@@ -147,39 +147,43 @@ namespace sentience.core
         public int getSelectedPointFeatures(float[] features)
         {
             int no_of_features = 0;
+            int max = 0;
+
             switch(currentAlgorithmType)
             {
                 case 0:
                     {
                         // get features from non-maximal suppression
-                        for (int i = 0; i < stereovision.no_of_selected_features * 3; i++)
+                        max = stereovision.no_of_selected_features * 3;
+                        for (int i = 0; i < max; i++)
                         {
                             features[i] = stereovision.selected_features[i];
                         }
-                        no_of_features = stereovision.no_of_selected_features;
                         break;
                     }
                 case 1:
                     {
                         // get features from the disparity map
-                        for (int i = 0; i < stereovision_contours.no_of_selected_features * 3; i++)
+                        max = stereovision_contours.no_of_selected_features * 3;
+                        if (max > features.Length) max = features.Length;
+                        for (int i = 0; i < max; i++)
                         {
                             features[i] = stereovision_contours.selected_features[i];
                         }
-                        no_of_features = stereovision_contours.no_of_selected_features;
                         break;
                     }
                 case 2:
                     {
                         // get FAST corner features from non-maximal suppression
-                        for (int i = 0; i < stereovision_FAST.no_of_selected_features * 3; i++)
+                        max = stereovision_FAST.no_of_selected_features * 3;
+                        for (int i = 0; i < max; i++)
                         {
                             features[i] = stereovision_FAST.selected_features[i];
-                        }
-                        no_of_features = stereovision_FAST.no_of_selected_features;
+                        }                        
                         break;
                     }
             }
+            no_of_features = max / 3;
             return (no_of_features);
         }
 
