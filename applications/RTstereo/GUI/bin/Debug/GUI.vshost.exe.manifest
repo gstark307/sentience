@@ -28,13 +28,13 @@
   </dependency>
   <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DirectX.Capture.dll" size="53248">
-      <assemblyIdentity name="DirectX.Capture" version="1.0.2588.21603" language="neutral" processorArchitecture="msil" />
+      <assemblyIdentity name="DirectX.Capture" version="1.0.2588.29581" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>TlA2USpAjPk8Bgvolja/6saWjoo=</dsig:DigestValue>
+        <dsig:DigestValue>Q/VRooeki2eBpjux/7wznU7/pP8=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -46,7 +46,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>JFVNh0DWsyGs/XeeXQMFw8sPoAs=</dsig:DigestValue>
+        <dsig:DigestValue>jqTRFcVAaLLMA00Wv6YOI2jG/10=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -58,7 +58,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>/8+0KG9euEBN9esX8U5A+4OdSok=</dsig:DigestValue>
+        <dsig:DigestValue>t1YGGhTQK3Ec4gnSUwjGl3useW0=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
@@ -70,7 +70,7 @@
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>J/b+dKIAITWg2tWBB8uDkk55gnE=</dsig:DigestValue>
+        <dsig:DigestValue>gfCe/08vS208WLfTtA9CQZ4TQiI=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

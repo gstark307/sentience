@@ -26,7 +26,7 @@ using System.Text;
 namespace sentience.core
 {
     /// <summary>
-    /// stores rays for each camera, similar to an ELM but more abstract
+    /// stores rays for each camera
     /// </summary>
     public class viewpoint
     {
