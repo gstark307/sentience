@@ -1,0 +1,77 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ClassLibrary1</RootNamespace>
+    <AssemblyName>sentcore</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="sentience_stereo_FAST.cs" />
+    <Compile Include="FAST.cs" />
+    <Compile Include="specialMath.cs" />
+    <Compile Include="classimage.cs" />
+    <Compile Include="sentienceRadar.cs" />
+    <Compile Include="sentienceTracking.cs" />
+    <Compile Include="robotLocalisation.cs" />
+    <Compile Include="sentience_stereo_contours.cs" />
+    <Compile Include="sentience_stereo_interface.cs" />
+    <Compile Include="sentience_stereo.cs" />
+    <Compile Include="occupancygridMultiResolution.cs" />
+    <Compile Include="MersenneTwister.cs" />
+    <Compile Include="occupancygrid.cs" />
+    <Compile Include="robotTestTracks.cs" />
+    <Compile Include="robotOdometry.cs" />
+    <Compile Include="robot.cs" />
+    <Compile Include="stereoCorrespondence.cs" />
+    <Compile Include="util.cs" />
+    <Compile Include="evidenceRay.cs" />
+    <Compile Include="pos3D.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="robotPath.cs" />
+    <Compile Include="stereoFeatures.cs" />
+    <Compile Include="stereoHead.cs" />
+    <Compile Include="stereoModel.cs" />
+    <Compile Include="surveyResult.cs" />
+    <Compile Include="viewpoint.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENCE.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
