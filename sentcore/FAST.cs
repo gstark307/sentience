@@ -26,141 +26,321 @@ using System.Text;
 
 namespace sentience.core
 {
-    public class FASTcorner
-    {
-        public const int constellation_size = 5;
-
-        public int x, y;
-        public int score;
-        public int[,] constellation;
-
-        public FASTcorner(int x, int y)
+        /// <summary>
+        /// stores information about a corner feature
+        /// </summary>
+        public class FASTcorner
         {
-            this.x = x;
-            this.y = y;
-        }
+            public const int constellation_size = 5;
 
-        public int matching_score(FASTcorner other)
-        {
-            int score = -1;
-            for (int x = 0; x < constellation_size * 2; x++)
+            public int x, y;
+            public int score;
+            public int[,] constellation;
+
+            public FASTcorner(int x, int y)
             {
-                for (int y = 0; y < constellation_size * 2; y++)
+                this.x = x;
+                this.y = y;
+            }
+
+            public int matching_score(FASTcorner other)
+            {
+                int score = -1;
+                for (int x = 0; x < constellation_size * 2; x++)
                 {
-                    if ((constellation[x,y] > 0) || (other.constellation[x,y] > 0))
+                    for (int y = 0; y < constellation_size * 2; y++)
                     {
-                        if (score == -1) score = 0;
-                        score += Math.Abs(constellation[x, y] - other.constellation[x, y]);
+                        if ((constellation[x, y] > 0) || (other.constellation[x, y] > 0))
+                        {
+                            if (score == -1) score = 0;
+                            score += Math.Abs(constellation[x, y] - other.constellation[x, y]);
+                        }
                     }
                 }
+                return (score);
             }
-            return (score);
-        }
 
-        /// <summary>
-        /// builds a constellation for this corner
-        /// </summary>
-        /// <param name="other_corner">array of corner features</param>
-        /// <param name="max_x_diff">max search radius for x axis</param>
-        /// <param name="max_y_diff">max search radius for y axis</param>
-        public void update(FASTcorner[] other_corner, int max_x_diff, int max_y_diff)
-        {
-            constellation = new int[(constellation_size*2)+1, (constellation_size*2)+1];
-
-            for (int i = 0; i < other_corner.Length; i++)
+            /// <summary>
+            /// builds a constellation for this corner
+            /// </summary>
+            /// <param name="other_corner">array of corner features</param>
+            /// <param name="max_x_diff">max search radius for x axis</param>
+            /// <param name="max_y_diff">max search radius for y axis</param>
+            public void update(FASTcorner[] other_corner, int max_x_diff, int max_y_diff)
             {
-                FASTcorner other = other_corner[i];
-                if ((other != this) && (other != null))
+                constellation = new int[(constellation_size * 2) + 1, (constellation_size * 2) + 1];
+
+                for (int i = 0; i < other_corner.Length; i++)
                 {
-                    int dx = other.x - x;
-                    if ((dx > -max_x_diff) && (dx < max_x_diff))
+                    FASTcorner other = other_corner[i];
+                    if ((other != this) && (other != null))
                     {
-                        int dy = other.y - y;
-                        if ((dy > -max_y_diff) && (dy < max_y_diff))
+                        int dx = other.x - x;
+                        if ((dx > -max_x_diff) && (dx < max_x_diff))
                         {
-                            int cx = constellation_size + (dx * constellation_size / max_x_diff);
-                            int cy = constellation_size + (dy * constellation_size / max_y_diff);
-                            constellation[cx, cy]++;
+                            int dy = other.y - y;
+                            if ((dy > -max_y_diff) && (dy < max_y_diff))
+                            {
+                                int cx = constellation_size + (dx * constellation_size / max_x_diff);
+                                int cy = constellation_size + (dy * constellation_size / max_y_diff);
+                                constellation[cx, cy]++;
+                            }
                         }
                     }
                 }
             }
         }
-    }
-
-
-    public class FASTline
-    {
-        public FASTcorner point1;
-        public FASTcorner point2;
 
         /// <summary>
-        /// returns true if the points given are on a line
+        /// stores information about a line feature consisting of two corners
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="img_width"></param>
-        /// <param name="img_height"></param>
-        /// <param name="p1"></param>
-        /// <param name="p2"></param>
-        /// <returns></returns>
-        public static bool isLine(Byte[] img, int img_width, int img_height, int bytes_per_pixel,
-                                  FASTcorner p1, FASTcorner p2, int line_threshold)
+        public class FASTline
         {
-            bool line = true;
-            int diff_x=0, diff_y=0, sample_number = 0;
-            const int max_samples = 5;
-            const int radius = 10;
+            public bool Visible = false;
+            public bool onHorizon = false;
+            public FASTcorner point1;
+            public FASTcorner point2;
+            public float dist1;
+            public float dist2;
 
-            int dx = p2.x - p1.x;
-            int dy = p2.y - p1.y;
-            while ((sample_number < max_samples) && (line))
+            /// <summary>
+            /// returns true if the points given are on a line
+            /// </summary>
+            /// <param name="img"></param>
+            /// <param name="img_width"></param>
+            /// <param name="img_height"></param>
+            /// <param name="p1"></param>
+            /// <param name="p2"></param>
+            /// <returns></returns>
+            public static bool isLine(Byte[] img, int img_width, int img_height, int bytes_per_pixel,
+                                      FASTcorner p1, FASTcorner p2, int line_threshold)
             {
-                line = false;
+                bool line = true;
+                int diff_x = 0, diff_y = 0, sample_number = 0;
+                const int max_samples = 50;
+                const int radius = 10;
 
-                int x = p1.x + (dx * sample_number / max_samples);
-                int y = p1.y + (dy * sample_number / max_samples);
-
-                if ((x > radius) && (x < img_width - radius) && (y > radius) && (y < img_height - radius))
+                int dx = p2.x - p1.x;
+                int dy = p2.y - p1.y;
+                while ((sample_number < max_samples) && (line))
                 {
-                    int n = ((y * img_width) + x) * bytes_per_pixel;
-                    int r = radius * bytes_per_pixel;
+                    line = false;
 
-                    diff_x = (img[n - r] + img[n - r + bytes_per_pixel]) -
-                                 (img[n + r] + img[n + r - bytes_per_pixel]);
-                    if (diff_x < 0) diff_x = -diff_x;
+                    int x = p1.x + (dx * sample_number / max_samples);
+                    int y = p1.y + (dy * sample_number / max_samples);
 
-                    if (diff_x < line_threshold)
+                    if ((x > radius) && (x < img_width - radius) && (y > radius) && (y < img_height - radius))
                     {
-                        r = radius * img_width * bytes_per_pixel;
+                        int n = ((y * img_width) + x) * bytes_per_pixel;
+                        int r = radius * bytes_per_pixel;
 
-                        diff_y = (img[n - r] + img[n - r + bytes_per_pixel]) -
-                                 (img[n + r] + img[n + r - bytes_per_pixel]);
-                        if (diff_y < 0) diff_y = -diff_y;
+                        diff_x = (img[n - r] + img[n - r + bytes_per_pixel]) -
+                                     (img[n + r] + img[n + r - bytes_per_pixel]);
+                        if (diff_x < 0) diff_x = -diff_x;
+
+                        if (diff_x < line_threshold)
+                        {
+                            r = radius * img_width * bytes_per_pixel;
+
+                            diff_y = (img[n - r] + img[n - r + bytes_per_pixel]) -
+                                     (img[n + r] + img[n + r - bytes_per_pixel]);
+                            if (diff_y < 0) diff_y = -diff_y;
+                        }
+
+                        if ((diff_x > line_threshold) || (diff_y > line_threshold))
+                            line = true;
                     }
-
-                    if ((diff_x > line_threshold) || (diff_y > line_threshold))
-                        line = true;
+                    else line = true;
+                    sample_number++;
                 }
-                else line = true;
-                sample_number++;
+
+                return (line);
             }
 
-            return (line);
+
+            public bool isOnHorizon(Byte[] colour_img, int img_width, int img_height, int horizon_threshold)
+            {
+                const int bytes_per_pixel = 3;
+                bool horizon = false;
+                int sample_number = 0;
+                const int max_samples = 10;
+                int radius = img_height / 10;
+
+                int dx = point2.x - point1.x;
+                int dy = point2.y - point1.y;
+
+                if ((point1.y > img_height / 10) && (point2.y > img_height / 10))
+                {
+                    if ((point1.y < img_height - (img_height / 8)) && (point2.y < img_height - (img_height / 8)))
+                    {
+                        if (Math.Abs(dx) > img_width / 10)
+                        {
+                            horizon = true;
+                            while ((sample_number < max_samples) && (horizon))
+                            {
+                                horizon = false;
+
+                                int x = point1.x + (dx * sample_number / max_samples);
+                                int y = point1.y + (dy * sample_number / max_samples);
+
+                                if ((x > radius) && (x < img_width - radius) && (y > radius) && (y < img_height - radius))
+                                {
+                                    int interval = (y - 10) / 15;
+                                    int tot = 0;
+                                    int hits = 0;
+                                    for (int yy = y - 10; yy > 0; yy -= interval)
+                                    {
+                                        int n = ((yy * img_width) + x) * bytes_per_pixel;
+                                        tot += colour_img[n];
+                                        hits++;
+                                    }
+                                    if (hits > 0)
+                                    {
+                                        tot /= hits;
+                                        if (tot > 230)
+                                        {
+                                            horizon = true;
+                                        }
+                                    }
+
+                                }
+                                else horizon = true;
+                                sample_number++;
+                            }
+                        }
+                    }
+                }
+
+                return (horizon);
+            }
+
+
+            public FASTline(FASTcorner point1, FASTcorner point2)
+            {
+                this.point1 = point1;
+                this.point2 = point2;
+            }
         }
 
-        public FASTline(FASTcorner point1, FASTcorner point2)
-        {
-            this.point1 = point1;
-            this.point2 = point2;
-        }
-    }
 
-
-    /// <summary>
-    /// A C# implementation of the FAST corner detector
-    /// </summary>
+        /// <summary>
+        /// A C# implementation of the FAST corner detector
+        /// </summary>
     public class FAST
     {
+        public static float horizon_detection(Byte[] colour_image, int img_width, int img_height,
+                                              FASTline[] lines, int horizon_threshold,
+                                              ref int vertical_position)
+        {
+            float gradient = 0;
+            float gravity_angle = 0;
+            int hits = 0;
+            int av_y = 0;
+
+            vertical_position = 0;
+            if (lines != null)
+            {
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    FASTline line = lines[i];
+                    if (line.Visible)
+                    {
+                        if (line.isOnHorizon(colour_image, img_width, img_height, horizon_threshold))
+                        {
+                            line.onHorizon = true;
+                            float dx = line.point2.x - line.point1.x;
+                            float dy = line.point2.y - line.point1.y;
+                            float grad = 0;
+                            if (dy != 0) grad = dx / dy;
+                            int y = (int)((grad * (img_width / 2)) + line.point1.y);
+                            if ((y > 0) && (y < img_height))
+                            {
+                                av_y += y;
+                                hits++;
+                                gradient += grad;
+                            }
+                        }
+                    }
+                }
+            }
+            if (hits > 0)
+            {
+                av_y /= hits;
+                gradient /= (float)hits;
+                vertical_position = av_y;
+                gravity_angle = gradient;
+            }
+
+            return (gravity_angle);
+        }
+
+        public static float gravity_direction(FASTline[] lines)
+        {
+            float gravity_angle = 0;
+
+            if (lines != null)
+            {
+                int[] orientation_histogram = new int[30];
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    FASTline line = lines[i];
+                    if (line.Visible)
+                    {
+                        // get the orientation of the line
+                        int dx = line.point2.x - line.point1.x;
+                        int dy = line.point2.y - line.point1.y;
+                        int length = (int)Math.Sqrt((dx * dx) + (dy * dy));
+                        if (length > 0)
+                        {
+                            float angle = (float)Math.Asin(dx / (float)length);
+                            if (dy < 0) angle = (float)(Math.PI * 2) - angle;
+                            if (angle < 0) angle = (float)(Math.PI) + angle;
+                            int bin_number = (int)(angle / (float)(Math.PI * 2) * (orientation_histogram.Length - 1));
+                            orientation_histogram[bin_number] += 1;
+                        }
+                    }
+                }
+
+                int max = 0;
+                for (int i = 0; i < orientation_histogram.Length / 4; i++)
+                {
+                    int curr_i = i;
+                    int prev_i = curr_i - 1;
+                    if (prev_i < 0) prev_i = orientation_histogram.Length + prev_i;
+                    int next_i = curr_i + 1;
+                    if (next_i >= orientation_histogram.Length) next_i -= orientation_histogram.Length;
+                    int value = orientation_histogram[curr_i] + ((orientation_histogram[prev_i] + orientation_histogram[next_i]) / 4);
+
+                    curr_i = i + (orientation_histogram.Length / 4);
+                    prev_i = curr_i - 1;
+                    if (prev_i < 0) prev_i = orientation_histogram.Length + prev_i;
+                    next_i = curr_i + 1;
+                    if (next_i >= orientation_histogram.Length) next_i -= orientation_histogram.Length;
+                    value += orientation_histogram[curr_i] + ((orientation_histogram[prev_i] + orientation_histogram[next_i]) / 4);
+
+                    curr_i = i + (orientation_histogram.Length / 2);
+                    prev_i = curr_i - 1;
+                    if (prev_i < 0) prev_i = orientation_histogram.Length + prev_i;
+                    next_i = curr_i + 1;
+                    if (next_i >= orientation_histogram.Length) next_i -= orientation_histogram.Length;
+                    value += orientation_histogram[curr_i] + ((orientation_histogram[prev_i] + orientation_histogram[next_i]) / 4);
+
+                    if (value > max)
+                    {
+                        max = value;
+                        gravity_angle = i * (float)Math.PI * 2 / orientation_histogram.Length;
+                    }
+                }
+            }
+
+
+            if (gravity_angle > (float)(Math.PI / 4))
+                gravity_angle -= (float)(Math.PI / 2);
+
+            return (gravity_angle);
+        }
+
         /// <summary>
         /// get a score for a corner feature
         /// </summary>
@@ -333,7 +513,7 @@ namespace sentience.core
                                 {
                                     ctr++;
                                     if (ctr > 100) break;
-                                    if (point_below >= corners.Length-1) break;
+                                    if (point_below >= corners.Length - 1) break;
                                 }
 
                                 found = false;
@@ -392,12 +572,12 @@ namespace sentience.core
         {
             int min_length_y = min_length * ysize / xsize;
             int no_of_lines = 0;
-            FASTline[] lines = new FASTline[corners.Length];
+            FASTline[] lines = new FASTline[corners.Length * corners.Length];
 
-            for (int i = 0; i < corners.Length-1; i++)
+            for (int i = 0; i < corners.Length - 1; i++)
             {
                 FASTcorner corner1 = corners[i];
-                for (int j = i + 1; j < corners.Length; j++)                
+                for (int j = i + 1; j < corners.Length; j++)
                 {
                     FASTcorner corner2 = corners[j];
 
@@ -415,9 +595,9 @@ namespace sentience.core
                     }
                 }
             }
-            if (no_of_lines > 0) 
+            if (no_of_lines > 0)
                 Array.Resize(ref lines, no_of_lines);
-            else 
+            else
                 lines = null;
 
             return (lines);
@@ -2527,7 +2707,7 @@ namespace sentience.core
                             if (total >= rsize)
                             {
                                 rsize *= 2;
-                                Array.Resize(ref ret, rsize);                            
+                                Array.Resize(ref ret, rsize);
                             }
 
                             int xx = (int)(cache_0 - line_min);
@@ -2542,7 +2722,7 @@ namespace sentience.core
                     return ret;
                 }
             }
-        }            
-    }																		
+        }
+    }
    
 }
