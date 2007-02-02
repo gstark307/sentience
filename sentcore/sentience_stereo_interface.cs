@@ -36,7 +36,6 @@ namespace sentience.core
         sentience_stereo_contours stereovision_contours;
         sentience_stereo_FAST stereovision_FAST;
         int currentAlgorithmType = 0;
-        int adaptive_threshold = 0;
         FASTlines line_detector = null;
 
         public sentience_stereo_interface()
@@ -71,43 +70,46 @@ namespace sentience.core
         {
             if (line_detector != null)
             {
-                const int linepoints = 8;
-                for (int i = 0; i < line_detector.lines.Length; i++)
+                if (line_detector.lines != null)
                 {
-                    FASTline line = line_detector.lines[i];
-                    if (line.Visible)
+                    const int linepoints = 8;
+                    for (int i = 0; i < line_detector.lines.Length; i++)
                     {
-                        int dx = line.point2.x - line.point1.x;
-                        int dy = line.point2.y - line.point1.y;
-                        float tot_lower = 0;
-                        int lower_hits = 0;
-                        float tot_upper = 0;
-                        int upper_hits = 0;
-                        for (int j = 0; j < linepoints; j++)
+                        FASTline line = line_detector.lines[i];
+                        if (line.Visible)
                         {
-                            int xx = line.point1.x + (dx * j / linepoints);
-                            int yy = line.point1.y + (dy * j / linepoints);
-                            float disp = stereovision_contours.getDisparityMapPoint(xx, yy);
-                            if (disp > 0)
+                            int dx = line.point2.x - line.point1.x;
+                            int dy = line.point2.y - line.point1.y;
+                            float tot_lower = 0;
+                            int lower_hits = 0;
+                            float tot_upper = 0;
+                            int upper_hits = 0;
+                            for (int j = 0; j < linepoints; j++)
                             {
-                                if (j < linepoints / 2)
+                                int xx = line.point1.x + (dx * j / linepoints);
+                                int yy = line.point1.y + (dy * j / linepoints);
+                                float disp = stereovision_contours.getDisparityMapPoint(xx, yy);
+                                if (disp > 0)
                                 {
-                                    tot_lower += disp;
-                                    lower_hits++;
-                                }
-                                else
-                                {
-                                    tot_upper += disp;
-                                    upper_hits++;
+                                    if (j < linepoints / 2)
+                                    {
+                                        tot_lower += disp;
+                                        lower_hits++;
+                                    }
+                                    else
+                                    {
+                                        tot_upper += disp;
+                                        upper_hits++;
+                                    }
                                 }
                             }
-                        }
-                        if ((lower_hits > 0) && (upper_hits > 0))
-                        {
-                            float av_lower = tot_lower / lower_hits;
-                            float av_upper = tot_upper / upper_hits;
-                            line.point1.disparity = av_lower;
-                            line.point2.disparity = av_upper;
+                            if ((lower_hits > 0) && (upper_hits > 0))
+                            {
+                                float av_lower = tot_lower / lower_hits;
+                                float av_upper = tot_upper / upper_hits;
+                                line.point1.disparity = av_lower;
+                                line.point2.disparity = av_upper;
+                            }
                         }
                     }
                 }
