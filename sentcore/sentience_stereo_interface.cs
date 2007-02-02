@@ -177,7 +177,7 @@ namespace sentience.core
                 case 1:  // contour based stereo
                     {
                         stereovision_contours.update(left_image, right_image, image_width, image_height,
-                                                     calibration_offset_x, calibration_offset_y);
+                                                     calibration_offset_x, calibration_offset_y, true);
                         break;
                     }
                 case 2:  // FAST corners based stereo
@@ -185,16 +185,16 @@ namespace sentience.core
                         stereovision_contours.vertical_compression = 4;
                         stereovision_contours.disparity_map_compression = 3;
                         stereovision_contours.update(left_image, right_image, image_width, image_height,
-                                                     calibration_offset_x, calibration_offset_y);
+                                                     calibration_offset_x, calibration_offset_y, false);
                         updateFASTCornerDisparities();
                         break;
                     }
                 case 3:  // stereo lines
                     {
-                        stereovision_contours.vertical_compression = 6;
+                        stereovision_contours.vertical_compression = 4;
                         stereovision_contours.disparity_map_compression = 3;
                         stereovision_contours.update(left_image, right_image, image_width, image_height,
-                                                     calibration_offset_x, calibration_offset_y);
+                                                     calibration_offset_x, calibration_offset_y, false);
                         updateLineDisparities();
                         break;
                     }

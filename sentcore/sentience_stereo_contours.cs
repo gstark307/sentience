@@ -63,6 +63,8 @@ namespace sentience.core
         /// </remarks>
         public int max_disparity;
 
+        ///attention map
+        public bool[,] attention_map;
         ///disparity map
         public float[,] disparity_map;
         //public float[,] confidence_map;
@@ -348,9 +350,21 @@ namespace sentience.core
             }
         }
 
+
+        /// <summary>
+        /// clear the attention map
+        /// </summary>
+        public void resetAttention(int wdth, int hght)
+        {
+            for (int xx = 0; xx < wdth; xx++)
+                for (int yy = 0; yy < hght; yy++)
+                    attention_map[xx, yy] = true;
+        }
+
+
         public void update(Byte[] left_bmp, Byte[] right_bmp,
                            int wdth, int hght,
-                           int calibration_offset_x, int calibration_offset_y)
+                           int calibration_offset_x, int calibration_offset_y, bool reset_attention)
         {
             int scale, idx;
             int x, y, x2;
@@ -371,10 +385,14 @@ namespace sentience.core
                 scalepoints_left = new int[no_of_scales, wdth + 1];
                 scalepoints_right = new int[no_of_scales, wdth + 1];
                 scalepoints_lookup = new int[no_of_scales, wdth, wdth + 1];
-                disparity_map = new float[(wdth / (step_size * disparity_map_compression))+1, (hght / (vertical_compression * disparity_map_compression))+1];
-                //confidence_map = new float[wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression)];
-                disparity_hits = new int[(wdth / (step_size * disparity_map_compression))+1, (hght / (vertical_compression * disparity_map_compression))+1];
-                //confidence_hits = new int[wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression)];
+
+                attention_map = new bool[wdth, hght];
+                resetAttention(wdth, hght);
+
+                int w = (wdth / (step_size * disparity_map_compression)) + 1;
+                int h = (hght / (vertical_compression * disparity_map_compression)) + 1;
+                disparity_map = new float[w, h];
+                disparity_hits = new int[w, h];
                 scale_width = new int[no_of_scales, 2];
 
                 int sc = 2;
@@ -387,6 +405,9 @@ namespace sentience.core
                     sc++;
                 }
             }
+
+            if (reset_attention) resetAttention(wdth, hght);
+
             prev_vertical_compression = vertical_compression;
             prev_disparity_map_compression = disparity_map_compression;
 
@@ -415,7 +436,6 @@ namespace sentience.core
                 img_left.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_left, wavepoints_left_scale, wavepoints_left_pattern, blob_type);
                 img_right.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_right, wavepoints_right_scale, wavepoints_right_pattern, blob_type);
             }
-
 
             // update the scale points for fast searching
             float min_thresh = 5.0f;
