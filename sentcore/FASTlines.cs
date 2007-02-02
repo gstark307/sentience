@@ -32,6 +32,7 @@ namespace sentience.core
         public bool drawLines = true;
 
         public FASTline[] lines;
+        public FASTcorner[] corners;
 
         int required_features = 200;
         int horizon_threshold = 10;
@@ -50,7 +51,7 @@ namespace sentience.core
             if (line_threshold == 0) line_threshold = 200;
             if (corner_threshold == 0) corner_threshold = 50;
             FASTcorner[] corners_all = FAST.fast_corner_detect_10(mono_image, width, height, corner_threshold);
-            FASTcorner[] corners = FAST.fast_nonmax(mono_image, width, height, corners_all, corner_threshold * 2, 0, 0);
+            corners = FAST.fast_nonmax(mono_image, width, height, corners_all, corner_threshold * 2, 0, 0);
 
             if (corners != null)
             {

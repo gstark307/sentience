@@ -47,13 +47,81 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// update the disparity values for FAST corners
+        /// </summary>
+        private void updateFASTCornerDisparities()
+        {
+            if (line_detector != null)
+            {
+                if (line_detector.corners != null)
+                {
+                    for (int i = 0; i < line_detector.corners.Length; i++)
+                    {
+                        FASTcorner c = line_detector.corners[i];
+                        c.disparity = stereovision_contours.getDisparityMapPoint(c.x, c.y);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// calculate the disparity values for observed lines
+        /// </summary>
+        private void updateLineDisparities()
+        {
+            if (line_detector != null)
+            {
+                const int linepoints = 8;
+                for (int i = 0; i < line_detector.lines.Length; i++)
+                {
+                    FASTline line = line_detector.lines[i];
+                    if (line.Visible)
+                    {
+                        int dx = line.point2.x - line.point1.x;
+                        int dy = line.point2.y - line.point1.y;
+                        float tot_lower = 0;
+                        int lower_hits = 0;
+                        float tot_upper = 0;
+                        int upper_hits = 0;
+                        for (int j = 0; j < linepoints; j++)
+                        {
+                            int xx = line.point1.x + (dx * j / linepoints);
+                            int yy = line.point1.y + (dy * j / linepoints);
+                            float disp = stereovision_contours.getDisparityMapPoint(xx, yy);
+                            if (disp > 0)
+                            {
+                                if (j < linepoints / 2)
+                                {
+                                    tot_lower += disp;
+                                    lower_hits++;
+                                }
+                                else
+                                {
+                                    tot_upper += disp;
+                                    upper_hits++;
+                                }
+                            }
+                        }
+                        if ((lower_hits > 0) && (upper_hits > 0))
+                        {
+                            float av_lower = tot_lower / lower_hits;
+                            float av_upper = tot_upper / upper_hits;
+                            line.point1.disparity = av_lower;
+                            line.point2.disparity = av_upper;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// load mono image data (single byte per pixel)
         /// Note that this assumes that the the image_data array has already been locked
         /// by the calling program
         /// </summary>
         public void loadImage(Byte[] image_data, int width, int height, bool isLeftImage, int bytesPerPixel)
         {
-            if ((isLeftImage) && (currentAlgorithmType == 3))
+            if ((isLeftImage) && ((currentAlgorithmType == 2) || (currentAlgorithmType == 3)))
             {
                 if (line_detector == null) line_detector = new FASTlines();
                 line_detector.drawLines = false;
@@ -114,14 +182,20 @@ namespace sentience.core
                     }
                 case 2:  // FAST corners based stereo
                     {
-                        stereovision_FAST.update(left_image, right_image, image_width, image_height, bytes_per_pixel,
-                                                 calibration_offset_x, calibration_offset_y, ref adaptive_threshold);
-                        break;
-                    }
-                case 3:  // contour based stereo
-                    {
+                        stereovision_contours.vertical_compression = 4;
+                        stereovision_contours.disparity_map_compression = 3;
                         stereovision_contours.update(left_image, right_image, image_width, image_height,
                                                      calibration_offset_x, calibration_offset_y);
+                        updateFASTCornerDisparities();
+                        break;
+                    }
+                case 3:  // stereo lines
+                    {
+                        stereovision_contours.vertical_compression = 6;
+                        stereovision_contours.disparity_map_compression = 3;
+                        stereovision_contours.update(left_image, right_image, image_width, image_height,
+                                                     calibration_offset_x, calibration_offset_y);
+                        updateLineDisparities();
                         break;
                     }
             }
@@ -189,11 +263,23 @@ namespace sentience.core
                 case 2:
                     {
                         // get FAST corner features from non-maximal suppression
-                        max = stereovision_FAST.no_of_selected_features * 3;
-                        for (int i = 0; i < max; i++)
+                        if (line_detector != null)
                         {
-                            features[i] = stereovision_FAST.selected_features[i];
-                        }                        
+                            if (line_detector.corners != null)
+                            {
+                                max = line_detector.corners.Length * 3;
+                                if (max > features.Length) max = features.Length;
+                                int n = 0;
+                                for (int i = 0; i < max; i += 3)
+                                {
+                                    FASTcorner c = line_detector.corners[n];
+                                    features[i] = c.x;
+                                    features[i + 1] = c.y;
+                                    features[i + 2] = c.disparity;
+                                    n++;
+                                }
+                            }
+                        }
                         break;
                     }
                 case 3:

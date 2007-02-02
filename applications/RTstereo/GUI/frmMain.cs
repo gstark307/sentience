@@ -986,8 +986,8 @@ namespace WindowsApplication1
 
         private void linesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            stereo.setCorrespondenceAlgorithmType(3);
-            display_type = 5;
+            stereo.setCorrespondenceAlgorithmType(2);
+            display_type = 0; // 5;
             stereoFeaturesToolStripMenuItem.Checked = false;
             roboRadarToolStripMenuItem.Checked = false;
             disparityMapToolStripMenuItem.Checked = false;

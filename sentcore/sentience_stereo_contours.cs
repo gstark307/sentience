@@ -78,6 +78,9 @@ namespace sentience.core
         public int vertical_compression = 4;
         public int disparity_map_compression = 3;
 
+        private int prev_vertical_compression;
+        private int prev_disparity_map_compression;
+
         // maximum difference below which matching is possible
         public float match_threshold = 10.0f;
 
@@ -352,7 +355,8 @@ namespace sentience.core
             int scale, idx;
             int x, y, x2;
 
-            if (wavepoints_left == null)
+            if ((wavepoints_left == null) || (vertical_compression != prev_vertical_compression) ||
+                                             (disparity_map_compression != prev_disparity_map_compression))
             {
                 img_left = new classimage();
                 img_left.createImage(wdth, hght / vertical_compression);
@@ -383,6 +387,8 @@ namespace sentience.core
                     sc++;
                 }
             }
+            prev_vertical_compression = vertical_compression;
+            prev_disparity_map_compression = disparity_map_compression;
 
             // set the images
             left_image = left_bmp;
@@ -425,7 +431,7 @@ namespace sentience.core
                 for (int sign = 0; sign < 4; sign++)
                 {
                     // go through each detection pattern
-                    // at present there are only two patterns: centre/surround and left/right
+                    // at present there are only two patterns: centre/surround and left/right                    
                     for (int currPattern = 0; currPattern < 2; currPattern++)
                     {
                         // clear the number of points
@@ -437,12 +443,14 @@ namespace sentience.core
                                 scalepoints_lookup[scale, x, 0] = 0;
                         }
 
-                        for (x = 0; x < wdth / step_size; x++)
+                        int ww = wdth / step_size;
+                        for (x = 0; x < ww; x++)
                         {
-                            left_diff = wavepoints_left[y, x];
-                            right_diff = wavepoints_right[y, x];
-                            if (wavepoints_left_pattern[y, x] == currPattern)
+                            int pattern = wavepoints_left_pattern[y, x];
+                            if (pattern == currPattern)
                             {
+                                left_diff = wavepoints_left[y, x];
+                                right_diff = wavepoints_right[y, x];
                                 if ((x > 0) && ((left_diff != 0) || (right_diff != 0)))
                                 {
                                     left_grad = left_diff - prev_left_diff;
@@ -490,9 +498,9 @@ namespace sentience.core
                                         }
                                     }
                                 }
+                                prev_left_diff = left_diff;
+                                prev_right_diff = right_diff;
                             }
-                            prev_left_diff = left_diff;
-                            prev_right_diff = right_diff;
                         }
 
                         // stereo match
@@ -507,7 +515,12 @@ namespace sentience.core
                                 //int winner = -1;
                                 int x_left = scalepoints_left[scale, i + 1];
                                 float diff_left = wavepoints_left[y, x_left];
-                                //int pattern_left = wavepoints_left_pattern[y, x_left];
+                                int x_left2 = x_left - 2;
+                                if (x_left2 < 0) x_left2 = 0;
+                                int x_left3 = x_left + 2;
+                                if (x_left3 >= ww) x_left3 = ww-1;
+                                int prev_pattern_left = wavepoints_left_pattern[y, x_left2];
+                                int next_pattern_left = wavepoints_left_pattern[y, x_left3];
                                 float min_response_difference = match_threshold;
 
                                 x2 = x_left / searchfactor;
@@ -520,16 +533,24 @@ namespace sentience.core
                                     int dx = x_left - x_right;
                                     if ((dx > -1) && (dx < max_disp))
                                     {
-                                        //int pattern_right = wavepoints_right_pattern[y, x_right];
-                                        //if (pattern_left == pattern_right)
+                                        int x_right2 = x_right - 2;
+                                        if (x_right2 < 0) x_right2 = 0;
+                                        int prev_pattern_right = wavepoints_right_pattern[y, x_right2];
+                                        if (prev_pattern_left == prev_pattern_right)
                                         {
-                                            float diff_right = wavepoints_right[y, x_right];
-                                            float response_difference = diff_right - diff_left;
-                                            if (response_difference < 0) response_difference = -response_difference;
-                                            if (response_difference < min_response_difference)
+                                            int x_right3 = x_right + 2;
+                                            if (x_right3 >= ww) x_right3 = ww - 1;
+                                            int next_pattern_right = wavepoints_right_pattern[y, x_right3];
+                                            if (next_pattern_left == next_pattern_right)
                                             {
-                                                disp = dx;
-                                                min_response_difference = response_difference;
+                                                float diff_right = wavepoints_right[y, x_right];
+                                                float response_difference = diff_right - diff_left;
+                                                if (response_difference < 0) response_difference = -response_difference;
+                                                if (response_difference < min_response_difference)
+                                                {
+                                                    disp = dx;
+                                                    min_response_difference = response_difference;
+                                                }
                                             }
                                         }
                                     }
@@ -545,7 +566,7 @@ namespace sentience.core
                                     updateDisparityMap(mx, my,
                                                        wdth / (step_size * disparity_map_compression),
                                                        hght / (vertical_compression * disparity_map_compression),
-                                                       scale, disp, confidence);
+                                                       scale, disp * step_size, confidence);
                                 }
                             }
 
@@ -627,6 +648,23 @@ namespace sentience.core
                 }
                 else tries++;
             }
+        }
+
+        /// <summary>
+        /// return the disparity value at the given point in te image
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public float getDisparityMapPoint(int x, int y)
+        {
+            // convert to disparity map coordinates
+            int xx = x / (step_size * disparity_map_compression);
+            int yy = y / (vertical_compression * disparity_map_compression);
+            float pointValue = disparity_map[xx, yy];
+            if (pointValue < 0) pointValue = 0;
+
+            return (pointValue);
         }
 
         /// <summary>

@@ -36,6 +36,7 @@ namespace sentience.core
             public int x, y;
             public int score;
             public int[,] constellation;
+            public float disparity = 0;
 
             public FASTcorner(int x, int y)
             {
@@ -100,8 +101,6 @@ namespace sentience.core
             public bool onHorizon = false;
             public FASTcorner point1;
             public FASTcorner point2;
-            public float dist1;
-            public float dist2;
 
             /// <summary>
             /// returns true if the points given are on a line
