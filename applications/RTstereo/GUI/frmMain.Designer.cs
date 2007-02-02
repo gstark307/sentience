@@ -38,6 +38,7 @@ namespace WindowsApplication1
             this.roboRadarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.disparityMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nearbyObjectsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.raysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.videoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startSentienceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startSimulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -88,7 +89,7 @@ namespace WindowsApplication1
             this.txtForward = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.picOutput = new System.Windows.Forms.PictureBox();
-            this.raysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.linesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -144,7 +145,8 @@ namespace WindowsApplication1
             this.roboRadarToolStripMenuItem,
             this.disparityMapToolStripMenuItem,
             this.nearbyObjectsToolStripMenuItem,
-            this.raysToolStripMenuItem});
+            this.raysToolStripMenuItem,
+            this.linesToolStripMenuItem});
             this.viewMenuItem.Name = "viewMenuItem";
             this.viewMenuItem.Size = new System.Drawing.Size(41, 20);
             this.viewMenuItem.Text = "View";
@@ -178,6 +180,13 @@ namespace WindowsApplication1
             this.nearbyObjectsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             this.nearbyObjectsToolStripMenuItem.Text = "Nearby Objects";
             this.nearbyObjectsToolStripMenuItem.Click += new System.EventHandler(this.nearbyObjectsToolStripMenuItem_Click);
+            // 
+            // raysToolStripMenuItem
+            // 
+            this.raysToolStripMenuItem.Name = "raysToolStripMenuItem";
+            this.raysToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.raysToolStripMenuItem.Text = "Rays";
+            this.raysToolStripMenuItem.Click += new System.EventHandler(this.raysToolStripMenuItem_Click);
             // 
             // videoToolStripMenuItem
             // 
@@ -626,12 +635,12 @@ namespace WindowsApplication1
             this.picOutput.TabIndex = 7;
             this.picOutput.TabStop = false;
             // 
-            // raysToolStripMenuItem
+            // linesToolStripMenuItem
             // 
-            this.raysToolStripMenuItem.Name = "raysToolStripMenuItem";
-            this.raysToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.raysToolStripMenuItem.Text = "Rays";
-            this.raysToolStripMenuItem.Click += new System.EventHandler(this.raysToolStripMenuItem_Click);
+            this.linesToolStripMenuItem.Name = "linesToolStripMenuItem";
+            this.linesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.linesToolStripMenuItem.Text = "Lines";
+            this.linesToolStripMenuItem.Click += new System.EventHandler(this.linesToolStripMenuItem_Click);
             // 
             // frmMain
             // 
@@ -728,6 +737,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.ToolStripMenuItem nearbyObjectsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openBackgroundToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem raysToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem linesToolStripMenuItem;
     }
 }
 

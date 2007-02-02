@@ -29,6 +29,7 @@ namespace sentience.core
         public bool showGravity = false;
         public bool showHorizon = false;
         public int required_lines = 100;
+        public bool drawLines = true;
 
         public FASTline[] lines;
 
@@ -96,23 +97,25 @@ namespace sentience.core
                         }
 
                         // draw lines
-
-                        for (int i = 0; i < lines.Length; i++)
+                        if (drawLines)
                         {
-                            FASTline line = lines[i];
-                            if (line.Visible)
+                            for (int i = 0; i < lines.Length; i++)
                             {
-                                if (!line.onHorizon)
+                                FASTline line = lines[i];
+                                if (line.Visible)
                                 {
-                                    util.drawLine(raw_image, width, height,
-                                                  line.point1.x, line.point1.y, line.point2.x, line.point2.y,
-                                                  255, 0, 0, 0, false);
-                                }
-                                else
-                                {
-                                    util.drawLine(raw_image, width, height,
-                                                  line.point1.x, line.point1.y, line.point2.x, line.point2.y,
-                                                  0, 255, 0, 0, false);
+                                    if (!line.onHorizon)
+                                    {
+                                        util.drawLine(raw_image, width, height,
+                                                      line.point1.x, line.point1.y, line.point2.x, line.point2.y,
+                                                      255, 0, 0, 0, false);
+                                    }
+                                    else
+                                    {
+                                        util.drawLine(raw_image, width, height,
+                                                      line.point1.x, line.point1.y, line.point2.x, line.point2.y,
+                                                      0, 255, 0, 0, false);
+                                    }
                                 }
                             }
                         }
@@ -129,27 +132,31 @@ namespace sentience.core
                         if (showGravity)
                         {
                             float gravity_angle = FAST.gravity_direction(lines);
-                            int pendulum_length = width / 8;
-                            int px = (width / 2) + (int)(pendulum_length * Math.Sin(gravity_angle));
-                            int py = (height / 2) + (int)(pendulum_length * Math.Cos(gravity_angle) * height / width);
-                            util.drawLine(raw_image, width, height,
-                                          width / 2, height / 2, px, py,
-                                          0, 255, 0, 1, false);
 
-                            int arrow_length = pendulum_length / 5;
-                            float angle2 = gravity_angle + (float)(Math.PI * 0.8f);
-                            int px2 = px + (int)(arrow_length * Math.Sin(angle2));
-                            int py2 = py + (int)(arrow_length * Math.Cos(angle2) * height / width);
-                            util.drawLine(raw_image, width, height,
-                                          px2, py2, px, py,
-                                          0, 255, 0, 1, false);
+                            if (drawLines)
+                            {
+                                int pendulum_length = width / 8;
+                                int px = (width / 2) + (int)(pendulum_length * Math.Sin(gravity_angle));
+                                int py = (height / 2) + (int)(pendulum_length * Math.Cos(gravity_angle) * height / width);
+                                util.drawLine(raw_image, width, height,
+                                              width / 2, height / 2, px, py,
+                                              0, 255, 0, 1, false);
 
-                            angle2 = gravity_angle - (float)(Math.PI * 0.8f);
-                            px2 = px + (int)(arrow_length * Math.Sin(angle2));
-                            py2 = py + (int)(arrow_length * Math.Cos(angle2) * height / width);
-                            util.drawLine(raw_image, width, height,
-                                          px2, py2, px, py,
-                                          0, 255, 0, 1, false);
+                                int arrow_length = pendulum_length / 5;
+                                float angle2 = gravity_angle + (float)(Math.PI * 0.8f);
+                                int px2 = px + (int)(arrow_length * Math.Sin(angle2));
+                                int py2 = py + (int)(arrow_length * Math.Cos(angle2) * height / width);
+                                util.drawLine(raw_image, width, height,
+                                              px2, py2, px, py,
+                                              0, 255, 0, 1, false);
+
+                                angle2 = gravity_angle - (float)(Math.PI * 0.8f);
+                                px2 = px + (int)(arrow_length * Math.Sin(angle2));
+                                py2 = py + (int)(arrow_length * Math.Cos(angle2) * height / width);
+                                util.drawLine(raw_image, width, height,
+                                              px2, py2, px, py,
+                                              0, 255, 0, 1, false);
+                            }
                         }
                     }
                 }

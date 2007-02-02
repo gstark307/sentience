@@ -664,6 +664,11 @@ namespace WindowsApplication1
                                 showRays();
                                 break;
                             }
+                        case 5:
+                            {
+                                showDisparityMap();
+                                break;
+                            }
                     }
 
                     // record left and right images to be used later for simulation or analysis
@@ -922,6 +927,7 @@ namespace WindowsApplication1
             disparityMapToolStripMenuItem.Checked = false;
             nearbyObjectsToolStripMenuItem.Checked = false;
             raysToolStripMenuItem.Checked = false;
+            linesToolStripMenuItem.Checked = false;
         }
 
         private void roboRadarToolStripMenuItem_Click(object sender, EventArgs e)
@@ -933,6 +939,7 @@ namespace WindowsApplication1
             disparityMapToolStripMenuItem.Checked = false;
             nearbyObjectsToolStripMenuItem.Checked = false;
             raysToolStripMenuItem.Checked = false;
+            linesToolStripMenuItem.Checked = false;
         }
 
         private void disparityMapToolStripMenuItem_Click(object sender, EventArgs e)
@@ -944,6 +951,7 @@ namespace WindowsApplication1
             disparityMapToolStripMenuItem.Checked = true;
             nearbyObjectsToolStripMenuItem.Checked = false;
             raysToolStripMenuItem.Checked = false;
+            linesToolStripMenuItem.Checked = false;
         }
 
         private void nearbyObjectsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -955,6 +963,7 @@ namespace WindowsApplication1
             disparityMapToolStripMenuItem.Checked = false;
             nearbyObjectsToolStripMenuItem.Checked = true;
             raysToolStripMenuItem.Checked = false;
+            linesToolStripMenuItem.Checked = false;
         }
 
         private void openBackgroundToolStripMenuItem_Click(object sender, EventArgs e)
@@ -972,6 +981,19 @@ namespace WindowsApplication1
             disparityMapToolStripMenuItem.Checked = false;
             nearbyObjectsToolStripMenuItem.Checked = false;
             raysToolStripMenuItem.Checked = true;
+            linesToolStripMenuItem.Checked = false;
+        }
+
+        private void linesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            stereo.setCorrespondenceAlgorithmType(3);
+            display_type = 5;
+            stereoFeaturesToolStripMenuItem.Checked = false;
+            roboRadarToolStripMenuItem.Checked = false;
+            disparityMapToolStripMenuItem.Checked = false;
+            nearbyObjectsToolStripMenuItem.Checked = false;
+            raysToolStripMenuItem.Checked = false;
+            linesToolStripMenuItem.Checked = true;
         }
 
     }

@@ -37,6 +37,7 @@ namespace sentience.core
         sentience_stereo_FAST stereovision_FAST;
         int currentAlgorithmType = 0;
         int adaptive_threshold = 0;
+        FASTlines line_detector = null;
 
         public sentience_stereo_interface()
         {
@@ -52,6 +53,13 @@ namespace sentience.core
         /// </summary>
         public void loadImage(Byte[] image_data, int width, int height, bool isLeftImage, int bytesPerPixel)
         {
+            if ((isLeftImage) && (currentAlgorithmType == 3))
+            {
+                if (line_detector == null) line_detector = new FASTlines();
+                line_detector.drawLines = false;
+                line_detector.Update(image_data, width, height);
+            }
+
             int j;
 
             if ((image_width != width) || (image_height != height))
@@ -110,6 +118,12 @@ namespace sentience.core
                                                  calibration_offset_x, calibration_offset_y, ref adaptive_threshold);
                         break;
                     }
+                case 3:  // contour based stereo
+                    {
+                        stereovision_contours.update(left_image, right_image, image_width, image_height,
+                                                     calibration_offset_x, calibration_offset_y);
+                        break;
+                    }
             }
         }
 
@@ -136,7 +150,7 @@ namespace sentience.core
         /// <param name="height"></param>
         public void getDisparityMap(Byte[] img, int width, int height, int threshold)
         {            
-            if (currentAlgorithmType == 1)
+            if ((currentAlgorithmType == 1) || (currentAlgorithmType == 3))
                 stereovision_contours.getDisparityMap(img, width, height, threshold);
         }
 
@@ -180,6 +194,17 @@ namespace sentience.core
                         {
                             features[i] = stereovision_FAST.selected_features[i];
                         }                        
+                        break;
+                    }
+                case 3:
+                    {
+                        // get features from the disparity map
+                        max = stereovision_contours.no_of_selected_features * 3;
+                        if (max > features.Length) max = features.Length;
+                        for (int i = 0; i < max; i++)
+                        {
+                            features[i] = stereovision_contours.selected_features[i];
+                        }
                         break;
                     }
             }
