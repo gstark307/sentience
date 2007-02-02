@@ -44,6 +44,62 @@ namespace sentience.core
         public Byte[] output_image = null;
         Byte[] mono_image;
 
+        private FASTcorner[] local_nonmax(FASTcorner[] corners, int radius_x, int radius_y)
+        {
+            FASTcorner[] corners2 = null;
+            if (corners != null)
+            {
+                for (int i = 0; i < corners.Length - 1; i++)
+                {
+                    FASTcorner c1 = corners[i];
+                    if (c1 != null)
+                    {
+                        for (int j = i + 1; j < corners.Length; j++)
+                        {
+                            if (i != j)
+                            {
+                                FASTcorner c2 = corners[j];
+                                if (c2 != null)
+                                {
+                                    int dx = c1.x - c2.x;
+                                    if ((dx > -radius_x) && (dx < radius_x))
+                                    {
+                                        int dy = c1.y - c2.y;
+                                        if ((dy > -radius_y) && (dy < radius_y))
+                                        {
+                                            if (c2.score < c1.score)
+                                            {
+                                                corners[j] = null;
+                                            }
+                                            else
+                                            {
+                                                corners[i] = null;
+                                                j = corners.Length;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                int count = 0;
+                for (int i = 0; i < corners.Length; i++)
+                    if (corners[i] != null) count++;
+
+                corners2 = new FASTcorner[count];
+                int n = 0;
+                for (int i = 0; i < corners.Length; i++)
+                    if (corners[i] != null)
+                    {
+                        corners2[n] = corners[i];
+                        n++;
+                    }
+            }
+            return (corners2);
+        }
+
         public void Update(Byte[] raw_image, int width, int height)
         {
             mono_image = util.monoImage(raw_image, width, height);
@@ -51,11 +107,12 @@ namespace sentience.core
             if (line_threshold == 0) line_threshold = 200;
             if (corner_threshold == 0) corner_threshold = 50;
             FASTcorner[] corners_all = FAST.fast_corner_detect_10(mono_image, width, height, corner_threshold);
-            corners = FAST.fast_nonmax(mono_image, width, height, corners_all, corner_threshold * 2, 0, 0);
+            FASTcorner[] corners1 = FAST.fast_nonmax(mono_image, width, height, corners_all, corner_threshold * 2, 0, 0);
+            corners = local_nonmax(corners1, width / 15, height / 15);
 
             if (corners != null)
             {
-                int no_of_feats = corners.Length;
+                int no_of_feats = corners1.Length;
                 if (no_of_feats < required_features / 2) corner_threshold -= 4;
                 if (no_of_feats > required_features) corner_threshold += 4;
 
@@ -126,14 +183,13 @@ namespace sentience.core
                             line_threshold -= 4;
                         if (no_of_lines > required_lines)
                             line_threshold += 8;
-                        if (line_threshold < 130) line_threshold = 130;
+                        if (line_threshold < 100) line_threshold = 100;
 
 
                         // detect the gravity angle
                         if (showGravity)
                         {
                             float gravity_angle = FAST.gravity_direction(lines);
-
                             if (drawLines)
                             {
                                 int pendulum_length = width / 8;
