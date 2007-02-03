@@ -67,7 +67,12 @@ namespace sentience.calibration
         ArrayList[] corners;
         int corners_index = 0;
 
-        const int no_of_images = 5;
+        float horizontal_separation_top = 0;
+        int horizontal_separation_top_hits = 0;
+        float horizontal_separation_bottom = 0;
+        int horizontal_separation_bottom_hits = 0;
+
+        const int no_of_images = 4;
         int binary_image_index = 0;
         bool[, ,] binary_image;
         bool[,] edges_binary;
@@ -76,11 +81,34 @@ namespace sentience.calibration
         int[,] vertical_magnitude;
         ArrayList horizontal_lines, vertical_lines;
 
+        private int averageIntensity(Byte[] img, int width, int height, int tx, int ty, int bx, int by)
+        {
+            int hits = 0;
+            int tot = 0;
+            for (int x = tx; x < bx; x++)
+            {
+                if ((x > -1) && (x < width) && (x != (tx+((bx-tx)/2))))
+                {
+                    for (int y = ty; y < by; y++)
+                    {
+                        if ((y > -1) && (y < height) && (y != (ty + ((by - ty) / 2))))
+                        {
+                            int n = (y * width) + x;
+                            tot += (255-img[n]);
+                            hits++;
+                        }
+                    }
+                }
+            }
+            if (hits > 0) tot /= hits;
+            return (tot);
+        }
+
         private void detectCorners(int width, int height)
         {
             if (corners == null)
             {
-                corners = new ArrayList[5];
+                corners = new ArrayList[8];
                 for (int i = 0; i < corners.Length; i++)
                     corners[i] = new ArrayList();
             }
@@ -112,11 +140,18 @@ namespace sentience.calibration
                                     {
                                         int cg_x = 0;
                                         int cg_y = 0;
-                                        localCG(calibration_image, width, height, (int)ix, (int)iy, 10, ref cg_x, ref cg_y);
-                                        calibration_point intersection_point = new calibration_point(cg_x, cg_y);
-                                        corners[corners_index].Add(intersection_point);
-                                        line1.intersections.Add(intersection_point);
-                                        line2.intersections.Add(intersection_point);                                        
+                                        int magnitude = localCG(calibration_image, width, height, (int)ix, (int)iy, 10, ref cg_x, ref cg_y);
+                                        if (magnitude > 50)
+                                        {
+                                            int av = averageIntensity(calibration_image, width, height, (int)ix - 10, (int)iy - 10, (int)ix + 10, (int)iy + 10);
+                                            if ((av < magnitude * 97 / 100) && (av < 170))
+                                            {
+                                                calibration_edge intersection_point = new calibration_edge(cg_x, cg_y, magnitude);
+                                                corners[corners_index].Add(intersection_point);
+                                                line1.intersections.Add(intersection_point);
+                                                line2.intersections.Add(intersection_point);
+                                            }
+                                        }
                                     }
                                 }
                                 prev_pt2 = pt2;
@@ -127,12 +162,29 @@ namespace sentience.calibration
                 }
             }
 
+            bool[,] coverage = new bool[width, height];
             for (int i = 0; i < corners.Length; i++)
             {
                 for (int j = 0; j < corners[i].Count; j++)
                 {
-                    calibration_point pt = (calibration_point)corners[i][j];
-                    util.drawCross(edges_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
+                    calibration_edge pt = (calibration_edge)corners[i][j];
+                    if (!coverage[pt.x, pt.y])
+                    {
+                        for (int xx = pt.x - 5; xx < pt.x + 5; xx++)
+                        {
+                            if ((xx > -1) && (xx < width))
+                            {
+                                for (int yy = pt.y - 5; yy < pt.y + 5; yy++)
+                                {
+                                    if ((yy > -1) && (yy < height))
+                                    {
+                                        coverage[xx, yy] = true;
+                                    }
+                                }
+                            }
+                        }
+                        util.drawCross(edges_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
+                    }
                 }
             }
         }
@@ -151,7 +203,7 @@ namespace sentience.calibration
 
         private void detectHorizontalEdges(Byte[] calibration_image, int width, int height, ArrayList edges, int min_magnitude)
         {
-            int inhibit_radius = width / 20;
+            int inhibit_radius = width / separation_factor;
             int search_radius = 2;
             ArrayList temp_edges = new ArrayList();
 
@@ -230,7 +282,7 @@ namespace sentience.calibration
 
         private void detectVerticalEdges(Byte[] calibration_image, int width, int height, ArrayList edges, int min_magnitude)
         {
-            int inhibit_radius = height / 20;
+            int inhibit_radius = height / separation_factor;
             int search_radius = 2;
             ArrayList temp_edges = new ArrayList();
 
@@ -317,7 +369,7 @@ namespace sentience.calibration
         /// <param name="radius"></param>
         /// <param name="cg_x"></param>
         /// <param name="cg_y"></param>
-        private void localCG(Byte[] img, int width, int height, int x, int y, int radius,
+        private int localCG(Byte[] img, int width, int height, int x, int y, int radius,
                              ref int cg_x, ref int cg_y)
         {
             cg_x = 0;
@@ -358,6 +410,7 @@ namespace sentience.calibration
                     }
                 }
             }
+            return (max_score / (radius*4));
         }
 
         private void updateEdgesImage(int width, int height)
@@ -565,11 +618,40 @@ namespace sentience.calibration
             int line_width = 5;
             int start_y = height / 20;
             int end_y = height - start_y;
+            int prev_x_top = 0;
+            int prev_x_bottom = 0;
             
             for (int x = 0; x < width; x++)
             {
+                if (horizontal_magnitude[1, x] > 0)
+                {
+                    if (prev_x_bottom > 0)
+                    {
+                        horizontal_separation_bottom += (x - prev_x_bottom);
+                        horizontal_separation_bottom_hits++;
+                        if (horizontal_separation_bottom_hits > 100)
+                        {
+                            horizontal_separation_bottom /= 2;
+                            horizontal_separation_bottom_hits /= 2;
+                        }
+                    }
+                    prev_x_bottom = x;
+                }
+                
                 if (horizontal_magnitude[0, x] > 0)
                 {
+                    if (prev_x_top > 0)
+                    {
+                        horizontal_separation_top += (x - prev_x_top);
+                        horizontal_separation_top_hits++;
+                        if (horizontal_separation_top_hits > 100)
+                        {
+                            horizontal_separation_top /= 2;
+                            horizontal_separation_top_hits /= 2;
+                        }
+                    }
+                    prev_x_top = x;
+
                     int max_score = (end_y-start_y)*8/10;
                     int winner = -1;
                     for (int x2 = x - search_width; x2 < x + search_width; x2++)
