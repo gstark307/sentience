@@ -819,7 +819,7 @@ namespace sentience.core
                     x1 = ray1.vertices[1].x + xx;
                     y1 = ray1.vertices[1].y + yy;
 
-                    if (intersection(x0, y0, x1, y1, x2, y2, x3, y3, ref xi, ref yi))
+                    if (util.intersection(x0, y0, x1, y1, x2, y2, x3, y3, ref xi, ref yi))
                     {
                         //calculate vertical separation at the intersection point
                         y0 = ray1.vertices[0].z;
@@ -833,8 +833,8 @@ namespace sentience.core
                         y5 = 1000;
 
                         float xi2 = 0, zi1 = 0, zi2 = 0;
-                        intersection(x0, y0, x1, y1, x4, y4, x5, y5, ref xi2, ref zi1);
-                        intersection(x2, y2, x3, y3, x4, y4, x5, y5, ref xi2, ref zi2);
+                        util.intersection(x0, y0, x1, y1, x4, y4, x5, y5, ref xi2, ref zi1);
+                        util.intersection(x2, y2, x3, y3, x4, y4, x5, y5, ref xi2, ref zi2);
 
                         float vertical_separation = Math.Abs(zi2 - zi1);
                         if (vertical_separation <= w)
@@ -855,80 +855,6 @@ namespace sentience.core
 
 
 
-        /// <summary>
-        /// does the line intersect with the given line?
-        /// </summary>
-        /// <param name="x0"></param>
-        /// <param name="y0"></param>
-        /// <param name="x1"></param>
-        /// <param name="y1"></param>
-        /// <param name="xi">intersection x coordinate</param>
-        /// <param name="yi">intersection y coordinate</param>
-        /// <returns></returns>
-        public static bool intersection(float x0, float y0, float x1, float y1,
-                                  float x2, float y2, float x3, float y3,
-                                  ref float xi, ref float yi)
-        {
-            float a1, b1, c1,         //constants of linear equations
-                  a2, b2, c2,
-                  det_inv,            //the inverse of the determinant of the coefficient        
-                  m1, m2, dm;         //the gradients of each line
-            bool insideLine = false;  //is the intersection along the lines given, or outside them
-            float tx, ty, bx, by;
-
-            //compute gradients, note the cludge for infinity, however, this will
-            //be close enough
-            if ((x1 - x0) != 0)
-                m1 = (y1 - y0) / (x1 - x0);
-            else
-                m1 = (float)1e+10;   //close, but no cigar
-
-            if ((x3 - x2) != 0)
-                m2 = (y3 - y2) / (x3 - x2);
-            else
-                m2 = (float)1e+10;   //close, but no cigar
-
-            dm = (float)Math.Abs(m1 - m2);
-            if (dm > 0.01f)
-            {
-                //compute constants
-                a1 = m1;
-                a2 = m2;
-
-                b1 = -1;
-                b2 = -1;
-
-                c1 = (y0 - m1 * x0);
-                c2 = (y2 - m2 * x2);
-
-                //compute the inverse of the determinate
-                det_inv = 1 / (a1 * b2 - a2 * b1);
-
-                //use Kramers rule to compute xi and yi
-                xi = ((b1 * c2 - b2 * c1) * det_inv);
-                yi = ((a2 * c1 - a1 * c2) * det_inv);
-
-                //is the intersection inside the line or outside it?
-                if (x0 < x1) { tx = x0; bx = x1; } else { tx = x1; bx = x0; }
-                if (y0 < y1) { ty = y0; by = y1; } else { ty = y1; by = y0; }
-                if ((xi >= tx) && (xi <= bx) && (yi >= ty) && (yi <= by))
-                {
-                    if (x2 < x3) { tx = x2; bx = x3; } else { tx = x3; bx = x2; }
-                    if (y2 < y3) { ty = y2; by = y3; } else { ty = y3; by = y2; }
-                    if ((xi >= tx) && (xi <= bx) && (yi >= ty) && (yi <= by))
-                    {
-                        insideLine = true;
-                    }
-                }
-            }
-            else
-            {
-                //parallel (or parallel-ish) lines, return some indicative value
-                xi = 9999;
-            }
-
-            return (insideLine);
-        }
 
         #region "gaussian functions"
 
@@ -1332,16 +1258,16 @@ namespace sentience.core
             if (ray_uncertainty < 0.5f) ray_uncertainty = 0.5f;
             float uncertainty = sigma * d * ray_uncertainty;
 
-            intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
+            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 - uncertainty, yy,
                          ref x_start, ref y_start);
-            intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
+            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 + uncertainty, yy,
                          ref x_end, ref y_end);
-            intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
+            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 - uncertainty, yy,
                          ref x_left, ref y_left);
-            intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
+            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 + uncertainty, yy,
                          ref x_right, ref y_right);
 

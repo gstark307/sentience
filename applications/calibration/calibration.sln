@@ -1,17 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual C# Express 2005
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RTstereo", "GUI\RTstereo.csproj", "{053B93AC-2D2C-4929-A9DE-4E246FC91C31}"
-	ProjectSection(ProjectDependencies) = postProject
-		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538} = {E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}
-		{8C0015DB-69E1-46E7-8705-3A4F8BE2E5E7} = {8C0015DB-69E1-46E7-8705-3A4F8BE2E5E7}
-		{CE009BFA-5EF6-4153-B2A1-2FA79698A9AE} = {CE009BFA-5EF6-4153-B2A1-2FA79698A9AE}
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sentcore", "..\..\sentcore\sentcore.csproj", "{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "calibration", "GUI\calibration.csproj", "{053B93AC-2D2C-4929-A9DE-4E246FC91C31}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectX.Capture", "..\..\directx\DirectX.Capture\DirectX.Capture.csproj", "{8C0015DB-69E1-46E7-8705-3A4F8BE2E5E7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DShowNET", "..\..\directx\DShowNET\DShowNET.csproj", "{CE009BFA-5EF6-4153-B2A1-2FA79698A9AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sentcore", "..\..\sentcore\sentcore.csproj", "{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +18,6 @@ Global
 		{053B93AC-2D2C-4929-A9DE-4E246FC91C31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{053B93AC-2D2C-4929-A9DE-4E246FC91C31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{053B93AC-2D2C-4929-A9DE-4E246FC91C31}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8C0015DB-69E1-46E7-8705-3A4F8BE2E5E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8C0015DB-69E1-46E7-8705-3A4F8BE2E5E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C0015DB-69E1-46E7-8705-3A4F8BE2E5E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -35,6 +26,10 @@ Global
 		{CE009BFA-5EF6-4153-B2A1-2FA79698A9AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE009BFA-5EF6-4153-B2A1-2FA79698A9AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE009BFA-5EF6-4153-B2A1-2FA79698A9AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

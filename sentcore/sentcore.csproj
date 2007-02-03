@@ -35,6 +35,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="calibration.cs" />
     <Compile Include="FASTlines.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
     <Compile Include="FAST.cs" />

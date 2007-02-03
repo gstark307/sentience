@@ -1,6 +1,5 @@
 /*
-    Sentience 3D Perception System
-    Copyright (C) 2000-2007 Bob Mottram
+    Copyright (C) 2007  Bob Mottram
     fuzzgun@gmail.com
 
     This program is free software; you can redistribute it and/or modify
@@ -15,95 +14,20 @@
 
     You should have received a copy of the GNU General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. 
 */
+
 
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
 
-namespace sentience.core
+namespace WindowsApplication1
 {
     public class util
     {
-        /// <summary>
-        /// does the line intersect with the given line?
-        /// </summary>
-        /// <param name="x0"></param>
-        /// <param name="y0"></param>
-        /// <param name="x1"></param>
-        /// <param name="y1"></param>
-        /// <param name="xi">intersection x coordinate</param>
-        /// <param name="yi">intersection y coordinate</param>
-        /// <returns></returns>
-        public static bool intersection(float x0, float y0, float x1, float y1,
-                                  float x2, float y2, float x3, float y3,
-                                  ref float xi, ref float yi)
-        {
-            float a1, b1, c1,         //constants of linear equations
-                  a2, b2, c2,
-                  det_inv,            //the inverse of the determinant of the coefficient        
-                  m1, m2, dm;         //the gradients of each line
-            bool insideLine = false;  //is the intersection along the lines given, or outside them
-            float tx, ty, bx, by;
 
-            //compute gradients, note the cludge for infinity, however, this will
-            //be close enough
-            if ((x1 - x0) != 0)
-                m1 = (y1 - y0) / (x1 - x0);
-            else
-                m1 = (float)1e+10;   //close, but no cigar
-
-            if ((x3 - x2) != 0)
-                m2 = (y3 - y2) / (x3 - x2);
-            else
-                m2 = (float)1e+10;   //close, but no cigar
-
-            dm = (float)Math.Abs(m1 - m2);
-            if (dm > 0.01f)
-            {
-                //compute constants
-                a1 = m1;
-                a2 = m2;
-
-                b1 = -1;
-                b2 = -1;
-
-                c1 = (y0 - m1 * x0);
-                c2 = (y2 - m2 * x2);
-
-                //compute the inverse of the determinate
-                det_inv = 1 / (a1 * b2 - a2 * b1);
-
-                //use Kramers rule to compute xi and yi
-                xi = ((b1 * c2 - b2 * c1) * det_inv);
-                yi = ((a2 * c1 - a1 * c2) * det_inv);
-
-                //is the intersection inside the line or outside it?
-                if (x0 < x1) { tx = x0; bx = x1; } else { tx = x1; bx = x0; }
-                if (y0 < y1) { ty = y0; by = y1; } else { ty = y1; by = y0; }
-                if ((xi >= tx) && (xi <= bx) && (yi >= ty) && (yi <= by))
-                {
-                    if (x2 < x3) { tx = x2; bx = x3; } else { tx = x3; bx = x2; }
-                    if (y2 < y3) { ty = y2; by = y3; } else { ty = y3; by = y2; }
-                    if ((xi >= tx) && (xi <= bx) && (yi >= ty) && (yi <= by))
-                    {
-                        insideLine = true;
-                    }
-                }
-            }
-            else
-            {
-                //parallel (or parallel-ish) lines, return some indicative value
-                xi = 9999;
-            }
-
-            return (insideLine);
-        }
-
-
-        
         public static Byte[] loadFromBitmap(String filename, int image_width, int image_height, int bytes_per_pixel)
         {
             Byte[] bmp = new Byte[image_width * image_height * bytes_per_pixel];
@@ -120,12 +44,12 @@ namespace sentience.core
                 {
                     for (int x = 0; x < image_width; x++)
                     {
-                        n2 = (((image_height-1-y) * image_width) + x) * 3;
+                        n2 = (((image_height - 1 - y) * image_width) + x) * 3;
                         for (int c = 0; c < bytes_per_pixel; c++)
                         {
-                            bmp[n2+c] = data[n];
+                            bmp[n2 + c] = data[n];
                             n++;
-                        }                        
+                        }
                     }
                 }
                 binfile.Close();
@@ -133,7 +57,7 @@ namespace sentience.core
             }
             return (bmp);
         }
-        
+
 
         public static Byte[] loadFromPGM(String filename, int image_width, int image_height, int bytes_per_pixel)
         {
@@ -167,32 +91,24 @@ namespace sentience.core
 
 
         public static void drawBox(Byte[] img, int img_width, int img_height,
-                                   int x, int y, int radius, int r, int g, int b, int line_width)
+                                   int x, int y, int rotation, int radius,
+                                   int r, int g, int b)
         {
-            int radius_y = radius * img_width / img_height;
-            int tx = x - radius;
-            int ty = y - radius_y;
-            int bx = x + radius;
-            int by = y + radius_y;
-            drawLine(img, img_width, img_height, tx, ty, bx, ty, r, g, b, line_width, false);
-            drawLine(img, img_width, img_height, bx, ty, bx, by, r, g, b, line_width, false);
-            drawLine(img, img_width, img_height, tx, by, bx, by, r, g, b, line_width, false);
-            drawLine(img, img_width, img_height, tx, by, tx, ty, r, g, b, line_width, false);
+            int xx, yy, prev_xx=0, prev_yy=0;
+            float ang = rotation * (float)Math.PI / 180.0f;
+            ang -= ((float)Math.PI / 4);
+
+            for (int i = 0; i < 5; i++)
+            {
+                xx = x + (int)(radius * Math.Sin(ang));
+                yy = y + (int)(radius * Math.Cos(ang));
+                if (i > 0) drawLine(img, img_width, img_height, prev_xx, prev_yy, xx, yy, r, g, b, 0, false);
+                ang += ((float)Math.PI / 2);
+                prev_xx = xx;
+                prev_yy = yy;
+            }
         }
 
-        public static void drawCross(Byte[] img, int img_width, int img_height,
-                                     int x, int y, int radius, int r, int g, int b, int line_width)
-        {
-            int radius_y = radius * img_width / img_height;
-            int tx = x - radius;
-            int ty = y - radius_y;
-            int bx = x + radius;
-            int by = y + radius_y;
-            drawLine(img, img_width, img_height, x, ty, x, by, r, g, b, line_width, false);
-            drawLine(img, img_width, img_height, tx, y, bx, y, r, g, b, line_width, false);
-        }
-
-        
         //---------------------------------------------------------------------------------------------
         //draw a line between two points in the given image
         //---------------------------------------------------------------------------------------------
@@ -290,7 +206,7 @@ namespace sentience.core
         public static Byte[] monoImage(Byte[] img_colour, int img_width, int img_height)
         {
             Byte[] mono_image = new Byte[img_width * img_height];
-            int n=0;
+            int n = 0;
 
             for (int i = 0; i < img_width * img_height * 3; i += 3)
             {
@@ -304,6 +220,7 @@ namespace sentience.core
             }
             return (mono_image);
         }
+
 
     }
 }
