@@ -47,6 +47,7 @@ namespace sentience.calibration
     {        
         public int magnitude;
         public bool enabled;
+        public int hits = 1;
 
         public calibration_edge(int x, int y, int magnitude) : base(x,y)
         {
@@ -59,6 +60,7 @@ namespace sentience.calibration
     {
         public int separation_factor = 15;
         public bool showLines = false;
+        public bool showEdges = false;
 
         Byte[] calibration_image;
         public Byte[] edges_image;
@@ -108,7 +110,7 @@ namespace sentience.calibration
         {
             if (corners == null)
             {
-                corners = new ArrayList[8];
+                corners = new ArrayList[30];
                 for (int i = 0; i < corners.Length; i++)
                     corners[i] = new ArrayList();
             }
@@ -138,12 +140,12 @@ namespace sentience.calibration
                                                           (float)prev_pt2.x, (float)prev_pt2.y, (float)pt2.x, (float)pt2.y,
                                                           ref ix, ref iy))
                                     {
-                                        int cg_x = 0;
-                                        int cg_y = 0;
+                                        int cg_x = (int)ix;
+                                        int cg_y = (int)iy;
                                         int magnitude = localCG(calibration_image, width, height, (int)ix, (int)iy, 10, ref cg_x, ref cg_y);
                                         if (magnitude > 50)
                                         {
-                                            int av = averageIntensity(calibration_image, width, height, (int)ix - 10, (int)iy - 10, (int)ix + 10, (int)iy + 10);
+                                            int av = averageIntensity(calibration_image, width, height, cg_x - 10, cg_y - 10, cg_x + 10, cg_y + 10);
                                             if ((av < magnitude * 97 / 100) && (av < 170))
                                             {
                                                 calibration_edge intersection_point = new calibration_edge(cg_x, cg_y, magnitude);
@@ -162,31 +164,50 @@ namespace sentience.calibration
                 }
             }
 
-            bool[,] coverage = new bool[width, height];
+            calibration_edge[,] coverage = new calibration_edge[width, height];
+            ArrayList detected_corners = new ArrayList();
             for (int i = 0; i < corners.Length; i++)
             {
                 for (int j = 0; j < corners[i].Count; j++)
                 {
                     calibration_edge pt = (calibration_edge)corners[i][j];
-                    if (!coverage[pt.x, pt.y])
+                    if (coverage[pt.x, pt.y] == null)
                     {
-                        for (int xx = pt.x - 5; xx < pt.x + 5; xx++)
+                        int radius = 10;
+                        for (int xx = pt.x - radius; xx < pt.x + radius; xx++)
                         {
                             if ((xx > -1) && (xx < width))
                             {
-                                for (int yy = pt.y - 5; yy < pt.y + 5; yy++)
+                                for (int yy = pt.y - radius; yy < pt.y + radius; yy++)
                                 {
                                     if ((yy > -1) && (yy < height))
                                     {
-                                        coverage[xx, yy] = true;
+                                        coverage[xx, yy] = pt;
                                     }
                                 }
                             }
                         }
-                        util.drawCross(edges_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
+                        detected_corners.Add(pt);                        
+                    }
+                    else
+                    {
+                        int xx = pt.x;
+                        int yy = pt.y;
+                        coverage[xx, yy].x += xx;
+                        coverage[xx, yy].y += yy;
+                        coverage[xx, yy].hits++;
                     }
                 }
             }
+            for (int i = 0; i < detected_corners.Count; i++)
+            {
+                calibration_edge pt = (calibration_edge)detected_corners[i];
+                pt.x /= pt.hits;
+                pt.y /= pt.hits;
+                pt.hits = 1;
+                util.drawCross(edges_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
+            }
+
         }
 
         /// <summary>
@@ -369,11 +390,13 @@ namespace sentience.calibration
         /// <param name="radius"></param>
         /// <param name="cg_x"></param>
         /// <param name="cg_y"></param>
+        /*
         private int localCG(Byte[] img, int width, int height, int x, int y, int radius,
                              ref int cg_x, ref int cg_y)
         {
             cg_x = 0;
             cg_y = 0;
+            int tot;
             int max_score = 0;
             for (int xx = x - radius; xx < x + radius; xx++)
             {
@@ -388,16 +411,23 @@ namespace sentience.calibration
                             {
                                 if ((xx2 > -1) && (xx2 < width))
                                 {
-                                    int n = (yy * width) + xx2;
-                                    score += (255 - img[n]);
+                                    if (edges_binary[xx2, yy])
+                                    {
+                                        score += 255;
+                                    }
+
+                                    //int n = (yy * width) + xx2;
+                                    //score += (255 - img[n]);
                                 }
                             }
                             for (int yy2 = yy - radius; yy2 < yy + radius; yy2++)
                             {
                                 if ((yy2 > -1) && (yy2 < height))
                                 {
-                                    int n = (yy2 * width) + xx;
-                                    score += (255 - img[n]);
+                                    if (edges_binary[xx, yy2]) score += 255;
+
+                                    //int n = (yy2 * width) + xx;
+                                    //score += (255 - img[n]);
                                 }
                             }
                             if (score > max_score)
@@ -412,10 +442,77 @@ namespace sentience.calibration
             }
             return (max_score / (radius*4));
         }
+        */
+
+
+        private int localCG(Byte[] img, int width, int height, int x, int y, int radius,
+                             ref int cg_x, ref int cg_y)
+        {
+            cg_x = 0;
+            cg_y = 0;
+            int tot = 0;
+            int max_score = 0;
+            for (int xx = x - radius; xx < x + radius; xx++)
+            {
+                if ((xx > -1) && (xx < width))
+                {
+                    for (int yy = y - radius; yy < y + radius; yy++)
+                    {
+                        if ((yy > -1) && (yy < height))
+                        {
+                            int score = 0;
+                            for (int xx2 = xx - radius; xx2 < xx + radius; xx2++)
+                            {
+                                if ((xx2 > -1) && (xx2 < width))
+                                {
+                                    if (edges_binary[xx2, yy])
+                                    {
+                                        int n = (yy * width) + xx2;
+                                        score += (255 - img[n]);
+                                    }
+                                }
+                            }
+                            for (int yy2 = yy - radius; yy2 < yy + radius; yy2++)
+                            {
+                                if ((yy2 > -1) && (yy2 < height))
+                                {
+                                    if (edges_binary[xx, yy2])
+                                    {
+                                        int n = (yy2 * width) + xx;
+                                        score += (255 - img[n]);
+                                    }
+                                }
+                            }
+
+                            score /= (radius * 4);
+                            score *= score;
+                            cg_x += (score * xx);
+                            cg_y += (score * yy);
+                            tot += score;
+
+                            if (score > max_score)
+                            {
+                                max_score = score;
+                            }
+                        }
+                    }
+                }
+            }
+            if (tot > 0)
+            {
+                cg_x = (cg_x / tot);
+                cg_y = (cg_y / tot);
+            }
+            return (max_score);
+        }
+
 
         private void updateEdgesImage(int width, int height)
         {
-            for (int x = 5; x < width-5; x++)
+            int start_x = width / 5;
+            int end_x = width - start_x;
+
+            for (int x = start_x; x < end_x; x++)
             {
                 for (int y = 5; y < height-5; y++)
                 {
@@ -453,12 +550,13 @@ namespace sentience.calibration
                             }
                         }
 
-                        /*
-                        int n = ((y * width) + x) * 3;
-                        edges_image[n] = 0;
-                        edges_image[n + 1] = (Byte)255;
-                        edges_image[n + 2] = 0;
-                         */
+                        if (showEdges)
+                        {
+                            int n = ((y * width) + x) * 3;
+                            edges_image[n] = 0;
+                            edges_image[n + 1] = (Byte)255;
+                            edges_image[n + 2] = 0;
+                        }
                     }
                     else edges_binary[x, y] = false;
                 }
