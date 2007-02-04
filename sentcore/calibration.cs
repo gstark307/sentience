@@ -76,8 +76,10 @@ namespace sentience.calibration
         int horizontal_separation_top_hits = 0;
         float horizontal_separation_bottom = 0;
         int horizontal_separation_bottom_hits = 0;
-        float vertical_separation = 0;
-        int vertical_separation_hits = 0;
+        float vertical_separation_top = 0;
+        int vertical_separation_top_hits = 0;
+        float vertical_separation_bottom = 0;
+        int vertical_separation_bottom_hits = 0;
         int closest_to_centreline_x = 0;
         int closest_to_centreline_y = 0;
         int av_centreline_x = 0;
@@ -703,14 +705,16 @@ namespace sentience.calibration
                 if (centre_adjust_x > av_separation_x / 2) centre_adjust_x -= (av_separation_x / 2);
                 grid_x = -(int)Math.Round(((((image_x - (width / 2.0)) / (double)grid_dx)) + 0.5 + (centre_adjust_x / (double)av_separation_x)));
 
-                int av_separation_y = av_separation_x; // *height / width;
+                int av_separation_y = av_separation_x;
                 float fraction = separation_top / (float)separation_bottom;
+                //fraction = fraction * width / height;
                 int min_separation = (int)(av_separation_y * (1.0f - (fraction / 2)));
-                int max_separation = (int)(av_separation_y * (1.0f + (fraction / 2)));
+                int max_separation = (int)(av_separation_y * (1.0f - (fraction / 2) + (fraction * fraction)));
                 int grid_dy = min_separation + (image_y * (max_separation - min_separation) / height);
+
                 int centre_adjust_y = av_centreline_y / av_centreline_y_hits;
                 if (centre_adjust_y > av_separation_y / 2) centre_adjust_y -= (av_separation_y / 2);
-                grid_y = -(int)Math.Round(((((image_y - (height / 2.0)) / (double)grid_dy)) + 0.0) + (centre_adjust_y / (double)av_separation_y) + 0.5);
+                grid_y = -(int)Math.Round(((((image_y - (height / 2.0)) / (double)grid_dy)) + 0.0) - 0.0 + (centre_adjust_y / (double)av_separation_y));
             }
         }
 
@@ -812,6 +816,12 @@ namespace sentience.calibration
             int end_x = width - start_x;
             int prev_y_left = 0;
             int prev_y_right = 0;
+            bool first_right = true;
+            bool first_left = true;
+            int curr_separation_left = 0;
+            int max_separation_left = 0;
+            int curr_separation_right = 0;
+            int max_separation_right = 0;
 
             closest_to_centreline_y = 0;
             for (int y = 0; y < height; y++)
@@ -825,12 +835,19 @@ namespace sentience.calibration
 
                     if (prev_y_right > 0)
                     {
-                        vertical_separation += (y - prev_y_right);
-                        vertical_separation_hits++;
-                        if (vertical_separation_hits > 50)
+                        curr_separation_right = y - prev_y_right;
+                        if (curr_separation_right > max_separation_right)
+                            max_separation_right = curr_separation_right;
+                        if (first_right)
                         {
-                            vertical_separation /= 2;
-                            vertical_separation_hits /= 2;
+                            first_right = false;
+                            vertical_separation_top += curr_separation_right;
+                            vertical_separation_top_hits++;
+                            if (vertical_separation_top_hits > 50)
+                            {
+                                vertical_separation_top /= 2;
+                                vertical_separation_top_hits /= 2;
+                            }
                         }
                     }
                     prev_y_right = y;
@@ -845,12 +862,19 @@ namespace sentience.calibration
 
                     if (prev_y_left > 0)
                     {
-                        vertical_separation += (y - prev_y_left);
-                        vertical_separation_hits++;
-                        if (vertical_separation_hits > 50)
+                        curr_separation_left = y - prev_y_left;
+                        if (curr_separation_left > max_separation_left)
+                            max_separation_left = curr_separation_left;
+                        if (first_left)
                         {
-                            vertical_separation /= 2;
-                            vertical_separation_hits /= 2;
+                            first_left = false;
+                            vertical_separation_top += curr_separation_left;
+                            vertical_separation_top_hits++;
+                            if (vertical_separation_top_hits > 50)
+                            {
+                                vertical_separation_top /= 2;
+                                vertical_separation_top_hits /= 2;
+                            }
                         }
                     }
                     prev_y_left = y;
@@ -889,6 +913,28 @@ namespace sentience.calibration
                     }
                 }
             }
+
+            if (max_separation_right > 0)
+            {
+                vertical_separation_bottom += max_separation_right;
+                vertical_separation_bottom_hits++;
+                if (vertical_separation_bottom_hits > 50)
+                {
+                    vertical_separation_bottom /= 2;
+                    vertical_separation_bottom_hits /= 2;
+                }
+            }
+            if (max_separation_left > 0)
+            {
+                vertical_separation_bottom += max_separation_left;
+                vertical_separation_bottom_hits++;
+                if (vertical_separation_bottom_hits > 50)
+                {
+                    vertical_separation_bottom /= 2;
+                    vertical_separation_bottom_hits /= 2;
+                }
+            }
+
         }
 
         /// <summary>
@@ -945,11 +991,18 @@ namespace sentience.calibration
         private void showVerticalCentreline(Byte[] img, int width, int height)
         {
             int x = width/2;
-            int y = height/15;
+            int y = height/12;
             util.drawLine(img, width, height, x - 2, 0, x, y, 100, 100, 255, 0, false);
             util.drawLine(img, width, height, x, y, x + 2, 0, 100, 100, 255, 0, false);
             util.drawLine(img, width, height, x - 2, height-1, x, height-y, 100, 100, 255, 0, false);
             util.drawLine(img, width, height, x, height-y, x + 2, height-1, 100, 100, 255, 0, false);
+
+            x = width / 12;
+            y = height / 2;
+            util.drawLine(img, width, height, 0, y - 2, x, y, 100, 100, 255, 0, false);
+            util.drawLine(img, width, height, x, y, 0, y + 2, 100, 100, 255, 0, false);
+            util.drawLine(img, width, height, width-1, y - 2, width-x, y, 100, 100, 255, 0, false);
+            util.drawLine(img, width, height, width-x, y, width-1, y + 2, 100, 100, 255, 0, false);
         }
 
 
