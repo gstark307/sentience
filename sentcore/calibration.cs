@@ -44,10 +44,11 @@ namespace sentience.calibration
     }
 
     public class calibration_edge : calibration_point
-    {        
+    {
         public int magnitude;
         public bool enabled;
         public int hits = 1;
+        public int grid_x, grid_y;
 
         public calibration_edge(int x, int y, int magnitude) : base(x,y)
         {
@@ -66,13 +67,23 @@ namespace sentience.calibration
         public Byte[] edges_image;
         ArrayList edges_horizontal;
         ArrayList edges_vertical;
+        ArrayList detected_corners;
         ArrayList[] corners;
+        calibration_edge[,] grid;
         int corners_index = 0;
 
         float horizontal_separation_top = 0;
         int horizontal_separation_top_hits = 0;
         float horizontal_separation_bottom = 0;
         int horizontal_separation_bottom_hits = 0;
+        float vertical_separation = 0;
+        int vertical_separation_hits = 0;
+        int closest_to_centreline_x = 0;
+        int closest_to_centreline_y = 0;
+        int av_centreline_x = 0;
+        int av_centreline_x_hits = 0;
+        int av_centreline_y = 0;
+        int av_centreline_y_hits = 0;
 
         const int no_of_images = 4;
         int binary_image_index = 0;
@@ -143,15 +154,23 @@ namespace sentience.calibration
                                         int cg_x = (int)ix;
                                         int cg_y = (int)iy;
                                         int magnitude = localCG(calibration_image, width, height, (int)ix, (int)iy, 10, ref cg_x, ref cg_y);
-                                        if (magnitude > 50)
+                                        //if (magnitude > 10)
                                         {
                                             int av = averageIntensity(calibration_image, width, height, cg_x - 10, cg_y - 10, cg_x + 10, cg_y + 10);
-                                            if ((av < magnitude * 97 / 100) && (av < 170))
+                                            //if ((av < magnitude * 97 / 100) && (av < 170))
+                                            if (av < 170)
                                             {
                                                 calibration_edge intersection_point = new calibration_edge(cg_x, cg_y, magnitude);
+
+                                                // get the grid coordinate of this corner
+                                                int grid_x = 0, grid_y = 0;
+                                                getGridCoordinate(cg_x, cg_y, width, height, ref grid_x, ref grid_y);
+
+                                                intersection_point.grid_x = grid_x;
+                                                intersection_point.grid_y = grid_y;
                                                 corners[corners_index].Add(intersection_point);
                                                 line1.intersections.Add(intersection_point);
-                                                line2.intersections.Add(intersection_point);
+                                                line2.intersections.Add(intersection_point);                                                
                                             }
                                         }
                                     }
@@ -164,13 +183,20 @@ namespace sentience.calibration
                 }
             }
 
+            int grid_tx=9999, grid_ty=9999, grid_bx=0, grid_by=0;
             calibration_edge[,] coverage = new calibration_edge[width, height];
-            ArrayList detected_corners = new ArrayList();
+            detected_corners = new ArrayList();
             for (int i = 0; i < corners.Length; i++)
             {
                 for (int j = 0; j < corners[i].Count; j++)
                 {
                     calibration_edge pt = (calibration_edge)corners[i][j];
+
+                    if (pt.grid_x < grid_tx) grid_tx = pt.grid_x;
+                    if (pt.grid_y < grid_ty) grid_ty = pt.grid_y;
+                    if (pt.grid_x > grid_bx) grid_bx = pt.grid_x;
+                    if (pt.grid_y > grid_by) grid_by = pt.grid_y;
+                    
                     if (coverage[pt.x, pt.y] == null)
                     {
                         int radius = 10;
@@ -187,7 +213,7 @@ namespace sentience.calibration
                                 }
                             }
                         }
-                        detected_corners.Add(pt);                        
+                        detected_corners.Add(pt);
                     }
                     else
                     {
@@ -196,16 +222,46 @@ namespace sentience.calibration
                         coverage[xx, yy].x += xx;
                         coverage[xx, yy].y += yy;
                         coverage[xx, yy].hits++;
+                        coverage[xx, yy].grid_x = pt.grid_x;
+                        coverage[xx, yy].grid_y = pt.grid_y;
                     }
                 }
             }
+
+            grid = null;
+            if ((grid_bx > grid_tx) && (grid_by > grid_ty))
+            {
+                grid = new calibration_edge[grid_bx - grid_tx+1, grid_by - grid_ty+1];
+            }
+
+
             for (int i = 0; i < detected_corners.Count; i++)
             {
                 calibration_edge pt = (calibration_edge)detected_corners[i];
                 pt.x /= pt.hits;
                 pt.y /= pt.hits;
                 pt.hits = 1;
-                util.drawCross(edges_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
+                pt.grid_x -= grid_tx;
+                pt.grid_y -= grid_ty;
+                if (grid != null)
+                {
+                    grid[pt.grid_x, pt.grid_y] = pt;
+                }
+            }
+
+            if (grid != null)
+            {
+                for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+                //for (int grid_x = 2; grid_x < 3; grid_x++)
+                {
+                    for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
+                    //for (int grid_y = 1; grid_y < 2; grid_y++)
+                    {
+                        calibration_edge pt = (calibration_edge)grid[grid_x, grid_y];
+                        if (pt != null)
+                            util.drawCross(edges_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
+                    }
+                }
             }
 
         }
@@ -379,131 +435,42 @@ namespace sentience.calibration
             }
         }
 
-        /// <summary>
-        /// returns the local centre of gravity
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="radius"></param>
-        /// <param name="cg_x"></param>
-        /// <param name="cg_y"></param>
-        /*
-        private int localCG(Byte[] img, int width, int height, int x, int y, int radius,
-                             ref int cg_x, ref int cg_y)
-        {
-            cg_x = 0;
-            cg_y = 0;
-            int tot;
-            int max_score = 0;
-            for (int xx = x - radius; xx < x + radius; xx++)
-            {
-                if ((xx > -1) && (xx < width))
-                {
-                    for (int yy = y - radius; yy < y + radius; yy++)
-                    {
-                        if ((yy > -1) && (yy < height))
-                        {
-                            int score = 0;
-                            for (int xx2 = xx - radius; xx2 < xx + radius; xx2++)
-                            {
-                                if ((xx2 > -1) && (xx2 < width))
-                                {
-                                    if (edges_binary[xx2, yy])
-                                    {
-                                        score += 255;
-                                    }
-
-                                    //int n = (yy * width) + xx2;
-                                    //score += (255 - img[n]);
-                                }
-                            }
-                            for (int yy2 = yy - radius; yy2 < yy + radius; yy2++)
-                            {
-                                if ((yy2 > -1) && (yy2 < height))
-                                {
-                                    if (edges_binary[xx, yy2]) score += 255;
-
-                                    //int n = (yy2 * width) + xx;
-                                    //score += (255 - img[n]);
-                                }
-                            }
-                            if (score > max_score)
-                            {
-                                max_score = score;
-                                cg_x = xx;
-                                cg_y = yy;
-                            }
-                        }
-                    }
-                }
-            }
-            return (max_score / (radius*4));
-        }
-        */
-
-
         private int localCG(Byte[] img, int width, int height, int x, int y, int radius,
                              ref int cg_x, ref int cg_y)
         {
             cg_x = 0;
             cg_y = 0;
             int tot = 0;
-            int max_score = 0;
+            int hits = 0;
+            int score = 0;
             for (int xx = x - radius; xx < x + radius; xx++)
             {
-                if ((xx > -1) && (xx < width))
+                if ((xx > -1) && (xx < width-1))
                 {
                     for (int yy = y - radius; yy < y + radius; yy++)
                     {
-                        if ((yy > -1) && (yy < height))
+                        if ((yy > -1) && (yy < height-1))
                         {
-                            int score = 0;
-                            for (int xx2 = xx - radius; xx2 < xx + radius; xx2++)
+                            if (edges_binary[xx, yy])
                             {
-                                if ((xx2 > -1) && (xx2 < width))
-                                {
-                                    if (edges_binary[xx2, yy])
-                                    {
-                                        int n = (yy * width) + xx2;
-                                        score += (255 - img[n]);
-                                    }
-                                }
-                            }
-                            for (int yy2 = yy - radius; yy2 < yy + radius; yy2++)
-                            {
-                                if ((yy2 > -1) && (yy2 < height))
-                                {
-                                    if (edges_binary[xx, yy2])
-                                    {
-                                        int n = (yy2 * width) + xx;
-                                        score += (255 - img[n]);
-                                    }
-                                }
-                            }
-
-                            score /= (radius * 4);
-                            score *= score;
-                            cg_x += (score * xx);
-                            cg_y += (score * yy);
-                            tot += score;
-
-                            if (score > max_score)
-                            {
-                                max_score = score;
+                                int n = (yy * width) + xx;
+                                score = (255 - img[n]);
+                                cg_x += (score * xx);
+                                cg_y += (score * yy);
+                                tot += score;
+                                hits++;
                             }
                         }
                     }
                 }
             }
-            if (tot > 0)
+
+            if (hits > 0)
             {
-                cg_x = (cg_x / tot);
-                cg_y = (cg_y / tot);
+                cg_x /= tot;
+                cg_y /= tot;
             }
-            return (max_score);
+            return (tot/hits);
         }
 
 
@@ -562,7 +529,7 @@ namespace sentience.calibration
                 }
             }
 
-            int search_width = width / separation_factor;
+            int search_width = width / separation_factor;            
             for (int i = 0; i < 2; i++)
             {
                 for (int x = 1; x < width - 1; x++)
@@ -581,11 +548,12 @@ namespace sentience.calibration
                         }
                     }
                 }
-                for (int x = width * 9 / 10; x < width - 1; x++)
+                for (int x = width * 9 / 10; x < width; x++)
                 {
                     if (horizontal_magnitude[i, x] > 0) horizontal_magnitude[i, x] = 0;
                 }
             }
+
 
             search_width = height / separation_factor;
             for (int i = 0; i < 2; i++)
@@ -709,6 +677,43 @@ namespace sentience.calibration
             return (line);
         }
 
+        /// <summary>
+        /// return the grid coordinate given the screen coordinate
+        /// </summary>
+        /// <param name="image_x"></param>
+        /// <param name="image_y"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="grid_x"></param>
+        /// <param name="grid_y"></param>
+        private void getGridCoordinate(int image_x, int image_y,
+                                       int width, int height,
+                                       ref int grid_x, ref int grid_y)
+        {
+            if ((horizontal_separation_top_hits > 0) && 
+                (horizontal_separation_bottom_hits > 0))
+            {
+                // get the horizontal separation at the given y coordinate
+                int separation_top = (int)(horizontal_separation_top / horizontal_separation_top_hits);
+                int separation_bottom = (int)(horizontal_separation_bottom / horizontal_separation_bottom_hits);
+                int grid_dx = separation_top + (image_y * (separation_bottom - separation_top) / height);
+                //int grid_dy = grid_dx * height / width;
+                int av_separation_x = (separation_top + separation_bottom) / 2;
+                int centre_adjust_x = av_centreline_x / av_centreline_x_hits;
+                if (centre_adjust_x > av_separation_x / 2) centre_adjust_x -= (av_separation_x / 2);
+                grid_x = -(int)Math.Round(((((image_x - (width / 2.0)) / (double)grid_dx)) + 0.5 + (centre_adjust_x / (double)av_separation_x)));
+
+                int av_separation_y = av_separation_x; // *height / width;
+                float fraction = separation_top / (float)separation_bottom;
+                int min_separation = (int)(av_separation_y * (1.0f - (fraction / 2)));
+                int max_separation = (int)(av_separation_y * (1.0f + (fraction / 2)));
+                int grid_dy = min_separation + (image_y * (max_separation - min_separation) / height);
+                int centre_adjust_y = av_centreline_y / av_centreline_y_hits;
+                if (centre_adjust_y > av_separation_y / 2) centre_adjust_y -= (av_separation_y / 2);
+                grid_y = -(int)Math.Round(((((image_y - (height / 2.0)) / (double)grid_dy)) + 0.0) + (centre_adjust_y / (double)av_separation_y) + 0.5);
+            }
+        }
+
         private void detectVerticalLines(int width, int height)
         {
             vertical_lines = new ArrayList();
@@ -718,16 +723,22 @@ namespace sentience.calibration
             int end_y = height - start_y;
             int prev_x_top = 0;
             int prev_x_bottom = 0;
-            
+
+            closest_to_centreline_x = 0;
             for (int x = 0; x < width; x++)
             {
                 if (horizontal_magnitude[1, x] > 0)
                 {
+                    // is this the closest to the vertical centre line?
+                    int dc = x - (width / 2);
+                    if ((closest_to_centreline_x == 0) || (dc < closest_to_centreline_x))
+                        closest_to_centreline_x = dc;
+
                     if (prev_x_bottom > 0)
                     {
                         horizontal_separation_bottom += (x - prev_x_bottom);
                         horizontal_separation_bottom_hits++;
-                        if (horizontal_separation_bottom_hits > 100)
+                        if (horizontal_separation_bottom_hits > 50)
                         {
                             horizontal_separation_bottom /= 2;
                             horizontal_separation_bottom_hits /= 2;
@@ -738,11 +749,16 @@ namespace sentience.calibration
                 
                 if (horizontal_magnitude[0, x] > 0)
                 {
+                    // is this the closest to the vertical centre line?
+                    int dc = x - (width / 2);
+                    if ((closest_to_centreline_x == 0) || (dc < closest_to_centreline_x))
+                        closest_to_centreline_x = dc;
+
                     if (prev_x_top > 0)
                     {
                         horizontal_separation_top += (x - prev_x_top);
                         horizontal_separation_top_hits++;
-                        if (horizontal_separation_top_hits > 100)
+                        if (horizontal_separation_top_hits > 50)
                         {
                             horizontal_separation_top /= 2;
                             horizontal_separation_top_hits /= 2;
@@ -794,11 +810,51 @@ namespace sentience.calibration
             int line_width = 5;
             int start_x = width / 8;
             int end_x = width - start_x;
+            int prev_y_left = 0;
+            int prev_y_right = 0;
 
+            closest_to_centreline_y = 0;
             for (int y = 0; y < height; y++)
             {
+                if (vertical_magnitude[1, y] > 0)
+                {
+                    // is this the closest to the horizontal centre line?
+                    int dc = y - (height / 2);
+                    if ((closest_to_centreline_y == 0) || (dc < closest_to_centreline_y))
+                        closest_to_centreline_y = dc;
+
+                    if (prev_y_right > 0)
+                    {
+                        vertical_separation += (y - prev_y_right);
+                        vertical_separation_hits++;
+                        if (vertical_separation_hits > 50)
+                        {
+                            vertical_separation /= 2;
+                            vertical_separation_hits /= 2;
+                        }
+                    }
+                    prev_y_right = y;
+                }
+
                 if (vertical_magnitude[0, y] > 0)
                 {
+                    // is this the closest to the horizontal centre line?
+                    int dc = y - (height / 2);
+                    if ((closest_to_centreline_y == 0) || (dc < closest_to_centreline_y))
+                        closest_to_centreline_y = dc;
+
+                    if (prev_y_left > 0)
+                    {
+                        vertical_separation += (y - prev_y_left);
+                        vertical_separation_hits++;
+                        if (vertical_separation_hits > 50)
+                        {
+                            vertical_separation /= 2;
+                            vertical_separation_hits /= 2;
+                        }
+                    }
+                    prev_y_left = y;
+
                     int max_score = (end_x - start_x) * 8 / 10;
                     int winner = -1;
                     for (int y2 = y - search_width; y2 < y + search_width; y2++)
@@ -835,6 +891,68 @@ namespace sentience.calibration
             }
         }
 
+        /// <summary>
+        /// draw the detected grid
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        private void drawGrid(Byte[] img, int width, int height)
+        {
+            int grid_x = 0, grid_y = 0;
+            int prev_grid_x, prev_grid_y;
+            for (int y = 0; y < height; y++)
+            {                
+                prev_grid_x = -9999;
+                for (int x = 0; x < width; x++)
+                {
+                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
+                    if (grid_x != prev_grid_x)
+                    {
+                        int n = ((y * width) + x) * 3;
+                        img[n] = 0;
+                        img[n+1] = (Byte)255;
+                        img[n + 2] = 0;
+                    }
+                    prev_grid_x = grid_x;
+                }
+            }
+            for (int x = 0; x < width; x++)            
+            {
+                grid_y = 0;
+                prev_grid_y = -9999;
+                for (int y = 0; y < height; y++)
+                {
+                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
+                    if (grid_y != prev_grid_y)
+                    {
+                        int n = ((y * width) + x) * 3;
+                        img[n] = 0;
+                        img[n + 1] = (Byte)255;
+                        img[n + 2] = 0;
+                    }
+                    prev_grid_y = grid_y;
+                }
+            }
+        }
+
+        /// <summary>
+        /// show a centre line guide to help when aligning the calibration pattern
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        private void showVerticalCentreline(Byte[] img, int width, int height)
+        {
+            int x = width/2;
+            int y = height/15;
+            util.drawLine(img, width, height, x - 2, 0, x, y, 100, 100, 255, 0, false);
+            util.drawLine(img, width, height, x, y, x + 2, 0, 100, 100, 255, 0, false);
+            util.drawLine(img, width, height, x - 2, height-1, x, height-y, 100, 100, 255, 0, false);
+            util.drawLine(img, width, height, x, height-y, x + 2, height-1, 100, 100, 255, 0, false);
+        }
+
+
         public void Update(Byte[] img, int width, int height)
         {
             // create lists to store edges
@@ -859,12 +977,38 @@ namespace sentience.calibration
             detectHorizontalLines(width, height);
             detectVerticalLines(width, height);
 
-            detectCorners(width, height);
+            // create a grid to store the edges
+            if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))
+            {
+                detectCorners(width, height);
 
-            corners_index++;
-            if (corners_index >= corners.Length) corners_index = 0;
+                corners_index++;
+                if (corners_index >= corners.Length) corners_index = 0;
+
+                drawGrid(edges_image, width, height);
+            }
+
+            showVerticalCentreline(edges_image, width, height);
+
             binary_image_index++;
             if (binary_image_index >= no_of_images) binary_image_index = 0;
+
+            av_centreline_x += closest_to_centreline_x;
+            av_centreline_x_hits++;
+            if (av_centreline_x_hits > 50)
+            {
+                av_centreline_x /= 2;
+                av_centreline_x_hits /= 2;
+            }
+
+            av_centreline_y += closest_to_centreline_y;
+            av_centreline_y_hits++;
+            if (av_centreline_y_hits > 50)
+            {
+                av_centreline_y /= 2;
+                av_centreline_y_hits /= 2;
+            }
+
         }
     }
 }
