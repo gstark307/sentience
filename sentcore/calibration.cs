@@ -134,6 +134,96 @@ namespace sentience.calibration
             return (tot);
         }
 
+        /// <summary>
+        /// detect the centre point within the calibration pattern
+        /// </summary>
+        /// <param name="calibration_image">mono image</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="image_cx">position of the centre spot within the image</param>
+        /// <param name="image_cy">position of the centre spot within the image</param>
+        /// <param name="grid_cx">centre of the grid</param>
+        /// <param name="grid_cy">centre of the grid</param>
+        private void detectCentrePoint(Byte[] calibration_image, int width, int height,
+                                       ref int image_cx, ref int image_cy,
+                                       ref int grid_cx, ref int grid_cy)
+        {
+            image_cx = 0;
+            image_cy = 0;
+            grid_cx = 0;
+            grid_cy = 0;
+            if (grid != null)
+            {
+                int max_value = 0;
+                for (int x = 1; x < grid.GetLength(0) - 2; x++)
+                {
+                    for (int y = 1; y < grid.GetLength(1) - 2; y++)
+                    {
+                        if ((grid[x, y] != null) && (grid[x + 1, y] != null) &&
+                            (grid[x + 1, y + 1] != null) && (grid[x, y + 1] != null))
+                        {
+                            // check that this is a box shape
+                            int dx_top = grid[x + 1, y].x - grid[x, y].x;
+                            int dx_bottom = grid[x + 1, y + 1].x - grid[x, y + 1].x;
+                            float fraction = dx_top / (float)dx_bottom;
+                            if ((fraction > 0.8f) && (fraction < 1.2f))
+                            {
+                                int dy_left = grid[x, y + 1].y - grid[x, y].y;
+                                int dy_right = grid[x + 1, y + 1].y - grid[x + 1, y].y;
+                                fraction = dy_left / (float)dy_right;
+                                if ((fraction > 0.8f) && (fraction < 1.2f))
+                                {
+                                    int av_width = (dx_top + dx_bottom) / 2;
+                                    int av_height = (dy_left + dy_right) / 2;
+                                    int centre_x = grid[x, y].x + (av_width / 2);
+                                    int centre_y = grid[x, y].y + (av_height / 2);
+
+                                    int spot_width = av_width / 5;
+                                    if (spot_width < 1) spot_width = 1;
+                                    int spot_height = av_height / 5;
+                                    if (spot_height < 1) spot_height = 1;
+                                    int tot_surround = 0;
+                                    int tot_centre = 0;
+                                    int hits_centre = 0;
+                                    int hits_surround = 0;
+                                    for (int xx = centre_x - (av_width/2); xx < centre_x + (av_width/2); xx++)
+                                    {
+                                        for (int yy = centre_y - (av_height/2); yy < centre_y + (av_height/2); yy++)
+                                        {
+                                            int n = (yy * width) + xx;
+
+                                            if ((xx > centre_x - spot_width) && (xx < centre_x + spot_width) &&
+                                                (yy > centre_y - spot_width) && (yy < centre_y + spot_width))
+                                            {
+                                                tot_centre += calibration_image[n];
+                                                hits_centre++;
+                                            }
+                                            else
+                                            {
+                                                tot_surround += calibration_image[n];
+                                                hits_surround++;
+                                            }
+                                        }
+                                    }
+                                    tot_centre /= hits_centre;
+                                    tot_surround /= hits_surround;
+                                    int tot = tot_surround - tot_centre;
+                                    if (tot > max_value)
+                                    {
+                                        max_value = tot;
+                                        image_cx = centre_x;
+                                        image_cy = centre_y;
+                                        grid_cx = x + 1;
+                                        grid_cy = y + 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         private void detectCorners(int width, int height)
         {
             if (corners == null)
@@ -180,11 +270,11 @@ namespace sentience.calibration
                                                 calibration_edge intersection_point = new calibration_edge(cg_x, cg_y, 0);
 
                                                 // get the grid coordinate of this corner
-                                                int grid_x = 0, grid_y = 0;
-                                                getGridCoordinate(cg_x, cg_y, width, height, ref grid_x, ref grid_y);
+                                                //int grid_x = 0, grid_y = 0;
+                                                //getGridCoordinate(cg_x, cg_y, width, height, ref grid_x, ref grid_y);
 
-                                                intersection_point.grid_x = grid_x;
-                                                intersection_point.grid_y = grid_y;
+                                                intersection_point.grid_x = i2;
+                                                intersection_point.grid_y = i;
                                                 corners[corners_index].Add(intersection_point);
                                                 line1.intersections.Add(intersection_point);
                                                 line2.intersections.Add(intersection_point);                                                
@@ -269,10 +359,8 @@ namespace sentience.calibration
             if (grid != null)
             {
                 for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
-                //for (int grid_x = 2; grid_x < 3; grid_x++)
                 {
                     for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
-                    //for (int grid_y = 1; grid_y < 2; grid_y++)
                     {
                         calibration_edge pt = (calibration_edge)grid[grid_x, grid_y];
                         if (pt != null)
@@ -510,8 +598,8 @@ namespace sentience.calibration
                         edges_binary[x, y] = true;
 
                         int index = -1;
-                        if (y < height / 3) index = 0;
-                        if (y > height * 2 / 3) index = 1;
+                        if (y < height / 4) index = 0;
+                        if (y > height * 3 / 4) index = 1;
                         if (index > -1)
                         {
                             horizontal_magnitude[index, x]++;
@@ -825,8 +913,7 @@ namespace sentience.calibration
                     {
                         calibration_line line = traceLine(width, height, x, start_y, winner, end_y);
                         vertical_lines.Add(line);
-                        //line.Draw(lines_image, width, height, 255, 0, 0);
-                        util.drawLine(lines_image, width, height, x, start_y, winner, end_y, 255, 0, 0, 0, false);
+                        line.Draw(lines_image, width, height, 255, 0, 0);
                     }
                 }
             }
@@ -848,6 +935,7 @@ namespace sentience.calibration
             int max_separation_left = 0;
             int curr_separation_right = 0;
             int max_separation_right = 0;
+            int prev_line_y = 0;
 
             closest_to_centreline_y = 0;
             for (int y = 0; y < height; y++)
@@ -933,9 +1021,14 @@ namespace sentience.calibration
 
                     if (winner > -1)
                     {
-                        calibration_line line = traceLine(width, height, start_x, y, end_x, winner);
-                        horizontal_lines.Add(line);
-                        line.Draw(lines_image, width, height, 255, 0, 0);
+                        int line_y = (y + winner) / 2;
+                        if ((prev_line_y == 0) || (line_y - prev_line_y > 5))
+                        {
+                            calibration_line line = traceLine(width, height, start_x, y, end_x, winner);
+                            horizontal_lines.Add(line);
+                            line.Draw(lines_image, width, height, 255, 0, 0);
+                        }
+                        prev_line_y = line_y;
                     }
                 }
             }
@@ -1068,7 +1161,18 @@ namespace sentience.calibration
             // create a grid to store the edges
             if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))
             {
+                // locate corners
                 detectCorners(width, height);
+
+                // hunt the centre spot
+                int image_cx=0, image_cy=0;
+                int grid_cx=0, grid_cy=0;
+                detectCentrePoint(calibration_image, width, height, ref image_cx, ref image_cy, ref grid_cx, ref grid_cy);
+                if (grid_cx > 0)
+                {
+                    util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
+                }
+
 
                 corners_index++;
                 if (corners_index >= corners.Length) corners_index = 0;
