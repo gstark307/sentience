@@ -59,12 +59,27 @@ namespace sentience.calibration
 
     public class calibration
     {
-        public int separation_factor = 15;
-        public bool showLines = false;
-        public bool showEdges = false;
+        public int separation_factor = 30;
+
+        // position of the camera relative to the calibration pattern
+        public float camera_height_mm = 785;
+        public float camera_dist_to_pattern_centre_mm = 450;
+
+        // the size of each square on the calibration pattern
+        public float calibration_pattern_spacing_mm = 50;
+
+        // tilt angle of the camera
+        public float camera_tilt_radians = 0;
+
+        // horizontal field of vision
+        public float camera_FOV_degrees = 40;
+
+        public Byte[] corners_image;
+        public Byte[] edges_image;
+        public Byte[] lines_image;
+        public Byte[] curve_fit;
 
         Byte[] calibration_image;
-        public Byte[] edges_image;
         ArrayList edges_horizontal;
         ArrayList edges_vertical;
         ArrayList detected_corners;
@@ -155,14 +170,14 @@ namespace sentience.calibration
                                     {
                                         int cg_x = (int)ix;
                                         int cg_y = (int)iy;
-                                        int magnitude = localCG(calibration_image, width, height, (int)ix, (int)iy, 10, ref cg_x, ref cg_y);
+                                        int magnitude = localCG(calibration_image, width, height, (int)ix, (int)iy, 5, ref cg_x, ref cg_y);
                                         //if (magnitude > 10)
                                         {
                                             int av = averageIntensity(calibration_image, width, height, cg_x - 10, cg_y - 10, cg_x + 10, cg_y + 10);
                                             //if ((av < magnitude * 97 / 100) && (av < 170))
                                             if (av < 170)
                                             {
-                                                calibration_edge intersection_point = new calibration_edge(cg_x, cg_y, magnitude);
+                                                calibration_edge intersection_point = new calibration_edge(cg_x, cg_y, 0);
 
                                                 // get the grid coordinate of this corner
                                                 int grid_x = 0, grid_y = 0;
@@ -201,7 +216,7 @@ namespace sentience.calibration
                     
                     if (coverage[pt.x, pt.y] == null)
                     {
-                        int radius = 10;
+                        int radius = 4;
                         for (int xx = pt.x - radius; xx < pt.x + radius; xx++)
                         {
                             if ((xx > -1) && (xx < width))
@@ -261,7 +276,7 @@ namespace sentience.calibration
                     {
                         calibration_edge pt = (calibration_edge)grid[grid_x, grid_y];
                         if (pt != null)
-                            util.drawCross(edges_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
+                            util.drawCross(corners_image, width, height, pt.x, pt.y, 3, 255, 0, 0, 0);
                     }
                 }
             }
@@ -519,13 +534,10 @@ namespace sentience.calibration
                             }
                         }
 
-                        if (showEdges)
-                        {
-                            int n = ((y * width) + x) * 3;
-                            edges_image[n] = 0;
-                            edges_image[n + 1] = (Byte)255;
-                            edges_image[n + 2] = 0;
-                        }
+                        int n = ((y * width) + x) * 3;
+                        edges_image[n] = 0;
+                        edges_image[n + 1] = (Byte)255;
+                        edges_image[n + 2] = 0;
                     }
                     else edges_binary[x, y] = false;
                 }
@@ -722,7 +734,7 @@ namespace sentience.calibration
         {
             vertical_lines = new ArrayList();
             int search_width = width / 10;
-            int line_width = 5;
+            int line_width = 4;
             int start_y = height / 20;
             int end_y = height - start_y;
             int prev_x_top = 0;
@@ -772,7 +784,20 @@ namespace sentience.calibration
 
                     int max_score = (end_y-start_y)*8/10;
                     int winner = -1;
-                    for (int x2 = x - search_width; x2 < x + search_width; x2++)
+                    int additive = (x - (width / 2)) / 15;
+                    additive *= Math.Abs(additive);
+                    int search_left = x - search_width;
+                    int search_right = x + search_width;
+
+                    if (x > width / 2)
+                        search_left = x-line_width;
+                    else
+                        search_right = x+line_width;
+
+                    search_left += additive;
+                    search_right += additive;
+
+                    for (int x2 = search_left; x2 < search_right; x2++)
                     {
                         if ((x2 > -1) && (x2 < width))
                         {
@@ -800,7 +825,8 @@ namespace sentience.calibration
                     {
                         calibration_line line = traceLine(width, height, x, start_y, winner, end_y);
                         vertical_lines.Add(line);
-                        if (showLines) line.Draw(edges_image, width, height, 255, 0, 0);
+                        //line.Draw(lines_image, width, height, 255, 0, 0);
+                        util.drawLine(lines_image, width, height, x, start_y, winner, end_y, 255, 0, 0, 0, false);
                     }
                 }
             }
@@ -810,8 +836,8 @@ namespace sentience.calibration
         private void detectHorizontalLines(int width, int height)
         {
             horizontal_lines = new ArrayList();
-            int search_width = height / 10;
-            int line_width = 5;
+            int search_width = height / 20;
+            int line_width = 4;
             int start_x = width / 8;
             int end_x = width - start_x;
             int prev_y_left = 0;
@@ -909,7 +935,7 @@ namespace sentience.calibration
                     {
                         calibration_line line = traceLine(width, height, start_x, y, end_x, winner);
                         horizontal_lines.Add(line);
-                        if (showLines) line.Draw(edges_image, width, height, 255, 0, 0);
+                        line.Draw(lines_image, width, height, 255, 0, 0);
                     }
                 }
             }
@@ -1012,11 +1038,20 @@ namespace sentience.calibration
             edges_horizontal = new ArrayList();
             edges_vertical = new ArrayList();
             edges_image = new Byte[width * height * 3];
+            corners_image = new Byte[width * height * 3];
+            lines_image = new Byte[width * height * 3];
+            curve_fit = new Byte[width * height * 3];
             edges_binary = new bool[width, height];
             horizontal_magnitude = new int[2,width];
             vertical_magnitude = new int[2,height];
             if (binary_image == null) binary_image = new bool[no_of_images, width, height];
-            for (int i = 0; i < img.Length; i++) edges_image[i] = img[i];
+            for (int i = 0; i < img.Length; i++)
+            {
+                lines_image[i] = img[i];
+                edges_image[i] = img[i];
+                corners_image[i] = img[i];
+                curve_fit[i] = (Byte)255;
+            }
 
             // create a mono image
             calibration_image = util.monoImage(img, width, height);
@@ -1038,7 +1073,7 @@ namespace sentience.calibration
                 corners_index++;
                 if (corners_index >= corners.Length) corners_index = 0;
 
-                drawGrid(edges_image, width, height);
+                //drawGrid(edges_image, width, height);
             }
 
             showVerticalCentreline(edges_image, width, height);
