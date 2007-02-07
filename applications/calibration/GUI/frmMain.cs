@@ -59,7 +59,9 @@ namespace WindowsApplication1
         const int DISPLAY_EDGES = 0;
         const int DISPLAY_CORNERS = 1;
         const int DISPLAY_LINES = 2;
-        public int display_type = DISPLAY_CORNERS;
+        const int DISPLAY_CENTREALIGN = 3;
+        const int DISPLAY_CURVE = 4;
+        public int display_type = DISPLAY_CENTREALIGN;
 
 #region "Camera stuff"
 
@@ -300,6 +302,16 @@ namespace WindowsApplication1
                         case DISPLAY_LINES:
                             {
                                 updatebitmap(cam.lines_image, (Bitmap)picOutput1.Image);
+                                break;
+                            }
+                        case DISPLAY_CENTREALIGN:
+                            {
+                                updatebitmap(cam.centrealign_image, (Bitmap)picOutput1.Image);
+                                break;
+                            }
+                        case DISPLAY_CURVE:
+                            {
+                                updatebitmap(cam.curve_fit, (Bitmap)picOutput1.Image);
                                 break;
                             }
                     }

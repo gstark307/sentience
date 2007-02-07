@@ -17,6 +17,17 @@ namespace sentience.calibration
         }
     }
 
+    public class calibration_graph_point
+    {
+        public float x, y;
+
+        public calibration_graph_point(float x, float y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
     public class calibration_line
     {
         public ArrayList points = new ArrayList();
@@ -68,14 +79,12 @@ namespace sentience.calibration
         // the size of each square on the calibration pattern
         public float calibration_pattern_spacing_mm = 50;
 
-        // tilt angle of the camera
-        public float camera_tilt_radians = 0;
-
         // horizontal field of vision
-        public float camera_FOV_degrees = 40;
+        public float camera_FOV_degrees = 50;
 
         public Byte[] corners_image;
         public Byte[] edges_image;
+        public Byte[] centrealign_image;
         public Byte[] lines_image;
         public Byte[] curve_fit;
 
@@ -205,16 +214,19 @@ namespace sentience.calibration
                                             }
                                         }
                                     }
-                                    tot_centre /= hits_centre;
-                                    tot_surround /= hits_surround;
-                                    int tot = tot_surround - tot_centre;
-                                    if (tot > max_value)
+                                    if ((hits_centre > 0) && (hits_surround > 0))
                                     {
-                                        max_value = tot;
-                                        image_cx = centre_x;
-                                        image_cy = centre_y;
-                                        grid_cx = x + 1;
-                                        grid_cy = y + 1;
+                                        tot_centre /= hits_centre;
+                                        tot_surround /= hits_surround;
+                                        int tot = tot_surround - tot_centre;
+                                        if (tot > max_value)
+                                        {
+                                            max_value = tot;
+                                            image_cx = centre_x;
+                                            image_cy = centre_y;
+                                            grid_cx = x + 1;
+                                            grid_cy = y + 1;
+                                        }
                                     }
                                 }
                             }
@@ -1124,6 +1136,118 @@ namespace sentience.calibration
             util.drawLine(img, width, height, width-x, y, width-1, y + 2, 100, 100, 255, 0, false);
         }
 
+        private void detectLensDistortion(int width, int height,
+                                          int grid_x, int grid_y)
+        {
+            if (grid[grid_x, grid_y] != null)
+            {
+                // field of vision in radians
+                float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
+                float FOV_vertical = FOV_horizontal * height / (float)width;
+
+                // center point of the grid within the image
+                int centre_x = grid[grid_x, grid_y].x;
+                int centre_y = grid[grid_x, grid_y].y;
+
+                // calculate the distance to the centre grid point on the ground plane
+                float ground_dist_to_point = camera_dist_to_pattern_centre_mm;
+
+                // distance between the camera lens and the centre point
+                float camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
+                                             (camera_height_mm * camera_height_mm));
+
+                // tilt angle at the centre point
+                float centre_tilt = (float)Math.Acos(camera_height_mm / camera_to_point_dist);
+
+                ArrayList rectifiedPoints = new ArrayList();
+
+                float centre_of_distortion_x = 0;
+                float centre_of_distortion_y = 0;
+                int hits = 0;
+
+                for (int x = 0; x < grid.GetLength(0); x++)
+                {
+                    for (int y = 0; y < grid.GetLength(1); y++)
+                    {
+                        if (grid[x, y] != null)
+                        {
+                            // calculate the distance to the observed grid point on the ground plane
+                            ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y - y) * calibration_pattern_spacing_mm);
+
+                            // distance between the camera lens and the observed point
+                            camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
+                                                         (camera_height_mm * camera_height_mm));
+
+                            // tilt angle
+                            float point_tilt = (float)Math.Acos(camera_height_mm / camera_to_point_dist);
+
+                            // distance to the point on the ground plave along the x (horizontal axis)
+                            float ground_dist_to_point_x = (x - grid_x) * calibration_pattern_spacing_mm;
+
+                            // pan angle
+                            float point_pan = (float)Math.Asin(ground_dist_to_point_x / camera_to_point_dist);
+
+                            // calc the position of the grid point within the image after rectification
+                            float rectified_x = centre_x + (point_pan * width / FOV_horizontal);
+                            float rectified_y = centre_y + ((centre_tilt - point_tilt) * height / FOV_vertical);
+                            rectifiedPoints.Add(new calibration_graph_point(rectified_x, rectified_y));
+
+                            centre_of_distortion_x += (rectified_x - grid[x, y].x);
+                            centre_of_distortion_y += (rectified_y - grid[x, y].y);
+                            hits++;                            
+                        }
+                    }
+                }
+
+                if (hits > 0)
+                {
+                    // create an opject to perform curve fitting
+                    polyfit fitter = new polyfit();
+                    fitter.SetDegree(2);
+
+                    centre_of_distortion_x = (width / 2) + (centre_of_distortion_x / hits);
+                    centre_of_distortion_y = (height / 2) + (centre_of_distortion_y / hits);
+                    int i = 0;
+                    for (int x = 0; x < grid.GetLength(0); x++)
+                    {
+                        for (int y = 0; y < grid.GetLength(1); y++)
+                        {
+                            if (grid[x, y] != null)
+                            {
+                                calibration_graph_point pt = (calibration_graph_point)rectifiedPoints[i];
+
+                                util.drawCross(corners_image, width, height, (int)(centre_of_distortion_x + pt.x), (int)(centre_of_distortion_y + pt.y), 5, 255, 255, 0, 0);
+
+                                float dx = pt.x - centre_of_distortion_x;
+                                float dy = pt.y - centre_of_distortion_y;
+                                float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                                dx = grid[x, y].x - centre_of_distortion_x;
+                                dy = grid[x, y].y - centre_of_distortion_y;
+                                float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
+
+                                fitter.AddPoint(radial_dist_rectified, radial_dist_original);
+
+                                int ix = (int)(radial_dist_rectified * 20 / 10);
+                                int iy = height - (int)(radial_dist_original * 20 / 10);
+                                int n = ((iy * width) + ix) * 3;
+                                if ((ix < width) && (iy < height) && (iy > 0))
+                                {
+                                    curve_fit[n] = 0;
+                                    curve_fit[n + 1] = 0;
+                                    curve_fit[n + 2] = (Byte)255;
+                                }
+                                i++;
+                            }
+                        }
+                    }
+
+                    // find the best fit curve by least squares
+                    fitter.Solve();
+
+                }
+            }
+        }
+
 
         public void Update(Byte[] img, int width, int height)
         {
@@ -1131,6 +1255,7 @@ namespace sentience.calibration
             edges_horizontal = new ArrayList();
             edges_vertical = new ArrayList();
             edges_image = new Byte[width * height * 3];
+            centrealign_image = new Byte[width * height * 3];
             corners_image = new Byte[width * height * 3];
             lines_image = new Byte[width * height * 3];
             curve_fit = new Byte[width * height * 3];
@@ -1141,10 +1266,15 @@ namespace sentience.calibration
             for (int i = 0; i < img.Length; i++)
             {
                 lines_image[i] = img[i];
+                centrealign_image[i] = img[i];
                 edges_image[i] = img[i];
                 corners_image[i] = img[i];
                 curve_fit[i] = (Byte)255;
             }
+
+            // image used for aligning the centre of the calibration pattern
+            util.drawLine(centrealign_image, width, height, width / 2, 0, width / 2, height - 1, 255, 255, 255, 0, false);
+            util.drawLine(centrealign_image, width, height, 0, height/2, width-1, height/2, 255, 255, 255, 0, false);
 
             // create a mono image
             calibration_image = util.monoImage(img, width, height);
@@ -1171,6 +1301,9 @@ namespace sentience.calibration
                 if (grid_cx > 0)
                 {
                     util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
+
+                    // detect the lens distortion
+                    detectLensDistortion(width, height, grid_cx, grid_cy);
                 }
 
 

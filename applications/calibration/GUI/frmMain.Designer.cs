@@ -47,6 +47,10 @@ namespace WindowsApplication1
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDirectionOfGravityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpParameters = new System.Windows.Forms.GroupBox();
+            this.txtDistToCentre = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.txtCameraHeight = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.txtSpacingFactor = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.txtFOV = new System.Windows.Forms.TextBox();
@@ -54,10 +58,6 @@ namespace WindowsApplication1
             this.txtPatternSpacing = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cmbDisplayType = new System.Windows.Forms.ComboBox();
-            this.txtCameraHeight = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.txtDistToCentre = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
@@ -200,6 +200,43 @@ namespace WindowsApplication1
             this.grpParameters.Text = "Parameters";
             this.grpParameters.Visible = false;
             // 
+            // txtDistToCentre
+            // 
+            this.txtDistToCentre.Location = new System.Drawing.Point(800, 18);
+            this.txtDistToCentre.Name = "txtDistToCentre";
+            this.txtDistToCentre.Size = new System.Drawing.Size(33, 20);
+            this.txtDistToCentre.TabIndex = 10;
+            this.txtDistToCentre.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtDistToCentre.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtDistToCentre_KeyPress);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(705, 22);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(93, 13);
+            this.label5.TabIndex = 9;
+            this.label5.Text = "Dist To centre mm";
+            // 
+            // txtCameraHeight
+            // 
+            this.txtCameraHeight.Location = new System.Drawing.Point(664, 17);
+            this.txtCameraHeight.Name = "txtCameraHeight";
+            this.txtCameraHeight.Size = new System.Drawing.Size(33, 20);
+            this.txtCameraHeight.TabIndex = 8;
+            this.txtCameraHeight.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtCameraHeight.Leave += new System.EventHandler(this.txtCameraHeight_Leave);
+            this.txtCameraHeight.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtCameraHeight_KeyPress);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(570, 21);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(96, 13);
+            this.label4.TabIndex = 7;
+            this.label4.Text = "Camera Height mm";
+            // 
             // txtSpacingFactor
             // 
             this.txtSpacingFactor.Location = new System.Drawing.Point(527, 17);
@@ -267,50 +304,15 @@ namespace WindowsApplication1
             this.cmbDisplayType.Items.AddRange(new object[] {
             "Edge features",
             "Corner points",
-            "Lines"});
+            "Lines",
+            "Align centre point",
+            "Best fit curve"});
             this.cmbDisplayType.Location = new System.Drawing.Point(15, 18);
             this.cmbDisplayType.Name = "cmbDisplayType";
             this.cmbDisplayType.Size = new System.Drawing.Size(128, 21);
             this.cmbDisplayType.TabIndex = 0;
             this.cmbDisplayType.Text = "Corner points";
             this.cmbDisplayType.SelectedIndexChanged += new System.EventHandler(this.cmbDisplayType_SelectedIndexChanged);
-            // 
-            // txtCameraHeight
-            // 
-            this.txtCameraHeight.Location = new System.Drawing.Point(664, 17);
-            this.txtCameraHeight.Name = "txtCameraHeight";
-            this.txtCameraHeight.Size = new System.Drawing.Size(33, 20);
-            this.txtCameraHeight.TabIndex = 8;
-            this.txtCameraHeight.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtCameraHeight.Leave += new System.EventHandler(this.txtCameraHeight_Leave);
-            this.txtCameraHeight.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtCameraHeight_KeyPress);
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(570, 21);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(96, 13);
-            this.label4.TabIndex = 7;
-            this.label4.Text = "Camera Height mm";
-            // 
-            // txtDistToCentre
-            // 
-            this.txtDistToCentre.Location = new System.Drawing.Point(800, 18);
-            this.txtDistToCentre.Name = "txtDistToCentre";
-            this.txtDistToCentre.Size = new System.Drawing.Size(33, 20);
-            this.txtDistToCentre.TabIndex = 10;
-            this.txtDistToCentre.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtDistToCentre.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtDistToCentre_KeyPress);
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(705, 22);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(93, 13);
-            this.label5.TabIndex = 9;
-            this.label5.Text = "Dist To centre mm";
             // 
             // frmMain
             // 

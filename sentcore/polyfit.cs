@@ -38,10 +38,10 @@ namespace sentience.core
 
         public polyfit()
         {
-            SumX = new float[2 * MaxO];
-            SumYX = new float[MaxO];
+            SumX = new float[(2 * MaxO) + 1];
+            SumYX = new float[MaxO + 1];
             M = new float[MaxO, MaxO + 1];
-            C = new float[MaxO]; // coefficients in: Y = C(0)*X^0 + C(1)*X^1 + C(2)*X^2 + ...
+            C = new float[MaxO + 1]; // coefficients in: Y = C(0)*X^0 + C(1)*X^1 + C(2)*X^2 + ...
 
             Init();
             GlobalO = 4;
