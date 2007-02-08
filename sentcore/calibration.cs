@@ -1054,7 +1054,8 @@ namespace sentience.calibration
                     if (winner > -1)
                     {
                         int line_y = (y + winner) / 2;
-                        if ((prev_line_y == 0) || (line_y - prev_line_y > 5))
+                        int min_separation_y = height / separation_factor;
+                        if ((prev_line_y == 0) || (line_y - prev_line_y > min_separation_y))
                         {
                             calibration_line line = traceLine(width, height, start_x, y, end_x, winner);
                             horizontal_lines.Add(line);
@@ -1220,8 +1221,6 @@ namespace sentience.calibration
 
                 if (hits > 0)
                 {
-                    util.drawLine(curve_fit, width, height, 0, height - 1, height - 1, 0, 230, 230, 230, 0, false);
-
                     // create an opject to perform curve fitting
                     fitter = new polyfit();
                     fitter.SetDegree(3);
@@ -1237,8 +1236,6 @@ namespace sentience.calibration
                             {
                                 calibration_graph_point pt = (calibration_graph_point)rectifiedPoints[i];
 
-                                //util.drawCross(corners_image, width, height, (int)(centre_of_distortion.x + pt.x), (int)(centre_of_distortion.y + pt.y), 5, 255, 255, 0, 0);
-
                                 float dx = pt.x - (width/2) + centre_of_distortion.x;
                                 float dy = pt.y - (height/2) + centre_of_distortion.y;
                                 float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
@@ -1247,16 +1244,6 @@ namespace sentience.calibration
                                 float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
 
                                 fitter.AddPoint(radial_dist_rectified, radial_dist_original);
-
-                                int ix = (int)(radial_dist_rectified * 2);
-                                int iy = height - (int)(radial_dist_original * 2);
-                                int n = ((iy * width) + ix) * 3;
-                                if ((ix < width) && (iy < height) && (iy > 0))
-                                {
-                                    curve_fit[n] = 0;
-                                    curve_fit[n + 1] = 0;
-                                    curve_fit[n + 2] = (Byte)255;
-                                }
                                 i++;
                             }
                         }
@@ -1267,20 +1254,6 @@ namespace sentience.calibration
 
                     // find the best fit curve
                     fitter.Solve();
-
-                    int prev_x = 0;
-                    int prev_y = height - 1;
-                    for (int x = 0; x < width/2; x++)
-                    {
-                        int y = (height/2) - (int)fitter.RegVal(x);
-                        if ((y < height) && (y > -1))
-                        {
-                            util.drawLine(curve_fit, width, height, prev_x, prev_y, x * 2, y * 2, 100, 100, 100, 0, false);
-                            prev_x = x * 2;
-                            prev_y = y * 2;
-                        }
-                    }
-
                 }
             }
         }
@@ -1310,8 +1283,8 @@ namespace sentience.calibration
                         if (radial_dist_original > 0)
                         {
                             float ratio = radial_dist_rectified / radial_dist_original;
-                            int x2 = (int)(centre_of_distortion.x + (dx * ratio));
-                            int y2 = (int)(centre_of_distortion.y + (dy * ratio));
+                            int x2 = (int)Math.Round(centre_of_distortion.x + (dx * ratio));
+                            int y2 = (int)Math.Round(centre_of_distortion.y + (dy * ratio));
 
                             int n = (y * width) + x;
                             int n2 = (y2 * width) + x2;
@@ -1399,10 +1372,6 @@ namespace sentience.calibration
                 {
                     util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
 
-                    curve_fit = new Byte[width * height * 3];
-                    for (int i = 0; i < img.Length; i++)
-                        curve_fit[i] = (Byte)255;
-
                     // detect the lens distortion
                     detectLensDistortion(width, height, grid_cx, grid_cy);
 
@@ -1411,6 +1380,10 @@ namespace sentience.calibration
                     {
                         // update the calibration lookup
                         updateCalibrationMap(width, height);
+
+                        // update the graph
+                        curve_fit = new Byte[width * height * 3];
+                        fitter.Show(curve_fit, width, height);
 
                         min_RMS_error = RMS_error;
                     }

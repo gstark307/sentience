@@ -271,5 +271,45 @@ namespace sentience.core
             }
             return (rms_error);
         }
+
+        public void Show(Byte[] img, int width, int height)
+        {
+            float max_x = 1;
+            float max_y = 1;
+            int i = 0;
+
+            for (i = 0; i < width * height * 3; i++) img[i] = 255;
+
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                float x = (float)Xpoints[i];
+                float y = (float)Ypoints[i];
+                if (x > max_x) max_x = x;
+                if (y > max_y) max_y = y;
+            }
+
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                float x = (float)Xpoints[i];
+                float y = (float)Ypoints[i];
+                int xx = (int)(x * (width - 1) / max_x);
+                int yy = (int)(height - 1 - (y * (height - 1) / max_y));
+                int n = ((yy * width) + xx) * 3;
+                img[n] = 150;
+                img[n + 1] = 150;
+                img[n + 2] = 150;
+            }
+
+            int prev_x = 0;
+            int prev_y = height - 1;
+            for (int x = 0; x < max_x; x++)
+            {
+                int xx = (int)(x * (width - 1) / max_x);
+                int yy = height - 1 - (int)(RegVal(x) * (height-1) / max_y);
+                util.drawLine(img, width, height, prev_x, prev_y, xx, yy, 100, 100, 100, 0, false);
+                prev_x = xx;
+                prev_y = yy;
+            }
+        }
     }
 }
