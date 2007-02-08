@@ -82,11 +82,21 @@ namespace sentience.calibration
         // horizontal field of vision
         public float camera_FOV_degrees = 50;
 
+        private float min_RMS_error = 999999;
+
+        // the centre of distortion in image pixel coordinates
+        calibration_graph_point centre_of_distortion;
+
+        public int[] calibration_map;
+        public Byte[] rectified_image;
+
         public Byte[] corners_image;
         public Byte[] edges_image;
         public Byte[] centrealign_image;
         public Byte[] lines_image;
         public Byte[] curve_fit;
+
+        polyfit fitter;
 
         Byte[] calibration_image;
         ArrayList edges_horizontal;
@@ -1171,8 +1181,7 @@ namespace sentience.calibration
 
                 ArrayList rectifiedPoints = new ArrayList();
 
-                float centre_of_distortion_x = 0;
-                float centre_of_distortion_y = 0;
+                centre_of_distortion = new calibration_graph_point(0, 0);
                 int hits = 0;
 
                 for (int x = 0; x < grid.GetLength(0); x++)
@@ -1202,8 +1211,8 @@ namespace sentience.calibration
                             float rectified_y = centre_y + ((centre_tilt - point_tilt) * height / FOV_vertical);
                             rectifiedPoints.Add(new calibration_graph_point(rectified_x, rectified_y));
 
-                            centre_of_distortion_x += (grid[x, y].x - rectified_x);
-                            centre_of_distortion_y += (grid[x, y].y - rectified_y);
+                            centre_of_distortion.x += (grid[x, y].x - rectified_x);
+                            centre_of_distortion.y += (grid[x, y].y - rectified_y);
                             hits++;                            
                         }
                     }
@@ -1214,11 +1223,11 @@ namespace sentience.calibration
                     util.drawLine(curve_fit, width, height, 0, height - 1, height - 1, 0, 230, 230, 230, 0, false);
 
                     // create an opject to perform curve fitting
-                    polyfit fitter = new polyfit();
-                    fitter.SetDegree(2);
+                    fitter = new polyfit();
+                    fitter.SetDegree(3);
 
-                    centre_of_distortion_x = (centre_of_distortion_x / hits);
-                    centre_of_distortion_y = (centre_of_distortion_y / hits);
+                    centre_of_distortion.x = (centre_of_distortion.x / (float)hits);
+                    centre_of_distortion.y = (centre_of_distortion.y / (float)hits);
                     int i = 0;
                     for (int x = 0; x < grid.GetLength(0); x++)
                     {
@@ -1228,13 +1237,13 @@ namespace sentience.calibration
                             {
                                 calibration_graph_point pt = (calibration_graph_point)rectifiedPoints[i];
 
-                                //util.drawCross(corners_image, width, height, (int)(centre_of_distortion_x + pt.x), (int)(centre_of_distortion_y + pt.y), 5, 255, 255, 0, 0);
+                                //util.drawCross(corners_image, width, height, (int)(centre_of_distortion.x + pt.x), (int)(centre_of_distortion.y + pt.y), 5, 255, 255, 0, 0);
 
-                                float dx = pt.x - (width/2) + centre_of_distortion_x;
-                                float dy = pt.y - (height/2) + centre_of_distortion_y;
+                                float dx = pt.x - (width/2) + centre_of_distortion.x;
+                                float dy = pt.y - (height/2) + centre_of_distortion.y;
                                 float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                                dx = grid[x, y].x - (width/2) + centre_of_distortion_x;
-                                dy = grid[x, y].y - (height/2) + centre_of_distortion_y;
+                                dx = grid[x, y].x - (width/2) + centre_of_distortion.x;
+                                dy = grid[x, y].y - (height/2) + centre_of_distortion.y;
                                 float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
 
                                 fitter.AddPoint(radial_dist_rectified, radial_dist_original);
@@ -1253,7 +1262,10 @@ namespace sentience.calibration
                         }
                     }
 
-                    // find the best fit curve by least squares
+                    centre_of_distortion.x = (width / 2) + centre_of_distortion.x;
+                    centre_of_distortion.y = (height / 2) + centre_of_distortion.y;
+
+                    // find the best fit curve
                     fitter.Solve();
 
                     int prev_x = 0;
@@ -1273,6 +1285,68 @@ namespace sentience.calibration
             }
         }
 
+
+        /// <summary>
+        /// update the calibration lookup table, which maps pixels
+        /// in the rectified image into the original image
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        private void updateCalibrationMap(int width, int height)
+        {
+            calibration_map = new int[width * height];
+            for (int x = 0; x < width; x++)
+            {
+                float dx = x - centre_of_distortion.x;
+
+                for (int y = 0; y < height; y++)
+                {
+                    float dy = y - centre_of_distortion.y;
+
+                    float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                    if (radial_dist_rectified >= 0.01f)
+                    {
+                        float radial_dist_original = fitter.RegVal(radial_dist_rectified);
+                        if (radial_dist_original > 0)
+                        {
+                            float ratio = radial_dist_rectified / radial_dist_original;
+                            int x2 = (int)(centre_of_distortion.x + (dx * ratio));
+                            int y2 = (int)(centre_of_distortion.y + (dy * ratio));
+
+                            int n = (y * width) + x;
+                            int n2 = (y2 * width) + x2;
+
+                            calibration_map[n] = n2;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// rectify the given image
+        /// </summary>
+        /// <param name="img">raw image</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <returns></returns>
+        public Byte[] Rectify(Byte[] img, int width, int height)
+        {
+            if (calibration_map != null)
+            {
+                rectified_image = new Byte[width * height * 3];
+                for (int i = 0; i < width * height; i++)
+                {
+                    int j = calibration_map[i];
+                    if ((j < width * height) && (j > -1))
+                    {
+                        for (int col=0;col<3;col++)
+                            rectified_image[(i * 3) + col] = img[(j * 3) + col];
+                    }
+                }
+            }
+            return (rectified_image);
+        }
 
         public void Update(Byte[] img, int width, int height)
         {
@@ -1331,8 +1405,20 @@ namespace sentience.calibration
 
                     // detect the lens distortion
                     detectLensDistortion(width, height, grid_cx, grid_cy);
-                }
 
+                    float RMS_error = fitter.GetRMSerror();
+                    if (RMS_error < min_RMS_error)
+                    {
+                        // update the calibration lookup
+                        updateCalibrationMap(width, height);
+
+                        min_RMS_error = RMS_error;
+                    }
+
+                    // rectify
+                    Rectify(img, width, height);
+
+                }
 
                 corners_index++;
                 if (corners_index >= corners.Length) corners_index = 0;

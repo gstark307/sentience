@@ -306,7 +306,8 @@ namespace WindowsApplication1
             "Corner points",
             "Lines",
             "Align centre point",
-            "Best fit curve"});
+            "Best fit curve",
+            "Rectified image"});
             this.cmbDisplayType.Location = new System.Drawing.Point(15, 18);
             this.cmbDisplayType.Name = "cmbDisplayType";
             this.cmbDisplayType.Size = new System.Drawing.Size(128, 21);

@@ -20,6 +20,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -35,6 +36,9 @@ namespace sentience.core
         private float[] SumYX;
         private float[,] M;
         private float[] C; // coefficients
+
+        private ArrayList Xpoints;
+        private ArrayList Ypoints;
 
         public polyfit()
         {
@@ -163,6 +167,9 @@ namespace sentience.core
         {
             int i;
 
+            Xpoints = new ArrayList();
+            Ypoints = new ArrayList();
+
             Finished = false;
             for (i = 0; i <= MaxO; i++)
             {
@@ -210,7 +217,10 @@ namespace sentience.core
         {
             int i, Max2O;
             float TX;
-            
+
+            Xpoints.Add(x);
+            Ypoints.Add(y);
+
             Finished = false;
             Max2O = 2 * GlobalO;
             TX = 1;
@@ -238,11 +248,28 @@ namespace sentience.core
             O = GlobalO;
             if (XYCount() <= O) O = XYCount() - 1;
             for (i = 0; i <= O; i++)
-            {
-                retval = retval + C[i] * (float)Math.Pow(x,i);
-            }
+                retval = retval + C[i] * (float)Math.Pow(x, i);
             return (retval);
         }
 
+
+        public float GetRMSerror()
+        {
+            float rms_error = 0;
+
+            if (Xpoints.Count > 0)
+            {
+                for (int i = 0; i < Xpoints.Count; i++)
+                {
+                    float x = (float)Xpoints[i];
+                    float y = (float)Ypoints[i];
+                    float y2 = RegVal(x);
+                    float diff = y - y2;
+                    rms_error += (diff * diff);
+                }
+                rms_error = (float)Math.Sqrt(rms_error/(float)Xpoints.Count);
+            }
+            return (rms_error);
+        }
     }
 }

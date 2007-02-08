@@ -61,6 +61,7 @@ namespace WindowsApplication1
         const int DISPLAY_LINES = 2;
         const int DISPLAY_CENTREALIGN = 3;
         const int DISPLAY_CURVE = 4;
+        const int DISPLAY_RECTIFIED = 5;
         public int display_type = DISPLAY_CENTREALIGN;
 
 #region "Camera stuff"
@@ -313,6 +314,12 @@ namespace WindowsApplication1
                             {
                                 if (cam.curve_fit != null)
                                     updatebitmap(cam.curve_fit, (Bitmap)picOutput1.Image);
+                                break;
+                            }
+                        case DISPLAY_RECTIFIED:
+                            {
+                                if (cam.rectified_image != null)
+                                    updatebitmap(cam.rectified_image, (Bitmap)picOutput1.Image);
                                 break;
                             }
                     }
