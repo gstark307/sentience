@@ -311,7 +311,8 @@ namespace WindowsApplication1
                             }
                         case DISPLAY_CURVE:
                             {
-                                updatebitmap(cam.curve_fit, (Bitmap)picOutput1.Image);
+                                if (cam.curve_fit != null)
+                                    updatebitmap(cam.curve_fit, (Bitmap)picOutput1.Image);
                                 break;
                             }
                     }
@@ -333,7 +334,7 @@ namespace WindowsApplication1
             picOutput1.Left = grpParameters.Left;
             picOutput1.Top = menuStrip1.Height + grpParameters.Height + 10;
             picOutput1.Width = this.Width - picOutput1.Left;
-            picOutput1.Height = this.Height - picOutput1.Top;
+            picOutput1.Height = this.Height - picOutput1.Top- 40;
             grpParameters.Width = picOutput1.Width;
             grpParameters.Visible = true;
 
