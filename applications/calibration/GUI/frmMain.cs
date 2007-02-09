@@ -173,6 +173,11 @@ namespace WindowsApplication1
 
 #endregion
 
+        private void ResetCalibration()
+        {
+            cam = new calibration();
+        }
+
         //is the given bitmap blank?
         private bool isBlankFrame(Byte[] data, int width, int height)
         {
@@ -441,6 +446,29 @@ namespace WindowsApplication1
                 if (txtDistToCentre.Text == "") txtDistToCentre.Text = "500";
                 cam.camera_dist_to_pattern_centre_mm = Convert.ToInt32(txtDistToCentre.Text);
             }
+        }
+
+        private void resetCalibrationDataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ResetCalibration();
+        }
+
+        private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.DefaultExt = "xml";
+            openFileDialog1.FileName = ".xml";
+            openFileDialog1.Title = "Load calibration file";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                cam.Load(openFileDialog1.FileName);
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {            
+            saveFileDialog1.DefaultExt = "xml";
+            saveFileDialog1.FileName = global_variables.CamSettingsLeft.cameraName + ".xml";
+            saveFileDialog1.Title = "Save calibration file";
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                cam.Save(saveFileDialog1.FileName);
         }
 
     }

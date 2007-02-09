@@ -1,4 +1,26 @@
+/*
+    Camera calibration class, used for automatic calibration with a pattern of lines
+    Copyright (C) 2000-2007 Bob Mottram
+    fuzzgun@gmail.com
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
+
 using System;
+using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -82,6 +104,8 @@ namespace sentience.calibration
         // horizontal field of vision
         public float camera_FOV_degrees = 50;
 
+        public String camera_name = "";
+        private int image_width, image_height;
         private float min_RMS_error = 999999;
 
         // the centre of distortion in image pixel coordinates
@@ -1323,6 +1347,9 @@ namespace sentience.calibration
 
         public void Update(Byte[] img, int width, int height)
         {
+            image_width = width;
+            image_height = height;
+
             // create lists to store edges
             edges_horizontal = new ArrayList();
             edges_vertical = new ArrayList();
@@ -1421,5 +1448,141 @@ namespace sentience.calibration
             }
 
         }
+
+
+        #region "saving and loading"
+
+        private XmlDocument getXmlDocument()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlElement nodeCalibration = doc.CreateElement("Calibration");
+            doc.AppendChild(nodeCalibration);
+            XmlElement elem = getXml(doc);
+            doc.DocumentElement.AppendChild(elem);
+
+            return (doc);
+        }
+
+        public void Save(String filename)
+        {
+            XmlDocument doc = getXmlDocument();
+            doc.Save(filename);
+        }
+
+
+        public void Load(String filename)
+        {
+            // use an XmlTextReader to open an XML document
+            XmlTextReader xtr = new XmlTextReader(filename);
+            xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+            // load the file into an XmlDocuent
+            XmlDocument xd = new XmlDocument();
+            xd.Load(xtr);
+
+            // get the document root node
+            XmlNode xnodDE = xd.DocumentElement;
+
+            // recursively walk the node tree
+            LoadFromXml(xnodDE, 0);
+
+            // close the reader
+            xtr.Close();
+
+            // show the best fit curve
+            curve_fit = new Byte[image_width * image_height * 3];
+            fitter.Show(curve_fit, image_width, image_height);
+        }
+
+        private XmlElement getXml(XmlDocument doc)
+        {
+            String coefficients = "";
+            if (fitter != null)
+            {
+                int degree = fitter.GetDegree();
+                for (int i = 0; i <= degree; i++)
+                {
+                    coefficients += Convert.ToString(fitter.Coeff(i));
+                    if (i < degree) coefficients += ",";
+                }
+            }
+
+            XmlElement elem = doc.CreateElement("Camera");
+            doc.DocumentElement.AppendChild(elem);
+            util.addTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(camera_FOV_degrees));
+            util.addTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width) + "," + Convert.ToString(image_height));
+            util.addTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion.x) + "," + Convert.ToString(centre_of_distortion.y));
+            util.addTextElement(doc, elem, "DistortionCoefficients", coefficients);
+            util.addTextElement(doc, elem, "RMSerror", Convert.ToString(min_RMS_error));
+            return (elem);
+        }
+
+        private void LoadFromXml(XmlNode xnod, int level)
+        {
+            XmlNode xnodWorking;
+
+            if (xnod.Name == "FieldOfViewDegrees")
+                camera_FOV_degrees = Convert.ToInt32(xnod.Value);
+
+            if (xnod.Name == "ImageDimensions")
+            {
+                String[] dimStr = xnod.Value.Split(',');
+                image_width = Convert.ToInt32(dimStr[0]);
+                image_height = Convert.ToInt32(dimStr[1]);
+            }
+
+            if (xnod.Name == "CentreOfDistortion")
+            {
+                String[] centreStr = xnod.Value.Split(',');
+                centre_of_distortion = new calibration_graph_point(
+                    Convert.ToInt32(centreStr[0]),
+                    Convert.ToInt32(centreStr[1]));
+            }
+
+            if (xnod.Name == "DistortionCoefficients")
+            {
+                String[] coeffStr = xnod.Value.Split(',');
+                fitter = new polyfit();
+                fitter.SetDegree(coeffStr.Length);
+                for (int i = 0; i < coeffStr.Length; i++)
+                    fitter.SetCoeff(i, Convert.ToSingle(coeffStr[i]));
+            }
+
+            if (xnod.Name == "RMSerror")
+                min_RMS_error = Convert.ToSingle(xnod.Value);
+
+            // if this is an element, extract any attributes
+            /*
+            if (xnod.NodeType == XmlNodeType.Element)
+            {
+                XmlNamedNodeMap mapAttributes = xnod.Attributes;
+                for (int i = 0; i < mapAttributes.Count; i += 1)
+                {
+                    //Console.WriteLine(pad + " " + mapAttributes.Item(i).Name
+                    //    + " = " + mapAttributes.Item(i).Value);
+                }
+            }
+            */
+
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+        #endregion
+
     }
 }

@@ -180,6 +180,12 @@ namespace sentience.core
             }
         }
 
+        public void SetCoeff(int Exponent, float value)
+        {
+            Finished = true;
+            C[Exponent] = value;
+        }
+
         public float Coeff(int Exponent)
         {
             int Ex, O;

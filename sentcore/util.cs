@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.Xml;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
@@ -27,6 +28,23 @@ namespace sentience.core
 {
     public class util
     {
+        /// <summary>
+        /// This method adds a text element to the XML document as the last
+        /// child of the current element.
+        /// </summary>
+        /// <param name="doc">The XML document</param>
+        /// <param name="nodeParent">Parent of the node we are adding</param>
+        /// <param name="strTag">The tag of the element to add</param>
+        /// <param name="strValue">The text value of the new element</param>
+        public static void addTextElement(XmlDocument doc, XmlElement nodeParent, string strTag, string strValue)
+        {
+            XmlElement nodeElem = doc.CreateElement(strTag);
+            XmlText nodeText = doc.CreateTextNode(strValue);
+            nodeParent.AppendChild(nodeElem);
+            nodeElem.AppendChild(nodeText);
+        } 
+
+
         /// <summary>
         /// does the line intersect with the given line?
         /// </summary>
