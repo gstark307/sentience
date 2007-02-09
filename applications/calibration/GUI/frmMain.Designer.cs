@@ -63,10 +63,12 @@ namespace WindowsApplication1
             this.label1 = new System.Windows.Forms.Label();
             this.cmbDisplayType = new System.Windows.Forms.ComboBox();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.picOutput2 = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             this.grpParameters.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picOutput2)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -94,21 +96,21 @@ namespace WindowsApplication1
             // OpenToolStripMenuItem
             // 
             this.OpenToolStripMenuItem.Name = "OpenToolStripMenuItem";
-            this.OpenToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.OpenToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.OpenToolStripMenuItem.Text = "Open";
             this.OpenToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.saveAsToolStripMenuItem.Text = "Save As...";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem1
             // 
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(136, 22);
             this.exitToolStripMenuItem1.Text = "Exit";
             this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem1_Click);
             // 
@@ -352,11 +354,22 @@ namespace WindowsApplication1
             this.cmbDisplayType.Text = "Corner points";
             this.cmbDisplayType.SelectedIndexChanged += new System.EventHandler(this.cmbDisplayType_SelectedIndexChanged);
             // 
+            // picOutput2
+            // 
+            this.picOutput2.Location = new System.Drawing.Point(621, 232);
+            this.picOutput2.Name = "picOutput2";
+            this.picOutput2.Size = new System.Drawing.Size(198, 141);
+            this.picOutput2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picOutput2.TabIndex = 5;
+            this.picOutput2.TabStop = false;
+            this.picOutput2.Visible = false;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(863, 457);
+            this.Controls.Add(this.picOutput2);
             this.Controls.Add(this.grpParameters);
             this.Controls.Add(this.picOutput1);
             this.Controls.Add(this.picLeftImage);
@@ -372,6 +385,7 @@ namespace WindowsApplication1
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
             this.grpParameters.ResumeLayout(false);
             this.grpParameters.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picOutput2)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -413,6 +427,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.ToolStripMenuItem OpenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.PictureBox picOutput2;
     }
 }
 

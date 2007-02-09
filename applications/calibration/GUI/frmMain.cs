@@ -37,7 +37,8 @@ namespace WindowsApplication1
 
     public partial class frmMain : common
     {
-        calibration cam = new calibration();
+        int no_of_cameras = 1;
+        calibrationStereo cam = new calibrationStereo();
 
         Random rnd = new Random();
 
@@ -175,7 +176,7 @@ namespace WindowsApplication1
 
         private void ResetCalibration()
         {
-            cam = new calibration();
+            cam = new calibrationStereo();
         }
 
         //is the given bitmap blank?
@@ -291,42 +292,48 @@ namespace WindowsApplication1
                         outputInitialised = true;
                     }
 
-                    cam.Update(disp_bmp_data, output_width, output_height);
-
-                    switch (display_type)
+                    for (int i = 0; i < no_of_cameras; i++)
                     {
-                        case DISPLAY_EDGES:
-                            {
-                                updatebitmap(cam.edges_image, (Bitmap)picOutput1.Image);
-                                break;
-                            }
-                        case DISPLAY_CORNERS:
-                            {
-                                updatebitmap(cam.corners_image, (Bitmap)picOutput1.Image);
-                                break;
-                            }
-                        case DISPLAY_LINES:
-                            {
-                                updatebitmap(cam.lines_image, (Bitmap)picOutput1.Image);
-                                break;
-                            }
-                        case DISPLAY_CENTREALIGN:
-                            {
-                                updatebitmap(cam.centrealign_image, (Bitmap)picOutput1.Image);
-                                break;
-                            }
-                        case DISPLAY_CURVE:
-                            {
-                                if (cam.curve_fit != null)
-                                    updatebitmap(cam.curve_fit, (Bitmap)picOutput1.Image);
-                                break;
-                            }
-                        case DISPLAY_RECTIFIED:
-                            {
-                                if (cam.rectified_image != null)
-                                    updatebitmap(cam.rectified_image, (Bitmap)picOutput1.Image);
-                                break;
-                            }
+                        calibration calib = cam.leftcam;
+                        if (i > 0) calib = cam.rightcam;
+
+                        calib.Update(disp_bmp_data, output_width, output_height);
+
+                        switch (display_type)
+                        {
+                            case DISPLAY_EDGES:
+                                {
+                                    updatebitmap(calib.edges_image, (Bitmap)picOutput1.Image);
+                                    break;
+                                }
+                            case DISPLAY_CORNERS:
+                                {
+                                    updatebitmap(calib.corners_image, (Bitmap)picOutput1.Image);
+                                    break;
+                                }
+                            case DISPLAY_LINES:
+                                {
+                                    updatebitmap(calib.lines_image, (Bitmap)picOutput1.Image);
+                                    break;
+                                }
+                            case DISPLAY_CENTREALIGN:
+                                {
+                                    updatebitmap(calib.centrealign_image, (Bitmap)picOutput1.Image);
+                                    break;
+                                }
+                            case DISPLAY_CURVE:
+                                {
+                                    if (calib.curve_fit != null)
+                                        updatebitmap(calib.curve_fit, (Bitmap)picOutput1.Image);
+                                    break;
+                                }
+                            case DISPLAY_RECTIFIED:
+                                {
+                                    if (calib.rectified_image != null)
+                                        updatebitmap(calib.rectified_image, (Bitmap)picOutput1.Image);
+                                    break;
+                                }
+                        }
                     }
 
                     picOutput1.Refresh();
@@ -343,19 +350,37 @@ namespace WindowsApplication1
 
         private void Redraw()
         {
-            picOutput1.Left = grpParameters.Left;
-            picOutput1.Top = menuStrip1.Height + grpParameters.Height + 10;
-            picOutput1.Width = this.Width - picOutput1.Left;
-            picOutput1.Height = this.Height - picOutput1.Top- 40;
+            if (no_of_cameras == 1)
+            {
+                picOutput2.Visible = false;
+                picOutput1.Left = grpParameters.Left;
+                picOutput1.Top = menuStrip1.Height + grpParameters.Height + 10;
+                picOutput1.Width = this.Width - picOutput1.Left;
+                picOutput1.Height = this.Height - picOutput1.Top - 40;                
+            }
+            else
+            {
+                picOutput2.Visible = true;
+                picOutput1.Left = grpParameters.Left;
+                picOutput1.Top = menuStrip1.Height + grpParameters.Height + 10;
+                picOutput1.Width = ((this.Width - picOutput1.Left) / 2)-5;
+                picOutput1.Height = this.Height - picOutput1.Top - 40;
+
+                picOutput2.Left = picOutput1.Top + picOutput1.Width + 10;
+                picOutput2.Top = picOutput1.Top;
+                picOutput2.Width = picOutput1.Width;
+                picOutput2.Height = picOutput1.Height;
+            }
+
             grpParameters.Width = picOutput1.Width;
             grpParameters.Visible = true;
 
             cmbDisplayType.SelectedIndex = display_type;
-            txtPatternSpacing.Text = Convert.ToString(cam.calibration_pattern_spacing_mm);
-            txtFOV.Text = Convert.ToString(cam.camera_FOV_degrees);
-            txtSpacingFactor.Text = Convert.ToString(cam.separation_factor);
-            txtCameraHeight.Text = Convert.ToString(cam.camera_height_mm);
-            txtDistToCentre.Text = Convert.ToString(cam.camera_dist_to_pattern_centre_mm);
+            txtPatternSpacing.Text = Convert.ToString(cam.leftcam.calibration_pattern_spacing_mm);
+            txtFOV.Text = Convert.ToString(cam.leftcam.camera_FOV_degrees);
+            txtSpacingFactor.Text = Convert.ToString(cam.leftcam.separation_factor);
+            txtCameraHeight.Text = Convert.ToString(cam.leftcam.camera_height_mm);
+            txtDistToCentre.Text = Convert.ToString(cam.leftcam.camera_dist_to_pattern_centre_mm);
         }
 
         private void startCameraToolStripMenuItem_Click(object sender, EventArgs e)
@@ -384,14 +409,16 @@ namespace WindowsApplication1
             if (e.KeyChar == 13)
             {
                 if (txtPatternSpacing.Text == "") txtPatternSpacing.Text = "50";
-                cam.calibration_pattern_spacing_mm = Convert.ToSingle(txtPatternSpacing.Text);
+                cam.leftcam.calibration_pattern_spacing_mm = Convert.ToSingle(txtPatternSpacing.Text);
+                cam.rightcam.calibration_pattern_spacing_mm = cam.leftcam.calibration_pattern_spacing_mm;
             }
         }
 
         private void txtPatternSpacing_Leave(object sender, EventArgs e)
         {
             if (txtPatternSpacing.Text == "") txtPatternSpacing.Text = "50";
-            cam.calibration_pattern_spacing_mm = Convert.ToSingle(txtPatternSpacing.Text);
+            cam.leftcam.calibration_pattern_spacing_mm = Convert.ToSingle(txtPatternSpacing.Text);
+            cam.rightcam.calibration_pattern_spacing_mm = cam.leftcam.calibration_pattern_spacing_mm;
         }
 
         private void txtFOV_KeyPress(object sender, KeyPressEventArgs e)
@@ -399,14 +426,16 @@ namespace WindowsApplication1
             if (e.KeyChar == 13)
             {
                 if (txtFOV.Text == "") txtFOV.Text = "40";
-                cam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
+                cam.leftcam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
+                cam.rightcam.camera_FOV_degrees = cam.leftcam.camera_FOV_degrees;
             }
         }
 
         private void txtFOV_Leave(object sender, EventArgs e)
         {
             if (txtFOV.Text == "") txtFOV.Text = "40";
-            cam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
+            cam.leftcam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
+            cam.rightcam.camera_FOV_degrees = cam.leftcam.camera_FOV_degrees;
         }
 
         private void txtSpacingFactor_KeyPress(object sender, KeyPressEventArgs e)
@@ -414,14 +443,16 @@ namespace WindowsApplication1
             if (e.KeyChar == 13)
             {
                 if (txtSpacingFactor.Text == "") txtSpacingFactor.Text = "15";
-                cam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
+                cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
+                cam.rightcam.separation_factor = cam.leftcam.separation_factor;
             }
         }
 
         private void txtSpacingFactor_Leave(object sender, EventArgs e)
         {
             if (txtSpacingFactor.Text == "") txtSpacingFactor.Text = "15";
-            cam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
+            cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
+            cam.rightcam.separation_factor = cam.leftcam.separation_factor;
         }
 
         private void txtCameraHeight_KeyPress(object sender, KeyPressEventArgs e)
@@ -429,14 +460,16 @@ namespace WindowsApplication1
             if (e.KeyChar == 13)
             {
                 if (txtCameraHeight.Text == "") txtCameraHeight.Text = "500";
-                cam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
+                cam.leftcam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
+                cam.rightcam.camera_height_mm = cam.leftcam.camera_height_mm;
             }
         }
 
         private void txtCameraHeight_Leave(object sender, EventArgs e)
         {
             if (txtCameraHeight.Text == "") txtCameraHeight.Text = "500";
-            cam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
+            cam.leftcam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
+            cam.rightcam.camera_height_mm = cam.leftcam.camera_height_mm;
         }
 
         private void txtDistToCentre_KeyPress(object sender, KeyPressEventArgs e)
@@ -444,7 +477,8 @@ namespace WindowsApplication1
             if (e.KeyChar == 13)
             {
                 if (txtDistToCentre.Text == "") txtDistToCentre.Text = "500";
-                cam.camera_dist_to_pattern_centre_mm = Convert.ToInt32(txtDistToCentre.Text);
+                cam.leftcam.camera_dist_to_pattern_centre_mm = Convert.ToInt32(txtDistToCentre.Text);
+                cam.rightcam.camera_dist_to_pattern_centre_mm = cam.leftcam.camera_dist_to_pattern_centre_mm;
             }
         }
 

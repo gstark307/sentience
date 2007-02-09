@@ -28,6 +28,8 @@ namespace sentience.core
 {
     public class util
     {
+        #region "xml"
+
         /// <summary>
         /// This method adds a text element to the XML document as the last
         /// child of the current element.
@@ -36,14 +38,22 @@ namespace sentience.core
         /// <param name="nodeParent">Parent of the node we are adding</param>
         /// <param name="strTag">The tag of the element to add</param>
         /// <param name="strValue">The text value of the new element</param>
-        public static void addTextElement(XmlDocument doc, XmlElement nodeParent, string strTag, string strValue)
+        public static XmlElement AddTextElement(XmlDocument doc, XmlElement nodeParent, String strTag, String strValue)
         {
             XmlElement nodeElem = doc.CreateElement(strTag);
             XmlText nodeText = doc.CreateTextNode(strValue);
             nodeParent.AppendChild(nodeElem);
             nodeElem.AppendChild(nodeText);
-        } 
+            return (nodeElem);
+        }
 
+        public static void AddComment(XmlDocument doc, XmlElement nodeParent, String comment)
+        {
+            XmlNode commentnode = doc.CreateComment(comment);
+            nodeParent.AppendChild(commentnode);
+        }
+
+        #endregion
 
         /// <summary>
         /// does the line intersect with the given line?

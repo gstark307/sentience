@@ -1452,6 +1452,10 @@ namespace sentience.calibration
 
         #region "saving and loading"
 
+        /// <summary>
+        /// return an Xml document containing camera calibration parameters
+        /// </summary>
+        /// <returns></returns>
         private XmlDocument getXmlDocument()
         {
             // Create the document.
@@ -1461,21 +1465,34 @@ namespace sentience.calibration
             XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
             doc.PrependChild(dec);
 
-            XmlElement nodeCalibration = doc.CreateElement("Calibration");
+            XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
+            doc.AppendChild(commentnode);
+
+            XmlElement nodeCalibration = doc.CreateElement("Sentience");
             doc.AppendChild(nodeCalibration);
+
+            util.AddComment(doc, nodeCalibration, "Camera calibration data");
+
             XmlElement elem = getXml(doc);
             doc.DocumentElement.AppendChild(elem);
 
             return (doc);
         }
 
+        /// <summary>
+        /// save camera calibration parameters as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
         public void Save(String filename)
         {
             XmlDocument doc = getXmlDocument();
             doc.Save(filename);
         }
 
-
+        /// <summary>
+        /// load camera calibration parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
         public void Load(String filename)
         {
             // use an XmlTextReader to open an XML document
@@ -1500,7 +1517,12 @@ namespace sentience.calibration
             fitter.Show(curve_fit, image_width, image_height);
         }
 
-        private XmlElement getXml(XmlDocument doc)
+        /// <summary>
+        /// return an xml element containing camera calibration parameters
+        /// </summary>
+        /// <param name="doc">xml document to add the data to</param>
+        /// <returns>an xml element</returns>
+        public XmlElement getXml(XmlDocument doc)
         {
             String coefficients = "";
             if (fitter != null)
@@ -1515,47 +1537,63 @@ namespace sentience.calibration
 
             XmlElement elem = doc.CreateElement("Camera");
             doc.DocumentElement.AppendChild(elem);
-            util.addTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(camera_FOV_degrees));
-            util.addTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width) + "," + Convert.ToString(image_height));
-            util.addTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion.x) + "," + Convert.ToString(centre_of_distortion.y));
-            util.addTextElement(doc, elem, "DistortionCoefficients", coefficients);
-            util.addTextElement(doc, elem, "RMSerror", Convert.ToString(min_RMS_error));
+            util.AddComment(doc, elem, "Horizontal field of view of the camera in degrees");
+            util.AddTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(camera_FOV_degrees));
+            util.AddComment(doc, elem, "Image dimensions in pixels");
+            util.AddTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width) + "," + Convert.ToString(image_height));
+            if (centre_of_distortion != null)
+            {
+                util.AddComment(doc, elem, "The centre of distortion in pixels");
+                util.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion.x) + "," + Convert.ToString(centre_of_distortion.y));
+            }
+            util.AddComment(doc, elem, "Polynomial coefficients used to describe the camera lens distortion");
+            util.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
+            util.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
+            util.AddTextElement(doc, elem, "RMSerror", Convert.ToString(min_RMS_error));
             return (elem);
         }
 
-        private void LoadFromXml(XmlNode xnod, int level)
+        /// <summary>
+        /// parse an xml node to extract camera calibration parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(XmlNode xnod, int level)
         {
             XmlNode xnodWorking;
 
             if (xnod.Name == "FieldOfViewDegrees")
-                camera_FOV_degrees = Convert.ToInt32(xnod.Value);
+                camera_FOV_degrees = Convert.ToInt32(xnod.InnerText);
 
             if (xnod.Name == "ImageDimensions")
             {
-                String[] dimStr = xnod.Value.Split(',');
+                String[] dimStr = xnod.InnerText.Split(',');
                 image_width = Convert.ToInt32(dimStr[0]);
                 image_height = Convert.ToInt32(dimStr[1]);
             }
 
             if (xnod.Name == "CentreOfDistortion")
             {
-                String[] centreStr = xnod.Value.Split(',');
+                String[] centreStr = xnod.InnerText.Split(',');
                 centre_of_distortion = new calibration_graph_point(
-                    Convert.ToInt32(centreStr[0]),
-                    Convert.ToInt32(centreStr[1]));
+                    Convert.ToSingle(centreStr[0]),
+                    Convert.ToSingle(centreStr[1]));
             }
 
             if (xnod.Name == "DistortionCoefficients")
             {
-                String[] coeffStr = xnod.Value.Split(',');
-                fitter = new polyfit();
-                fitter.SetDegree(coeffStr.Length);
-                for (int i = 0; i < coeffStr.Length; i++)
-                    fitter.SetCoeff(i, Convert.ToSingle(coeffStr[i]));
+                if (xnod.InnerText != "")
+                {
+                    String[] coeffStr = xnod.InnerText.Split(',');
+                    fitter = new polyfit();
+                    fitter.SetDegree(coeffStr.Length - 1);
+                    for (int i = 0; i < coeffStr.Length; i++)
+                        fitter.SetCoeff(i, Convert.ToSingle(coeffStr[i]));
+                }
             }
 
             if (xnod.Name == "RMSerror")
-                min_RMS_error = Convert.ToSingle(xnod.Value);
+                min_RMS_error = Convert.ToSingle(xnod.InnerText);
 
             // if this is an element, extract any attributes
             /*
