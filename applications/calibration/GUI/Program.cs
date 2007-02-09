@@ -40,28 +40,13 @@ namespace WindowsApplication1
     }
 
 
-    public class interactiveObject
-    {
-        public String text;           //text associated with the object
-        public float x, y;            //position of the object
-        public Byte r, g, b;          //colour of the object
-        public int size = 1;          //size of the object
-        public int size_change = 0;   //change in size per frame
-        public int counter = 0;       //persistence counter
-        public float vx, vy;          //velocity
-        public int shape = 0;         //shape of teh object
-        public int state = 0;         //state of the object
-        public int state_counter = 0; //counter used to change state
-        public int no_of_states = 0;
-        public int state_ticks = 0;
-    }
-
-
     public class globals
     {
         public bool camera_initialised = false;
+        public String selectedCameraName = "";
 
         public cameraSettings CamSettingsLeft = new cameraSettings();
+        public cameraSettings CamSettingsRight = new cameraSettings();
 
         public String calibration_filename;
         public String calibration_filename_left;
@@ -91,25 +76,39 @@ namespace WindowsApplication1
         }
 
         public ActiveLeft CaptureInformationLeft;
+        public ActiveLeft CaptureInformationRight;
         public Filters WDM_filters = new Filters();
 
         public void PrepareCamLeft(String PathVideo)
         {
-            //String[] s;
-
-            //s = PathVideo.Split(".")
             ConfParamCamLeft();
-            //CaptureInformation.CaptureInfo.Filename = s(0) + CStr(CaptureInformation.Counter) + ".avi"
-            CaptureInformationLeft.Counter ++;
+            CaptureInformationLeft.Counter++;
             CaptureInformationLeft.CaptureInfo.RenderPreview();
+        }
+
+        public void PrepareCamRight(String PathVideo)
+        {
+            ConfParamCamRight();
+            CaptureInformationRight.Counter++;
+            CaptureInformationRight.CaptureInfo.RenderPreview();
         }
 
         public void selectCamera(bool leftImage, int cameraindex)
         {
+            if (leftImage)
+            {
                 CaptureInformationLeft.Camera = WDM_filters.VideoInputDevices[cameraindex];
                 CaptureInformationLeft.CaptureInfo = new Capture(CaptureInformationLeft.Camera, null);
                 CamSettingsLeft.cameraName = WDM_filters.VideoInputDevices[cameraindex].Name;
                 CamSettingsLeft.Save();
+            }
+            else
+            {
+                CaptureInformationRight.Camera = WDM_filters.VideoInputDevices[cameraindex];
+                CaptureInformationRight.CaptureInfo = new Capture(CaptureInformationRight.Camera, null);
+                CamSettingsRight.cameraName = WDM_filters.VideoInputDevices[cameraindex].Name;
+                CamSettingsRight.Save();
+            }
         }
 
 
@@ -135,6 +134,33 @@ namespace WindowsApplication1
                 return(-1);        
         }
 
+        public int getCameraIndexContaining(String containsCameraName, int index)
+        {
+            //return the index of the given camera
+            Filter f;
+            bool found = false;
+            int idx = 0;
+
+            int i = 0;
+            while ((!found) && (i < WDM_filters.VideoInputDevices.Count))
+            {
+                f = WDM_filters.VideoInputDevices[i];
+                if (f.Name.Contains(containsCameraName))
+                {
+                    if (index == idx)
+                    {
+                        found = true;
+                    }
+                    else i++;
+                    idx++;
+                }
+                else i++;
+            }
+            if (found)
+                return (i);
+            else
+                return (-1);
+        }
 
         public void ConfParamCamLeft()
         {
@@ -160,6 +186,32 @@ namespace WindowsApplication1
             s = CamSettingsLeft.frameRate.Split(' ');
             Rate = Convert.ToSingle(s[0]);
             CaptureInformationLeft.CaptureInfo.FrameRate = Rate;
+        }
+
+        public void ConfParamCamRight()
+        {
+            String[] s;
+            Size size;
+            double Rate;
+
+            CaptureInformationRight.CaptureInfo.Stop();
+
+            // Change the compressor
+            //CaptureInformation.CaptureInfo.VideoCompressor = WDM_filters.VideoCompressors(CaptureInformation.ConfWindow.cmbCompress.Items.IndexOf(CaptureInformation.ConfWindow.cmbCompress.Text))
+
+            // Change the image size
+            //s = CaptureInformationLeft.ConfWindow.cmbTam.Text.Split("x")
+            if (CamSettingsRight.resolution == "") CamSettingsRight.resolution = "320x240";
+            s = CamSettingsRight.resolution.Split('x');
+            size = new Size(Convert.ToInt32(s[0]), Convert.ToInt32(s[1]));
+            CaptureInformationRight.CaptureInfo.FrameSize = size;
+
+            // Change the number of frames per second
+            //s = CaptureInformationLeft.ConfWindow.cmbFPS.Text.Split(" ")
+            if (CamSettingsRight.frameRate == "") CamSettingsRight.frameRate = "30";
+            s = CamSettingsRight.frameRate.Split(' ');
+            Rate = Convert.ToSingle(s[0]);
+            CaptureInformationRight.CaptureInfo.FrameRate = Rate;
         }
 
 

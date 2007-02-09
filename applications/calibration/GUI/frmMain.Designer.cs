@@ -64,11 +64,13 @@ namespace WindowsApplication1
             this.cmbDisplayType = new System.Windows.Forms.ComboBox();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.picOutput2 = new System.Windows.Forms.PictureBox();
+            this.picRightImage = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             this.grpParameters.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -181,6 +183,7 @@ namespace WindowsApplication1
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
+            this.openFileDialog1.Filter = "Xml files|*.xml";
             // 
             // timUpdate
             // 
@@ -192,7 +195,7 @@ namespace WindowsApplication1
             // 
             this.picOutput1.Location = new System.Drawing.Point(12, 112);
             this.picOutput1.Name = "picOutput1";
-            this.picOutput1.Size = new System.Drawing.Size(733, 333);
+            this.picOutput1.Size = new System.Drawing.Size(330, 219);
             this.picOutput1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picOutput1.TabIndex = 3;
             this.picOutput1.TabStop = false;
@@ -356,19 +359,30 @@ namespace WindowsApplication1
             // 
             // picOutput2
             // 
-            this.picOutput2.Location = new System.Drawing.Point(621, 232);
+            this.picOutput2.Location = new System.Drawing.Point(358, 190);
             this.picOutput2.Name = "picOutput2";
-            this.picOutput2.Size = new System.Drawing.Size(198, 141);
+            this.picOutput2.Size = new System.Drawing.Size(302, 219);
             this.picOutput2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picOutput2.TabIndex = 5;
             this.picOutput2.TabStop = false;
             this.picOutput2.Visible = false;
+            // 
+            // picRightImage
+            // 
+            this.picRightImage.Location = new System.Drawing.Point(444, 112);
+            this.picRightImage.Name = "picRightImage";
+            this.picRightImage.Size = new System.Drawing.Size(64, 55);
+            this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picRightImage.TabIndex = 6;
+            this.picRightImage.TabStop = false;
+            this.picRightImage.Visible = false;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(863, 457);
+            this.Controls.Add(this.picRightImage);
             this.Controls.Add(this.picOutput2);
             this.Controls.Add(this.grpParameters);
             this.Controls.Add(this.picOutput1);
@@ -386,6 +400,7 @@ namespace WindowsApplication1
             this.grpParameters.ResumeLayout(false);
             this.grpParameters.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -428,6 +443,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.PictureBox picOutput2;
+        private System.Windows.Forms.PictureBox picRightImage;
     }
 }
 

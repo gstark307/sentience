@@ -46,6 +46,7 @@ namespace WindowsApplication1
             Filter f;
 
             //what cameras are available?  Populate the combo box
+            global_variables.selectedCameraName = "";
             cboCamaras.Items.Clear();
             for (i = 0; i < global_variables.WDM_filters.VideoInputDevices.Count; i++)
             {
@@ -57,8 +58,6 @@ namespace WindowsApplication1
 
         private void Bo_Selecta()
         {
-            //String IdVentana;
-
             if (cboCamaras.SelectedItem == null)
             {
                 MessageBox.Show("Select an available camera.", "Error",MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
@@ -66,7 +65,7 @@ namespace WindowsApplication1
                 this.Close();
             }
 
-            global_variables.selectCamera(LeftImage, cboCamaras.SelectedIndex);
+            global_variables.selectedCameraName = cboCamaras.Text;
 
             this.Dispose();
         }

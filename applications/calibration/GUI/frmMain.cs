@@ -45,15 +45,18 @@ namespace WindowsApplication1
         globals global_variables;
 
         bool left_camera_running = false;
+        bool right_camera_running = false;
 
         int[] captureState = new int[2];
-        Bitmap leftbmp;
+        Bitmap leftbmp, rightbmp;
 
         //list of interactive objects
         RotateFlipType transformLeft = 0;
+        RotateFlipType transformRight = 0;
 
         //output image
-        Byte[] disp_bmp_data=null;
+        Byte[] bmp_data_left = null;
+        Byte[] bmp_data_right = null;
         bool outputInitialised = false;
         int output_width, output_height;
 
@@ -67,28 +70,46 @@ namespace WindowsApplication1
 
 #region "Camera stuff"
 
-        public void updateVisionLeft(Image input_img, bool leftImage)
+        public void updateVision(Image input_img, bool leftImage)
         {
+            int cameraIndex = 0;
+            Byte[] disp_bmp_data = bmp_data_left;
+            if (!leftImage)
+            {
+                cameraIndex = 1;
+                disp_bmp_data = bmp_data_right;
+            }
+
             Byte[] ary;
 
             try
             {
-                if (captureState[0] == 1)
+                if (captureState[cameraIndex] == 1)
                 {
-                    //if (global_variables.left_bmp == null)
-                        //global_variables.left_bmp = new Byte[input_img.Width * input_img.Height * 3];
-
                     if (disp_bmp_data == null)
                     {
-                        disp_bmp_data = new Byte[input_img.Width * input_img.Height * 3];
+                        if (leftImage)
+                        {
+                            bmp_data_left = new Byte[input_img.Width * input_img.Height * 3];
+                            disp_bmp_data = bmp_data_left;
+                        }
+                        else
+                        {
+                            bmp_data_right = new Byte[input_img.Width * input_img.Height * 3];
+                            disp_bmp_data = bmp_data_right;
+                        }
                     }
 
                     ary = disp_bmp_data;
                     updatebitmap((Bitmap)(input_img.Clone()), ary);
 
-                    captureState[0] = 2;
+                    captureState[cameraIndex] = 2;
                 }
-                left_camera_running = true;
+
+                if (leftImage)
+                    left_camera_running = true;
+                else
+                    right_camera_running = true;
             }
             catch
             {
@@ -106,28 +127,35 @@ namespace WindowsApplication1
         #region "Capture Event functions"
 
 
-        public void RefreshLeftImage(PictureBox Frame) //object sender, FrameGrabArgs f)
+        public void RefreshLeftImage(PictureBox Frame)
         {
             try
             {
-                //picLeftImage.Image = null;
-                //picLeftImage.Image = Frame.Image;
-
-                //transform the image appropriately
                 transformImage(Frame, transformLeft);
 
                 global_variables.CaptureInformationLeft.CounterFrames ++;
-                updateVisionLeft(Frame.Image, true);
-
-                //picLeftImage.Refresh();
-
+                updateVision(Frame.Image, true);
             }
-            catch //(Exception ex)
+            catch 
             {
 
             }
         }
 
+        public void RefreshRightImage(PictureBox Frame)
+        {
+            try
+            {
+                transformImage(Frame, transformRight);
+
+                global_variables.CaptureInformationRight.CounterFrames++;
+                updateVision(Frame.Image, false);
+            }
+            catch 
+            {
+
+            }
+        }
 
         #endregion
 
@@ -137,7 +165,7 @@ namespace WindowsApplication1
             //leftbmp = New Bitmap(CaptureInformationLeft.ConfWindow.Width, CaptureInformationLeft.ConfWindow.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb)
             leftbmp = new Bitmap(320, 240, PixelFormat.Format24bppRgb);
             picLeftImage.Image = leftbmp;
-            picLeftImage.Visible = true;
+            picLeftImage.Visible = false;
 
             global_variables.CaptureInformationLeft.CaptureInfo.PreviewWindow = this.picLeftImage;
 
@@ -146,7 +174,6 @@ namespace WindowsApplication1
 
             //Define RefreshImage as event handler of FrameCaptureComplete
             global_variables.CaptureInformationLeft.CaptureInfo.FrameCaptureComplete += new Capture.FrameCapHandler(this.RefreshLeftImage);
-            //AddHandler(global_variables.CaptureInformationLeft.CaptureInfo.FrameCaptureComplete, *RefreshLeftImage);
 
             global_variables.CaptureInformationLeft.CaptureInfo.CaptureFrame();
 
@@ -156,19 +183,36 @@ namespace WindowsApplication1
             this.Show();
         }
 
+        private void initCameraRight2()
+        {
+            //rightbmp = New Bitmap(CaptureInformationLeft.ConfWindow.Width, CaptureInformationLeft.ConfWindow.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb)
+            rightbmp = new Bitmap(320, 240, PixelFormat.Format24bppRgb);
+            picRightImage.Image = rightbmp;
+            picRightImage.Visible = false;
 
-        public void initCameraLeft()
+            global_variables.CaptureInformationRight.CaptureInfo.PreviewWindow = this.picRightImage;
+
+            global_variables.ConfParamCamRight();
+            global_variables.PrepareCamRight(global_variables.CaptureInformationRight.PathVideo);
+
+            //Define RefreshImage as event handler of FrameCaptureComplete
+            global_variables.CaptureInformationRight.CaptureInfo.FrameCaptureComplete += new Capture.FrameCapHandler(this.RefreshRightImage);
+
+            global_variables.CaptureInformationRight.CaptureInfo.CaptureFrame();
+
+            global_variables.CaptureInformationRight.Counter = 1;
+            global_variables.CaptureInformationRight.CounterFrames = 1;
+
+            this.Show();
+        }
+
+        public void initCamera()
         {
             //Call to AddCam to select an available camera
             AddCam AddCamera = new AddCam(global_variables);
 
             AddCamera.LeftImage = true;
             AddCamera.ShowDialog(this);
-            if (global_variables.camera_initialised)
-            {
-                startSentienceToolStripMenuItem.Enabled = false;
-                initCameraLeft2();
-            }
         }
 
 
@@ -269,6 +313,20 @@ namespace WindowsApplication1
                 {
                 }
             }
+            if (right_camera_running)
+            {
+                try
+                {
+                    if ((captureState[1] < 2) && (!global_variables.CaptureInformationRight.CaptureInfo.Capturing))
+                    {
+                        captureState[1] = 1;
+                        global_variables.CaptureInformationRight.CaptureInfo.CaptureFrame();
+                    }
+                }
+                catch
+                {
+                }
+            }
         }
 
         private void timUpdate_Tick(object sender, EventArgs e)
@@ -279,14 +337,17 @@ namespace WindowsApplication1
                 captureCameraImages();
                 
                 //update from camera
-                if (captureState[0] == 2)
+                if (((no_of_cameras == 1) && (captureState[0] == 2)) ||
+                    ((no_of_cameras > 1) && (captureState[1] == 2)))
                 {
                     captureState[0] = 0;
+                    captureState[1] = 0;
 
                     //show disparity
                     if (!outputInitialised)
                     {
                         picOutput1.Image = new Bitmap(picLeftImage.Image.Width, picLeftImage.Image.Height, PixelFormat.Format24bppRgb);
+                        if (no_of_cameras > 1) picOutput2.Image = new Bitmap(picRightImage.Image.Width, picRightImage.Image.Height, PixelFormat.Format24bppRgb);
                         output_width = picLeftImage.Image.Width;
                         output_height = picLeftImage.Image.Height;
                         outputInitialised = true;
@@ -295,7 +356,15 @@ namespace WindowsApplication1
                     for (int i = 0; i < no_of_cameras; i++)
                     {
                         calibration calib = cam.leftcam;
-                        if (i > 0) calib = cam.rightcam;
+                        PictureBox pic = picOutput1;
+                        Byte[] disp_bmp_data = bmp_data_left;
+
+                        if (i > 0)
+                        {
+                            calib = cam.rightcam;
+                            pic = picOutput2;
+                            disp_bmp_data = bmp_data_right;
+                        }                        
 
                         calib.Update(disp_bmp_data, output_width, output_height);
 
@@ -303,40 +372,42 @@ namespace WindowsApplication1
                         {
                             case DISPLAY_EDGES:
                                 {
-                                    updatebitmap(calib.edges_image, (Bitmap)picOutput1.Image);
+                                    updatebitmap(calib.edges_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_CORNERS:
                                 {
-                                    updatebitmap(calib.corners_image, (Bitmap)picOutput1.Image);
+                                    updatebitmap(calib.corners_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_LINES:
                                 {
-                                    updatebitmap(calib.lines_image, (Bitmap)picOutput1.Image);
+                                    updatebitmap(calib.lines_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_CENTREALIGN:
                                 {
-                                    updatebitmap(calib.centrealign_image, (Bitmap)picOutput1.Image);
+                                    updatebitmap(calib.centrealign_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_CURVE:
                                 {
                                     if (calib.curve_fit != null)
-                                        updatebitmap(calib.curve_fit, (Bitmap)picOutput1.Image);
+                                        updatebitmap(calib.curve_fit, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_RECTIFIED:
                                 {
                                     if (calib.rectified_image != null)
-                                        updatebitmap(calib.rectified_image, (Bitmap)picOutput1.Image);
+                                        updatebitmap(calib.rectified_image, (Bitmap)pic.Image);
                                     break;
                                 }
                         }
+
+                        pic.Refresh();
                     }
 
-                    picOutput1.Refresh();
+                    
                 }
 
             }
@@ -363,16 +434,16 @@ namespace WindowsApplication1
                 picOutput2.Visible = true;
                 picOutput1.Left = grpParameters.Left;
                 picOutput1.Top = menuStrip1.Height + grpParameters.Height + 10;
-                picOutput1.Width = ((this.Width - picOutput1.Left) / 2)-5;
+                picOutput1.Width = ((this.Width - picOutput1.Left) / 2)-1;
                 picOutput1.Height = this.Height - picOutput1.Top - 40;
 
-                picOutput2.Left = picOutput1.Top + picOutput1.Width + 10;
+                picOutput2.Left = picOutput1.Left + picOutput1.Width + 2;
                 picOutput2.Top = picOutput1.Top;
                 picOutput2.Width = picOutput1.Width;
                 picOutput2.Height = picOutput1.Height;
             }
 
-            grpParameters.Width = picOutput1.Width;
+            grpParameters.Width = (picOutput1.Width*2) - picOutput1.Left;
             grpParameters.Visible = true;
 
             cmbDisplayType.SelectedIndex = display_type;
@@ -384,9 +455,53 @@ namespace WindowsApplication1
         }
 
         private void startCameraToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Redraw();
-            initCameraLeft();            
+        {            
+            initCamera();
+            if (global_variables.selectedCameraName != "")
+            {
+                startCameraToolStripMenuItem.Enabled = false;
+
+                global_variables.camera_initialised = false;
+
+                // grab the required camera WDM device name from the text box
+                // (hope you remembered to fill that in correctly)
+                String cameraFilterName = global_variables.selectedCameraName;
+
+                if (cameraFilterName.Contains("#"))
+                {
+                    String[] str = cameraFilterName.Split('#');
+                    cameraFilterName = str[0].Trim();
+                }
+
+                //transformRight = RotateFlipType.Rotate180FlipNone;
+
+                // get the device list index number for this WDM device
+                int index = global_variables.getCameraIndexContaining(cameraFilterName, 0);
+                if (index > -1)
+                {
+                    // start running the left camera
+                    global_variables.selectCamera(true, index);
+                    initCameraLeft2();
+                    no_of_cameras = 1;
+
+                    index = global_variables.getCameraIndexContaining(cameraFilterName, 1);
+                    if (index > -1)
+                    {
+                        //start running the right camera
+                        // note: it's assumed that the device index for the right
+                        // camera is immediately after the left one
+                        global_variables.selectCamera(false, index);
+                        initCameraRight2();
+                        no_of_cameras = 2;
+                    }
+
+                    // and lo, the cameras were initialised...
+                    global_variables.camera_initialised = true;
+                }
+                else MessageBox.Show("Cannot find a WDM driver for the device known as '" + cameraFilterName + "'.  Are the cameras plugged in ?", "Sentience Demo");
+
+                Redraw();
+            }
         }
 
         private void frmMain_Resize(object sender, EventArgs e)
@@ -491,6 +606,7 @@ namespace WindowsApplication1
         {
             openFileDialog1.DefaultExt = "xml";
             openFileDialog1.FileName = ".xml";
+            openFileDialog1.Filter = "Xml files|*.xml";
             openFileDialog1.Title = "Load calibration file";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 cam.Load(openFileDialog1.FileName);
@@ -499,7 +615,8 @@ namespace WindowsApplication1
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {            
             saveFileDialog1.DefaultExt = "xml";
-            saveFileDialog1.FileName = global_variables.CamSettingsLeft.cameraName + ".xml";
+            saveFileDialog1.FileName = "calibration_" + global_variables.CamSettingsLeft.cameraName + ".xml";
+            saveFileDialog1.Filter = "Xml files|*.xml";
             saveFileDialog1.Title = "Save calibration file";
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
                 cam.Save(saveFileDialog1.FileName);
