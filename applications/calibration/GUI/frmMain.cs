@@ -73,6 +73,10 @@ namespace WindowsApplication1
         const int DISPLAY_RECTIFIED = 5;
         public int display_type = DISPLAY_CENTREALIGN;
 
+        //current position of the mouse within an image
+        Point LocalMousePosition;
+
+
         #region "Camera stuff"
 
         public void updateVision(Image input_img, bool leftImage)
@@ -225,6 +229,8 @@ namespace WindowsApplication1
 
         #region "saving and loading the calibration setup"
 
+        bool inCalibrationSetup = false;
+
         /// <summary>
         /// return an Xml document containing camera calibration parameters
         /// </summary>
@@ -265,6 +271,22 @@ namespace WindowsApplication1
             util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingFactor", txtSpacingFactor.Text);
             util.AddComment(doc, nodeCalibSetup, "Calibration pattern spacing in mm");
             util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingMillimetres", txtPatternSpacing.Text);
+            if (cam.leftcam.ROI != null)
+            {
+                util.AddComment(doc, nodeCalibSetup, "Region of interest in the left image");
+                util.AddTextElement(doc, nodeCalibSetup, "LeftROI", Convert.ToString(cam.leftcam.ROI.tx) + "," +
+                                                                    Convert.ToString(cam.leftcam.ROI.ty) + "," +
+                                                                    Convert.ToString(cam.leftcam.ROI.bx) + "," +
+                                                                    Convert.ToString(cam.leftcam.ROI.by));
+            }
+            if (cam.rightcam.ROI != null)
+            {
+                util.AddComment(doc, nodeCalibSetup, "Region of interest in the right image");
+                util.AddTextElement(doc, nodeCalibSetup, "RightROI", Convert.ToString(cam.rightcam.ROI.tx) + "," +
+                                                                    Convert.ToString(cam.rightcam.ROI.ty) + "," +
+                                                                    Convert.ToString(cam.rightcam.ROI.bx) + "," +
+                                                                    Convert.ToString(cam.rightcam.ROI.by));
+            }
 
             return (doc);
         }
@@ -287,6 +309,8 @@ namespace WindowsApplication1
         {
             if (File.Exists(filename))
             {
+                inCalibrationSetup = false;
+
                 // use an XmlTextReader to open an XML document
                 XmlTextReader xtr = new XmlTextReader(filename);
                 xtr.WhitespaceHandling = WhitespaceHandling.None;
@@ -319,34 +343,60 @@ namespace WindowsApplication1
         {
             XmlNode xnodWorking;
 
-            if (xnod.Name == "FieldOfViewDegrees")
-            {
-                txtFOV.Text = xnod.InnerText;
-            }
+            if (xnod.Name == "CalibrationSetup")
+                inCalibrationSetup = true;
 
-            if (xnod.Name == "DistToCentreMillimetres")
+            if (inCalibrationSetup)
             {
-                txtDistToCentre.Text = xnod.InnerText;
-            }
+                if (xnod.Name == "LeftROI")
+                {
+                    String[] s = xnod.InnerText.Split(',');
+                    cam.leftcam.ROI = new calibration_region_of_interest();
+                    cam.leftcam.ROI.tx = Convert.ToInt32(s[0]);
+                    cam.leftcam.ROI.ty = Convert.ToInt32(s[1]);
+                    cam.leftcam.ROI.bx = Convert.ToInt32(s[2]);
+                    cam.leftcam.ROI.by = Convert.ToInt32(s[3]);
+                }
 
-            if (xnod.Name == "CameraHeightMillimetres")
-            {
-                txtCameraHeight.Text = xnod.InnerText;
-            }
+                if (xnod.Name == "RightROI")
+                {
+                    String[] s = xnod.InnerText.Split(',');
+                    cam.rightcam.ROI = new calibration_region_of_interest();
+                    cam.rightcam.ROI.tx = Convert.ToInt32(s[0]);
+                    cam.rightcam.ROI.ty = Convert.ToInt32(s[1]);
+                    cam.rightcam.ROI.bx = Convert.ToInt32(s[2]);
+                    cam.rightcam.ROI.by = Convert.ToInt32(s[3]);
+                }
 
-            if (xnod.Name == "PatternSpacingFactor")
-            {
-                txtSpacingFactor.Text = xnod.InnerText;
-            }
+                if (xnod.Name == "FieldOfViewDegrees")
+                {
+                    txtFOV.Text = xnod.InnerText;
+                }
 
-            if (xnod.Name == "PatternSpacingMillimetres")
-            {
-                txtPatternSpacing.Text = xnod.InnerText;
-            }
+                if (xnod.Name == "DistToCentreMillimetres")
+                {
+                    txtDistToCentre.Text = xnod.InnerText;
+                }
 
-            if (xnod.Name == "CentreSpotPosition")
-            {
-                cmbCentreSpotPosition.SelectedIndex = Convert.ToInt32(xnod.InnerText);
+                if (xnod.Name == "CameraHeightMillimetres")
+                {
+                    txtCameraHeight.Text = xnod.InnerText;
+                }
+
+                if (xnod.Name == "PatternSpacingFactor")
+                {
+                    txtSpacingFactor.Text = xnod.InnerText;
+                }
+
+                if (xnod.Name == "PatternSpacingMillimetres")
+                {
+                    txtPatternSpacing.Text = xnod.InnerText;
+                }
+
+                if (xnod.Name == "CentreSpotPosition")
+                {
+                    cmbCentreSpotPosition.SelectedIndex = Convert.ToInt32(xnod.InnerText);
+                }
             }
 
             // call recursively on all children of the current node
@@ -358,6 +408,7 @@ namespace WindowsApplication1
                     LoadFromXml(xnodWorking, level + 1, ref cameraIndex);
                     xnodWorking = xnodWorking.NextSibling;
                 }
+                if (xnod.Name == "CalibrationSetup") inCalibrationSetup = false;
             }
         }
 
@@ -369,7 +420,12 @@ namespace WindowsApplication1
         /// </summary>
         private void ResetCalibration()
         {
+            calibration_region_of_interest r_left = cam.leftcam.ROI;
+            calibration_region_of_interest r_right = cam.rightcam.ROI;
+
             cam = new calibrationStereo();
+            cam.leftcam.ROI = r_left;
+            cam.rightcam.ROI = r_right;
             cam.setCentreSpotPosition(cmbCentreSpotPosition.SelectedIndex);
             cam.leftcam.camera_dist_to_pattern_centre_mm = Convert.ToInt32(txtDistToCentre.Text);
             cam.rightcam.camera_dist_to_pattern_centre_mm = cam.leftcam.camera_dist_to_pattern_centre_mm;
@@ -806,6 +862,44 @@ namespace WindowsApplication1
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveCalibrationSetup(calibration_setup_filename);
+        }
+
+        private void picOutput1_MouseMove(object sender, MouseEventArgs e)
+        {
+            LocalMousePosition = picOutput1.PointToClient(Cursor.Position);
+        }
+
+        private void picOutput2_MouseMove(object sender, MouseEventArgs e)
+        {
+            LocalMousePosition = picOutput2.PointToClient(Cursor.Position);
+        }
+
+        private void picOutput1_Click(object sender, EventArgs e)
+        {
+            if ((cmbDisplayType.SelectedIndex == 3) && (picOutput1.Image != null))
+            {
+                int x = (LocalMousePosition.X * picOutput1.Image.Width) / picOutput1.Width;
+                int y = (LocalMousePosition.Y * picOutput1.Image.Height) / picOutput1.Height;
+
+                if (y < picOutput1.Image.Height / 2)
+                    cam.leftcam.setRegionOfInterestPoint(x, y, true);
+                else
+                    cam.leftcam.setRegionOfInterestPoint(x, y, false);
+            }
+        }
+
+        private void picOutput2_Click(object sender, EventArgs e)
+        {
+            if ((cmbDisplayType.SelectedIndex == 3) && (picOutput2.Image != null))
+            {
+                int x = (LocalMousePosition.X * picOutput2.Image.Width) / picOutput2.Width;
+                int y = (LocalMousePosition.Y * picOutput2.Image.Height) / picOutput2.Height;
+
+                if (y < picOutput2.Image.Height / 2)
+                    cam.rightcam.setRegionOfInterestPoint(x, y, true);
+                else
+                    cam.rightcam.setRegionOfInterestPoint(x, y, false);
+            }
         }
 
     }

@@ -201,6 +201,8 @@ namespace WindowsApplication1
             this.picOutput1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picOutput1.TabIndex = 3;
             this.picOutput1.TabStop = false;
+            this.picOutput1.Click += new System.EventHandler(this.picOutput1_Click);
+            this.picOutput1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.picOutput1_MouseMove);
             // 
             // picLeftImage
             // 
@@ -394,6 +396,8 @@ namespace WindowsApplication1
             this.picOutput2.TabIndex = 5;
             this.picOutput2.TabStop = false;
             this.picOutput2.Visible = false;
+            this.picOutput2.Click += new System.EventHandler(this.picOutput2_Click);
+            this.picOutput2.MouseMove += new System.Windows.Forms.MouseEventHandler(this.picOutput2_MouseMove);
             // 
             // picRightImage
             // 

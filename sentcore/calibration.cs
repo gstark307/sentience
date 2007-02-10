@@ -50,6 +50,40 @@ namespace sentience.calibration
         }
     }
 
+    /// <summary>
+    /// defines a region of interest containing the calibration pattern
+    /// </summary>
+    public class calibration_region_of_interest
+    {
+        public int tx, ty, bx, by;
+
+        public void setTopLeft(int x, int y)
+        {
+            tx = x;
+            ty = y;
+        }
+
+        public void setBottomRight(int x, int y)
+        {
+            bx = x;
+            by = y;
+        }
+
+        /// <summary>
+        /// show the region within the given image
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void Show(Byte[] img, int width, int height)
+        {
+            util.drawLine(img, width, height, tx, ty, bx, ty, 0, 255, 0, 0, false);
+            util.drawLine(img, width, height, bx, ty, bx, by, 0, 255, 0, 0, false);
+            util.drawLine(img, width, height, bx, by, tx, by, 0, 255, 0, 0, false);
+            util.drawLine(img, width, height, tx, by, tx, ty, 0, 255, 0, 0, false);
+        }
+    }
+
     public class calibration_line
     {
         public ArrayList points = new ArrayList();
@@ -164,6 +198,27 @@ namespace sentience.calibration
         int[,] horizontal_magnitude;
         int[,] vertical_magnitude;
         ArrayList horizontal_lines, vertical_lines;
+
+        #region "region of interest"
+
+        public calibration_region_of_interest ROI;
+
+        /// <summary>
+        /// sets the top left or bottom right point of the region of interest
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="topLeft"></param>
+        public void setRegionOfInterestPoint(int x, int y, bool topLeft)
+        {
+            if (ROI == null) ROI = new calibration_region_of_interest();
+            if (topLeft)
+                ROI.setTopLeft(x, y);
+            else
+                ROI.setBottomRight(x, y);
+        }
+
+        #endregion
 
         #region "centre spot detection"
 
@@ -565,11 +620,22 @@ namespace sentience.calibration
         private void updateEdgesImage(int width, int height)
         {
             int start_x = width / 5;
+            if (ROI != null) start_x = ROI.tx;
             int end_x = width - start_x;
+            if (ROI != null) end_x = ROI.bx;
+            int start_y = 5;
+            if (ROI != null) start_y = ROI.ty;
+            int end_y = height - 5;
+            if (ROI != null) end_y = ROI.by;
+
+            if (start_x < 5) start_x = 5;
+            if (start_y < 5) start_y = 5;
+            if (end_x > width - 5) end_x = width - 5;
+            if (end_y > height - 5) end_y = height - 5;
 
             for (int x = start_x; x < end_x; x++)
             {
-                for (int y = 5; y < height - 5; y++)
+                for (int y = start_y; y < end_y; y++)
                 {
                     int hits = 0;
                     for (int i = 0; i < no_of_images; i++)
@@ -1263,33 +1329,6 @@ namespace sentience.calibration
 
         #endregion
 
-        #region "display functions"
-
-        /// <summary>
-        /// show a centre line guide to help when aligning the calibration pattern
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        private void showVerticalCentreline(Byte[] img, int width, int height)
-        {
-            int x = width/2;
-            int y = height/12;
-            util.drawLine(img, width, height, x - 2, 0, x, y, 100, 100, 255, 0, false);
-            util.drawLine(img, width, height, x, y, x + 2, 0, 100, 100, 255, 0, false);
-            util.drawLine(img, width, height, x - 2, height-1, x, height-y, 100, 100, 255, 0, false);
-            util.drawLine(img, width, height, x, height-y, x + 2, height-1, 100, 100, 255, 0, false);
-
-            x = width / 12;
-            y = height / 2;
-            util.drawLine(img, width, height, 0, y - 2, x, y, 100, 100, 255, 0, false);
-            util.drawLine(img, width, height, x, y, 0, y + 2, 100, 100, 255, 0, false);
-            util.drawLine(img, width, height, width-1, y - 2, width-x, y, 100, 100, 255, 0, false);
-            util.drawLine(img, width, height, width-x, y, width-1, y + 2, 100, 100, 255, 0, false);
-        }
-
-        #endregion
-
         #region "lens distortion calculation"
 
         private void detectLensDistortion(int width, int height,
@@ -1587,108 +1626,111 @@ namespace sentience.calibration
 
         public void Update(Byte[] img, int width, int height)
         {
-            image_width = width;
-            image_height = height;
-
-            // create lists to store edges
-            edges_horizontal = new ArrayList();
-            edges_vertical = new ArrayList();
-            edges_image = new Byte[width * height * 3];
-            centrealign_image = new Byte[width * height * 3];
-            corners_image = new Byte[width * height * 3];
-            lines_image = new Byte[width * height * 3];
-            edges_binary = new bool[width, height];
-            horizontal_magnitude = new int[2,width];
-            vertical_magnitude = new int[2,height];
-            if (binary_image == null) binary_image = new bool[no_of_images, width, height];
-            for (int i = 0; i < img.Length; i++)
+            if (img != null)
             {
-                lines_image[i] = img[i];
-                centrealign_image[i] = img[i];
-                edges_image[i] = img[i];
-                corners_image[i] = img[i];
-            }
+                image_width = width;
+                image_height = height;
 
-            // image used for aligning the centre of the calibration pattern
-            util.drawLine(centrealign_image, width, height, width / 2, 0, width / 2, height - 1, 255, 255, 255, 0, false);
-            util.drawLine(centrealign_image, width, height, 0, height/2, width-1, height/2, 255, 255, 255, 0, false);
-
-            // create a mono image
-            calibration_image = util.monoImage(img, width, height);
-
-            int min_magnitude = 1;
-            clearBinaryImage(width, height);
-            detectHorizontalEdges(calibration_image, width, height, edges_horizontal, min_magnitude);
-            detectVerticalEdges(calibration_image, width, height, edges_vertical, min_magnitude);
-            updateEdgesImage(width, height);
-
-            detectHorizontalLines(width, height);
-            detectVerticalLines(width, height);
-
-            // create a grid to store the edges
-            if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))
-            {
-                // locate corners
-                detectCorners(width, height);
-
-                // hunt the centre spot
-                int image_cx=0, image_cy=0;
-                int grid_cx=0, grid_cy=0;
-                detectCentrePoint(calibration_image, width, height, ref image_cx, ref image_cy, ref grid_cx, ref grid_cy);
-                if (grid_cx > 0)
+                // create lists to store edges
+                edges_horizontal = new ArrayList();
+                edges_vertical = new ArrayList();
+                edges_image = new Byte[width * height * 3];
+                centrealign_image = new Byte[width * height * 3];
+                corners_image = new Byte[width * height * 3];
+                lines_image = new Byte[width * height * 3];
+                edges_binary = new bool[width, height];
+                horizontal_magnitude = new int[2, width];
+                vertical_magnitude = new int[2, height];
+                if (binary_image == null) binary_image = new bool[no_of_images, width, height];
+                for (int i = 0; i < img.Length; i++)
                 {
-                    util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
-
-                    // detect the lens distortion
-                    detectLensDistortion(width, height, grid_cx, grid_cy);
-
-                    // update the calibration lookup
-                    updateCalibrationMap(width, height);
-
-                    float RMS_error = GetRMSerror() * fitter.GetRMSerror();
-                    if (RMS_error < min_RMS_error)
-                    {
-                        calibration_map = new int[width * height];
-                        for (int i = 0; i < temp_calibration_map.Length; i++)
-                            calibration_map[i] = temp_calibration_map[i];
-
-                        // update the graph
-                        curve_fit = new Byte[width * height * 3];
-                        fitter.Show(curve_fit, width, height);
-
-                        min_RMS_error = RMS_error;
-                    }
-
-                    // rectify
-                    Rectify(img, width, height);
-
+                    lines_image[i] = img[i];
+                    centrealign_image[i] = img[i];
+                    edges_image[i] = img[i];
+                    corners_image[i] = img[i];
                 }
 
-                corners_index++;
-                if (corners_index >= corners.Length) corners_index = 0;
+                // image used for aligning the centre of the calibration pattern
+                util.drawLine(centrealign_image, width, height, width / 2, 0, width / 2, height - 1, 255, 255, 255, 0, false);
+                util.drawLine(centrealign_image, width, height, 0, height / 2, width - 1, height / 2, 255, 255, 255, 0, false);
+                // show region of interest
+                if (ROI != null) ROI.Show(centrealign_image, width, height);
 
-                //drawGrid(edges_image, width, height);
-            }
+                // create a mono image
+                calibration_image = util.monoImage(img, width, height);
 
-            showVerticalCentreline(edges_image, width, height);
+                int min_magnitude = 1;
+                clearBinaryImage(width, height);
+                detectHorizontalEdges(calibration_image, width, height, edges_horizontal, min_magnitude);
+                detectVerticalEdges(calibration_image, width, height, edges_vertical, min_magnitude);
+                updateEdgesImage(width, height);
 
-            binary_image_index++;
-            if (binary_image_index >= no_of_images) binary_image_index = 0;
+                detectHorizontalLines(width, height);
+                detectVerticalLines(width, height);
 
-            av_centreline_x += closest_to_centreline_x;
-            av_centreline_x_hits++;
-            if (av_centreline_x_hits > 50)
-            {
-                av_centreline_x /= 2;
-                av_centreline_x_hits /= 2;
-            }
+                // create a grid to store the edges
+                if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))
+                {
+                    // locate corners
+                    detectCorners(width, height);
 
-            av_centreline_y += closest_to_centreline_y;
-            av_centreline_y_hits++;
-            if (av_centreline_y_hits > 50)
-            {
-                av_centreline_y /= 2;
-                av_centreline_y_hits /= 2;
+                    // hunt the centre spot
+                    int image_cx = 0, image_cy = 0;
+                    int grid_cx = 0, grid_cy = 0;
+                    detectCentrePoint(calibration_image, width, height, ref image_cx, ref image_cy, ref grid_cx, ref grid_cy);
+                    if (grid_cx > 0)
+                    {
+                        util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
+
+                        // detect the lens distortion
+                        detectLensDistortion(width, height, grid_cx, grid_cy);
+
+                        // update the calibration lookup
+                        updateCalibrationMap(width, height);
+
+                        float RMS_error = GetRMSerror() * fitter.GetRMSerror();
+                        if (RMS_error < min_RMS_error)
+                        {
+                            calibration_map = new int[width * height];
+                            for (int i = 0; i < temp_calibration_map.Length; i++)
+                                calibration_map[i] = temp_calibration_map[i];
+
+                            // update the graph
+                            curve_fit = new Byte[width * height * 3];
+                            fitter.Show(curve_fit, width, height);
+
+                            min_RMS_error = RMS_error;
+                        }
+
+                        // rectify
+                        Rectify(img, width, height);
+
+                    }
+
+                    corners_index++;
+                    if (corners_index >= corners.Length) corners_index = 0;
+
+                    //drawGrid(edges_image, width, height);
+                }
+
+                binary_image_index++;
+                if (binary_image_index >= no_of_images) binary_image_index = 0;
+
+                av_centreline_x += closest_to_centreline_x;
+                av_centreline_x_hits++;
+                if (av_centreline_x_hits > 50)
+                {
+                    av_centreline_x /= 2;
+                    av_centreline_x_hits /= 2;
+                }
+
+                av_centreline_y += closest_to_centreline_y;
+                av_centreline_y_hits++;
+                if (av_centreline_y_hits > 50)
+                {
+                    av_centreline_y /= 2;
+                    av_centreline_y_hits /= 2;
+                }
             }
 
         }
