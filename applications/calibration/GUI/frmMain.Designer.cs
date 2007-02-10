@@ -51,6 +51,8 @@ namespace WindowsApplication1
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDirectionOfGravityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpParameters = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.cmbCentreSpotPosition = new System.Windows.Forms.ComboBox();
             this.txtDistToCentre = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.txtCameraHeight = new System.Windows.Forms.TextBox();
@@ -223,6 +225,8 @@ namespace WindowsApplication1
             // 
             // grpParameters
             // 
+            this.grpParameters.Controls.Add(this.label6);
+            this.grpParameters.Controls.Add(this.cmbCentreSpotPosition);
             this.grpParameters.Controls.Add(this.txtDistToCentre);
             this.grpParameters.Controls.Add(this.label5);
             this.grpParameters.Controls.Add(this.txtCameraHeight);
@@ -236,11 +240,35 @@ namespace WindowsApplication1
             this.grpParameters.Controls.Add(this.cmbDisplayType);
             this.grpParameters.Location = new System.Drawing.Point(12, 27);
             this.grpParameters.Name = "grpParameters";
-            this.grpParameters.Size = new System.Drawing.Size(839, 45);
+            this.grpParameters.Size = new System.Drawing.Size(839, 69);
             this.grpParameters.TabIndex = 4;
             this.grpParameters.TabStop = false;
             this.grpParameters.Text = "Parameters";
             this.grpParameters.Visible = false;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(149, 46);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(100, 13);
+            this.label6.TabIndex = 12;
+            this.label6.Text = "Centre spot position";
+            // 
+            // cmbCentreSpotPosition
+            // 
+            this.cmbCentreSpotPosition.FormattingEnabled = true;
+            this.cmbCentreSpotPosition.Items.AddRange(new object[] {
+            "North West",
+            "North East",
+            "South East",
+            "South West"});
+            this.cmbCentreSpotPosition.Location = new System.Drawing.Point(257, 43);
+            this.cmbCentreSpotPosition.Name = "cmbCentreSpotPosition";
+            this.cmbCentreSpotPosition.Size = new System.Drawing.Size(88, 21);
+            this.cmbCentreSpotPosition.TabIndex = 11;
+            this.cmbCentreSpotPosition.Text = "North West";
+            this.cmbCentreSpotPosition.SelectedIndexChanged += new System.EventHandler(this.cmbCentreSpotPosition_SelectedIndexChanged);
             // 
             // txtDistToCentre
             // 
@@ -392,6 +420,7 @@ namespace WindowsApplication1
             this.Name = "frmMain";
             this.Text = "Sluggish Software:  Camera Calibration";
             this.Resize += new System.EventHandler(this.frmMain_Resize);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -444,6 +473,8 @@ namespace WindowsApplication1
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.PictureBox picOutput2;
         private System.Windows.Forms.PictureBox picRightImage;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox cmbCentreSpotPosition;
     }
 }
 

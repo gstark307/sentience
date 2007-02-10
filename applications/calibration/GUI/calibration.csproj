@@ -60,7 +60,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="util.cs" />
     <Compile Include="cameraSettings.cs" />
     <Compile Include="common.cs">
       <SubType>Form</SubType>

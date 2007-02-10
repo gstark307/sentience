@@ -20,6 +20,7 @@
 
 
 using System;
+using System.Xml;
 using System.IO;
 using System.Collections.Generic;
 using System.Collections;
@@ -31,12 +32,16 @@ using System.Text;
 using System.Windows.Forms;
 using DirectX.Capture;
 using sentience.calibration;
+using sentience.core;
 
 namespace WindowsApplication1
 {
 
     public partial class frmMain : common
     {
+        // this file stores the general setup parameters
+        const String calibration_setup_filename = "calibration_setup.xml";
+
         int no_of_cameras = 1;
         calibrationStereo cam = new calibrationStereo();
 
@@ -68,7 +73,7 @@ namespace WindowsApplication1
         const int DISPLAY_RECTIFIED = 5;
         public int display_type = DISPLAY_CENTREALIGN;
 
-#region "Camera stuff"
+        #region "Camera stuff"
 
         public void updateVision(Image input_img, bool leftImage)
         {
@@ -216,11 +221,166 @@ namespace WindowsApplication1
         }
 
 
-#endregion
+        #endregion
 
+        #region "saving and loading the calibration setup"
+
+        /// <summary>
+        /// return an Xml document containing camera calibration parameters
+        /// </summary>
+        /// <returns></returns>
+        private XmlDocument getXmlDocument()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
+            doc.AppendChild(commentnode);
+
+            XmlElement nodeCalibration = doc.CreateElement("Sentience");
+            doc.AppendChild(nodeCalibration);
+
+            util.AddComment(doc, nodeCalibration, "Calibration apparatus setup parameters");
+
+            XmlElement nodeCalibSetup = doc.CreateElement("CalibrationSetup");
+            nodeCalibration.AppendChild(nodeCalibSetup);
+
+            util.AddComment(doc, nodeCalibSetup, "Horizontal field of view of the camera in degrees");
+            util.AddTextElement(doc, nodeCalibSetup, "FieldOfViewDegrees", txtFOV.Text);
+            util.AddComment(doc, nodeCalibSetup, "Position of the centre spot relative to the centre of the calibration pattern");
+            util.AddComment(doc, nodeCalibSetup, "0 - North West");
+            util.AddComment(doc, nodeCalibSetup, "1 - North East");
+            util.AddComment(doc, nodeCalibSetup, "2 - South East");
+            util.AddComment(doc, nodeCalibSetup, "3 - South West");
+            util.AddTextElement(doc, nodeCalibSetup, "CentreSpotPosition", Convert.ToString(cmbCentreSpotPosition.SelectedIndex));
+            util.AddComment(doc, nodeCalibSetup, "Distance from the camera to the centre of the calibration pattern along the ground in mm");
+            util.AddTextElement(doc, nodeCalibSetup, "DistToCentreMillimetres", txtDistToCentre.Text);
+            util.AddComment(doc, nodeCalibSetup, "height of the camera above the ground in mm");
+            util.AddTextElement(doc, nodeCalibSetup, "CameraHeightMillimetres", txtCameraHeight.Text);
+            util.AddComment(doc, nodeCalibSetup, "Factor indicating the typical spacing of the calibration grid pattern as observed within the image");
+            util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingFactor", txtSpacingFactor.Text);
+            util.AddComment(doc, nodeCalibSetup, "Calibration pattern spacing in mm");
+            util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingMillimetres", txtPatternSpacing.Text);
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save camera calibration parameters as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void SaveCalibrationSetup(String filename)
+        {
+            XmlDocument doc = getXmlDocument();
+            doc.Save(filename);
+        }
+
+        /// <summary>
+        /// load camera calibration parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void LoadCalibrationSetup(String filename)
+        {
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+                int cameraIndex = 0;
+                LoadFromXml(xnodDE, 0, ref cameraIndex);
+
+                // close the reader
+                xtr.Close();
+
+                // now reset with the loaded parameters
+                ResetCalibration();
+            }
+        }
+
+        /// <summary>
+        /// parse an xml node to extract camera calibration parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        private void LoadFromXml(XmlNode xnod, int level, ref int cameraIndex)
+        {
+            XmlNode xnodWorking;
+
+            if (xnod.Name == "FieldOfViewDegrees")
+            {
+                txtFOV.Text = xnod.InnerText;
+            }
+
+            if (xnod.Name == "DistToCentreMillimetres")
+            {
+                txtDistToCentre.Text = xnod.InnerText;
+            }
+
+            if (xnod.Name == "CameraHeightMillimetres")
+            {
+                txtCameraHeight.Text = xnod.InnerText;
+            }
+
+            if (xnod.Name == "PatternSpacingFactor")
+            {
+                txtSpacingFactor.Text = xnod.InnerText;
+            }
+
+            if (xnod.Name == "PatternSpacingMillimetres")
+            {
+                txtPatternSpacing.Text = xnod.InnerText;
+            }
+
+            if (xnod.Name == "CentreSpotPosition")
+            {
+                cmbCentreSpotPosition.SelectedIndex = Convert.ToInt32(xnod.InnerText);
+            }
+
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1, ref cameraIndex);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+        #endregion
+
+
+        /// <summary>
+        /// reset the calibration
+        /// </summary>
         private void ResetCalibration()
         {
             cam = new calibrationStereo();
+            cam.setCentreSpotPosition(cmbCentreSpotPosition.SelectedIndex);
+            cam.leftcam.camera_dist_to_pattern_centre_mm = Convert.ToInt32(txtDistToCentre.Text);
+            cam.rightcam.camera_dist_to_pattern_centre_mm = cam.leftcam.camera_dist_to_pattern_centre_mm;
+            cam.leftcam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
+            cam.rightcam.camera_height_mm = cam.leftcam.camera_height_mm;
+            cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
+            cam.rightcam.separation_factor = cam.leftcam.separation_factor;
+            cam.leftcam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
+            cam.rightcam.camera_FOV_degrees = cam.leftcam.camera_FOV_degrees;
+            cam.leftcam.calibration_pattern_spacing_mm = Convert.ToSingle(txtPatternSpacing.Text);
+            cam.rightcam.calibration_pattern_spacing_mm = cam.leftcam.calibration_pattern_spacing_mm;
         }
 
         //is the given bitmap blank?
@@ -252,6 +412,8 @@ namespace WindowsApplication1
             captureState[0] = 0;
             captureState[1] = 0;
             this.WindowState = FormWindowState.Maximized;
+
+            LoadCalibrationSetup(calibration_setup_filename);
         }
 
         /// <summary>
@@ -419,6 +581,9 @@ namespace WindowsApplication1
             this.Close();
         }
 
+        /// <summary>
+        /// redraw for either monocular or binocular camera
+        /// </summary>
         private void Redraw()
         {
             if (no_of_cameras == 1)
@@ -447,6 +612,7 @@ namespace WindowsApplication1
             grpParameters.Visible = true;
 
             cmbDisplayType.SelectedIndex = display_type;
+            cmbCentreSpotPosition.SelectedIndex = cam.leftcam.centre_spot_position;
             txtPatternSpacing.Text = Convert.ToString(cam.leftcam.calibration_pattern_spacing_mm);
             txtFOV.Text = Convert.ToString(cam.leftcam.camera_FOV_degrees);
             txtSpacingFactor.Text = Convert.ToString(cam.leftcam.separation_factor);
@@ -526,6 +692,7 @@ namespace WindowsApplication1
                 if (txtPatternSpacing.Text == "") txtPatternSpacing.Text = "50";
                 cam.leftcam.calibration_pattern_spacing_mm = Convert.ToSingle(txtPatternSpacing.Text);
                 cam.rightcam.calibration_pattern_spacing_mm = cam.leftcam.calibration_pattern_spacing_mm;
+                ResetCalibration();
             }
         }
 
@@ -534,6 +701,7 @@ namespace WindowsApplication1
             if (txtPatternSpacing.Text == "") txtPatternSpacing.Text = "50";
             cam.leftcam.calibration_pattern_spacing_mm = Convert.ToSingle(txtPatternSpacing.Text);
             cam.rightcam.calibration_pattern_spacing_mm = cam.leftcam.calibration_pattern_spacing_mm;
+            ResetCalibration();
         }
 
         private void txtFOV_KeyPress(object sender, KeyPressEventArgs e)
@@ -543,6 +711,7 @@ namespace WindowsApplication1
                 if (txtFOV.Text == "") txtFOV.Text = "40";
                 cam.leftcam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
                 cam.rightcam.camera_FOV_degrees = cam.leftcam.camera_FOV_degrees;
+                ResetCalibration();
             }
         }
 
@@ -551,6 +720,7 @@ namespace WindowsApplication1
             if (txtFOV.Text == "") txtFOV.Text = "40";
             cam.leftcam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
             cam.rightcam.camera_FOV_degrees = cam.leftcam.camera_FOV_degrees;
+            ResetCalibration();
         }
 
         private void txtSpacingFactor_KeyPress(object sender, KeyPressEventArgs e)
@@ -560,6 +730,7 @@ namespace WindowsApplication1
                 if (txtSpacingFactor.Text == "") txtSpacingFactor.Text = "15";
                 cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
                 cam.rightcam.separation_factor = cam.leftcam.separation_factor;
+                ResetCalibration();
             }
         }
 
@@ -568,6 +739,7 @@ namespace WindowsApplication1
             if (txtSpacingFactor.Text == "") txtSpacingFactor.Text = "15";
             cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
             cam.rightcam.separation_factor = cam.leftcam.separation_factor;
+            ResetCalibration();
         }
 
         private void txtCameraHeight_KeyPress(object sender, KeyPressEventArgs e)
@@ -577,6 +749,7 @@ namespace WindowsApplication1
                 if (txtCameraHeight.Text == "") txtCameraHeight.Text = "500";
                 cam.leftcam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
                 cam.rightcam.camera_height_mm = cam.leftcam.camera_height_mm;
+                ResetCalibration();
             }
         }
 
@@ -585,6 +758,7 @@ namespace WindowsApplication1
             if (txtCameraHeight.Text == "") txtCameraHeight.Text = "500";
             cam.leftcam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
             cam.rightcam.camera_height_mm = cam.leftcam.camera_height_mm;
+            ResetCalibration();
         }
 
         private void txtDistToCentre_KeyPress(object sender, KeyPressEventArgs e)
@@ -594,6 +768,7 @@ namespace WindowsApplication1
                 if (txtDistToCentre.Text == "") txtDistToCentre.Text = "500";
                 cam.leftcam.camera_dist_to_pattern_centre_mm = Convert.ToInt32(txtDistToCentre.Text);
                 cam.rightcam.camera_dist_to_pattern_centre_mm = cam.leftcam.camera_dist_to_pattern_centre_mm;
+                ResetCalibration();
             }
         }
 
@@ -620,6 +795,17 @@ namespace WindowsApplication1
             saveFileDialog1.Title = "Save calibration file";
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
                 cam.Save(saveFileDialog1.FileName);
+        }
+
+        private void cmbCentreSpotPosition_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cam.setCentreSpotPosition(cmbCentreSpotPosition.SelectedIndex);
+            ResetCalibration();
+        }
+
+        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            SaveCalibrationSetup(calibration_setup_filename);
         }
 
     }

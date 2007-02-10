@@ -30,6 +30,19 @@ namespace sentience.calibration
     {
         public calibration leftcam, rightcam;
 
+        /// <summary>
+        /// set the position of the centre spot relative to the centre of the calibration pattern
+        /// </summary>
+        /// <param name="position"></param>
+        public void setCentreSpotPosition(int position)
+        {
+            leftcam.centre_spot_position = position;
+            rightcam.centre_spot_position = position;
+        }
+
+        /// <summary>
+        /// constructor
+        /// </summary>
         public calibrationStereo()
         {
             leftcam = new calibration();
