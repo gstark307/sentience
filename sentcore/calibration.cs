@@ -997,12 +997,17 @@ namespace sentience.calibration
         {
             calibration_line line = new calibration_line();
 
-            const int step_size = 10;
+            int step_size = 10;
+            int radius_x = width / (separation_factor * 2);
+            if (radius_x < 1) radius_x = 1;
+            int radius_y = height / (separation_factor * 2);
+            if (radius_y < 1) radius_y = 1;
             int dx = bx - tx;
             int dy = by - ty;
 
             if (dy > dx)
             {
+                step_size = radius_y*2;
                 for (int y = ty; y < by; y += step_size)
                 {
                     int x = tx + (dx * (y - ty) / dy);
@@ -1011,11 +1016,11 @@ namespace sentience.calibration
                     int av_y = 0;
                     int hits = 0;
 
-                    for (int xx = x - step_size; xx < x + step_size; xx++)
+                    for (int xx = x - (radius_x*2); xx < x + (radius_x*2); xx++)
                     {
                         if ((xx > -1) && (xx < width))
                         {
-                            for (int yy = y - step_size; yy < y + step_size; yy++)
+                            for (int yy = y - radius_y; yy < y + radius_y; yy++)
                             {
                                 if ((yy > -1) && (yy < height))
                                 {
@@ -1034,12 +1039,13 @@ namespace sentience.calibration
                     {
                         av_x /= hits;
                         av_y /= hits;
-                        line.Add(av_x, av_y);
+                        line.Add(av_x, y);
                     }
                 }
             }
             else
             {
+                step_size = radius_x*2;
                 for (int x = tx; x < bx; x += step_size)
                 {
                     int y = ty + (dy * (x - tx) / dx);
@@ -1048,11 +1054,11 @@ namespace sentience.calibration
                     int av_y = 0;
                     int hits = 0;
 
-                    for (int xx = x - step_size; xx < x + step_size; xx++)
+                    for (int xx = x - radius_x; xx < x + radius_x; xx++)
                     {
                         if ((xx > -1) && (xx < width))
                         {
-                            for (int yy = y - step_size; yy < y + step_size; yy++)
+                            for (int yy = y - (radius_y*2); yy < y + (radius_y*2); yy++)
                             {
                                 if ((yy > -1) && (yy < height))
                                 {
@@ -1071,7 +1077,7 @@ namespace sentience.calibration
                     {
                         av_x /= hits;
                         av_y /= hits;
-                        line.Add(av_x, av_y);
+                        line.Add(x, av_y);
                     }
                 }
             }
@@ -1093,6 +1099,7 @@ namespace sentience.calibration
             int end_y = height - start_y;
             int prev_x_top = 0;
             int prev_x_bottom = 0;
+            int prev_line_x = 0;
 
             closest_to_centreline_x = 0;
             for (int x = 0; x < width; x++)
@@ -1177,9 +1184,15 @@ namespace sentience.calibration
 
                     if (winner > -1)
                     {
-                        calibration_line line = traceLine(width, height, x, start_y, winner, end_y);
-                        vertical_lines.Add(line);
-                        line.Draw(lines_image, width, height, 255, 0, 0);
+                        int line_x = (x + winner) / 2;
+                        int min_separation_x = width / separation_factor;
+                        if ((prev_line_x == 0) || (line_x - prev_line_x > min_separation_x))
+                        {
+                            calibration_line line = traceLine(width, height, x, start_y, winner, end_y);
+                            vertical_lines.Add(line);
+                            line.Draw(lines_image, width, height, 255, 0, 0);
+                        }
+                        prev_line_x = line_x;
                     }
                 }
             }
@@ -1504,16 +1517,19 @@ namespace sentience.calibration
                                 int dx = bx - tx;
                                 int dy = by - ty;
 
-                                for (int y = top + 1; y < bottom; y++)
+                                if (dy > 0)
                                 {
-                                    if (grid[x, y] != null)
+                                    for (int y = top + 1; y < bottom; y++)
                                     {
-                                        if (rectifyPoint(grid[x, y].x, grid[x, y].y, ref rectified_x, ref rectified_y))
+                                        if (grid[x, y] != null)
                                         {
-                                            int xx = tx + (((rectified_y - ty) * dx) / dy);
-                                            int diff = xx - rectified_x;
-                                            rms_error += (diff * diff);
-                                            hits++;
+                                            if (rectifyPoint(grid[x, y].x, grid[x, y].y, ref rectified_x, ref rectified_y))
+                                            {
+                                                int xx = tx + (((rectified_y - ty) * dx) / dy);
+                                                int diff = xx - rectified_x;
+                                                rms_error += (diff * diff);
+                                                hits++;
+                                            }
                                         }
                                     }
                                 }
@@ -1522,6 +1538,57 @@ namespace sentience.calibration
 
                     }
                 }
+
+                for (int y = 0; y < grid.GetLength(1); y++)
+                {
+                    int top = -1;
+                    int bottom = -1;
+                    for (int x = 0; x < grid.GetLength(0); x++)
+                    {
+                        if (grid[x, y] != null)
+                        {
+                            if (top == -1) top = x;
+                            bottom = x;
+                        }
+                    }
+
+                    if (bottom > top + 1)
+                    {
+                        int rectified_x = 0;
+                        int rectified_y = 0;
+                        if (rectifyPoint(grid[top, y].x, grid[top, y].y, ref rectified_x, ref rectified_y))
+                        {
+                            int tx = rectified_x;
+                            int ty = rectified_y;
+                            if (rectifyPoint(grid[bottom, y].x, grid[bottom, y].y, ref rectified_x, ref rectified_y))
+                            {
+                                int bx = rectified_x;
+                                int by = rectified_y;
+                                int dx = bx - tx;
+                                int dy = by - ty;
+
+                                if (dx > 0)
+                                {
+                                    for (int x = top + 1; x < bottom; x++)
+                                    {
+                                        if (grid[x, y] != null)
+                                        {
+                                            if (rectifyPoint(grid[x, y].x, grid[x, y].y, ref rectified_x, ref rectified_y))
+                                            {
+                                                int yy = ty + (((rectified_x - tx) * dy) / dx);
+                                                int diff = yy - rectified_y;
+                                                rms_error += (diff * diff);
+                                                hits++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+
             }
             if (hits > 2)
                 rms_error = (float)Math.Sqrt(rms_error / (float)hits);
