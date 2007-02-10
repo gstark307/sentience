@@ -154,28 +154,7 @@ namespace sentience.calibration
         int[,] vertical_magnitude;
         ArrayList horizontal_lines, vertical_lines;
 
-        private int averageIntensity(Byte[] img, int width, int height, int tx, int ty, int bx, int by)
-        {
-            int hits = 0;
-            int tot = 0;
-            for (int x = tx; x < bx; x++)
-            {
-                if ((x > -1) && (x < width) && (x != (tx+((bx-tx)/2))))
-                {
-                    for (int y = ty; y < by; y++)
-                    {
-                        if ((y > -1) && (y < height) && (y != (ty + ((by - ty) / 2))))
-                        {
-                            int n = (y * width) + x;
-                            tot += (255-img[n]);
-                            hits++;
-                        }
-                    }
-                }
-            }
-            if (hits > 0) tot /= hits;
-            return (tot);
-        }
+        #region "centre spot detection"
 
         /// <summary>
         /// detect the centre point within the calibration pattern
@@ -279,6 +258,67 @@ namespace sentience.calibration
             }
         }
 
+        #endregion
+
+        #region "corner detection"
+
+        /// <summary>
+        /// local fine matching to get the closest fit to the image
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="radius"></param>
+        /// <param name="cg_x"></param>
+        /// <param name="cg_y"></param>
+        /// <returns></returns>
+        private int localCG(Byte[] img, int width, int height, int x, int y, int radius,
+                             ref int cg_x, ref int cg_y)
+        {
+            cg_x = 0;
+            cg_y = 0;
+            int tot = 0;
+            int hits = 0;
+            int score = 0;
+            for (int xx = x - radius; xx < x + radius; xx++)
+            {
+                if ((xx > -1) && (xx < width - 1))
+                {
+                    for (int yy = y - radius; yy < y + radius; yy++)
+                    {
+                        if ((yy > -1) && (yy < height - 1))
+                        {
+                            if (edges_binary[xx, yy])
+                            {
+                                int n = (yy * width) + xx;
+                                score = (255 - img[n]);
+                                cg_x += (score * xx);
+                                cg_y += (score * yy);
+                                tot += score;
+                                hits++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (hits > 0)
+            {
+                cg_x /= tot;
+                cg_y /= tot;
+                tot /= hits;
+            }
+            return (tot);
+        }
+
+
+        /// <summary>
+        /// detect corners within the grid pattern
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         private void detectCorners(int width, int height)
         {
             if (corners == null)
@@ -427,6 +467,44 @@ namespace sentience.calibration
         }
 
         /// <summary>
+        /// returns the average pixel intensity within the given area
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="tx"></param>
+        /// <param name="ty"></param>
+        /// <param name="bx"></param>
+        /// <param name="by"></param>
+        /// <returns></returns>
+        private int averageIntensity(Byte[] img, int width, int height, int tx, int ty, int bx, int by)
+        {
+            int hits = 0;
+            int tot = 0;
+            for (int x = tx; x < bx; x++)
+            {
+                if ((x > -1) && (x < width) && (x != (tx + ((bx - tx) / 2))))
+                {
+                    for (int y = ty; y < by; y++)
+                    {
+                        if ((y > -1) && (y < height) && (y != (ty + ((by - ty) / 2))))
+                        {
+                            int n = (y * width) + x;
+                            tot += (255 - img[n]);
+                            hits++;
+                        }
+                    }
+                }
+            }
+            if (hits > 0) tot /= hits;
+            return (tot);
+        }
+
+        #endregion
+
+        #region "edge detection"
+
+        /// <summary>
         /// clear the current binary image
         /// </summary>
         /// <param name="width"></param>
@@ -436,6 +514,115 @@ namespace sentience.calibration
             for (int x = 0; x < width; x++)
                 for (int y = 0; y < height; y++)
                     binary_image[binary_image_index, x, y] = false;
+        }
+
+        /// <summary>
+        /// creates a binary edges image
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        private void updateEdgesImage(int width, int height)
+        {
+            int start_x = width / 5;
+            int end_x = width - start_x;
+
+            for (int x = start_x; x < end_x; x++)
+            {
+                for (int y = 5; y < height - 5; y++)
+                {
+                    int hits = 0;
+                    for (int i = 0; i < no_of_images; i++)
+                    {
+                        if (binary_image[i, x, y]) hits++;
+                    }
+                    if (hits > no_of_images - 3)
+                    {
+                        edges_binary[x, y] = true;
+
+                        int index = -1;
+                        if (y < height / 4) index = 0;
+                        if (y > height * 3 / 4) index = 1;
+                        if (index > -1)
+                        {
+                            horizontal_magnitude[index, x]++;
+                            for (int j = 0; j < 4; j++)
+                            {
+                                horizontal_magnitude[index, x + j]++;
+                                horizontal_magnitude[index, x - j]++;
+                            }
+                        }
+                        index = -1;
+                        if (x < width / 2) index = 0;
+                        if (x > width / 2) index = 1;
+                        if (index > -1)
+                        {
+                            vertical_magnitude[index, y]++;
+                            for (int j = 0; j < 4; j++)
+                            {
+                                vertical_magnitude[index, y - j]++;
+                                vertical_magnitude[index, y + j]++;
+                            }
+                        }
+
+                        int n = ((y * width) + x) * 3;
+                        edges_image[n] = 0;
+                        edges_image[n + 1] = (Byte)255;
+                        edges_image[n + 2] = 0;
+                    }
+                    else edges_binary[x, y] = false;
+                }
+            }
+
+            int search_width = width / separation_factor;
+            for (int i = 0; i < 2; i++)
+            {
+                for (int x = 1; x < width - 1; x++)
+                {
+                    for (int xx = x + 1; xx < x + search_width; xx++)
+                    {
+                        if ((xx > -1) && (xx < width))
+                        {
+                            if (horizontal_magnitude[i, xx] < horizontal_magnitude[i, x])
+                                horizontal_magnitude[i, xx] = 0;
+                            else
+                            {
+                                horizontal_magnitude[i, x] = 0;
+                                xx = width;
+                            }
+                        }
+                    }
+                }
+                for (int x = width * 9 / 10; x < width; x++)
+                {
+                    if (horizontal_magnitude[i, x] > 0) horizontal_magnitude[i, x] = 0;
+                }
+            }
+
+
+            search_width = height / separation_factor;
+            for (int i = 0; i < 2; i++)
+            {
+                for (int y = 1; y < height - 1; y++)
+                {
+                    for (int yy = y + 1; yy < y + search_width; yy++)
+                    {
+                        if ((yy > -1) && (yy < height))
+                        {
+                            if (vertical_magnitude[i, yy] < vertical_magnitude[i, y])
+                                vertical_magnitude[i, yy] = 0;
+                            else
+                            {
+                                vertical_magnitude[i, y] = 0;
+                                yy = height;
+                            }
+                        }
+                    }
+                }
+                for (int y = height * 9 / 10; y < height - 1; y++)
+                {
+                    if (vertical_magnitude[i, y] > 0) vertical_magnitude[i, y] = 0;
+                }
+            }
         }
 
         private void detectHorizontalEdges(Byte[] calibration_image, int width, int height, ArrayList edges, int min_magnitude)
@@ -595,149 +782,98 @@ namespace sentience.calibration
             }
         }
 
-        private int localCG(Byte[] img, int width, int height, int x, int y, int radius,
-                             ref int cg_x, ref int cg_y)
-        {
-            cg_x = 0;
-            cg_y = 0;
-            int tot = 0;
-            int hits = 0;
-            int score = 0;
-            for (int xx = x - radius; xx < x + radius; xx++)
-            {
-                if ((xx > -1) && (xx < width-1))
-                {
-                    for (int yy = y - radius; yy < y + radius; yy++)
-                    {
-                        if ((yy > -1) && (yy < height-1))
-                        {
-                            if (edges_binary[xx, yy])
-                            {
-                                int n = (yy * width) + xx;
-                                score = (255 - img[n]);
-                                cg_x += (score * xx);
-                                cg_y += (score * yy);
-                                tot += score;
-                                hits++;
-                            }
-                        }
-                    }
-                }
-            }
+        #endregion
 
-            if (hits > 0)
+        #region "old stuff"
+        /// <summary>
+        /// return the grid coordinate given the screen coordinate
+        /// </summary>
+        /// <param name="image_x"></param>
+        /// <param name="image_y"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="grid_x"></param>
+        /// <param name="grid_y"></param>
+        /*
+        private void getGridCoordinate(int image_x, int image_y,
+                                       int width, int height,
+                                       ref int grid_x, ref int grid_y)
+        {
+            if ((horizontal_separation_top_hits > 0) && 
+                (horizontal_separation_bottom_hits > 0))
             {
-                cg_x /= tot;
-                cg_y /= tot;
-                tot /= hits;
+                // get the horizontal separation at the given y coordinate
+                int separation_top = (int)(horizontal_separation_top / horizontal_separation_top_hits);
+                int separation_bottom = (int)(horizontal_separation_bottom / horizontal_separation_bottom_hits);
+                int grid_dx = separation_top + (image_y * (separation_bottom - separation_top) / height);
+                //int grid_dy = grid_dx * height / width;
+                int av_separation_x = (separation_top + separation_bottom) / 2;
+                int centre_adjust_x = av_centreline_x / av_centreline_x_hits;
+                if (centre_adjust_x > av_separation_x / 2) centre_adjust_x -= (av_separation_x / 2);
+                grid_x = -(int)Math.Round(((((image_x - (width / 2.0)) / (double)grid_dx)) + 0.5 + (centre_adjust_x / (double)av_separation_x)));
+
+                int av_separation_y = av_separation_x;
+                float fraction = separation_top / (float)separation_bottom;
+                //fraction = fraction * width / height;
+                int min_separation = (int)(av_separation_y * (1.0f - (fraction / 2)));
+                int max_separation = (int)(av_separation_y * (1.0f - (fraction / 2) + (fraction * fraction)));
+                int grid_dy = min_separation + (image_y * (max_separation - min_separation) / height);
+
+                int centre_adjust_y = av_centreline_y / av_centreline_y_hits;
+                if (centre_adjust_y > av_separation_y / 2) centre_adjust_y -= (av_separation_y / 2);
+                grid_y = -(int)Math.Round(((((image_y - (height / 2.0)) / (double)grid_dy)) + 0.0) - 0.0 + (centre_adjust_y / (double)av_separation_y));
             }
-            return (tot);
         }
-
-
-        private void updateEdgesImage(int width, int height)
+        /// <summary>
+        /// draw the detected grid
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        private void drawGrid(Byte[] img, int width, int height)
         {
-            int start_x = width / 5;
-            int end_x = width - start_x;
-
-            for (int x = start_x; x < end_x; x++)
-            {
-                for (int y = 5; y < height-5; y++)
+            int grid_x = 0, grid_y = 0;
+            int prev_grid_x, prev_grid_y;
+            for (int y = 0; y < height; y++)
+            {                
+                prev_grid_x = -9999;
+                for (int x = 0; x < width; x++)
                 {
-                    int hits = 0;
-                    for (int i = 0; i < no_of_images; i++)
+                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
+                    if (grid_x != prev_grid_x)
                     {
-                        if (binary_image[i, x, y]) hits++;
-                    }
-                    if (hits > no_of_images-3)
-                    {
-                        edges_binary[x, y] = true;
-
-                        int index = -1;
-                        if (y < height / 4) index = 0;
-                        if (y > height * 3 / 4) index = 1;
-                        if (index > -1)
-                        {
-                            horizontal_magnitude[index, x]++;
-                            for (int j = 0; j < 4; j++)
-                            {
-                                horizontal_magnitude[index, x + j]++;
-                                horizontal_magnitude[index, x - j]++;
-                            }
-                        }
-                        index = -1;
-                        if (x < width / 2) index = 0;
-                        if (x > width / 2) index = 1;
-                        if (index > -1)
-                        {
-                            vertical_magnitude[index, y]++;
-                            for (int j = 0; j < 4; j++)
-                            {
-                                vertical_magnitude[index, y - j]++;
-                                vertical_magnitude[index, y + j]++;
-                            }
-                        }
-
                         int n = ((y * width) + x) * 3;
-                        edges_image[n] = 0;
-                        edges_image[n + 1] = (Byte)255;
-                        edges_image[n + 2] = 0;
+                        img[n] = 0;
+                        img[n+1] = (Byte)255;
+                        img[n + 2] = 0;
                     }
-                    else edges_binary[x, y] = false;
+                    prev_grid_x = grid_x;
                 }
             }
-
-            int search_width = width / separation_factor;            
-            for (int i = 0; i < 2; i++)
+            for (int x = 0; x < width; x++)            
             {
-                for (int x = 1; x < width - 1; x++)
+                grid_y = 0;
+                prev_grid_y = -9999;
+                for (int y = 0; y < height; y++)
                 {
-                    for (int xx = x + 1; xx < x + search_width; xx++)
+                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
+                    if (grid_y != prev_grid_y)
                     {
-                        if ((xx > -1) && (xx < width))
-                        {
-                            if (horizontal_magnitude[i, xx] < horizontal_magnitude[i, x])
-                                horizontal_magnitude[i, xx] = 0;
-                            else
-                            {
-                                horizontal_magnitude[i, x] = 0;
-                                xx = width;
-                            }
-                        }
+                        int n = ((y * width) + x) * 3;
+                        img[n] = 0;
+                        img[n + 1] = (Byte)255;
+                        img[n + 2] = 0;
                     }
-                }
-                for (int x = width * 9 / 10; x < width; x++)
-                {
-                    if (horizontal_magnitude[i, x] > 0) horizontal_magnitude[i, x] = 0;
-                }
-            }
-
-
-            search_width = height / separation_factor;
-            for (int i = 0; i < 2; i++)
-            {
-                for (int y = 1; y < height - 1; y++)
-                {
-                    for (int yy = y + 1; yy < y + search_width; yy++)
-                    {
-                        if ((yy > -1) && (yy < height))
-                        {
-                            if (vertical_magnitude[i, yy] < vertical_magnitude[i, y])
-                                vertical_magnitude[i, yy] = 0;
-                            else
-                            {
-                                vertical_magnitude[i, y] = 0;
-                                yy = height;
-                            }
-                        }
-                    }
-                }
-                for (int y = height*9/10; y < height - 1; y++)
-                {
-                    if (vertical_magnitude[i, y] > 0) vertical_magnitude[i, y] = 0;
+                    prev_grid_y = grid_y;
                 }
             }
         }
+         
+         */
+
+        #endregion
+
+        #region "line detection"
 
         /// <summary>
         /// trace along a line
@@ -835,45 +971,12 @@ namespace sentience.calibration
             return (line);
         }
 
+
         /// <summary>
-        /// return the grid coordinate given the screen coordinate
+        /// detect vertical lines
         /// </summary>
-        /// <param name="image_x"></param>
-        /// <param name="image_y"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        /// <param name="grid_x"></param>
-        /// <param name="grid_y"></param>
-        private void getGridCoordinate(int image_x, int image_y,
-                                       int width, int height,
-                                       ref int grid_x, ref int grid_y)
-        {
-            if ((horizontal_separation_top_hits > 0) && 
-                (horizontal_separation_bottom_hits > 0))
-            {
-                // get the horizontal separation at the given y coordinate
-                int separation_top = (int)(horizontal_separation_top / horizontal_separation_top_hits);
-                int separation_bottom = (int)(horizontal_separation_bottom / horizontal_separation_bottom_hits);
-                int grid_dx = separation_top + (image_y * (separation_bottom - separation_top) / height);
-                //int grid_dy = grid_dx * height / width;
-                int av_separation_x = (separation_top + separation_bottom) / 2;
-                int centre_adjust_x = av_centreline_x / av_centreline_x_hits;
-                if (centre_adjust_x > av_separation_x / 2) centre_adjust_x -= (av_separation_x / 2);
-                grid_x = -(int)Math.Round(((((image_x - (width / 2.0)) / (double)grid_dx)) + 0.5 + (centre_adjust_x / (double)av_separation_x)));
-
-                int av_separation_y = av_separation_x;
-                float fraction = separation_top / (float)separation_bottom;
-                //fraction = fraction * width / height;
-                int min_separation = (int)(av_separation_y * (1.0f - (fraction / 2)));
-                int max_separation = (int)(av_separation_y * (1.0f - (fraction / 2) + (fraction * fraction)));
-                int grid_dy = min_separation + (image_y * (max_separation - min_separation) / height);
-
-                int centre_adjust_y = av_centreline_y / av_centreline_y_hits;
-                if (centre_adjust_y > av_separation_y / 2) centre_adjust_y -= (av_separation_y / 2);
-                grid_y = -(int)Math.Round(((((image_y - (height / 2.0)) / (double)grid_dy)) + 0.0) - 0.0 + (centre_adjust_y / (double)av_separation_y));
-            }
-        }
-
         private void detectVerticalLines(int width, int height)
         {
             vertical_lines = new ArrayList();
@@ -975,7 +1078,11 @@ namespace sentience.calibration
             }
         }
 
-
+        /// <summary>
+        /// detect horizontal lines
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         private void detectHorizontalLines(int width, int height)
         {
             horizontal_lines = new ArrayList();
@@ -1113,50 +1220,9 @@ namespace sentience.calibration
 
         }
 
-        /// <summary>
-        /// draw the detected grid
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        private void drawGrid(Byte[] img, int width, int height)
-        {
-            int grid_x = 0, grid_y = 0;
-            int prev_grid_x, prev_grid_y;
-            for (int y = 0; y < height; y++)
-            {                
-                prev_grid_x = -9999;
-                for (int x = 0; x < width; x++)
-                {
-                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
-                    if (grid_x != prev_grid_x)
-                    {
-                        int n = ((y * width) + x) * 3;
-                        img[n] = 0;
-                        img[n+1] = (Byte)255;
-                        img[n + 2] = 0;
-                    }
-                    prev_grid_x = grid_x;
-                }
-            }
-            for (int x = 0; x < width; x++)            
-            {
-                grid_y = 0;
-                prev_grid_y = -9999;
-                for (int y = 0; y < height; y++)
-                {
-                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
-                    if (grid_y != prev_grid_y)
-                    {
-                        int n = ((y * width) + x) * 3;
-                        img[n] = 0;
-                        img[n + 1] = (Byte)255;
-                        img[n + 2] = 0;
-                    }
-                    prev_grid_y = grid_y;
-                }
-            }
-        }
+        #endregion
+
+        #region "display functions"
 
         /// <summary>
         /// show a centre line guide to help when aligning the calibration pattern
@@ -1180,6 +1246,10 @@ namespace sentience.calibration
             util.drawLine(img, width, height, width-1, y - 2, width-x, y, 100, 100, 255, 0, false);
             util.drawLine(img, width, height, width-x, y, width-1, y + 2, 100, 100, 255, 0, false);
         }
+
+        #endregion
+
+        #region "lens distortion calculation"
 
         private void detectLensDistortion(int width, int height,
                                           int grid_x, int grid_y)
@@ -1282,6 +1352,9 @@ namespace sentience.calibration
             }
         }
 
+        #endregion
+
+        #region "image rectification"
 
         /// <summary>
         /// update the calibration lookup table, which maps pixels
@@ -1344,6 +1417,10 @@ namespace sentience.calibration
             }
             return (rectified_image);
         }
+
+        #endregion
+
+        #region "main update method"
 
         public void Update(Byte[] img, int width, int height)
         {
@@ -1449,6 +1526,7 @@ namespace sentience.calibration
 
         }
 
+        #endregion
 
         #region "saving and loading"
 
