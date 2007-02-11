@@ -605,7 +605,8 @@ namespace WindowsApplication1
                                 }
                             case DISPLAY_CENTREALIGN:
                                 {
-                                    updatebitmap(calib.centrealign_image, (Bitmap)pic.Image);
+                                    if (calib.centrealign_image != null)
+                                        updatebitmap(calib.centrealign_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_CURVE:
