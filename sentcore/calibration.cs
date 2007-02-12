@@ -105,13 +105,12 @@ namespace sentience.calibration
         public bool enabled;
         public int hits = 1;
         public int grid_x, grid_y;
-        public bool validated;
+        public float rectified_x, rectified_y;
 
         public calibration_edge(float x, float y, int magnitude) : base(x,y)
         {
             this.magnitude = magnitude;
             enabled = true;
-            validated = false;
         }
     }
 
@@ -132,6 +131,8 @@ namespace sentience.calibration
         public float camera_height_mm = 785;
         public float camera_dist_to_pattern_centre_mm = 450;
 
+        calibration_edge[,] coverage;
+
         // the size of each square on the calibration pattern
         public float calibration_pattern_spacing_mm = 50;
 
@@ -145,6 +146,7 @@ namespace sentience.calibration
 
         // the centre of distortion in image pixel coordinates
         calibration_point centre_of_distortion;
+        calibration_point centre_spot;
 
         public int[] calibration_map;
         public int[] temp_calibration_map;
@@ -216,133 +218,135 @@ namespace sentience.calibration
         #region "centre spot detection"
 
         /// <summary>
-        /// detect the centre point within the calibration pattern
+        /// detect the centre spot within the image
         /// </summary>
-        /// <param name="calibration_image">mono image</param>
-        /// <param name="width">width of the image</param>
-        /// <param name="height">height of the image</param>
-        /// <param name="image_cx">position of the centre spot within the image</param>
-        /// <param name="image_cy">position of the centre spot within the image</param>
-        /// <param name="grid_cx">centre of the grid</param>
-        /// <param name="grid_cy">centre of the grid</param>
-        private void detectCentrePoint(Byte[] calibration_image, int width, int height,
-                                       ref int image_cx, ref int image_cy,
-                                       ref int grid_cx, ref int grid_cy)
+        /// <param name="calibration_image"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        private void detectCentreSpot(Byte[] calibration_image, int width, int height,
+                                      ref int grid_x, ref int grid_y)
         {
-            image_cx = 0;
-            image_cy = 0;
-            grid_cx = 0;
-            grid_cy = 0;
-            if (grid != null)
+            grid_x = 0;
+            grid_y = 0;
+
+            int search_radius_x = width / (separation_factor * 2);
+            if (search_radius_x < 2) search_radius_x = 2;
+            int search_radius_y = height / (separation_factor * 2);
+            if (search_radius_y < 2) search_radius_y = 2;
+            int search_radius_x2 = search_radius_x / 2;
+            int search_radius_y2 = search_radius_y / 2;
+
+            int tx = width/4;
+            int bx = width - 1 - tx;
+            int ty = height/4;
+            int by = height - 1 - ty;
+            if (ROI != null)
             {
-                float max_value = 0;
-                for (int x = 1; x < grid.GetLength(0) - 2; x++)
+                tx = ROI.tx + ((ROI.bx - ROI.tx) / 4);
+                bx = ROI.tx + ((ROI.bx - ROI.tx) * 3 / 4);
+                ty = ROI.ty + ((ROI.by - ROI.ty) / 4);
+                by = ROI.ty + ((ROI.by - ROI.ty) * 3 / 4);
+            }
+
+            float max_diff = 0;
+            centre_spot = new calibration_point(width / 2, height / 2);
+            for (int x = tx; x < bx; x++)
+            {
+                for (int y = ty; y < by; y++)
                 {
-                    for (int y = 1; y < grid.GetLength(1) - 2; y++)
+                    int inner = 0;
+                    int inner_hits = 0;
+                    int outer = 0;
+                    int outer_hits = 0;
+                    for (int xx = x - search_radius_x; xx < x + search_radius_x; xx++)
                     {
-                        if ((grid[x, y] != null) && (grid[x + 1, y] != null) &&
-                            (grid[x + 1, y + 1] != null) && (grid[x, y + 1] != null))
+                        for (int yy = y - search_radius_y; yy < y + search_radius_y; yy++)
                         {
-                            // check that this is a box shape
-                            int dx_top = (int)(grid[x + 1, y].x - grid[x, y].x);
-                            int dx_bottom = (int)(grid[x + 1, y + 1].x - grid[x, y + 1].x);
-                            float fraction = dx_top / (float)dx_bottom;
-                            if ((fraction > 0.8f) && (fraction < 1.2f))
+                            if (coverage[xx, yy] == null)
                             {
-                                int dy_left = (int)(grid[x, y + 1].y - grid[x, y].y);
-                                int dy_right = (int)(grid[x + 1, y + 1].y - grid[x + 1, y].y);
-                                fraction = dy_left / (float)dy_right;
-                                if ((fraction > 0.8f) && (fraction < 1.2f))
+                                int n = (yy * width) + xx;
+
+                                if ((xx > x - search_radius_x2) && (xx < x + search_radius_x2) &&
+                                    (yy > y - search_radius_y2) && (yy < y + search_radius_y2))
                                 {
-                                    int av_width = (dx_top + dx_bottom) / 2;
-                                    int av_height = (dy_left + dy_right) / 2;
-
-                                    fraction = (av_width) / (float)(av_height);
-                                    if ((fraction > 0.5f) && (fraction < 3))
-                                    {
-                                        int centre_x = (int)grid[x, y].x + (av_width / 2);
-                                        int centre_y = (int)grid[x, y].y + (av_height / 2);
-
-                                        grid[x, y].validated = true;
-
-                                        int spot_width = av_width / 4;
-                                        if (spot_width < 1) spot_width = 1;
-                                        int spot_height = av_height / 4;
-                                        if (spot_height < 1) spot_height = 1;
-                                        float tot_surround = 0;
-                                        float tot_centre = 0;
-                                        int hits_centre = 0;
-                                        int hits_surround = 0;
-                                        for (int xx = centre_x - (av_width / 2); xx < centre_x + (av_width / 2); xx++)
-                                        {
-                                            for (int yy = centre_y - (av_height / 2); yy < centre_y + (av_height / 2); yy++)
-                                            {
-                                                int n = (yy * width) + xx;
-
-                                                if ((xx > centre_x - spot_width) && (xx < centre_x + spot_width) &&
-                                                    (yy > centre_y - spot_height) && (yy < centre_y + spot_height))
-                                                {
-                                                    if (calibration_image[n] < 180)
-                                                    {
-                                                        tot_centre += calibration_image[n];
-                                                        hits_centre++;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    tot_surround += calibration_image[n];
-                                                    hits_surround++;
-                                                }
-                                            }
-                                        }
-                                        if ((hits_centre > 0) && (hits_surround > 0))
-                                        {
-                                            tot_centre /= (float)hits_centre;
-                                            tot_surround /= (float)hits_surround;
-                                            float tot = tot_surround - tot_centre;
-                                            if (tot > max_value)
-                                            {
-                                                max_value = tot;
-                                                image_cx = centre_x;
-                                                image_cy = centre_y;
-
-                                                // centre of the grid relative to the spot
-                                                switch (centre_spot_position)
-                                                {
-                                                    case CENTRE_SPOT_NW:
-                                                        {
-                                                            grid_cx = x + 1;
-                                                            grid_cy = y + 1;
-                                                            break;
-                                                        }
-                                                    case CENTRE_SPOT_NE:
-                                                        {
-                                                            grid_cx = x - 1;
-                                                            grid_cy = y - 1;
-                                                            break;
-                                                        }
-                                                    case CENTRE_SPOT_SW:
-                                                        {
-                                                            grid_cx = x + 1;
-                                                            grid_cy = y - 1;
-                                                            break;
-                                                        }
-                                                    case CENTRE_SPOT_SE:
-                                                        {
-                                                            grid_cx = x - 1;
-                                                            grid_cy = y - 1;
-                                                            break;
-                                                        }
-                                                }
-
-                                            }
-                                        }
-
-                                    }
+                                    inner += calibration_image[n];
+                                    inner_hits++;
+                                }
+                                else
+                                {
+                                    outer += calibration_image[n];
+                                    outer_hits++;
                                 }
                             }
                         }
                     }
+                    if (inner_hits > 0)
+                    {
+                        float diff = (outer / (float)outer_hits) - (inner / (float)inner_hits);
+                        if (diff > max_diff)
+                        {
+                            max_diff = diff;
+                            centre_spot.x = x;
+                            centre_spot.y = y;
+                        }
+                    }
+                }
+            }
+
+            int cx = (int)centre_spot.x;
+            int cy = (int)centre_spot.y;
+            switch (centre_spot_position)
+            {
+                case CENTRE_SPOT_NW:
+                    {
+                        cx = (int)centre_spot.x + search_radius_x;
+                        cy = (int)centre_spot.y + search_radius_y;
+                        break;
+                    }
+                case CENTRE_SPOT_NE:
+                    {
+                        cx = (int)centre_spot.x - search_radius_x;
+                        cy = (int)centre_spot.y + search_radius_y;
+                        break;
+                    }
+                case CENTRE_SPOT_SW:
+                    {
+                        cx = (int)centre_spot.x + search_radius_x;
+                        cy = (int)centre_spot.y - search_radius_y;
+                        break;
+                    }
+                case CENTRE_SPOT_SE:
+                    {
+                        cx = (int)centre_spot.x - search_radius_x;
+                        cy = (int)centre_spot.y - search_radius_y;
+                        break;
+                    }
+            }            
+
+            if (coverage[cx, cy] != null)
+            {
+                grid_x = coverage[cx, cy].grid_x;
+                grid_y = coverage[cx, cy].grid_y;
+                util.drawBox(corners_image, width, height, (int)coverage[cx, cy].x, (int)coverage[cx, cy].y, 4, 255, 255, 255, 0);
+            }
+            else
+            {
+                int xx = cx - 2;
+                int yy = cy;
+                while ((xx <= cx + 2) && (coverage[xx, yy] == null))
+                {
+                    yy = cy - 2;
+                    while ((yy <= cy + 2) && (coverage[xx, yy] == null))
+                    {
+                        yy++;
+                    }
+                    xx++;
+                }
+                if (coverage[xx, yy] != null)
+                {
+                    grid_x = coverage[xx, yy].grid_x;
+                    grid_y = coverage[xx, yy].grid_y;
+                    util.drawBox(corners_image, width, height, (int)coverage[xx, yy].x, (int)coverage[xx, yy].y, 4, 255, 255, 255, 0);
                 }
             }
         }
@@ -350,6 +354,23 @@ namespace sentience.calibration
         #endregion
 
         #region "corner detection"
+
+        public void ShowRectifiedCorners(Byte[] img, int width, int height)
+        {
+            if (grid != null)
+            {
+                for (int x = 0; x < grid.GetLength(0); x++)
+                {
+                    for (int y = 0; y < grid.GetLength(1); y++)
+                    {
+                        if (grid[x, y] != null)
+                        {
+                            util.drawCross(img, width, height, (int)grid[x, y].rectified_x, (int)grid[x, y].rectified_y, 2, 255, 255, 0, 0);
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// detect corners within the grid pattern
@@ -412,7 +433,7 @@ namespace sentience.calibration
             }
 
             int grid_tx=9999, grid_ty=9999, grid_bx=0, grid_by=0;
-            calibration_edge[,] coverage = new calibration_edge[width, height];
+            coverage = new calibration_edge[width, height];
             detected_corners = new ArrayList();
             for (int i = 0; i < corners.Length; i++)
             {
@@ -1349,8 +1370,6 @@ namespace sentience.calibration
 
                 for (int x = 0; x < grid.GetLength(0); x++)
                 {
-                    float prev_rectified_x = 0;
-                    float prev_rectified_y = 0;
                     for (int y = 0; y < grid.GetLength(1); y++)
                     {
                         if (grid[x, y] != null)
@@ -1374,24 +1393,10 @@ namespace sentience.calibration
                             // calc the position of the grid point within the image after rectification
                             float rectified_x = centre_x + (point_pan * width / FOV_horizontal);
                             float rectified_y = centre_y + ((centre_tilt - point_tilt) * height / FOV_vertical);
-                            rectifiedPoints.Add(new calibration_point(rectified_x, rectified_y));
+                            grid[x, y].rectified_x = rectified_x;
+                            grid[x, y].rectified_y = rectified_y;
                             cx += (grid[x, y].x - rectified_x);
                             cy += (grid[x, y].y - rectified_y);
-                            prev_rectified_x = rectified_x;
-                            prev_rectified_y = rectified_y;
-
-                            if (y > 0)
-                            {
-                                if (grid[x, y - 1] != null)
-                                {
-                                    if (grid[x, y - 1].validated)
-                                    {
-                                        rectified_x = prev_rectified_x + ((rectified_x - prev_rectified_x) / 2);
-                                        rectified_y = prev_rectified_y + ((rectified_y - prev_rectified_y) / 2);
-                                        rectifiedPoints.Add(new calibration_point(rectified_x, rectified_y));
-                                    }
-                                }
-                            }
 
                             hits++;                            
                         }
@@ -1400,63 +1405,59 @@ namespace sentience.calibration
 
                 if (hits > 0)
                 {
-                    // create an opject to perform curve fitting
-                    fitter = new polyfit();
-                    fitter.SetDegree(2);
+                    // a ballpack figure for the centre of distortion
+                    centre_of_distortion.x = (width / 2) + (cx / (float)hits);
+                    centre_of_distortion.y = (height / 2) + (cy / (float)hits);
 
-                    centre_of_distortion.x = (cx / (float)hits);
-                    centre_of_distortion.y = (cy / (float)hits);
-                    int i = 0;
-                    for (int x = 0; x < grid.GetLength(0); x++)
+                    float winner_x = centre_of_distortion.x;
+                    float winner_y = centre_of_distortion.y;
+                    float min_rms_err = 999999;
+                    int radius = 5;
+                    for (int search_x = (int)centre_of_distortion.x - radius; search_x <= (int)centre_of_distortion.x + radius; search_x++)
                     {
-                        for (int y = 0; y < grid.GetLength(1); y++)
+                        for (int search_y = (int)centre_of_distortion.y - radius; search_y <= (int)centre_of_distortion.y + radius; search_y++)
                         {
-                            if (grid[x, y] != null)
+                            polyfit curvefit = new polyfit();
+                            curvefit.SetDegree(2);
+
+                            int i = 0;
+                            for (int x = 0; x < grid.GetLength(0); x++)
                             {
-                                calibration_point pt = (calibration_point)rectifiedPoints[i];
-                                float dx = pt.x - (width/2) + centre_of_distortion.x;
-                                float dy = (pt.y - (height/2)) + centre_of_distortion.y;
-                                float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                                dx = grid[x, y].x - (width/2) + centre_of_distortion.x;
-                                dy = (grid[x, y].y - (height/2)) + centre_of_distortion.y;
-                                float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
-
-                                fitter.AddPoint(radial_dist_rectified, radial_dist_original);
-                                i++;
-
-                                if (y > 0)
+                                for (int y = 0; y < grid.GetLength(1); y++)
                                 {
-                                    if (grid[x, y - 1] != null)
+                                    if (grid[x, y] != null)
                                     {
-                                        if (grid[x, y - 1].validated)
-                                        {
-                                            dx = pt.x - (width / 2) + centre_of_distortion.x;
-                                            dy = (pt.y - (height / 2)) + centre_of_distortion.y;
-                                            radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                                            dx = grid[x, y].x - (width / 2) + centre_of_distortion.x;
-                                            dy = (grid[x, y].y - (height / 2)) + centre_of_distortion.y;
-                                            radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                                        float dx = grid[x, y].rectified_x - centre_of_distortion.x;
+                                        float dy = grid[x, y].rectified_y - centre_of_distortion.y;
+                                        float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                                        dx = grid[x, y].x - centre_of_distortion.x;
+                                        dy = grid[x, y].y - centre_of_distortion.y;
+                                        float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
 
-                                            fitter.AddPoint(radial_dist_rectified, radial_dist_original);
-                                            i++;
-                                        }
+                                        curvefit.AddPoint(radial_dist_rectified, radial_dist_original);
+                                        i++;
                                     }
                                 }
-
+                            }
+                            curvefit.Solve();
+                            float rms_err = curvefit.GetRMSerror();
+                            if (rms_err < min_rms_err)
+                            {
+                                min_rms_err = rms_err;
+                                winner_x = search_x;
+                                winner_y = search_y;
+                                fitter = curvefit;
                             }
                         }
                     }
 
-                    centre_of_distortion.x = (width / 2) + centre_of_distortion.x;
-                    centre_of_distortion.y = (height / 2) + centre_of_distortion.y;
-
-                    // find the best fit curve
-                    fitter.Solve();
+                    centre_of_distortion.x = winner_x;
+                    centre_of_distortion.y = winner_y;
                 }
             }
         }
 
-        private float GetRMSerror()
+        private float GetRMSerror_old()
         {
             float rms_error = 0;
             int hits = 0;
@@ -1571,6 +1572,38 @@ namespace sentience.calibration
             return (rms_error);
         }
 
+        private float GetRMSerror()
+        {
+            float rms_error = 0;
+            int rectified_x = 0, rectified_y = 0;
+            int hits = 0;
+
+            if (grid != null)
+            {
+                for (int x = 0; x < grid.GetLength(0); x++)
+                {
+                    for (int y = 0; y < grid.GetLength(1); y++)
+                    {
+                        if (grid[x, y] != null)
+                        {
+                            if (rectifyPoint((int)grid[x, y].x, (int)grid[x, y].y, ref rectified_x, ref rectified_y))
+                            {
+                                float dx = rectified_x - grid[x, y].rectified_x;
+                                float dy = rectified_y - grid[x, y].rectified_y;
+                                rms_error += ((dx * dx) + (dy * dy));
+                                hits++;
+                            }
+                        }
+                    }
+                }
+            }
+            if (hits > 2)
+                rms_error = (float)Math.Sqrt(rms_error / (float)hits);
+            else
+                rms_error = 99999;
+            return (rms_error);
+        }
+
         #endregion
 
         #region "image rectification"
@@ -1660,6 +1693,7 @@ namespace sentience.calibration
             }
             return (rectified_image);
         }
+
 
         #endregion
 
@@ -1771,12 +1805,12 @@ namespace sentience.calibration
                     detectCorners(width, height);
 
                     // hunt the centre spot
-                    int image_cx = 0, image_cy = 0;
                     int grid_cx = 0, grid_cy = 0;
-                    detectCentrePoint(calibration_image, width, height, ref image_cx, ref image_cy, ref grid_cx, ref grid_cy);
+                    detectCentreSpot(calibration_image, width, height, ref grid_cx, ref grid_cy);
+                    //util.drawCross(corners_image, width, height, (int)centre_spot.x, (int)centre_spot.y, 4, 0, 255, 0, 0);
                     if (grid_cx > 0)
                     {
-                        util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
+                        //util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
 
                         // detect the lens distortion
                         detectLensDistortion(width, height, grid_cx, grid_cy);
@@ -1814,6 +1848,7 @@ namespace sentience.calibration
 
                                 min_RMS_error = RMS_error;
                             }
+                                /*
                             else
                             {
                                 RMS_error = MinimiseError(width, height, 1, min_RMS_error) * polyfit_error;
@@ -1823,11 +1858,13 @@ namespace sentience.calibration
                                     min_RMS_error = RMS_error;
                                 }
                             }
+                                 */
                         }
 
                         // rectify
                         Rectify(img, width, height);
 
+                        //ShowRectifiedCorners(corners_image, width, height);
                     }
 
                     corners_index++;
