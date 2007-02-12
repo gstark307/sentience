@@ -117,6 +117,8 @@ namespace sentience.calibration
 
     public class calibration
     {
+        Random rnd = new Random();
+
         // the position of the centre spot relative to the centre of the calibration pattern
         public const int CENTRE_SPOT_NW = 0;
         public const int CENTRE_SPOT_NE = 1;
@@ -138,7 +140,8 @@ namespace sentience.calibration
 
         public String camera_name = "";
         private int image_width, image_height;
-        private float min_RMS_error = 999999;
+        public float min_RMS_error = 999999;
+        public float polyfit_error = 999999;
 
         // the centre of distortion in image pixel coordinates
         calibration_point centre_of_distortion;
@@ -146,6 +149,7 @@ namespace sentience.calibration
         public int[] calibration_map;
         public int[] temp_calibration_map;
         public int[,,] calibration_map_inverse;
+        public int[, ,] temp_calibration_map_inverse;
         public Byte[] rectified_image;
 
         public Byte[] corners_image;
@@ -154,7 +158,7 @@ namespace sentience.calibration
         public Byte[] lines_image;
         public Byte[] curve_fit;
 
-        polyfit fitter;
+        polyfit fitter, best_curve;
 
         Byte[] calibration_image;
         ArrayList edges_horizontal;
@@ -954,24 +958,10 @@ namespace sentience.calibration
                     {
                         if ((xx > 2) && (xx < width-2))
                         {
-                            for (int yy = y - (radius_y*2); yy < y + (radius_y*2); yy++)
+                            for (int yy = y - (radius_y*4); yy < y + (radius_y*4); yy++)
                             {
                                 if ((yy > -1) && (yy < height))
-                                {
-                                    /*
-                                    int n = (yy * width) + xx - 1;
-                                    int diff = (calibration_image[n-1] + calibration_image[n]) -
-                                               (calibration_image[n + 1] + calibration_image[n + 2]);
-                                    //diff *= (radius_x - Math.Abs(xx - x));
-                                    if (diff > max_diff)
-                                    {
-                                        max_diff = diff;
-                                        av_x = xx;
-                                        av_y = yy;
-                                        hits = 1;
-                                    }
-                                     */
-                                    
+                                {                                    
                                     if (edges_binary[xx, yy])
                                     {
                                         av_x += xx;
@@ -1020,33 +1010,14 @@ namespace sentience.calibration
                     int hits = 0;
                     //int max_diff = 0;
 
-                    for (int xx = x - (radius_x*2); xx < x + (radius_x*2); xx++)
+                    for (int xx = x - (radius_x*4); xx < x + (radius_x*4); xx++)
                     {
                         if ((xx > -1) && (xx < width))
                         {
                             for (int yy = y - radius_y; yy < y + radius_y; yy++)
                             {
                                 if ((yy > 2) && (yy < height-2))
-                                {
-                                    /*
-                                    int n = ((yy-2) * width) + xx;
-                                    int diff = calibration_image[n-1];
-                                    n = ((yy-1) * width) + xx;
-                                    diff += calibration_image[n];
-                                    n = (yy * width) + xx;
-                                    diff -= calibration_image[n];
-                                    n = ((yy+1) * width) + xx;
-                                    diff -= calibration_image[n];
-                                    //diff *= (radius_y - Math.Abs(yy - y));
-                                    if (diff > max_diff)
-                                    {
-                                        max_diff = diff;
-                                        av_x = xx;
-                                        av_y = yy;
-                                        hits = 1;
-                                    }
-                                     */
-                                    
+                                {                                    
                                     if (edges_binary[xx, yy])
                                     {
                                         av_x += xx;
@@ -1431,7 +1402,7 @@ namespace sentience.calibration
                 {
                     // create an opject to perform curve fitting
                     fitter = new polyfit();
-                    fitter.SetDegree(4);
+                    fitter.SetDegree(2);
 
                     centre_of_distortion.x = (cx / (float)hits);
                     centre_of_distortion.y = (cy / (float)hits);
@@ -1444,10 +1415,10 @@ namespace sentience.calibration
                             {
                                 calibration_point pt = (calibration_point)rectifiedPoints[i];
                                 float dx = pt.x - (width/2) + centre_of_distortion.x;
-                                float dy = pt.y - (height/2) + centre_of_distortion.y;
+                                float dy = (pt.y - (height/2)) + centre_of_distortion.y;
                                 float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
                                 dx = grid[x, y].x - (width/2) + centre_of_distortion.x;
-                                dy = grid[x, y].y - (height/2) + centre_of_distortion.y;
+                                dy = (grid[x, y].y - (height/2)) + centre_of_distortion.y;
                                 float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
 
                                 fitter.AddPoint(radial_dist_rectified, radial_dist_original);
@@ -1460,10 +1431,10 @@ namespace sentience.calibration
                                         if (grid[x, y - 1].validated)
                                         {
                                             dx = pt.x - (width / 2) + centre_of_distortion.x;
-                                            dy = pt.y - (height / 2) + centre_of_distortion.y;
+                                            dy = (pt.y - (height / 2)) + centre_of_distortion.y;
                                             radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
                                             dx = grid[x, y].x - (width / 2) + centre_of_distortion.x;
-                                            dy = grid[x, y].y - (height / 2) + centre_of_distortion.y;
+                                            dy = (grid[x, y].y - (height / 2)) + centre_of_distortion.y;
                                             radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
 
                                             fitter.AddPoint(radial_dist_rectified, radial_dist_original);
@@ -1616,8 +1587,8 @@ namespace sentience.calibration
                                   ref int rectified_x, ref int rectified_y)
         {
             bool isValid = true;
-            rectified_x = calibration_map_inverse[original_x, original_y, 0];
-            rectified_y = calibration_map_inverse[original_x, original_y, 1];
+            rectified_x = temp_calibration_map_inverse[original_x, original_y, 0];
+            rectified_y = temp_calibration_map_inverse[original_x, original_y, 1];
             if ((rectified_x == 0) && (rectified_y == 0)) isValid = false;
             return (isValid);
         }
@@ -1628,22 +1599,22 @@ namespace sentience.calibration
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        private void updateCalibrationMap(int width, int height)
+        private void updateCalibrationMap(int width, int height, polyfit curve)
         {
-            temp_calibration_map = new int[width * height];
-            calibration_map_inverse = new int[width, height, 2];
+            temp_calibration_map = new int[width * height];            
+            temp_calibration_map_inverse = new int[width, height, 2];
             for (int x = 0; x < width; x++)
             {
                 float dx = x - centre_of_distortion.x;
 
                 for (int y = 0; y < height; y++)
                 {
-                    float dy = y - centre_of_distortion.y;
+                    float dy = (y - centre_of_distortion.y);
 
                     float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
                     if (radial_dist_rectified >= 0.01f)
                     {
-                        float radial_dist_original = fitter.RegVal(radial_dist_rectified);
+                        float radial_dist_original = curve.RegVal(radial_dist_rectified);
                         if (radial_dist_original > 0)
                         {
                             float ratio = radial_dist_rectified / radial_dist_original;
@@ -1656,8 +1627,8 @@ namespace sentience.calibration
                                 int n2 = (y2 * width) + x2;
 
                                 temp_calibration_map[n] = n2;
-                                calibration_map_inverse[x2, y2, 0] = x;
-                                calibration_map_inverse[x2, y2, 1] = y;
+                                temp_calibration_map_inverse[x2, y2, 0] = x;
+                                temp_calibration_map_inverse[x2, y2, 1] = y;
                             }
                         }
                     }
@@ -1693,6 +1664,61 @@ namespace sentience.calibration
         #endregion
 
         #region "main update method"
+
+        private float MinimiseError(int width, int height, int tries, float min_err)
+        {
+            float MinError = min_err;
+            polyfit curve = new polyfit();
+            polyfit best_curve = null;
+            int degree = fitter.GetDegree();
+            curve.SetDegree(degree);
+
+            for (int i = 0; i < tries; i++)
+            {
+                // randomly mutate the coefficients
+                for (int j = 0; j <= degree; j++)
+                {
+                    if (rnd.Next(10) > 5)
+                    {
+                        float fraction = 0.9f + (0.2f * (rnd.Next(10000) / 10000.0f));
+                        curve.SetCoeff(j, fitter.Coeff(j) * fraction);
+                    }
+                    else curve.SetCoeff(j, fitter.Coeff(j));
+                }
+
+                // calculate the calibration map using these coefficients
+                updateCalibrationMap(width, height, curve);
+
+                // calc the error using this calibration
+                float rms_error = GetRMSerror();
+                if (rms_error < MinError)
+                {
+                    MinError = rms_error;
+
+                    // store the calibration map and inverse map
+                    calibration_map = new int[width * height];
+                    for (int j = 0; j < temp_calibration_map.Length; j++)
+                        calibration_map[j] = temp_calibration_map[j];
+                    calibration_map_inverse = new int[width, height, 2];
+                    for (int x = 0; x < width; x++)
+                    {
+                        for (int y = 0; y < height; y++)
+                        {
+                            calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
+                            calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                        }
+                    }
+
+                    best_curve = new polyfit();
+                    best_curve.SetDegree(fitter.GetDegree());
+                    for (int j = 0; j <= degree; j++)
+                        best_curve.SetCoeff(j, curve.Coeff(j));
+                }
+            }
+            if (best_curve != null) fitter = best_curve;
+            return (MinError);
+        }
+
 
         public void Update(Byte[] img, int width, int height)
         {
@@ -1756,20 +1782,47 @@ namespace sentience.calibration
                         detectLensDistortion(width, height, grid_cx, grid_cy);
 
                         // update the calibration lookup
-                        updateCalibrationMap(width, height);
+                        updateCalibrationMap(width, height, fitter);
 
-                        float RMS_error = GetRMSerror() * fitter.GetRMSerror();
-                        if (RMS_error < min_RMS_error)
+                        float err1 = fitter.GetRMSerror();
+                        //if (err1 < 2)
                         {
-                            calibration_map = new int[width * height];
-                            for (int i = 0; i < temp_calibration_map.Length; i++)
-                                calibration_map[i] = temp_calibration_map[i];
+                            float RMS_error = GetRMSerror() * err1;
+                            if (RMS_error < min_RMS_error)
+                            {
+                                polyfit_error = err1;
+                                calibration_map = new int[width * height];
+                                for (int i = 0; i < temp_calibration_map.Length; i++)
+                                    calibration_map[i] = temp_calibration_map[i];
+                                calibration_map_inverse = new int[width, height, 2];
+                                for (int x = 0; x < width; x++)
+                                {
+                                    for (int y = 0; y < height; y++)
+                                    {
+                                        calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
+                                        calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                                    }
+                                }
 
-                            // update the graph
-                            curve_fit = new Byte[width * height * 3];
-                            fitter.Show(curve_fit, width, height);
 
-                            min_RMS_error = RMS_error;
+                                // update the graph
+                                curve_fit = new Byte[width * height * 3];
+                                fitter.Show(curve_fit, width, height);
+
+                                //RMS_error = MinimiseError(width, height, 100) * err1;
+                                best_curve = fitter;
+
+                                min_RMS_error = RMS_error;
+                            }
+                            else
+                            {
+                                RMS_error = MinimiseError(width, height, 1, min_RMS_error) * polyfit_error;
+                                if (RMS_error < min_RMS_error)
+                                {
+                                    best_curve = fitter;
+                                    min_RMS_error = RMS_error;
+                                }
+                            }
                         }
 
                         // rectify

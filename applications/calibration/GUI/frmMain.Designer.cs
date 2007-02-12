@@ -67,6 +67,7 @@ namespace WindowsApplication1
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.picOutput2 = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.lblStatus = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
@@ -227,6 +228,7 @@ namespace WindowsApplication1
             // 
             // grpParameters
             // 
+            this.grpParameters.Controls.Add(this.lblStatus);
             this.grpParameters.Controls.Add(this.label6);
             this.grpParameters.Controls.Add(this.cmbCentreSpotPosition);
             this.grpParameters.Controls.Add(this.txtDistToCentre);
@@ -409,6 +411,15 @@ namespace WindowsApplication1
             this.picRightImage.TabStop = false;
             this.picRightImage.Visible = false;
             // 
+            // lblStatus
+            // 
+            this.lblStatus.AutoSize = true;
+            this.lblStatus.Location = new System.Drawing.Point(12, 46);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(65, 13);
+            this.lblStatus.TabIndex = 13;
+            this.lblStatus.Text = "Calibrating...";
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -479,6 +490,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.PictureBox picRightImage;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cmbCentreSpotPosition;
+        private System.Windows.Forms.Label lblStatus;
     }
 }
 

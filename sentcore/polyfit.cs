@@ -252,7 +252,7 @@ namespace sentience.core
 
             if (!Finished) Solve();
             O = GlobalO;
-            if (XYCount() <= O) O = XYCount() - 1;
+            //if (XYCount() <= O) O = XYCount() - 1;
             for (i = 0; i <= O; i++)
                 retval = retval + C[i] * (float)Math.Pow(x, i);
             return (retval);

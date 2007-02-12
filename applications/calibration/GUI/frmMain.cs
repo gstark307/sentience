@@ -47,6 +47,8 @@ namespace WindowsApplication1
 
         Random rnd = new Random();
 
+        float max_RMS_error = 1;
+
         globals global_variables;
 
         bool left_camera_running = false;
@@ -626,6 +628,24 @@ namespace WindowsApplication1
                         pic.Refresh();
                     }
 
+                    if (no_of_cameras == 1)
+                    {
+                        if (cam.leftcam.min_RMS_error > max_RMS_error)
+                            lblStatus.Text = "Calibrating...";
+                        else
+                            lblStatus.Text = "* COMPLETE *";
+                    }
+                    else
+                    {
+                        if ((cam.leftcam.min_RMS_error > max_RMS_error) || (cam.rightcam.min_RMS_error > max_RMS_error))
+                        {
+                            lblStatus.Text = "Calibrating...";
+                            if (cam.leftcam.min_RMS_error <= max_RMS_error) lblStatus.Text = "Left camera done";
+                            if (cam.rightcam.min_RMS_error <= max_RMS_error) lblStatus.Text = "Right camera done";
+                        }
+                        else
+                            lblStatus.Text = "* COMPLETE *";
+                    }
                     
                 }
 
