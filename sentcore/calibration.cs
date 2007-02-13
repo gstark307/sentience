@@ -1349,7 +1349,7 @@ namespace sentience.calibration
                 // field of vision in radians
                 float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
                 float FOV_vertical = FOV_horizontal * height / (float)width;
-                //FOV_vertical /= temp_vertical_adjust;
+                //FOV_vertical = FOV_vertical * temp_vertical_adjust;
                 FOV_vertical = (FOV_vertical * height / width) * temp_vertical_adjust;
 
                 // center point of the grid within the image
@@ -1818,7 +1818,7 @@ namespace sentience.calibration
                        
                         for (int v = 0; v < 2; v++)
                         {
-                            temp_vertical_adjust = 0.9f + ((rnd.Next(10000) / 10000.0f) * 0.2f);
+                            temp_vertical_adjust = 0.8f + ((rnd.Next(10000) / 10000.0f) * 0.4f);
 
                             // detect the lens distortion
                             detectLensDistortion(width, height, grid_cx, grid_cy);
@@ -1874,7 +1874,7 @@ namespace sentience.calibration
                         // rectify
                         Rectify(img, width, height);
 
-                        //ShowRectifiedCorners(rectified_image, width, height);
+                        ShowRectifiedCorners(rectified_image, width, height);
                     }
 
                     corners_index++;
