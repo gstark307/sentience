@@ -227,82 +227,85 @@ namespace sentience.core
         public static void drawLine(Byte[] img, int img_width, int img_height,
                                     int x1, int y1, int x2, int y2, int r, int g, int b, int linewidth, bool overwrite)
         {
-            int w, h, x, y, step_x, step_y, dx, dy, xx2, yy2;
-            float m;
-
-            dx = x2 - x1;
-            dy = y2 - y1;
-            w = Math.Abs(dx);
-            h = Math.Abs(dy);
-            if (x2 >= x1) step_x = 1; else step_x = -1;
-            if (y2 >= y1) step_y = 1; else step_y = -1;
-
-            if (w > h)
+            if (img != null)
             {
-                if (dx != 0)
-                {
-                    m = dy / (float)dx;
-                    x = x1;
-                    while (x != x2 + step_x)
-                    {
-                        y = (int)(m * (x - x1)) + y1;
+                int w, h, x, y, step_x, step_y, dx, dy, xx2, yy2;
+                float m;
 
-                        for (xx2 = x - linewidth; xx2 <= x + linewidth; xx2++)
-                            for (yy2 = y - linewidth; yy2 <= y + linewidth; yy2++)
-                            {
-                                if ((xx2 >= 0) && (xx2 < img_width) && (yy2 >= 0) && (yy2 < img_height))
+                dx = x2 - x1;
+                dy = y2 - y1;
+                w = Math.Abs(dx);
+                h = Math.Abs(dy);
+                if (x2 >= x1) step_x = 1; else step_x = -1;
+                if (y2 >= y1) step_y = 1; else step_y = -1;
+
+                if (w > h)
+                {
+                    if (dx != 0)
+                    {
+                        m = dy / (float)dx;
+                        x = x1;
+                        while (x != x2 + step_x)
+                        {
+                            y = (int)(m * (x - x1)) + y1;
+
+                            for (xx2 = x - linewidth; xx2 <= x + linewidth; xx2++)
+                                for (yy2 = y - linewidth; yy2 <= y + linewidth; yy2++)
                                 {
-                                    int n = ((img_width * yy2) + xx2) * 3;
-                                    if ((img[n] == 0) || (!overwrite))
+                                    if ((xx2 >= 0) && (xx2 < img_width) && (yy2 >= 0) && (yy2 < img_height))
                                     {
-                                        img[n] = (Byte)b;
-                                        img[n + 1] = (Byte)g;
-                                        img[n + 2] = (Byte)r;
-                                    }
-                                    else
-                                    {
-                                        img[n] = (Byte)((img[n] + b) / 2);
-                                        img[n + 1] = (Byte)((img[n] + g) / 2);
-                                        img[n + 2] = (Byte)((img[n] + r) / 2);
+                                        int n = ((img_width * yy2) + xx2) * 3;
+                                        if ((img[n] == 0) || (!overwrite))
+                                        {
+                                            img[n] = (Byte)b;
+                                            img[n + 1] = (Byte)g;
+                                            img[n + 2] = (Byte)r;
+                                        }
+                                        else
+                                        {
+                                            img[n] = (Byte)((img[n] + b) / 2);
+                                            img[n + 1] = (Byte)((img[n] + g) / 2);
+                                            img[n + 2] = (Byte)((img[n] + r) / 2);
+                                        }
                                     }
                                 }
-                            }
 
-                        x += step_x;
+                            x += step_x;
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (dy != 0)
+                else
                 {
-                    m = dx / (float)dy;
-                    y = y1;
-                    while (y != y2 + step_y)
+                    if (dy != 0)
                     {
-                        x = (int)(m * (y - y1)) + x1;
-                        for (xx2 = x - linewidth; xx2 <= x + linewidth; xx2++)
-                            for (yy2 = y - linewidth; yy2 <= y + linewidth; yy2++)
-                            {
-                                if ((xx2 >= 0) && (xx2 < img_width) && (yy2 >= 0) && (yy2 < img_height))
+                        m = dx / (float)dy;
+                        y = y1;
+                        while (y != y2 + step_y)
+                        {
+                            x = (int)(m * (y - y1)) + x1;
+                            for (xx2 = x - linewidth; xx2 <= x + linewidth; xx2++)
+                                for (yy2 = y - linewidth; yy2 <= y + linewidth; yy2++)
                                 {
-                                    int n = ((img_width * yy2) + xx2) * 3;
-                                    if ((img[n] == 0) || (!overwrite))
+                                    if ((xx2 >= 0) && (xx2 < img_width) && (yy2 >= 0) && (yy2 < img_height))
                                     {
-                                        img[n] = (Byte)b;
-                                        img[n + 1] = (Byte)g;
-                                        img[n + 2] = (Byte)r;
-                                    }
-                                    else
-                                    {
-                                        img[n] = (Byte)((img[n] + b) / 2);
-                                        img[n + 1] = (Byte)((img[n] + g) / 2);
-                                        img[n + 2] = (Byte)((img[n] + r) / 2);
+                                        int n = ((img_width * yy2) + xx2) * 3;
+                                        if ((img[n] == 0) || (!overwrite))
+                                        {
+                                            img[n] = (Byte)b;
+                                            img[n + 1] = (Byte)g;
+                                            img[n + 2] = (Byte)r;
+                                        }
+                                        else
+                                        {
+                                            img[n] = (Byte)((img[n] + b) / 2);
+                                            img[n + 1] = (Byte)((img[n] + g) / 2);
+                                            img[n + 2] = (Byte)((img[n] + r) / 2);
+                                        }
                                     }
                                 }
-                            }
 
-                        y += step_y;
+                            y += step_y;
+                        }
                     }
                 }
             }

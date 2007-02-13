@@ -132,6 +132,8 @@ namespace sentience.calibration
         public float camera_dist_to_pattern_centre_mm = 450;
 
         calibration_edge[,] coverage;
+        float vertical_adjust = 1.0f;
+        float temp_vertical_adjust = 1.0f;
 
         // the size of each square on the calibration pattern
         public float calibration_pattern_spacing_mm = 50;
@@ -1347,6 +1349,8 @@ namespace sentience.calibration
                 // field of vision in radians
                 float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
                 float FOV_vertical = FOV_horizontal * height / (float)width;
+                //FOV_vertical /= temp_vertical_adjust;
+                FOV_vertical = (FOV_vertical * height / width) * temp_vertical_adjust;
 
                 // center point of the grid within the image
                 int centre_x = (int)grid[grid_x, grid_y].x;
@@ -1811,43 +1815,48 @@ namespace sentience.calibration
                     if (grid_cx > 0)
                     {
                         //util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
-
-                        // detect the lens distortion
-                        detectLensDistortion(width, height, grid_cx, grid_cy);
-
-                        // update the calibration lookup
-                        updateCalibrationMap(width, height, fitter);
-
-                        float err1 = fitter.GetRMSerror();
-                        //if (err1 < 2)
+                       
+                        for (int v = 0; v < 2; v++)
                         {
-                            float RMS_error = GetRMSerror() * err1;
-                            if (RMS_error < min_RMS_error)
+                            temp_vertical_adjust = 0.9f + ((rnd.Next(10000) / 10000.0f) * 0.2f);
+
+                            // detect the lens distortion
+                            detectLensDistortion(width, height, grid_cx, grid_cy);
+
+                            // update the calibration lookup
+                            updateCalibrationMap(width, height, fitter);
+
+                            float err1 = fitter.GetRMSerror();
+                            //if (err1 < 2)
                             {
-                                polyfit_error = err1;
-                                calibration_map = new int[width * height];
-                                for (int i = 0; i < temp_calibration_map.Length; i++)
-                                    calibration_map[i] = temp_calibration_map[i];
-                                calibration_map_inverse = new int[width, height, 2];
-                                for (int x = 0; x < width; x++)
+                                float RMS_error = GetRMSerror() * err1;
+                                if (RMS_error < min_RMS_error)
                                 {
-                                    for (int y = 0; y < height; y++)
+                                    vertical_adjust = temp_vertical_adjust;
+                                    polyfit_error = err1;
+                                    calibration_map = new int[width * height];
+                                    for (int i = 0; i < temp_calibration_map.Length; i++)
+                                        calibration_map[i] = temp_calibration_map[i];
+                                    calibration_map_inverse = new int[width, height, 2];
+                                    for (int x = 0; x < width; x++)
                                     {
-                                        calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
-                                        calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                                        for (int y = 0; y < height; y++)
+                                        {
+                                            calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
+                                            calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                                        }
                                     }
+
+
+                                    // update the graph
+                                    curve_fit = new Byte[width * height * 3];
+                                    fitter.Show(curve_fit, width, height);
+
+                                    //RMS_error = MinimiseError(width, height, 100) * err1;
+                                    best_curve = fitter;
+
+                                    min_RMS_error = RMS_error;
                                 }
-
-
-                                // update the graph
-                                curve_fit = new Byte[width * height * 3];
-                                fitter.Show(curve_fit, width, height);
-
-                                //RMS_error = MinimiseError(width, height, 100) * err1;
-                                best_curve = fitter;
-
-                                min_RMS_error = RMS_error;
-                            }
                                 /*
                             else
                             {
@@ -1859,12 +1868,13 @@ namespace sentience.calibration
                                 }
                             }
                                  */
+                            }
                         }
 
                         // rectify
                         Rectify(img, width, height);
 
-                        //ShowRectifiedCorners(corners_image, width, height);
+                        //ShowRectifiedCorners(rectified_image, width, height);
                     }
 
                     corners_index++;
