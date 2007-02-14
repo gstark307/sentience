@@ -146,6 +146,8 @@ namespace sentience.calibration
         public float min_RMS_error = 999999;
         public float polyfit_error = 999999;
 
+        private bool isValidRectification;
+
         // the centre of distortion in image pixel coordinates
         calibration_point centre_of_distortion;
         calibration_point centre_spot;
@@ -163,6 +165,7 @@ namespace sentience.calibration
         public Byte[] curve_fit;
 
         polyfit fitter, best_curve;
+        public float temp_scale, scale=1;
 
         Byte[] calibration_image;
         ArrayList edges_horizontal;
@@ -359,6 +362,8 @@ namespace sentience.calibration
 
         public void ShowRectifiedCorners(Byte[] img, int width, int height)
         {
+            int rectified_x = 0, rectified_y = 0;
+
             if (grid != null)
             {
                 for (int x = 0; x < grid.GetLength(0); x++)
@@ -368,6 +373,12 @@ namespace sentience.calibration
                         if (grid[x, y] != null)
                         {
                             util.drawCross(img, width, height, (int)grid[x, y].rectified_x, (int)grid[x, y].rectified_y, 2, 255, 255, 0, 0);
+                            
+                            if (rectifyPoint((int)grid[x, y].x, (int)grid[x, y].y, ref rectified_x, ref rectified_y))
+                            {
+                                //util.drawCross(img, width, height, rectified_x, rectified_y, 2, 255, 255, 255, 0);
+                                util.drawLine(img, width, height, (int)grid[x, y].rectified_x, (int)grid[x, y].rectified_y, rectified_x, rectified_y, 255, 255, 255, 0, false);
+                            }                            
                         }
                     }
                 }
@@ -1351,6 +1362,7 @@ namespace sentience.calibration
                 float FOV_vertical = FOV_horizontal * height / (float)width;
                 //FOV_vertical = FOV_vertical * temp_vertical_adjust;
                 FOV_vertical = (FOV_vertical * height / width) * temp_vertical_adjust;
+                //FOV_vertical = FOV_vertical * temp_vertical_adjust;
 
                 // center point of the grid within the image
                 int centre_x = (int)grid[grid_x, grid_y].x;
@@ -1359,12 +1371,42 @@ namespace sentience.calibration
                 // calculate the distance to the centre grid point on the ground plane
                 float ground_dist_to_point = camera_dist_to_pattern_centre_mm;
 
-                // distance between the camera lens and the centre point
+                // line of sight distance between the camera lens and the centre point
                 float camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
                                              (camera_height_mm * camera_height_mm));
 
                 // tilt angle at the centre point
-                float centre_tilt = (float)Math.Acos(camera_height_mm / camera_to_point_dist);
+                float centre_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
+
+
+
+
+                // pan angle at the centre
+                float point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
+
+                // grid width at the centre point
+                float x1 = centre_x + (point_pan * width / FOV_horizontal);
+
+                // calculate the distance to the observed grid point on the ground plane
+                ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y + 2) * calibration_pattern_spacing_mm);
+
+                // line of sight distance between the camera lens and the observed point
+                camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
+                                             (camera_height_mm * camera_height_mm));
+
+                // tilt angle
+                float point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
+
+                // pan angle
+                point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
+
+                // calc the position of the grid point within the image after rectification
+                float x2 = centre_x + (point_pan * width / FOV_horizontal);
+                float y2 = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
+
+                // calc the gradient
+                float grad = (x2 - x1) / (float)(y2 - centre_y);
+
 
                 ArrayList rectifiedPoints = new ArrayList();
 
@@ -1381,28 +1423,29 @@ namespace sentience.calibration
                             // calculate the distance to the observed grid point on the ground plane
                             ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y - y) * calibration_pattern_spacing_mm);
 
-                            // distance between the camera lens and the observed point
+                            // line of sight distance between the camera lens and the observed point
                             camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
                                                          (camera_height_mm * camera_height_mm));
 
                             // tilt angle
-                            float point_tilt = (float)Math.Acos(camera_height_mm / camera_to_point_dist);
+                            point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
 
                             // distance to the point on the ground plave along the x (horizontal axis)
                             float ground_dist_to_point_x = (x - grid_x) * calibration_pattern_spacing_mm;
 
                             // pan angle
-                            float point_pan = (float)Math.Asin(ground_dist_to_point_x / camera_to_point_dist);
+                            point_pan = (float)Math.Asin(ground_dist_to_point_x / camera_to_point_dist);
 
                             // calc the position of the grid point within the image after rectification
-                            float rectified_x = centre_x + (point_pan * width / FOV_horizontal);
-                            float rectified_y = centre_y + ((centre_tilt - point_tilt) * height / FOV_vertical);
+                            //float rectified_x = centre_x + (point_pan * width / FOV_horizontal);
+                            float rectified_x = centre_x + (((x1-centre_x) + ((grid[x, y].y - centre_y) * grad)) * (x - grid_x));
+                            float rectified_y = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
                             grid[x, y].rectified_x = rectified_x;
                             grid[x, y].rectified_y = rectified_y;
                             cx += (grid[x, y].x - rectified_x);
                             cy += (grid[x, y].y - rectified_y);
 
-                            hits++;                            
+                            hits++;
                         }
                     }
                 }
@@ -1435,7 +1478,7 @@ namespace sentience.calibration
                                         float dy = grid[x, y].rectified_y - centre_of_distortion.y;
                                         float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
                                         dx = grid[x, y].x - centre_of_distortion.x;
-                                        dy = grid[x, y].y - centre_of_distortion.y;
+                                        dy = (grid[x, y].y - centre_of_distortion.y);
                                         float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
 
                                         curvefit.AddPoint(radial_dist_rectified, radial_dist_original);
@@ -1458,6 +1501,59 @@ namespace sentience.calibration
                     centre_of_distortion.x = winner_x;
                     centre_of_distortion.y = winner_y;
                 }
+            }
+        }
+
+
+        private void detectScale(int width, int height)
+        {
+            if (fitter != null)
+            {
+                int x;
+                int prev_x_start = 0;
+                int x_start = -1;
+                int y = height / 2;
+
+                temp_scale = 1;
+                isValidRectification = true;
+
+                for (int i = 0; i < 2; i++)
+                {
+                    x = 0;
+                    if (i > 0) y = height - 10;
+                    while ((x < width / 4) && (x_start < 0))
+                    {
+                        float dx = x - centre_of_distortion.x;
+                        float dy = y - centre_of_distortion.y;
+
+                        float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                        if (radial_dist_rectified >= 0.01f)
+                        {
+                            float radial_dist_original = fitter.RegVal(radial_dist_rectified);
+                            if (radial_dist_original > 0)
+                            {
+                                float ratio = radial_dist_original / radial_dist_rectified;
+                                x_start = (int)Math.Round(centre_of_distortion.x + (dx * ratio));
+                            }
+                        }
+                        x++;
+                    }
+                    if (x_start > -1)
+                    {
+                        x--;
+                        if (i == 0)
+                        {
+                            temp_scale = 1.0f - (x / (float)(width / 2));
+                            prev_x_start = x;
+                        }
+                        else
+                        {
+                            if (x > prev_x_start)
+                                isValidRectification = false;
+                        }                        
+                    }
+                }
+
             }
         }
 
@@ -1636,7 +1732,7 @@ namespace sentience.calibration
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        private void updateCalibrationMap(int width, int height, polyfit curve)
+        private void updateCalibrationMap(int width, int height, polyfit curve, float scale)
         {
             temp_calibration_map = new int[width * height];            
             temp_calibration_map_inverse = new int[width, height, 2];
@@ -1646,7 +1742,7 @@ namespace sentience.calibration
 
                 for (int y = 0; y < height; y++)
                 {
-                    float dy = (y - centre_of_distortion.y);
+                    float dy = y - centre_of_distortion.y;
 
                     float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
                     if (radial_dist_rectified >= 0.01f)
@@ -1654,9 +1750,11 @@ namespace sentience.calibration
                         float radial_dist_original = curve.RegVal(radial_dist_rectified);
                         if (radial_dist_original > 0)
                         {
-                            float ratio = radial_dist_rectified / radial_dist_original;
+                            float ratio = radial_dist_original / radial_dist_rectified;
                             int x2 = (int)Math.Round(centre_of_distortion.x + (dx * ratio));
+                            x2 = (width/2) + (int)((x2 - (width / 2)) * scale);
                             int y2 = (int)Math.Round(centre_of_distortion.y + (dy * ratio));
+                            y2 = (height / 2) + (int)((y2 - (height / 2)) * scale);
 
                             if ((x2 > -1) && (x2 < width) && (y2 > -1) && (y2 < height))
                             {
@@ -1703,60 +1801,16 @@ namespace sentience.calibration
 
         #region "main update method"
 
-        private float MinimiseError(int width, int height, int tries, float min_err)
+        private bool validRectification(Byte[] img, int width, int height)
         {
-            float MinError = min_err;
-            polyfit curve = new polyfit();
-            polyfit best_curve = null;
-            int degree = fitter.GetDegree();
-            curve.SetDegree(degree);
-
-            for (int i = 0; i < tries; i++)
-            {
-                // randomly mutate the coefficients
-                for (int j = 0; j <= degree; j++)
-                {
-                    if (rnd.Next(10) > 5)
-                    {
-                        float fraction = 0.9f + (0.2f * (rnd.Next(10000) / 10000.0f));
-                        curve.SetCoeff(j, fitter.Coeff(j) * fraction);
-                    }
-                    else curve.SetCoeff(j, fitter.Coeff(j));
-                }
-
-                // calculate the calibration map using these coefficients
-                updateCalibrationMap(width, height, curve);
-
-                // calc the error using this calibration
-                float rms_error = GetRMSerror();
-                if (rms_error < MinError)
-                {
-                    MinError = rms_error;
-
-                    // store the calibration map and inverse map
-                    calibration_map = new int[width * height];
-                    for (int j = 0; j < temp_calibration_map.Length; j++)
-                        calibration_map[j] = temp_calibration_map[j];
-                    calibration_map_inverse = new int[width, height, 2];
-                    for (int x = 0; x < width; x++)
-                    {
-                        for (int y = 0; y < height; y++)
-                        {
-                            calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
-                            calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
-                        }
-                    }
-
-                    best_curve = new polyfit();
-                    best_curve.SetDegree(fitter.GetDegree());
-                    for (int j = 0; j <= degree; j++)
-                        best_curve.SetCoeff(j, curve.Coeff(j));
-                }
-            }
-            if (best_curve != null) fitter = best_curve;
-            return (MinError);
+            int x = 10;
+            int y = 10;
+            int n = (y * width) + x;
+            if ((img[n] != 0) || (img[n + 2] != 0) || (img[n + 4] != 0))
+                return (true);
+            else
+                return (false);
         }
-
 
         public void Update(Byte[] img, int width, int height)
         {
@@ -1815,66 +1869,75 @@ namespace sentience.calibration
                     if (grid_cx > 0)
                     {
                         //util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
-                       
-                        for (int v = 0; v < 2; v++)
+
+                        // detect the lens distortion
+                        detectLensDistortion(width, height, grid_cx, grid_cy);
+
+                        if (fitter != null)
                         {
-                            temp_vertical_adjust = 0.8f + ((rnd.Next(10000) / 10000.0f) * 0.4f);
+                            float[] C = new float[4];
+                            C[1] = fitter.Coeff(1);
+                            C[2] = fitter.Coeff(2);
+                            //C[3] = fitter.Coeff(3);
 
-                            // detect the lens distortion
-                            detectLensDistortion(width, height, grid_cx, grid_cy);
-
-                            // update the calibration lookup
-                            updateCalibrationMap(width, height, fitter);
-
-                            float err1 = fitter.GetRMSerror();
-                            //if (err1 < 2)
+                            int max_v = 1;
+                            if (min_RMS_error > 5) max_v = 5;
+                            if (min_RMS_error > 10) max_v = 15;
+                            for (int v = 0; v < max_v; v++)
                             {
-                                float RMS_error = GetRMSerror() * err1;
-                                if (RMS_error < min_RMS_error)
+                                temp_vertical_adjust = 1.15f + ((rnd.Next(1000000) / 1000000.0f) * 0.2f);
+
+                                for (int c = 1; c <= 2; c++)
+                                    fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.05f))));
+
+                                detectScale(width, height);
+
+                                if (isValidRectification)
                                 {
-                                    vertical_adjust = temp_vertical_adjust;
-                                    polyfit_error = err1;
-                                    calibration_map = new int[width * height];
-                                    for (int i = 0; i < temp_calibration_map.Length; i++)
-                                        calibration_map[i] = temp_calibration_map[i];
-                                    calibration_map_inverse = new int[width, height, 2];
-                                    for (int x = 0; x < width; x++)
+                                    // update the calibration lookup
+                                    updateCalibrationMap(width, height, fitter, 1.0f);
+
+                                    float RMS_error = GetRMSerror();
+                                    if (RMS_error < min_RMS_error)
                                     {
-                                        for (int y = 0; y < height; y++)
+                                        // update the graph
+                                        curve_fit = new Byte[width * height * 3];
+                                        fitter.Show(curve_fit, width, height);
+
+                                        updateCalibrationMap(width, height, fitter, temp_scale);
+                                        calibration_map = new int[width * height];
+                                        for (int i = 0; i < temp_calibration_map.Length; i++)
+                                            calibration_map[i] = temp_calibration_map[i];
+                                        calibration_map_inverse = new int[width, height, 2];
+                                        for (int x = 0; x < width; x++)
                                         {
-                                            calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
-                                            calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                                            for (int y = 0; y < height; y++)
+                                            {
+                                                calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
+                                                calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                                            }
                                         }
+
+                                        //if (validRectification(calibration_image, width, height))
+                                        {
+                                            scale = temp_scale;
+                                            vertical_adjust = temp_vertical_adjust;
+
+                                            //RMS_error = MinimiseError(width, height, 100) * err1;
+                                            best_curve = fitter;
+
+                                            min_RMS_error = RMS_error;
+                                        }
+
                                     }
-
-
-                                    // update the graph
-                                    curve_fit = new Byte[width * height * 3];
-                                    fitter.Show(curve_fit, width, height);
-
-                                    //RMS_error = MinimiseError(width, height, 100) * err1;
-                                    best_curve = fitter;
-
-                                    min_RMS_error = RMS_error;
-                                }
-                                /*
-                            else
-                            {
-                                RMS_error = MinimiseError(width, height, 1, min_RMS_error) * polyfit_error;
-                                if (RMS_error < min_RMS_error)
-                                {
-                                    best_curve = fitter;
-                                    min_RMS_error = RMS_error;
                                 }
                             }
-                                 */
-                            }
+
+                            // rectify
+                            Rectify(img, width, height);
                         }
 
-                        // rectify
-                        Rectify(img, width, height);
-
-                        ShowRectifiedCorners(rectified_image, width, height);
+                        //ShowRectifiedCorners(rectified_image, width, height);
                     }
 
                     corners_index++;

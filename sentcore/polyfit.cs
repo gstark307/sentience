@@ -306,6 +306,12 @@ namespace sentience.core
                 img[n + 2] = 150;
             }
 
+            if (max_x == 1)
+            {
+                max_x = width/2;
+                max_y = height/2;
+            }
+
             int prev_x = 0;
             int prev_y = height - 1;
             for (int x = 0; x < max_x; x++)

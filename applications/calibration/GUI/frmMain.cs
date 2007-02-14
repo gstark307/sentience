@@ -47,7 +47,7 @@ namespace WindowsApplication1
 
         Random rnd = new Random();
 
-        float max_RMS_error = 40;
+        float max_RMS_error = 8;
 
         globals global_variables;
 
