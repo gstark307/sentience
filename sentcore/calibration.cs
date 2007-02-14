@@ -1519,8 +1519,9 @@ namespace sentience.calibration
 
                 for (int i = 0; i < 2; i++)
                 {
+                    x_start = -1;
                     x = 0;
-                    if (i > 0) y = height - 10;
+                    if (i > 0) y += (height/5);
                     while ((x < width / 4) && (x_start < 0))
                     {
                         float dx = x - centre_of_distortion.x;
@@ -1552,6 +1553,51 @@ namespace sentience.calibration
                                 isValidRectification = false;
                         }                        
                     }
+                }
+
+                if (isValidRectification)
+                {
+                    int prev_y_start = 0;
+                    int y_start = -1;
+                    x = width / 2;
+                    y = height-1;
+                    for (int i = 0; i < 2; i++)
+                    {
+                        y_start = -1;
+                        y = height-1;
+                        if (i > 0) x += (width / 5);
+                        while ((y >height-(height / 4)) && (y_start < 0))
+                        {
+                            float dx = x - centre_of_distortion.x;
+                            float dy = y - centre_of_distortion.y;
+
+                            float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                            if (radial_dist_rectified >= 0.01f)
+                            {
+                                float radial_dist_original = fitter.RegVal(radial_dist_rectified);
+                                if (radial_dist_original > 0)
+                                {
+                                    float ratio = radial_dist_original / radial_dist_rectified;
+                                    y_start = (int)Math.Round(centre_of_distortion.y + (dy * ratio));
+                                }
+                            }
+                            y--;
+                        }
+                        if (y_start > -1)
+                        {
+                            y++;
+                            if (i == 0)
+                            {
+                                prev_y_start = y;
+                            }
+                            else
+                            {
+                                if (y < prev_y_start)
+                                    isValidRectification = false;
+                            }
+                        }
+                    }
+
                 }
 
             }
