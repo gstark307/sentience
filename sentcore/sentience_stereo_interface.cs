@@ -19,8 +19,10 @@
 */
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Text;
+using sentience.calibration;
 
 namespace sentience.core
 {
@@ -31,18 +33,34 @@ namespace sentience.core
         int image_height = 0;
         int bytes_per_pixel;
         Byte[] left_image = null;
-        Byte[] right_image = null;
+        Byte[] right_image = null;        
         sentience_stereo stereovision;
         sentience_stereo_contours stereovision_contours;
         sentience_stereo_FAST stereovision_FAST;
         int currentAlgorithmType = 0;
         FASTlines line_detector = null;
 
+        calibrationStereo calibration = null;
+        String calibrationFilename = "";
+
         public sentience_stereo_interface()
         {
             stereovision = new sentience_stereo();
             stereovision_contours = new sentience_stereo_contours();
             stereovision_FAST = new sentience_stereo_FAST();
+        }
+
+        // load stereo calibration parameters
+        public void loadCalibration(String calibrationFilename)
+        {
+            if (File.Exists(calibrationFilename))
+            {
+                this.calibrationFilename = calibrationFilename;
+                calibration = new calibrationStereo();
+                calibration.Load(calibrationFilename);
+                calibration.updateCalibrationMaps();
+            }
+            else calibration = null;
         }
 
         /// <summary>
@@ -146,13 +164,23 @@ namespace sentience.core
             int tot, offset;
             for (j = 0; j < width * height; j++)
             {
+                int n = j;
+                if (calibration != null)
+                {
+                    if (isLeftImage)
+                        n = calibration.leftcam.calibration_map[j];
+                    else
+                        n = calibration.rightcam.calibration_map[j];
+                }
+
                 // get the total intensity
-                offset = j * bytesPerPixel;
+                offset = n * bytesPerPixel;
                 tot = 0;
                 for (int k = 0; k < bytesPerPixel; k++)
                 {
                     tot += image_data[offset + k];
                 }
+
                 ///left or right
                 if (isLeftImage)
                     left_image[j] = (Byte)(tot / bytesPerPixel);
@@ -167,6 +195,18 @@ namespace sentience.core
         /// </summary>
         public void stereoMatchRun(int calibration_offset_x, int calibration_offset_y, int image_threshold, int peaks_per_row, int algorithm_type)
         {
+            if (calibration != null)
+            {
+                // save offset values if necessary
+                if ((calibration.offset_x != calibration_offset_x) ||
+                    (calibration.offset_y != calibration_offset_y))
+                {
+                    calibration.offset_x = calibration_offset_x;
+                    calibration.offset_y = calibration_offset_y;
+                    calibration.Save(calibrationFilename);
+                }
+            }
+
             currentAlgorithmType = algorithm_type;
             switch (algorithm_type)
             {

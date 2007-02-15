@@ -20,6 +20,7 @@
 
 
 using System;
+using System.IO;
 using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
@@ -1790,6 +1791,27 @@ namespace sentience.calibration
             util.drawLine(img, width, height, tx2, ty2, bx2, by2, 255, 255, 255, 0, false);
         }
 
+        /// <summary>
+        /// update the calibration map after loading calibration data
+        /// </summary>
+        public void updateCalibrationMap()
+        {
+            updateCalibrationMap(image_width, image_height, fitter, scale, rotation);
+
+            calibration_map = new int[image_width * image_height];
+            for (int i = 0; i < temp_calibration_map.Length; i++)
+                calibration_map[i] = temp_calibration_map[i];
+            calibration_map_inverse = new int[image_width, image_height, 2];
+            for (int x = 0; x < image_width; x++)
+            {
+                for (int y = 0; y < image_height; y++)
+                {
+                    calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
+                    calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                }
+            }
+        }
+
         public void Update(Byte[] img, int width, int height)
         {
             if (img != null)
@@ -2003,26 +2025,29 @@ namespace sentience.calibration
         /// <param name="filename"></param>
         public void Load(String filename)
         {
-            // use an XmlTextReader to open an XML document
-            XmlTextReader xtr = new XmlTextReader(filename);
-            xtr.WhitespaceHandling = WhitespaceHandling.None;
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
 
-            // load the file into an XmlDocuent
-            XmlDocument xd = new XmlDocument();
-            xd.Load(xtr);
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
 
-            // get the document root node
-            XmlNode xnodDE = xd.DocumentElement;
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
 
-            // recursively walk the node tree
-            LoadFromXml(xnodDE, 0);
+                // recursively walk the node tree
+                LoadFromXml(xnodDE, 0);
 
-            // close the reader
-            xtr.Close();
+                // close the reader
+                xtr.Close();
 
-            // show the best fit curve
-            curve_fit = new Byte[image_width * image_height * 3];
-            fitter.Show(curve_fit, image_width, image_height);
+                // show the best fit curve
+                curve_fit = new Byte[image_width * image_height * 3];
+                fitter.Show(curve_fit, image_width, image_height);
+            }
         }
 
         /// <summary>

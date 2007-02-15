@@ -39,6 +39,7 @@ namespace WindowsApplication1
             this.disparityMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nearbyObjectsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.raysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.linesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.videoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startSentienceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startSimulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -89,7 +90,7 @@ namespace WindowsApplication1
             this.txtForward = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.picOutput = new System.Windows.Forms.PictureBox();
-            this.linesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -119,6 +120,7 @@ namespace WindowsApplication1
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openBackgroundToolStripMenuItem,
+            this.loadCalibrationToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
@@ -187,6 +189,13 @@ namespace WindowsApplication1
             this.raysToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             this.raysToolStripMenuItem.Text = "Rays";
             this.raysToolStripMenuItem.Click += new System.EventHandler(this.raysToolStripMenuItem_Click);
+            // 
+            // linesToolStripMenuItem
+            // 
+            this.linesToolStripMenuItem.Name = "linesToolStripMenuItem";
+            this.linesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.linesToolStripMenuItem.Text = "Lines";
+            this.linesToolStripMenuItem.Click += new System.EventHandler(this.linesToolStripMenuItem_Click);
             // 
             // videoToolStripMenuItem
             // 
@@ -635,12 +644,12 @@ namespace WindowsApplication1
             this.picOutput.TabIndex = 7;
             this.picOutput.TabStop = false;
             // 
-            // linesToolStripMenuItem
+            // loadCalibrationToolStripMenuItem
             // 
-            this.linesToolStripMenuItem.Name = "linesToolStripMenuItem";
-            this.linesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.linesToolStripMenuItem.Text = "Lines";
-            this.linesToolStripMenuItem.Click += new System.EventHandler(this.linesToolStripMenuItem_Click);
+            this.loadCalibrationToolStripMenuItem.Name = "loadCalibrationToolStripMenuItem";
+            this.loadCalibrationToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
+            this.loadCalibrationToolStripMenuItem.Text = "Load Calibration ";
+            this.loadCalibrationToolStripMenuItem.Click += new System.EventHandler(this.loadCalibrationToolStripMenuItem_Click);
             // 
             // frmMain
             // 
@@ -738,6 +747,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.ToolStripMenuItem openBackgroundToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem raysToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem linesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadCalibrationToolStripMenuItem;
     }
 }
 

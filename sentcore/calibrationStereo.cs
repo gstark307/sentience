@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.IO;
 using System.Xml;
 using System.Collections.Generic;
 using System.Text;
@@ -61,6 +62,12 @@ namespace sentience.calibration
             {
                 offset_y = (int)(rightcam.centre_spot_rectified.y - leftcam.centre_spot_rectified.y);
             }
+        }
+
+        public void updateCalibrationMaps()
+        {
+            leftcam.updateCalibrationMap();
+            rightcam.updateCalibrationMap();
         }
 
         /// <summary>
@@ -149,23 +156,26 @@ namespace sentience.calibration
         /// <param name="filename"></param>
         public void Load(String filename)
         {
-            // use an XmlTextReader to open an XML document
-            XmlTextReader xtr = new XmlTextReader(filename);
-            xtr.WhitespaceHandling = WhitespaceHandling.None;
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
 
-            // load the file into an XmlDocuent
-            XmlDocument xd = new XmlDocument();
-            xd.Load(xtr);
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
 
-            // get the document root node
-            XmlNode xnodDE = xd.DocumentElement;
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
 
-            // recursively walk the node tree
-            int cameraIndex = 0;
-            LoadFromXml(xnodDE, 0, ref cameraIndex);
+                // recursively walk the node tree
+                int cameraIndex = 0;
+                LoadFromXml(xnodDE, 0, ref cameraIndex);
 
-            // close the reader
-            xtr.Close();
+                // close the reader
+                xtr.Close();
+            }
         }
 
         /// <summary>

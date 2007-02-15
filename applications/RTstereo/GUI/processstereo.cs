@@ -231,6 +231,10 @@ namespace WindowsApplication1
         }
 
 
+        public void LoadCalibration(String filename)
+        {
+            stereointerface.loadCalibration(filename);
+        }
 
         public unsafe void stereoMatch(Byte[] left_bmp, Byte[] right_bmp,
                                         int width, int height, bool colourImages)
@@ -238,6 +242,7 @@ namespace WindowsApplication1
             if (!initialised)
             {
                 initialised = true;
+                stereointerface.loadCalibration("calibration.xml");
             }
 
             int BytesPerPixel = 3;

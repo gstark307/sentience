@@ -53,7 +53,7 @@ namespace sentience.core
         /// <param name="FOV_radians"></param>
         /// <returns></returns>
         public float getObstacleDistance(float focal_length_mm, float camera_baseline_mm, 
-                                         int img_width, float FOV_radians)
+                                                int img_width, float FOV_radians)
         {
             float disparity_angle = average_disparity * FOV_radians / img_width;
             return (focal_length_mm * camera_baseline_mm / disparity_angle);

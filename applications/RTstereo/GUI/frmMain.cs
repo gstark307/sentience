@@ -749,6 +749,9 @@ namespace WindowsApplication1
                 startSimulationToolStripMenuItem.Enabled = false;
                 optomiseToolStripMenuItem.Enabled = false;
 
+                // load calibration settings
+                stereo.LoadCalibration("calibration.xml");
+
                 // and lo, the cameras were initialised...
                 global_variables.camera_initialised = true;
 
@@ -994,6 +997,18 @@ namespace WindowsApplication1
             nearbyObjectsToolStripMenuItem.Checked = false;
             raysToolStripMenuItem.Checked = false;
             linesToolStripMenuItem.Checked = true;
+        }
+
+        private void loadCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.DefaultExt = "xml";
+            openFileDialog1.FileName = ".xml";
+            openFileDialog1.Filter = "Xml files|*.xml";
+            openFileDialog1.Title = "Load calibration file";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                File.Copy(openFileDialog1.FileName, "calibration.xml");
+            }                
         }
 
     }
