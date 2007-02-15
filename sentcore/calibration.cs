@@ -1613,121 +1613,6 @@ namespace sentience.calibration
             }
         }
 
-        private float GetRMSerror_old()
-        {
-            float rms_error = 0;
-            int hits = 0;
-
-            if (grid != null)
-            {
-                for (int x = 0; x < grid.GetLength(0); x++)
-                {
-                    int top = -1;
-                    int bottom = -1;
-                    for (int y = 0; y < grid.GetLength(1); y++)
-                    {
-                        if (grid[x, y] != null)
-                        {
-                            if (top == -1) top = y;
-                            bottom = y;
-                        }
-                    }
-
-                    if (bottom > top + 1)
-                    {
-                        int rectified_x = 0;
-                        int rectified_y = 0;
-                        if (rectifyPoint((int)grid[x, top].x,(int)grid[x, top].y,ref rectified_x,ref rectified_y))
-                        {
-                            int tx = rectified_x;
-                            int ty = rectified_y;
-                            if (rectifyPoint((int)grid[x, bottom].x, (int)grid[x, bottom].y, ref rectified_x, ref rectified_y))
-                            {
-                                int bx = rectified_x;
-                                int by = rectified_y;
-                                int dx = bx - tx;
-                                int dy = by - ty;
-
-                                if (dy > 0)
-                                {
-                                    for (int y = top + 1; y < bottom; y++)
-                                    {
-                                        if (grid[x, y] != null)
-                                        {
-                                            if (rectifyPoint((int)grid[x, y].x, (int)grid[x, y].y, ref rectified_x, ref rectified_y))
-                                            {
-                                                int xx = tx + (((rectified_y - ty) * dx) / dy);
-                                                int diff = xx - rectified_x;
-                                                rms_error += (diff * diff);
-                                                hits++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-                }
-
-                for (int y = 0; y < grid.GetLength(1); y++)
-                {
-                    int top = -1;
-                    int bottom = -1;
-                    for (int x = 0; x < grid.GetLength(0); x++)
-                    {
-                        if (grid[x, y] != null)
-                        {
-                            if (top == -1) top = x;
-                            bottom = x;
-                        }
-                    }
-
-                    if (bottom > top + 1)
-                    {
-                        int rectified_x = 0;
-                        int rectified_y = 0;
-                        if (rectifyPoint((int)grid[top, y].x, (int)grid[top, y].y, ref rectified_x, ref rectified_y))
-                        {
-                            int tx = rectified_x;
-                            int ty = rectified_y;
-                            if (rectifyPoint((int)grid[bottom, y].x, (int)grid[bottom, y].y, ref rectified_x, ref rectified_y))
-                            {
-                                int bx = rectified_x;
-                                int by = rectified_y;
-                                int dx = bx - tx;
-                                int dy = by - ty;
-
-                                if (dx > 0)
-                                {
-                                    for (int x = top + 1; x < bottom; x++)
-                                    {
-                                        if (grid[x, y] != null)
-                                        {
-                                            if (rectifyPoint((int)grid[x, y].x, (int)grid[x, y].y, ref rectified_x, ref rectified_y))
-                                            {
-                                                int yy = ty + (((rectified_x - tx) * dy) / dx);
-                                                int diff = yy - rectified_y;
-                                                rms_error += (diff * diff);
-                                                hits++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-                }
-
-            }
-            if (hits > 2)
-                rms_error = (float)Math.Sqrt(rms_error / (float)hits);
-            else
-                rms_error = 99999;
-            return (rms_error);
-        }
-
         private float GetRMSerror()
         {
             float rms_error = 0;
@@ -1889,7 +1774,7 @@ namespace sentience.calibration
 
         #region "main update method"
 
-        private void showAlignmentLines(Byte[] img, int width, int height, float rotn)
+        private void showAlignmentLines(Byte[] img, int width, int height)
         {
             int tx1 = width / 2;
             int ty1 = 0;
@@ -1900,25 +1785,6 @@ namespace sentience.calibration
             int ty2 = height / 2;
             int bx2 = width - 1;
             int by2 = height / 2;
-
-            int cx = width / 2;
-            int cy = height / 2;
-
-            if (rotn != 0)
-            {
-                int length = width / 2;
-                tx2 = cx + (int)(length * Math.Sin(rotn + (Math.PI / 2)));
-                ty2 = cy + (int)(length * Math.Cos(rotn + (Math.PI / 2)));
-                bx2 = cx + (int)(length * Math.Sin(rotn + (Math.PI * 3 / 2)));
-                by2 = cy + (int)(length * Math.Cos(rotn + (Math.PI * 3 / 2)));
-
-                length = height / 2;
-                rotn = rotn * width / height;
-                tx1 = cx + (int)(length * Math.Sin(rotn));
-                ty1 = cy + (int)(length * Math.Cos(rotn));
-                bx1 = cx + (int)(length * Math.Sin(rotn + Math.PI));
-                by1 = cy + (int)(length * Math.Cos(rotn + Math.PI));
-            }
 
             util.drawLine(img, width, height, tx1, ty1, bx1, by1, 255, 255, 255, 0, false);
             util.drawLine(img, width, height, tx2, ty2, bx2, by2, 255, 255, 255, 0, false);
@@ -1976,7 +1842,7 @@ namespace sentience.calibration
                     rotation = (rotation * 0.9f) + (rotn * 0.1f);
 
                 // image used for aligning the centre of the calibration pattern
-                showAlignmentLines(centrealign_image, width, height, rotation);
+                showAlignmentLines(centrealign_image, width, height);
 
                 // create a grid to store the edges
                 if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))

@@ -271,6 +271,8 @@ namespace WindowsApplication1
             util.AddTextElement(doc, nodeCalibSetup, "CameraHeightMillimetres", txtCameraHeight.Text);
             util.AddComment(doc, nodeCalibSetup, "Calibration pattern spacing in mm");
             util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingMillimetres", txtPatternSpacing.Text);
+            util.AddComment(doc, nodeCalibSetup, "Baseline Distance mm");
+            util.AddTextElement(doc, nodeCalibSetup, "BaselineMillimetres", txtBaseline.Text);
             if (cam.leftcam.ROI != null)
             {
                 util.AddComment(doc, nodeCalibSetup, "Region of interest in the left image");
@@ -392,6 +394,11 @@ namespace WindowsApplication1
                 {
                     cmbCentreSpotPosition.SelectedIndex = Convert.ToInt32(xnod.InnerText);
                 }
+
+                if (xnod.Name == "BaselineMillimetres")
+                {
+                    txtBaseline.Text = xnod.InnerText;
+                }
             }
 
             // call recursively on all children of the current node
@@ -417,12 +424,15 @@ namespace WindowsApplication1
         {
             calibration_region_of_interest r_left = cam.leftcam.ROI;
             calibration_region_of_interest r_right = cam.rightcam.ROI;
+            String DriverName = cam.DriverName;
 
             cam = new calibrationStereo();
+            cam.DriverName = DriverName;
             cam.leftcam.rotation = 0;
             cam.rightcam.rotation = 0;
             cam.leftcam.ROI = r_left;
             cam.rightcam.ROI = r_right;
+            cam.baseline = Convert.ToSingle(txtBaseline.Text);
             cam.setCentreSpotPosition(cmbCentreSpotPosition.SelectedIndex);
             cam.leftcam.camera_dist_to_pattern_centre_mm = Convert.ToInt32(txtDistToCentre.Text);
             cam.rightcam.camera_dist_to_pattern_centre_mm = cam.leftcam.camera_dist_to_pattern_centre_mm;
@@ -545,6 +555,18 @@ namespace WindowsApplication1
 
         private void timUpdate_Tick(object sender, EventArgs e)
         {
+            if (no_of_cameras < 2)
+            {
+                lblBaseline.Visible = false;
+                txtBaseline.Visible = false;
+            }
+            else
+            {
+                lblBaseline.Visible = true;
+                txtBaseline.Visible = true;
+            }
+
+
             if (left_camera_running)
             {
                 //get images from the two cameras
@@ -733,6 +755,9 @@ namespace WindowsApplication1
                         no_of_cameras = 2;
                     }
 
+                    // set the driver name
+                    cam.DriverName = cameraFilterName;
+
                     // and lo, the cameras were initialised...
                     global_variables.camera_initialised = true;
                 }
@@ -837,7 +862,10 @@ namespace WindowsApplication1
             openFileDialog1.Filter = "Xml files|*.xml";
             openFileDialog1.Title = "Load calibration file";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
                 cam.Load(openFileDialog1.FileName);
+                txtBaseline.Text = Convert.ToString(cam.baseline);
+            }
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -904,6 +932,21 @@ namespace WindowsApplication1
                 else
                     cam.rightcam.setRegionOfInterestPoint(x, y, false);
             }
+        }
+
+        private void txtBaseline_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == 13)
+            {
+                if (txtBaseline.Text == "") txtBaseline.Text = "100";
+                cam.baseline = Convert.ToSingle(txtBaseline.Text);
+            }
+        }
+
+        private void txtBaseline_Leave(object sender, EventArgs e)
+        {
+            if (txtBaseline.Text == "") txtBaseline.Text = "100";
+            cam.baseline = Convert.ToSingle(txtBaseline.Text);
         }
 
     }

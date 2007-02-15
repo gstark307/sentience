@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.Xml;
 using System.Collections.Generic;
 using System.Text;
 
@@ -136,5 +137,67 @@ namespace sentience.core
         {
             return(new pos3D(this.x + x, this.y + y, this.z + z));
         }
+
+
+        #region "saving and loading"
+
+        /// <summary>
+        /// return an xml element
+        /// </summary>
+        /// <param name="doc">xml document to add the data to</param>
+        /// <returns>an xml element</returns>
+        public XmlElement getXml(XmlDocument doc)
+        {
+            XmlElement elem = doc.CreateElement("PositionOrientation");
+            util.AddComment(doc, elem, "Position in millimetres");
+            util.AddTextElement(doc, elem, "PositionMillimetres", Convert.ToString(x) + "," +
+                                                       Convert.ToString(y) + "," +
+                                                       Convert.ToString(z));
+            util.AddComment(doc, elem, "Orientation in degrees");
+            util.AddTextElement(doc, elem, "OrientationDegrees", Convert.ToString(pan / (float)Math.PI * 180.0f) + "," +
+                                                                 Convert.ToString(tilt / (float)Math.PI * 180.0f) + "," +
+                                                                 Convert.ToString(roll / (float)Math.PI * 180.0f));
+            return (elem);
+        }
+
+        /// <summary>
+        /// parse an xml node to extract camera calibration parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(XmlNode xnod, int level)
+        {
+            XmlNode xnodWorking;
+
+            if (xnod.Name == "PositionMillimetres")
+            {
+                String[] dimStr = xnod.InnerText.Split(',');
+                x = Convert.ToSingle(dimStr[0]);
+                y = Convert.ToSingle(dimStr[1]);
+                z = Convert.ToSingle(dimStr[2]);
+            }
+
+            if (xnod.Name == "OrientationDegrees")
+            {
+                String[] dimStr = xnod.InnerText.Split(',');
+                pan = Convert.ToSingle(dimStr[0]) / 180.0f * (float)Math.PI;
+                tilt = Convert.ToSingle(dimStr[1]) / 180.0f * (float)Math.PI;
+                roll = Convert.ToSingle(dimStr[2]) / 180.0f * (float)Math.PI;
+            }
+
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+        #endregion
+
     }
 }

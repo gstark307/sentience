@@ -30,8 +30,20 @@ namespace sentience.calibration
     {
         public calibration leftcam, rightcam;
 
+        // name of the WDM camera driver
+        public String DriverName = "";
+        
+        // position and orientation of this camera relative to the head
+        public pos3D positionOrientation = new pos3D(0, 0, 0);
+
         // horizontal and vertical offset of the right image relative to the left image
         public int offset_x = 0, offset_y = 0;
+
+        // focal length in millimetres
+        public float focalLength = 5;
+
+        // camera baseline distance in millimetres
+        public float baseline = 100.0f;
 
         /// <summary>
         /// set the position of the centre spot relative to the centre of the calibration pattern
@@ -62,6 +74,41 @@ namespace sentience.calibration
 
         #region "saving and loading"
 
+        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        {
+            XmlElement nodeStereoCamera = doc.CreateElement("StereoCamera");
+            parent.AppendChild(nodeStereoCamera);
+
+            util.AddComment(doc, nodeStereoCamera, "Name of the WDM software driver for the cameras");
+            util.AddTextElement(doc, nodeStereoCamera, "DriverName", DriverName);
+
+            util.AddComment(doc, nodeStereoCamera, "Position and orientation of the stereo camera relative to the robots head or body");
+            nodeStereoCamera.AppendChild(positionOrientation.getXml(doc));
+
+            util.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
+            util.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focalLength));
+
+            util.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
+            util.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline));
+
+            util.AddComment(doc, nodeStereoCamera, "Calibration Data");
+
+            XmlElement nodeCalibration = doc.CreateElement("Calibration");
+            nodeStereoCamera.AppendChild(nodeCalibration);
+
+            String offsets = Convert.ToString(offset_x) + "," +
+                             Convert.ToString(offset_y);
+            util.AddComment(doc, nodeCalibration, "Image offsets in pixels");
+            util.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
+
+            XmlElement elem = leftcam.getXml(doc);
+            nodeCalibration.AppendChild(elem);
+            elem = rightcam.getXml(doc);
+            nodeCalibration.AppendChild(elem);
+
+            return (nodeStereoCamera);
+        }
+
         /// <summary>
         /// return an Xml document containing camera calibration parameters
         /// </summary>
@@ -78,23 +125,10 @@ namespace sentience.calibration
             XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
             doc.AppendChild(commentnode);
 
-            XmlElement nodeCalibration = doc.CreateElement("Sentience");
-            doc.AppendChild(nodeCalibration);
+            XmlElement nodeSentience = doc.CreateElement("Sentience");
+            doc.AppendChild(nodeSentience);
 
-            util.AddComment(doc, nodeCalibration, "Calibration data");
-
-            XmlElement nodeCameras = doc.CreateElement("Calibration");
-            nodeCalibration.AppendChild(nodeCameras);
-
-            String offsets = Convert.ToString(offset_x) + "," +
-                             Convert.ToString(offset_y);
-            util.AddComment(doc, nodeCameras, "Image offsets in pixels");
-            util.AddTextElement(doc, nodeCameras, "Offsets", offsets);            
-
-            XmlElement elem = leftcam.getXml(doc);
-            nodeCameras.AppendChild(elem);
-            elem = rightcam.getXml(doc);
-            nodeCameras.AppendChild(elem);
+            nodeSentience.AppendChild(getXml(doc, nodeSentience));
 
             return (doc);
         }
@@ -153,12 +187,32 @@ namespace sentience.calibration
             }
             else
             {
+                if (xnod.Name == "DriverName")
+                {
+                    DriverName = xnod.InnerText;
+                }
+
+                if (xnod.Name == "PositionOrientation")
+                {
+                    positionOrientation.LoadFromXml(xnod, level);
+                }
+
                 if (xnod.Name == "Offsets")
                 {
                     String[] offsets = xnod.InnerText.Split(',');
                     offset_x = Convert.ToInt32(offsets[0]);
                     offset_y = Convert.ToInt32(offsets[1]);
                 }
+
+                if (xnod.Name == "FocalLengthMillimetres")
+                {
+                    focalLength = Convert.ToSingle(xnod.InnerText);
+                }
+
+                if (xnod.Name == "BaselineMillimetres")
+                {
+                    baseline = Convert.ToSingle(xnod.InnerText);
+                }                
 
                 // call recursively on all children of the current node
                 if (xnod.HasChildNodes)

@@ -51,6 +51,8 @@ namespace WindowsApplication1
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDirectionOfGravityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpParameters = new System.Windows.Forms.GroupBox();
+            this.txtBaseline = new System.Windows.Forms.TextBox();
+            this.lblBaseline = new System.Windows.Forms.Label();
             this.lblStatus = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.cmbCentreSpotPosition = new System.Windows.Forms.ComboBox();
@@ -99,21 +101,21 @@ namespace WindowsApplication1
             // OpenToolStripMenuItem
             // 
             this.OpenToolStripMenuItem.Name = "OpenToolStripMenuItem";
-            this.OpenToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.OpenToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.OpenToolStripMenuItem.Text = "Open";
             this.OpenToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.saveAsToolStripMenuItem.Text = "Save As...";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem1
             // 
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(136, 22);
+            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
             this.exitToolStripMenuItem1.Text = "Exit";
             this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem1_Click);
             // 
@@ -226,6 +228,8 @@ namespace WindowsApplication1
             // 
             // grpParameters
             // 
+            this.grpParameters.Controls.Add(this.txtBaseline);
+            this.grpParameters.Controls.Add(this.lblBaseline);
             this.grpParameters.Controls.Add(this.lblStatus);
             this.grpParameters.Controls.Add(this.label6);
             this.grpParameters.Controls.Add(this.cmbCentreSpotPosition);
@@ -245,6 +249,26 @@ namespace WindowsApplication1
             this.grpParameters.TabStop = false;
             this.grpParameters.Text = "Parameters";
             this.grpParameters.Visible = false;
+            // 
+            // txtBaseline
+            // 
+            this.txtBaseline.Location = new System.Drawing.Point(427, 43);
+            this.txtBaseline.Name = "txtBaseline";
+            this.txtBaseline.Size = new System.Drawing.Size(33, 20);
+            this.txtBaseline.TabIndex = 15;
+            this.txtBaseline.Text = "100";
+            this.txtBaseline.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtBaseline.Leave += new System.EventHandler(this.txtBaseline_Leave);
+            this.txtBaseline.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtBaseline_KeyPress);
+            // 
+            // lblBaseline
+            // 
+            this.lblBaseline.AutoSize = true;
+            this.lblBaseline.Location = new System.Drawing.Point(355, 47);
+            this.lblBaseline.Name = "lblBaseline";
+            this.lblBaseline.Size = new System.Drawing.Size(66, 13);
+            this.lblBaseline.TabIndex = 14;
+            this.lblBaseline.Text = "Baseline mm";
             // 
             // lblStatus
             // 
@@ -465,6 +489,8 @@ namespace WindowsApplication1
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cmbCentreSpotPosition;
         private System.Windows.Forms.Label lblStatus;
+        private System.Windows.Forms.TextBox txtBaseline;
+        private System.Windows.Forms.Label lblBaseline;
     }
 }
 
