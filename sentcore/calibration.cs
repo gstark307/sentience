@@ -151,6 +151,7 @@ namespace sentience.calibration
         // the centre of distortion in image pixel coordinates
         calibration_point centre_of_distortion;
         calibration_point centre_spot;
+        public calibration_point centre_spot_rectified;
 
         public int[] calibration_map;
         public int[] temp_calibration_map;
@@ -166,6 +167,7 @@ namespace sentience.calibration
 
         polyfit fitter, best_curve;
         public float temp_scale, scale=1;
+        public float rotation = 0;
 
         Byte[] calibration_image;
         ArrayList edges_horizontal;
@@ -221,6 +223,21 @@ namespace sentience.calibration
         #endregion
 
         #region "centre spot detection"
+
+        /// <summary>
+        /// updates the rectified position of the centre spot.  This can be used to
+        /// calculate the horizontal and vertical offsets for stereo cameras
+        /// </summary>
+        private void updateCentreSpotRectified()
+        {
+            int rectified_x = 0, rectified_y = 0;
+
+            if (rectifyPoint((int)centre_spot.x, (int)centre_spot.y, ref rectified_x, ref rectified_y))
+            {
+                centre_spot_rectified = new calibration_point(rectified_x, rectified_y);
+            }
+        }
+
 
         /// <summary>
         /// detect the centre spot within the image
@@ -855,96 +872,60 @@ namespace sentience.calibration
 
         #endregion
 
-        #region "old stuff"
-        /// <summary>
-        /// return the grid coordinate given the screen coordinate
-        /// </summary>
-        /// <param name="image_x"></param>
-        /// <param name="image_y"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="grid_x"></param>
-        /// <param name="grid_y"></param>
-        /*
-        private void getGridCoordinate(int image_x, int image_y,
-                                       int width, int height,
-                                       ref int grid_x, ref int grid_y)
-        {
-            if ((horizontal_separation_top_hits > 0) && 
-                (horizontal_separation_bottom_hits > 0))
-            {
-                // get the horizontal separation at the given y coordinate
-                int separation_top = (int)(horizontal_separation_top / horizontal_separation_top_hits);
-                int separation_bottom = (int)(horizontal_separation_bottom / horizontal_separation_bottom_hits);
-                int grid_dx = separation_top + (image_y * (separation_bottom - separation_top) / height);
-                //int grid_dy = grid_dx * height / width;
-                int av_separation_x = (separation_top + separation_bottom) / 2;
-                int centre_adjust_x = av_centreline_x / av_centreline_x_hits;
-                if (centre_adjust_x > av_separation_x / 2) centre_adjust_x -= (av_separation_x / 2);
-                grid_x = -(int)Math.Round(((((image_x - (width / 2.0)) / (double)grid_dx)) + 0.5 + (centre_adjust_x / (double)av_separation_x)));
-
-                int av_separation_y = av_separation_x;
-                float fraction = separation_top / (float)separation_bottom;
-                //fraction = fraction * width / height;
-                int min_separation = (int)(av_separation_y * (1.0f - (fraction / 2)));
-                int max_separation = (int)(av_separation_y * (1.0f - (fraction / 2) + (fraction * fraction)));
-                int grid_dy = min_separation + (image_y * (max_separation - min_separation) / height);
-
-                int centre_adjust_y = av_centreline_y / av_centreline_y_hits;
-                if (centre_adjust_y > av_separation_y / 2) centre_adjust_y -= (av_separation_y / 2);
-                grid_y = -(int)Math.Round(((((image_y - (height / 2.0)) / (double)grid_dy)) + 0.0) - 0.0 + (centre_adjust_y / (double)av_separation_y));
-            }
-        }
-        /// <summary>
-        /// draw the detected grid
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        private void drawGrid(Byte[] img, int width, int height)
-        {
-            int grid_x = 0, grid_y = 0;
-            int prev_grid_x, prev_grid_y;
-            for (int y = 0; y < height; y++)
-            {                
-                prev_grid_x = -9999;
-                for (int x = 0; x < width; x++)
-                {
-                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
-                    if (grid_x != prev_grid_x)
-                    {
-                        int n = ((y * width) + x) * 3;
-                        img[n] = 0;
-                        img[n+1] = (Byte)255;
-                        img[n + 2] = 0;
-                    }
-                    prev_grid_x = grid_x;
-                }
-            }
-            for (int x = 0; x < width; x++)            
-            {
-                grid_y = 0;
-                prev_grid_y = -9999;
-                for (int y = 0; y < height; y++)
-                {
-                    getGridCoordinate(x, y, width, height, ref grid_x, ref grid_y);
-                    if (grid_y != prev_grid_y)
-                    {
-                        int n = ((y * width) + x) * 3;
-                        img[n] = 0;
-                        img[n + 1] = (Byte)255;
-                        img[n + 2] = 0;
-                    }
-                    prev_grid_y = grid_y;
-                }
-            }
-        }
-         
-         */
-
-        #endregion
-
         #region "line detection"
+
+        // detect the rotation
+        private float detectRotation(int width, int height)
+        {
+            float rot = 0;
+            const int no_of_buckets = 40;
+            int[] bucket_hits = new int[no_of_buckets];
+            float[] bucket_ang = new float[no_of_buckets];
+            int max_hits = 0;
+            int bucket_winner = 0;
+
+            for (int i = 0; i < horizontal_lines.Count; i++)
+            {
+                calibration_line line = (calibration_line)horizontal_lines[i];
+                if (line.points.Count > 5)
+                {
+                    calibration_point pt_start = (calibration_point)line.points[0];
+                    calibration_point pt_end = (calibration_point)line.points[line.points.Count - 1];
+                    float dx = pt_end.x - pt_start.x;
+                    float dy = pt_end.y - pt_start.y;
+                    float length = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                    float ang = (float)Math.Asin(dy / length);
+                    int b = (no_of_buckets / 2) + (int)(ang * (no_of_buckets / 2) / (float)(Math.PI / 2));
+                    if (b >= no_of_buckets) b = no_of_buckets - 1;
+                    if (b < 0) b = 0;
+                    bucket_ang[b] += ang;
+                    bucket_hits[b]++;
+                    if (bucket_hits[b] > max_hits)
+                    {
+                        max_hits = bucket_hits[b];
+                        bucket_winner = b;
+                    }
+                }
+            }
+            if (bucket_hits[bucket_winner] > 0)
+            {
+                if (bucket_winner > 0)
+                {
+                    if (bucket_winner - 1 > 0)
+                    {
+                        bucket_hits[bucket_winner] += bucket_hits[bucket_winner - 1];
+                        bucket_ang[bucket_winner] += bucket_ang[bucket_winner - 1];
+                    }
+                    if (bucket_winner + 1 < no_of_buckets)
+                    {
+                        bucket_hits[bucket_winner] += bucket_hits[bucket_winner + 1];
+                        bucket_ang[bucket_winner] += bucket_ang[bucket_winner + 1];
+                    }
+                }
+                rot = bucket_ang[bucket_winner] / (float)bucket_hits[bucket_winner];
+            }
+            return (rot);
+        }
 
         /// <summary>
         /// trace along a line
@@ -1537,6 +1518,7 @@ namespace sentience.calibration
         {
             if (fitter != null)
             {
+                const int fraction = 35;
                 int x;
                 int prev_x_start = 0;
                 int x_start = -1;
@@ -1549,7 +1531,7 @@ namespace sentience.calibration
                 {
                     x_start = -1;
                     x = 0;
-                    if (i > 0) y += (height/5);
+                    if (i > 0) y += (height * fraction / 100);
                     while ((x < width / 4) && (x_start < 0))
                     {
                         float dx = x - centre_of_distortion.x;
@@ -1593,7 +1575,7 @@ namespace sentience.calibration
                     {
                         y_start = -1;
                         y = height-1;
-                        if (i > 0) x += (width / 5);
+                        if (i > 0) x += (width * fraction / 100);
                         while ((y >height-(height / 4)) && (y_start < 0))
                         {
                             float dx = x - centre_of_distortion.x;
@@ -1782,6 +1764,27 @@ namespace sentience.calibration
 
         #region "image rectification"
 
+        public void rotatePoint(float x, float y, float ang,
+                                ref float rotated_x, ref float rotated_y)
+        {
+            float hyp;
+            rotated_x = x;
+            rotated_y = y;
+
+            if (ang != 0)
+            {
+                hyp = (float)Math.Sqrt((x * x) + (y * y));
+                if (hyp > 0)
+                {
+                    float rot_angle = (float)Math.Acos(y / hyp);
+                    if (x < 0) rot_angle = (float)(Math.PI * 2) - rot_angle;
+                    float new_angle = ang + rot_angle;
+                    rotated_x = hyp * (float)Math.Sin(new_angle);
+                    rotated_y = hyp * (float)Math.Cos(new_angle);
+                }
+            }
+        }
+
         /// <summary>
         /// returns a rectified version of the given image location
         /// </summary>
@@ -1810,7 +1813,7 @@ namespace sentience.calibration
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        private void updateCalibrationMap(int width, int height, polyfit curve, float scale)
+        private void updateCalibrationMap(int width, int height, polyfit curve, float scale, float rotation)
         {
             temp_calibration_map = new int[width * height];            
             temp_calibration_map_inverse = new int[width, height, 2];
@@ -1829,19 +1832,26 @@ namespace sentience.calibration
                         if (radial_dist_original > 0)
                         {
                             float ratio = radial_dist_original / radial_dist_rectified;
-                            int x2 = (int)Math.Round(centre_of_distortion.x + (dx * ratio));
-                            x2 = (width/2) + (int)((x2 - (width / 2)) * scale);
-                            int y2 = (int)Math.Round(centre_of_distortion.y + (dy * ratio));
-                            y2 = (height / 2) + (int)((y2 - (height / 2)) * scale);
+                            float x2 = (float)Math.Round(centre_of_distortion.x + (dx * ratio));
+                            x2 = (x2 - (width / 2)) * scale;
+                            float y2 = (float)Math.Round(centre_of_distortion.y + (dy * ratio));
+                            y2 = (y2 - (height / 2)) * scale;
 
-                            if ((x2 > -1) && (x2 < width) && (y2 > -1) && (y2 < height))
+                            // apply rotation
+                            float x3=x2, y3=y2;
+                            rotatePoint(x2, y2, -rotation, ref x3, ref y3);
+
+                            x3 += (width / 2);
+                            y3 += (height / 2);
+
+                            if (((int)x3 > -1) && ((int)x3 < width) && ((int)y3 > -1) && ((int)y3 < height))
                             {
                                 int n = (y * width) + x;
-                                int n2 = (y2 * width) + x2;
+                                int n2 = ((int)y3 * width) + (int)x3;
 
                                 temp_calibration_map[n] = n2;
-                                temp_calibration_map_inverse[x2, y2, 0] = x;
-                                temp_calibration_map_inverse[x2, y2, 1] = y;
+                                temp_calibration_map_inverse[(int)x3, (int)y3, 0] = x;
+                                temp_calibration_map_inverse[(int)x3, (int)y3, 1] = y;
                             }
                         }
                     }
@@ -1879,6 +1889,41 @@ namespace sentience.calibration
 
         #region "main update method"
 
+        private void showAlignmentLines(Byte[] img, int width, int height, float rotn)
+        {
+            int tx1 = width / 2;
+            int ty1 = 0;
+            int bx1 = width / 2;
+            int by1 = height - 1;
+
+            int tx2 = 0;
+            int ty2 = height / 2;
+            int bx2 = width - 1;
+            int by2 = height / 2;
+
+            int cx = width / 2;
+            int cy = height / 2;
+
+            if (rotn != 0)
+            {
+                int length = width / 2;
+                tx2 = cx + (int)(length * Math.Sin(rotn + (Math.PI / 2)));
+                ty2 = cy + (int)(length * Math.Cos(rotn + (Math.PI / 2)));
+                bx2 = cx + (int)(length * Math.Sin(rotn + (Math.PI * 3 / 2)));
+                by2 = cy + (int)(length * Math.Cos(rotn + (Math.PI * 3 / 2)));
+
+                length = height / 2;
+                rotn = rotn * width / height;
+                tx1 = cx + (int)(length * Math.Sin(rotn));
+                ty1 = cy + (int)(length * Math.Cos(rotn));
+                bx1 = cx + (int)(length * Math.Sin(rotn + Math.PI));
+                by1 = cy + (int)(length * Math.Cos(rotn + Math.PI));
+            }
+
+            util.drawLine(img, width, height, tx1, ty1, bx1, by1, 255, 255, 255, 0, false);
+            util.drawLine(img, width, height, tx2, ty2, bx2, by2, 255, 255, 255, 0, false);
+        }
+
         public void Update(Byte[] img, int width, int height)
         {
             if (img != null)
@@ -1904,10 +1949,6 @@ namespace sentience.calibration
                     edges_image[i] = img[i];
                     corners_image[i] = img[i];
                 }
-
-                // image used for aligning the centre of the calibration pattern
-                util.drawLine(centrealign_image, width, height, width / 2, 0, width / 2, height - 1, 255, 255, 255, 0, false);
-                util.drawLine(centrealign_image, width, height, 0, height / 2, width - 1, height / 2, 255, 255, 255, 0, false);
                 
                 // show region of interest
                 if (ROI != null) ROI.Show(centrealign_image, width, height);
@@ -1927,6 +1968,15 @@ namespace sentience.calibration
 
                 detectHorizontalLines(width, height);
                 detectVerticalLines(width, height);
+
+                float rotn = detectRotation(width, height);
+                if (rotation == 0)
+                    rotation = rotn;
+                else
+                    rotation = (rotation * 0.9f) + (rotn * 0.1f);
+
+                // image used for aligning the centre of the calibration pattern
+                showAlignmentLines(centrealign_image, width, height, rotation);
 
                 // create a grid to store the edges
                 if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))
@@ -1963,7 +2013,7 @@ namespace sentience.calibration
 
                                 // add small amount of noise to the polynomial coefficients
                                 for (int c = 1; c <= 2; c++)
-                                    fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.05f))));
+                                    fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.02f))));
 
                                 // does this equation cause the image to be re-scaled?
                                 // if it does we can explicitly detect this and correct for it later
@@ -1973,7 +2023,7 @@ namespace sentience.calibration
                                 if (isValidRectification)
                                 {
                                     // update the calibration lookup
-                                    updateCalibrationMap(width, height, fitter, 1.0f);
+                                    updateCalibrationMap(width, height, fitter, 1.0f, rotation);
 
                                     float RMS_error = GetRMSerror();
                                     if (RMS_error < min_RMS_error)
@@ -1982,7 +2032,7 @@ namespace sentience.calibration
                                         curve_fit = new Byte[width * height * 3];
                                         fitter.Show(curve_fit, width, height);
 
-                                        updateCalibrationMap(width, height, fitter, temp_scale);
+                                        updateCalibrationMap(width, height, fitter, temp_scale, rotation);
                                         calibration_map = new int[width * height];
                                         for (int i = 0; i < temp_calibration_map.Length; i++)
                                             calibration_map[i] = temp_calibration_map[i];
@@ -1995,6 +2045,9 @@ namespace sentience.calibration
                                                 calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
                                             }
                                         }
+
+                                        // update the rectified position of the centre spot
+                                        updateCentreSpotRectified();
 
                                         scale = temp_scale;
                                         vertical_adjust = vertical_adjust_noise;
@@ -2139,6 +2192,8 @@ namespace sentience.calibration
             util.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
             util.AddComment(doc, elem, "Scaling factor");
             util.AddTextElement(doc, elem, "Scale", Convert.ToString(scale));
+            util.AddComment(doc, elem, "Rotation of the image in degrees");
+            util.AddTextElement(doc, elem, "RotationDegrees", Convert.ToString(rotation / (float)Math.PI * 180.0f));
             util.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
             util.AddTextElement(doc, elem, "RMSerror", Convert.ToString(min_RMS_error));
             return (elem);
@@ -2186,6 +2241,11 @@ namespace sentience.calibration
             if (xnod.Name == "Scale")
             {
                 scale = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "RotationDegrees")
+            {
+                rotation = Convert.ToSingle(xnod.InnerText) / 180.0f * (float)Math.PI;
             }
 
             if (xnod.Name == "RMSerror")

@@ -30,6 +30,9 @@ namespace sentience.calibration
     {
         public calibration leftcam, rightcam;
 
+        // horizontal and vertical offset of the right image relative to the left image
+        public int offset_x = 0, offset_y = 0;
+
         /// <summary>
         /// set the position of the centre spot relative to the centre of the calibration pattern
         /// </summary>
@@ -38,6 +41,14 @@ namespace sentience.calibration
         {
             leftcam.centre_spot_position = position;
             rightcam.centre_spot_position = position;
+        }
+
+        public void update()
+        {
+            if ((leftcam.centre_spot_rectified != null) && (rightcam.centre_spot_rectified != null))
+            {
+                offset_y = (int)(rightcam.centre_spot_rectified.y - leftcam.centre_spot_rectified.y);
+            }
         }
 
         /// <summary>
@@ -74,6 +85,11 @@ namespace sentience.calibration
 
             XmlElement nodeCameras = doc.CreateElement("Calibration");
             nodeCalibration.AppendChild(nodeCameras);
+
+            String offsets = Convert.ToString(offset_x) + "," +
+                             Convert.ToString(offset_y);
+            util.AddComment(doc, nodeCameras, "Image offsets in pixels");
+            util.AddTextElement(doc, nodeCameras, "Offsets", offsets);            
 
             XmlElement elem = leftcam.getXml(doc);
             nodeCameras.AppendChild(elem);
@@ -137,6 +153,13 @@ namespace sentience.calibration
             }
             else
             {
+                if (xnod.Name == "Offsets")
+                {
+                    String[] offsets = xnod.InnerText.Split(',');
+                    offset_x = Convert.ToInt32(offsets[0]);
+                    offset_y = Convert.ToInt32(offsets[1]);
+                }
+
                 // call recursively on all children of the current node
                 if (xnod.HasChildNodes)
                 {

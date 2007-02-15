@@ -419,6 +419,8 @@ namespace WindowsApplication1
             calibration_region_of_interest r_right = cam.rightcam.ROI;
 
             cam = new calibrationStereo();
+            cam.leftcam.rotation = 0;
+            cam.rightcam.rotation = 0;
             cam.leftcam.ROI = r_left;
             cam.rightcam.ROI = r_right;
             cam.setCentreSpotPosition(cmbCentreSpotPosition.SelectedIndex);
@@ -619,6 +621,8 @@ namespace WindowsApplication1
 
                         pic.Refresh();
                     }
+
+                    cam.update();
 
                     if (no_of_cameras == 1)
                     {
@@ -837,9 +841,16 @@ namespace WindowsApplication1
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
-        {            
+        {
+            String cameraName = global_variables.CamSettingsLeft.cameraName;
+            if (cameraName.Contains("#"))
+            {
+                String[] str = cameraName.Split('#');
+                cameraName = str[0].Trim();
+            }
+
             saveFileDialog1.DefaultExt = "xml";
-            saveFileDialog1.FileName = "calibration_" + global_variables.CamSettingsLeft.cameraName + ".xml";
+            saveFileDialog1.FileName = "calibration_" + cameraName + ".xml";
             saveFileDialog1.Filter = "Xml files|*.xml";
             saveFileDialog1.Title = "Save calibration file";
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
