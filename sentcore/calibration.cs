@@ -133,7 +133,7 @@ namespace sentience.calibration
 
         calibration_edge[,] coverage;
         float vertical_adjust = 1.0f;
-        float temp_vertical_adjust = 1.0f;
+        float vertical_adjust_noise = 1.0f;
 
         // the size of each square on the calibration pattern
         public float calibration_pattern_spacing_mm = 50;
@@ -1360,9 +1360,9 @@ namespace sentience.calibration
                 // field of vision in radians
                 float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
                 float FOV_vertical = FOV_horizontal * height / (float)width;
-                //FOV_vertical = FOV_vertical * temp_vertical_adjust;
-                FOV_vertical = (FOV_vertical * height / width) * temp_vertical_adjust;
-                //FOV_vertical = FOV_vertical * temp_vertical_adjust;
+
+                // add some small amount of random noise to get the best fit
+                FOV_vertical *= vertical_adjust_noise;
 
                 // center point of the grid within the image
                 int centre_x = (int)grid[grid_x, grid_y].x;
@@ -1502,6 +1502,34 @@ namespace sentience.calibration
                     centre_of_distortion.y = winner_y;
                 }
             }
+        }
+
+        /// <summary>
+        /// returns the separation factor, which is the radius used for non-maximal
+        /// suppression when detecting edges
+        /// </summary>
+        /// <param name="width"></param>
+        /// <returns></returns>
+        private float GetSeparationFactor(int width)
+        {
+             // field of vision in radians
+             float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
+
+             // calculate the distance to the centre grid point on the ground plane
+             float ground_dist_to_point = camera_dist_to_pattern_centre_mm;
+
+             // line of sight distance between the camera lens and the centre point
+             float camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
+                                             (camera_height_mm * camera_height_mm));
+
+             // pan angle at the centre
+             float point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
+
+             // width of a grid cell
+             float x1 = (point_pan * width / FOV_horizontal);
+
+             float factor = x1 / (float)width;
+             return (factor*0.8f);
         }
 
 
@@ -1766,9 +1794,13 @@ namespace sentience.calibration
                                   ref int rectified_x, ref int rectified_y)
         {
             bool isValid = true;
-            rectified_x = temp_calibration_map_inverse[original_x, original_y, 0];
-            rectified_y = temp_calibration_map_inverse[original_x, original_y, 1];
-            if ((rectified_x == 0) && (rectified_y == 0)) isValid = false;
+            if (temp_calibration_map_inverse != null)
+            {
+                rectified_x = temp_calibration_map_inverse[original_x, original_y, 0];
+                rectified_y = temp_calibration_map_inverse[original_x, original_y, 1];
+                if ((rectified_x == 0) && (rectified_y == 0)) isValid = false;
+            }
+            else isValid = false;
             return (isValid);
         }
 
@@ -1847,17 +1879,6 @@ namespace sentience.calibration
 
         #region "main update method"
 
-        private bool validRectification(Byte[] img, int width, int height)
-        {
-            int x = 10;
-            int y = 10;
-            int n = (y * width) + x;
-            if ((img[n] != 0) || (img[n + 2] != 0) || (img[n + 4] != 0))
-                return (true);
-            else
-                return (false);
-        }
-
         public void Update(Byte[] img, int width, int height)
         {
             if (img != null)
@@ -1887,11 +1908,16 @@ namespace sentience.calibration
                 // image used for aligning the centre of the calibration pattern
                 util.drawLine(centrealign_image, width, height, width / 2, 0, width / 2, height - 1, 255, 255, 255, 0, false);
                 util.drawLine(centrealign_image, width, height, 0, height / 2, width - 1, height / 2, 255, 255, 255, 0, false);
+                
                 // show region of interest
                 if (ROI != null) ROI.Show(centrealign_image, width, height);
 
                 // create a mono image
                 calibration_image = util.monoImage(img, width, height);
+
+                // determine the separation factor used for non-maximal suppression
+                // during edge detection
+                separation_factor = (int)(1.0f / GetSeparationFactor(width));
 
                 int min_magnitude = 1;
                 clearBinaryImage(width, height);
@@ -1911,33 +1937,39 @@ namespace sentience.calibration
                     // hunt the centre spot
                     int grid_cx = 0, grid_cy = 0;
                     detectCentreSpot(calibration_image, width, height, ref grid_cx, ref grid_cy);
-                    //util.drawCross(corners_image, width, height, (int)centre_spot.x, (int)centre_spot.y, 4, 0, 255, 0, 0);
                     if (grid_cx > 0)
                     {
-                        //util.drawBox(corners_image, width, height, image_cx, image_cy, 2, 0, 255, 0, 0);
-
                         // detect the lens distortion
                         detectLensDistortion(width, height, grid_cx, grid_cy);
 
                         if (fitter != null)
                         {
-                            float[] C = new float[4];
+                            // store the polynomial coefficients which will be used as
+                            // a basis for a more detailed search
+                            float[] C = new float[3];
                             C[1] = fitter.Coeff(1);
                             C[2] = fitter.Coeff(2);
-                            //C[3] = fitter.Coeff(3);
 
+                            // itterate a number of time trying different possible matches
+                            // the number of itterations is adjusted depending upon the size of the error
                             int max_v = 1;
                             if (min_RMS_error > 5) max_v = 5;
                             if (min_RMS_error > 10) max_v = 15;
                             for (int v = 0; v < max_v; v++)
                             {
-                                temp_vertical_adjust = 1.15f + ((rnd.Next(1000000) / 1000000.0f) * 0.2f);
+                                // add some small amount of noise to the vertical to try slighly different fits
+                                // this allows the best fit to be discovered (ableit in a crude way)
+                                vertical_adjust_noise = 0.9f + ((rnd.Next(1000000) / 1000000.0f) * 0.2f);
 
+                                // add small amount of noise to the polynomial coefficients
                                 for (int c = 1; c <= 2; c++)
                                     fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.05f))));
 
+                                // does this equation cause the image to be re-scaled?
+                                // if it does we can explicitly detect this and correct for it later
                                 detectScale(width, height);
 
+                                // the rectification is only considered valid if it is roughly concave
                                 if (isValidRectification)
                                 {
                                     // update the calibration lookup
@@ -1964,32 +1996,23 @@ namespace sentience.calibration
                                             }
                                         }
 
-                                        //if (validRectification(calibration_image, width, height))
-                                        {
-                                            scale = temp_scale;
-                                            vertical_adjust = temp_vertical_adjust;
-
-                                            //RMS_error = MinimiseError(width, height, 100) * err1;
-                                            best_curve = fitter;
-
-                                            min_RMS_error = RMS_error;
-                                        }
-
+                                        scale = temp_scale;
+                                        vertical_adjust = vertical_adjust_noise;
+                                        best_curve = fitter;
+                                        min_RMS_error = RMS_error;
                                     }
                                 }
                             }
 
                             // rectify
                             Rectify(img, width, height);
-                        }
 
-                        //ShowRectifiedCorners(rectified_image, width, height);
+                            //ShowRectifiedCorners(rectified_image, width, height);
+                        }                        
                     }
 
                     corners_index++;
                     if (corners_index >= corners.Length) corners_index = 0;
-
-                    //drawGrid(edges_image, width, height);
                 }
 
                 binary_image_index++;
@@ -2114,6 +2137,8 @@ namespace sentience.calibration
             }
             util.AddComment(doc, elem, "Polynomial coefficients used to describe the camera lens distortion");
             util.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
+            util.AddComment(doc, elem, "Scaling factor");
+            util.AddTextElement(doc, elem, "Scale", Convert.ToString(scale));
             util.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
             util.AddTextElement(doc, elem, "RMSerror", Convert.ToString(min_RMS_error));
             return (elem);
@@ -2156,6 +2181,11 @@ namespace sentience.calibration
                     for (int i = 0; i < coeffStr.Length; i++)
                         fitter.SetCoeff(i, Convert.ToSingle(coeffStr[i]));
                 }
+            }
+
+            if (xnod.Name == "Scale")
+            {
+                scale = Convert.ToSingle(xnod.InnerText);
             }
 
             if (xnod.Name == "RMSerror")

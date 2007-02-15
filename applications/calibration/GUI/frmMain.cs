@@ -269,8 +269,6 @@ namespace WindowsApplication1
             util.AddTextElement(doc, nodeCalibSetup, "DistToCentreMillimetres", txtDistToCentre.Text);
             util.AddComment(doc, nodeCalibSetup, "height of the camera above the ground in mm");
             util.AddTextElement(doc, nodeCalibSetup, "CameraHeightMillimetres", txtCameraHeight.Text);
-            util.AddComment(doc, nodeCalibSetup, "Factor indicating the typical spacing of the calibration grid pattern as observed within the image");
-            util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingFactor", txtSpacingFactor.Text);
             util.AddComment(doc, nodeCalibSetup, "Calibration pattern spacing in mm");
             util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingMillimetres", txtPatternSpacing.Text);
             if (cam.leftcam.ROI != null)
@@ -385,11 +383,6 @@ namespace WindowsApplication1
                     txtCameraHeight.Text = xnod.InnerText;
                 }
 
-                if (xnod.Name == "PatternSpacingFactor")
-                {
-                    txtSpacingFactor.Text = xnod.InnerText;
-                }
-
                 if (xnod.Name == "PatternSpacingMillimetres")
                 {
                     txtPatternSpacing.Text = xnod.InnerText;
@@ -433,7 +426,6 @@ namespace WindowsApplication1
             cam.rightcam.camera_dist_to_pattern_centre_mm = cam.leftcam.camera_dist_to_pattern_centre_mm;
             cam.leftcam.camera_height_mm = Convert.ToInt32(txtCameraHeight.Text);
             cam.rightcam.camera_height_mm = cam.leftcam.camera_height_mm;
-            cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
             cam.rightcam.separation_factor = cam.leftcam.separation_factor;
             cam.leftcam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
             cam.rightcam.camera_FOV_degrees = cam.leftcam.camera_FOV_degrees;
@@ -692,7 +684,6 @@ namespace WindowsApplication1
             cmbCentreSpotPosition.SelectedIndex = cam.leftcam.centre_spot_position;
             txtPatternSpacing.Text = Convert.ToString(cam.leftcam.calibration_pattern_spacing_mm);
             txtFOV.Text = Convert.ToString(cam.leftcam.camera_FOV_degrees);
-            txtSpacingFactor.Text = Convert.ToString(cam.leftcam.separation_factor);
             txtCameraHeight.Text = Convert.ToString(cam.leftcam.camera_height_mm);
             txtDistToCentre.Text = Convert.ToString(cam.leftcam.camera_dist_to_pattern_centre_mm);
         }
@@ -797,25 +788,6 @@ namespace WindowsApplication1
             if (txtFOV.Text == "") txtFOV.Text = "40";
             cam.leftcam.camera_FOV_degrees = Convert.ToSingle(txtFOV.Text);
             cam.rightcam.camera_FOV_degrees = cam.leftcam.camera_FOV_degrees;
-            ResetCalibration();
-        }
-
-        private void txtSpacingFactor_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == 13)
-            {
-                if (txtSpacingFactor.Text == "") txtSpacingFactor.Text = "15";
-                cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
-                cam.rightcam.separation_factor = cam.leftcam.separation_factor;
-                ResetCalibration();
-            }
-        }
-
-        private void txtSpacingFactor_Leave(object sender, EventArgs e)
-        {
-            if (txtSpacingFactor.Text == "") txtSpacingFactor.Text = "15";
-            cam.leftcam.separation_factor = Convert.ToInt32(txtSpacingFactor.Text);
-            cam.rightcam.separation_factor = cam.leftcam.separation_factor;
             ResetCalibration();
         }
 

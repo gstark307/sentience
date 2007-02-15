@@ -51,14 +51,13 @@ namespace WindowsApplication1
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDirectionOfGravityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpParameters = new System.Windows.Forms.GroupBox();
+            this.lblStatus = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.cmbCentreSpotPosition = new System.Windows.Forms.ComboBox();
             this.txtDistToCentre = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.txtCameraHeight = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.txtSpacingFactor = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.txtFOV = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.txtPatternSpacing = new System.Windows.Forms.TextBox();
@@ -67,7 +66,6 @@ namespace WindowsApplication1
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.picOutput2 = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
-            this.lblStatus = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
@@ -235,8 +233,6 @@ namespace WindowsApplication1
             this.grpParameters.Controls.Add(this.label5);
             this.grpParameters.Controls.Add(this.txtCameraHeight);
             this.grpParameters.Controls.Add(this.label4);
-            this.grpParameters.Controls.Add(this.txtSpacingFactor);
-            this.grpParameters.Controls.Add(this.label3);
             this.grpParameters.Controls.Add(this.txtFOV);
             this.grpParameters.Controls.Add(this.label2);
             this.grpParameters.Controls.Add(this.txtPatternSpacing);
@@ -249,6 +245,15 @@ namespace WindowsApplication1
             this.grpParameters.TabStop = false;
             this.grpParameters.Text = "Parameters";
             this.grpParameters.Visible = false;
+            // 
+            // lblStatus
+            // 
+            this.lblStatus.AutoSize = true;
+            this.lblStatus.Location = new System.Drawing.Point(12, 46);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(65, 13);
+            this.lblStatus.TabIndex = 13;
+            this.lblStatus.Text = "Calibrating...";
             // 
             // label6
             // 
@@ -276,7 +281,7 @@ namespace WindowsApplication1
             // 
             // txtDistToCentre
             // 
-            this.txtDistToCentre.Location = new System.Drawing.Point(800, 18);
+            this.txtDistToCentre.Location = new System.Drawing.Point(679, 18);
             this.txtDistToCentre.Name = "txtDistToCentre";
             this.txtDistToCentre.Size = new System.Drawing.Size(33, 20);
             this.txtDistToCentre.TabIndex = 10;
@@ -286,7 +291,7 @@ namespace WindowsApplication1
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(705, 22);
+            this.label5.Location = new System.Drawing.Point(584, 22);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(93, 13);
             this.label5.TabIndex = 9;
@@ -294,7 +299,7 @@ namespace WindowsApplication1
             // 
             // txtCameraHeight
             // 
-            this.txtCameraHeight.Location = new System.Drawing.Point(664, 17);
+            this.txtCameraHeight.Location = new System.Drawing.Point(543, 17);
             this.txtCameraHeight.Name = "txtCameraHeight";
             this.txtCameraHeight.Size = new System.Drawing.Size(33, 20);
             this.txtCameraHeight.TabIndex = 8;
@@ -305,31 +310,11 @@ namespace WindowsApplication1
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(570, 21);
+            this.label4.Location = new System.Drawing.Point(449, 21);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(96, 13);
             this.label4.TabIndex = 7;
             this.label4.Text = "Camera Height mm";
-            // 
-            // txtSpacingFactor
-            // 
-            this.txtSpacingFactor.Location = new System.Drawing.Point(527, 17);
-            this.txtSpacingFactor.Name = "txtSpacingFactor";
-            this.txtSpacingFactor.Size = new System.Drawing.Size(33, 20);
-            this.txtSpacingFactor.TabIndex = 6;
-            this.txtSpacingFactor.Text = "15";
-            this.txtSpacingFactor.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtSpacingFactor.Leave += new System.EventHandler(this.txtSpacingFactor_Leave);
-            this.txtSpacingFactor.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtSpacingFactor_KeyPress);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(442, 21);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(79, 13);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "Spacing Factor";
             // 
             // txtFOV
             // 
@@ -411,15 +396,6 @@ namespace WindowsApplication1
             this.picRightImage.TabStop = false;
             this.picRightImage.Visible = false;
             // 
-            // lblStatus
-            // 
-            this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(12, 46);
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(65, 13);
-            this.lblStatus.TabIndex = 13;
-            this.lblStatus.Text = "Calibrating...";
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -475,8 +451,6 @@ namespace WindowsApplication1
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtFOV;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox txtSpacingFactor;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox txtCameraHeight;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtDistToCentre;
