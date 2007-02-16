@@ -58,6 +58,10 @@ namespace sentience.calibration
 
         public void update()
         {
+            // set the baseline offsets
+            leftcam.baseline_offset = -(baseline/2);
+            rightcam.baseline_offset = baseline/2;
+
             if ((leftcam.centre_spot_rectified != null) && (rightcam.centre_spot_rectified != null))
             {
                 offset_y = (int)(rightcam.centre_spot_rectified.y - leftcam.centre_spot_rectified.y);

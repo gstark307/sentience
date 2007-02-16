@@ -128,6 +128,9 @@ namespace sentience.calibration
 
         public int separation_factor = 30;
 
+        //horizontal offset of the camera relative to the centre of the calibration pattern
+        public float baseline_offset = 0;
+
         // position of the camera relative to the calibration pattern
         public float camera_height_mm = 785;
         public float camera_dist_to_pattern_centre_mm = 450;
@@ -895,7 +898,7 @@ namespace sentience.calibration
                     float dx = pt_end.x - pt_start.x;
                     float dy = pt_end.y - pt_start.y;
                     float length = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                    float ang = (float)Math.Asin(dy / length);
+                    float ang = -(float)Math.Asin(dy / length);
                     int b = (no_of_buckets / 2) + (int)(ang * (no_of_buckets / 2) / (float)(Math.PI / 2));
                     if (b >= no_of_buckets) b = no_of_buckets - 1;
                     if (b < 0) b = 0;
@@ -1363,7 +1366,7 @@ namespace sentience.calibration
 
 
 
-                // pan angle at the centre
+                // angle subtended by one grid spacing at the centre
                 float point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
 
                 // grid width at the centre point
@@ -1379,7 +1382,7 @@ namespace sentience.calibration
                 // tilt angle
                 float point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
 
-                // pan angle
+                // angle subtended by one grid spacing
                 point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
 
                 // calc the position of the grid point within the image after rectification
@@ -1389,6 +1392,7 @@ namespace sentience.calibration
                 // calc the gradient
                 float grad = (x2 - x1) / (float)(y2 - centre_y);
 
+                float baseline_fraction = baseline_offset / (float)(calibration_pattern_spacing_mm);
 
                 ArrayList rectifiedPoints = new ArrayList();
 
@@ -1413,14 +1417,15 @@ namespace sentience.calibration
                             point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
 
                             // distance to the point on the ground plave along the x (horizontal axis)
-                            float ground_dist_to_point_x = (x - grid_x) * calibration_pattern_spacing_mm;
+                            float ground_dist_to_point_x = ((x - grid_x) * calibration_pattern_spacing_mm) + baseline_offset;
 
                             // pan angle
                             point_pan = (float)Math.Asin(ground_dist_to_point_x / camera_to_point_dist);
 
                             // calc the position of the grid point within the image after rectification
-                            //float rectified_x = centre_x + (point_pan * width / FOV_horizontal);
-                            float rectified_x = centre_x + (((x1-centre_x) + ((grid[x, y].y - centre_y) * grad)) * (x - grid_x));
+                            float w = ((x1 - centre_x) + ((grid[x, y].y - centre_y) * grad));
+                            float wbaseline = baseline_fraction * (grid[x, y].y - centre_y) * grad;
+                            float rectified_x = centre_x + (w * (x - grid_x)) - wbaseline;
                             float rectified_y = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
                             grid[x, y].rectified_x = rectified_x;
                             grid[x, y].rectified_y = rectified_y;
@@ -1857,11 +1862,13 @@ namespace sentience.calibration
                 detectHorizontalLines(width, height);
                 detectVerticalLines(width, height);
 
+                
                 float rotn = detectRotation(width, height);
                 if (rotation == 0)
                     rotation = rotn;
                 else
                     rotation = (rotation * 0.9f) + (rotn * 0.1f);
+                
 
                 // image used for aligning the centre of the calibration pattern
                 showAlignmentLines(centrealign_image, width, height);
@@ -1897,7 +1904,7 @@ namespace sentience.calibration
                             {
                                 // add some small amount of noise to the vertical to try slighly different fits
                                 // this allows the best fit to be discovered (ableit in a crude way)
-                                vertical_adjust_noise = 0.9f + ((rnd.Next(1000000) / 1000000.0f) * 0.2f);
+                                vertical_adjust_noise = 0.98f + ((rnd.Next(1000000) / 1000000.0f) * 0.04f);
 
                                 // add small amount of noise to the polynomial coefficients
                                 for (int c = 1; c <= 2; c++)
