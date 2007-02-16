@@ -898,7 +898,7 @@ namespace sentience.calibration
                     float dx = pt_end.x - pt_start.x;
                     float dy = pt_end.y - pt_start.y;
                     float length = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                    float ang = -(float)Math.Asin(dy / length);
+                    float ang = (float)Math.Asin(dy / length);
                     int b = (no_of_buckets / 2) + (int)(ang * (no_of_buckets / 2) / (float)(Math.PI / 2));
                     if (b >= no_of_buckets) b = no_of_buckets - 1;
                     if (b < 0) b = 0;
@@ -1516,7 +1516,7 @@ namespace sentience.calibration
              float x1 = (point_pan * width / FOV_horizontal);
 
              float factor = x1 / (float)width;
-             return (factor*0.8f);
+             return (factor*0.6f);
         }
 
 
@@ -1904,7 +1904,7 @@ namespace sentience.calibration
                             {
                                 // add some small amount of noise to the vertical to try slighly different fits
                                 // this allows the best fit to be discovered (ableit in a crude way)
-                                vertical_adjust_noise = 0.98f + ((rnd.Next(1000000) / 1000000.0f) * 0.04f);
+                                vertical_adjust_noise = 0.9f + ((rnd.Next(1000000) / 1000000.0f) * 0.1f);
 
                                 // add small amount of noise to the polynomial coefficients
                                 for (int c = 1; c <= 2; c++)

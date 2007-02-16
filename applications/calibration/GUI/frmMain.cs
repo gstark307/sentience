@@ -648,6 +648,7 @@ namespace WindowsApplication1
 
                     if (no_of_cameras == 1)
                     {
+                        cam.baseline = 0;
                         if (cam.leftcam.min_RMS_error > max_RMS_error)
                             lblStatus.Text = "Calibrating...";
                         else
@@ -655,6 +656,7 @@ namespace WindowsApplication1
                     }
                     else
                     {
+                        cam.baseline = Convert.ToSingle(txtBaseline.Text);
                         if ((cam.leftcam.min_RMS_error > max_RMS_error) || (cam.rightcam.min_RMS_error > max_RMS_error))
                         {
                             lblStatus.Text = "Calibrating...";
