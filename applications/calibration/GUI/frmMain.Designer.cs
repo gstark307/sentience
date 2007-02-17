@@ -51,6 +51,7 @@ namespace WindowsApplication1
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDirectionOfGravityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpParameters = new System.Windows.Forms.GroupBox();
+            this.cmdStart = new System.Windows.Forms.Button();
             this.txtBaseline = new System.Windows.Forms.TextBox();
             this.lblBaseline = new System.Windows.Forms.Label();
             this.lblStatus = new System.Windows.Forms.Label();
@@ -101,21 +102,21 @@ namespace WindowsApplication1
             // OpenToolStripMenuItem
             // 
             this.OpenToolStripMenuItem.Name = "OpenToolStripMenuItem";
-            this.OpenToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.OpenToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.OpenToolStripMenuItem.Text = "Open";
             this.OpenToolStripMenuItem.Click += new System.EventHandler(this.OpenToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             this.saveAsToolStripMenuItem.Text = "Save As...";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem1
             // 
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(136, 22);
             this.exitToolStripMenuItem1.Text = "Exit";
             this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem1_Click);
             // 
@@ -228,6 +229,7 @@ namespace WindowsApplication1
             // 
             // grpParameters
             // 
+            this.grpParameters.Controls.Add(this.cmdStart);
             this.grpParameters.Controls.Add(this.txtBaseline);
             this.grpParameters.Controls.Add(this.lblBaseline);
             this.grpParameters.Controls.Add(this.lblStatus);
@@ -250,9 +252,19 @@ namespace WindowsApplication1
             this.grpParameters.Text = "Parameters";
             this.grpParameters.Visible = false;
             // 
+            // cmdStart
+            // 
+            this.cmdStart.Location = new System.Drawing.Point(6, 19);
+            this.cmdStart.Name = "cmdStart";
+            this.cmdStart.Size = new System.Drawing.Size(74, 41);
+            this.cmdStart.TabIndex = 16;
+            this.cmdStart.Text = "Calibrate";
+            this.cmdStart.UseVisualStyleBackColor = true;
+            this.cmdStart.Click += new System.EventHandler(this.cmdStart_Click);
+            // 
             // txtBaseline
             // 
-            this.txtBaseline.Location = new System.Drawing.Point(427, 43);
+            this.txtBaseline.Location = new System.Drawing.Point(501, 44);
             this.txtBaseline.Name = "txtBaseline";
             this.txtBaseline.Size = new System.Drawing.Size(33, 20);
             this.txtBaseline.TabIndex = 15;
@@ -264,7 +276,7 @@ namespace WindowsApplication1
             // lblBaseline
             // 
             this.lblBaseline.AutoSize = true;
-            this.lblBaseline.Location = new System.Drawing.Point(355, 47);
+            this.lblBaseline.Location = new System.Drawing.Point(429, 48);
             this.lblBaseline.Name = "lblBaseline";
             this.lblBaseline.Size = new System.Drawing.Size(66, 13);
             this.lblBaseline.TabIndex = 14;
@@ -273,16 +285,16 @@ namespace WindowsApplication1
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(12, 46);
+            this.lblStatus.Location = new System.Drawing.Point(86, 47);
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(65, 13);
+            this.lblStatus.Size = new System.Drawing.Size(68, 13);
             this.lblStatus.TabIndex = 13;
-            this.lblStatus.Text = "Calibrating...";
+            this.lblStatus.Text = "Align camera";
             // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(149, 46);
+            this.label6.Location = new System.Drawing.Point(223, 47);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(100, 13);
             this.label6.TabIndex = 12;
@@ -296,7 +308,7 @@ namespace WindowsApplication1
             "North East",
             "South East",
             "South West"});
-            this.cmbCentreSpotPosition.Location = new System.Drawing.Point(257, 43);
+            this.cmbCentreSpotPosition.Location = new System.Drawing.Point(331, 44);
             this.cmbCentreSpotPosition.Name = "cmbCentreSpotPosition";
             this.cmbCentreSpotPosition.Size = new System.Drawing.Size(88, 21);
             this.cmbCentreSpotPosition.TabIndex = 11;
@@ -305,7 +317,7 @@ namespace WindowsApplication1
             // 
             // txtDistToCentre
             // 
-            this.txtDistToCentre.Location = new System.Drawing.Point(679, 18);
+            this.txtDistToCentre.Location = new System.Drawing.Point(753, 19);
             this.txtDistToCentre.Name = "txtDistToCentre";
             this.txtDistToCentre.Size = new System.Drawing.Size(33, 20);
             this.txtDistToCentre.TabIndex = 10;
@@ -315,7 +327,7 @@ namespace WindowsApplication1
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(584, 22);
+            this.label5.Location = new System.Drawing.Point(658, 23);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(93, 13);
             this.label5.TabIndex = 9;
@@ -323,7 +335,7 @@ namespace WindowsApplication1
             // 
             // txtCameraHeight
             // 
-            this.txtCameraHeight.Location = new System.Drawing.Point(543, 17);
+            this.txtCameraHeight.Location = new System.Drawing.Point(617, 18);
             this.txtCameraHeight.Name = "txtCameraHeight";
             this.txtCameraHeight.Size = new System.Drawing.Size(33, 20);
             this.txtCameraHeight.TabIndex = 8;
@@ -334,7 +346,7 @@ namespace WindowsApplication1
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(449, 21);
+            this.label4.Location = new System.Drawing.Point(523, 22);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(96, 13);
             this.label4.TabIndex = 7;
@@ -342,7 +354,7 @@ namespace WindowsApplication1
             // 
             // txtFOV
             // 
-            this.txtFOV.Location = new System.Drawing.Point(404, 17);
+            this.txtFOV.Location = new System.Drawing.Point(478, 18);
             this.txtFOV.Name = "txtFOV";
             this.txtFOV.Size = new System.Drawing.Size(33, 20);
             this.txtFOV.TabIndex = 4;
@@ -354,7 +366,7 @@ namespace WindowsApplication1
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(296, 21);
+            this.label2.Location = new System.Drawing.Point(370, 22);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(110, 13);
             this.label2.TabIndex = 3;
@@ -362,7 +374,7 @@ namespace WindowsApplication1
             // 
             // txtPatternSpacing
             // 
-            this.txtPatternSpacing.Location = new System.Drawing.Point(257, 17);
+            this.txtPatternSpacing.Location = new System.Drawing.Point(331, 18);
             this.txtPatternSpacing.Name = "txtPatternSpacing";
             this.txtPatternSpacing.Size = new System.Drawing.Size(33, 20);
             this.txtPatternSpacing.TabIndex = 2;
@@ -374,7 +386,7 @@ namespace WindowsApplication1
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(149, 21);
+            this.label1.Location = new System.Drawing.Point(223, 22);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(102, 13);
             this.label1.TabIndex = 1;
@@ -391,7 +403,7 @@ namespace WindowsApplication1
             "Align centre point",
             "Best fit curve",
             "Rectified image"});
-            this.cmbDisplayType.Location = new System.Drawing.Point(15, 18);
+            this.cmbDisplayType.Location = new System.Drawing.Point(89, 19);
             this.cmbDisplayType.Name = "cmbDisplayType";
             this.cmbDisplayType.Size = new System.Drawing.Size(128, 21);
             this.cmbDisplayType.TabIndex = 0;
@@ -491,6 +503,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.TextBox txtBaseline;
         private System.Windows.Forms.Label lblBaseline;
+        private System.Windows.Forms.Button cmdStart;
     }
 }
 

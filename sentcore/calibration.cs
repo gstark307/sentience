@@ -1817,7 +1817,7 @@ namespace sentience.calibration
             }
         }
 
-        public void Update(Byte[] img, int width, int height)
+        public void Update(Byte[] img, int width, int height, bool alignMode)
         {
             if (img != null)
             {
@@ -1846,140 +1846,142 @@ namespace sentience.calibration
                 // show region of interest
                 if (ROI != null) ROI.Show(centrealign_image, width, height);
 
-                // create a mono image
-                calibration_image = util.monoImage(img, width, height);
-
-                // determine the separation factor used for non-maximal suppression
-                // during edge detection
-                separation_factor = (int)(1.0f / GetSeparationFactor(width));
-
-                int min_magnitude = 1;
-                clearBinaryImage(width, height);
-                detectHorizontalEdges(calibration_image, width, height, edges_horizontal, min_magnitude);
-                detectVerticalEdges(calibration_image, width, height, edges_vertical, min_magnitude);
-                updateEdgesImage(width, height);
-
-                detectHorizontalLines(width, height);
-                detectVerticalLines(width, height);
-
-                
-                float rotn = detectRotation(width, height);
-                if (rotation == 0)
-                    rotation = rotn;
-                else
-                    rotation = (rotation * 0.9f) + (rotn * 0.1f);
-                
-
                 // image used for aligning the centre of the calibration pattern
                 showAlignmentLines(centrealign_image, width, height);
 
-                // create a grid to store the edges
-                if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))
+                if (!alignMode)
                 {
-                    // locate corners
-                    detectCorners(width, height);
+                    // create a mono image
+                    calibration_image = util.monoImage(img, width, height);
 
-                    // hunt the centre spot
-                    int grid_cx = 0, grid_cy = 0;
-                    detectCentreSpot(calibration_image, width, height, ref grid_cx, ref grid_cy);
-                    if (grid_cx > 0)
+                    // determine the separation factor used for non-maximal suppression
+                    // during edge detection
+                    separation_factor = (int)(1.0f / GetSeparationFactor(width));
+
+                    int min_magnitude = 1;
+                    clearBinaryImage(width, height);
+                    detectHorizontalEdges(calibration_image, width, height, edges_horizontal, min_magnitude);
+                    detectVerticalEdges(calibration_image, width, height, edges_vertical, min_magnitude);
+                    updateEdgesImage(width, height);
+
+                    detectHorizontalLines(width, height);
+                    detectVerticalLines(width, height);
+
+
+                    float rotn = detectRotation(width, height);
+                    if (rotation == 0)
+                        rotation = rotn;
+                    else
+                        rotation = (rotation * 0.9f) + (rotn * 0.1f);
+
+                    // create a grid to store the edges
+                    if ((vertical_lines.Count > 0) && (horizontal_lines.Count > 0))
                     {
-                        // detect the lens distortion
-                        detectLensDistortion(width, height, grid_cx, grid_cy);
+                        // locate corners
+                        detectCorners(width, height);
 
-                        if (fitter != null)
+                        // hunt the centre spot
+                        int grid_cx = 0, grid_cy = 0;
+                        detectCentreSpot(calibration_image, width, height, ref grid_cx, ref grid_cy);
+                        if (grid_cx > 0)
                         {
-                            // store the polynomial coefficients which will be used as
-                            // a basis for a more detailed search
-                            float[] C = new float[3];
-                            C[1] = fitter.Coeff(1);
-                            C[2] = fitter.Coeff(2);
+                            // detect the lens distortion
+                            detectLensDistortion(width, height, grid_cx, grid_cy);
 
-                            // itterate a number of time trying different possible matches
-                            // the number of itterations is adjusted depending upon the size of the error
-                            int max_v = 1;
-                            if (min_RMS_error > 5) max_v = 5;
-                            if (min_RMS_error > 10) max_v = 15;
-                            for (int v = 0; v < max_v; v++)
+                            if (fitter != null)
                             {
-                                // add some small amount of noise to the vertical to try slighly different fits
-                                // this allows the best fit to be discovered (ableit in a crude way)
-                                vertical_adjust_noise = 0.9f + ((rnd.Next(1000000) / 1000000.0f) * 0.1f);
+                                // store the polynomial coefficients which will be used as
+                                // a basis for a more detailed search
+                                float[] C = new float[3];
+                                C[1] = fitter.Coeff(1);
+                                C[2] = fitter.Coeff(2);
 
-                                // add small amount of noise to the polynomial coefficients
-                                for (int c = 1; c <= 2; c++)
-                                    fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.02f))));
-
-                                // does this equation cause the image to be re-scaled?
-                                // if it does we can explicitly detect this and correct for it later
-                                detectScale(width, height);
-
-                                // the rectification is only considered valid if it is roughly concave
-                                if (isValidRectification)
+                                // itterate a number of time trying different possible matches
+                                // the number of itterations is adjusted depending upon the size of the error
+                                int max_v = 1;
+                                if (min_RMS_error > 5) max_v = 10;
+                                if (min_RMS_error > 10) max_v = 20;
+                                for (int v = 0; v < max_v; v++)
                                 {
-                                    // update the calibration lookup
-                                    updateCalibrationMap(width, height, fitter, 1.0f, rotation);
+                                    // add some small amount of noise to the vertical to try slighly different fits
+                                    // this allows the best fit to be discovered (ableit in a crude way)
+                                    vertical_adjust_noise = 0.9f + ((rnd.Next(1000000) / 1000000.0f) * 0.1f);
 
-                                    float RMS_error = GetRMSerror();
-                                    if (RMS_error < min_RMS_error)
+                                    // add small amount of noise to the polynomial coefficients
+                                    for (int c = 1; c <= 2; c++)
+                                        fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.02f))));
+
+                                    // does this equation cause the image to be re-scaled?
+                                    // if it does we can explicitly detect this and correct for it later
+                                    detectScale(width, height);
+
+                                    // the rectification is only considered valid if it is roughly concave
+                                    if (isValidRectification)
                                     {
-                                        // update the graph
-                                        curve_fit = new Byte[width * height * 3];
-                                        fitter.Show(curve_fit, width, height);
+                                        // update the calibration lookup
+                                        updateCalibrationMap(width, height, fitter, 1.0f, rotation);
 
-                                        updateCalibrationMap(width, height, fitter, temp_scale, rotation);
-                                        calibration_map = new int[width * height];
-                                        for (int i = 0; i < temp_calibration_map.Length; i++)
-                                            calibration_map[i] = temp_calibration_map[i];
-                                        calibration_map_inverse = new int[width, height, 2];
-                                        for (int x = 0; x < width; x++)
+                                        float RMS_error = GetRMSerror();
+                                        if (RMS_error < min_RMS_error)
                                         {
-                                            for (int y = 0; y < height; y++)
+                                            // update the graph
+                                            curve_fit = new Byte[width * height * 3];
+                                            fitter.Show(curve_fit, width, height);
+
+                                            updateCalibrationMap(width, height, fitter, temp_scale, rotation);
+                                            calibration_map = new int[width * height];
+                                            for (int i = 0; i < temp_calibration_map.Length; i++)
+                                                calibration_map[i] = temp_calibration_map[i];
+                                            calibration_map_inverse = new int[width, height, 2];
+                                            for (int x = 0; x < width; x++)
                                             {
-                                                calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
-                                                calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                                                for (int y = 0; y < height; y++)
+                                                {
+                                                    calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
+                                                    calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                                                }
                                             }
+
+                                            // update the rectified position of the centre spot
+                                            updateCentreSpotRectified();
+
+                                            scale = temp_scale;
+                                            vertical_adjust = vertical_adjust_noise;
+                                            best_curve = fitter;
+                                            min_RMS_error = RMS_error;
                                         }
-
-                                        // update the rectified position of the centre spot
-                                        updateCentreSpotRectified();
-
-                                        scale = temp_scale;
-                                        vertical_adjust = vertical_adjust_noise;
-                                        best_curve = fitter;
-                                        min_RMS_error = RMS_error;
                                     }
                                 }
+
+                                // rectify
+                                Rectify(img, width, height);
+
+                                //ShowRectifiedCorners(rectified_image, width, height);
                             }
+                        }
 
-                            // rectify
-                            Rectify(img, width, height);
-
-                            //ShowRectifiedCorners(rectified_image, width, height);
-                        }                        
+                        corners_index++;
+                        if (corners_index >= corners.Length) corners_index = 0;
                     }
 
-                    corners_index++;
-                    if (corners_index >= corners.Length) corners_index = 0;
-                }
+                    binary_image_index++;
+                    if (binary_image_index >= no_of_images) binary_image_index = 0;
 
-                binary_image_index++;
-                if (binary_image_index >= no_of_images) binary_image_index = 0;
+                    av_centreline_x += closest_to_centreline_x;
+                    av_centreline_x_hits++;
+                    if (av_centreline_x_hits > 50)
+                    {
+                        av_centreline_x /= 2;
+                        av_centreline_x_hits /= 2;
+                    }
 
-                av_centreline_x += closest_to_centreline_x;
-                av_centreline_x_hits++;
-                if (av_centreline_x_hits > 50)
-                {
-                    av_centreline_x /= 2;
-                    av_centreline_x_hits /= 2;
-                }
-
-                av_centreline_y += closest_to_centreline_y;
-                av_centreline_y_hits++;
-                if (av_centreline_y_hits > 50)
-                {
-                    av_centreline_y /= 2;
-                    av_centreline_y_hits /= 2;
+                    av_centreline_y += closest_to_centreline_y;
+                    av_centreline_y_hits++;
+                    if (av_centreline_y_hits > 50)
+                    {
+                        av_centreline_y /= 2;
+                        av_centreline_y_hits /= 2;
+                    }
                 }
             }
 

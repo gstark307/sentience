@@ -48,6 +48,8 @@ namespace WindowsApplication1
         Random rnd = new Random();
 
         float max_RMS_error = 8;
+        bool alignMode = true;
+        String prev_state = "";
 
         globals global_variables;
 
@@ -602,7 +604,7 @@ namespace WindowsApplication1
                             disp_bmp_data = bmp_data_right;
                         }                        
 
-                        calib.Update(disp_bmp_data, output_width, output_height);
+                        calib.Update(disp_bmp_data, output_width, output_height, alignMode);
 
                         switch (display_type)
                         {
@@ -649,24 +651,44 @@ namespace WindowsApplication1
                     if (no_of_cameras == 1)
                     {
                         cam.baseline = 0;
-                        if (cam.leftcam.min_RMS_error > max_RMS_error)
-                            lblStatus.Text = "Calibrating...";
+                        if (alignMode)
+                            lblStatus.Text = "Align camera";
                         else
-                            lblStatus.Text = "* COMPLETE *";
+                        {
+                            if (cam.leftcam.min_RMS_error > max_RMS_error)
+                                lblStatus.Text = "Calibrating...";
+                            else
+                                lblStatus.Text = "* COMPLETE *";
+                        }
                     }
                     else
                     {
                         cam.baseline = Convert.ToSingle(txtBaseline.Text);
-                        if ((cam.leftcam.min_RMS_error > max_RMS_error) || (cam.rightcam.min_RMS_error > max_RMS_error))
-                        {
-                            lblStatus.Text = "Calibrating...";
-                            if (cam.leftcam.min_RMS_error <= max_RMS_error) lblStatus.Text = "Left camera done";
-                            if (cam.rightcam.min_RMS_error <= max_RMS_error) lblStatus.Text = "Right camera done";
-                        }
+                        if (alignMode)
+                            lblStatus.Text = "Align camera";
                         else
-                            lblStatus.Text = "* COMPLETE *";
+                        {
+                            if ((cam.leftcam.min_RMS_error > max_RMS_error) || (cam.rightcam.min_RMS_error > max_RMS_error))
+                            {
+                                lblStatus.Text = "Calibrating...";
+                                if (cam.leftcam.min_RMS_error <= max_RMS_error) lblStatus.Text = "Left camera done";
+                                if (cam.rightcam.min_RMS_error <= max_RMS_error) lblStatus.Text = "Right camera done";
+                            }
+                            else
+                                lblStatus.Text = "* COMPLETE *";
+                        }
                     }
-                    
+
+                    // switch to the rectified view when calibration is completed
+                    if (prev_state != lblStatus.Text)
+                    {
+                        if (lblStatus.Text == "* COMPLETE *")
+                        {
+                            display_type = DISPLAY_RECTIFIED;
+                            cmbDisplayType.SelectedIndex = display_type;
+                        }
+                    }
+                    prev_state = lblStatus.Text;                    
                 }
 
             }
@@ -942,6 +964,7 @@ namespace WindowsApplication1
             {
                 if (txtBaseline.Text == "") txtBaseline.Text = "100";
                 cam.baseline = Convert.ToSingle(txtBaseline.Text);
+                ResetCalibration();
             }
         }
 
@@ -949,6 +972,23 @@ namespace WindowsApplication1
         {
             if (txtBaseline.Text == "") txtBaseline.Text = "100";
             cam.baseline = Convert.ToSingle(txtBaseline.Text);
+            ResetCalibration();
+        }
+
+        private void cmdStart_Click(object sender, EventArgs e)
+        {
+            // reset data when beginning to calibrate
+            if (alignMode) ResetCalibration();
+
+            alignMode = !alignMode;
+            if (alignMode)
+            {
+                cmdStart.Text = "Calibrate";
+                display_type = DISPLAY_CENTREALIGN;
+                cmbDisplayType.SelectedIndex = display_type;
+            }
+            else
+                cmdStart.Text = "Align";
         }
 
     }
