@@ -139,7 +139,7 @@ namespace sentience.calibration
         float vertical_adjust = 1.0f;
         float vertical_adjust_noise = 1.0f;
 
-        float vertical_gradient = 0.0f;
+        float vertical_gradient = 0.5f;
 
         // the size of each square on the calibration pattern
         public float calibration_pattern_spacing_mm = 50;
@@ -259,9 +259,9 @@ namespace sentience.calibration
             grid_x = 0;
             grid_y = 0;
 
-            int search_radius_x = (int)(width * (separation_factor * 1));
+            int search_radius_x = (int)(width * separation_factor / 1.5f);
             if (search_radius_x < 2) search_radius_x = 2;
-            int search_radius_y = (int)(height * (separation_factor * 1));
+            int search_radius_y = (int)(height * separation_factor / 1.5f);
             if (search_radius_y < 2) search_radius_y = 2;
             int search_radius_x2 = search_radius_x / 2;
             int search_radius_y2 = search_radius_y / 2;
@@ -890,7 +890,7 @@ namespace sentience.calibration
         private float detectRotation(int width, int height)
         {
             float rot = 0;
-            const int no_of_buckets = 40;
+            const int no_of_buckets = 30;
             int[] bucket_hits = new int[no_of_buckets];
             float[] bucket_ang = new float[no_of_buckets];
             int max_hits = 0;
@@ -955,9 +955,9 @@ namespace sentience.calibration
             calibration_line line = new calibration_line();
 
             int step_size = 10;
-            int radius_x = (int)(width * (separation_factor / 2));
+            int radius_x = (int)(width * separation_factor / 2);
             if (radius_x < 1) radius_x = 1;
-            int radius_y = (int)(height * (separation_factor / 2));
+            int radius_y = (int)(height * separation_factor / 2);
             if (radius_y < 1) radius_y = 1;
             int dx = bx - tx;
             int dy = by - ty;
@@ -1106,13 +1106,14 @@ namespace sentience.calibration
         private void detectVerticalLines(int width, int height)
         {
             vertical_lines = new ArrayList();
-            int search_width = width / 10;
+            int search_width = (int)(width * separation_factor * 3); // / 10;
             int line_width = 4;
             int start_y = height / 20;
             int end_y = height - start_y;
             int prev_x_top = 0;
             int prev_x_bottom = 0;
-            int prev_line_x = 0;
+            int prev_line_x_left = 0;
+            int prev_line_x_right = 0;
 
             closest_to_centreline_x = 0;
             for (int x = 0; x < width; x++)
@@ -1197,15 +1198,16 @@ namespace sentience.calibration
 
                     if (winner > -1)
                     {
-                        int line_x = (x + winner) / 2;
                         int min_separation_x = (int)(width * separation_factor);
-                        if ((prev_line_x == 0) || (line_x - prev_line_x > min_separation_x))
+                        if ((prev_line_x_left == 0) || 
+                            ((x - prev_line_x_left > min_separation_x) && (winner - prev_line_x_right > min_separation_x)))
                         {
                             calibration_line line = traceLine(width, height, x, start_y, winner, end_y);
                             vertical_lines.Add(line);
                             line.Draw(lines_image, width, height, 255, 0, 0);
+                            prev_line_x_left = x;
+                            prev_line_x_right = winner;
                         }
-                        prev_line_x = line_x;
                     }
                 }
             }
@@ -1231,7 +1233,8 @@ namespace sentience.calibration
             int max_separation_left = 0;
             int curr_separation_right = 0;
             int max_separation_right = 0;
-            int prev_line_y = 0;
+            int prev_line_y_left = 0;
+            int prev_line_y_right = 0;
 
             closest_to_centreline_y = 0;
             for (int y = 0; y < height; y++)
@@ -1317,15 +1320,16 @@ namespace sentience.calibration
 
                     if (winner > -1)
                     {
-                        int line_y = (y + winner) / 2;
                         int min_separation_y = (int)(height * separation_factor);
-                        if ((prev_line_y == 0) || (line_y - prev_line_y > min_separation_y))
+                        if ((prev_line_y_left == 0) || 
+                            ((y - prev_line_y_left > min_separation_y) && (winner - prev_line_y_right > min_separation_y)))
                         {
                             calibration_line line = traceLine(width, height, start_x, y, end_x, winner);
                             horizontal_lines.Add(line);
                             line.Draw(lines_image, width, height, 255, 0, 0);
+                            prev_line_y_left = y;
+                            prev_line_y_right = winner;
                         }
-                        prev_line_y = line_y;
                     }
                 }
             }
@@ -1538,8 +1542,8 @@ namespace sentience.calibration
              // width of a grid cell
              float x1 = (point_pan * width / FOV_horizontal);
 
-             float factor = x1; // x1 / (float)width;
-             return (1.0f / (factor*2.5f));
+             float factor = x1 / (float)width;
+             return (factor/2.0f);
         }
 
 
@@ -1869,6 +1873,11 @@ namespace sentience.calibration
                 // show region of interest
                 if (ROI != null) ROI.Show(centrealign_image, width, height);
 
+                // determine the separation factor used for non-maximal suppression
+                // during edge detection
+                //separation_factor = (int)(1.0f / GetSeparationFactor(width));
+                separation_factor = GetSeparationFactor(width);
+
                 // image used for aligning the centre of the calibration pattern
                 showAlignmentLines(centrealign_image, width, height);
 
@@ -1876,11 +1885,6 @@ namespace sentience.calibration
                 {
                     // create a mono image
                     calibration_image = util.monoImage(img, width, height);
-
-                    // determine the separation factor used for non-maximal suppression
-                    // during edge detection
-                    //separation_factor = (int)(1.0f / GetSeparationFactor(width));
-                    separation_factor = GetSeparationFactor(width);
 
                     int min_magnitude = 1;
                     clearBinaryImage(width, height);
