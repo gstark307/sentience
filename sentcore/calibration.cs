@@ -126,7 +126,7 @@ namespace sentience.calibration
         public const int CENTRE_SPOT_SW = 3;
         public int centre_spot_position = CENTRE_SPOT_NW;
 
-        public int separation_factor = 30;
+        public float separation_factor = 1.0f / 30.0f;
 
         //horizontal offset of the camera relative to the centre of the calibration pattern
         public float baseline_offset = 0;
@@ -139,6 +139,8 @@ namespace sentience.calibration
         float vertical_adjust = 1.0f;
         float vertical_adjust_noise = 1.0f;
 
+        float vertical_gradient = 0.0f;
+
         // the size of each square on the calibration pattern
         public float calibration_pattern_spacing_mm = 50;
 
@@ -146,7 +148,7 @@ namespace sentience.calibration
         public float camera_FOV_degrees = 50;
 
         public String camera_name = "";
-        private int image_width, image_height;
+        public int image_width, image_height;
         public float min_RMS_error = 999999;
         public float polyfit_error = 999999;
 
@@ -156,6 +158,9 @@ namespace sentience.calibration
         calibration_point centre_of_distortion;
         calibration_point centre_spot;
         public calibration_point centre_spot_rectified;
+
+        public int grid_centre_x, grid_centre_y;
+        public calibration_edge[,] grid;
 
         public int[] calibration_map;
         public int[] temp_calibration_map;
@@ -177,8 +182,7 @@ namespace sentience.calibration
         ArrayList edges_horizontal;
         ArrayList edges_vertical;
         ArrayList detected_corners;
-        ArrayList[] corners;
-        calibration_edge[,] grid;
+        ArrayList[] corners;        
         int corners_index = 0;
 
         float horizontal_separation_top = 0;
@@ -255,9 +259,9 @@ namespace sentience.calibration
             grid_x = 0;
             grid_y = 0;
 
-            int search_radius_x = width / (separation_factor * 2);
+            int search_radius_x = (int)(width * (separation_factor * 1));
             if (search_radius_x < 2) search_radius_x = 2;
-            int search_radius_y = height / (separation_factor * 2);
+            int search_radius_y = (int)(height * (separation_factor * 1));
             if (search_radius_y < 2) search_radius_y = 2;
             int search_radius_x2 = search_radius_x / 2;
             int search_radius_y2 = search_radius_y / 2;
@@ -665,7 +669,7 @@ namespace sentience.calibration
                 }
             }
 
-            int search_width = width / separation_factor;
+            int search_width = (int)(width * separation_factor);
             for (int i = 0; i < 2; i++)
             {
                 for (int x = 1; x < width - 1; x++)
@@ -691,7 +695,7 @@ namespace sentience.calibration
             }
 
 
-            search_width = height / separation_factor;
+            search_width = (int)(height * separation_factor);
             for (int i = 0; i < 2; i++)
             {
                 for (int y = 1; y < height - 1; y++)
@@ -718,14 +722,15 @@ namespace sentience.calibration
         }
 
         private void detectHorizontalEdges(Byte[] calibration_image, int width, int height, ArrayList edges, int min_magnitude)
-        {
-            int inhibit_radius = width / separation_factor;
+        {            
             int search_radius = 2;
-            ArrayList temp_edges = new ArrayList();
+            ArrayList temp_edges = new ArrayList();            
 
             edges.Clear();
             for (int y = 1; y < height - 1; y++)
             {
+                float factor = (y - (height/2)) * vertical_gradient;
+                int inhibit_radius = (int)((width + factor) * separation_factor);
                 temp_edges.Clear();
                 for (int x = search_radius; x < width - search_radius; x++)
                 {
@@ -798,7 +803,7 @@ namespace sentience.calibration
 
         private void detectVerticalEdges(Byte[] calibration_image, int width, int height, ArrayList edges, int min_magnitude)
         {
-            int inhibit_radius = height / separation_factor;
+            //int inhibit_radius = height / separation_factor;
             int search_radius = 2;
             ArrayList temp_edges = new ArrayList();
 
@@ -841,6 +846,9 @@ namespace sentience.calibration
                                 calibration_edge e2 = (calibration_edge)temp_edges[j];
                                 if (e2.enabled)
                                 {
+                                    float factor = (e1.y - (height / 2)) * vertical_gradient;
+                                    int inhibit_radius = (int)((height + factor) * separation_factor);
+
                                     int dy = (int)(e2.y - e1.y);
                                     if (dy < 0) dy = -dy;
                                     if (dy < inhibit_radius)
@@ -947,9 +955,9 @@ namespace sentience.calibration
             calibration_line line = new calibration_line();
 
             int step_size = 10;
-            int radius_x = width / (separation_factor * 2);
+            int radius_x = (int)(width * (separation_factor / 2));
             if (radius_x < 1) radius_x = 1;
-            int radius_y = height / (separation_factor * 2);
+            int radius_y = (int)(height * (separation_factor / 2));
             if (radius_y < 1) radius_y = 1;
             int dx = bx - tx;
             int dy = by - ty;
@@ -968,6 +976,12 @@ namespace sentience.calibration
                 for (int y = ty; y < by; y += step_size)
                 {
                     int x = tx + (dx * (y - ty) / dy);
+
+                    float factor = (y - (height / 2)) * vertical_gradient;
+                    radius_x = (int)((width+factor) * (separation_factor / 2));
+                    if (radius_x < 1) radius_x = 1;
+                    radius_y = (int)((height+factor) * (separation_factor / 2));
+                    if (radius_y < 1) radius_y = 1;
 
                     int av_x = 0;
                     int av_y = 0;
@@ -1023,6 +1037,12 @@ namespace sentience.calibration
                 for (int x = tx; x < bx; x += step_size)
                 {
                     int y = ty + (dy * (x - tx) / dx);
+
+                    float factor = (y - (height / 2)) * vertical_gradient;
+                    radius_x = (int)((width + factor) * (separation_factor / 2));
+                    if (radius_x < 1) radius_x = 1;
+                    radius_y = (int)((height + factor) * (separation_factor / 2));
+                    if (radius_y < 1) radius_y = 1;
 
                     int av_x = 0;
                     int av_y = 0;
@@ -1178,7 +1198,7 @@ namespace sentience.calibration
                     if (winner > -1)
                     {
                         int line_x = (x + winner) / 2;
-                        int min_separation_x = width / separation_factor;
+                        int min_separation_x = (int)(width * separation_factor);
                         if ((prev_line_x == 0) || (line_x - prev_line_x > min_separation_x))
                         {
                             calibration_line line = traceLine(width, height, x, start_y, winner, end_y);
@@ -1298,7 +1318,7 @@ namespace sentience.calibration
                     if (winner > -1)
                     {
                         int line_y = (y + winner) / 2;
-                        int min_separation_y = height / separation_factor;
+                        int min_separation_y = (int)(height * separation_factor);
                         if ((prev_line_y == 0) || (line_y - prev_line_y > min_separation_y))
                         {
                             calibration_line line = traceLine(width, height, start_x, y, end_x, winner);
@@ -1340,153 +1360,156 @@ namespace sentience.calibration
         private void detectLensDistortion(int width, int height,
                                           int grid_x, int grid_y)
         {
-            if (grid[grid_x, grid_y] != null)
+            if (grid != null)
             {
-                // field of vision in radians
-                float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
-                float FOV_vertical = FOV_horizontal * height / (float)width;
-
-                // add some small amount of random noise to get the best fit
-                FOV_vertical *= vertical_adjust_noise;
-
-                // center point of the grid within the image
-                int centre_x = (int)grid[grid_x, grid_y].x;
-                int centre_y = (int)grid[grid_x, grid_y].y;
-
-                // calculate the distance to the centre grid point on the ground plane
-                float ground_dist_to_point = camera_dist_to_pattern_centre_mm;
-
-                // line of sight distance between the camera lens and the centre point
-                float camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
-                                             (camera_height_mm * camera_height_mm));
-
-                // tilt angle at the centre point
-                float centre_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
-
-
-
-
-                // angle subtended by one grid spacing at the centre
-                float point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
-
-                // grid width at the centre point
-                float x1 = centre_x + (point_pan * width / FOV_horizontal);
-
-                // calculate the distance to the observed grid point on the ground plane
-                ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y + 2) * calibration_pattern_spacing_mm);
-
-                // line of sight distance between the camera lens and the observed point
-                camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
-                                             (camera_height_mm * camera_height_mm));
-
-                // tilt angle
-                float point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
-
-                // angle subtended by one grid spacing
-                point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
-
-                // calc the position of the grid point within the image after rectification
-                float x2 = centre_x + (point_pan * width / FOV_horizontal);
-                float y2 = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
-
-                // calc the gradient
-                float grad = (x2 - x1) / (float)(y2 - centre_y);
-
-                float baseline_fraction = baseline_offset / (float)(calibration_pattern_spacing_mm);
-
-                ArrayList rectifiedPoints = new ArrayList();
-
-                centre_of_distortion = new calibration_point(0, 0);
-                int hits = 0;
-                float cx = 0, cy = 0;
-
-                for (int x = 0; x < grid.GetLength(0); x++)
+                if (grid[grid_x, grid_y] != null)
                 {
-                    for (int y = 0; y < grid.GetLength(1); y++)
+                    // field of vision in radians
+                    float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
+                    float FOV_vertical = FOV_horizontal * height / (float)width;
+
+                    // add some small amount of random noise to get the best fit
+                    FOV_vertical *= vertical_adjust_noise;
+
+                    // center point of the grid within the image
+                    int centre_x = (int)grid[grid_x, grid_y].x;
+                    int centre_y = (int)grid[grid_x, grid_y].y;
+
+                    // calculate the distance to the centre grid point on the ground plane
+                    float ground_dist_to_point = camera_dist_to_pattern_centre_mm;
+
+                    // line of sight distance between the camera lens and the centre point
+                    float camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
+                                                 (camera_height_mm * camera_height_mm));
+
+                    // tilt angle at the centre point
+                    float centre_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
+
+
+
+
+                    // angle subtended by one grid spacing at the centre
+                    float point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
+
+                    // grid width at the centre point
+                    float x1 = centre_x + (point_pan * width / FOV_horizontal);
+
+                    // calculate the distance to the observed grid point on the ground plane
+                    ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y + 2) * calibration_pattern_spacing_mm);
+
+                    // line of sight distance between the camera lens and the observed point
+                    camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
+                                                 (camera_height_mm * camera_height_mm));
+
+                    // tilt angle
+                    float point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
+
+                    // angle subtended by one grid spacing
+                    point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
+
+                    // calc the position of the grid point within the image after rectification
+                    float x2 = centre_x + (point_pan * width / FOV_horizontal);
+                    float y2 = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
+
+                    // calc the gradient
+                    float grad = (x2 - x1) / (float)(y2 - centre_y);
+
+                    float baseline_fraction = baseline_offset / (float)(calibration_pattern_spacing_mm);
+
+                    ArrayList rectifiedPoints = new ArrayList();
+
+                    centre_of_distortion = new calibration_point(0, 0);
+                    int hits = 0;
+                    float cx = 0, cy = 0;
+
+                    for (int x = 0; x < grid.GetLength(0); x++)
                     {
-                        if (grid[x, y] != null)
+                        for (int y = 0; y < grid.GetLength(1); y++)
                         {
-                            // calculate the distance to the observed grid point on the ground plane
-                            ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y - y) * calibration_pattern_spacing_mm);
+                            if (grid[x, y] != null)
+                            {
+                                // calculate the distance to the observed grid point on the ground plane
+                                ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y - y) * calibration_pattern_spacing_mm);
 
-                            // line of sight distance between the camera lens and the observed point
-                            camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
-                                                         (camera_height_mm * camera_height_mm));
+                                // line of sight distance between the camera lens and the observed point
+                                camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
+                                                             (camera_height_mm * camera_height_mm));
 
-                            // tilt angle
-                            point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
+                                // tilt angle
+                                point_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
 
-                            // distance to the point on the ground plave along the x (horizontal axis)
-                            float ground_dist_to_point_x = ((x - grid_x) * calibration_pattern_spacing_mm) + baseline_offset;
+                                // distance to the point on the ground plave along the x (horizontal axis)
+                                float ground_dist_to_point_x = ((x - grid_x) * calibration_pattern_spacing_mm) + baseline_offset;
 
-                            // pan angle
-                            point_pan = (float)Math.Asin(ground_dist_to_point_x / camera_to_point_dist);
+                                // pan angle
+                                point_pan = (float)Math.Asin(ground_dist_to_point_x / camera_to_point_dist);
 
-                            // calc the position of the grid point within the image after rectification
-                            float w = ((x1 - centre_x) + ((grid[x, y].y - centre_y) * grad));
-                            float wbaseline = baseline_fraction * (grid[x, y].y - centre_y) * grad;
-                            float rectified_x = centre_x + (w * (x - grid_x)) - wbaseline;
-                            float rectified_y = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
-                            grid[x, y].rectified_x = rectified_x;
-                            grid[x, y].rectified_y = rectified_y;
-                            cx += (grid[x, y].x - rectified_x);
-                            cy += (grid[x, y].y - rectified_y);
+                                // calc the position of the grid point within the image after rectification
+                                float w = ((x1 - centre_x) + ((grid[x, y].y - centre_y) * grad));
+                                float wbaseline = baseline_fraction * (grid[x, y].y - centre_y) * grad;
+                                float rectified_x = centre_x + (w * (x - grid_x)) - wbaseline;
+                                float rectified_y = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
+                                grid[x, y].rectified_x = rectified_x;
+                                grid[x, y].rectified_y = rectified_y;
+                                cx += (grid[x, y].x - rectified_x);
+                                cy += (grid[x, y].y - rectified_y);
 
-                            hits++;
+                                hits++;
+                            }
                         }
                     }
-                }
 
-                if (hits > 0)
-                {
-                    // a ballpack figure for the centre of distortion
-                    centre_of_distortion.x = (width / 2) + (cx / (float)hits);
-                    centre_of_distortion.y = (height / 2) + (cy / (float)hits);
-
-                    float winner_x = centre_of_distortion.x;
-                    float winner_y = centre_of_distortion.y;
-                    float min_rms_err = 999999;
-                    int radius = 5;
-                    for (int search_x = (int)centre_of_distortion.x - radius; search_x <= (int)centre_of_distortion.x + radius; search_x++)
+                    if (hits > 0)
                     {
-                        for (int search_y = (int)centre_of_distortion.y - radius; search_y <= (int)centre_of_distortion.y + radius; search_y++)
+                        // a ballpack figure for the centre of distortion
+                        centre_of_distortion.x = (width / 2) + (cx / (float)hits);
+                        centre_of_distortion.y = (height / 2) + (cy / (float)hits);
+
+                        float winner_x = centre_of_distortion.x;
+                        float winner_y = centre_of_distortion.y;
+                        float min_rms_err = 999999;
+                        int radius = 5;
+                        for (int search_x = (int)centre_of_distortion.x - radius; search_x <= (int)centre_of_distortion.x + radius; search_x++)
                         {
-                            polyfit curvefit = new polyfit();
-                            curvefit.SetDegree(2);
-
-                            int i = 0;
-                            for (int x = 0; x < grid.GetLength(0); x++)
+                            for (int search_y = (int)centre_of_distortion.y - radius; search_y <= (int)centre_of_distortion.y + radius; search_y++)
                             {
-                                for (int y = 0; y < grid.GetLength(1); y++)
-                                {
-                                    if (grid[x, y] != null)
-                                    {
-                                        float dx = grid[x, y].rectified_x - centre_of_distortion.x;
-                                        float dy = grid[x, y].rectified_y - centre_of_distortion.y;
-                                        float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                                        dx = grid[x, y].x - centre_of_distortion.x;
-                                        dy = (grid[x, y].y - centre_of_distortion.y);
-                                        float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                                polyfit curvefit = new polyfit();
+                                curvefit.SetDegree(2);
 
-                                        curvefit.AddPoint(radial_dist_rectified, radial_dist_original);
-                                        i++;
+                                int i = 0;
+                                for (int x = 0; x < grid.GetLength(0); x++)
+                                {
+                                    for (int y = 0; y < grid.GetLength(1); y++)
+                                    {
+                                        if (grid[x, y] != null)
+                                        {
+                                            float dx = grid[x, y].rectified_x - centre_of_distortion.x;
+                                            float dy = grid[x, y].rectified_y - centre_of_distortion.y;
+                                            float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                                            dx = grid[x, y].x - centre_of_distortion.x;
+                                            dy = (grid[x, y].y - centre_of_distortion.y);
+                                            float radial_dist_original = (float)Math.Sqrt((dx * dx) + (dy * dy));
+
+                                            curvefit.AddPoint(radial_dist_rectified, radial_dist_original);
+                                            i++;
+                                        }
                                     }
                                 }
-                            }
-                            curvefit.Solve();
-                            float rms_err = curvefit.GetRMSerror();
-                            if (rms_err < min_rms_err)
-                            {
-                                min_rms_err = rms_err;
-                                winner_x = search_x;
-                                winner_y = search_y;
-                                fitter = curvefit;
+                                curvefit.Solve();
+                                float rms_err = curvefit.GetRMSerror();
+                                if (rms_err < min_rms_err)
+                                {
+                                    min_rms_err = rms_err;
+                                    winner_x = search_x;
+                                    winner_y = search_y;
+                                    fitter = curvefit;
+                                }
                             }
                         }
-                    }
 
-                    centre_of_distortion.x = winner_x;
-                    centre_of_distortion.y = winner_y;
+                        centre_of_distortion.x = winner_x;
+                        centre_of_distortion.y = winner_y;
+                    }
                 }
             }
         }
@@ -1515,8 +1538,8 @@ namespace sentience.calibration
              // width of a grid cell
              float x1 = (point_pan * width / FOV_horizontal);
 
-             float factor = x1 / (float)width;
-             return (factor*0.6f);
+             float factor = x1; // x1 / (float)width;
+             return (1.0f / (factor*2.5f));
         }
 
 
@@ -1684,8 +1707,8 @@ namespace sentience.calibration
         /// <param name="rectified_x"></param>
         /// <param name="rectified_y"></param>
         /// <returns></returns>
-        private bool rectifyPoint(int original_x, int original_y,
-                                  ref int rectified_x, ref int rectified_y)
+        public bool rectifyPoint(int original_x, int original_y,
+                                 ref int rectified_x, ref int rectified_y)
         {
             bool isValid = true;
             if (temp_calibration_map_inverse != null)
@@ -1856,7 +1879,8 @@ namespace sentience.calibration
 
                     // determine the separation factor used for non-maximal suppression
                     // during edge detection
-                    separation_factor = (int)(1.0f / GetSeparationFactor(width));
+                    //separation_factor = (int)(1.0f / GetSeparationFactor(width));
+                    separation_factor = GetSeparationFactor(width);
 
                     int min_magnitude = 1;
                     clearBinaryImage(width, height);
@@ -1881,12 +1905,13 @@ namespace sentience.calibration
                         detectCorners(width, height);
 
                         // hunt the centre spot
-                        int grid_cx = 0, grid_cy = 0;
-                        detectCentreSpot(calibration_image, width, height, ref grid_cx, ref grid_cy);
-                        if (grid_cx > 0)
+                        grid_centre_x = 0;
+                        grid_centre_y = 0;
+                        detectCentreSpot(calibration_image, width, height, ref grid_centre_x, ref grid_centre_y);
+                        if (grid_centre_x > 0)
                         {
                             // detect the lens distortion
-                            detectLensDistortion(width, height, grid_cx, grid_cy);
+                            detectLensDistortion(width, height, grid_centre_x, grid_centre_y);
 
                             if (fitter != null)
                             {

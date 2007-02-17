@@ -280,6 +280,8 @@ namespace sentience.core
 
         public void Show(Byte[] img, int width, int height)
         {
+            float min_x = 0;
+            float min_y = 0;
             float max_x = 1;
             float max_y = 1;
             int i = 0;
@@ -292,14 +294,28 @@ namespace sentience.core
                 float y = (float)Ypoints[i];
                 if (x > max_x) max_x = x;
                 if (y > max_y) max_y = y;
+                if (x < min_x) min_x = x;
+                if (y < min_y) min_y = y;
+            }
+
+            // draw axes
+            if (min_x < 0)
+            {
+                int xx = (int)((0 - min_x) * (width - 1) / (max_x - min_x));
+                util.drawLine(img, width, height, xx, 0, xx, height - 1, 200, 200, 200, 0, false);
+            }
+            if (min_y < 0)
+            {
+                int yy = (int)((0 - min_y) * (height - 1) / (max_y - min_y));
+                util.drawLine(img, width, height, 0, yy, width-1, yy, 200, 200, 200, 0, false);
             }
 
             for (i = 0; i < Xpoints.Count; i++)
             {
                 float x = (float)Xpoints[i];
                 float y = (float)Ypoints[i];
-                int xx = (int)(x * (width - 1) / max_x);
-                int yy = (int)(height - 1 - (y * (height - 1) / max_y));
+                int xx = (int)((x-min_x) * (width - 1) / (max_x-min_x));
+                int yy = (int)(height - 1 - ((y-min_y) * (height - 1) / (max_y-min_y)));
                 int n = ((yy * width) + xx) * 3;
                 img[n] = 150;
                 img[n + 1] = 150;

@@ -131,7 +131,7 @@ namespace WindowsApplication1
             // startCameraToolStripMenuItem
             // 
             this.startCameraToolStripMenuItem.Name = "startCameraToolStripMenuItem";
-            this.startCameraToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.startCameraToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.startCameraToolStripMenuItem.Text = "Start Camera";
             this.startCameraToolStripMenuItem.Click += new System.EventHandler(this.startCameraToolStripMenuItem_Click);
             // 
@@ -254,6 +254,7 @@ namespace WindowsApplication1
             // 
             // cmdStart
             // 
+            this.cmdStart.Enabled = false;
             this.cmdStart.Location = new System.Drawing.Point(6, 19);
             this.cmdStart.Name = "cmdStart";
             this.cmdStart.Size = new System.Drawing.Size(74, 41);
@@ -402,7 +403,8 @@ namespace WindowsApplication1
             "Lines",
             "Align centre point",
             "Best fit curve",
-            "Rectified image"});
+            "Rectified image",
+            "Disparity graph"});
             this.cmbDisplayType.Location = new System.Drawing.Point(89, 19);
             this.cmbDisplayType.Name = "cmbDisplayType";
             this.cmbDisplayType.Size = new System.Drawing.Size(128, 21);
