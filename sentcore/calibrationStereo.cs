@@ -67,12 +67,12 @@ namespace sentience.calibration
                     polyfit disparities = new polyfit();
                     disparities.SetDegree(2);
 
-                    for (int x_left = 0; x_left < leftcam.grid.GetLength(0); x_left++)
+                    for (int x_left = 1; x_left < leftcam.grid.GetLength(0)-1; x_left++)
                     {
                         int x_right = rightcam.grid_centre_x + (x_left - leftcam.grid_centre_x);
                         if ((x_right > 0) && (x_right < rightcam.grid.GetLength(0)))
                         {
-                            for (int y_left = 0; y_left < leftcam.grid.GetLength(1); y_left++)
+                            for (int y_left = 1; y_left < leftcam.grid.GetLength(1)-1; y_left++)
                             {
                                 if (leftcam.grid[x_left, y_left] != null)
                                 {
@@ -91,11 +91,11 @@ namespace sentience.calibration
                                                                           ref x_right_image, ref y_right_image))
                                                 {
                                                     // update the disparity value
-                                                    int disparity = Math.Abs(x_right_image - x_left_image);
+                                                    int disparity = (x_right_image - x_left_image);
                                                     if (disparity > 0)
                                                     {
                                                         // distance according to the disparity value
-                                                        float dist_disparity = 1.0f / (float)disparity;
+                                                        float dist_disparity = disparity; // 1.0f / (float)disparity;
 
                                                         // actual distance to the corner
                                                         float dx = (x_left - leftcam.grid_centre_x) * leftcam.calibration_pattern_spacing_mm;
@@ -131,7 +131,8 @@ namespace sentience.calibration
             rightcam.baseline_offset = baseline/2;
 
             // is calibration complete ?
-            if ((leftcam.min_RMS_error < 5) && (rightcam.min_RMS_error < 5))
+            int calibration_threshold = 10;
+            if ((leftcam.min_RMS_error < calibration_threshold) && (rightcam.min_RMS_error < calibration_threshold))
             {
                 // stereo match the corner features
                 stereoMatchCorners();
