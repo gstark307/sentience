@@ -696,7 +696,7 @@ namespace sentience.calibration
             }
 
             // non-maximal supression in the horizontal
-            int search_width = (int)(width * separation_factor * 1.5f);
+            int search_width = (int)(width * separation_factor * 1.2f);
             for (int i = 0; i < horizontal_magnitude.GetLength(0); i++)
             {
                 for (int x = 1; x < width - 1; x++)
@@ -1551,7 +1551,7 @@ namespace sentience.calibration
                     vertical_gradient = (bottom_spacing - top_spacing) / (float)(height*3/4);
             }
 
-            float vertical_additive = (width/(float)height) + 0.0f;
+            float vertical_additive = (width/(float)height) - 0.2f;
 
             //int additive = 0;
             int max_horizontal_difference = (int)(width * separation_factor * 1.5f);
@@ -1566,7 +1566,7 @@ namespace sentience.calibration
 
                 for (int i = 1; i < horizontal_magnitude.GetLength(0); i++)
                 {
-                    int max_connectedness = 0;
+                    int max_connectedness = 10;
                     int best_x = -1;
                     int best_y = -1;
                     int idx = -1;
@@ -1584,9 +1584,15 @@ namespace sentience.calibration
                             if ((y < height) && (y2 < height))
                             {
                                 int additive = (int)(vertical_additive * vertical_gradient * y2);
-                                if (ROI != null) additive = (int)(1.5f * vertical_gradient * (y2-ROI.ty));
-                                if (!(((x > width * 55 / 100) && (x+additive>x2)) ||
-                                    ((x < width * 45 / 100) && (x-additive<x2))))
+                                int grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * y2 / height));
+                                if (ROI != null)
+                                {
+                                    additive = (int)(1.5f * vertical_gradient * (y2 - ROI.ty));
+                                    grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * (y2 - ROI.ty) / (ROI.by - ROI.ty)));
+                                }
+
+                                if (!(((x > width * 55 / 100) && (x+additive>x2) && (x2 < x+additive+grid_width)) ||
+                                    ((x < width * 45 / 100) && (x - additive < x2) && (x2 > x - additive - grid_width))))
                                 {
                                     int connectedness = pointsConnectedByIntensity(width, height, x, y, x2, y2);
                                     if (connectedness > max_connectedness)
@@ -1636,7 +1642,7 @@ namespace sentience.calibration
 
                     for (int i = horizontal_magnitude.GetLength(0) - 2; i >= 0; i--)
                     {
-                        int max_connectedness = 0;
+                        int max_connectedness = 10;
                         int best_x = -1;
                         int best_y = -1;
                         int idx = -1;
@@ -1653,10 +1659,16 @@ namespace sentience.calibration
                                 // are these two connected?
                                 if ((y < height) && (y2 < height))
                                 {
+                                    int grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * y2 / height)); 
                                     int additive = (int)(vertical_additive * vertical_gradient * y2);
-                                    if (ROI != null) additive = (int)(1.5f * vertical_gradient * (y2-ROI.ty));
-                                    if (!(((x > width * 55 / 100) && (x+additive>x2)) ||
-                                        ((x < width * 45 / 100) && (x-additive<x2))))
+                                    if (ROI != null)
+                                    {
+                                        additive = (int)(1.5f * vertical_gradient * (y2 - ROI.ty));
+                                        grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * (y2 - ROI.ty) / (ROI.by - ROI.ty)));
+                                    }
+
+                                    if (!(((x > width * 55 / 100) && (x + additive > x2) && (x2 < x + additive + grid_width)) ||
+                                        ((x < width * 45 / 100) && (x - additive < x2) && (x2 > x - additive - grid_width))))
                                     {
                                         int connectedness = pointsConnectedByIntensity(width, height, x, y, x2, y2);
                                         if (connectedness > max_connectedness)
@@ -1954,7 +1966,7 @@ namespace sentience.calibration
              float x1 = (point_pan * width / FOV_horizontal);
 
              float factor = x1 / (float)width;
-             return (factor/1.8f);
+             return (factor/2.0f);
         }
 
 
@@ -2345,11 +2357,11 @@ namespace sentience.calibration
                                 {
                                     // add some small amount of noise to the vertical to try slighly different fits
                                     // this allows the best fit to be discovered (ableit in a crude way)
-                                    vertical_adjust_noise = 0.9f + ((rnd.Next(1000000) / 1000000.0f) * 0.12f);
+                                    vertical_adjust_noise = 0.98f + ((rnd.Next(1000000) / 1000000.0f) * 0.04f);
 
                                     // add small amount of noise to the polynomial coefficients
                                     for (int c = 1; c <= 2; c++)
-                                        fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.03f))));
+                                        fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.02f))));
 
                                     // does this equation cause the image to be re-scaled?
                                     // if it does we can explicitly detect this and correct for it later
