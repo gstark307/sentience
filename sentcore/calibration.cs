@@ -696,7 +696,7 @@ namespace sentience.calibration
             }
 
             // non-maximal supression in the horizontal
-            int search_width = (int)(width * separation_factor * 1.2f);
+            int search_width = (int)(width * separation_factor * 1.0f);
             for (int i = 0; i < horizontal_magnitude.GetLength(0); i++)
             {
                 for (int x = 1; x < width - 1; x++)
@@ -1315,6 +1315,7 @@ namespace sentience.calibration
                     }
             }
 
+            int min_connectedness = 14000;
 
             int max_vertical_difference = (int)((height * separation_factor) / 1.0f);
             for (int j = 0; j < vertical_positions[0].Count; j++)
@@ -1328,7 +1329,7 @@ namespace sentience.calibration
 
                 for (int i = 1; i < vertical_magnitude.GetLength(0); i++)
                 {
-                    int max_connectedness = 0;
+                    int max_connectedness = min_connectedness;
                     int best_x = -1;
                     int best_y = -1;
                     int idx = -1;
@@ -1388,7 +1389,7 @@ namespace sentience.calibration
 
                     for (int i = vertical_magnitude.GetLength(0) - 2; i >= 0; i--)
                     {
-                        int max_connectedness = 0;
+                        int max_connectedness = min_connectedness;
                         int best_x = -1;
                         int best_y = -1;
                         int idx = -1;
@@ -1482,6 +1483,31 @@ namespace sentience.calibration
                     }
                 }
             }
+            for (int j = 0; j < 3; j++)
+            {
+                for (int i = 1; i < horizontal_lines.Count; i++)
+                {
+                    calibration_line line1 = (calibration_line)horizontal_lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[0];
+                    calibration_line line2 = (calibration_line)horizontal_lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[0];
+                    if (pt1.y - pt2.y < max_vertical_difference)
+                    {
+                        horizontal_lines.RemoveAt(i);
+                    }
+                }
+                for (int i = 1; i < horizontal_lines.Count; i++)
+                {
+                    calibration_line line1 = (calibration_line)horizontal_lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
+                    calibration_line line2 = (calibration_line)horizontal_lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
+                    if (pt1.y - pt2.y < max_vertical_difference)
+                    {
+                        horizontal_lines.RemoveAt(i);
+                    }
+                }
+            }
 
             // remove first and last lines
             if (horizontal_lines.Count > 2)
@@ -1551,6 +1577,7 @@ namespace sentience.calibration
                     vertical_gradient = (bottom_spacing - top_spacing) / (float)(height*3/4);
             }
 
+            int min_connectedness = 14000;
             float vertical_additive = (width/(float)height) - 0.2f;
 
             //int additive = 0;
@@ -1566,7 +1593,7 @@ namespace sentience.calibration
 
                 for (int i = 1; i < horizontal_magnitude.GetLength(0); i++)
                 {
-                    int max_connectedness = 10;
+                    int max_connectedness = min_connectedness;
                     int best_x = -1;
                     int best_y = -1;
                     int idx = -1;
@@ -1642,7 +1669,7 @@ namespace sentience.calibration
 
                     for (int i = horizontal_magnitude.GetLength(0) - 2; i >= 0; i--)
                     {
-                        int max_connectedness = 10;
+                        int max_connectedness = min_connectedness;
                         int best_x = -1;
                         int best_y = -1;
                         int idx = -1;
@@ -1725,7 +1752,7 @@ namespace sentience.calibration
             }
 
             // remove lines which are too close together
-            max_horizontal_difference = (int)(width * separation_factor * 0.5f);
+            max_horizontal_difference = (int)(width * separation_factor * 0.8f);
             for (int j = 0; j < 2; j++)
             {
                 for (int i = vertical_lines.Count - 1; i > 0; i--)
@@ -1740,6 +1767,31 @@ namespace sentience.calibration
                     }
                 }
                 for (int i = vertical_lines.Count - 1; i > 0; i--)
+                {
+                    calibration_line line1 = (calibration_line)vertical_lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
+                    calibration_line line2 = (calibration_line)vertical_lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
+                    if (pt1.x - pt2.x < max_horizontal_difference)
+                    {
+                        vertical_lines.RemoveAt(i);
+                    }
+                }
+            }
+            for (int j = 0; j < 2; j++)
+            {
+                for (int i = 1; i < vertical_lines.Count; i++)
+                {
+                    calibration_line line1 = (calibration_line)vertical_lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[0];
+                    calibration_line line2 = (calibration_line)vertical_lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[0];
+                    if (pt1.x - pt2.x < max_horizontal_difference)
+                    {
+                        vertical_lines.RemoveAt(i);
+                    }
+                }
+                for (int i = 1; i < vertical_lines.Count; i++)
                 {
                     calibration_line line1 = (calibration_line)vertical_lines[i];
                     calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
@@ -1966,7 +2018,7 @@ namespace sentience.calibration
              float x1 = (point_pan * width / FOV_horizontal);
 
              float factor = x1 / (float)width;
-             return (factor/2.0f);
+             return (factor/2.3f);
         }
 
 
