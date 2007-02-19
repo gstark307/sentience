@@ -432,7 +432,7 @@ namespace sentience.calibration
         {
             if (corners == null)
             {
-                corners = new ArrayList[30];
+                corners = new ArrayList[5];
                 for (int i = 0; i < corners.Length; i++)
                     corners[i] = new ArrayList();
             }
@@ -500,7 +500,7 @@ namespace sentience.calibration
                     if (coverage[(int)pt.x, (int)pt.y] == null)
                     {
                         int radius = (int)(width * separation_factor / 2.0f);
-                        if (radius < 1) radius = 1;
+                        if (radius < 4) radius = 4;
                         for (int xx = (int)pt.x - radius; xx <= (int)pt.x + radius; xx++)
                         {
                             if ((xx > -1) && (xx < width))
@@ -909,7 +909,7 @@ namespace sentience.calibration
         private float detectRotation(int width, int height)
         {
             float rot = 0;
-            const int no_of_buckets = 30;
+            const int no_of_buckets = 10;
             int[] bucket_hits = new int[no_of_buckets];
             float[] bucket_ang = new float[no_of_buckets];
             int max_hits = 0;
@@ -1457,7 +1457,7 @@ namespace sentience.calibration
             }
 
             // remove lines which are too close together
-            max_vertical_difference = (int)(height * separation_factor * 0.5f);
+            max_vertical_difference = (int)(height * separation_factor * 1.8f);
             for (int j = 0; j < 3; j++)
             {
                 for (int i = horizontal_lines.Count - 1; i > 0; i--)
@@ -1578,7 +1578,7 @@ namespace sentience.calibration
             }
 
             int min_connectedness = 14000;
-            float vertical_additive = (width/(float)height) - 0.2f;
+            float vertical_additive = (width/(float)height) - 0.0f;
 
             //int additive = 0;
             int max_horizontal_difference = (int)(width * separation_factor * 1.5f);
@@ -1818,11 +1818,13 @@ namespace sentience.calibration
             }
 
             // remove first and last lines
+            /*
             if (vertical_lines.Count > 2)
             {
                 vertical_lines.RemoveAt(vertical_lines.Count - 1);
                 vertical_lines.RemoveAt(0);
             }
+            */
 
             // draw
             for (int i = 0; i < vertical_lines.Count; i++)
