@@ -203,7 +203,7 @@ namespace sentience.core
                 {
                     calibration.offset_x = calibration_offset_x;
                     calibration.offset_y = calibration_offset_y;
-                    calibration.Save(calibrationFilename);
+                    calibration.Save(calibrationFilename, 2);
                 }
             }
 

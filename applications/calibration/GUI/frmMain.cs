@@ -915,7 +915,7 @@ namespace WindowsApplication1
             saveFileDialog1.Filter = "Xml files|*.xml";
             saveFileDialog1.Title = "Save calibration file";
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
-                cam.Save(saveFileDialog1.FileName);
+                cam.Save(saveFileDialog1.FileName, no_of_cameras);
         }
 
         private void cmbCentreSpotPosition_SelectedIndexChanged(object sender, EventArgs e)

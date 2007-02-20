@@ -198,6 +198,7 @@ namespace sentience.calibration
         polyfit fitter, best_curve;
         public float temp_scale, scale=1;
         public float rotation = 0;
+        public float distance_to_pattern_centre = 0;
 
         Byte[] calibration_image;
         ArrayList edges_horizontal;
@@ -1862,6 +1863,7 @@ namespace sentience.calibration
                     // line of sight distance between the camera lens and the centre point
                     float camera_to_point_dist = (float)Math.Sqrt((ground_dist_to_point * ground_dist_to_point) +
                                                  (camera_height_mm * camera_height_mm));
+                    distance_to_pattern_centre = camera_to_point_dist;
 
                     // tilt angle at the centre point
                     float centre_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);

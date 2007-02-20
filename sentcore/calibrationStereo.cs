@@ -38,7 +38,7 @@ namespace sentience.calibration
         public pos3D positionOrientation = new pos3D(0, 0, 0);
 
         // horizontal and vertical offset of the right image relative to the left image
-        public int offset_x = 0, offset_y = 0;
+        public float offset_x = 0, offset_y = 0;
 
         // focal length in millimetres
         public float focalLength = 5;
@@ -137,7 +137,28 @@ namespace sentience.calibration
                 // stereo match the corner features
                 stereoMatchCorners();
 
-                //offset_y = (int)(rightcam.centre_spot_rectified.y - leftcam.centre_spot_rectified.y);
+                if (leftcam.distance_to_pattern_centre > 0)
+                {
+                    // viewing angle to the centre spot from the left camera
+                    float angle_left_radians = (leftcam.centre_spot_rectified.x - (leftcam.image_width / 2)) / (leftcam.image_width / 2.0f) * (leftcam.camera_FOV_degrees / 2.0f);
+                    angle_left_radians = angle_left_radians / 180.0f * (float)Math.PI;
+
+                    // viewing angle to the centre spot from the right camera
+                    float angle_right_degrees = (rightcam.centre_spot_rectified.x - (rightcam.image_width / 2)) / (rightcam.image_width / 2.0f) * (rightcam.camera_FOV_degrees / 2.0f);
+
+                    float d1 = leftcam.distance_to_pattern_centre * (float)Math.Tan(angle_left_radians);
+                    float d2 = baseline - d1;
+                    float angle_right_predicted_degrees = (float)Math.Atan(d2 / leftcam.distance_to_pattern_centre);
+                    angle_right_predicted_degrees = -angle_right_predicted_degrees / (float)Math.PI * 180.0f;
+
+                    // difference between the predicted angle for the right ray and the actual angle observed
+                    float angle_diff_degrees = angle_right_degrees - angle_right_predicted_degrees;
+
+                    // convert the angle into a pixel offset
+                    offset_x = (angle_diff_degrees * rightcam.image_width) / rightcam.camera_FOV_degrees;
+                }
+
+                offset_y = rightcam.centre_spot_rectified.y - leftcam.centre_spot_rectified.y;
             }
         }
 
@@ -158,37 +179,51 @@ namespace sentience.calibration
 
         #region "saving and loading"
 
-        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        public XmlElement getXml(XmlDocument doc, XmlElement parent, int no_of_cameras)
         {
-            XmlElement nodeStereoCamera = doc.CreateElement("StereoCamera");
+            XmlElement nodeStereoCamera;
+            if (no_of_cameras > 1)
+                nodeStereoCamera = doc.CreateElement("StereoCamera");
+            else
+                nodeStereoCamera = doc.CreateElement("MonocularCamera");
             parent.AppendChild(nodeStereoCamera);
 
             util.AddComment(doc, nodeStereoCamera, "Name of the WDM software driver for the cameras");
             util.AddTextElement(doc, nodeStereoCamera, "DriverName", DriverName);
 
-            util.AddComment(doc, nodeStereoCamera, "Position and orientation of the stereo camera relative to the robots head or body");
+            util.AddComment(doc, nodeStereoCamera, "Position and orientation of the camera relative to the robots head or body");
             nodeStereoCamera.AppendChild(positionOrientation.getXml(doc));
 
             util.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
             util.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focalLength));
 
-            util.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
-            util.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline));
+            if (no_of_cameras > 1)
+            {
+                util.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
+                util.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline));
+            }
 
             util.AddComment(doc, nodeStereoCamera, "Calibration Data");
 
             XmlElement nodeCalibration = doc.CreateElement("Calibration");
             nodeStereoCamera.AppendChild(nodeCalibration);
 
-            String offsets = Convert.ToString(offset_x) + "," +
-                             Convert.ToString(offset_y);
-            util.AddComment(doc, nodeCalibration, "Image offsets in pixels");
-            util.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
+            if (no_of_cameras > 1)
+            {
+                String offsets = Convert.ToString(offset_x) + "," +
+                                 Convert.ToString(offset_y);
+                util.AddComment(doc, nodeCalibration, "Image offsets in pixels due to small missalignment from parallel");
+                util.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
+            }
 
             XmlElement elem = leftcam.getXml(doc);
             nodeCalibration.AppendChild(elem);
-            elem = rightcam.getXml(doc);
-            nodeCalibration.AppendChild(elem);
+
+            if (no_of_cameras > 1)
+            {
+                elem = rightcam.getXml(doc);
+                nodeCalibration.AppendChild(elem);
+            }
 
             return (nodeStereoCamera);
         }
@@ -197,7 +232,7 @@ namespace sentience.calibration
         /// return an Xml document containing camera calibration parameters
         /// </summary>
         /// <returns></returns>
-        private XmlDocument getXmlDocument()
+        private XmlDocument getXmlDocument(int no_of_cameras)
         {
             // Create the document.
             XmlDocument doc = new XmlDocument();
@@ -212,7 +247,7 @@ namespace sentience.calibration
             XmlElement nodeSentience = doc.CreateElement("Sentience");
             doc.AppendChild(nodeSentience);
 
-            nodeSentience.AppendChild(getXml(doc, nodeSentience));
+            nodeSentience.AppendChild(getXml(doc, nodeSentience, no_of_cameras));
 
             return (doc);
         }
@@ -221,9 +256,9 @@ namespace sentience.calibration
         /// save camera calibration parameters as an xml file
         /// </summary>
         /// <param name="filename">file name to save as</param>
-        public void Save(String filename)
+        public void Save(String filename, int no_of_cameras)
         {
-            XmlDocument doc = getXmlDocument();
+            XmlDocument doc = getXmlDocument(no_of_cameras);
             doc.Save(filename);
         }
 
@@ -287,8 +322,8 @@ namespace sentience.calibration
                 if (xnod.Name == "Offsets")
                 {
                     String[] offsets = xnod.InnerText.Split(',');
-                    offset_x = Convert.ToInt32(offsets[0]);
-                    offset_y = Convert.ToInt32(offsets[1]);
+                    offset_x = Convert.ToSingle(offsets[0]);
+                    offset_y = Convert.ToSingle(offsets[1]);
                 }
 
                 if (xnod.Name == "FocalLengthMillimetres")
