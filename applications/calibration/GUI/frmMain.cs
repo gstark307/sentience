@@ -712,6 +712,9 @@ namespace WindowsApplication1
         /// </summary>
         private void Redraw()
         {
+            picTitle.Left = (this.Width / 2) - (picTitle.Width / 2);
+            picTitle.Top = (this.Height / 2) - (picTitle.Height / 2);
+
             if (no_of_cameras == 1)
             {
                 picOutput2.Visible = false;
@@ -789,6 +792,7 @@ namespace WindowsApplication1
                     // set the driver name
                     cam.DriverName = cameraFilterName;
 
+                    picTitle.Visible = false;
                     cmdStart.Enabled = true;
 
                     // and lo, the cameras were initialised...

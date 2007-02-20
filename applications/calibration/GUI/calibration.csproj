@@ -129,5 +129,8 @@
       <Name>sentcore</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="title.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

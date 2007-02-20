@@ -59,5 +59,12 @@ namespace WindowsApplication1.Properties {
                 resourceCulture = value;
             }
         }
+        
+        internal static System.Drawing.Bitmap title {
+            get {
+                object obj = ResourceManager.GetObject("title", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

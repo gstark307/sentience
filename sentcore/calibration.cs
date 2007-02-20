@@ -384,26 +384,37 @@ namespace sentience.calibration
             {
                 grid_x = coverage[cx, cy].grid_x;
                 grid_y = coverage[cx, cy].grid_y;
-                util.drawBox(corners_image, width, height, (int)coverage[cx, cy].x, (int)coverage[cx, cy].y, 4, 255, 255, 255, 0);
+                int px = (int)(coverage[cx, cy].x / coverage[cx, cy].hits);
+                int py = (int)(coverage[cx, cy].y / coverage[cx, cy].hits);
+                util.drawBox(corners_image, width, height, px, py, 4, 255, 255, 255, 0);
             }
             else
             {
-                int xx = cx - 2;
-                int yy = cy;
-                while ((xx <= cx + 2) && (coverage[xx, yy] == null))
+                bool found = false;
+                int r = 0;
+                while ((r < 3) && (!found))
                 {
-                    yy = cy - 2;
-                    while ((yy <= cy + 2) && (coverage[xx, yy] == null))
+                    int xx = cx - r;
+                    int yy = cy;
+                    while ((xx <= cx + r) && (!found))
                     {
-                        yy++;
+                        yy = cy - r;
+                        while ((yy <= cy + r) && (!found))
+                        {
+                            if (coverage[xx, yy] != null)
+                            {
+                                grid_x = coverage[xx, yy].grid_x;
+                                grid_y = coverage[xx, yy].grid_y;
+                                int px = (int)(coverage[xx, yy].x / coverage[xx, yy].hits);
+                                int py = (int)(coverage[xx, yy].y / coverage[xx, yy].hits);
+                                util.drawBox(corners_image, width, height, px, py, 4, 255, 255, 255, 0);
+                                found = true;
+                            }
+                            yy++;
+                        }
+                        xx++;
                     }
-                    xx++;
-                }
-                if (coverage[xx, yy] != null)
-                {
-                    grid_x = coverage[xx, yy].grid_x;
-                    grid_y = coverage[xx, yy].grid_y;
-                    util.drawBox(corners_image, width, height, (int)coverage[xx, yy].x, (int)coverage[xx, yy].y, 4, 255, 255, 255, 0);
+                    r++;
                 }
             }
         }
@@ -485,7 +496,9 @@ namespace sentience.calibration
                                             intersection_point.grid_y = i;
                                             corners[corners_index].Add(intersection_point);
                                             line1.intersections.Add(intersection_point);
-                                            line2.intersections.Add(intersection_point);                                                
+                                            line2.intersections.Add(intersection_point);
+
+                                            //util.drawCross(corners_image, width, height, (int)ix, (int)iy, 2, 255, 255, 255, 0);
                                         }
                                     }
                                 }
@@ -506,39 +519,54 @@ namespace sentience.calibration
                 {
                     calibration_edge pt = (calibration_edge)corners[i][j];
 
-                    if (pt.grid_x < grid_tx) grid_tx = pt.grid_x;
-                    if (pt.grid_y < grid_ty) grid_ty = pt.grid_y;
-                    if (pt.grid_x > grid_bx) grid_bx = pt.grid_x;
-                    if (pt.grid_y > grid_by) grid_by = pt.grid_y;
-                    
-                    if (coverage[(int)pt.x, (int)pt.y] == null)
+                    int px = (int)(pt.x / pt.hits);
+                    int py = (int)(pt.y / pt.hits);
+
+                    if ((px < width) && (py < height))
                     {
-                        int radius = (int)(width * separation_factor / 2.0f);
-                        if (radius < 3) radius = 3;
-                        for (int xx = (int)pt.x - radius; xx <= (int)pt.x + radius; xx++)
+                        if (pt.grid_x < grid_tx) grid_tx = pt.grid_x;
+                        if (pt.grid_y < grid_ty) grid_ty = pt.grid_y;
+                        if (pt.grid_x > grid_bx) grid_bx = pt.grid_x;
+                        if (pt.grid_y > grid_by) grid_by = pt.grid_y;
+
+                        if (coverage[px, py] == null)
                         {
-                            if ((xx > -1) && (xx < width))
+                            int radius = (int)(width * separation_factor / 1.5f);
+                            if (radius < 3) radius = 3;
+                            for (int xx = px - radius; xx <= px + radius; xx++)
                             {
-                                for (int yy = (int)pt.y - radius; yy <= (int)pt.y + radius; yy++)
+                                if ((xx > -1) && (xx < width))
                                 {
-                                    if ((yy > -1) && (yy < height))
+                                    for (int yy = py - radius; yy <= py + radius; yy++)
                                     {
-                                        coverage[xx, yy] = pt;
+                                        if ((yy > -1) && (yy < height))
+                                        {
+                                            coverage[xx, yy] = pt;
+                                        }
                                     }
                                 }
                             }
+                            detected_corners.Add(pt);
                         }
-                        detected_corners.Add(pt);
-                    }
-                    else
-                    {
-                        int xx = (int)pt.x;
-                        int yy = (int)pt.y;
-                        coverage[xx, yy].x += xx;
-                        coverage[xx, yy].y += yy;
-                        coverage[xx, yy].hits++;
-                        coverage[xx, yy].grid_x = pt.grid_x;
-                        coverage[xx, yy].grid_y = pt.grid_y;
+                        else
+                        {
+                            coverage[px, py].x += px;
+                            coverage[px, py].y += py;
+                            coverage[px, py].hits++;
+
+                            if (coverage[px, py].hits > 1000)
+                            {
+                                coverage[px, py].x /= 2;
+                                coverage[px, py].y /= 2;
+                                coverage[px, py].hits /= 2;
+                            }
+
+                            if (pt.grid_x < coverage[px, py].grid_x)
+                                coverage[px, py].grid_x = pt.grid_x;
+                            if (pt.grid_y < coverage[px, py].grid_y)
+                                coverage[px, py].grid_y = pt.grid_y;
+                            detected_corners.Add(coverage[px, py]);
+                        }
                     }
                 }
             }
@@ -553,14 +581,14 @@ namespace sentience.calibration
             for (int i = 0; i < detected_corners.Count; i++)
             {
                 calibration_edge pt = (calibration_edge)detected_corners[i];
-                pt.x /= pt.hits;
-                pt.y /= pt.hits;
-                pt.hits = 1;
-                pt.grid_x -= grid_tx;
-                pt.grid_y -= grid_ty;
+                //pt.x /= pt.hits;
+                //pt.y /= pt.hits;
+                //pt.hits = 1;
+                int gx = pt.grid_x - grid_tx;
+                int gy = pt.grid_y - grid_ty;
                 if (grid != null)
                 {
-                    grid[pt.grid_x, pt.grid_y] = pt;
+                    grid[gx, gy] = new calibration_edge(pt.x/pt.hits,pt.y/pt.hits,1);
                 }
             }
 
@@ -979,7 +1007,7 @@ namespace sentience.calibration
 
             if (dy > dx)
             {
-                step_size = radius_y2*3/4;
+                step_size = radius_y2 * 2; // *3 / 4;
                 if (step_size < 1) step_size = 1;
                 for (int y = ty; y < by; y += step_size * height / 240)
                 {
@@ -1040,7 +1068,7 @@ namespace sentience.calibration
             }
             else
             {
-                step_size = radius_x2*3/4;
+                step_size = radius_x2 * 2; // *3 / 4;
                 if (step_size < 1) step_size = 1;
                 for (int x = tx; x < bx; x += step_size * width / 320)
                 {
@@ -2480,7 +2508,10 @@ namespace sentience.calibration
                         av_centreline_y_hits /= 2;
                     }
                 }
-                else samples = 0;
+                else
+                {
+                    samples = 0;
+                }
 
                 binary_image_index++;
                 if (binary_image_index >= no_of_images) binary_image_index = 0;

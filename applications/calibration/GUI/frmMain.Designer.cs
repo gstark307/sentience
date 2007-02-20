@@ -69,12 +69,14 @@ namespace WindowsApplication1
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.picOutput2 = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.picTitle = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             this.grpParameters.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picTitle)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -434,11 +436,22 @@ namespace WindowsApplication1
             this.picRightImage.TabStop = false;
             this.picRightImage.Visible = false;
             // 
+            // picTitle
+            // 
+            this.picTitle.Image = global::WindowsApplication1.Properties.Resources.title;
+            this.picTitle.Location = new System.Drawing.Point(280, 119);
+            this.picTitle.Name = "picTitle";
+            this.picTitle.Size = new System.Drawing.Size(365, 290);
+            this.picTitle.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picTitle.TabIndex = 7;
+            this.picTitle.TabStop = false;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(863, 457);
+            this.Controls.Add(this.picTitle);
             this.Controls.Add(this.picRightImage);
             this.Controls.Add(this.picOutput2);
             this.Controls.Add(this.grpParameters);
@@ -447,7 +460,7 @@ namespace WindowsApplication1
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmMain";
-            this.Text = "Sluggish Software:  Camera Calibration";
+            this.Text = "Sluggish Software:  FishFood Camera Calibration Tool";
             this.Resize += new System.EventHandler(this.frmMain_Resize);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
@@ -459,6 +472,7 @@ namespace WindowsApplication1
             this.grpParameters.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picOutput2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picTitle)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -506,6 +520,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.TextBox txtBaseline;
         private System.Windows.Forms.Label lblBaseline;
         private System.Windows.Forms.Button cmdStart;
+        private System.Windows.Forms.PictureBox picTitle;
     }
 }
 
