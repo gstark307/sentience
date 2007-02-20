@@ -41,7 +41,6 @@ namespace sentience.core
         FASTlines line_detector = null;
 
         calibrationStereo calibration = null;
-        String calibrationFilename = "";
 
         public sentience_stereo_interface()
         {
@@ -50,17 +49,28 @@ namespace sentience.core
             stereovision_FAST = new sentience_stereo_FAST();
         }
 
-        // load stereo calibration parameters
+        /// <summary>
+        /// load stereo calibration parameters from file
+        /// </summary>
+        /// <param name="calibrationFilename"></param>
         public void loadCalibration(String calibrationFilename)
         {
             if (File.Exists(calibrationFilename))
             {
-                this.calibrationFilename = calibrationFilename;
                 calibration = new calibrationStereo();
                 calibration.Load(calibrationFilename);
                 calibration.updateCalibrationMaps();
             }
             else calibration = null;
+        }
+
+        /// <summary>
+        /// set the calibration data
+        /// </summary>
+        /// <param name="calib"></param>
+        public void setCalibration(calibrationStereo calib)
+        {
+            calibration = calib;
         }
 
         /// <summary>
@@ -165,13 +175,14 @@ namespace sentience.core
             for (j = 0; j < width * height; j++)
             {
                 int n = j;
+                
                 if (calibration != null)
                 {
                     if (isLeftImage)
                         n = calibration.leftcam.calibration_map[j];
                     else
                         n = calibration.rightcam.calibration_map[j];
-                }
+                }                
 
                 // get the total intensity
                 offset = n * bytesPerPixel;
@@ -193,18 +204,13 @@ namespace sentience.core
         /// <summary>
         /// run the stereo algorithm
         /// </summary>
-        public void stereoMatchRun(int calibration_offset_x, int calibration_offset_y, int image_threshold, int peaks_per_row, int algorithm_type)
+        public void stereoMatchRun(int image_threshold, int peaks_per_row, int algorithm_type)
         {
+            float calibration_offset_x=0, calibration_offset_y=0;
             if (calibration != null)
             {
-                // save offset values if necessary
-                if ((calibration.offset_x != calibration_offset_x) ||
-                    (calibration.offset_y != calibration_offset_y))
-                {
-                    calibration.offset_x = calibration_offset_x;
-                    calibration.offset_y = calibration_offset_y;
-                    calibration.Save(calibrationFilename, 2);
-                }
+                calibration_offset_x = calibration.offset_x;
+                calibration_offset_y = calibration.offset_y;
             }
 
             currentAlgorithmType = algorithm_type;

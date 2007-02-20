@@ -364,7 +364,7 @@ namespace sentience.core
 
         public void update(Byte[] left_bmp, Byte[] right_bmp,
                            int wdth, int hght,
-                           int calibration_offset_x, int calibration_offset_y, bool reset_attention)
+                           float calibration_offset_x, float calibration_offset_y, bool reset_attention)
         {
             int scale, idx;
             int x, y, x2;
@@ -414,7 +414,7 @@ namespace sentience.core
             // set the images
             left_image = left_bmp;
             img_left.updateFromBitmapVerticalCompression(left_bmp, wdth, hght, vertical_compression, 0, 0);
-            img_right.updateFromBitmapVerticalCompression(right_bmp, wdth, hght, vertical_compression, calibration_offset_x, calibration_offset_y);
+            img_right.updateFromBitmapVerticalCompression(right_bmp, wdth, hght, vertical_compression, (int)calibration_offset_x, (int)calibration_offset_y);
 
             // update integrals
             img_left.updateIntegralImage();

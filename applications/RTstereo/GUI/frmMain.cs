@@ -258,7 +258,7 @@ namespace WindowsApplication1
             InitializeComponent();
             
             // load calibration data
-            stereo.LoadCalibration();
+            stereo.loadCalibrationData(global_variables.calibration_filename);
 
             //what cameras are available?  Populate the list box
             lstCameraDevices.Items.Clear();
@@ -280,9 +280,7 @@ namespace WindowsApplication1
         {
             //set some filenames for use in calibration
             String path = System.AppDomain.CurrentDomain.BaseDirectory + "\\";
-            global_variables.calibration_filename = path + "calibration.dat";
-            global_variables.calibration_filename_left = path + "calibration_left.bmp";
-            global_variables.calibration_filename_right = path + "calibration_right.bmp";
+            global_variables.calibration_filename = path + "calibration.xml";
 
             captureState[0] = 0;
             captureState[1] = 0;            
@@ -290,6 +288,7 @@ namespace WindowsApplication1
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            initialise();
         }
 
         #region "timing fuinctions"
@@ -679,39 +678,6 @@ namespace WindowsApplication1
 
         }
 
-        private void cmdCalibration_Click(object sender, EventArgs e)
-        {
-            String path;
-
-            if ((left_camera_running) && (right_camera_running))
-            {
-                // where are the calibration images to be stored ?
-                path = System.AppDomain.CurrentDomain.BaseDirectory + "\\";
-                global_variables.calibration_filename_left = path + "calibration_left.bmp";
-                global_variables.calibration_filename_right = path + "calibration_right.bmp";
-                
-                // Ugh! We have to delete the previous files before writing new ones
-                // otherwise trouble ensues
-                if (File.Exists(global_variables.calibration_filename_left))
-                    File.Delete(global_variables.calibration_filename_left);
-                left_image.Save(global_variables.calibration_filename_left);
-                if (File.Exists(global_variables.calibration_filename_right))
-                    File.Delete(global_variables.calibration_filename_right);
-                right_image.Save(global_variables.calibration_filename_right);                
-
-                // calibrate using the captured images
-                Calibrate(global_variables.calibration_filename_left, global_variables.calibration_filename_right);
-
-                // make an announcement
-                MessageBox.Show("Calibration complete", "Sentience Demo");
-            }
-            else
-            {
-                // uno problemo...
-                MessageBox.Show("The cameras must be running in order to calibrate them", "Sentience Demo");
-            }
-        }
-
 
         private void recordImagesToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -723,41 +689,65 @@ namespace WindowsApplication1
 
         private void startSentienceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            int index;
+            // open a calibration file if none was found
+            if (!File.Exists(global_variables.calibration_filename))
+                OpenCalibrationFile();
 
-            // grab the required camera WDM device name from the text box
-            // (hope you remembered to fill that in correctly)
-            string cameraFilterName = txtCameraDeviceName.Text;
-            
-            //transformRight = RotateFlipType.Rotate180FlipNone;
-
-            // get the device list index number for this WDM device
-            index = global_variables.getCameraIndex(cameraFilterName);
-            if (index > -1)
+            if (File.Exists(global_variables.calibration_filename))
             {
-                // start running the left camera
-                global_variables.selectCamera(true, index);
-                initCameraLeft2();
-                //start running the right camera
-                // note: it's assumed that the device index for the right
-                // camera is immediately after the left one
-                global_variables.selectCamera(false, index + 1);
-                initCameraRight2();
-
-                // do some crap with the menu bar
-                startSentienceToolStripMenuItem.Enabled = false;
-                startSimulationToolStripMenuItem.Enabled = false;
-                optomiseToolStripMenuItem.Enabled = false;
-
                 // load calibration settings
-                stereo.LoadCalibration("calibration.xml");
+                stereo.LoadCalibration(global_variables.calibration_filename);
 
-                // and lo, the cameras were initialised...
-                global_variables.camera_initialised = true;
+                String cameraFilterName = stereo.getCameraDriverName();
+                txtCameraDeviceName.Text = cameraFilterName;
 
-                tabSentience.SelectedIndex = 1;
+                // grab the required camera WDM device name from the text box
+                // (hope you remembered to fill that in correctly)
+                /*
+                string cameraFilterName = txtCameraDeviceName.Text;
+
+                if (cameraFilterName.Contains("#"))
+                {
+                    String[] s = cameraFilterName.Split('#');
+                    cameraFilterName = s[0].Trim();
+                }
+                 */
+
+                // get the device list index number for this WDM device
+                int index = global_variables.getCameraIndexContaining(cameraFilterName, 0);
+                if (index > -1)
+                {
+                    // start running the left camera
+                    global_variables.selectCamera(true, index);
+                    initCameraLeft2();
+
+                    index = global_variables.getCameraIndexContaining(cameraFilterName, 1);
+                    if (index > -1)
+                    {
+                        //start running the right camera
+                        // note: it's assumed that the device index for the right
+                        // camera is immediately after the left one
+                        global_variables.selectCamera(false, index);
+                        initCameraRight2();
+
+                        // do some crap with the menu bar
+                        startSentienceToolStripMenuItem.Enabled = false;
+                        startSimulationToolStripMenuItem.Enabled = false;
+                        optomiseToolStripMenuItem.Enabled = false;
+
+                        // and lo, the cameras were initialised...
+                        global_variables.camera_initialised = true;
+
+                        tabSentience.SelectedIndex = 1;
+
+                        // and lo, the cameras were initialised...
+                        global_variables.camera_initialised = true;
+                    }
+                    else MessageBox.Show("Cannot find a WDM driver for the right camera device known as '" + cameraFilterName + "'.  Is the right camera plugged in ?", "Sentience Demo");
+                }
+                else MessageBox.Show("Cannot find a WDM driver for the left camera device known as '" + cameraFilterName + "'.  Is the left camera plugged in ?", "Sentience Demo");
             }
-            else MessageBox.Show("Cannot find a WDM driver for the device known as '" + cameraFilterName + "'.  Are the cameras plugged in ?", "Sentience Demo");
+            else MessageBox.Show("Could not locate a calibration file '" + global_variables.calibration_filename + "'", "Sentience Demo");
         }
 
         private void startSimulationToolStripMenuItem_Click(object sender, EventArgs e)
@@ -771,44 +761,6 @@ namespace WindowsApplication1
                 simulation_running = true;
                 tabSentience.SelectedIndex = 1;
             }
-        }
-
-
-        /// <summary>
-        /// calibrate using two images of a distant flat surface
-        /// </summary>
-        /// <param name="left_filename">Filename for the left calibration image</param>
-        /// <param name="right_filename">Filename for the right calibration image</param>
-        private unsafe void Calibrate(String left_filename, String right_filename)
-        {
-            FileStream fs;
-
-            // get the left image as a byte array
-            fs = new FileStream(left_filename, FileMode.Open, FileAccess.Read);
-            Bitmap bmp_left = (Bitmap)(Image.FromStream(fs));
-            fs.Close();
-            Byte[] left_data = new Byte[bmp_left.Width * bmp_left.Height * 3];
-            updatebitmap(bmp_left, left_data);
-
-            // get the right image as a byte array
-            fs = new FileStream(right_filename, FileMode.Open, FileAccess.Read);
-            Bitmap bmp_right = (Bitmap)(Image.FromStream(fs));
-            fs.Close();
-            Byte[] right_data = new Byte[bmp_left.Width * bmp_left.Height * 3];
-            updatebitmap(bmp_right, right_data);
-
-            // go forth, and calibrate!
-            int offset_x = 0;
-            int offset_y = 0;
-            //fixed (byte* pleft = left_data)
-            {
-                //fixed (byte* pright = right_data)
-                {
-                    stereo.stereoCalibrate(left_data, right_data, bmp_left.Width, bmp_left.Height, 3, ref offset_x, ref offset_y);
-                }
-            }
-            // save the calibration settings
-            stereo.UpdateCalibration(offset_x, offset_y);
         }
 
 
@@ -999,7 +951,7 @@ namespace WindowsApplication1
             linesToolStripMenuItem.Checked = true;
         }
 
-        private void loadCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
+        private void OpenCalibrationFile()
         {
             openFileDialog1.DefaultExt = "xml";
             openFileDialog1.FileName = ".xml";
@@ -1007,8 +959,13 @@ namespace WindowsApplication1
             openFileDialog1.Title = "Load calibration file";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                File.Copy(openFileDialog1.FileName, "calibration.xml");
-            }                
+                File.Copy(openFileDialog1.FileName, global_variables.calibration_filename);
+            }
+        }
+
+        private void loadCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenCalibrationFile();
         }
 
     }

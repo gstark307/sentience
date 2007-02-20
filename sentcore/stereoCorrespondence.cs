@@ -22,7 +22,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
-//using System.Runtime.InteropServices;  //for DLL access
+using sentience.calibration;
 
 namespace sentience.core
 {
@@ -77,23 +77,73 @@ namespace sentience.core
             }
         }
 
+        /// <summary>
+        /// set the calibration data
+        /// </summary>
+        /// <param name="calib"></param>
+        public void setCalibration(calibrationStereo calib)
+        {
+            stereointerface.setCalibration(calib);
+        }
+
+        /// <summary>
+        /// load calibration data from file
+        /// </summary>
+        /// <param name="calibrationFilename"></param>
+        public void loadCalibration(String calibrationFilename)
+        {
+            stereointerface.loadCalibration(calibrationFilename);
+        }
 
         /// <summary>
         /// load a pair of rectified images
         /// </summary>
-        /// <param name="fullres_left"></param>
-        /// <param name="fullres_right"></param>
+        /// <param name="stereo_cam_index">index of the stereo camera</param>
+        /// <param name="fullres_left">left image</param>
+        /// <param name="fullres_right">right image</param>
+        /// <param name="head">stereo head geometry and features</param>
+        /// <param name="no_of_stereo_features"></param>
+        /// <param name="bytes_per_pixel"></param>
+        /// <param name="algorithm_type"></param>
+        /// <returns></returns>
         public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, stereoHead head, int no_of_stereo_features, int bytes_per_pixel,
-                                         int calibration_offset_x, int calibration_offset_y,
                                          int algorithm_type)
         {
+            setCalibration(null);  // don't use any calibration data
+            return(loadImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, algorithm_type));
+        }
+
+        /// <summary>
+        /// load a pair of raw (unrectified) images
+        /// </summary>
+        /// <param name="stereo_cam_index">index of the stereo camera</param>
+        /// <param name="fullres_left">left image</param>
+        /// <param name="fullres_right">right image</param>
+        /// <param name="head">stereo head geometry and features</param>
+        /// <param name="no_of_stereo_features"></param>
+        /// <param name="bytes_per_pixel"></param>
+        /// <param name="algorithm_type"></param>
+        /// <returns></returns>
+        public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, stereoHead head, int no_of_stereo_features, int bytes_per_pixel,
+                                   int algorithm_type)
+        {
+            setCalibration(head.calibration[stereo_cam_index]);  // load the appropriate calibration settings for this camera
+            return(loadImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, algorithm_type));
+        }
+
+        /// <summary>
+        /// load a pair of images
+        /// </summary>
+        private float loadImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, stereoHead head, int no_of_stereo_features, int bytes_per_pixel,
+                                 int algorithm_type)
+        {            
             stereointerface.loadImage(fullres_left, head.image_width, head.image_height, true, bytes_per_pixel);
 
             stereointerface.loadImage(fullres_right, head.image_width, head.image_height, false, bytes_per_pixel);
             
             // calculate stereo disparity features
             int peaks_per_row = 5;
-            stereointerface.stereoMatchRun(calibration_offset_x, calibration_offset_y, 0, peaks_per_row, algorithm_type);
+            stereointerface.stereoMatchRun(0, peaks_per_row, algorithm_type);
 
             // retrieve the features
             stereoFeatures feat = new stereoFeatures(no_of_stereo_features);

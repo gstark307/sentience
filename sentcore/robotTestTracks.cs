@@ -526,7 +526,7 @@ namespace sentience.core
                 else
                 {
                     right_bmp = util.loadFromPGM(image_filename, rob.head.image_width, rob.head.image_height, 1);
-                    matching_score += rob.loadRectifiedImages(stereo_cam_index, left_bmp, right_bmp, 1, 0, 0);
+                    matching_score += rob.loadRectifiedImages(stereo_cam_index, left_bmp, right_bmp, 1);
 
                     // store images and features for later display
                     if (stereo_cam_index == 0)
@@ -582,7 +582,7 @@ namespace sentience.core
                     if (!File.Exists(image_filename)) errorMessage = image_filename + " not found";
                     rob.head.imageFilename[i] = image_filename;
                     right_bmp = util.loadFromBitmap(image_filename, rob.head.image_width, rob.head.image_height, 3);
-                    matching_score += rob.loadRectifiedImages(stereo_cam_index, left_bmp, right_bmp, 3, calibration_offset_x, calibration_offset_y);
+                    matching_score += rob.loadRectifiedImages(stereo_cam_index, left_bmp, right_bmp, 3);
 
                     // store images and features for later display
                     if (stereo_cam_index == 0)

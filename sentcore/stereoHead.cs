@@ -22,6 +22,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
+using sentience.calibration;
 
 namespace sentience.core
 {
@@ -32,13 +33,14 @@ namespace sentience.core
     {
         public int no_of_cameras;         //number of cameras on the head
 
-        public int baseline_mm = 100;     //distance between cameras
+        public int baseline_mm = 100;            //distance between cameras
         public int image_width = 640;
         public int image_height = 480;
 
-        public pos3D[] cameraPosition;    //position and orientation of each camera
-        public stereoFeatures[] features; //stereo features observed by each camera
-        public String[] imageFilename;    //filename of raw image for each camera
+        public pos3D[] cameraPosition;           //position and orientation of each camera
+        public stereoFeatures[] features;        //stereo features observed by each camera
+        public String[] imageFilename;           //filename of raw image for each camera
+        public calibrationStereo[] calibration;  // calibration data for each camera
 
         public stereoHead(int no_of_cameras) : base(0,0,0)
         {
@@ -49,8 +51,11 @@ namespace sentience.core
             imageFilename = new String[no_of_cameras * 2];
             // create the cameras
             cameraPosition = new pos3D[no_of_cameras];
+            // calibration data
+            calibration = new calibrationStereo[no_of_cameras];
             for (int cam = 0; cam < no_of_cameras; cam++)
             {
+                calibration[cam] = new calibrationStereo();
                 cameraPosition[cam] = new pos3D(0, 0, 0);
                 features[cam] = null; // new stereoFeatures();
             }
@@ -136,6 +141,32 @@ namespace sentience.core
             cameraPosition[0].pan = pan_angle;
         }
 
+        /// <summary>
+        /// loads calibration data for the given camera
+        /// </summary>
+        /// <param name="camera_index"></param>
+        /// <param name="calibrationFilename"></param>
+        public void loadCalibrationData(int camera_index, String calibrationFilename)
+        {
+            // load the data
+            calibration[camera_index].Load(calibrationFilename);
+
+            // create the rectification lookup tables
+            calibration[camera_index].updateCalibrationMaps();
+        }
+
+        /// <summary>
+        /// load calibration data for all cameras from the given directory
+        /// </summary>
+        /// <param name="directory"></param>
+        public void loadCalibrationData(String directory)
+        {
+            for (int cam = 0; cam < no_of_cameras; cam++)
+            {
+                String filename = directory + "calibration" + Convert.ToString(cam) + ".xml";
+                loadCalibrationData(cam, filename);
+            }
+        }
 
         /// <summary>
         /// assign stereo features to the given camera

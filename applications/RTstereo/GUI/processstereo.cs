@@ -39,10 +39,6 @@ namespace WindowsApplication1
 
         int peaks_per_row = 5;
 
-        // calibration offsets
-        public int calibration_offset_x = 0;
-        public int calibration_offset_y = 0;
-
         // maximum disparity as a percentage of the image width
         public int max_disparity_percent = 20;
 
@@ -72,6 +68,22 @@ namespace WindowsApplication1
             stereo_model = new stereoModel();
         }
 
+        public void loadCalibrationData(String filename)
+        {
+            robot_head.loadCalibrationData(0, filename);
+        }
+
+        /// <summary>
+        /// returns the WDM driver name for the camibrated camera
+        /// </summary>
+        /// <returns></returns>
+        public String getCameraDriverName()
+        {
+            String driverName = "";
+            driverName = robot_head.calibration[0].DriverName;
+            return (driverName);
+        }
+
         public float getObstacleDistance(float focal_length_mm, float camera_baseline_mm,
                                          int img_width, float FOV_radians)
         {
@@ -87,32 +99,6 @@ namespace WindowsApplication1
             correspondence_algorithm_type = algorithm_type;
         }
 
-        public void UpdateCalibration(int offset_x, int offset_y)
-        {
-            calibration_offset_x = offset_x;
-            calibration_offset_y = offset_y;
-
-            StreamWriter oWrite = null;
-            bool allowWrite = true;
-            String filename = "calibration.txt";
-
-            try
-            {
-                oWrite = File.CreateText(System.Windows.Forms.Application.StartupPath + "\\" + filename);
-            }
-            catch
-            {
-                allowWrite = false;
-            }
-
-            if (allowWrite)
-            {
-                oWrite.WriteLine(calibration_offset_x);
-                oWrite.WriteLine(calibration_offset_y);
-                oWrite.Close();
-            }
-
-        }
 
 
         // delete path data
@@ -157,35 +143,6 @@ namespace WindowsApplication1
 
         }
 
-
-
-        public void LoadCalibration()
-        {
-            StreamReader oRead = null;
-            String str;
-            bool filefound = true;
-            String filename = "calibration.txt";
-
-            try
-            {
-                oRead = File.OpenText(System.Windows.Forms.Application.StartupPath + "\\" + filename);
-            }
-            catch
-            {
-                filefound = false;
-            }
-
-            if (filefound)
-            {
-                str = oRead.ReadLine();
-                if (str != null) calibration_offset_x = Convert.ToInt32(str);
-
-                str = oRead.ReadLine();
-                if (str != null) calibration_offset_y = Convert.ToInt32(str);
-
-                oRead.Close();
-            }
-        }
 
         /// <summary>
         /// return the radar image
@@ -242,7 +199,6 @@ namespace WindowsApplication1
             if (!initialised)
             {
                 initialised = true;
-                stereointerface.loadCalibration("calibration.xml");
             }
 
             int BytesPerPixel = 3;
@@ -256,7 +212,7 @@ namespace WindowsApplication1
             setRequiredFeatures(required_features);
 
             // do the stereo correspondence            
-            stereointerface.stereoMatchRun(calibration_offset_x, calibration_offset_y, 0, peaks_per_row, correspondence_algorithm_type);
+            stereointerface.stereoMatchRun(0, peaks_per_row, correspondence_algorithm_type);
 
             // retrieve features
             no_of_disparities = stereointerface.getSelectedPointFeatures(disparities);

@@ -390,7 +390,7 @@ namespace sentience.core
         /// <param name="corners">returned corner features</param>
         /// <param name="barrier">detection threshold</param>
         /// <returns></returns>
-        public static unsafe FASTcorner[] fast_nonmax(Byte[] img, int xsize, int ysize, FASTcorner[] corners, int barrier, int calibration_offset_x, int calibration_offset_y)
+        public static unsafe FASTcorner[] fast_nonmax(Byte[] img, int xsize, int ysize, FASTcorner[] corners, int barrier, float calibration_offset_x, float calibration_offset_y)
         {
             bool found;
 
@@ -532,8 +532,8 @@ namespace sentience.core
                             }
                         }
 
-                        int xx = corners[i].x + calibration_offset_x;
-                        int yy = corners[i].y + calibration_offset_y;
+                        int xx = (int)(corners[i].x + calibration_offset_x);
+                        int yy = (int)(corners[i].y + calibration_offset_y);
                         if ((xx > -1) && (xx < xsize) && (yy > -1) && (yy < ysize))
                         {
                             nonmax_corners[num_nonmax] = new FASTcorner(xx, yy);

@@ -52,8 +52,6 @@ namespace WindowsApplication1
         public cameraSettings CamSettingsRight = new cameraSettings();
 
         public String calibration_filename;
-        public String calibration_filename_left;
-        public String calibration_filename_right;
 
         //the image is converted into a standard size for processing
         public int standard_width = 320;
@@ -131,6 +129,35 @@ namespace WindowsApplication1
                 CamSettingsRight.cameraName = WDM_filters.VideoInputDevices[cameraindex].Name;
                 CamSettingsRight.Save();
             }
+        }
+
+
+        public int getCameraIndexContaining(String containsCameraName, int index)
+        {
+            //return the index of the given camera
+            Filter f;
+            bool found = false;
+            int idx = 0;
+
+            int i = 0;
+            while ((!found) && (i < WDM_filters.VideoInputDevices.Count))
+            {
+                f = WDM_filters.VideoInputDevices[i];
+                if (f.Name.Contains(containsCameraName))
+                {
+                    if (index == idx)
+                    {
+                        found = true;
+                    }
+                    else i++;
+                    idx++;
+                }
+                else i++;
+            }
+            if (found)
+                return (i);
+            else
+                return (-1);
         }
 
 

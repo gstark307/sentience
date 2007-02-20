@@ -2039,7 +2039,7 @@ namespace sentience.calibration
              float x1 = (point_pan * width / FOV_horizontal);
 
              float factor = x1 / (float)width;
-             return (factor/2.3f);
+             return (factor/2.4f);
         }
 
 
@@ -2367,7 +2367,18 @@ namespace sentience.calibration
                 }
                 
                 // show region of interest
-                if (ROI != null) ROI.Show(centrealign_image, width, height);
+                if (ROI == null)
+                {
+                    // create a default region of interest
+                    ROI = new calibration_region_of_interest();
+                    ROI.tx = width / 10;
+                    ROI.bx = width - ROI.tx;
+                    ROI.ty = height / 10;
+                    ROI.by = height - ROI.ty;
+                }
+
+                // show the region of interest
+                ROI.Show(centrealign_image, width, height);
 
                 // determine the separation factor used for non-maximal suppression
                 // during edge detection

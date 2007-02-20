@@ -32,6 +32,7 @@ namespace WindowsApplication1
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openBackgroundToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stereoFeaturesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,7 +53,6 @@ namespace WindowsApplication1
             this.fullResolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
-            this.cmdCalibration = new System.Windows.Forms.Button();
             this.txtNoOfFeatures = new System.Windows.Forms.TextBox();
             this.label10 = new System.Windows.Forms.Label();
             this.txtStereoTime = new System.Windows.Forms.TextBox();
@@ -90,7 +90,6 @@ namespace WindowsApplication1
             this.txtForward = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.picOutput = new System.Windows.Forms.PictureBox();
-            this.loadCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -132,6 +131,13 @@ namespace WindowsApplication1
             this.openBackgroundToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.openBackgroundToolStripMenuItem.Text = "Open Background";
             this.openBackgroundToolStripMenuItem.Click += new System.EventHandler(this.openBackgroundToolStripMenuItem_Click);
+            // 
+            // loadCalibrationToolStripMenuItem
+            // 
+            this.loadCalibrationToolStripMenuItem.Name = "loadCalibrationToolStripMenuItem";
+            this.loadCalibrationToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
+            this.loadCalibrationToolStripMenuItem.Text = "Load Calibration ";
+            this.loadCalibrationToolStripMenuItem.Click += new System.EventHandler(this.loadCalibrationToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
@@ -278,15 +284,6 @@ namespace WindowsApplication1
             this.picRightImage.TabIndex = 2;
             this.picRightImage.TabStop = false;
             // 
-            // cmdCalibration
-            // 
-            this.cmdCalibration.Location = new System.Drawing.Point(131, 128);
-            this.cmdCalibration.Name = "cmdCalibration";
-            this.cmdCalibration.Size = new System.Drawing.Size(106, 27);
-            this.cmdCalibration.TabIndex = 2;
-            this.cmdCalibration.Text = "Calibrate";
-            this.cmdCalibration.Click += new System.EventHandler(this.cmdCalibration_Click);
-            // 
             // txtNoOfFeatures
             // 
             this.txtNoOfFeatures.Location = new System.Drawing.Point(159, 52);
@@ -350,7 +347,6 @@ namespace WindowsApplication1
             this.tabPageCamera.Controls.Add(this.lstCameraDevices);
             this.tabPageCamera.Controls.Add(this.txtCameraDeviceName);
             this.tabPageCamera.Controls.Add(this.label2);
-            this.tabPageCamera.Controls.Add(this.cmdCalibration);
             this.tabPageCamera.Location = new System.Drawing.Point(4, 22);
             this.tabPageCamera.Name = "tabPageCamera";
             this.tabPageCamera.Padding = new System.Windows.Forms.Padding(3);
@@ -383,7 +379,6 @@ namespace WindowsApplication1
             this.txtCameraDeviceName.Name = "txtCameraDeviceName";
             this.txtCameraDeviceName.Size = new System.Drawing.Size(247, 20);
             this.txtCameraDeviceName.TabIndex = 4;
-            this.txtCameraDeviceName.Text = "Creative WebCam NX Ultra";
             // 
             // label2
             // 
@@ -644,13 +639,6 @@ namespace WindowsApplication1
             this.picOutput.TabIndex = 7;
             this.picOutput.TabStop = false;
             // 
-            // loadCalibrationToolStripMenuItem
-            // 
-            this.loadCalibrationToolStripMenuItem.Name = "loadCalibrationToolStripMenuItem";
-            this.loadCalibrationToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
-            this.loadCalibrationToolStripMenuItem.Text = "Load Calibration ";
-            this.loadCalibrationToolStripMenuItem.Click += new System.EventHandler(this.loadCalibrationToolStripMenuItem_Click);
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -699,7 +687,6 @@ namespace WindowsApplication1
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Timer timUpdate;
-        private System.Windows.Forms.Button cmdCalibration;
         private System.Windows.Forms.ToolStripMenuItem optomiseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem speedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem qualityToolStripMenuItem;

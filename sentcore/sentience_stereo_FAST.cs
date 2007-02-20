@@ -107,7 +107,7 @@ namespace sentience.core
 
         public void update(Byte[] left_bmp, Byte[] right_bmp,
                            int wdth, int hght, int bytes_per_pixel,
-                           int calibration_offset_x, int calibration_offset_y,
+                           float calibration_offset_x, float calibration_offset_y,
                            ref int threshold)
         {
             Byte[] left_img;

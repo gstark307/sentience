@@ -363,7 +363,7 @@ namespace sentience.core
                                      bool[,] left_feature_properties,
                                      bool[,] right_feature_properties,
                                      int max_disparity_pixels,
-                                     int calibration_offset_x, int calibration_offset_y)
+                                     float calibration_offset_x, float calibration_offset_y)
         {
             bool positive, positive2;
 
@@ -376,18 +376,18 @@ namespace sentience.core
                     positive = false;
 
                 int f2 = 0;
-                int min_score = 999999;
+                float min_score = 999999;
                 int winner = -1;
                 while (f2 < no_of_right_maxima)
                 {
-                    int x2 = (int)right_maxima[f2 * 3];
+                    float x2 = right_maxima[f2 * 3];
                     if (right_maxima[(f2 * 3) + 1] >= 0)
                         positive2 = true;
                     else
                         positive2 = false;
                     if (positive == positive2)
                     {
-                        int disp = x - x2 + calibration_offset_x;
+                        float disp = x - x2 + calibration_offset_x;
                         if ((disp > -1) && (disp < max_disparity_pixels))
                         {
                             int i = 0;
@@ -400,7 +400,7 @@ namespace sentience.core
                             }
                             if (!different)
                             {
-                                int score = disp;
+                                float score = disp;
                                 if (score < min_score)
                                 {
                                     winner = f2;
@@ -528,7 +528,7 @@ namespace sentience.core
 
         public void update(Byte[] left_bmp, Byte[] right_bmp,
                            int wdth, int hght, int bytes_per_pixel,
-                           int calibration_offset_x, int calibration_offset_y,
+                           float calibration_offset_x, float calibration_offset_y,
                            int image_threshold, int peaks_per_row)
         {
             int y_step = 4;
@@ -607,7 +607,7 @@ namespace sentience.core
                                           no_of_left_maxima, left_maxima, left_feature_properties,
                                           disp_x, disp_y);
                 // find peak values for a single row in the right image
-                int y2 = y + calibration_offset_y;
+                int y2 = (int)Math.Round(y + calibration_offset_y);
                 if ((y2 > -1) && (y2 < wdth))
                 {
                     int no_of_right_maxima = row_maxima(y2, right_bmp, wdth, hght, bytes_per_pixel, integral,

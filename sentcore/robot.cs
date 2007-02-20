@@ -28,7 +28,7 @@ namespace sentience.core
     public class robot : pos3D
     {        
         public int no_of_stereo_cameras;   // number of stereo cameras on the head
-        public stereoHead head;            // head geometry
+        public stereoHead head;            // head geometry, stereo features and calibration data
         public int no_of_stereo_features;  // required number of stereo features per camera pair
         public stereoModel sensorModel;
         public stereoCorrespondence correspondence;
@@ -48,6 +48,25 @@ namespace sentience.core
             sensorModel = new stereoModel();
 
             initRobotSentience();
+        }
+
+        /// <summary>
+        /// loads calibration data for the given camera
+        /// </summary>
+        /// <param name="camera_index"></param>
+        /// <param name="calibrationFilename"></param>
+        public void loadCalibrationData(int camera_index, String calibrationFilename)
+        {
+            head.loadCalibrationData(camera_index, calibrationFilename);
+        }
+
+        /// <summary>
+        /// load calibration data for all cameras from the given directory
+        /// </summary>
+        /// <param name="directory"></param>
+        public void loadCalibrationData(String directory)
+        {
+            head.loadCalibrationData(directory);
         }
 
         /// <summary>
@@ -144,9 +163,17 @@ namespace sentience.core
             }
         }
 
-        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, int calibration_offset_x, int calibration_offset_y)
+        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
         {
-            return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, calibration_offset_x, calibration_offset_y, correspondence_algorithm_type));
+            return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
+        }
+
+        public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
+        {
+            // set the correspondence data for this camera
+            correspondence.setCalibration(head.calibration[stereo_cam_index]);
+
+            return (correspondence.loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
         public void setMappingParameters(float sigma)
