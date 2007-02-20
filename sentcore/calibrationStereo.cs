@@ -137,28 +137,34 @@ namespace sentience.calibration
                 // stereo match the corner features
                 stereoMatchCorners();
 
-                if (leftcam.distance_to_pattern_centre > 0)
+                if ((leftcam.distance_to_pattern_centre > 0) &&
+                    (leftcam.pattern_centre_rectified != null) &&
+                    (rightcam.pattern_centre_rectified != null))
                 {
-                    // viewing angle to the centre spot from the left camera
-                    float angle_left_radians = (leftcam.centre_spot_rectified.x - (leftcam.image_width / 2)) / (leftcam.image_width / 2.0f) * (leftcam.camera_FOV_degrees / 2.0f);
-                    angle_left_radians = angle_left_radians / 180.0f * (float)Math.PI;
+                    // if the vertical displacement is too large assume this is a spurious case
+                    if (Math.Abs(rightcam.pattern_centre_rectified.y - leftcam.pattern_centre_rectified.y) < 10)
+                    {
+                        // viewing angle to the centre spot from the left camera
+                        float angle_left_radians = (leftcam.pattern_centre_rectified.x - (leftcam.image_width / 2)) / (leftcam.image_width / 2.0f) * (leftcam.camera_FOV_degrees / 2.0f);
+                        angle_left_radians = angle_left_radians / 180.0f * (float)Math.PI;
 
-                    // viewing angle to the centre spot from the right camera
-                    float angle_right_degrees = (rightcam.centre_spot_rectified.x - (rightcam.image_width / 2)) / (rightcam.image_width / 2.0f) * (rightcam.camera_FOV_degrees / 2.0f);
+                        // viewing angle to the centre spot from the right camera
+                        float angle_right_degrees = (rightcam.pattern_centre_rectified.x - (rightcam.image_width / 2)) / (rightcam.image_width / 2.0f) * (rightcam.camera_FOV_degrees / 2.0f);
 
-                    float d1 = leftcam.distance_to_pattern_centre * (float)Math.Tan(angle_left_radians);
-                    float d2 = baseline - d1;
-                    float angle_right_predicted_degrees = (float)Math.Atan(d2 / leftcam.distance_to_pattern_centre);
-                    angle_right_predicted_degrees = -angle_right_predicted_degrees / (float)Math.PI * 180.0f;
+                        float d1 = leftcam.distance_to_pattern_centre * (float)Math.Tan(angle_left_radians);
+                        float d2 = baseline - d1;
+                        float angle_right_predicted_degrees = (float)Math.Atan(d2 / leftcam.distance_to_pattern_centre);
+                        angle_right_predicted_degrees = -angle_right_predicted_degrees / (float)Math.PI * 180.0f;
 
-                    // difference between the predicted angle for the right ray and the actual angle observed
-                    float angle_diff_degrees = angle_right_degrees - angle_right_predicted_degrees;
+                        // difference between the predicted angle for the right ray and the actual angle observed
+                        float angle_diff_degrees = angle_right_degrees - angle_right_predicted_degrees;
 
-                    // convert the angle into a pixel offset
-                    offset_x = (angle_diff_degrees * rightcam.image_width) / rightcam.camera_FOV_degrees;
+                        // convert the angle into a pixel offset
+                        offset_x = (angle_diff_degrees * rightcam.image_width) / rightcam.camera_FOV_degrees;
+
+                        offset_y = rightcam.pattern_centre_rectified.y - leftcam.pattern_centre_rectified.y;
+                    }
                 }
-
-                offset_y = rightcam.centre_spot_rectified.y - leftcam.centre_spot_rectified.y;
             }
         }
 

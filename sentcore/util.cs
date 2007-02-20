@@ -245,7 +245,8 @@ namespace sentience.core
                     {
                         m = dy / (float)dx;
                         x = x1;
-                        while (x != x2 + step_x)
+                        int s = 0;
+                        while (s*Math.Abs(step_x) <= Math.Abs(dx))
                         {
                             y = (int)(m * (x - x1)) + y1;
 
@@ -271,6 +272,7 @@ namespace sentience.core
                                 }
 
                             x += step_x;
+                            s++;
                         }
                     }
                 }
@@ -280,7 +282,8 @@ namespace sentience.core
                     {
                         m = dx / (float)dy;
                         y = y1;
-                        while (y != y2 + step_y)
+                        int s = 0;
+                        while (s*Math.Abs(step_y) <= Math.Abs(dy))
                         {
                             x = (int)(m * (y - y1)) + x1;
                             for (xx2 = x - linewidth; xx2 <= x + linewidth; xx2++)
@@ -305,6 +308,7 @@ namespace sentience.core
                                 }
 
                             y += step_y;
+                            s++;
                         }
                     }
                 }

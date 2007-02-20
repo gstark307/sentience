@@ -177,8 +177,7 @@ namespace sentience.calibration
 
         // the centre of distortion in image pixel coordinates
         calibration_point centre_of_distortion;
-        calibration_point centre_spot;
-        public calibration_point centre_spot_rectified;
+        calibration_point centre_spot;        
 
         public int grid_centre_x, grid_centre_y;
         public calibration_edge[,] grid;
@@ -198,7 +197,12 @@ namespace sentience.calibration
         polyfit fitter, best_curve;
         public float temp_scale, scale=1;
         public float rotation = 0;
+
+        // centre of the calibration pattern
         public float distance_to_pattern_centre = 0;
+        public float pattern_centre_x = 0;
+        public float pattern_centre_y = 0;
+        public calibration_point pattern_centre_rectified;
 
         Byte[] calibration_image;
         ArrayList edges_horizontal;
@@ -207,12 +211,21 @@ namespace sentience.calibration
         ArrayList[] corners;        
         int corners_index = 0;
 
+        // a minimum number of frames should be grabbed and analysed before
+        // coming to a decision.  This prevents the system from looking at
+        // one or two lucky but erroneous images and drawing a false conclusion
+        int samples = 0;
+        const int min_samples = 10;
+
         int closest_to_centreline_x = 0;
         int closest_to_centreline_y = 0;
         int av_centreline_x = 0;
         int av_centreline_x_hits = 0;
         int av_centreline_y = 0;
         int av_centreline_y_hits = 0;
+
+        // threshold used when detecting horizontal and vertical lines
+        int min_connectedness = 30;
 
         const int no_of_images = 4;
         int binary_image_index = 0;
@@ -247,16 +260,16 @@ namespace sentience.calibration
         #region "centre spot detection"
 
         /// <summary>
-        /// updates the rectified position of the centre spot.  This can be used to
-        /// calculate the horizontal and vertical offsets for stereo cameras
+        /// updates the rectified position of the centre of the calibration pattern.  This can be used to
+        /// calculate the horizontal and vertical alignment offsets for stereo cameras
         /// </summary>
-        private void updateCentreSpotRectified()
+        private void updatePatternCentreRectified()
         {
             int rectified_x = 0, rectified_y = 0;
 
-            if (rectifyPoint((int)centre_spot.x, (int)centre_spot.y, ref rectified_x, ref rectified_y))
+            if (rectifyPoint((int)pattern_centre_x, (int)pattern_centre_y, ref rectified_x, ref rectified_y))
             {
-                centre_spot_rectified = new calibration_point(rectified_x, rectified_y);
+                pattern_centre_rectified = new calibration_point(rectified_x, rectified_y);
             }
         }
 
@@ -273,9 +286,9 @@ namespace sentience.calibration
             grid_x = 0;
             grid_y = 0;
 
-            int search_radius_x = (int)(width * separation_factor / 1.5f);
+            int search_radius_x = (int)(width * separation_factor / 1.0f);
             if (search_radius_x < 2) search_radius_x = 2;
-            int search_radius_y = (int)(height * separation_factor / 1.5f);
+            int search_radius_y = (int)(height * separation_factor / 1.0f);
             if (search_radius_y < 2) search_radius_y = 2;
             int search_radius_x2 = search_radius_x / 2;
             int search_radius_y2 = search_radius_y / 2;
@@ -501,7 +514,7 @@ namespace sentience.calibration
                     if (coverage[(int)pt.x, (int)pt.y] == null)
                     {
                         int radius = (int)(width * separation_factor / 2.0f);
-                        if (radius < 4) radius = 4;
+                        if (radius < 3) radius = 3;
                         for (int xx = (int)pt.x - radius; xx <= (int)pt.x + radius; xx++)
                         {
                             if ((xx > -1) && (xx < width))
@@ -749,7 +762,7 @@ namespace sentience.calibration
             edges.Clear();
             for (int y = 1; y < height - 1; y++)
             {
-                float factor = (y - (height/2)) * vertical_gradient;
+                float factor = y / (float)height * width * 0.6f;
                 int inhibit_radius = (int)((width + factor) * separation_factor);
                 temp_edges.Clear();
                 for (int x = search_radius; x < width - search_radius; x++)
@@ -866,7 +879,8 @@ namespace sentience.calibration
                                 calibration_edge e2 = (calibration_edge)temp_edges[j];
                                 if (e2.enabled)
                                 {
-                                    float factor = (e1.y - (height / 2)) * vertical_gradient;
+                                    //float factor = (e1.y - (height / 2)) * vertical_gradient;
+                                    float factor = e1.y / (float)height * width * 0.6f;
                                     int inhibit_radius = (int)((height + factor) * separation_factor);
 
                                     int dy = (int)(e2.y - e1.y);
@@ -910,54 +924,25 @@ namespace sentience.calibration
         private float detectRotation(int width, int height)
         {
             float rot = 0;
-            const int no_of_buckets = 10;
-            int[] bucket_hits = new int[no_of_buckets];
-            float[] bucket_ang = new float[no_of_buckets];
-            int max_hits = 0;
-            int bucket_winner = 0;
+            int hits = 0;
 
-            for (int i = 0; i < horizontal_lines.Count; i++)
+            for (int i = 0; i < vertical_lines.Count; i++)
             {
-                calibration_line line = (calibration_line)horizontal_lines[i];
-                if (line.points.Count > 5)
-                {
-                    calibration_point pt_start = (calibration_point)line.points[0];
-                    calibration_point pt_end = (calibration_point)line.points[line.points.Count - 1];
-                    float dx = pt_end.x - pt_start.x;
-                    float dy = pt_end.y - pt_start.y;
-                    float length = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                    float ang = (float)Math.Asin(dy / length);
-                    int b = (no_of_buckets / 2) + (int)(ang * (no_of_buckets / 2) / (float)(Math.PI / 2));
-                    if (b >= no_of_buckets) b = no_of_buckets - 1;
-                    if (b < 0) b = 0;
-                    bucket_ang[b] += ang;
-                    bucket_hits[b]++;
-                    if (bucket_hits[b] > max_hits)
-                    {
-                        max_hits = bucket_hits[b];
-                        bucket_winner = b;
-                    }
-                }
+                calibration_line line = (calibration_line)vertical_lines[i];
+                calibration_point pt_start = (calibration_point)line.points[0];
+                calibration_point pt_end = (calibration_point)line.points[line.points.Count - 1];
+                float dx = pt_end.x - pt_start.x;
+                float dy = pt_end.y - pt_start.y;
+                float length = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                float ang = (float)Math.Asin(-dx / length);
+
+                rot += ang;
+                hits++;
             }
-            if (bucket_hits[bucket_winner] > 0)
-            {
-                if (bucket_winner > 0)
-                {
-                    if (bucket_winner - 1 > 0)
-                    {
-                        bucket_hits[bucket_winner] += bucket_hits[bucket_winner - 1];
-                        bucket_ang[bucket_winner] += bucket_ang[bucket_winner - 1];
-                    }
-                    if (bucket_winner + 1 < no_of_buckets)
-                    {
-                        bucket_hits[bucket_winner] += bucket_hits[bucket_winner + 1];
-                        bucket_ang[bucket_winner] += bucket_ang[bucket_winner + 1];
-                    }
-                }
-                rot = bucket_ang[bucket_winner] / (float)bucket_hits[bucket_winner];
-            }
+            if (hits > 0) rot /= horizontal_lines.Count;
             return (rot);
         }
+
 
         /// <summary>
         /// trace along a line
@@ -979,7 +964,7 @@ namespace sentience.calibration
             int radius_x2 = (int)(width * separation_factor * 10 / 4);
             if (radius_x < 1) radius_x = 1;
             int radius_y = (int)(height * separation_factor / 4);
-            int radius_y2 = (int)(height * separation_factor * 15 / 4);
+            int radius_y2 = (int)(height * separation_factor * 10 / 4);
             if (radius_y < 1) radius_y = 1;
             int dx = bx - tx;
             int dy = by - ty;
@@ -1000,9 +985,9 @@ namespace sentience.calibration
                 {
                     int x = tx + (dx * (y - ty) / dy);
 
-                    radius_x = (int)(width * separation_factor / 1);
+                    radius_x = (int)(width * separation_factor * 1.0f);
                     if (radius_x < 1) radius_x = 1;
-                    radius_y = (int)(height * (separation_factor / 2));
+                    radius_y = (int)(height * (separation_factor * 0.5f));
                     if (radius_y < 1) radius_y = 1;
 
                     int av_x = 0;
@@ -1036,7 +1021,7 @@ namespace sentience.calibration
                         int n = (y * width) + av_x;
                         int intensity = calibration_image[n];
                         int min_x = av_x;
-                        for (int xx = av_x - 2; xx <= av_x + 2; xx++)
+                        for (int xx = av_x - 3; xx <= av_x + 3; xx++)
                         {
                             if ((xx > -1) && (xx < width))
                             {
@@ -1061,9 +1046,9 @@ namespace sentience.calibration
                 {
                     int y = ty + (dy * (x - tx) / dx);
 
-                    radius_x = (int)(width * separation_factor / 2);
+                    radius_x = (int)(width * separation_factor * 0.5f);
                     if (radius_x < 1) radius_x = 1;
-                    radius_y = (int)(height * separation_factor / 1);
+                    radius_y = (int)(height * separation_factor * 1.0f);
                     if (radius_y < 1) radius_y = 1;
 
                     int av_x = 0;
@@ -1209,7 +1194,8 @@ namespace sentience.calibration
         private int pointsConnectedByIntensity(int width, int height,
                             int x1, int y1, int x2, int y2)
         {
-            int line_search = 3;
+            int line_search = 1;
+            int outer = line_search + 3;
 
             int x3 = x1;
             int y3 = y1;
@@ -1245,7 +1231,13 @@ namespace sentience.calibration
                         {
                             int n = (yy * width) + x;
                             int v = 255 - calibration_image[n];
-                            hits += (v*v);
+                            if (yy + outer < height)
+                                n = ((yy+outer) * width) + x;
+                            else
+                                n = ((yy-outer) * width) + x;
+                            v -= (255 - calibration_image[n]);
+                            if (v < 0) v = 0;
+                            hits += (v * v);
                             samples++;
                         }
                     }
@@ -1275,7 +1267,13 @@ namespace sentience.calibration
                         {
                             int n = (y * width) + xx;
                             int v = 255 - calibration_image[n];
-                            hits += (v*v);
+                            if (x + outer < width)
+                                n = (y * width) + xx + outer;
+                            else
+                                n = (y * width) + xx - outer;
+                            v -= (255 - calibration_image[n]);
+                            if (v < 0) v = 0;
+                            hits += (v * v);
                             samples++;
                         }
                     }
@@ -1315,9 +1313,7 @@ namespace sentience.calibration
                             x = ROI.tx + (i * (ROI.bx - ROI.tx) / vertical_magnitude.GetLength(0)) + ((ROI.bx - ROI.tx) / (vertical_magnitude.GetLength(0)*2));                         
                     }
             }
-
-            int min_connectedness = 14000;
-
+            
             int max_vertical_difference = (int)((height * separation_factor) / 1.0f);
             for (int j = 0; j < vertical_positions[0].Count; j++)
             {
@@ -1371,8 +1367,8 @@ namespace sentience.calibration
                 {
                     calibration_line temp_line = traceLine(width, height, x, y, max_x, y);
                     line.Add(temp_line);
-                    horizontal_lines.Add(line);
-                    //line.Draw(lines_image, width, height, 255, 0, 0);
+                    if (line.points.Count > 0)
+                        horizontal_lines.Add(line);
                 }
             }
 
@@ -1433,7 +1429,8 @@ namespace sentience.calibration
                         temp_line.Reverse();
                         line.Add(temp_line);
                         line.Reverse();
-                        horizontal_lines.Add(line);                        
+                        if (line.points.Count > 0)
+                            horizontal_lines.Add(line);                        
                     }
                 }
             }
@@ -1572,17 +1569,18 @@ namespace sentience.calibration
             // calculate the vertical gradient using the top and bottom horizontal spacings
             if ((top_spacing > 0) && (bottom_spacing > 0))
             {
+                if (bottom_spacing < top_spacing * 1.3f)
+                    bottom_spacing = top_spacing * 1.3f;
+
                 if (ROI != null)
                     vertical_gradient = (bottom_spacing - top_spacing) / (float)(ROI.by - ROI.ty);
                 else
                     vertical_gradient = (bottom_spacing - top_spacing) / (float)(height*3/4);
             }
 
-            int min_connectedness = 14000;
-            float vertical_additive = (width/(float)height) - 0.0f;
+            float vertical_additive = 0.5f;
 
-            //int additive = 0;
-            int max_horizontal_difference = (int)(width * separation_factor * 1.5f);
+            int max_horizontal_difference = (int)(width * separation_factor * 1.9f);
             for (int j = 0; j < horizontal_positions[0].Count; j++)
             {
                 int x = (int)horizontal_positions[0][j];
@@ -1611,16 +1609,12 @@ namespace sentience.calibration
                             // are these two connected?
                             if ((y < height) && (y2 < height))
                             {
-                                int additive = (int)(vertical_additive * vertical_gradient * y2);
-                                int grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * y2 / height));
+                                int grid_width = (int)(top_spacing + (vertical_additive * (bottom_spacing - top_spacing) * y2 / height));
                                 if (ROI != null)
-                                {
-                                    additive = (int)(1.5f * vertical_gradient * (y2 - ROI.ty));
-                                    grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * (y2 - ROI.ty) / (ROI.by - ROI.ty)));
-                                }
+                                    grid_width = (int)(top_spacing + (vertical_additive * (bottom_spacing - top_spacing) * (y2 - ROI.ty) / (ROI.by - ROI.ty)));
 
-                                if (!(((x > width * 55 / 100) && (x+additive>x2) && (x2 < x+additive+grid_width)) ||
-                                    ((x < width * 45 / 100) && (x - additive < x2) && (x2 > x - additive - grid_width))))
+                                if (!(((x > width * 55 / 100) && (x>x2) && (x2 < x+grid_width)) ||
+                                    ((x < width * 45 / 100) && (x < x2) && (x2 > x - grid_width))))
                                 {
                                     int connectedness = pointsConnectedByIntensity(width, height, x, y, x2, y2);
                                     if (connectedness > max_connectedness)
@@ -1651,8 +1645,8 @@ namespace sentience.calibration
                 {
                     calibration_line temp_line = traceLine(width, height, x, y, x, max_y);
                     line.Add(temp_line);
-                    vertical_lines.Add(line);
-                    //line.Draw(lines_image, width, height, 255, 0, 0);
+                    if (line.points.Count > 0)
+                        vertical_lines.Add(line);
                 }
             }
 
@@ -1687,16 +1681,12 @@ namespace sentience.calibration
                                 // are these two connected?
                                 if ((y < height) && (y2 < height))
                                 {
-                                    int grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * y2 / height)); 
-                                    int additive = (int)(vertical_additive * vertical_gradient * y2);
+                                    int grid_width = (int)(top_spacing + (vertical_additive * (bottom_spacing - top_spacing) * y2 / height)); 
                                     if (ROI != null)
-                                    {
-                                        additive = (int)(1.5f * vertical_gradient * (y2 - ROI.ty));
-                                        grid_width = (int)(top_spacing + (0.2f * (bottom_spacing - top_spacing) * (y2 - ROI.ty) / (ROI.by - ROI.ty)));
-                                    }
+                                        grid_width = (int)(top_spacing + (vertical_additive * (bottom_spacing - top_spacing) * (y2 - ROI.ty) / (ROI.by - ROI.ty)));
 
-                                    if (!(((x > width * 55 / 100) && (x + additive > x2) && (x2 < x + additive + grid_width)) ||
-                                        ((x < width * 45 / 100) && (x - additive < x2) && (x2 > x - additive - grid_width))))
+                                    if (!(((x > width * 55 / 100) && (x > x2) && (x2 < x + grid_width)) ||
+                                        ((x < width * 45 / 100) && (x < x2) && (x2 > x - grid_width))))
                                     {
                                         int connectedness = pointsConnectedByIntensity(width, height, x, y, x2, y2);
                                         if (connectedness > max_connectedness)
@@ -1728,7 +1718,8 @@ namespace sentience.calibration
                         temp_line.Reverse();
                         line.Add(temp_line);
                         line.Reverse();
-                        vertical_lines.Add(line);
+                        if (line.points.Count > 0)
+                            vertical_lines.Add(line);
                     }
                 }
             }
@@ -1818,14 +1809,12 @@ namespace sentience.calibration
                 }
             }
 
-            // remove first and last lines
-            /*
+            // remove first and last lines                       
             if (vertical_lines.Count > 2)
             {
                 vertical_lines.RemoveAt(vertical_lines.Count - 1);
                 vertical_lines.RemoveAt(0);
-            }
-            */
+            }                        
 
             // draw
             for (int i = 0; i < vertical_lines.Count; i++)
@@ -1854,8 +1843,8 @@ namespace sentience.calibration
                     FOV_vertical *= vertical_adjust_noise;
 
                     // center point of the grid within the image
-                    int centre_x = (int)grid[grid_x, grid_y].x;
-                    int centre_y = (int)grid[grid_x, grid_y].y;
+                    pattern_centre_x = (int)grid[grid_x, grid_y].x;
+                    pattern_centre_y = (int)grid[grid_x, grid_y].y;
 
                     // calculate the distance to the centre grid point on the ground plane
                     float ground_dist_to_point = camera_dist_to_pattern_centre_mm;
@@ -1875,7 +1864,7 @@ namespace sentience.calibration
                     float point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
 
                     // grid width at the centre point
-                    float x1 = centre_x + (point_pan * width / FOV_horizontal);
+                    float x1 = pattern_centre_x + (point_pan * width / FOV_horizontal);
 
                     // calculate the distance to the observed grid point on the ground plane
                     ground_dist_to_point = camera_dist_to_pattern_centre_mm + ((grid_y + 2) * calibration_pattern_spacing_mm);
@@ -1891,11 +1880,11 @@ namespace sentience.calibration
                     point_pan = (float)Math.Asin(calibration_pattern_spacing_mm / camera_to_point_dist);
 
                     // calc the position of the grid point within the image after rectification
-                    float x2 = centre_x + (point_pan * width / FOV_horizontal);
-                    float y2 = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
+                    float x2 = pattern_centre_x + (point_pan * width / FOV_horizontal);
+                    float y2 = pattern_centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
 
                     // calc the gradient
-                    float grad = (x2 - x1) / (float)(y2 - centre_y);
+                    float grad = (x2 - x1) / (float)(y2 - pattern_centre_y);
 
                     float baseline_fraction = baseline_offset / (float)(calibration_pattern_spacing_mm);
 
@@ -1928,10 +1917,10 @@ namespace sentience.calibration
                                 point_pan = (float)Math.Asin(ground_dist_to_point_x / camera_to_point_dist);
 
                                 // calc the position of the grid point within the image after rectification
-                                float w = ((x1 - centre_x) + ((grid[x, y].y - centre_y) * grad));
-                                float wbaseline = baseline_fraction * (grid[x, y].y - centre_y) * grad;
-                                float rectified_x = centre_x + (w * (x - grid_x)) - wbaseline;
-                                float rectified_y = centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
+                                float w = ((x1 - pattern_centre_x) + ((grid[x, y].y - pattern_centre_y) * grad));
+                                float wbaseline = baseline_fraction * (grid[x, y].y - pattern_centre_y) * grad;
+                                float rectified_x = pattern_centre_x + (w * (x - grid_x)) - wbaseline;
+                                float rectified_y = pattern_centre_y + ((point_tilt - centre_tilt) * height / FOV_vertical);
                                 grid[x, y].rectified_x = rectified_x;
                                 grid[x, y].rectified_y = rectified_y;
                                 cx += (grid[x, y].x - rectified_x);
@@ -2365,6 +2354,8 @@ namespace sentience.calibration
 
                 if (!alignMode)
                 {
+                    if (samples < min_samples) samples++;
+
                     int min_magnitude = 1;
                     clearBinaryImage(width, height);
                     detectHorizontalEdges(calibration_image, width, height, edges_horizontal, min_magnitude);
@@ -2430,7 +2421,7 @@ namespace sentience.calibration
                                         updateCalibrationMap(width, height, fitter, 1.0f, rotation);
 
                                         float RMS_error = GetRMSerror();
-                                        if (RMS_error < min_RMS_error)
+                                        if ((RMS_error < min_RMS_error) && (samples >= min_samples))
                                         {
                                             // update the graph
                                             curve_fit = new Byte[width * height * 3];
@@ -2450,8 +2441,8 @@ namespace sentience.calibration
                                                 }
                                             }
 
-                                            // update the rectified position of the centre spot
-                                            updateCentreSpotRectified();
+                                            // update the rectified position of the centre of the pattern
+                                            updatePatternCentreRectified();
 
                                             scale = temp_scale;
                                             vertical_adjust = vertical_adjust_noise;
@@ -2489,6 +2480,8 @@ namespace sentience.calibration
                         av_centreline_y_hits /= 2;
                     }
                 }
+                else samples = 0;
+
                 binary_image_index++;
                 if (binary_image_index >= no_of_images) binary_image_index = 0;
 
