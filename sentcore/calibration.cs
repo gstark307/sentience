@@ -76,6 +76,7 @@ namespace sentience.calibration
 
     public class calibration_line
     {
+        private float lin = -1;
         public ArrayList points = new ArrayList();
         public ArrayList intersections = new ArrayList();
 
@@ -103,6 +104,51 @@ namespace sentience.calibration
             for (int i = points.Count-1; i >= 0; i--)
                 new_points.Add((calibration_point)points[i]);
             points = new_points;
+        }
+
+        public float Linearity()
+        {
+            float linearity = 0;
+
+            if (lin == -1)
+            {
+
+                calibration_point p1 = (calibration_point)points[0];
+                calibration_point p2 = (calibration_point)points[points.Count - 1];
+                float dx = p2.x - p1.x;
+                float dy = p2.y - p1.y;
+
+                const int no_of_points = 15;
+                for (int j = 0; j < no_of_points; j++)
+                {
+                    calibration_point p3 = (calibration_point)points[(points.Count - 1) * j / no_of_points];
+                    float mid_x = p1.x + (dx * j / no_of_points);
+                    float mid_y = p1.y + (dy * j / no_of_points);
+
+                    if (Math.Abs(dy) > dx)
+                    {
+                        linearity += Math.Abs(mid_x - p3.x);
+                        for (int i = 1; i < points.Count; i++)
+                        {
+                            if (((calibration_point)points[i]).y < ((calibration_point)points[i - 1]).y)
+                                linearity = 99999;
+                        }
+                    }
+                    else
+                    {
+                        linearity += Math.Abs(mid_y - p3.y);
+                        for (int i = 1; i < points.Count; i++)
+                        {
+                            if (((calibration_point)points[i]).x < ((calibration_point)points[i - 1]).x)
+                                linearity = 99999;
+                        }
+                    }
+                }
+                linearity /= no_of_points;
+                lin = linearity;
+            }
+            else linearity = lin;
+            return (linearity);
         }
 
         public void AddIntersectionPoint(int x, int y)
@@ -235,6 +281,8 @@ namespace sentience.calibration
         int[,] horizontal_magnitude;
         int[,] vertical_magnitude;
         ArrayList horizontal_lines, vertical_lines;
+        ArrayList all_horizontal_lines;
+        ArrayList all_vertical_lines;
 
         #region "region of interest"
 
@@ -457,24 +505,37 @@ namespace sentience.calibration
         {
             if (corners == null)
             {
-                corners = new ArrayList[5];
+                corners = new ArrayList[30];
                 for (int i = 0; i < corners.Length; i++)
                     corners[i] = new ArrayList();
-            }
+            }            
             corners[corners_index].Clear();
 
-            for (int i = 0; i < horizontal_lines.Count; i++)
+            // clear intersection points
+            for (int i = 0; i < all_horizontal_lines.Count; i++)
             {
-                calibration_line line1 = (calibration_line)horizontal_lines[i];
+                calibration_line line = (calibration_line)all_horizontal_lines[i];
+                line.intersections.Clear();
+            }
+            for (int i = 0; i < all_vertical_lines.Count; i++)
+            {
+                calibration_line line = (calibration_line)all_vertical_lines[i];
+                line.intersections.Clear();
+            }
+
+
+            for (int i = 0; i < all_horizontal_lines.Count; i++)
+            {
+                calibration_line line1 = (calibration_line)all_horizontal_lines[i];
                 calibration_point prev_pt = null;
                 for (int j = 0; j < line1.points.Count; j++)
                 {
                     calibration_point pt = (calibration_point)line1.points[j];
                     if (j > 0)
                     {
-                        for (int i2 = 0; i2 < vertical_lines.Count; i2++)
+                        for (int i2 = 0; i2 < all_vertical_lines.Count; i2++)
                         {
-                            calibration_line line2 = (calibration_line)vertical_lines[i2];
+                            calibration_line line2 = (calibration_line)all_vertical_lines[i2];
                             calibration_point prev_pt2 = null;
                             for (int j2 = 0; j2 < line2.points.Count; j2++)
                             {
@@ -790,7 +851,7 @@ namespace sentience.calibration
             edges.Clear();
             for (int y = 1; y < height - 1; y++)
             {
-                float factor = y / (float)height * width * 0.6f;
+                float factor = y / (float)height * width * 0.8f;
                 int inhibit_radius = (int)((width + factor) * separation_factor);
                 temp_edges.Clear();
                 for (int x = search_radius; x < width - search_radius; x++)
@@ -908,7 +969,7 @@ namespace sentience.calibration
                                 if (e2.enabled)
                                 {
                                     //float factor = (e1.y - (height / 2)) * vertical_gradient;
-                                    float factor = e1.y / (float)height * width * 0.6f;
+                                    float factor = e1.y / (float)height * width * 0.8f;
                                     int inhibit_radius = (int)((height + factor) * separation_factor);
 
                                     int dy = (int)(e2.y - e1.y);
@@ -954,6 +1015,20 @@ namespace sentience.calibration
             float rot = 0;
             int hits = 0;
 
+            for (int i = 0; i < horizontal_lines.Count; i++)
+            {
+                calibration_line line = (calibration_line)horizontal_lines[i];
+                calibration_point pt_start = (calibration_point)line.points[0];
+                calibration_point pt_end = (calibration_point)line.points[line.points.Count - 1];
+                float dx = pt_end.x - pt_start.x;
+                float dy = pt_end.y - pt_start.y;
+                float length = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                float ang = (float)Math.Asin(dy / length);
+
+                rot += ang;
+                hits++;
+            }
+            /*
             for (int i = 0; i < vertical_lines.Count; i++)
             {
                 calibration_line line = (calibration_line)vertical_lines[i];
@@ -967,6 +1042,7 @@ namespace sentience.calibration
                 rot += ang;
                 hits++;
             }
+             */
             if (hits > 0) rot /= horizontal_lines.Count;
             return (rot);
         }
@@ -1314,6 +1390,208 @@ namespace sentience.calibration
         }
 
 
+        private void detectLinesSort(int width, int height, bool horizontal, ArrayList lines)
+        {
+            ArrayList victims = new ArrayList();
+
+            // sort the lines into order
+            for (int i = 0; i < lines.Count - 1; i++)
+            {
+                calibration_line line1 = (calibration_line)lines[i];
+                calibration_point pt1 = (calibration_point)line1.points[0];
+                for (int j = i + 1; j < lines.Count; j++)
+                {
+                    calibration_line line2 = (calibration_line)lines[j];
+                    calibration_point pt2 = (calibration_point)line2.points[0];
+                    calibration_point pt3 = (calibration_point)line2.points[line2.points.Count-1];
+                    if (((horizontal) && (pt2.y < pt1.y)) ||
+                        ((!horizontal) && (pt2.x < pt1.x)))
+                    {
+                        lines[i] = line2;
+                        lines[j] = line1;
+                        line1 = line2;
+                        pt1 = (calibration_point)line1.points[0];
+                    }
+                    if (Math.Abs(pt3.x - pt1.x) < 2)
+                        if (Math.Abs(pt3.y - pt1.y) < 2)
+                            victims.Add(line1);
+                }
+            }
+
+            if (ROI != null)
+            {
+                for (int i = 0; i < lines.Count - 1; i++)
+                {
+                    calibration_line line1 = (calibration_line)lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[0];
+                    calibration_point pt2 = (calibration_point)line1.points[line1.points.Count - 1];
+                    if (!horizontal)
+                    {
+                        if ((pt1.y > ROI.ty + ((ROI.by-ROI.ty)/5)) ||
+                            (pt2.y < ROI.by - ((ROI.by-ROI.ty)/5)))
+                            if (!victims.Contains(line1))
+                                victims.Add(line1);
+                    }
+                }
+            }
+
+            float max_linearity = 0.4f;
+            for (int i = 0; i < lines.Count - 1; i++)
+            {
+                calibration_line line1 = (calibration_line)lines[i];
+                int max_deviation = (int)(width * separation_factor * max_linearity);
+                if (horizontal) max_deviation = (int)(height * separation_factor * max_linearity);
+                if (line1.Linearity() > max_deviation)
+                    if (!victims.Contains(line1))
+                        victims.Add(line1);
+            }
+
+            // remove any stragglers
+            for (int i = 0; i < victims.Count; i++)
+                lines.Remove((calibration_line)victims[i]);
+
+            // remove lines which are too close together
+            int max_horizontal_difference = (int)(width * separation_factor * 0.5f);
+            int max_vertical_difference = (int)(height * separation_factor * 1.2f);
+            int max_vertical_difference2;
+            float vertical_adjust = height * separation_factor * 2.0f;
+            for (int j = 0; j < 2; j++)
+            {
+                for (int i = lines.Count - 1; i > 0; i--)
+                {
+                    calibration_line line1 = (calibration_line)lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[0];
+                    calibration_line line2 = (calibration_line)lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[0];
+                    max_vertical_difference2 = max_vertical_difference + (int)(pt1.y * vertical_adjust / height);
+                    if (((!horizontal) && (pt1.x - pt2.x < max_horizontal_difference)) ||
+                        ((horizontal) && (pt1.y - pt2.y < max_vertical_difference2)))
+                    {
+                        lines.RemoveAt(i);
+                    }
+                }
+                for (int i = lines.Count - 1; i > 0; i--)
+                {
+                    calibration_line line1 = (calibration_line)lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
+                    calibration_line line2 = (calibration_line)lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
+                    max_vertical_difference2 = max_vertical_difference + (int)(pt1.y * vertical_adjust / height);
+                    if (((!horizontal) && (pt1.x - pt2.x < max_horizontal_difference)) ||
+                        ((horizontal) && (pt1.y - pt2.y < max_vertical_difference2)))
+                    {
+                        lines.RemoveAt(i);
+                    }
+                }
+            }
+            for (int j = 0; j < 2; j++)
+            {
+                for (int i = 1; i < lines.Count; i++)
+                {
+                    calibration_line line1 = (calibration_line)lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[0];
+                    calibration_line line2 = (calibration_line)lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[0];
+                    max_vertical_difference2 = max_vertical_difference + (int)(pt1.y * vertical_adjust / height);
+                    if (((!horizontal) && (pt1.x - pt2.x < max_horizontal_difference)) ||
+                        ((horizontal) && (pt1.y - pt2.y < max_vertical_difference2)))
+                    {
+                        lines.RemoveAt(i);
+                    }
+                }
+                for (int i = 1; i < lines.Count; i++)
+                {
+                    calibration_line line1 = (calibration_line)lines[i];
+                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
+                    calibration_line line2 = (calibration_line)lines[i - 1];
+                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
+                    max_vertical_difference2 = max_vertical_difference + (int)(pt1.y * vertical_adjust / height);
+                    if (((!horizontal) && (pt1.x - pt2.x < max_horizontal_difference)) ||
+                        ((horizontal) && (pt1.y - pt2.y < max_vertical_difference2)))
+                    {
+                        lines.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
+        private void updateAllLines(int width, int height, bool horizontal, ArrayList lines)
+        {
+            ArrayList all_lines=null;
+            if (horizontal)
+            {
+                if (all_horizontal_lines == null) all_horizontal_lines = new ArrayList();
+                all_lines = all_horizontal_lines;
+            }
+            else
+            {
+                if (all_vertical_lines == null) all_vertical_lines = new ArrayList();
+                all_lines = all_vertical_lines;
+            }
+
+            int max_horizontal_variance = (int)(width * separation_factor * 0.8f);
+            int max_vertical_variance = (int)(height * separation_factor * 0.8f);
+            for (int i = 0; i < lines.Count; i++)
+            {
+                calibration_line line1 = (calibration_line)lines[i];
+                calibration_point pt1 = (calibration_point)line1.points[0];
+                bool found = false;
+                float linearity = line1.Linearity();
+                int insert_index = 0;
+
+                int j = 0;
+                while ((j < all_lines.Count) && (!found))
+                {
+                    calibration_line line2 = (calibration_line)all_lines[j];
+                    calibration_point pt2 = (calibration_point)line2.points[0];
+
+                    if (horizontal)
+                    {
+                        if (pt2.y < pt1.y) insert_index = j;
+
+                        float dy = pt2.y - pt1.y;
+                        if (Math.Abs(dy) < max_vertical_variance)
+                        {
+                            if (linearity < line2.Linearity())
+                            {
+                                all_lines[j] = line1;
+                                linearity = line2.Linearity();
+                                found = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (pt2.x < pt1.x) insert_index = j;
+
+                        float dx = pt2.x - pt1.x;
+                        if (Math.Abs(dx) < max_horizontal_variance)
+                        {
+                            if (linearity < line2.Linearity())
+                            {
+                                all_lines[j] = line1;
+                                linearity = line2.Linearity();
+                                found = true;
+                            }
+                        }
+                    }
+                    j++;
+                }
+
+                if (!found)
+                {
+                    if (all_lines.Count > 0)
+                        all_lines.Insert(insert_index, line1);
+                    else
+                        all_lines.Add(line1);
+                }
+
+            }
+
+            detectLinesSort(width, height, horizontal, all_lines);
+        }
+
+
         private void detectHorizontalLines(int width, int height)
         {
             horizontal_lines = new ArrayList();
@@ -1463,77 +1741,9 @@ namespace sentience.calibration
                 }
             }
 
-            // sort the lines into vertical order
-            for (int i = 0; i < horizontal_lines.Count-1; i++)
-            {
-                calibration_line line1 = (calibration_line)horizontal_lines[i];
-                calibration_point pt1 = (calibration_point)line1.points[0];
-                for (int j = i+1; j < horizontal_lines.Count; j++)
-                {
-                    calibration_line line2 = (calibration_line)horizontal_lines[j];
-                    calibration_point pt2 = (calibration_point)line2.points[0];
-                    if (pt2.y < pt1.y)
-                    {
-                        horizontal_lines[i] = line2;
-                        horizontal_lines[j] = line1;
-                        line1 = line2;
-                        pt1 = (calibration_point)line1.points[0];
-                    }
-                }
-            }
-
-            // remove lines which are too close together
-            max_vertical_difference = (int)(height * separation_factor * 1.8f);
-            for (int j = 0; j < 3; j++)
-            {
-                for (int i = horizontal_lines.Count - 1; i > 0; i--)
-                {
-                    calibration_line line1 = (calibration_line)horizontal_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[0];
-                    calibration_line line2 = (calibration_line)horizontal_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[0];
-                    if (pt1.y - pt2.y < max_vertical_difference)
-                    {
-                        horizontal_lines.RemoveAt(i);
-                    }
-                }
-                for (int i = horizontal_lines.Count - 1; i > 0; i--)
-                {
-                    calibration_line line1 = (calibration_line)horizontal_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count-1];
-                    calibration_line line2 = (calibration_line)horizontal_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
-                    if (pt1.y - pt2.y < max_vertical_difference)
-                    {
-                        horizontal_lines.RemoveAt(i);
-                    }
-                }
-            }
-            for (int j = 0; j < 3; j++)
-            {
-                for (int i = 1; i < horizontal_lines.Count; i++)
-                {
-                    calibration_line line1 = (calibration_line)horizontal_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[0];
-                    calibration_line line2 = (calibration_line)horizontal_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[0];
-                    if (pt1.y - pt2.y < max_vertical_difference)
-                    {
-                        horizontal_lines.RemoveAt(i);
-                    }
-                }
-                for (int i = 1; i < horizontal_lines.Count; i++)
-                {
-                    calibration_line line1 = (calibration_line)horizontal_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
-                    calibration_line line2 = (calibration_line)horizontal_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
-                    if (pt1.y - pt2.y < max_vertical_difference)
-                    {
-                        horizontal_lines.RemoveAt(i);
-                    }
-                }
-            }
+            // sort and prune
+            detectLinesSort(width, height, true, horizontal_lines);
+            //detectHorizontalLinesCleanup(height, horizontal_lines);
 
             // remove first and last lines
             if (horizontal_lines.Count > 2)
@@ -1542,10 +1752,12 @@ namespace sentience.calibration
                 horizontal_lines.RemoveAt(0);
             }
 
+            updateAllLines(width, height, true, horizontal_lines);
+
             // draw
-            for (int i = 0; i < horizontal_lines.Count; i++)
+            for (int i = 0; i < all_horizontal_lines.Count; i++)
             {
-                calibration_line line = (calibration_line)horizontal_lines[i];
+                calibration_line line = (calibration_line)all_horizontal_lines[i];
                 line.Draw(lines_image, width, height, 255, 0, 0);
             }
         }
@@ -1641,7 +1853,7 @@ namespace sentience.calibration
                                 if (ROI != null)
                                     grid_width = (int)(top_spacing + (vertical_additive * (bottom_spacing - top_spacing) * (y2 - ROI.ty) / (ROI.by - ROI.ty)));
 
-                                if (!(((x > width * 55 / 100) && (x>x2) && (x2 < x+grid_width)) ||
+                                if (!(((x > width * 55 / 100) && (x>x2) && (x2 < x + grid_width)) ||
                                     ((x < width * 45 / 100) && (x < x2) && (x2 > x - grid_width))))
                                 {
                                     int connectedness = pointsConnectedByIntensity(width, height, x, y, x2, y2);
@@ -1752,102 +1964,22 @@ namespace sentience.calibration
                 }
             }
 
-            // sort the lines into vertical order
-            for (int i = 0; i < vertical_lines.Count - 1; i++)
-            {
-                calibration_line line1 = (calibration_line)vertical_lines[i];
-                calibration_point pt1 = (calibration_point)line1.points[0];
-                for (int j = i + 1; j < vertical_lines.Count; j++)
-                {
-                    calibration_line line2 = (calibration_line)vertical_lines[j];
-                    calibration_point pt2 = (calibration_point)line2.points[0];
-                    if (pt2.y < pt1.y)
-                    {
-                        vertical_lines[i] = line2;
-                        vertical_lines[j] = line1;
-                        line1 = line2;
-                        pt1 = (calibration_point)line1.points[0];
-                    }
-                }
-            }
-
-            // remove lines which are too close together
-            max_horizontal_difference = (int)(width * separation_factor * 0.8f);
-            for (int j = 0; j < 2; j++)
-            {
-                for (int i = vertical_lines.Count - 1; i > 0; i--)
-                {
-                    calibration_line line1 = (calibration_line)vertical_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[0];
-                    calibration_line line2 = (calibration_line)vertical_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[0];
-                    if (pt1.x - pt2.x < max_horizontal_difference)
-                    {
-                        vertical_lines.RemoveAt(i);
-                    }
-                }
-                for (int i = vertical_lines.Count - 1; i > 0; i--)
-                {
-                    calibration_line line1 = (calibration_line)vertical_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
-                    calibration_line line2 = (calibration_line)vertical_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
-                    if (pt1.x - pt2.x < max_horizontal_difference)
-                    {
-                        vertical_lines.RemoveAt(i);
-                    }
-                }
-            }
-            for (int j = 0; j < 2; j++)
-            {
-                for (int i = 1; i < vertical_lines.Count; i++)
-                {
-                    calibration_line line1 = (calibration_line)vertical_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[0];
-                    calibration_line line2 = (calibration_line)vertical_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[0];
-                    if (pt1.x - pt2.x < max_horizontal_difference)
-                    {
-                        vertical_lines.RemoveAt(i);
-                    }
-                }
-                for (int i = 1; i < vertical_lines.Count; i++)
-                {
-                    calibration_line line1 = (calibration_line)vertical_lines[i];
-                    calibration_point pt1 = (calibration_point)line1.points[line1.points.Count - 1];
-                    calibration_line line2 = (calibration_line)vertical_lines[i - 1];
-                    calibration_point pt2 = (calibration_point)line2.points[line2.points.Count - 1];
-                    if (pt1.x - pt2.x < max_horizontal_difference)
-                    {
-                        vertical_lines.RemoveAt(i);
-                    }
-                }
-            }
-
-            for (int i = vertical_lines.Count - 1; i >= 0; i--)
-            {
-                calibration_line line1 = (calibration_line)vertical_lines[i];
-                calibration_point pt1 = (calibration_point)line1.points[0];
-                calibration_point pt2 = (calibration_point)line1.points[line1.points.Count-1];
-                int additive = (int)(1.8f * vertical_gradient * (pt2.y - pt1.y));
-                if (((pt1.x > width * 55 / 100) && (pt1.x+additive>pt2.x)) ||
-                    ((pt1.x < width * 45 / 100) && (pt1.x-additive<pt2.x)))
-                {
-                    vertical_lines.RemoveAt(i);
-                }
-            }
+            // sort and prune
+            detectLinesSort(width, height, false, vertical_lines);
 
             // remove first and last lines                       
             if (vertical_lines.Count > 2)
             {
                 vertical_lines.RemoveAt(vertical_lines.Count - 1);
                 vertical_lines.RemoveAt(0);
-            }                        
+            }
+
+            updateAllLines(width, height, false, vertical_lines);
 
             // draw
-            for (int i = 0; i < vertical_lines.Count; i++)
+            for (int i = 0; i < all_vertical_lines.Count; i++)
             {
-                calibration_line line = (calibration_line)vertical_lines[i];
+                calibration_line line = (calibration_line)all_vertical_lines[i];
                 line.Draw(lines_image, width, height, 255, 0, 0);
             }
         }
@@ -1865,7 +1997,8 @@ namespace sentience.calibration
                 {
                     // field of vision in radians
                     float FOV_horizontal = camera_FOV_degrees * (float)Math.PI / 180.0f;
-                    float FOV_vertical = FOV_horizontal * height / (float)width;
+                    float FOV_vertical = FOV_horizontal *height / (float)width;
+                    //FOV_vertical /= 1.3f;
 
                     // add some small amount of random noise to get the best fit
                     FOV_vertical *= vertical_adjust_noise;
@@ -1884,8 +2017,6 @@ namespace sentience.calibration
 
                     // tilt angle at the centre point
                     float centre_tilt = (float)Math.Asin(camera_height_mm / camera_to_point_dist);
-
-
 
 
                     // angle subtended by one grid spacing at the centre
@@ -2047,7 +2178,7 @@ namespace sentience.calibration
         {
             if (fitter != null)
             {
-                const int fraction = 35;
+                const int fraction = 30;
                 int x;
                 int prev_x_start = 0;
                 int x_start = -1;
@@ -2437,17 +2568,18 @@ namespace sentience.calibration
                                 // itterate a number of time trying different possible matches
                                 // the number of itterations is adjusted depending upon the size of the error
                                 int max_v = 1;
-                                if (min_RMS_error > 5) max_v = 5;
-                                if (min_RMS_error > 10) max_v = 10;
+                                //if (min_RMS_error > 5) max_v = 5;
+                                //if (min_RMS_error > 10) max_v = 10;
                                 for (int v = 0; v < max_v; v++)
                                 {
                                     // add some small amount of noise to the vertical to try slighly different fits
                                     // this allows the best fit to be discovered (ableit in a crude way)
-                                    vertical_adjust_noise = 0.98f + ((rnd.Next(1000000) / 1000000.0f) * 0.04f);
+                                    vertical_adjust_noise = 1; // 0.98f + ((rnd.Next(1000000) / 1000000.0f) * 0.04f);
 
                                     // add small amount of noise to the polynomial coefficients
                                     for (int c = 1; c <= 2; c++)
-                                        fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.02f))));
+                                        //fitter.SetCoeff(c, C[c] * (1.0f + ((((rnd.Next(2000000) / 1000000.0f) - 1.0f) * 0.02f))));
+                                        fitter.SetCoeff(c, C[c]);
 
                                     // does this equation cause the image to be re-scaled?
                                     // if it does we can explicitly detect this and correct for it later
@@ -2494,14 +2626,13 @@ namespace sentience.calibration
                                 // rectify
                                 Rectify(img, width, height);
 
-                                //ShowRectifiedCorners(rectified_image, width, height);
+                                ShowRectifiedCorners(rectified_image, width, height);
                             }
                         }
 
                         corners_index++;
                         if (corners_index >= corners.Length) corners_index = 0;
                     }
-
 
                     av_centreline_x += closest_to_centreline_x;
                     av_centreline_x_hits++;
