@@ -1083,7 +1083,7 @@ namespace sentience.calibration
 
             if (dy > dx)
             {
-                step_size = radius_y2 * 2; // *3 / 4;
+                step_size = radius_y2 * 3 / 2; // *3 / 4;
                 if (step_size < 1) step_size = 1;
                 for (int y = ty; y < by; y += step_size * height / 240)
                 {
@@ -1091,7 +1091,7 @@ namespace sentience.calibration
 
                     radius_x = (int)(width * separation_factor * 1.0f);
                     if (radius_x < 1) radius_x = 1;
-                    radius_y = (int)(height * (separation_factor * 0.5f));
+                    radius_y = (int)(height * (separation_factor * 2.0f));
                     if (radius_y < 1) radius_y = 1;
 
                     int av_x = 0;
@@ -1144,7 +1144,7 @@ namespace sentience.calibration
             }
             else
             {
-                step_size = radius_x2 * 2; // *3 / 4;
+                step_size = radius_x2 * 3 / 2; // *3 / 4;
                 if (step_size < 1) step_size = 1;
                 for (int x = tx; x < bx; x += step_size * width / 320)
                 {
@@ -1435,7 +1435,7 @@ namespace sentience.calibration
                 }
             }
 
-            float max_linearity = 0.4f;
+            float max_linearity = 0.25f;
             for (int i = 0; i < lines.Count - 1; i++)
             {
                 calibration_line line1 = (calibration_line)lines[i];
@@ -1967,12 +1967,12 @@ namespace sentience.calibration
             // sort and prune
             detectLinesSort(width, height, false, vertical_lines);
 
-            // remove first and last lines                       
+            // remove first and last lines , because these are usually poorly detected                                  
             if (vertical_lines.Count > 2)
             {
                 vertical_lines.RemoveAt(vertical_lines.Count - 1);
                 vertical_lines.RemoveAt(0);
-            }
+            }            
 
             updateAllLines(width, height, false, vertical_lines);
 
