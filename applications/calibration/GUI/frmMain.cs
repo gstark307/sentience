@@ -47,7 +47,7 @@ namespace WindowsApplication1
 
         Random rnd = new Random();
 
-        float max_RMS_error = 8;
+        float max_RMS_error = 5;
         bool alignMode = true;
         String prev_state = "";
 
@@ -752,9 +752,7 @@ namespace WindowsApplication1
         {            
             initCamera();
             if (global_variables.selectedCameraName != "")
-            {
-                startCameraToolStripMenuItem.Enabled = false;
-
+            {                
                 global_variables.camera_initialised = false;
 
                 // grab the required camera WDM device name from the text box
@@ -796,9 +794,10 @@ namespace WindowsApplication1
                     cmdStart.Enabled = true;
 
                     // and lo, the cameras were initialised...
+                    startCameraToolStripMenuItem.Enabled = false;
                     global_variables.camera_initialised = true;
                 }
-                else MessageBox.Show("Cannot find a WDM driver for the device known as '" + cameraFilterName + "'.  Are the cameras plugged in ?", "Sentience Demo");
+                //else MessageBox.Show("Cannot find a WDM driver for the device known as '" + cameraFilterName + "'.  Are the cameras plugged in ?", "Sentience Demo");
 
                 Redraw();
             }
@@ -950,10 +949,7 @@ namespace WindowsApplication1
                 int x = (LocalMousePosition.X * picOutput1.Image.Width) / picOutput1.Width;
                 int y = (LocalMousePosition.Y * picOutput1.Image.Height) / picOutput1.Height;
 
-                if (y < picOutput1.Image.Height / 2)
-                    cam.leftcam.setRegionOfInterestPoint(x, y, true);
-                else
-                    cam.leftcam.setRegionOfInterestPoint(x, y, false);
+                cam.leftcam.setRegionOfInterestPoint(x, y);
             }
         }
 
@@ -964,10 +960,7 @@ namespace WindowsApplication1
                 int x = (LocalMousePosition.X * picOutput2.Image.Width) / picOutput2.Width;
                 int y = (LocalMousePosition.Y * picOutput2.Image.Height) / picOutput2.Height;
 
-                if (y < picOutput2.Image.Height / 2)
-                    cam.rightcam.setRegionOfInterestPoint(x, y, true);
-                else
-                    cam.rightcam.setRegionOfInterestPoint(x, y, false);
+                cam.rightcam.setRegionOfInterestPoint(x, y);
             }
         }
 
