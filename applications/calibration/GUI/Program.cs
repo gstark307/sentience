@@ -1,4 +1,5 @@
 /*
+    FishFood Camera Calibration Tool
     Copyright (C) 2007  Bob Mottram
     fuzzgun@gmail.com
 

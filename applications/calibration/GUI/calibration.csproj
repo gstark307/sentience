@@ -132,5 +132,8 @@
   <ItemGroup>
     <None Include="title.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENCE.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,5 +1,5 @@
 /*
-    Demonstration of detection of line features using the FAST corner detector
+    FishFood Camera Calibration Tool
     Copyright (C) 2007  Bob Mottram
     fuzzgun@gmail.com
 

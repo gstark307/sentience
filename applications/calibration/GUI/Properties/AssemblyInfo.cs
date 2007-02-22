@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Camera Calibration")]
-[assembly: AssemblyDescription("Calibrates a webcam")]
+[assembly: AssemblyTitle("FishFood Camera Calibration Tool")]
+[assembly: AssemblyDescription("Calibrates a monocular or stereo webcams")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sluggish Software")]
-[assembly: AssemblyProduct("Camera Calibration")]
+[assembly: AssemblyProduct("FishFood Camera Calibration Tool")]
 [assembly: AssemblyCopyright("Copyright © 2007")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

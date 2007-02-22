@@ -296,7 +296,7 @@ namespace sentience.calibration
 
         // position of the camera relative to the calibration pattern
         public float camera_height_mm = 785;
-        public float camera_dist_to_pattern_centre_mm = 450;
+        public float camera_dist_to_pattern_centre_mm = 500;
 
         calibration_edge[,] coverage;
 
