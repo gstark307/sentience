@@ -116,7 +116,7 @@ namespace sentience.core
 
         public void initRobotSentience()
         {
-            head.initSentience();
+            head.initDualCam();
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
             sensorModel.FOV_horizontal = 78 * (float)Math.PI / 180.0f;
@@ -140,7 +140,7 @@ namespace sentience.core
 
         public void initRobotSingleStereo()
         {
-            head.initSingleStereoCamera();
+            head.initSingleStereoCamera(false);
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
             sensorModel.FOV_horizontal = 78 * (float)Math.PI / 180.0f;
@@ -310,6 +310,9 @@ namespace sentience.core
             XmlElement nodeSensorPlatform = doc.CreateElement("SensorPlatform");
             nodeRobot.AppendChild(nodeSensorPlatform);
 
+            util.AddComment(doc, nodeSensorPlatform, "Number of stereo cameras");
+            util.AddTextElement(doc, nodeSensorPlatform, "NoOfStereoCameras", Convert.ToString(head.no_of_cameras));
+
             util.AddComment(doc, nodeSensorPlatform, "The type of head");
             util.AddTextElement(doc, nodeSensorPlatform, "HeadType", Convert.ToString(HeadType));
 
@@ -330,9 +333,6 @@ namespace sentience.core
 
             util.AddComment(doc, nodeSensorPlatform, "Orientation of the cameras");
             util.AddTextElement(doc, nodeSensorPlatform, "CameraOrientation", Convert.ToString(CameraOrientation));
-
-            util.AddComment(doc, nodeSensorPlatform, "Number of stereo cameras");
-            util.AddTextElement(doc, nodeSensorPlatform, "NoOfStereoCameras", Convert.ToString(head.no_of_cameras));
 
             for (int i = 0; i < head.no_of_cameras; i++)
             {
@@ -524,22 +524,19 @@ namespace sentience.core
                 init(no_of_cameras, no_of_stereo_features);
             }
 
-            /*
-            if (xnod.Name == "CameraBaselineMillimetres")
-            {
-                camera_baseline_mm = Convert.ToSingle(xnod.InnerText);
-            }
-
-            if (xnod.Name == "CameraFieldOfViewDegrees")
-            {
-                camera_FOV_degrees = Convert.ToSingle(xnod.InnerText);
-            }
-            */
-
             if (xnod.Name == "StereoCamera")
             {
                 int camIndex = 0;
                 head.calibration[cameraIndex].LoadFromXml(xnod.FirstChild, level + 1, ref camIndex);
+
+                head.image_width = head.calibration[cameraIndex].leftcam.image_width;
+                head.image_height = head.calibration[cameraIndex].leftcam.image_height;
+                sensorModel.image_width = head.image_width;
+                sensorModel.image_height = head.image_height;
+                sensorModel.FOV_horizontal = head.calibration[cameraIndex].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
+                sensorModel.FOV_vertical = sensorModel.FOV_horizontal * sensorModel.image_height / sensorModel.image_width;
+                sensorModel.baseline = head.baseline_mm;
+
                 cameraIndex++;
             }
 
@@ -549,7 +546,8 @@ namespace sentience.core
                  (xnod.Name == "Sentience") ||
                  (xnod.Name == "BodyDimensions") ||
                  (xnod.Name == "PropulsionSystem") ||
-                 (xnod.Name == "SensorPlatform")
+                 (xnod.Name == "SensorPlatform") ||
+                 (xnod.Name == "SensorModel")
                  ))
             {
                 xnodWorking = xnod.FirstChild;

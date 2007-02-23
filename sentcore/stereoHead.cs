@@ -61,7 +61,8 @@ namespace sentience.core
             }
 
             if (no_of_cameras == 4) initQuadCam();
-            if (no_of_cameras == 1) initSingleStereoCamera();
+            if (no_of_cameras == 2) initDualCam();
+            if (no_of_cameras == 1) initSingleStereoCamera(false);
         }
 
         public void initQuadCam()
@@ -109,7 +110,7 @@ namespace sentience.core
         }
 
 
-        public void initSentience()
+        public void initDualCam()
         {
             image_width = 320;
             image_height = 240;
@@ -129,12 +130,13 @@ namespace sentience.core
             }
         }
 
-        public void initSingleStereoCamera()
+        public void initSingleStereoCamera(bool rolled)
         {
             image_width = 320;
             image_height = 240;
 
-            float roll_angle = 45.0f / 180.0f * (float)Math.PI;
+            float roll_angle = 0;
+            if (rolled) roll_angle = 45.0f / 180.0f * (float)Math.PI;
             float pan_angle = 0.0f / 180.0f * (float)Math.PI;
 
             cameraPosition[0].roll = -roll_angle;

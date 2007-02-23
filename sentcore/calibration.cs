@@ -309,7 +309,7 @@ namespace sentience.calibration
         public float camera_FOV_degrees = 50;
 
         public String camera_name = "";
-        public int image_width, image_height;
+        public int image_width=320, image_height=240;
         public float min_RMS_error = 999999;
         public float polyfit_error = 999999;
 
