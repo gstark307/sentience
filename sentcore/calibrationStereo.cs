@@ -46,8 +46,6 @@ namespace sentience.calibration
         // camera baseline distance in millimetres
         public float baseline = 100.0f;
 
-        public Byte[] disparity_graph;
-
         /// <summary>
         /// set the position of the centre spot relative to the centre of the calibration pattern
         /// </summary>
@@ -56,72 +54,6 @@ namespace sentience.calibration
         {
             leftcam.centre_spot_position = position;
             rightcam.centre_spot_position = position;
-        }
-
-        private void stereoMatchCorners()
-        {
-            if ((leftcam.grid != null) && (rightcam.grid != null))
-            {
-                if ((leftcam.grid_centre_x > 0) && (rightcam.grid_centre_x > 0))
-                {
-                    polyfit disparities = new polyfit();
-                    disparities.SetDegree(2);
-
-                    for (int x_left = 1; x_left < leftcam.grid.GetLength(0)-1; x_left++)
-                    {
-                        int x_right = rightcam.grid_centre_x + (x_left - leftcam.grid_centre_x);
-                        if ((x_right > 0) && (x_right < rightcam.grid.GetLength(0)))
-                        {
-                            for (int y_left = 1; y_left < leftcam.grid.GetLength(1)-1; y_left++)
-                            {
-                                if (leftcam.grid[x_left, y_left] != null)
-                                {
-                                    int y_right = rightcam.grid_centre_y + (y_left - leftcam.grid_centre_y);
-                                    if ((y_right > 0) && (y_right < rightcam.grid.GetLength(1)))
-                                    {
-                                        if (rightcam.grid[x_right, y_right] != null)
-                                        {
-                                            // rectify the corner positions
-                                            int x_left_image = 0, y_left_image = 0;
-                                            if (leftcam.rectifyPoint((int)leftcam.grid[x_left, y_left].x, (int)leftcam.grid[x_left, y_left].y,
-                                                                     ref x_left_image, ref y_left_image))
-                                            {
-                                                int x_right_image = 0, y_right_image = 0;
-                                                if (rightcam.rectifyPoint((int)rightcam.grid[x_right, y_right].x, (int)rightcam.grid[x_right, y_right].y,
-                                                                          ref x_right_image, ref y_right_image))
-                                                {
-                                                    // update the disparity value
-                                                    int disparity = (x_right_image - x_left_image);
-                                                    if (disparity > 0)
-                                                    {
-                                                        // distance according to the disparity value
-                                                        float dist_disparity = disparity; // 1.0f / (float)disparity;
-
-                                                        // actual distance to the corner
-                                                        float dx = (x_left - leftcam.grid_centre_x) * leftcam.calibration_pattern_spacing_mm;
-                                                        float dy = leftcam.camera_dist_to_pattern_centre_mm + ((leftcam.grid_centre_y - y_left) * leftcam.calibration_pattern_spacing_mm);
-                                                        float dist_mm = (float)Math.Sqrt((dx * dx) + (dy * dy));
-
-                                                        disparities.AddPoint(dist_disparity, dist_mm);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    disparities.Solve();
-
-                    // create a graph
-                    disparity_graph = new Byte[leftcam.image_width * leftcam.image_height * 3];
-                    for (int i = 0; i < disparity_graph.Length; i++)
-                        disparity_graph[i] = (Byte)255;
-                    disparities.Show(disparity_graph, leftcam.image_width, leftcam.image_height);
-                }
-            }
         }
 
         public void update()
@@ -134,9 +66,6 @@ namespace sentience.calibration
             int calibration_threshold = 10;
             if ((leftcam.min_RMS_error < calibration_threshold) && (rightcam.min_RMS_error < calibration_threshold))
             {
-                // stereo match the corner features
-                stereoMatchCorners();
-
                 if ((leftcam.distance_to_pattern_centre > 0) &&
                     (leftcam.pattern_centre_rectified != null) &&
                     (rightcam.pattern_centre_rectified != null))

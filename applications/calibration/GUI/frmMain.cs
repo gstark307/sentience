@@ -75,7 +75,6 @@ namespace WindowsApplication1
         const int DISPLAY_CENTREALIGN = 3;
         const int DISPLAY_CURVE = 4;
         const int DISPLAY_RECTIFIED = 5;
-        const int DISPLAY_DISPARITY_GRAPH = 6;
         public int display_type = DISPLAY_CENTREALIGN;
 
         //current position of the mouse within an image
@@ -640,12 +639,6 @@ namespace WindowsApplication1
                                 {
                                     if (calib.rectified_image != null)
                                         updatebitmap(calib.rectified_image, (Bitmap)pic.Image);
-                                    break;
-                                }
-                            case DISPLAY_DISPARITY_GRAPH:
-                                {
-                                    if (cam.disparity_graph != null)
-                                        updatebitmap(cam.disparity_graph, (Bitmap)pic.Image);
                                     break;
                                 }
                         }
