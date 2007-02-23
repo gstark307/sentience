@@ -48,7 +48,10 @@ namespace robotDesigner
                 txtBodyWidth.Text = Convert.ToString(rob.BodyWidth_mm);
                 txtBodyLength.Text = Convert.ToString(rob.BodyLength_mm);
                 txtBodyHeight.Text = Convert.ToString(rob.BodyHeight_mm);
+                cmbBodyShape.SelectedIndex = Convert.ToInt32(rob.BodyShape);
                 cmbPropulsion.SelectedIndex = rob.propulsionType;
+                txtWheelBase.Text = Convert.ToString(rob.WheelBase_mm);
+                txtWheelBaseForward.Text = Convert.ToString(rob.WheelBaseForward_mm);
                 txtWheelDiameter.Text = Convert.ToString(rob.WheelDiameter_mm);
                 cmbWheelFeedback.SelectedIndex = rob.WheelPositionFeedbackType;
                 txtGearRatio.Text = Convert.ToString(rob.GearRatio);
@@ -58,7 +61,9 @@ namespace robotDesigner
                 cmbHeadType.SelectedIndex = rob.HeadType;
                 txtHeadSize.Text = Convert.ToString(rob.HeadSize_mm);
                 cmbHeadShape.SelectedIndex = rob.HeadShape;
-                txtHeadHeightFromGround.Text = Convert.ToString(rob.HeadHeight_mm);
+                txtHeadHeightFromGround.Text = Convert.ToString(rob.head.z);
+                txtHeadPositionLeft.Text = Convert.ToString(rob.head.x);
+                txtHeadPositionForward.Text = Convert.ToString(rob.head.y);
                 txtNoOfCameras.Text = Convert.ToString(rob.head.no_of_cameras);
                 cmbCameraOrientation.SelectedIndex = rob.CameraOrientation;
             }
@@ -66,22 +71,40 @@ namespace robotDesigner
 
         public void update()
         {
+            int no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);
+            robot new_rob = new robot(no_of_cameras, 100);
+
+            for (int i = 0; i < rob.head.no_of_cameras; i++)
+            {
+                new_rob.head.calibration[i] = rob.head.calibration[i];
+            }
+            rob = new_rob;
+
             rob.Name = txtName.Text;
             rob.TotalMass_kg = Convert.ToSingle(txtTotalMass.Text);
             rob.BodyWidth_mm = Convert.ToSingle(txtBodyWidth.Text);
             rob.BodyLength_mm = Convert.ToSingle(txtBodyLength.Text);
             rob.BodyHeight_mm = Convert.ToSingle(txtBodyHeight.Text);
+            rob.BodyShape = cmbBodyShape.SelectedIndex;
             rob.propulsionType = Convert.ToInt32(cmbPropulsion.SelectedIndex);
+            rob.WheelBase_mm = Convert.ToSingle(txtWheelBase.Text);
+            rob.WheelBaseForward_mm = Convert.ToSingle(txtWheelBaseForward.Text);
             rob.WheelDiameter_mm = Convert.ToSingle(txtWheelDiameter.Text);
             rob.WheelPositionFeedbackType = Convert.ToInt32(cmbWheelFeedback.SelectedIndex);
             rob.GearRatio = Convert.ToInt32(txtGearRatio.Text);
             rob.CountsPerRev = Convert.ToInt32(txtCountsPerRev.Text);
-            rob.head.calibration[0].baseline = Convert.ToSingle(txtCameraBaseline.Text);
-            rob.head.calibration[0].leftcam.camera_FOV_degrees = Convert.ToSingle(txtCameraFOV.Text);
+            for (int i = 0; i < rob.head.no_of_cameras; i++)
+            {
+                rob.head.calibration[i].baseline = Convert.ToSingle(txtCameraBaseline.Text);
+                rob.head.calibration[i].leftcam.camera_FOV_degrees = Convert.ToSingle(txtCameraFOV.Text);
+                rob.head.calibration[i].rightcam.camera_FOV_degrees = Convert.ToSingle(txtCameraFOV.Text);
+            }
             rob.HeadType = Convert.ToInt32(cmbHeadType.SelectedIndex);
             rob.HeadSize_mm = Convert.ToSingle(txtHeadSize.Text);
             rob.HeadShape = Convert.ToInt32(cmbHeadShape.SelectedIndex);
-            rob.HeadHeight_mm = Convert.ToSingle(txtHeadHeightFromGround.Text);
+            rob.head.x = Convert.ToSingle(txtHeadPositionLeft.Text);
+            rob.head.y = Convert.ToSingle(txtHeadPositionForward.Text);
+            rob.head.z = Convert.ToSingle(txtHeadHeightFromGround.Text);
             rob.head.no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);
             rob.CameraOrientation = Convert.ToInt32(cmbCameraOrientation.SelectedIndex);
         }

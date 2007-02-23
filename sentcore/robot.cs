@@ -42,12 +42,15 @@ namespace sentience.core
         public float BodyWidth_mm;
         public float BodyLength_mm;
         public float BodyHeight_mm;
+        public int BodyShape = 0;
 
         // the type of propulsion for the robot
         public int propulsionType = 0;
 
         // wheel settings
         public float WheelDiameter_mm;
+        public float WheelBase_mm;
+        public float WheelBaseForward_mm;
         public int WheelPositionFeedbackType = 0;
         public int GearRatio = 30;
         public int CountsPerRev = 4096;
@@ -55,7 +58,6 @@ namespace sentience.core
         public int HeadType = 0;
         public float HeadSize_mm;
         public int HeadShape = 0;
-        public float HeadHeight_mm = 1000;
         public int CameraOrientation = 0;
 
 
@@ -261,56 +263,81 @@ namespace sentience.core
             util.AddComment(doc, nodeRobot, "Name");
             util.AddTextElement(doc, nodeRobot, "Name", Name);
 
-            util.AddComment(doc, nodeRobot, "Total mass in kilogrammes");
-            util.AddTextElement(doc, nodeRobot, "TotalMassKilogrammes", Convert.ToString(TotalMass_kg));
+            util.AddComment(doc, nodeRobot, "Total mass in kilograms");
+            util.AddTextElement(doc, nodeRobot, "TotalMassKilograms", Convert.ToString(TotalMass_kg));
 
-            util.AddComment(doc, nodeRobot, "Width of the body in millimetres");
-            util.AddTextElement(doc, nodeRobot, "BodyWidthMillimetres", Convert.ToString(BodyWidth_mm));
+            XmlElement nodeBody = doc.CreateElement("BodyDimensions");
+            nodeRobot.AppendChild(nodeBody);
 
-            util.AddComment(doc, nodeRobot, "Length of the body in millimetres");
-            util.AddTextElement(doc, nodeRobot, "BodyLengthMillimetres", Convert.ToString(BodyLength_mm));
+            util.AddComment(doc, nodeBody, "Shape of the body");
+            util.AddComment(doc, nodeBody, "0 - square");
+            util.AddComment(doc, nodeBody, "1 - round");
+            util.AddTextElement(doc, nodeBody, "BodyShape", Convert.ToString(BodyShape));
 
-            util.AddComment(doc, nodeRobot, "Height of the body in millimetres");
-            util.AddTextElement(doc, nodeRobot, "BodyHeightMillimetres", Convert.ToString(BodyHeight_mm));
+            util.AddComment(doc, nodeBody, "Width of the body in millimetres");
+            util.AddTextElement(doc, nodeBody, "BodyWidthMillimetres", Convert.ToString(BodyWidth_mm));
 
-            util.AddComment(doc, nodeRobot, "Propulsion type");
-            util.AddTextElement(doc, nodeRobot, "PropulsionType", Convert.ToString(propulsionType));
+            util.AddComment(doc, nodeBody, "Length of the body in millimetres");
+            util.AddTextElement(doc, nodeBody, "BodyLengthMillimetres", Convert.ToString(BodyLength_mm));
 
-            util.AddComment(doc, nodeRobot, "Wheel diameter in millimetres");
-            util.AddTextElement(doc, nodeRobot, "WheelDiameterMillimetres", Convert.ToString(WheelDiameter_mm));
+            util.AddComment(doc, nodeBody, "Height of the body in millimetres");
+            util.AddTextElement(doc, nodeBody, "BodyHeightMillimetres", Convert.ToString(BodyHeight_mm));
 
-            util.AddComment(doc, nodeRobot, "Wheel Position feedback type");
-            util.AddTextElement(doc, nodeRobot, "WheelPositionFeedbackType", Convert.ToString(WheelPositionFeedbackType));
+            XmlElement nodePropulsion = doc.CreateElement("PropulsionSystem");
+            nodeRobot.AppendChild(nodePropulsion);
 
-            util.AddComment(doc, nodeRobot, "Motor gear ratio");
-            util.AddTextElement(doc, nodeRobot, "GearRatio", Convert.ToString(GearRatio));
+            util.AddComment(doc, nodePropulsion, "Propulsion type");
+            util.AddTextElement(doc, nodePropulsion, "PropulsionType", Convert.ToString(propulsionType));
 
-            util.AddComment(doc, nodeRobot, "Encoder counts per revolution");
-            util.AddTextElement(doc, nodeRobot, "CountsPerRev", Convert.ToString(CountsPerRev));
+            util.AddComment(doc, nodePropulsion, "Distance between the wheels in millimetres");
+            util.AddTextElement(doc, nodePropulsion, "WheelBaseMillimetres", Convert.ToString(WheelBase_mm));
 
-            util.AddComment(doc, nodeRobot, "The type of head");
-            util.AddTextElement(doc, nodeRobot, "HeadType", Convert.ToString(HeadType));
+            util.AddComment(doc, nodePropulsion, "How far from the front of the robot is the wheel base in millimetres");
+            util.AddTextElement(doc, nodePropulsion, "WheelBaseForwardMillimetres", Convert.ToString(WheelBaseForward_mm));
 
-            util.AddComment(doc, nodeRobot, "Size of the head in millimetres");
-            util.AddTextElement(doc, nodeRobot, "HeadSizeMillimetres", Convert.ToString(HeadSize_mm));
+            util.AddComment(doc, nodePropulsion, "Wheel diameter in millimetres");
+            util.AddTextElement(doc, nodePropulsion, "WheelDiameterMillimetres", Convert.ToString(WheelDiameter_mm));
 
-            util.AddComment(doc, nodeRobot, "Shape of the head");
-            util.AddTextElement(doc, nodeRobot, "HeadShape", Convert.ToString(HeadShape));
+            util.AddComment(doc, nodePropulsion, "Wheel Position feedback type");
+            util.AddTextElement(doc, nodePropulsion, "WheelPositionFeedbackType", Convert.ToString(WheelPositionFeedbackType));
 
-            util.AddComment(doc, nodeRobot, "Height of the head above the ground in millimetres");
-            util.AddTextElement(doc, nodeRobot, "HeadHeightMillimetres", Convert.ToString(HeadHeight_mm));
+            util.AddComment(doc, nodePropulsion, "Motor gear ratio");
+            util.AddTextElement(doc, nodePropulsion, "GearRatio", Convert.ToString(GearRatio));
 
-            util.AddComment(doc, nodeRobot, "Orientation of the cameras");
-            util.AddTextElement(doc, nodeRobot, "CameraOrientation", Convert.ToString(CameraOrientation));
+            util.AddComment(doc, nodePropulsion, "Encoder counts per revolution");
+            util.AddTextElement(doc, nodePropulsion, "CountsPerRev", Convert.ToString(CountsPerRev));
 
-            util.AddComment(doc, nodeRobot, "Number of stereo cameras");
-            util.AddTextElement(doc, nodeRobot, "NoOfStereoCameras", Convert.ToString(head.no_of_cameras));
+            XmlElement nodeSensorPlatform = doc.CreateElement("SensorPlatform");
+            nodeRobot.AppendChild(nodeSensorPlatform);
 
-            util.AddComment(doc, nodeRobot, "Stereo camera baseline in millimetres");
-            util.AddTextElement(doc, nodeRobot, "CameraBaselineMillimetres", Convert.ToString(head.calibration[0].baseline));
+            util.AddComment(doc, nodeSensorPlatform, "The type of head");
+            util.AddTextElement(doc, nodeSensorPlatform, "HeadType", Convert.ToString(HeadType));
 
-            util.AddComment(doc, nodeRobot, "Stereo camera field of view in degrees");
-            util.AddTextElement(doc, nodeRobot, "CameraFieldOfViewDegrees", Convert.ToString(head.calibration[0].leftcam.camera_FOV_degrees));
+            util.AddComment(doc, nodeSensorPlatform, "Size of the head in millimetres");
+            util.AddTextElement(doc, nodeSensorPlatform, "HeadSizeMillimetres", Convert.ToString(HeadSize_mm));
+
+            util.AddComment(doc, nodeSensorPlatform, "Shape of the head");
+            util.AddTextElement(doc, nodeSensorPlatform, "HeadShape", Convert.ToString(HeadShape));
+
+            util.AddComment(doc, nodeSensorPlatform, "Offset of the head from the leftmost side of the robot in millimetres");
+            util.AddTextElement(doc, nodeSensorPlatform, "HeadPositionLeftMillimetres", Convert.ToString(head.x));
+
+            util.AddComment(doc, nodeSensorPlatform, "Offset of the head from the front of the robot in millimetres");
+            util.AddTextElement(doc, nodeSensorPlatform, "HeadPositionForwardMillimetres", Convert.ToString(head.y));
+
+            util.AddComment(doc, nodeSensorPlatform, "Height of the head above the ground in millimetres");
+            util.AddTextElement(doc, nodeSensorPlatform, "HeadHeightMillimetres", Convert.ToString(head.z));
+
+            util.AddComment(doc, nodeSensorPlatform, "Orientation of the cameras");
+            util.AddTextElement(doc, nodeSensorPlatform, "CameraOrientation", Convert.ToString(CameraOrientation));
+
+            util.AddComment(doc, nodeSensorPlatform, "Number of stereo cameras");
+            util.AddTextElement(doc, nodeSensorPlatform, "NoOfStereoCameras", Convert.ToString(head.no_of_cameras));
+
+            for (int i = 0; i < head.no_of_cameras; i++)
+            {
+                nodeSensorPlatform.AppendChild(head.calibration[i].getXml(doc, nodeSensorPlatform, 2));
+            }
 
             return (nodeRobot);
         }
@@ -371,25 +398,9 @@ namespace sentience.core
                 XmlNode xnodDE = xd.DocumentElement;
 
                 // recursively walk the node tree
-                int no_of_cameras = 0;
-                int no_of_features_per_camera = 500;
-                float camera_baseline_mm = 0;
-                float camera_FOV_degrees = 0;
-                LoadFromXml(xnodDE, 0, ref no_of_cameras, ref camera_baseline_mm, ref camera_FOV_degrees);
+                int cameraIndex = 0;
+                LoadFromXml(xnodDE, 0, ref cameraIndex);
                 
-                // initialise with the loaded settings
-                if ((no_of_cameras > 0) && (camera_baseline_mm > 0) && (camera_FOV_degrees > 0))
-                {
-                    init(no_of_cameras, no_of_features_per_camera);
-
-                    for (int i = 0; i < no_of_cameras; i++)
-                    {
-                        head.calibration[i].baseline = camera_baseline_mm;
-                        head.calibration[i].leftcam.camera_FOV_degrees = camera_FOV_degrees;
-                        head.calibration[i].rightcam.camera_FOV_degrees = camera_FOV_degrees;
-                    }
-                }
-
                 // close the reader
                 xtr.Close();
                 loaded = true;
@@ -403,8 +414,7 @@ namespace sentience.core
         /// <param name="xnod"></param>
         /// <param name="level"></param>
         public void LoadFromXml(XmlNode xnod, int level,
-                                ref int no_of_cameras, ref float camera_baseline_mm,
-                                ref float camera_FOV_degrees)
+                                ref int cameraIndex)
         {
             XmlNode xnodWorking;
 
@@ -413,7 +423,7 @@ namespace sentience.core
                 Name = xnod.InnerText;
             }
 
-            if (xnod.Name == "TotalMassKilogrammes")
+            if (xnod.Name == "TotalMassKilograms")
             {
                 TotalMass_kg = Convert.ToSingle(xnod.InnerText);
             }
@@ -433,6 +443,11 @@ namespace sentience.core
                 BodyHeight_mm = Convert.ToSingle(xnod.InnerText);
             }
 
+            if (xnod.Name == "BodyShape")
+            {
+                BodyShape = Convert.ToInt32(xnod.InnerText);
+            }
+
             if (xnod.Name == "PropulsionType")
             {
                 propulsionType = Convert.ToInt32(xnod.InnerText);
@@ -441,6 +456,16 @@ namespace sentience.core
             if (xnod.Name == "WheelDiameterMillimetres")
             {
                 WheelDiameter_mm = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "WheelBaseMillimetres")
+            {
+                WheelBase_mm = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "WheelBaseForwardMillimetres")
+            {
+                WheelBaseForward_mm = Convert.ToSingle(xnod.InnerText);
             }
 
             if (xnod.Name == "WheelPositionFeedbackType")
@@ -473,9 +498,19 @@ namespace sentience.core
                 HeadShape = Convert.ToInt32(xnod.InnerText);
             }
 
+            if (xnod.Name == "HeadPositionLeftMillimetres")
+            {
+                head.x = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "HeadPositionForwardMillimetres")
+            {
+                head.y = Convert.ToSingle(xnod.InnerText);
+            }
+
             if (xnod.Name == "HeadHeightMillimetres")
             {
-                HeadHeight_mm = Convert.ToSingle(xnod.InnerText);
+                head.z = Convert.ToSingle(xnod.InnerText);
             }
 
             if (xnod.Name == "CameraOrientation")
@@ -485,9 +520,11 @@ namespace sentience.core
 
             if (xnod.Name == "NoOfStereoCameras")
             {
-                no_of_cameras = Convert.ToInt32(xnod.InnerText);
+                int no_of_cameras = Convert.ToInt32(xnod.InnerText);
+                init(no_of_cameras, no_of_stereo_features);
             }
 
+            /*
             if (xnod.Name == "CameraBaselineMillimetres")
             {
                 camera_baseline_mm = Convert.ToSingle(xnod.InnerText);
@@ -497,17 +534,31 @@ namespace sentience.core
             {
                 camera_FOV_degrees = Convert.ToSingle(xnod.InnerText);
             }
+            */
 
-                // call recursively on all children of the current node
-                if ((xnod.HasChildNodes) && ((xnod.Name == "Robot") || (xnod.Name == "Sentience")))
+            if (xnod.Name == "StereoCamera")
+            {
+                int camIndex = 0;
+                head.calibration[cameraIndex].LoadFromXml(xnod.FirstChild, level + 1, ref camIndex);
+                cameraIndex++;
+            }
+
+            // call recursively on all children of the current node
+            if ((xnod.HasChildNodes) && 
+                ((xnod.Name == "Robot") || 
+                 (xnod.Name == "Sentience") ||
+                 (xnod.Name == "BodyDimensions") ||
+                 (xnod.Name == "PropulsionSystem") ||
+                 (xnod.Name == "SensorPlatform")
+                 ))
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
                 {
-                    xnodWorking = xnod.FirstChild;
-                    while (xnodWorking != null)
-                    {
-                        LoadFromXml(xnodWorking, level + 1, ref no_of_cameras, ref camera_baseline_mm, ref camera_FOV_degrees);
-                        xnodWorking = xnodWorking.NextSibling;
-                    }
+                    LoadFromXml(xnodWorking, level + 1, ref cameraIndex);
+                    xnodWorking = xnodWorking.NextSibling;
                 }
+            }
         }
 
         #endregion

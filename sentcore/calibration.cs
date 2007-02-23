@@ -2954,6 +2954,7 @@ namespace sentience.calibration
                     if (i < degree) coefficients += ",";
                 }
             }
+            else coefficients = "0,0,0";
 
             XmlElement elem = doc.CreateElement("Camera");
             doc.DocumentElement.AppendChild(elem);

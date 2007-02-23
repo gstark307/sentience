@@ -32,7 +32,7 @@ namespace sentience.calibration
         public calibration leftcam, rightcam;
 
         // name of the WDM camera driver
-        public String DriverName = "";
+        public String DriverName = "Not specified";
         
         // position and orientation of this camera relative to the head
         public pos3D positionOrientation = new pos3D(0, 0, 0);
