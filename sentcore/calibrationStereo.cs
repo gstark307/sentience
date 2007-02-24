@@ -126,7 +126,7 @@ namespace sentience.calibration
             util.AddComment(doc, nodeStereoCamera, "Name of the WDM software driver for the cameras");
             util.AddTextElement(doc, nodeStereoCamera, "DriverName", DriverName);
 
-            util.AddComment(doc, nodeStereoCamera, "Position and orientation of the camera relative to the robots head or body");
+            util.AddComment(doc, nodeStereoCamera, "Position and orientation of the camera relative to the robots head");
             nodeStereoCamera.AppendChild(positionOrientation.getXml(doc));
 
             util.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");

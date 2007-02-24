@@ -38,6 +38,7 @@
     <Compile Include="calibration.cs" />
     <Compile Include="calibrationStereo.cs" />
     <Compile Include="FASTlines.cs" />
+    <Compile Include="motionModel.cs" />
     <Compile Include="polyfit.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
     <Compile Include="FAST.cs" />

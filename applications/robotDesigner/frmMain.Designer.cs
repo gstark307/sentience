@@ -31,6 +31,7 @@ namespace robotDesigner
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpBody = new System.Windows.Forms.GroupBox();
@@ -44,7 +45,7 @@ namespace robotDesigner
             this.label2 = new System.Windows.Forms.Label();
             this.txtBodyWidth = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.grpWheels = new System.Windows.Forms.GroupBox();
+            this.grpPropulsion = new System.Windows.Forms.GroupBox();
             this.txtWheelBaseForward = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
             this.txtWheelBase = new System.Windows.Forms.TextBox();
@@ -91,15 +92,21 @@ namespace robotDesigner
             this.tabGeometry = new System.Windows.Forms.TabPage();
             this.tabPerception = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.txtGridInterval = new System.Windows.Forms.TextBox();
+            this.label26 = new System.Windows.Forms.Label();
+            this.txtGridLevels = new System.Windows.Forms.TextBox();
+            this.label25 = new System.Windows.Forms.Label();
             this.txtGridDimension = new System.Windows.Forms.TextBox();
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.txtGridLevels = new System.Windows.Forms.TextBox();
-            this.label25 = new System.Windows.Forms.Label();
+            this.txtMotorNoLoadSpeedRPM = new System.Windows.Forms.TextBox();
+            this.label27 = new System.Windows.Forms.Label();
+            this.txtMotorTorque = new System.Windows.Forms.TextBox();
+            this.label30 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
-            this.grpWheels.SuspendLayout();
+            this.grpPropulsion.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.grpStereoCamera.SuspendLayout();
@@ -115,7 +122,7 @@ namespace robotDesigner
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(585, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(577, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -123,6 +130,7 @@ namespace robotDesigner
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
+            this.importCalibrationToolStripMenuItem,
             this.saveAsToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -132,21 +140,28 @@ namespace robotDesigner
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // importCalibrationToolStripMenuItem
+            // 
+            this.importCalibrationToolStripMenuItem.Name = "importCalibrationToolStripMenuItem";
+            this.importCalibrationToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.importCalibrationToolStripMenuItem.Text = "Import Calibration";
+            this.importCalibrationToolStripMenuItem.Click += new System.EventHandler(this.importCalibrationToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.saveAsToolStripMenuItem.Text = "Save As...";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -154,8 +169,6 @@ namespace robotDesigner
             // 
             this.grpBody.Controls.Add(this.label22);
             this.grpBody.Controls.Add(this.cmbBodyShape);
-            this.grpBody.Controls.Add(this.label4);
-            this.grpBody.Controls.Add(this.cmbPropulsion);
             this.grpBody.Controls.Add(this.txtBodyHeight);
             this.grpBody.Controls.Add(this.label3);
             this.grpBody.Controls.Add(this.txtBodyLength);
@@ -172,7 +185,7 @@ namespace robotDesigner
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(19, 134);
+            this.label22.Location = new System.Drawing.Point(19, 110);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(38, 13);
             this.label22.TabIndex = 25;
@@ -185,7 +198,7 @@ namespace robotDesigner
             "Square",
             "Round",
             "Other"});
-            this.cmbBodyShape.Location = new System.Drawing.Point(80, 131);
+            this.cmbBodyShape.Location = new System.Drawing.Point(80, 107);
             this.cmbBodyShape.Name = "cmbBodyShape";
             this.cmbBodyShape.Size = new System.Drawing.Size(93, 21);
             this.cmbBodyShape.TabIndex = 24;
@@ -194,11 +207,11 @@ namespace robotDesigner
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(19, 107);
+            this.label4.Location = new System.Drawing.Point(22, 26);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(56, 13);
+            this.label4.Size = new System.Drawing.Size(31, 13);
             this.label4.TabIndex = 7;
-            this.label4.Text = "Propulsion";
+            this.label4.Text = "Type";
             // 
             // cmbPropulsion
             // 
@@ -207,7 +220,7 @@ namespace robotDesigner
             "Wheels",
             "Tracks",
             "Legs"});
-            this.cmbPropulsion.Location = new System.Drawing.Point(80, 104);
+            this.cmbPropulsion.Location = new System.Drawing.Point(170, 19);
             this.cmbPropulsion.Name = "cmbPropulsion";
             this.cmbPropulsion.Size = new System.Drawing.Size(93, 21);
             this.cmbPropulsion.TabIndex = 6;
@@ -268,31 +281,37 @@ namespace robotDesigner
             this.label1.TabIndex = 0;
             this.label1.Text = "Width mm";
             // 
-            // grpWheels
+            // grpPropulsion
             // 
-            this.grpWheels.Controls.Add(this.txtWheelBaseForward);
-            this.grpWheels.Controls.Add(this.label21);
-            this.grpWheels.Controls.Add(this.txtWheelBase);
-            this.grpWheels.Controls.Add(this.label20);
-            this.grpWheels.Controls.Add(this.txtCountsPerRev);
-            this.grpWheels.Controls.Add(this.label9);
-            this.grpWheels.Controls.Add(this.label8);
-            this.grpWheels.Controls.Add(this.txtGearRatio);
-            this.grpWheels.Controls.Add(this.label7);
-            this.grpWheels.Controls.Add(this.label6);
-            this.grpWheels.Controls.Add(this.cmbWheelFeedback);
-            this.grpWheels.Controls.Add(this.txtWheelDiameter);
-            this.grpWheels.Controls.Add(this.label5);
-            this.grpWheels.Location = new System.Drawing.Point(254, 94);
-            this.grpWheels.Name = "grpWheels";
-            this.grpWheels.Size = new System.Drawing.Size(248, 190);
-            this.grpWheels.TabIndex = 2;
-            this.grpWheels.TabStop = false;
-            this.grpWheels.Text = "Wheels";
+            this.grpPropulsion.Controls.Add(this.txtMotorTorque);
+            this.grpPropulsion.Controls.Add(this.label30);
+            this.grpPropulsion.Controls.Add(this.label4);
+            this.grpPropulsion.Controls.Add(this.txtMotorNoLoadSpeedRPM);
+            this.grpPropulsion.Controls.Add(this.cmbPropulsion);
+            this.grpPropulsion.Controls.Add(this.label27);
+            this.grpPropulsion.Controls.Add(this.txtWheelBaseForward);
+            this.grpPropulsion.Controls.Add(this.label21);
+            this.grpPropulsion.Controls.Add(this.txtWheelBase);
+            this.grpPropulsion.Controls.Add(this.label20);
+            this.grpPropulsion.Controls.Add(this.txtCountsPerRev);
+            this.grpPropulsion.Controls.Add(this.label9);
+            this.grpPropulsion.Controls.Add(this.label8);
+            this.grpPropulsion.Controls.Add(this.txtGearRatio);
+            this.grpPropulsion.Controls.Add(this.label7);
+            this.grpPropulsion.Controls.Add(this.label6);
+            this.grpPropulsion.Controls.Add(this.cmbWheelFeedback);
+            this.grpPropulsion.Controls.Add(this.txtWheelDiameter);
+            this.grpPropulsion.Controls.Add(this.label5);
+            this.grpPropulsion.Location = new System.Drawing.Point(254, 94);
+            this.grpPropulsion.Name = "grpPropulsion";
+            this.grpPropulsion.Size = new System.Drawing.Size(269, 272);
+            this.grpPropulsion.TabIndex = 2;
+            this.grpPropulsion.TabStop = false;
+            this.grpPropulsion.Text = "Propulsion";
             // 
             // txtWheelBaseForward
             // 
-            this.txtWheelBaseForward.Location = new System.Drawing.Point(137, 159);
+            this.txtWheelBaseForward.Location = new System.Drawing.Point(170, 185);
             this.txtWheelBaseForward.Name = "txtWheelBaseForward";
             this.txtWheelBaseForward.Size = new System.Drawing.Size(59, 20);
             this.txtWheelBaseForward.TabIndex = 18;
@@ -302,7 +321,7 @@ namespace robotDesigner
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(13, 162);
+            this.label21.Location = new System.Drawing.Point(22, 191);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(121, 13);
             this.label21.TabIndex = 17;
@@ -310,7 +329,7 @@ namespace robotDesigner
             // 
             // txtWheelBase
             // 
-            this.txtWheelBase.Location = new System.Drawing.Point(137, 133);
+            this.txtWheelBase.Location = new System.Drawing.Point(170, 159);
             this.txtWheelBase.Name = "txtWheelBase";
             this.txtWheelBase.Size = new System.Drawing.Size(59, 20);
             this.txtWheelBase.TabIndex = 16;
@@ -320,7 +339,7 @@ namespace robotDesigner
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 136);
+            this.label20.Location = new System.Drawing.Point(22, 165);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(80, 13);
             this.label20.TabIndex = 15;
@@ -328,17 +347,17 @@ namespace robotDesigner
             // 
             // txtCountsPerRev
             // 
-            this.txtCountsPerRev.Location = new System.Drawing.Point(137, 107);
+            this.txtCountsPerRev.Location = new System.Drawing.Point(170, 133);
             this.txtCountsPerRev.Name = "txtCountsPerRev";
             this.txtCountsPerRev.Size = new System.Drawing.Size(59, 20);
             this.txtCountsPerRev.TabIndex = 14;
-            this.txtCountsPerRev.Text = "4096";
+            this.txtCountsPerRev.Text = "32";
             this.txtCountsPerRev.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(13, 110);
+            this.label9.Location = new System.Drawing.Point(22, 139);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(65, 13);
             this.label9.TabIndex = 13;
@@ -347,7 +366,7 @@ namespace robotDesigner
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(174, 84);
+            this.label8.Location = new System.Drawing.Point(207, 110);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(19, 13);
             this.label8.TabIndex = 12;
@@ -355,17 +374,17 @@ namespace robotDesigner
             // 
             // txtGearRatio
             // 
-            this.txtGearRatio.Location = new System.Drawing.Point(137, 81);
+            this.txtGearRatio.Location = new System.Drawing.Point(170, 107);
             this.txtGearRatio.Name = "txtGearRatio";
             this.txtGearRatio.Size = new System.Drawing.Size(31, 20);
             this.txtGearRatio.TabIndex = 11;
-            this.txtGearRatio.Text = "50";
+            this.txtGearRatio.Text = "54";
             this.txtGearRatio.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(13, 84);
+            this.label7.Location = new System.Drawing.Point(22, 113);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(58, 13);
             this.label7.TabIndex = 10;
@@ -374,7 +393,7 @@ namespace robotDesigner
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(13, 54);
+            this.label6.Location = new System.Drawing.Point(22, 83);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(55, 13);
             this.label6.TabIndex = 9;
@@ -387,7 +406,7 @@ namespace robotDesigner
             "None",
             "Encoder",
             "Resolver"});
-            this.cmbWheelFeedback.Location = new System.Drawing.Point(137, 51);
+            this.cmbWheelFeedback.Location = new System.Drawing.Point(170, 77);
             this.cmbWheelFeedback.Name = "cmbWheelFeedback";
             this.cmbWheelFeedback.Size = new System.Drawing.Size(93, 21);
             this.cmbWheelFeedback.TabIndex = 8;
@@ -395,7 +414,7 @@ namespace robotDesigner
             // 
             // txtWheelDiameter
             // 
-            this.txtWheelDiameter.Location = new System.Drawing.Point(137, 22);
+            this.txtWheelDiameter.Location = new System.Drawing.Point(170, 48);
             this.txtWheelDiameter.Name = "txtWheelDiameter";
             this.txtWheelDiameter.Size = new System.Drawing.Size(59, 20);
             this.txtWheelDiameter.TabIndex = 3;
@@ -405,7 +424,7 @@ namespace robotDesigner
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(13, 25);
+            this.label5.Location = new System.Drawing.Point(22, 54);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(68, 13);
             this.label5.TabIndex = 2;
@@ -429,7 +448,7 @@ namespace robotDesigner
             this.groupBox1.Controls.Add(this.label13);
             this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.cmbHeadType);
-            this.groupBox1.Location = new System.Drawing.Point(254, 290);
+            this.groupBox1.Location = new System.Drawing.Point(254, 372);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(269, 254);
             this.groupBox1.TabIndex = 3;
@@ -703,7 +722,7 @@ namespace robotDesigner
             this.tabRobot.Location = new System.Drawing.Point(12, 37);
             this.tabRobot.Name = "tabRobot";
             this.tabRobot.SelectedIndex = 0;
-            this.tabRobot.Size = new System.Drawing.Size(555, 576);
+            this.tabRobot.Size = new System.Drawing.Size(555, 667);
             this.tabRobot.TabIndex = 6;
             // 
             // tabGeometry
@@ -711,12 +730,12 @@ namespace robotDesigner
             this.tabGeometry.Controls.Add(this.groupBox2);
             this.tabGeometry.Controls.Add(this.grpStereoCamera);
             this.tabGeometry.Controls.Add(this.grpBody);
-            this.tabGeometry.Controls.Add(this.grpWheels);
+            this.tabGeometry.Controls.Add(this.grpPropulsion);
             this.tabGeometry.Controls.Add(this.groupBox1);
             this.tabGeometry.Location = new System.Drawing.Point(4, 22);
             this.tabGeometry.Name = "tabGeometry";
             this.tabGeometry.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeometry.Size = new System.Drawing.Size(547, 550);
+            this.tabGeometry.Size = new System.Drawing.Size(547, 641);
             this.tabGeometry.TabIndex = 0;
             this.tabGeometry.Text = "Geometry";
             this.tabGeometry.UseVisualStyleBackColor = true;
@@ -734,6 +753,8 @@ namespace robotDesigner
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.txtGridInterval);
+            this.groupBox3.Controls.Add(this.label26);
             this.groupBox3.Controls.Add(this.txtGridLevels);
             this.groupBox3.Controls.Add(this.label25);
             this.groupBox3.Controls.Add(this.txtGridDimension);
@@ -742,10 +763,46 @@ namespace robotDesigner
             this.groupBox3.Controls.Add(this.label29);
             this.groupBox3.Location = new System.Drawing.Point(17, 19);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(217, 127);
+            this.groupBox3.Size = new System.Drawing.Size(217, 143);
             this.groupBox3.TabIndex = 2;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Local Occupancy Map";
+            // 
+            // txtGridInterval
+            // 
+            this.txtGridInterval.Location = new System.Drawing.Point(131, 104);
+            this.txtGridInterval.Name = "txtGridInterval";
+            this.txtGridInterval.Size = new System.Drawing.Size(59, 20);
+            this.txtGridInterval.TabIndex = 7;
+            this.txtGridInterval.Text = "200";
+            this.txtGridInterval.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label26
+            // 
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(17, 104);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(83, 13);
+            this.label26.TabIndex = 6;
+            this.label26.Text = "Grid Interval mm";
+            // 
+            // txtGridLevels
+            // 
+            this.txtGridLevels.Location = new System.Drawing.Point(131, 78);
+            this.txtGridLevels.Name = "txtGridLevels";
+            this.txtGridLevels.Size = new System.Drawing.Size(59, 20);
+            this.txtGridLevels.TabIndex = 5;
+            this.txtGridLevels.Text = "1";
+            this.txtGridLevels.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(17, 78);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(60, 13);
+            this.label25.TabIndex = 4;
+            this.label25.Text = "Grid Levels";
             // 
             // txtGridDimension
             // 
@@ -783,29 +840,47 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
-            // txtGridLevels
+            // txtMotorNoLoadSpeedRPM
             // 
-            this.txtGridLevels.Location = new System.Drawing.Point(131, 78);
-            this.txtGridLevels.Name = "txtGridLevels";
-            this.txtGridLevels.Size = new System.Drawing.Size(59, 20);
-            this.txtGridLevels.TabIndex = 5;
-            this.txtGridLevels.Text = "1";
-            this.txtGridLevels.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtMotorNoLoadSpeedRPM.Location = new System.Drawing.Point(170, 211);
+            this.txtMotorNoLoadSpeedRPM.Name = "txtMotorNoLoadSpeedRPM";
+            this.txtMotorNoLoadSpeedRPM.Size = new System.Drawing.Size(59, 20);
+            this.txtMotorNoLoadSpeedRPM.TabIndex = 20;
+            this.txtMotorNoLoadSpeedRPM.Text = "175";
+            this.txtMotorNoLoadSpeedRPM.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // label25
+            // label27
             // 
-            this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(17, 78);
-            this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(60, 13);
-            this.label25.TabIndex = 4;
-            this.label25.Text = "Grid Levels";
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(22, 217);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(131, 13);
+            this.label27.TabIndex = 19;
+            this.label27.Text = "Motor no load speed RPM";
+            // 
+            // txtMotorTorque
+            // 
+            this.txtMotorTorque.Location = new System.Drawing.Point(170, 237);
+            this.txtMotorTorque.Name = "txtMotorTorque";
+            this.txtMotorTorque.Size = new System.Drawing.Size(59, 20);
+            this.txtMotorTorque.TabIndex = 22;
+            this.txtMotorTorque.Text = "80";
+            this.txtMotorTorque.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label30
+            // 
+            this.label30.AutoSize = true;
+            this.label30.Location = new System.Drawing.Point(22, 243);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(133, 13);
+            this.label30.TabIndex = 21;
+            this.label30.Text = "Motor torque rating Kg/mm";
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(585, 625);
+            this.ClientSize = new System.Drawing.Size(577, 716);
             this.Controls.Add(this.tabRobot);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -816,8 +891,8 @@ namespace robotDesigner
             this.menuStrip1.PerformLayout();
             this.grpBody.ResumeLayout(false);
             this.grpBody.PerformLayout();
-            this.grpWheels.ResumeLayout(false);
-            this.grpWheels.PerformLayout();
+            this.grpPropulsion.ResumeLayout(false);
+            this.grpPropulsion.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
@@ -848,7 +923,7 @@ namespace robotDesigner
         private System.Windows.Forms.ComboBox cmbPropulsion;
         private System.Windows.Forms.TextBox txtBodyHeight;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.GroupBox grpWheels;
+        private System.Windows.Forms.GroupBox grpPropulsion;
         private System.Windows.Forms.TextBox txtCountsPerRev;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label8;
@@ -905,6 +980,13 @@ namespace robotDesigner
         private System.Windows.Forms.Label label29;
         private System.Windows.Forms.TextBox txtGridLevels;
         private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.ToolStripMenuItem importCalibrationToolStripMenuItem;
+        private System.Windows.Forms.TextBox txtGridInterval;
+        private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.TextBox txtMotorTorque;
+        private System.Windows.Forms.Label label30;
+        private System.Windows.Forms.TextBox txtMotorNoLoadSpeedRPM;
+        private System.Windows.Forms.Label label27;
     }
 }
 

@@ -31,6 +31,8 @@ namespace sentience.core
         public int no_of_stereo_cameras;   // number of stereo cameras on the head
         public stereoHead head;            // head geometry, stereo features and calibration data
 
+        public motionModel motion;         // describes how the robot moves, used to predict the next step
+
         // sensor models used for mapping and localisation
         public stereoModel sensorModelMapping;
         public stereoModel sensorModelLocalisation;
@@ -39,51 +41,77 @@ namespace sentience.core
         int correspondence_algorithm_type = 1;  //the type of stereo correspondance algorithm to be used
 
         public String Name = "My Robot";
-        public float TotalMass_kg;
+        public float TotalMass_kg;                // total mass of the robot
 
         // dimensions of the body
-        public float BodyWidth_mm;
-        public float BodyLength_mm;
-        public float BodyHeight_mm;
-        public int BodyShape = 0;
+        public float BodyWidth_mm;                // width of the body
+        public float BodyLength_mm;               // length of the body
+        public float BodyHeight_mm;               // height of the body from the ground
+        public int BodyShape = 0;                 // shape of the body of the robot
 
         // the type of propulsion for the robot
-        public int propulsionType = 0;
+        public int propulsionType = 0;            // the type of propulsion used
 
         // wheel settings
-        public float WheelDiameter_mm;
-        public float WheelBase_mm;
-        public float WheelBaseForward_mm;
-        public int WheelPositionFeedbackType = 0;
-        public int GearRatio = 30;
-        public int CountsPerRev = 4096;
+        public float WheelDiameter_mm;            // diameter of the wheel
+        public float WheelBase_mm;                // wheel base length
+        public float WheelBaseForward_mm;         // wheel base distance from the front of the robot
+        public int WheelPositionFeedbackType = 0; // the type of position feedback 
+        public int GearRatio = 30;                // motor gear ratio
+        public int CountsPerRev = 4096;           // encoder counts per rev
 
-        public int HeadType = 0;
-        public float HeadSize_mm;
-        public int HeadShape = 0;
-        public int CameraOrientation = 0;
+        // motion limits
+        public float MotorNoLoadSpeedRPM = 175;   // max motor speed with no load
+        public float MotorTorqueKgMm = 80;        // toque rating in Kg/mm
+
+        public int HeadType = 0;                  // type of head
+        public float HeadSize_mm;                 // size of the head
+        public int HeadShape = 0;                 // shape of the head
+        public int CameraOrientation = 0;         // the general configuration of camera positions
 
         // grid settings
-        public int LocalGridLevels = 1;
-        public int LocalGridDimension = 128;
-        public float LocalGridCellSize_mm = 32;
+        public int LocalGridLevels = 1;           // The number of scales used within the local grid
+        public int LocalGridDimension = 128;      // Cubic dimension of the local grid in cells
+        public float LocalGridCellSize_mm = 32;   // Size of each grid cell (voxel) in millimetres
+        public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
+        public occupancygridMultiResolution LocalGrid;  // grid containing the current local observations
+        public pos3D LocalGridPosition;           // the current position within the local grid
 
         // odometry
         public long leftWheelCounts, rightWheelCounts;
 
+        /// <summary>
+        /// initialise with the given number of stereo cameras
+        /// </summary>
+        /// <param name="no_of_stereo_cameras"></param>
         private void init(int no_of_stereo_cameras)
         {
             this.no_of_stereo_cameras = no_of_stereo_cameras;
 
+            // head and shoulders
             head = new stereoHead(no_of_stereo_cameras);
         
+            // sensor model used for mapping
             sensorModelMapping = new stereoModel();
             sensorModelMapping.no_of_stereo_features = 300;
             correspondence = new stereoCorrespondence(sensorModelMapping.no_of_stereo_features);
 
+            // sensor model used for localisation
             sensorModelLocalisation = new stereoModel();
             sensorModelLocalisation.mapping = false;
             sensorModelLocalisation.no_of_stereo_features = 100;
+
+            createLocalGrid();
+        }
+
+        /// <summary>
+        /// recreate the local grid
+        /// </summary>
+        private void createLocalGrid()
+        {
+            // create the local grid
+            LocalGrid = new occupancygridMultiResolution(LocalGridLevels, LocalGridDimension, (int)LocalGridCellSize_mm);
+            LocalGridPosition = new pos3D(0, 0, 0);
         }
 
         public robot()
@@ -335,6 +363,12 @@ namespace sentience.core
 
             util.AddComment(doc, nodePropulsion, "Encoder counts per revolution");
             util.AddTextElement(doc, nodePropulsion, "CountsPerRev", Convert.ToString(CountsPerRev));
+            
+            util.AddComment(doc, nodePropulsion, "Motor no load speed in RPM");
+            util.AddTextElement(doc, nodePropulsion, "MotorNoLoadSpeedRPM", Convert.ToString(MotorNoLoadSpeedRPM));
+
+            util.AddComment(doc, nodePropulsion, "Motor torque rating in Kg/mm");
+            util.AddTextElement(doc, nodePropulsion, "MotorTorqueKgMm", Convert.ToString(MotorTorqueKgMm));            
 
             XmlElement nodeSensorPlatform = doc.CreateElement("SensorPlatform");
             nodeRobot.AppendChild(nodeSensorPlatform);
@@ -385,6 +419,9 @@ namespace sentience.core
 
             util.AddComment(doc, nodeOccupancyGrid, "Size of each grid cell (voxel) in millimetres");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridCellSizeMillimetres", Convert.ToString(LocalGridCellSize_mm));
+
+            util.AddComment(doc, nodeOccupancyGrid, "The distance which the robot must travel before new data is inserted into the grid during mapping");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridIntervalMillimetres", Convert.ToString(LocalGridInterval_mm));
 
             return (nodeRobot);
         }
@@ -447,6 +484,8 @@ namespace sentience.core
                 // recursively walk the node tree
                 int cameraIndex = 0;
                 LoadFromXml(xnodDE, 0, ref cameraIndex);
+
+                createLocalGrid();
                 
                 // close the reader
                 xtr.Close();
@@ -530,6 +569,16 @@ namespace sentience.core
                 CountsPerRev = Convert.ToInt32(xnod.InnerText);
             }
 
+            if (xnod.Name == "MotorNoLoadSpeedRPM")
+            {
+                MotorNoLoadSpeedRPM = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "MotorTorqueKgMm")
+            {
+                MotorTorqueKgMm = Convert.ToSingle(xnod.InnerText);
+            }                                 
+
             if (xnod.Name == "HeadType")
             {
                 HeadType = Convert.ToInt32(xnod.InnerText);
@@ -585,6 +634,12 @@ namespace sentience.core
             {
                 LocalGridCellSize_mm = Convert.ToSingle(xnod.InnerText);
             }
+
+            if (xnod.Name == "LocalGridIntervalMillimetres")
+            {
+                LocalGridInterval_mm = Convert.ToSingle(xnod.InnerText);
+            }
+            
 
             if (xnod.Name == "StereoCamera")
             {

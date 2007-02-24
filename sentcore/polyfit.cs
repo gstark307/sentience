@@ -193,7 +193,7 @@ namespace sentience.core
             if (!Finished) Solve();
             Ex = Math.Abs(Exponent);
             O = GlobalO;
-            if (XYCount() <= O) O = XYCount() - 1;
+            //if (XYCount() <= O) O = XYCount() - 1;
             if (O < Ex) 
                 return(0); 
             else 

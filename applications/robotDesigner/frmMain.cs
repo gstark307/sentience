@@ -39,6 +39,19 @@ namespace robotDesigner
             LoadRobot("robotdesign.xml");
         }
 
+        /// <summary>
+        /// load camera calibration data
+        /// </summary>
+        /// <param name="filename"></param>
+        public void LoadCalibration(String filename)
+        {
+            rob.head.calibration[0].Load(filename);
+        }
+
+        /// <summary>
+        /// load a robot design file
+        /// </summary>
+        /// <param name="filename"></param>
         public void LoadRobot(String filename)
         {            
             if (rob.Load(filename))
@@ -56,6 +69,8 @@ namespace robotDesigner
                 cmbWheelFeedback.SelectedIndex = rob.WheelPositionFeedbackType;
                 txtGearRatio.Text = Convert.ToString(rob.GearRatio);
                 txtCountsPerRev.Text = Convert.ToString(rob.CountsPerRev);
+                txtMotorNoLoadSpeedRPM.Text = Convert.ToString(rob.MotorNoLoadSpeedRPM);
+                txtMotorTorque.Text = Convert.ToString(rob.MotorTorqueKgMm);
                 txtCameraBaseline.Text = Convert.ToString(rob.head.calibration[0].baseline);
                 txtCameraFOV.Text = Convert.ToString(rob.head.calibration[0].leftcam.camera_FOV_degrees);
                 cmbHeadType.SelectedIndex = rob.HeadType;
@@ -70,6 +85,7 @@ namespace robotDesigner
                 txtGridLevels.Text = Convert.ToString(rob.LocalGridLevels);
                 txtGridDimension.Text = Convert.ToString(rob.LocalGridDimension);
                 txtGridCellDimension.Text = Convert.ToString(rob.LocalGridCellSize_mm);
+                txtGridInterval.Text = Convert.ToString(rob.LocalGridInterval_mm);
             }
         }
 
@@ -97,6 +113,8 @@ namespace robotDesigner
             rob.WheelPositionFeedbackType = Convert.ToInt32(cmbWheelFeedback.SelectedIndex);
             rob.GearRatio = Convert.ToInt32(txtGearRatio.Text);
             rob.CountsPerRev = Convert.ToInt32(txtCountsPerRev.Text);
+            rob.MotorNoLoadSpeedRPM = Convert.ToSingle(txtMotorNoLoadSpeedRPM.Text);
+            rob.MotorTorqueKgMm = Convert.ToSingle(txtMotorTorque.Text);
             for (int i = 0; i < rob.head.no_of_cameras; i++)
             {
                 rob.head.calibration[i].baseline = Convert.ToSingle(txtCameraBaseline.Text);
@@ -114,7 +132,8 @@ namespace robotDesigner
 
             rob.LocalGridLevels = Convert.ToInt32(txtGridLevels.Text);
             rob.LocalGridDimension = Convert.ToInt32(txtGridDimension.Text);
-            rob.LocalGridCellSize_mm = Convert.ToInt32(txtGridCellDimension.Text);
+            rob.LocalGridCellSize_mm = Convert.ToSingle(txtGridCellDimension.Text);
+            rob.LocalGridInterval_mm = Convert.ToSingle(txtGridInterval.Text);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -125,9 +144,9 @@ namespace robotDesigner
         private void cmbPropulsion_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cmbPropulsion.SelectedIndex > 1)
-                grpWheels.Visible = false;
+                grpPropulsion.Visible = false;
             else
-                grpWheels.Visible = true;
+                grpPropulsion.Visible = true;
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -159,6 +178,18 @@ namespace robotDesigner
         {
             update();
             rob.Save("robotdesign.xml");
+        }
+
+        private void importCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.DefaultExt = "xml";
+            openFileDialog1.FileName = ".xml";
+            openFileDialog1.Filter = "Xml files|*.xml";
+            openFileDialog1.Title = "Load camera calibration data";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                LoadCalibration(openFileDialog1.FileName);
+            }
         }
     }
 }
