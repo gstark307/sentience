@@ -219,7 +219,7 @@ namespace sentience.core
                     float max_score = 0;
                     //TODO: get local odometry position within the grid
                     pos3D local_odometry_position = new pos3D(0, 0, 0); // view_map.odometry_position.subtract(pathMap.pathCentre());
-                    ArrayList survey_results = rob.sensorModel.surveyXYP(view_localisation, currentGrid, survey_diameter_mm, survey_diameter_mm,
+                    ArrayList survey_results = rob.sensorModelLocalisation.surveyXYP(view_localisation, currentGrid, survey_diameter_mm, survey_diameter_mm,
                                                                          no_of_trial_poses, ray_thickness, pruneSurvey, randomSeed,
                                                                          pruneThreshold, survey_angular_offset,
                                                                          local_odometry_position, momentum,
@@ -227,9 +227,9 @@ namespace sentience.core
                     float peak_x = 0;
                     float peak_y = 0;
                     float peak_pan = 0;
-                    rob.sensorModel.SurveyPeak(survey_results, ref peak_x, ref peak_y);
-                    float[] peak = rob.sensorModel.surveyPan(view_localisation, currentGrid, ray_thickness, peak_x, peak_y);
-                    peak_pan = rob.sensorModel.SurveyPeakPan(peak);
+                    rob.sensorModelLocalisation.SurveyPeak(survey_results, ref peak_x, ref peak_y);
+                    float[] peak = rob.sensorModelLocalisation.surveyPan(view_localisation, currentGrid, ray_thickness, peak_x, peak_y);
+                    peak_pan = rob.sensorModelLocalisation.SurveyPeakPan(peak);
 
                     /*
                     float dx = view_localisation.odometry_position.x - view_map.odometry_position.x;

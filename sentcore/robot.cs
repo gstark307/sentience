@@ -30,8 +30,11 @@ namespace sentience.core
     {        
         public int no_of_stereo_cameras;   // number of stereo cameras on the head
         public stereoHead head;            // head geometry, stereo features and calibration data
-        public int no_of_stereo_features;  // required number of stereo features per camera pair
-        public stereoModel sensorModel;
+
+        // sensor models used for mapping and localisation
+        public stereoModel sensorModelMapping;
+        public stereoModel sensorModelLocalisation;
+
         public stereoCorrespondence correspondence;
         int correspondence_algorithm_type = 1;  //the type of stereo correspondance algorithm to be used
 
@@ -64,14 +67,19 @@ namespace sentience.core
         // odometry
         public long leftWheelCounts, rightWheelCounts;
 
-        private void init(int no_of_stereo_cameras, int no_of_stereo_features)
+        private void init(int no_of_stereo_cameras)
         {
             this.no_of_stereo_cameras = no_of_stereo_cameras;
-            this.no_of_stereo_features = no_of_stereo_features;
 
-            correspondence = new stereoCorrespondence(no_of_stereo_features);
             head = new stereoHead(no_of_stereo_cameras);
-            sensorModel = new stereoModel();
+        
+            sensorModelMapping = new stereoModel();
+            sensorModelMapping.no_of_stereo_features = 300;
+            correspondence = new stereoCorrespondence(sensorModelMapping.no_of_stereo_features);
+
+            sensorModelLocalisation = new stereoModel();
+            sensorModelLocalisation.mapping = false;
+            sensorModelLocalisation.no_of_stereo_features = 100;
         }
 
         public robot()
@@ -79,10 +87,10 @@ namespace sentience.core
         {
         }
 
-        public robot(int no_of_stereo_cameras, int no_of_stereo_features)
+        public robot(int no_of_stereo_cameras)
             : base(0, 0, 0)
         {
-            init(no_of_stereo_cameras, no_of_stereo_features);
+            init(no_of_stereo_cameras);
             initRobotSentience();
         }
 
@@ -114,16 +122,31 @@ namespace sentience.core
             correspondence_algorithm_type = algorithm_type;
         }
 
+        /// <summary>
+        /// initialise a sensor model
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="FOV_degrees"></param>
+        /// <param name="baseline_mm"></param>
+        private void initSensorModel(stereoModel model,
+                                     int image_width, int image_height,
+                                     int FOV_degrees, int baseline_mm)
+        {
+            model.image_width = image_width;
+            model.image_height = image_height;
+            model.baseline = baseline_mm;
+            model.FOV_horizontal = FOV_degrees * (float)Math.PI / 180.0f;
+            model.FOV_vertical = model.FOV_horizontal * image_height / image_width;
+        }
+
         public void initRobotSentience()
         {
             head.initDualCam();
 
-            // using Creative Webcam NX Ultra - 78 degrees FOV
-            sensorModel.FOV_horizontal = 78 * (float)Math.PI / 180.0f;
-            sensorModel.FOV_vertical = 39 * (float)Math.PI / 180.0f;
-            sensorModel.image_width = head.image_width;
-            sensorModel.image_height = head.image_height;
-            sensorModel.baseline = head.baseline_mm;
+            initSensorModel(sensorModelMapping, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(sensorModelLocalisation, 78, head.image_width, head.image_height, head.baseline_mm);
         }
 
         public void initQuadCam()
@@ -131,11 +154,8 @@ namespace sentience.core
             head.initQuadCam();
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
-            sensorModel.FOV_horizontal = 78 * (float)Math.PI / 180.0f;
-            sensorModel.FOV_vertical = 39 * (float)Math.PI / 180.0f;
-            sensorModel.image_width = head.image_width;
-            sensorModel.image_height = head.image_height;
-            sensorModel.baseline = head.baseline_mm;
+            initSensorModel(sensorModelMapping, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(sensorModelLocalisation, 78, head.image_width, head.image_height, head.baseline_mm);
         }
 
         public void initRobotSingleStereo()
@@ -143,11 +163,8 @@ namespace sentience.core
             head.initSingleStereoCamera(false);
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
-            sensorModel.FOV_horizontal = 78 * (float)Math.PI / 180.0f;
-            sensorModel.FOV_vertical = 39 * (float)Math.PI / 180.0f;
-            sensorModel.image_width = head.image_width;
-            sensorModel.image_height = head.image_height;
-            sensorModel.baseline = head.baseline_mm;
+            initSensorModel(sensorModelMapping, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(sensorModelLocalisation, 78, head.image_width, head.image_height, head.baseline_mm);
         }
 
         /// <summary>
@@ -199,22 +216,30 @@ namespace sentience.core
             }
         }
 
-        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
+        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, bool mapping)
         {
-            return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
+            stereoModel sensorModel = sensorModelMapping;
+            if (!mapping) sensorModel = sensorModelLocalisation;
+            correspondence.setRequiredFeatures(sensorModel.no_of_stereo_features);
+
+            return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, sensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
-        public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
+        public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, bool mapping)
         {
-            // set the correspondence data for this camera
+            stereoModel sensorModel = sensorModelMapping;
+            if (!mapping) sensorModel = sensorModelLocalisation;
+            correspondence.setRequiredFeatures(sensorModel.no_of_stereo_features);
+
+            // set the calibration data for this camera
             correspondence.setCalibration(head.calibration[stereo_cam_index]);
 
-            return (correspondence.loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
+            return (correspondence.loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, sensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
         public void setMappingParameters(float sigma)
         {
-            sensorModel.sigma = sigma;
+            sensorModelMapping.sigma = sigma;
         }
 
         public void setStereoParameters(int max_disparity, int difference_threshold,
@@ -235,7 +260,7 @@ namespace sentience.core
         /// <returns></returns>
         public viewpoint getViewpoint()
         {
-            return (sensorModel.createViewpoint(head, (pos3D)this));
+            return (sensorModelMapping.createViewpoint(head, (pos3D)this));
         }
 
         /// <summary>
@@ -338,6 +363,12 @@ namespace sentience.core
             {
                 nodeSensorPlatform.AppendChild(head.calibration[i].getXml(doc, nodeSensorPlatform, 2));
             }
+
+            XmlElement nodeSensorModels = doc.CreateElement("SensorModels");
+            nodeRobot.AppendChild(nodeSensorModels);
+
+            nodeSensorModels.AppendChild(sensorModelMapping.getXml(doc, nodeSensorModels));
+            nodeSensorModels.AppendChild(sensorModelLocalisation.getXml(doc, nodeSensorModels));
 
             return (nodeRobot);
         }
@@ -521,7 +552,7 @@ namespace sentience.core
             if (xnod.Name == "NoOfStereoCameras")
             {
                 int no_of_cameras = Convert.ToInt32(xnod.InnerText);
-                init(no_of_cameras, no_of_stereo_features);
+                init(no_of_cameras);
             }
 
             if (xnod.Name == "StereoCamera")
@@ -531,13 +562,15 @@ namespace sentience.core
 
                 head.image_width = head.calibration[cameraIndex].leftcam.image_width;
                 head.image_height = head.calibration[cameraIndex].leftcam.image_height;
-                sensorModel.image_width = head.image_width;
-                sensorModel.image_height = head.image_height;
-                sensorModel.FOV_horizontal = head.calibration[cameraIndex].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
-                sensorModel.FOV_vertical = sensorModel.FOV_horizontal * sensorModel.image_height / sensorModel.image_width;
-                sensorModel.baseline = head.baseline_mm;
-
+                initSensorModel(sensorModelMapping, head.image_width, head.image_height, (int)head.calibration[cameraIndex].leftcam.camera_FOV_degrees, head.baseline_mm);
+                initSensorModel(sensorModelLocalisation, head.image_width, head.image_height, (int)head.calibration[cameraIndex].leftcam.camera_FOV_degrees, head.baseline_mm);
                 cameraIndex++;
+            }
+
+            if (xnod.Name == "SensorModels")
+            {
+                sensorModelMapping.LoadFromXml(xnod.FirstChild, level + 1);
+                sensorModelLocalisation.LoadFromXml(xnod.FirstChild, level + 1);
             }
 
             // call recursively on all children of the current node
@@ -546,8 +579,7 @@ namespace sentience.core
                  (xnod.Name == "Sentience") ||
                  (xnod.Name == "BodyDimensions") ||
                  (xnod.Name == "PropulsionSystem") ||
-                 (xnod.Name == "SensorPlatform") ||
-                 (xnod.Name == "SensorModel")
+                 (xnod.Name == "SensorPlatform")
                  ))
             {
                 xnodWorking = xnod.FirstChild;

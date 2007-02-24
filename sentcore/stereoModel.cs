@@ -19,6 +19,8 @@
 */
 
 using System;
+using System.IO;
+using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -28,7 +30,9 @@ namespace sentience.core
 {
     public class stereoModel
     {
-        Random rnd = new Random();        
+        Random rnd = new Random();
+
+        public bool mapping = true;
 
         // field of vision
         public float FOV_horizontal = (float)Math.PI / 2;
@@ -52,7 +56,16 @@ namespace sentience.core
         private float prev_max_trial_pose_score = 1;
         private float[] TrialPoseScore = new float[2000];
         private float[] prevTrialPoseScore = new float[2000];
-        private int survey_trial_poses = 0;
+
+        // number of trial poses
+        private int survey_trial_poses = 200;
+
+        // adjustment factor for peak probability density
+        private float peak_density_adjust = 0;
+
+        // number of features to use when updating or probing the grid
+        public int no_of_stereo_features = 100;
+
 
         // Yes, it's prime time...
         private int[] primes = {    
@@ -483,7 +496,7 @@ namespace sentience.core
                     int f2 = 0;
                     for (int f = 0; f < stereo_features.Length; f += 3)
                     {
-                        // get the parameters of te feature
+                        // get the parameters of the feature
                         float image_x = stereo_features[f];
                         float image_y = stereo_features[f + 1];
                         float disparity = stereo_features[f + 2];
@@ -1352,6 +1365,150 @@ namespace sentience.core
                 addGaussianLine(tx, ty, bx, by, 2, magnitude, grid_layer, grid_dimension, rayNumber);
             }
         }
+
+
+        #region "saving and loading"
+
+        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        {
+            if (mapping)
+                util.AddComment(doc, parent, "Sensor model used to update grid maps");            
+            else
+                util.AddComment(doc, parent, "Sensor model used to localise within grids");
+
+            String ModelName = "SensorModelMapping";
+            if (!mapping) ModelName = "SensorModelLocalisation";
+
+            XmlElement nodeSensorModel = doc.CreateElement(ModelName);
+            parent.AppendChild(nodeSensorModel);
+
+            if (!mapping)
+            {
+                util.AddComment(doc, nodeSensorModel, "Number of trial poses used when localising or registering");
+                util.AddTextElement(doc, nodeSensorModel, "NoOfTrialPoses", Convert.ToString(survey_trial_poses));
+
+                util.AddComment(doc, nodeSensorModel, "Number of features to use when performing grid based localisation");
+                util.AddTextElement(doc, nodeSensorModel, "NoOfFeatures", Convert.ToString(no_of_stereo_features));
+            }
+            else
+            {
+                util.AddComment(doc, nodeSensorModel, "Number of features to use when updating the grid");
+                util.AddTextElement(doc, nodeSensorModel, "NoOfFeatures", Convert.ToString(no_of_stereo_features));
+            }
+
+            util.AddComment(doc, nodeSensorModel, "Observation Error Standard Deviation");
+            util.AddTextElement(doc, nodeSensorModel, "ObservationErrorStandardDeviation", Convert.ToString(sigma));
+
+            util.AddComment(doc, nodeSensorModel, "Adjustment factor for probability peak density");
+            util.AddTextElement(doc, nodeSensorModel, "PeakDensityAdjust", Convert.ToString(peak_density_adjust));
+
+            
+            return (nodeSensorModel);
+        }
+
+        /// <summary>
+        /// return an Xml document containing camera calibration parameters
+        /// </summary>
+        /// <returns></returns>
+        private XmlDocument getXmlDocument()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
+            doc.AppendChild(commentnode);
+
+            XmlElement nodeSentience = doc.CreateElement("Sentience");
+            doc.AppendChild(nodeSentience);
+
+            nodeSentience.AppendChild(getXml(doc, nodeSentience));
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save camera calibration parameters as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void Save(String filename)
+        {
+            XmlDocument doc = getXmlDocument();
+            doc.Save(filename);
+        }
+
+        /// <summary>
+        /// load camera calibration parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public bool Load(String filename)
+        {
+            bool loaded = false;
+
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+                LoadFromXml(xnodDE, 0);
+
+                // close the reader
+                xtr.Close();
+                loaded = true;
+            }
+            return (loaded);
+        }
+
+        /// <summary>
+        /// parse an xml node to extract camera calibration parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(XmlNode xnod, int level)
+        {
+            XmlNode xnodWorking;
+
+            if (xnod.Name == "ObservationErrorStandardDeviation")
+            {
+                sigma = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "NoOfTrialPoses")
+            {
+                survey_trial_poses = Convert.ToInt32(xnod.InnerText);
+            }
+
+            if (xnod.Name == "PeakDensityAdjust")
+            {
+                peak_density_adjust = Convert.ToSingle(xnod.InnerText);
+            }
+
+            // call recursively on all children of the current node
+            if ((xnod.HasChildNodes) &&
+                ((xnod.Name == "SensorModelMapping") || (xnod.Name == "SensorModelLocalisation")))
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+        #endregion
 
     }
 }

@@ -31,7 +31,7 @@ namespace robotDesigner
 {
     public partial class frmMain : Form
     {
-        robot rob = new robot(1, 100);
+        robot rob = new robot(1);
 
         public frmMain()
         {
@@ -72,7 +72,7 @@ namespace robotDesigner
         public void update()
         {
             int no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);
-            robot new_rob = new robot(no_of_cameras, 100);
+            robot new_rob = new robot(no_of_cameras);
 
             for (int i = 0; i < rob.head.no_of_cameras; i++)
             {

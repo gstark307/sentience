@@ -30,9 +30,6 @@ namespace sentience.core
     {
         public String Name;
 
-        public int no_of_mapping_features = 500;
-        public int no_of_localisation_features = 50;
-
         public int noOfMappingTracks = 0;
         ArrayList mapping_tracks = new ArrayList();
 
@@ -44,8 +41,6 @@ namespace sentience.core
         public ArrayList features_stereoCamera0 = new ArrayList();
         public ArrayList image_filenames_stereoCamera1 = new ArrayList();
         public ArrayList features_stereoCamera1 = new ArrayList();
-
-        int calibration_offset_x = 0, calibration_offset_y = 0;
 
         public String errorMessage = "";
 
@@ -76,26 +71,23 @@ namespace sentience.core
 
 
         public void Add(robot rob, String path, String trackName, 
-                        int starting_index, String TrackName, bool sentienceTrack, int trackType,
+                        int starting_index, String TrackName, int trackType,
                         bool mappingOnly)
         {
             int starting_index1 = starting_index;
             int starting_index2 = starting_index;
 
-            if (sentienceTrack)
-            {
-                //starting_index1 += 42;
-                rob.correspondence.LoadCalibration(path + trackName + "\\calibration.txt", ref calibration_offset_x, ref calibration_offset_y);
-            }
+            //starting_index1 += 42;
+            //rob.correspondence.LoadCalibration(path + trackName + "\\calibration.txt", ref calibration_offset_x, ref calibration_offset_y);
 
             Name = trackName;
             robotPath p;
             if (!mappingOnly)
             {
-                p = getPath(rob, path, trackName, "L", starting_index1, TrackName, sentienceTrack, trackType);
+                p = getPath(rob, path, trackName, "L", starting_index1, TrackName, trackType);
                 Add(p, false);
             }
-            p = getPath(rob, path, trackName, "M", starting_index2, TrackName, sentienceTrack, trackType);
+            p = getPath(rob, path, trackName, "M", starting_index2, TrackName, trackType);
             Add(p, true);
         }
 
@@ -131,7 +123,7 @@ namespace sentience.core
             // position estimate from odometry, which positions the robot within the grid
             // as an initial estimate from which to search
             pos3D local_odometry_position = view_map.odometry_position.subtract(pathMap.pathCentre());
-            ArrayList survey_results = rob.sensorModel.surveyXYP(view_localisation, grid, survey_diameter_mm, survey_diameter_mm,
+            ArrayList survey_results = rob.sensorModelLocalisation.surveyXYP(view_localisation, grid, survey_diameter_mm, survey_diameter_mm,
                                                                  no_of_trial_poses, ray_thickness, pruneSurvey, randomSeed,
                                                                  pruneThreshold, survey_angular_offset, 
                                                                  local_odometry_position, momentum,
@@ -139,10 +131,10 @@ namespace sentience.core
             float peak_x = 0;
             float peak_y = 0;
             float peak_pan = 0;
-            rob.sensorModel.SurveyPeak(survey_results, ref peak_x, ref peak_y);
+            rob.sensorModelLocalisation.SurveyPeak(survey_results, ref peak_x, ref peak_y);
             //float[] peak = rob.sensorModel.surveyPan(view_map, view_localisation, separation_tollerance, ray_thickness, peak_x, peak_y);
-            float[] peak = rob.sensorModel.surveyPan(view_localisation, grid, ray_thickness, peak_x, peak_y);
-            peak_pan = rob.sensorModel.SurveyPeakPan(peak);
+            float[] peak = rob.sensorModelLocalisation.surveyPan(view_localisation, grid, ray_thickness, peak_x, peak_y);
+            peak_pan = rob.sensorModelLocalisation.SurveyPeakPan(peak);
 
             float half_track_length = 1000;
 
@@ -413,17 +405,15 @@ namespace sentience.core
         }
 
 
-        private robotPath getPath(robot rob, String path, String track, String index, int starting_index, String TrackName, bool sentienceTrack, int trackType)
+        private robotPath getPath(robot rob, String path, String track, String index, int starting_index, String TrackName, int trackType)
         {
             robotPath rpath = new robotPath();
             robotOdometry odometry = new robotOdometry();
 
-            if (sentienceTrack)
-            {
-                odometry.readPathFileSentience(path + track + "\\" + TrackName + ".path", index, rob);
+            odometry.readPathFileSentience(path + track + "\\" + TrackName + ".path", index, rob);
 
-                switch (trackType)
-                {
+            switch (trackType)
+            {
                     case 1:
                         {
                             // mapping X track
@@ -457,20 +447,12 @@ namespace sentience.core
                             specialTrack(100, 16, 21, 3, odometry, 110);
                             break;
                         }
-                }                    
+            }                    
 
-                if (odometry.no_of_measurements == 0)
-                {
+            if (odometry.no_of_measurements == 0)
+            {
                     errorMessage = path + track + "\\" + TrackName + ".path not found or contains no data.  ";
                     errorMessage += "Check that the path file is included as 'Content' within the project folder";
-                }
-            }
-            else
-            {
-                odometry.readPathFile(path + track + "\\" + track + ".path", index);
-
-                if (odometry.no_of_measurements == 0)
-                    errorMessage = path + track + "\\" + track + ".path not found or contains no data";
             }
 
 
@@ -484,70 +466,11 @@ namespace sentience.core
                 rob.tilt = pos.tilt;
                 rob.roll = pos.roll;
 
-                if (sentienceTrack)
-                    loadGlimpseSentience(rob, path + track + "\\", TrackName, index, distance_index + starting_index, odometry.no_of_measurements, index);
-                else
-                    loadGlimpse(rob, path + track + "\\", index, distance_index + starting_index, index);
+                loadGlimpseSentience(rob, path + track + "\\", TrackName, index, distance_index + starting_index, odometry.no_of_measurements, index);
 
                 rob.updatePath(rpath);
             }
             return (rpath);
-        }
-
-        public float loadGlimpse(robot rob, String path, String track, int distance_index, String index)
-        {
-            float matching_score = 0;
-
-            Byte[] left_bmp=null;
-            Byte[] right_bmp=null;
-            String filename, image_filename;
-
-            filename = path + track + "\\Rect\\";
-            if (track == "L")
-                filename += "RMeters_" + Convert.ToString(distance_index) + ".";
-            else
-                filename += "RFeet_" + Convert.ToString(distance_index) + ".";
-
-            // use different numbers of features for mapping and localisation
-            if (index == "M")
-                rob.correspondence.setRequiredFeatures(500);
-            else
-                rob.correspondence.setRequiredFeatures(100);
-
-            int stereo_cam_index = 0;
-            bool left_camera = true;
-            for (int i = 0; i < rob.head.no_of_cameras*2; i++)
-            {
-                image_filename = filename + Convert.ToString(i) + ".pgm";
-                rob.head.imageFilename[i] = image_filename;
-
-                if (left_camera)
-                    left_bmp = util.loadFromPGM(image_filename, rob.head.image_width, rob.head.image_height, 1);
-                else
-                {
-                    right_bmp = util.loadFromPGM(image_filename, rob.head.image_width, rob.head.image_height, 1);
-                    matching_score += rob.loadRectifiedImages(stereo_cam_index, left_bmp, right_bmp, 1);
-
-                    // store images and features for later display
-                    if (stereo_cam_index == 0)
-                    {
-                        image_filenames_stereoCamera0.Add(rob.head.imageFilename[i - 1]);
-                        image_filenames_stereoCamera0.Add(rob.head.imageFilename[i]);
-                        features_stereoCamera0.Add(rob.head.features[stereo_cam_index]);
-                    }
-                    else
-                    {
-                        image_filenames_stereoCamera1.Add(rob.head.imageFilename[i - 1]);
-                        image_filenames_stereoCamera1.Add(rob.head.imageFilename[i]);
-                        features_stereoCamera1.Add(rob.head.features[stereo_cam_index]);
-                    }
-
-                    stereo_cam_index++;
-                }
-                left_camera = !left_camera;
-            }
-
-            return (matching_score);
         }
 
 
@@ -558,12 +481,8 @@ namespace sentience.core
             Byte[] left_bmp = null;
             Byte[] right_bmp = null;
             String image_filename;
-
-            // use different numbers of features for mapping and localisation
-            if (index == "M")
-                rob.correspondence.setRequiredFeatures(no_of_mapping_features);
-            else
-                rob.correspondence.setRequiredFeatures(no_of_localisation_features);
+            bool mapping = true;
+            if (index != "M") mapping = false;
 
             int stereo_cam_index = 0;
             bool left_camera = true;
@@ -582,7 +501,7 @@ namespace sentience.core
                     if (!File.Exists(image_filename)) errorMessage = image_filename + " not found";
                     rob.head.imageFilename[i] = image_filename;
                     right_bmp = util.loadFromBitmap(image_filename, rob.head.image_width, rob.head.image_height, 3);
-                    matching_score += rob.loadRectifiedImages(stereo_cam_index, left_bmp, right_bmp, 3);
+                    matching_score += rob.loadRectifiedImages(stereo_cam_index, left_bmp, right_bmp, 3, mapping);
 
                     // store images and features for later display
                     if (stereo_cam_index == 0)
