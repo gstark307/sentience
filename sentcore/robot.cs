@@ -63,6 +63,10 @@ namespace sentience.core
         public int HeadShape = 0;
         public int CameraOrientation = 0;
 
+        // grid settings
+        public int LocalGridLevels = 1;
+        public int LocalGridDimension = 128;
+        public float LocalGridCellSize_mm = 32;
 
         // odometry
         public long leftWheelCounts, rightWheelCounts;
@@ -370,6 +374,18 @@ namespace sentience.core
             nodeSensorModels.AppendChild(sensorModelMapping.getXml(doc, nodeSensorModels));
             nodeSensorModels.AppendChild(sensorModelLocalisation.getXml(doc, nodeSensorModels));
 
+            XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
+            nodeRobot.AppendChild(nodeOccupancyGrid);
+
+            util.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLevels", Convert.ToString(LocalGridLevels));
+
+            util.AddComment(doc, nodeOccupancyGrid, "Cubic dimension of the local grid in cells");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimension", Convert.ToString(LocalGridDimension));
+
+            util.AddComment(doc, nodeOccupancyGrid, "Size of each grid cell (voxel) in millimetres");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridCellSizeMillimetres", Convert.ToString(LocalGridCellSize_mm));
+
             return (nodeRobot);
         }
 
@@ -555,6 +571,21 @@ namespace sentience.core
                 init(no_of_cameras);
             }
 
+            if (xnod.Name == "LocalGridLevels")
+            {
+                LocalGridLevels = Convert.ToInt32(xnod.InnerText);
+            }
+
+            if (xnod.Name == "LocalGridDimension")
+            {
+                LocalGridDimension = Convert.ToInt32(xnod.InnerText);
+            }
+
+            if (xnod.Name == "LocalGridCellSizeMillimetres")
+            {
+                LocalGridCellSize_mm = Convert.ToSingle(xnod.InnerText);
+            }
+
             if (xnod.Name == "StereoCamera")
             {
                 int camIndex = 0;
@@ -579,7 +610,8 @@ namespace sentience.core
                  (xnod.Name == "Sentience") ||
                  (xnod.Name == "BodyDimensions") ||
                  (xnod.Name == "PropulsionSystem") ||
-                 (xnod.Name == "SensorPlatform")
+                 (xnod.Name == "SensorPlatform") ||
+                 (xnod.Name == "OccupancyGrid")
                  ))
             {
                 xnodWorking = xnod.FirstChild;

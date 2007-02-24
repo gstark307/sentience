@@ -34,6 +34,8 @@ namespace robotDesigner
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpBody = new System.Windows.Forms.GroupBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.cmbBodyShape = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.cmbPropulsion = new System.Windows.Forms.ComboBox();
             this.txtBodyHeight = new System.Windows.Forms.TextBox();
@@ -43,6 +45,10 @@ namespace robotDesigner
             this.txtBodyWidth = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.grpWheels = new System.Windows.Forms.GroupBox();
+            this.txtWheelBaseForward = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
+            this.txtWheelBase = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
             this.txtCountsPerRev = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
@@ -53,6 +59,10 @@ namespace robotDesigner
             this.txtWheelDiameter = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtHeadPositionForward = new System.Windows.Forms.TextBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.txtHeadPositionLeft = new System.Windows.Forms.TextBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.cmbCameraOrientation = new System.Windows.Forms.ComboBox();
             this.label11 = new System.Windows.Forms.Label();
@@ -77,22 +87,26 @@ namespace robotDesigner
             this.label18 = new System.Windows.Forms.Label();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.txtWheelBase = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.txtWheelBaseForward = new System.Windows.Forms.TextBox();
-            this.label21 = new System.Windows.Forms.Label();
-            this.label22 = new System.Windows.Forms.Label();
-            this.cmbBodyShape = new System.Windows.Forms.ComboBox();
-            this.txtHeadPositionLeft = new System.Windows.Forms.TextBox();
-            this.label23 = new System.Windows.Forms.Label();
-            this.txtHeadPositionForward = new System.Windows.Forms.TextBox();
-            this.label24 = new System.Windows.Forms.Label();
+            this.tabRobot = new System.Windows.Forms.TabControl();
+            this.tabGeometry = new System.Windows.Forms.TabPage();
+            this.tabPerception = new System.Windows.Forms.TabPage();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.txtGridDimension = new System.Windows.Forms.TextBox();
+            this.label28 = new System.Windows.Forms.Label();
+            this.txtGridCellDimension = new System.Windows.Forms.TextBox();
+            this.label29 = new System.Windows.Forms.Label();
+            this.txtGridLevels = new System.Windows.Forms.TextBox();
+            this.label25 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpWheels.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.grpStereoCamera.SuspendLayout();
+            this.tabRobot.SuspendLayout();
+            this.tabGeometry.SuspendLayout();
+            this.tabPerception.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -101,7 +115,7 @@ namespace robotDesigner
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(547, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(585, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -148,12 +162,34 @@ namespace robotDesigner
             this.grpBody.Controls.Add(this.label2);
             this.grpBody.Controls.Add(this.txtBodyWidth);
             this.grpBody.Controls.Add(this.label1);
-            this.grpBody.Location = new System.Drawing.Point(13, 116);
+            this.grpBody.Location = new System.Drawing.Point(18, 94);
             this.grpBody.Name = "grpBody";
             this.grpBody.Size = new System.Drawing.Size(212, 175);
             this.grpBody.TabIndex = 1;
             this.grpBody.TabStop = false;
             this.grpBody.Text = "Body";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(19, 134);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(38, 13);
+            this.label22.TabIndex = 25;
+            this.label22.Text = "Shape";
+            // 
+            // cmbBodyShape
+            // 
+            this.cmbBodyShape.FormattingEnabled = true;
+            this.cmbBodyShape.Items.AddRange(new object[] {
+            "Square",
+            "Round",
+            "Other"});
+            this.cmbBodyShape.Location = new System.Drawing.Point(80, 131);
+            this.cmbBodyShape.Name = "cmbBodyShape";
+            this.cmbBodyShape.Size = new System.Drawing.Size(93, 21);
+            this.cmbBodyShape.TabIndex = 24;
+            this.cmbBodyShape.Text = "Square";
             // 
             // label4
             // 
@@ -184,7 +220,7 @@ namespace robotDesigner
             this.txtBodyHeight.Name = "txtBodyHeight";
             this.txtBodyHeight.Size = new System.Drawing.Size(59, 20);
             this.txtBodyHeight.TabIndex = 5;
-            this.txtBodyHeight.Text = "500";
+            this.txtBodyHeight.Text = "80";
             this.txtBodyHeight.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label3
@@ -202,7 +238,7 @@ namespace robotDesigner
             this.txtBodyLength.Name = "txtBodyLength";
             this.txtBodyLength.Size = new System.Drawing.Size(59, 20);
             this.txtBodyLength.TabIndex = 3;
-            this.txtBodyLength.Text = "500";
+            this.txtBodyLength.Text = "200";
             this.txtBodyLength.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label2
@@ -220,7 +256,7 @@ namespace robotDesigner
             this.txtBodyWidth.Name = "txtBodyWidth";
             this.txtBodyWidth.Size = new System.Drawing.Size(59, 20);
             this.txtBodyWidth.TabIndex = 1;
-            this.txtBodyWidth.Text = "500";
+            this.txtBodyWidth.Text = "200";
             this.txtBodyWidth.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label1
@@ -247,12 +283,48 @@ namespace robotDesigner
             this.grpWheels.Controls.Add(this.cmbWheelFeedback);
             this.grpWheels.Controls.Add(this.txtWheelDiameter);
             this.grpWheels.Controls.Add(this.label5);
-            this.grpWheels.Location = new System.Drawing.Point(249, 116);
+            this.grpWheels.Location = new System.Drawing.Point(254, 94);
             this.grpWheels.Name = "grpWheels";
             this.grpWheels.Size = new System.Drawing.Size(248, 190);
             this.grpWheels.TabIndex = 2;
             this.grpWheels.TabStop = false;
             this.grpWheels.Text = "Wheels";
+            // 
+            // txtWheelBaseForward
+            // 
+            this.txtWheelBaseForward.Location = new System.Drawing.Point(137, 159);
+            this.txtWheelBaseForward.Name = "txtWheelBaseForward";
+            this.txtWheelBaseForward.Size = new System.Drawing.Size(59, 20);
+            this.txtWheelBaseForward.TabIndex = 18;
+            this.txtWheelBaseForward.Text = "25";
+            this.txtWheelBaseForward.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(13, 162);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(121, 13);
+            this.label21.TabIndex = 17;
+            this.label21.Text = "Wheelbase Forward mm";
+            // 
+            // txtWheelBase
+            // 
+            this.txtWheelBase.Location = new System.Drawing.Point(137, 133);
+            this.txtWheelBase.Name = "txtWheelBase";
+            this.txtWheelBase.Size = new System.Drawing.Size(59, 20);
+            this.txtWheelBase.TabIndex = 16;
+            this.txtWheelBase.Text = "175";
+            this.txtWheelBase.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(13, 136);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(80, 13);
+            this.label20.TabIndex = 15;
+            this.label20.Text = "Wheelbase mm";
             // 
             // txtCountsPerRev
             // 
@@ -327,7 +399,7 @@ namespace robotDesigner
             this.txtWheelDiameter.Name = "txtWheelDiameter";
             this.txtWheelDiameter.Size = new System.Drawing.Size(59, 20);
             this.txtWheelDiameter.TabIndex = 3;
-            this.txtWheelDiameter.Text = "500";
+            this.txtWheelDiameter.Text = "70";
             this.txtWheelDiameter.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label5
@@ -357,12 +429,48 @@ namespace robotDesigner
             this.groupBox1.Controls.Add(this.label13);
             this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.cmbHeadType);
-            this.groupBox1.Location = new System.Drawing.Point(249, 312);
+            this.groupBox1.Location = new System.Drawing.Point(254, 290);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(269, 254);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Head";
+            // 
+            // txtHeadPositionForward
+            // 
+            this.txtHeadPositionForward.Location = new System.Drawing.Point(170, 162);
+            this.txtHeadPositionForward.Name = "txtHeadPositionForward";
+            this.txtHeadPositionForward.Size = new System.Drawing.Size(59, 20);
+            this.txtHeadPositionForward.TabIndex = 29;
+            this.txtHeadPositionForward.Text = "120";
+            this.txtHeadPositionForward.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(20, 165);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(119, 13);
+            this.label24.TabIndex = 28;
+            this.label24.Text = "Offset from the front mm";
+            // 
+            // txtHeadPositionLeft
+            // 
+            this.txtHeadPositionLeft.Location = new System.Drawing.Point(170, 136);
+            this.txtHeadPositionLeft.Name = "txtHeadPositionLeft";
+            this.txtHeadPositionLeft.Size = new System.Drawing.Size(59, 20);
+            this.txtHeadPositionLeft.TabIndex = 27;
+            this.txtHeadPositionLeft.Text = "100";
+            this.txtHeadPositionLeft.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(20, 139);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(134, 13);
+            this.label23.TabIndex = 26;
+            this.label23.Text = "Offset from the left side mm";
             // 
             // label12
             // 
@@ -493,7 +601,7 @@ namespace robotDesigner
             this.groupBox2.Controls.Add(this.label17);
             this.groupBox2.Controls.Add(this.txtName);
             this.groupBox2.Controls.Add(this.label16);
-            this.groupBox2.Location = new System.Drawing.Point(13, 39);
+            this.groupBox2.Location = new System.Drawing.Point(18, 17);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(505, 71);
             this.groupBox2.TabIndex = 4;
@@ -541,7 +649,7 @@ namespace robotDesigner
             this.grpStereoCamera.Controls.Add(this.label19);
             this.grpStereoCamera.Controls.Add(this.txtCameraBaseline);
             this.grpStereoCamera.Controls.Add(this.label18);
-            this.grpStereoCamera.Location = new System.Drawing.Point(13, 312);
+            this.grpStereoCamera.Location = new System.Drawing.Point(18, 290);
             this.grpStereoCamera.Name = "grpStereoCamera";
             this.grpStereoCamera.Size = new System.Drawing.Size(212, 129);
             this.grpStereoCamera.TabIndex = 5;
@@ -554,7 +662,7 @@ namespace robotDesigner
             this.txtCameraFOV.Name = "txtCameraFOV";
             this.txtCameraFOV.Size = new System.Drawing.Size(59, 20);
             this.txtCameraFOV.TabIndex = 5;
-            this.txtCameraFOV.Text = "40";
+            this.txtCameraFOV.Text = "78";
             this.txtCameraFOV.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label19
@@ -588,110 +696,117 @@ namespace robotDesigner
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // txtWheelBase
+            // tabRobot
             // 
-            this.txtWheelBase.Location = new System.Drawing.Point(137, 133);
-            this.txtWheelBase.Name = "txtWheelBase";
-            this.txtWheelBase.Size = new System.Drawing.Size(59, 20);
-            this.txtWheelBase.TabIndex = 16;
-            this.txtWheelBase.Text = "500";
-            this.txtWheelBase.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tabRobot.Controls.Add(this.tabGeometry);
+            this.tabRobot.Controls.Add(this.tabPerception);
+            this.tabRobot.Location = new System.Drawing.Point(12, 37);
+            this.tabRobot.Name = "tabRobot";
+            this.tabRobot.SelectedIndex = 0;
+            this.tabRobot.Size = new System.Drawing.Size(555, 576);
+            this.tabRobot.TabIndex = 6;
             // 
-            // label20
+            // tabGeometry
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 136);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(80, 13);
-            this.label20.TabIndex = 15;
-            this.label20.Text = "Wheelbase mm";
+            this.tabGeometry.Controls.Add(this.groupBox2);
+            this.tabGeometry.Controls.Add(this.grpStereoCamera);
+            this.tabGeometry.Controls.Add(this.grpBody);
+            this.tabGeometry.Controls.Add(this.grpWheels);
+            this.tabGeometry.Controls.Add(this.groupBox1);
+            this.tabGeometry.Location = new System.Drawing.Point(4, 22);
+            this.tabGeometry.Name = "tabGeometry";
+            this.tabGeometry.Padding = new System.Windows.Forms.Padding(3);
+            this.tabGeometry.Size = new System.Drawing.Size(547, 550);
+            this.tabGeometry.TabIndex = 0;
+            this.tabGeometry.Text = "Geometry";
+            this.tabGeometry.UseVisualStyleBackColor = true;
             // 
-            // txtWheelBaseForward
+            // tabPerception
             // 
-            this.txtWheelBaseForward.Location = new System.Drawing.Point(137, 159);
-            this.txtWheelBaseForward.Name = "txtWheelBaseForward";
-            this.txtWheelBaseForward.Size = new System.Drawing.Size(59, 20);
-            this.txtWheelBaseForward.TabIndex = 18;
-            this.txtWheelBaseForward.Text = "20";
-            this.txtWheelBaseForward.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tabPerception.Controls.Add(this.groupBox3);
+            this.tabPerception.Location = new System.Drawing.Point(4, 22);
+            this.tabPerception.Name = "tabPerception";
+            this.tabPerception.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPerception.Size = new System.Drawing.Size(547, 550);
+            this.tabPerception.TabIndex = 1;
+            this.tabPerception.Text = "Perception";
+            this.tabPerception.UseVisualStyleBackColor = true;
             // 
-            // label21
+            // groupBox3
             // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(13, 162);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(121, 13);
-            this.label21.TabIndex = 17;
-            this.label21.Text = "Wheelbase Forward mm";
+            this.groupBox3.Controls.Add(this.txtGridLevels);
+            this.groupBox3.Controls.Add(this.label25);
+            this.groupBox3.Controls.Add(this.txtGridDimension);
+            this.groupBox3.Controls.Add(this.label28);
+            this.groupBox3.Controls.Add(this.txtGridCellDimension);
+            this.groupBox3.Controls.Add(this.label29);
+            this.groupBox3.Location = new System.Drawing.Point(17, 19);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(217, 127);
+            this.groupBox3.TabIndex = 2;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Local Occupancy Map";
             // 
-            // label22
+            // txtGridDimension
             // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(19, 134);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(38, 13);
-            this.label22.TabIndex = 25;
-            this.label22.Text = "Shape";
+            this.txtGridDimension.Location = new System.Drawing.Point(131, 52);
+            this.txtGridDimension.Name = "txtGridDimension";
+            this.txtGridDimension.Size = new System.Drawing.Size(59, 20);
+            this.txtGridDimension.TabIndex = 3;
+            this.txtGridDimension.Text = "128";
+            this.txtGridDimension.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // cmbBodyShape
+            // label28
             // 
-            this.cmbBodyShape.FormattingEnabled = true;
-            this.cmbBodyShape.Items.AddRange(new object[] {
-            "Square",
-            "Round",
-            "Other"});
-            this.cmbBodyShape.Location = new System.Drawing.Point(80, 131);
-            this.cmbBodyShape.Name = "cmbBodyShape";
-            this.cmbBodyShape.Size = new System.Drawing.Size(93, 21);
-            this.cmbBodyShape.TabIndex = 24;
-            this.cmbBodyShape.Text = "Square";
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(17, 55);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(108, 13);
+            this.label28.TabIndex = 2;
+            this.label28.Text = "Grid Dimension (cells)";
             // 
-            // txtHeadPositionLeft
+            // txtGridCellDimension
             // 
-            this.txtHeadPositionLeft.Location = new System.Drawing.Point(170, 136);
-            this.txtHeadPositionLeft.Name = "txtHeadPositionLeft";
-            this.txtHeadPositionLeft.Size = new System.Drawing.Size(59, 20);
-            this.txtHeadPositionLeft.TabIndex = 27;
-            this.txtHeadPositionLeft.Text = "10";
-            this.txtHeadPositionLeft.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtGridCellDimension.Location = new System.Drawing.Point(131, 29);
+            this.txtGridCellDimension.Name = "txtGridCellDimension";
+            this.txtGridCellDimension.Size = new System.Drawing.Size(59, 20);
+            this.txtGridCellDimension.TabIndex = 1;
+            this.txtGridCellDimension.Text = "32";
+            this.txtGridCellDimension.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // label23
+            // label29
             // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(20, 139);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(134, 13);
-            this.label23.TabIndex = 26;
-            this.label23.Text = "Offset from the left side mm";
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(17, 29);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(95, 13);
+            this.label29.TabIndex = 0;
+            this.label29.Text = "Cell Dimension mm";
             // 
-            // txtHeadPositionForward
+            // txtGridLevels
             // 
-            this.txtHeadPositionForward.Location = new System.Drawing.Point(170, 162);
-            this.txtHeadPositionForward.Name = "txtHeadPositionForward";
-            this.txtHeadPositionForward.Size = new System.Drawing.Size(59, 20);
-            this.txtHeadPositionForward.TabIndex = 29;
-            this.txtHeadPositionForward.Text = "10";
-            this.txtHeadPositionForward.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtGridLevels.Location = new System.Drawing.Point(131, 78);
+            this.txtGridLevels.Name = "txtGridLevels";
+            this.txtGridLevels.Size = new System.Drawing.Size(59, 20);
+            this.txtGridLevels.TabIndex = 5;
+            this.txtGridLevels.Text = "1";
+            this.txtGridLevels.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // label24
+            // label25
             // 
-            this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(20, 165);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(119, 13);
-            this.label24.TabIndex = 28;
-            this.label24.Text = "Offset from the front mm";
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(17, 78);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(60, 13);
+            this.label25.TabIndex = 4;
+            this.label25.Text = "Grid Levels";
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(547, 579);
-            this.Controls.Add(this.grpStereoCamera);
-            this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.grpWheels);
-            this.Controls.Add(this.grpBody);
+            this.ClientSize = new System.Drawing.Size(585, 625);
+            this.Controls.Add(this.tabRobot);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmMain";
@@ -709,6 +824,11 @@ namespace robotDesigner
             this.groupBox2.PerformLayout();
             this.grpStereoCamera.ResumeLayout(false);
             this.grpStereoCamera.PerformLayout();
+            this.tabRobot.ResumeLayout(false);
+            this.tabGeometry.ResumeLayout(false);
+            this.tabPerception.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -775,6 +895,16 @@ namespace robotDesigner
         private System.Windows.Forms.Label label24;
         private System.Windows.Forms.TextBox txtHeadPositionLeft;
         private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.TabControl tabRobot;
+        private System.Windows.Forms.TabPage tabGeometry;
+        private System.Windows.Forms.TabPage tabPerception;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.TextBox txtGridDimension;
+        private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.TextBox txtGridCellDimension;
+        private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.TextBox txtGridLevels;
+        private System.Windows.Forms.Label label25;
     }
 }
 

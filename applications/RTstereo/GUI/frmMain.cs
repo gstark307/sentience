@@ -256,6 +256,8 @@ namespace WindowsApplication1
             global_variables = new globals();
 
             InitializeComponent();
+
+            initialise();
             
             // load calibration data
             stereo.loadCalibrationData(global_variables.calibration_filename);
@@ -288,7 +290,7 @@ namespace WindowsApplication1
 
         private void frmMain_Load(object sender, EventArgs e)
         {
-            initialise();
+            
         }
 
         #region "timing fuinctions"

@@ -98,7 +98,7 @@ namespace WindowsApplication1
             //stereo_model.updateRayModel(grid_layer, grid_dimension, img_rays, standard_width, standard_height);
 
             //test_head();
-            //test_head_forward();
+            //test_head2();
             //test_grid();
             //test_trial_poses();
             //test_intercepts();
@@ -148,10 +148,10 @@ namespace WindowsApplication1
         }
 
 
-        private void test_head_forward()
+        private void test_head2()
         {
             robot_head = new stereoHead(2);            
-            robot_head.initSentience();
+            robot_head.initDualCam();
 
             pos3D robotPosition = new pos3D(0, 0, 0);
             pos3D robotOrientation = new pos3D(0, 0, 0);

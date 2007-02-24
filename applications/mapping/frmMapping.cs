@@ -63,11 +63,7 @@ namespace StereoMapping
 
         private void init()
         {
-            // load calibration data
-            stereo.LoadCalibration();
-            stereo2.LoadCalibration();
-
-            sentience_robot = new robot(2, 100 * 6);
+            sentience_robot = new robot(2);
             sentience_robot.initRobotSingleStereo();
             sentience_robot.setMappingParameters(sigma);
 
@@ -86,7 +82,7 @@ namespace StereoMapping
             
             trackType = 3;
             no_of_glimpses = 45*2;
-            track.Add(sentience_robot, app_path, "c1", 1, "test", true, trackType, true);
+            track.Add(sentience_robot, app_path, "c1", 1, "test", trackType, true);
             
 
             /*

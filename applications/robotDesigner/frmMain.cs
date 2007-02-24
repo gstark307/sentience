@@ -66,6 +66,10 @@ namespace robotDesigner
                 txtHeadPositionForward.Text = Convert.ToString(rob.head.y);
                 txtNoOfCameras.Text = Convert.ToString(rob.head.no_of_cameras);
                 cmbCameraOrientation.SelectedIndex = rob.CameraOrientation;
+
+                txtGridLevels.Text = Convert.ToString(rob.LocalGridLevels);
+                txtGridDimension.Text = Convert.ToString(rob.LocalGridDimension);
+                txtGridCellDimension.Text = Convert.ToString(rob.LocalGridCellSize_mm);
             }
         }
 
@@ -107,6 +111,10 @@ namespace robotDesigner
             rob.head.z = Convert.ToSingle(txtHeadHeightFromGround.Text);
             rob.head.no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);
             rob.CameraOrientation = Convert.ToInt32(cmbCameraOrientation.SelectedIndex);
+
+            rob.LocalGridLevels = Convert.ToInt32(txtGridLevels.Text);
+            rob.LocalGridDimension = Convert.ToInt32(txtGridDimension.Text);
+            rob.LocalGridCellSize_mm = Convert.ToInt32(txtGridCellDimension.Text);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)

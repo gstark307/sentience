@@ -39,10 +39,6 @@ namespace StereoMapping
 
         int peaks_per_row = 5;
 
-        // calibration offsets
-        public int calibration_offset_x = 0;
-        public int calibration_offset_y = 0;
-
         // maximum disparity as a percentage of the image width
         public int max_disparity_percent = 20;
 
@@ -88,34 +84,6 @@ namespace StereoMapping
         }
 
 
-        public void UpdateCalibration(int offset_x, int offset_y)
-        {
-            calibration_offset_x = offset_x;
-            calibration_offset_y = offset_y;
-
-            StreamWriter oWrite = null;
-            bool allowWrite = true;
-            String filename = "calibration.txt";
-
-            try
-            {
-                oWrite = File.CreateText(System.Windows.Forms.Application.StartupPath + "\\" + filename);
-            }
-            catch
-            {
-                allowWrite = false;
-            }
-
-            if (allowWrite)
-            {
-                oWrite.WriteLine(calibration_offset_x);
-                oWrite.WriteLine(calibration_offset_y);
-                oWrite.Close();
-            }
-
-        }
-
-
         // delete path data
         public void clearPath(String PathName)
         {
@@ -158,35 +126,6 @@ namespace StereoMapping
 
         }
 
-
-
-        public void LoadCalibration()
-        {
-            StreamReader oRead = null;
-            String str;
-            bool filefound = true;
-            String filename = "calibration.txt";
-
-            try
-            {
-                oRead = File.OpenText(System.Windows.Forms.Application.StartupPath + "\\" + filename);
-            }
-            catch
-            {
-                filefound = false;
-            }
-
-            if (filefound)
-            {
-                str = oRead.ReadLine();
-                if (str != null) calibration_offset_x = Convert.ToInt32(str);
-
-                str = oRead.ReadLine();
-                if (str != null) calibration_offset_y = Convert.ToInt32(str);
-
-                oRead.Close();
-            }
-        }
 
         /// <summary>
         /// return the radar image
@@ -252,7 +191,7 @@ namespace StereoMapping
             setRequiredFeatures(required_features);
 
             // do the stereo correspondence            
-            stereointerface.stereoMatchRun(calibration_offset_x, calibration_offset_y, 0, peaks_per_row, correspondence_algorithm_type);
+            stereointerface.stereoMatchRun(0, peaks_per_row, correspondence_algorithm_type);
 
             // retrieve features
             no_of_disparities = stereointerface.getSelectedPointFeatures(disparities);
