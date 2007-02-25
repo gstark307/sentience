@@ -65,7 +65,7 @@
     <Compile Include="stereoFeatures.cs" />
     <Compile Include="stereoHead.cs" />
     <Compile Include="stereoModel.cs" />
-    <Compile Include="surveyResult.cs" />
+    <Compile Include="possiblePose.cs" />
     <Compile Include="viewpoint.cs" />
   </ItemGroup>
   <ItemGroup>

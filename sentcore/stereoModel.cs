@@ -357,7 +357,7 @@ namespace sentience.core
                     orientation_bucket[bucket] += score;
 
                     // add the result to the survey
-                    survey_results.Add(new surveyResult(t, x, y, bucket, score));
+                    survey_results.Add(new possiblePose(t, x, y, bucket, score));
 
                     // record the max score
                     if (score > max_score) max_score = score;
@@ -383,7 +383,7 @@ namespace sentience.core
                 if (max_diff < 1) max_diff = 1;
                 for (int i = survey_results.Count - 1; i >= 0; i--)
                 {
-                    surveyResult result = (surveyResult)survey_results[i];
+                    possiblePose result = (possiblePose)survey_results[i];
                     if (Math.Abs(result.pan - winner) > max_diff)
                     {
                         TrialPoseScore[result.index] *= 0.8f;
@@ -434,7 +434,7 @@ namespace sentience.core
             float max_score = 0;
             for (int i = 0; i < survey_results.Count; i++)
             {
-                surveyResult result = (surveyResult)survey_results[i];
+                possiblePose result = (possiblePose)survey_results[i];
                 if (result.score > max_score) max_score = result.score;
             }
             float min_score = 0;
@@ -445,7 +445,7 @@ namespace sentience.core
             float scoresqr;
             for (int i = 0; i < survey_results.Count; i++)
             {
-                surveyResult result = (surveyResult)survey_results[i];
+                possiblePose result = (possiblePose)survey_results[i];
                 if (result.score > min_score)
                 {
                     scoresqr = result.score; // *result.score;  // it's hip to be square
@@ -685,7 +685,7 @@ namespace sentience.core
 
             for (pose = 0; pose < survey_results.Count; pose++)
             {
-                surveyResult trialPose = (surveyResult)survey_results[pose];
+                possiblePose trialPose = (possiblePose)survey_results[pose];
                 int bucket = half_buckets + (int)(trialPose.pan * half_buckets / half_PI);
                 if ((bucket > -1) && (bucket < no_of_buckets))
                 {
@@ -738,7 +738,7 @@ namespace sentience.core
             max_score = 0;
             for (int pose = 0; pose < survey_results.Count; pose++)
             {
-                surveyResult trialPose = (surveyResult)survey_results[pose];
+                possiblePose trialPose = (possiblePose)survey_results[pose];
                 if (trialPose.x < min_x) min_x = trialPose.x;
                 if (trialPose.y < min_y) min_y = trialPose.y;
                 if (trialPose.x > max_x) max_x = trialPose.x;
@@ -756,7 +756,7 @@ namespace sentience.core
                 float scale_y = max_y - min_y;
                 for (int pose = 0; pose < survey_results.Count; pose++)
                 {
-                    surveyResult trialPose = (surveyResult)survey_results[pose];
+                    possiblePose trialPose = (possiblePose)survey_results[pose];
                     x = (int)((trialPose.x - min_x) * (img_width - 1) / scale_x);
                     y = (int)((trialPose.y - min_y) * (img_height - 1) / scale_y);
                     if (x < 1) x = 1;
