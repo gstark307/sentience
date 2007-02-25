@@ -31,7 +31,12 @@ namespace sentience.core
         private robot rob;
 
         // a list of possible poses
+        public int survey_trial_poses = 200;   // the number of possible poses to keep track of
+        public int pose_maturation = 5;        // the number of updates after which a pose is considered to be mature
         public ArrayList Poses;
+
+        // pose score threshold in the range 0-100 below which low probability poses are pruned
+        int cull_threshold = 25;
 
         // standard deviation values for noise within the motion model
         public float[] motion_noise;
@@ -51,6 +56,25 @@ namespace sentience.core
             this.rob = rob;
             Poses = new ArrayList();
             motion_noise = new float[6];
+
+            // some default noise values
+            for (int i = 0; i < motion_noise.Length; i++)
+                motion_noise[i] = 0.0001f;
+
+            // create some initial poses
+            createNewPoses(rob.x, rob.y, rob.pan);
+        }
+
+        /// <summary>
+        /// creates some new poses
+        /// </summary>
+        private void createNewPoses(float x, float y, float pan)
+        {
+            for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
+            {
+                possiblePose pose = new possiblePose(x, y, pan);
+                Poses.Add(pose);
+            }
         }
 
         /// <summary>
@@ -96,7 +120,59 @@ namespace sentience.core
                               (fraction * (float)Math.Sin(new_pan));
             pose.y = pose.y + (fraction * (float)Math.Cos(pose.pan)) -
                               (fraction * (float)Math.Cos(new_pan));
-            pose.pan = pose.pan + (ang_velocity * time_elapsed_sec) + (v * time_elapsed_sec);            
+            pose.pan = pose.pan + (ang_velocity * time_elapsed_sec) + (v * time_elapsed_sec);
+
+            pose.time_steps++;
+        }
+
+        /// <summary>
+        /// removes low probability poses
+        /// Note that a maturity threshold is used, so that poses which may initially 
+        /// be unfairly judged as improbable have time to prove their worth
+        /// </summary>
+        private void Prune()
+        {
+            possiblePose best_pose = null;
+
+            // gather mature poses
+            float max_score = 0;
+            ArrayList maturePoses = new ArrayList();
+            for (int sample = 0; sample < Poses.Count; sample++)
+            {
+                possiblePose pose = (possiblePose)Poses[sample];
+
+                if (pose.time_steps > pose_maturation)
+                {
+                    maturePoses.Add(pose);
+                }
+
+                // record the maximum score
+                if (pose.score > max_score)
+                {
+                    max_score = pose.score;
+                    best_pose = pose;
+                }
+            }
+
+            // remove mature poses with a score below the cull threshold
+            float threshold = max_score * cull_threshold / 100;
+            for (int mature = 0; mature < maturePoses.Count; mature++)
+            {
+                possiblePose pose = (possiblePose)maturePoses[mature];
+                if (pose.score < threshold)
+                    Poses.Remove(pose);
+            }
+
+            if (best_pose != null)
+            {
+                // create new poses to maintain the population
+                createNewPoses(best_pose.x, best_pose.y, best_pose.pan);
+
+                // update the robot position with the best available pose
+                rob.x = best_pose.x;
+                rob.y = best_pose.y;
+                rob.pan = best_pose.pan;
+            }
         }
 
         /// <summary>
@@ -106,6 +182,9 @@ namespace sentience.core
         {
             if (time_elapsed_sec > 0)
             {
+                // remove low probability poses
+                Prune();
+
                 // deterministic prediction of angular and forward velocities
                 float WheelRadius = rob.WheelDiameter_mm / 2;
                 angular_velocity = ((WheelRadius / (2 * rob.WheelBase_mm)) * (RightWheelAngularVelocity - LeftWheelAngularVelocity));

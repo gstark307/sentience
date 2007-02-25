@@ -28,8 +28,9 @@ namespace sentience.core
     {
         public int index;
         public float x, y;
-        public float pan;     //bucketed pan value
+        public float pan; 
         public float score;
+        public int time_steps;  //the number of time steps for which this pose has been updated
 
         public possiblePose(int index, float x, float y, int pan, float score)
         {
@@ -40,12 +41,12 @@ namespace sentience.core
             this.score = score;
         }
 
-        public possiblePose(float x, float y, int pan)
+        public possiblePose(float x, float y, float pan)
         {
             this.x = x;
             this.y = y;
             this.pan = pan;
-            this.score = 1;
+            this.score = 0;
         }
     }
 }
