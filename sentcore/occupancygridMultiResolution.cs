@@ -26,7 +26,7 @@ using System.Text;
 
 namespace sentience.core
 {
-    public class occupancygridMultiResolution
+    public class occupancygridMultiResolution : pos3D
     {
         public occupancygrid[] grid;
         public int levels;
@@ -52,7 +52,7 @@ namespace sentience.core
                 grid[0].showVacancyFunction(img, img_width, img_height);
         }
 
-        public occupancygridMultiResolution(int levels, int dimension, int max_cellSize_mm)
+        public occupancygridMultiResolution(int levels, int dimension, int max_cellSize_mm) : base(0,0,0)
         {
             init(levels, dimension, max_cellSize_mm);
         }

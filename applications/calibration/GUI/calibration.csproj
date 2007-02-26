@@ -11,8 +11,8 @@
     <AssemblyName>fishfood</AssemblyName>
     <GenerateManifests>true</GenerateManifests>
     <SignManifests>true</SignManifests>
-    <ManifestCertificateThumbprint>8A1E0DCBD0B1ED14F4F78D66657E46A9128C8D4D</ManifestCertificateThumbprint>
-    <ManifestKeyFile>visualodometry_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestCertificateThumbprint>64ADCDF1604D35DA2FC71E5FFC190F952AF81867</ManifestCertificateThumbprint>
+    <ManifestKeyFile>calibration_TemporaryKey.pfx</ManifestKeyFile>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>C:\temp\fishfood\</PublishUrl>
     <Install>true</Install>
@@ -129,6 +129,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="calibration_TemporaryKey.pfx" />
     <None Include="title.jpg" />
   </ItemGroup>
   <ItemGroup>

@@ -28,6 +28,38 @@ namespace sentience.core
 {
     public class robotLocalisation
     {
+        /// <summary>
+        /// Perform a survey over the given possible poses
+        /// Tries to match a viewpoint within a grid and updates the pose scores accordingly
+        /// </summary>
+        /// <param name="current_view">viewpoint containing range data</param>
+        /// <param name="grid">occupancy grid</param>
+        /// <param name="motion">motion model</param>
+        public static void surveyPoses(viewpoint current_view,
+                                       occupancygridMultiResolution grid,
+                                       motionModel motion)
+        {
+            // examine the pose list
+            for (int sample = 0; sample < motion.survey_trial_poses; sample++)
+            {
+                possiblePose pose = (possiblePose)motion.Poses[sample];
+
+                // The trial pose is generated
+                viewpoint trialPose = current_view.createTrialPose(pose.pan, pose.x, pose.y);
+
+                // insert the trial pose into the grid and record the number
+                // of matched cells
+                grid.insert(trialPose, false, (pos3D)grid);
+
+                // update the score for this pose
+                motion.updatePoseScore(pose, grid.matchedCells());
+            }
+        }
+
+
+
+
+        /*
         private robotPath teachPath;
         FileStream fp;
         BinaryWriter binfile_write;
@@ -231,24 +263,12 @@ namespace sentience.core
                     float[] peak = rob.sensorModelLocalisation.surveyPan(view_localisation, currentGrid, ray_thickness, peak_x, peak_y);
                     peak_pan = rob.sensorModelLocalisation.SurveyPeakPan(peak);
 
-                    /*
-                    float dx = view_localisation.odometry_position.x - view_map.odometry_position.x;
-                    float dy = view_localisation.odometry_position.y - view_map.odometry_position.y;
-                    float dp = view_localisation.odometry_position.pan - view_map.odometry_position.pan;
-                    float error_x = dx + peak_x;
-                    float error_y = dy + peak_y;
-                    float error_pan = dp + peak_pan;
-                    error_pan = error_pan / (float)Math.PI * 180;
-
-                    estimatedPos.x = view_map.odometry_position.x - peak_x;
-                    estimatedPos.y = view_map.odometry_position.y - peak_y;
-                    estimatedPos.pan = view_map.odometry_position.pan - peak_pan;
-                     */
 
                 }
             }
         }
 
         #endregion
+        */
     }
 }

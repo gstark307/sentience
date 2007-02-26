@@ -46,7 +46,8 @@ namespace sentience.core
             this.x = x;
             this.y = y;
             this.pan = pan;
-            this.score = 0;
+            this.score = 0;  // this should be a running average
+            this.time_steps = 1;
         }
     }
 }

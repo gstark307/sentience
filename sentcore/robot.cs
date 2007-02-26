@@ -423,6 +423,8 @@ namespace sentience.core
             util.AddComment(doc, nodeOccupancyGrid, "The distance which the robot must travel before new data is inserted into the grid during mapping");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridIntervalMillimetres", Convert.ToString(LocalGridInterval_mm));
 
+            nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
+
             return (nodeRobot);
         }
 
@@ -657,6 +659,11 @@ namespace sentience.core
             {
                 sensorModelMapping.LoadFromXml(xnod.FirstChild, level + 1);
                 sensorModelLocalisation.LoadFromXml(xnod.FirstChild, level + 1);
+            }
+
+            if (xnod.Name == "MotionModel")
+            {
+                motion.LoadFromXml(xnod.FirstChild, level + 1);
             }
 
             // call recursively on all children of the current node

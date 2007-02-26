@@ -53,7 +53,6 @@
     <Compile Include="occupancygridMultiResolution.cs" />
     <Compile Include="MersenneTwister.cs" />
     <Compile Include="occupancygrid.cs" />
-    <Compile Include="robotTestTracks.cs" />
     <Compile Include="robotOdometry.cs" />
     <Compile Include="robot.cs" />
     <Compile Include="stereoCorrespondence.cs" />

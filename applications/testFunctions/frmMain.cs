@@ -294,7 +294,7 @@ namespace WindowsApplication1
             txtMappingTime.Text = Convert.ToString(mappingTime);
         }
 
-
+        /*
         private void test_survey(int offset_x, int offset_y)
         {
             pos3D robotPosition = new pos3D(0, 0, 0);
@@ -359,6 +359,7 @@ namespace WindowsApplication1
             long mappingTime = endStopWatch();
             txtMappingTime.Text = Convert.ToString(mappingTime);
         }
+        */
 
         /*
         private void test_survey_pan(int offset_x, int offset_y)
