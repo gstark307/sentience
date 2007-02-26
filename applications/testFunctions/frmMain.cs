@@ -224,6 +224,16 @@ namespace WindowsApplication1
             grd.show(img_rays, standard_width, standard_height);
         }
 
+        private void test_motion_model()
+        {
+            robot rob = new robot(1);
+
+            for (int t = 0; t < 10; t++)
+            {
+
+            }
+        }
+
 
         private void test_trial_poses()
         {

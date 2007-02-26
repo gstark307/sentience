@@ -44,12 +44,15 @@ namespace sentience.core
             {
                 possiblePose pose = (possiblePose)motion.Poses[sample];
 
+                // get the position of this pose inside the grid
+                pos3D relative_position = pose.subtract((pos3D)grid);
+
                 // The trial pose is generated
                 viewpoint trialPose = current_view.createTrialPose(pose.pan, pose.x, pose.y);
 
                 // insert the trial pose into the grid and record the number
                 // of matched cells
-                grid.insert(trialPose, false, (pos3D)grid);
+                grid.insert(trialPose, false, relative_position);
 
                 // update the score for this pose
                 motion.updatePoseScore(pose, grid.matchedCells());

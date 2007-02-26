@@ -49,5 +49,14 @@ namespace sentience.core
             this.score = 0;  // this should be a running average
             this.time_steps = 1;
         }
+
+        public pos3D subtract(pos3D pos)
+        {
+            pos3D sum = new pos3D(x, y, 0);
+            sum.x = x - pos.x;
+            sum.y = y - pos.y;
+            sum.pan = pan - pos.pan;
+            return (sum);
+        }
     }
 }

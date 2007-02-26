@@ -42,8 +42,18 @@ namespace sentience.core
             grid = new occupancygrid[levels];
             for (int l = 0; l < levels; l++)
             {
-                grid[l] = new occupancygrid(dimension, cellSize_mm / ((l*3)+1));
+                grid[l] = new occupancygrid(dimension, getCellSize(l));
             }
+        }
+
+        /// <summary>
+        /// get the grid cell size at the given level
+        /// </summary>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        public float getCellSize(int level)
+        {
+            return (cellSize_mm / ((level * 3) + 1));
         }
 
         public void showVacancyFunction(Byte[] img, int img_width, int img_height)

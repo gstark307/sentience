@@ -54,12 +54,12 @@ namespace sentience.core
         }
 
         /// <summary>
-        /// sets the odometry position for this viewpoint
+        /// sets the position for this viewpoint
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="z"></param>
-        public void set_odometry_position(float x, float y, float z)
+        public void SetPosition(float x, float y, float z)
         {
             odometry_position.x = x;
             odometry_position.y = y;

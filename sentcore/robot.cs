@@ -21,6 +21,7 @@
 using System;
 using System.Xml;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -29,18 +30,23 @@ namespace sentience.core
     public class robot : pos3D
     {        
         public int no_of_stereo_cameras;   // number of stereo cameras on the head
-        public stereoHead head;            // head geometry, stereo features and calibration data
 
-        public motionModel motion;         // describes how the robot moves, used to predict the next step
+        // head geometry, stereo features and calibration data
+        public stereoHead head;            
+
+        // describes how the robot moves, used to predict the next step as a probabilistic distribution
+        // of possible poses
+        public motionModel motion;         
 
         // sensor models used for mapping and localisation
         public stereoModel sensorModelMapping;
         public stereoModel sensorModelLocalisation;
 
+        // routines for performing stereo correspondence
         public stereoCorrespondence correspondence;
         int correspondence_algorithm_type = 1;  //the type of stereo correspondance algorithm to be used
 
-        public String Name = "My Robot";
+        public String Name = "My Robot";          // name of the robot
         public float TotalMass_kg;                // total mass of the robot
 
         // dimensions of the body
@@ -75,44 +81,8 @@ namespace sentience.core
         public float LocalGridCellSize_mm = 32;   // Size of each grid cell (voxel) in millimetres
         public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
         public occupancygridMultiResolution LocalGrid;  // grid containing the current local observations
-        public pos3D LocalGridPosition;           // the current position within the local grid
 
-        // odometry
-        public long leftWheelCounts, rightWheelCounts;
-
-        /// <summary>
-        /// initialise with the given number of stereo cameras
-        /// </summary>
-        /// <param name="no_of_stereo_cameras"></param>
-        private void init(int no_of_stereo_cameras)
-        {
-            this.no_of_stereo_cameras = no_of_stereo_cameras;
-
-            // head and shoulders
-            head = new stereoHead(no_of_stereo_cameras);
-        
-            // sensor model used for mapping
-            sensorModelMapping = new stereoModel();
-            sensorModelMapping.no_of_stereo_features = 300;
-            correspondence = new stereoCorrespondence(sensorModelMapping.no_of_stereo_features);
-
-            // sensor model used for localisation
-            sensorModelLocalisation = new stereoModel();
-            sensorModelLocalisation.mapping = false;
-            sensorModelLocalisation.no_of_stereo_features = 100;
-
-            createLocalGrid();
-        }
-
-        /// <summary>
-        /// recreate the local grid
-        /// </summary>
-        private void createLocalGrid()
-        {
-            // create the local grid
-            LocalGrid = new occupancygridMultiResolution(LocalGridLevels, LocalGridDimension, (int)LocalGridCellSize_mm);
-            LocalGridPosition = new pos3D(0, 0, 0);
-        }
+        #region "constructors"
 
         public robot()
             : base(0, 0, 0)
@@ -123,8 +93,12 @@ namespace sentience.core
             : base(0, 0, 0)
         {
             init(no_of_stereo_cameras);
-            initRobotSentience();
+            initDualCam();
         }
+
+        #endregion
+
+        #region "camera calibration"
 
         /// <summary>
         /// loads calibration data for the given camera
@@ -145,13 +119,41 @@ namespace sentience.core
             head.loadCalibrationData(directory);
         }
 
+        #endregion
+
+        #region "initialisation functions"
+
         /// <summary>
-        /// set the type of stereo correspondence algorithm
+        /// recreate the local grid
         /// </summary>
-        /// <param name="algorithm_type"></param>
-        public void setCorrespondenceAlgorithmType(int algorithm_type)
+        private void createLocalGrid()
         {
-            correspondence_algorithm_type = algorithm_type;
+            // create the local grid
+            LocalGrid = new occupancygridMultiResolution(LocalGridLevels, LocalGridDimension, (int)LocalGridCellSize_mm);
+        }
+
+        /// <summary>
+        /// initialise with the given number of stereo cameras
+        /// </summary>
+        /// <param name="no_of_stereo_cameras"></param>
+        private void init(int no_of_stereo_cameras)
+        {
+            this.no_of_stereo_cameras = no_of_stereo_cameras;
+
+            // head and shoulders
+            head = new stereoHead(no_of_stereo_cameras);
+
+            // sensor model used for mapping
+            sensorModelMapping = new stereoModel();
+            sensorModelMapping.no_of_stereo_features = 300;
+            correspondence = new stereoCorrespondence(sensorModelMapping.no_of_stereo_features);
+
+            // sensor model used for localisation
+            sensorModelLocalisation = new stereoModel();
+            sensorModelLocalisation.mapping = false;
+            sensorModelLocalisation.no_of_stereo_features = 100;
+
+            createLocalGrid();
         }
 
         /// <summary>
@@ -173,7 +175,7 @@ namespace sentience.core
             model.FOV_vertical = model.FOV_horizontal * image_height / image_width;
         }
 
-        public void initRobotSentience()
+        public void initDualCam()
         {
             head.initDualCam();
 
@@ -198,6 +200,13 @@ namespace sentience.core
             initSensorModel(sensorModelMapping, 78, head.image_width, head.image_height, head.baseline_mm);
             initSensorModel(sensorModelLocalisation, 78, head.image_width, head.image_height, head.baseline_mm);
         }
+
+        #endregion
+
+        #region "paths"
+
+        // odometry
+        public long leftWheelCounts, rightWheelCounts;
 
         /// <summary>
         /// save the current position and stereo features to file
@@ -248,6 +257,24 @@ namespace sentience.core
             }
         }
 
+        /// <summary>
+        /// update the given path using the current viewpoint
+        /// </summary>
+        /// <param name="path"></param>
+        public void updatePath(robotPath path)
+        {
+            viewpoint view = getViewpoint();
+            view.odometry_position.x = x;
+            view.odometry_position.y = y;
+            view.odometry_position.z = z;
+            view.odometry_position.pan = pan;
+            path.Add(view);
+        }
+
+        #endregion
+
+        #region "image loading"
+
         public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, bool mapping)
         {
             stereoModel sensorModel = sensorModelMapping;
@@ -269,6 +296,19 @@ namespace sentience.core
             return (correspondence.loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, sensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
+        #endregion
+
+        #region "parameter setting"
+
+        /// <summary>
+        /// set the type of stereo correspondence algorithm
+        /// </summary>
+        /// <param name="algorithm_type"></param>
+        public void setCorrespondenceAlgorithmType(int algorithm_type)
+        {
+            correspondence_algorithm_type = algorithm_type;
+        }
+
         public void setMappingParameters(float sigma)
         {
             sensorModelMapping.sigma = sigma;
@@ -285,6 +325,10 @@ namespace sentience.core
             correspondence.setContextRadii(context_radius_1, context_radius_2);
         }
 
+        #endregion
+
+        #region "viewpoints"
+
         /// <summary>
         /// calculates a viewpoint based upon the stereo features currently
         /// associated with the head of the robot
@@ -295,20 +339,124 @@ namespace sentience.core
             return (sensorModelMapping.createViewpoint(head, (pos3D)this));
         }
 
-        /// <summary>
-        /// update the given path using the current viewpoint
-        /// </summary>
-        /// <param name="path"></param>
-        public void updatePath(robotPath path)
+        #endregion
+
+        #region "update routines"
+
+        // the path which was used to construct the current local grid
+        private robotPath LocalGridPath = new robotPath();
+
+        private void loadImages(ArrayList images, bool mapping)
         {
-            viewpoint view = getViewpoint();
-            view.odometry_position.x = x;
-            view.odometry_position.y = y;
-            view.odometry_position.z = z;
-            view.odometry_position.pan = pan;
-            path.Add(view);
+            for (int i = 0; i < images.Count / 2; i++)
+            {
+                Byte[] left_image = (Byte[])images[i * 2];
+                Byte[] right_image = (Byte[])images[(i * 2) + 1];
+                loadRawImages(i, left_image, right_image, 3, mapping);
+            }
         }
 
+        /// <summary>
+        /// check if the robot has moved out of bounds of the current local grid
+        /// if so, create a new grid for it to move into and centre it appropriately
+        /// </summary>
+        private void checkOutOfBounds()
+        {
+            bool out_of_bounds = false;
+            pos3D new_grid_centre = new pos3D(LocalGrid.x, LocalGrid.y, LocalGrid.z);
+
+            float innermost_gridSize_mm = LocalGrid.getCellSize(LocalGrid.levels - 1);
+            float border = innermost_gridSize_mm / 4.0f;
+            if (x < LocalGrid.x - border)
+            {
+                new_grid_centre.x = LocalGrid.x - border;
+                out_of_bounds = true;
+            }
+            if (x > LocalGrid.x + border)
+            {
+                new_grid_centre.x = LocalGrid.x + border;
+                out_of_bounds = true;
+            }
+            if (y < LocalGrid.y - border)
+            {
+                new_grid_centre.y = LocalGrid.y - border;
+                out_of_bounds = true;
+            }
+            if (y > LocalGrid.y + border)
+            {
+                new_grid_centre.y = LocalGrid.y + border;
+                out_of_bounds = true;
+            }
+
+            if (out_of_bounds)
+            {
+                // store the path which was used to create the previous grid
+                // this is far more efficient in terms of memory and disk storage
+                // than trying to store the entire grid, most of which will be just empty cells
+                // TODO:                
+
+                // clear out the path data
+                LocalGridPath.Clear();
+
+                // make a new grid
+                createLocalGrid();
+
+                // position the grid
+                LocalGrid.x = new_grid_centre.x;
+                LocalGrid.y = new_grid_centre.y;
+                LocalGrid.z = new_grid_centre.z;
+
+            }
+        }
+
+        public void update(ArrayList images, 
+                           float forward_velocity, float angular_velocity,
+                           float time_elapsed_sec, bool mapping)
+        {
+            if (images != null)
+            {
+                // load stereo images
+                loadImages(images, mapping);
+
+                // create a viewpoint from the stereo features
+                // using either the mapping or localisation sensor model
+                viewpoint v = null;
+                if (mapping)
+                    v = sensorModelMapping.createViewpoint(head, (pos3D)this);
+                else
+                    v = sensorModelLocalisation.createViewpoint(head, null);
+                v.SetPosition(x, y, z);
+                v.odometry_position.pan = pan;
+
+                // store the viewpoint in the path
+                LocalGridPath.Add(v);      
+
+                // what's the relative position of the robot inside the grid ?
+                pos3D relative_position = new pos3D(x - LocalGrid.x, y - LocalGrid.y, 0);
+                relative_position.pan = pan - LocalGrid.pan;
+
+                // have we moved off the current grid ?
+                checkOutOfBounds();
+
+                if (mapping)
+                {
+                    // update the grid
+                    LocalGrid.insert(v, mapping, relative_position);
+                }
+                else
+                {
+                    // localise within the grid
+                    robotLocalisation.surveyPoses(v, LocalGrid, motion);
+                }
+            }
+
+            // update the motion model
+            motion.forward_velocity = forward_velocity;
+            motion.angular_velocity = angular_velocity;
+            motion.Predict(time_elapsed_sec);
+        }
+
+        #endregion
 
         #region "saving and loading"
 

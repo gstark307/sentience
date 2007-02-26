@@ -32,6 +32,10 @@ namespace sentience.core
         private Random rnd = new Random();
         private robot rob;
 
+        public const int INPUTTYPE_WHEEL_ANGULAR_VELOCITY = 0;
+        public const int INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY = 1;
+        public int InputType = INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
+
         // a list of possible poses
         public int survey_trial_poses = 200;   // the number of possible poses to keep track of
 
@@ -251,12 +255,16 @@ namespace sentience.core
             {
                 // remove low probability poses
                 Prune();
-
-                // deterministic prediction of angular and forward velocities
-                float WheelRadius = rob.WheelDiameter_mm / 2;
-                angular_velocity = ((WheelRadius / (2 * rob.WheelBase_mm)) * (RightWheelAngularVelocity - LeftWheelAngularVelocity));
-                rob.pan += angular_velocity / time_elapsed_sec;
-                forward_velocity = ((WheelRadius / 2) * (RightWheelAngularVelocity + LeftWheelAngularVelocity)) / time_elapsed_sec;
+                
+                if (InputType == INPUTTYPE_WHEEL_ANGULAR_VELOCITY)
+                {
+                    // deterministic prediction of angular and forward velocities from
+                    // left and right wheel angular velocities
+                    float WheelRadius = rob.WheelDiameter_mm / 2;
+                    angular_velocity = ((WheelRadius / (2 * rob.WheelBase_mm)) * (RightWheelAngularVelocity - LeftWheelAngularVelocity));
+                    rob.pan += angular_velocity / time_elapsed_sec;
+                    forward_velocity = ((WheelRadius / 2) * (RightWheelAngularVelocity + LeftWheelAngularVelocity)) / time_elapsed_sec;
+                }
 
                 // update poses
                 for (int sample = 0; sample < Poses.Count; sample++)
