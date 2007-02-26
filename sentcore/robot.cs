@@ -65,6 +65,7 @@ namespace sentience.core
         public int WheelPositionFeedbackType = 0; // the type of position feedback 
         public int GearRatio = 30;                // motor gear ratio
         public int CountsPerRev = 4096;           // encoder counts per rev
+        private long prev_left_wheel_encoder = 0, prev_right_wheel_encoder = 0;
 
         // motion limits
         public float MotorNoLoadSpeedRPM = 175;   // max motor speed with no load
@@ -153,7 +154,15 @@ namespace sentience.core
             sensorModelLocalisation.mapping = false;
             sensorModelLocalisation.no_of_stereo_features = 100;
 
+            // add a local occupancy grid
             createLocalGrid();
+
+            // create a motion model
+            motion = new motionModel(this);
+
+            // zero encoder positions
+            prev_left_wheel_encoder = 0;
+            prev_right_wheel_encoder = 0;
         }
 
         /// <summary>
@@ -360,7 +369,7 @@ namespace sentience.core
         /// check if the robot has moved out of bounds of the current local grid
         /// if so, create a new grid for it to move into and centre it appropriately
         /// </summary>
-        private void checkOutOfBounds()
+        private void checkOutOfBounds(bool mapping)
         {
             bool out_of_bounds = false;
             pos3D new_grid_centre = new pos3D(LocalGrid.x, LocalGrid.y, LocalGrid.z);
@@ -390,10 +399,14 @@ namespace sentience.core
 
             if (out_of_bounds)
             {
+                // file name for this grid, based upon its position
+                String grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid.x / border)) + "_" +
+                                                Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
+
                 // store the path which was used to create the previous grid
                 // this is far more efficient in terms of memory and disk storage
                 // than trying to store the entire grid, most of which will be just empty cells
-                // TODO:                
+                LocalGridPath.Save(grid_filename);          
 
                 // clear out the path data
                 LocalGridPath.Clear();
@@ -406,12 +419,21 @@ namespace sentience.core
                 LocalGrid.y = new_grid_centre.y;
                 LocalGrid.z = new_grid_centre.z;
 
+                if (!mapping)
+                {
+                    // file name of the grid to be loaded
+                    grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid.x / border)) + "_" +
+                                             Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
+                    LocalGridPath.Load(grid_filename);
+                    
+                    // update the local grid using the loaded path
+                    LocalGrid.insert(LocalGridPath, false);
+                }
+
             }
         }
 
-        public void update(ArrayList images, 
-                           float forward_velocity, float angular_velocity,
-                           float time_elapsed_sec, bool mapping)
+        private void update(ArrayList images, bool mapping)
         {
             if (images != null)
             {
@@ -429,14 +451,14 @@ namespace sentience.core
                 v.odometry_position.pan = pan;
 
                 // store the viewpoint in the path
-                LocalGridPath.Add(v);      
+                LocalGridPath.Add(v);
 
                 // what's the relative position of the robot inside the grid ?
                 pos3D relative_position = new pos3D(x - LocalGrid.x, y - LocalGrid.y, 0);
                 relative_position.pan = pan - LocalGrid.pan;
 
                 // have we moved off the current grid ?
-                checkOutOfBounds();
+                checkOutOfBounds(mapping);
 
                 if (mapping)
                 {
@@ -449,8 +471,85 @@ namespace sentience.core
                     robotLocalisation.surveyPoses(v, LocalGrid, motion);
                 }
             }
+        }
+
+        /// <summary>
+        /// update from a known position and orientation
+        /// </summary>
+        /// <param name="images">list of bitmap images (3bpp)</param>
+        /// <param name="x">x position in mm</param>
+        /// <param name="y">y position in mm</param>
+        /// <param name="pan">pan angle in radians</param>
+        /// <param name="mapping">mapping or localisation</param>
+        public void updateFromKnownPosition(ArrayList images,
+                                            float x, float y, float pan, 
+                                            bool mapping)                   
+        {
+            // update the grid
+            update(images, mapping);
+
+            // set the robot at the known position
+            this.x = x;
+            this.y = y;
+            this.pan = pan;
+
+            if (!mapping)
+            {
+                // update the motion model
+                motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
+                motion.forward_velocity = 0;
+                motion.angular_velocity = 0;
+                motion.Predict(1);
+            }
+        }
+
+        public void updateFromEncoderPositions(ArrayList images,
+                                               long left_wheel_encoder, long right_wheel_encoder,
+                                               float time_elapsed_sec, bool mapping)
+        {
+            // update the grid
+            update(images, mapping);
+
+            float wheel_circumference_mm = (float)Math.PI * WheelDiameter_mm;
+            long countsPerWheelRev = CountsPerRev * GearRatio;
+
+            if ((time_elapsed_sec > 0.00001f) && (countsPerWheelRev > 0))
+            {
+                // calculate angular velocity of the left wheel in radians/sec
+                float angle_traversed_radians = (float)(left_wheel_encoder - prev_left_wheel_encoder) * 2 * (float)Math.PI / countsPerWheelRev;
+                motion.LeftWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;
+
+                // calculate angular velocity of the right wheel in radians/sec
+                angle_traversed_radians = (float)(right_wheel_encoder - prev_right_wheel_encoder) * 2 * (float)Math.PI / countsPerWheelRev;
+                motion.RightWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;
+            }
 
             // update the motion model
+            motion.InputType = motionModel.INPUTTYPE_WHEEL_ANGULAR_VELOCITY;
+            motion.Predict(time_elapsed_sec);
+
+            prev_left_wheel_encoder = left_wheel_encoder;
+            prev_right_wheel_encoder = right_wheel_encoder;
+        }
+
+
+        /// <summary>
+        /// update using known velocities
+        /// </summary>
+        /// <param name="images">list of bitmap images (3bpp)</param>
+        /// <param name="forward_velocity">forward velocity in mm/sec</param>
+        /// <param name="angular_velocity">angular velocity in radians/sec</param>
+        /// <param name="time_elapsed_sec">time elapsed since the last update in sec</param>
+        /// <param name="mapping">mapping or localisation</param>
+        public void updateFromVelocities(ArrayList images, 
+                                         float forward_velocity, float angular_velocity,
+                                         float time_elapsed_sec, bool mapping)
+        {
+            // update the grid
+            update(images, mapping);
+
+            // update the motion model
+            motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
             motion.forward_velocity = forward_velocity;
             motion.angular_velocity = angular_velocity;
             motion.Predict(time_elapsed_sec);

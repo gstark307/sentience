@@ -124,7 +124,7 @@ namespace sentience.core
                 (motion_noise[5] * Math.Abs(angular_velocity)));
 
             float fraction = 0;
-            if (Math.Abs(ang_velocity) > 0.00001f) fraction = fwd_velocity / ang_velocity;
+            if (Math.Abs(ang_velocity) > 0.000001f) fraction = fwd_velocity / ang_velocity;
             float new_pan = pose.pan + (ang_velocity * time_elapsed_sec);
 
             // update the pose

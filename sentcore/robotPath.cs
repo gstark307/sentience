@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -28,6 +29,50 @@ namespace sentience.core
     public class robotPath
     {
         private ArrayList viewpoints = new ArrayList();
+
+        #region "saving and loading"
+
+        public void Save(String filename)
+        {
+            FileStream fp = new FileStream(filename, FileMode.Create);
+            BinaryWriter binfile = new BinaryWriter(fp);
+            Save(binfile);
+            binfile.Close();
+            fp.Close();
+        }
+
+        public void Load(String filename)
+        {
+            if (File.Exists(filename))
+            {
+                FileStream fp = new FileStream(filename, FileMode.Open);
+                BinaryReader binfile = new BinaryReader(fp);
+                Load(binfile);
+                binfile.Close();
+                fp.Close();
+            }
+        }
+
+        public void Save(BinaryWriter binfile)
+        {
+            binfile.Write((int)(viewpoints.Count));
+            for (int v = 0; v < viewpoints.Count; v++)
+                ((viewpoint)viewpoints[v]).Save(binfile);
+        }
+
+        public void Load(BinaryReader binfile)
+        {
+            viewpoints.Clear();
+            int no_of_viewpoints = binfile.ReadInt32();
+            for (int v = 0; v < no_of_viewpoints; v++)
+            {
+                viewpoint new_viewpoint = new viewpoint(1);
+                new_viewpoint.Load(binfile);
+                Add(new_viewpoint);
+            }
+        }
+
+        #endregion
 
         public void Add(viewpoint v)
         {

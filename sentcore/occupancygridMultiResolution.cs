@@ -43,6 +43,7 @@ namespace sentience.core
             for (int l = 0; l < levels; l++)
             {
                 grid[l] = new occupancygrid(dimension, getCellSize(l));
+                grid[l].parent = this;
             }
         }
 
@@ -119,9 +120,9 @@ namespace sentience.core
         /// insert a path into the grids
         /// </summary>
         /// <param name="p"></param>
-        public void insert(robotPath p)
+        public void insert(robotPath p, bool autoCentre)
         {
-            for (int l = 0; l < levels; l++) grid[l].insert(p);
+            for (int l = 0; l < levels; l++) grid[l].insert(p, autoCentre);
         }
 
         /// <summary>

@@ -82,6 +82,8 @@ namespace sentience.core
 
     public class occupancygrid
     {
+        public occupancygridMultiResolution parent = null;
+
         public int dimension;            // how many cells across
         private float half_dimension_mm;
         public float cellSize_mm = 10;
@@ -116,7 +118,7 @@ namespace sentience.core
             gaussLookup = stereoModel.createGaussianLookup(50);
         }
 
-        public occupancygrid(int dimension, float cellSize_mm)        
+        public occupancygrid(int dimension, float cellSize_mm)  
         {
             init(dimension, cellSize_mm);
         }
@@ -356,14 +358,25 @@ namespace sentience.core
         /// insert the given path into the grid
         /// </summary>
         /// <param name="p"></param>
-        public void insert(robotPath p)
+        public void insert(robotPath p, bool autoCentre)
         {
-            pos3D centre = p.pathCentre();
-            //centre.y += 1000;
+            pos3D centre = new pos3D(0,0,0);
+
+            if (autoCentre) centre = p.pathCentre();
+
             int length = p.getNoOfViewpoints();
             for (int i = 0; i < length; i++)
             {
                 viewpoint v = p.getViewpoint(i);
+
+                if (!autoCentre)
+                {
+                    centre.x = v.odometry_position.x - parent.x;
+                    centre.y = v.odometry_position.y - parent.y;
+                    centre.z = v.odometry_position.z - parent.z;
+                    centre.pan = v.odometry_position.pan - parent.pan;
+                }
+
                 insert(v, true, centre);
             }
         }

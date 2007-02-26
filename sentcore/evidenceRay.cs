@@ -20,6 +20,7 @@
 
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Text;
 
@@ -52,6 +53,56 @@ namespace sentience.core
             colour = new Byte[3];
             colour[0] = 255;
         }
+
+        #region "saving and loading"
+
+        /// <summary>
+        /// save the ray to file
+        /// </summary>
+        /// <param name="binfile"></param>
+        public void Save(BinaryWriter binfile)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                binfile.Write(vertices[i].x);
+                binfile.Write(vertices[i].y);
+                binfile.Write(vertices[i].z);
+            }
+
+            for (int c = 0; c < 3; c++)
+                binfile.Write(colour[c]);
+
+            binfile.Write(width);
+            binfile.Write(fattestPoint);
+        }
+
+        /// <summary>
+        /// load the ray from file
+        /// </summary>
+        /// <param name="binfile"></param>
+        public void Load(BinaryReader binfile)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                vertices[i].x = binfile.ReadSingle();
+                vertices[i].y = binfile.ReadSingle();
+                vertices[i].z = binfile.ReadSingle();
+            }
+
+            for (int c = 0; c < 3; c++)
+                colour[c] = binfile.ReadByte();
+
+            width = binfile.ReadSingle();
+            fattestPoint = binfile.ReadSingle();
+
+            // calculate the length
+            float dx = vertices[1].x - vertices[0].x;
+            float dy = vertices[1].y - vertices[0].y;
+            float dz = vertices[1].z - vertices[0].z;
+            length = (float)Math.Sqrt((dx*dx)+(dy*dy)+(dz*dz));
+        }
+
+        #endregion
 
         /// <summary>
         /// what is the occupancy probability at the given point ?

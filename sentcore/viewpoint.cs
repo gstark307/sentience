@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -47,11 +48,57 @@ namespace sentience.core
         public viewpoint(int no_of_cameras)
         {
             odometry_position = new pos3D(0, 0, 0);
+            init(no_of_cameras);
+        }
 
+        private void init(int no_of_cameras)
+        {
             rays = new ArrayList[no_of_cameras];
             for (int cam = 0; cam < no_of_cameras; cam++)
                 rays[cam] = new ArrayList();
         }
+
+        #region "saving and loading"
+
+        public void Save(BinaryWriter binfile)
+        {
+            binfile.Write(odometry_position.x);
+            binfile.Write(odometry_position.y);
+            binfile.Write(odometry_position.z);
+
+            binfile.Write((int)(rays.Length));
+            for (int cam = 0; cam < rays.Length; cam++)
+            {
+                binfile.Write((int)(rays[cam].Count));
+                for (int r = 0; r < rays[cam].Count; r++)
+                    ((evidenceRay)rays[cam][r]).Save(binfile);
+            }
+        }
+
+        public void Load(BinaryReader binfile)
+        {
+            odometry_position.x = binfile.ReadSingle();
+            odometry_position.y = binfile.ReadSingle();
+            odometry_position.z = binfile.ReadSingle();
+
+            int no_of_cameras = binfile.ReadInt32();
+            init(no_of_cameras);
+            for (int cam = 0; cam < rays.Length; cam++)
+            {
+                int no_of_rays = binfile.ReadInt32();
+                for (int r = 0; r < no_of_rays; r++)
+                {
+                    evidenceRay new_ray = new evidenceRay();
+                    new_ray.Load(binfile);
+                    new_ray.observedFrom.x = odometry_position.x;
+                    new_ray.observedFrom.y = odometry_position.y;
+                    new_ray.observedFrom.z = odometry_position.z;
+                    rays[cam].Add(new_ray);
+                }
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// sets the position for this viewpoint
