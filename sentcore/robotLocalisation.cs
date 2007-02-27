@@ -57,6 +57,33 @@ namespace sentience.core
                 // update the score for this pose
                 motion.updatePoseScore(pose, grid.matchedCells());
             }
+
+            // indicate that the pose scores have been updated
+            motion.PosesEvaluated = true;
+        }
+
+        /// <summary>
+        /// generate scores for poses.  This is only for testing purposes.
+        /// </summary>
+        /// <param name="rob"></param>
+        public static void surveyPosesDummy(robot rob)
+        {
+            // examine the pose list
+            for (int sample = 0; sample < rob.motion.survey_trial_poses; sample++)
+            {
+                possiblePose pose = (possiblePose)rob.motion.Poses[sample];
+
+                float dx = rob.x - pose.x;
+                float dy = rob.y - pose.y;
+                float dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                float score = 1.0f / (1 + dist);
+
+                // update the score for this pose
+                rob.motion.updatePoseScore(pose, score);
+            }
+
+            // indicate that the pose scores have been updated
+            rob.motion.PosesEvaluated = true;
         }
 
 

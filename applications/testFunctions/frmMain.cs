@@ -91,7 +91,9 @@ namespace WindowsApplication1
             rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             picRays.Image = rays;
 
-            stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false);
+            test_motion_model(true);
+
+            //stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false);
             //stereo_model.showDistribution(img_rays, standard_width, standard_height);
             //stereo_model.showSurveyDistribution(500, img_rays, standard_width, standard_height);
 
@@ -224,13 +226,27 @@ namespace WindowsApplication1
             grd.show(img_rays, standard_width, standard_height);
         }
 
-        private void test_motion_model()
+        private void test_motion_model(bool closed_loop)
         {
             robot rob = new robot(1);
 
-            for (int t = 0; t < 10; t++)
+            int min_x_mm = 0;
+            int min_y_mm = 0;
+            int max_x_mm = 1000;
+            int max_y_mm = 1000;
+            int step_size = (max_y_mm - min_y_mm) / 10;
+            int x = (max_x_mm - min_x_mm) / 2;
+            bool initial = true;
+            float pan = 0; // (float)Math.PI / 4;
+            for (int y = min_y_mm; y < max_y_mm; y += step_size)
             {
-
+                if (closed_loop) robotLocalisation.surveyPosesDummy(rob);
+                rob.updateFromKnownPosition(null, x, y, pan, false);
+                
+                rob.motion.Show(img_rays, standard_width, standard_height, 
+                                min_x_mm, min_y_mm, max_x_mm, max_y_mm,
+                                initial);
+                initial = false;
             }
         }
 

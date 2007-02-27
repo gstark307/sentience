@@ -82,6 +82,7 @@ namespace sentience.core
         public float LocalGridCellSize_mm = 32;   // Size of each grid cell (voxel) in millimetres
         public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
         public occupancygridMultiResolution LocalGrid;  // grid containing the current local observations
+       
 
         #region "constructors"
 
@@ -355,6 +356,21 @@ namespace sentience.core
         // the path which was used to construct the current local grid
         private robotPath LocalGridPath = new robotPath();
 
+        // the previous position and orientation of the robot
+        private pos3D previousPosition = new pos3D(-1,-1,0);
+
+        /// <summary>
+        /// stores the previous position of the robot
+        /// </summary>
+        private void storePreviousPosition()
+        {
+            previousPosition.x = x;
+            previousPosition.y = y;
+            previousPosition.z = z;
+            previousPosition.pan = pan;
+            previousPosition.tilt = tilt;
+        }
+
         private void loadImages(ArrayList images, bool mapping)
         {
             for (int i = 0; i < images.Count / 2; i++)
@@ -497,12 +513,31 @@ namespace sentience.core
             {
                 // update the motion model
                 motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
-                motion.forward_velocity = 0;
-                motion.angular_velocity = 0;
-                motion.Predict(1);
+                if (!((previousPosition.x == -1) && (previousPosition.y == -1)))
+                {
+                    motion.forward_velocity = y - previousPosition.y;
+                    motion.angular_velocity = pan - previousPosition.pan;
+                    motion.Predict(1);
+                }
             }
+            storePreviousPosition();
         }
 
+        public void Reset()
+        {
+            previousPosition.x = -1;
+            previousPosition.y = -1;
+            motion.Reset();
+        }
+
+        /// <summary>
+        /// update using wheel encoder positions
+        /// </summary>
+        /// <param name="images"></param>
+        /// <param name="left_wheel_encoder">left wheel encoder position</param>
+        /// <param name="right_wheel_encoder">right wheel encoder position</param>
+        /// <param name="time_elapsed_sec">time elapsed since the last update in sec</param>
+        /// <param name="mapping">mapping or localisation</param>
         public void updateFromEncoderPositions(ArrayList images,
                                                long left_wheel_encoder, long right_wheel_encoder,
                                                float time_elapsed_sec, bool mapping)
@@ -513,11 +548,13 @@ namespace sentience.core
             float wheel_circumference_mm = (float)Math.PI * WheelDiameter_mm;
             long countsPerWheelRev = CountsPerRev * GearRatio;
 
-            if ((time_elapsed_sec > 0.00001f) && (countsPerWheelRev > 0))
+            if ((time_elapsed_sec > 0.00001f) && 
+                (countsPerWheelRev > 0) && 
+                (prev_left_wheel_encoder != 0))
             {
                 // calculate angular velocity of the left wheel in radians/sec
                 float angle_traversed_radians = (float)(left_wheel_encoder - prev_left_wheel_encoder) * 2 * (float)Math.PI / countsPerWheelRev;
-                motion.LeftWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;
+                motion.LeftWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;                
 
                 // calculate angular velocity of the right wheel in radians/sec
                 angle_traversed_radians = (float)(right_wheel_encoder - prev_right_wheel_encoder) * 2 * (float)Math.PI / countsPerWheelRev;
@@ -530,6 +567,8 @@ namespace sentience.core
 
             prev_left_wheel_encoder = left_wheel_encoder;
             prev_right_wheel_encoder = right_wheel_encoder;
+
+            storePreviousPosition();
         }
 
 
@@ -553,6 +592,8 @@ namespace sentience.core
             motion.forward_velocity = forward_velocity;
             motion.angular_velocity = angular_velocity;
             motion.Predict(time_elapsed_sec);
+
+            storePreviousPosition();
         }
 
         #endregion

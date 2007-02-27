@@ -32,6 +32,9 @@ namespace sentience.core
         private Random rnd = new Random();
         private robot rob;
 
+        // have the pose scores been updated?
+        public bool PosesEvaluated;
+
         public const int INPUTTYPE_WHEEL_ANGULAR_VELOCITY = 0;
         public const int INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY = 1;
         public int InputType = INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
@@ -42,13 +45,13 @@ namespace sentience.core
         // the number of updates after which a pose is considered to be mature
         /// This is so that poses which may initially be unfairly judged as 
         /// improbable have a few time steps to prove their worth
-        public int pose_maturation = 5;        
+        public int pose_maturation = 1;        
 
         // list of poses
         public ArrayList Poses;
 
         // pose score threshold in the range 0-100 below which low probability poses are pruned
-        int cull_threshold = 25;
+        int cull_threshold = 75;
 
         // standard deviation values for noise within the motion model
         public float[] motion_noise;
@@ -63,6 +66,8 @@ namespace sentience.core
         // angular speed in radians / sec
         public float angular_velocity = 0;
 
+        private bool initialised = false;
+
         public motionModel(robot rob)
         {
             this.rob = rob;
@@ -70,8 +75,22 @@ namespace sentience.core
             motion_noise = new float[6];
 
             // some default noise values
-            for (int i = 0; i < motion_noise.Length; i++)
-                motion_noise[i] = 0.0001f;
+            int i = 0;
+            while (i < 2)
+            {
+                motion_noise[i] = 0.05f;
+                i++;
+            }
+            while (i < 4)
+            {
+                motion_noise[i] = 0.0002f;
+                i++;
+            }
+            while (i < motion_noise.Length)
+            {
+                motion_noise[i] = 0.0005f;
+                i++;
+            }
 
             // create some initial poses
             createNewPoses(rob.x, rob.y, rob.pan);
@@ -128,9 +147,9 @@ namespace sentience.core
             float new_pan = pose.pan + (ang_velocity * time_elapsed_sec);
 
             // update the pose
-            pose.x = pose.x - (fraction * (float)Math.Sin(pose.pan)) +
+            pose.y = pose.y - (fraction * (float)Math.Sin(pose.pan)) +
                               (fraction * (float)Math.Sin(new_pan));
-            pose.y = pose.y + (fraction * (float)Math.Cos(pose.pan)) -
+            pose.x = pose.x + (fraction * (float)Math.Cos(pose.pan)) -
                               (fraction * (float)Math.Cos(new_pan));
             pose.pan = new_pan + (v * time_elapsed_sec);
 
@@ -144,12 +163,9 @@ namespace sentience.core
         /// <param name="img"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void Show(Byte[] img, int width, int height)
+        public void Show(Byte[] img, int width, int height,
+                         bool clearBackground)
         {
-            // clear the image
-            for (int i = 0; i < width * height * 3; i++)
-                img[i] = (Byte)200;
-
             float min_x = 99999;
             float min_y = 99999;
             float max_x = -99999;
@@ -162,19 +178,51 @@ namespace sentience.core
                 if (pose.x > max_x) max_x = pose.x;
                 if (pose.y > max_y) max_y = pose.y;
             }
-            if ((max_x > min_x) && (max_y > min_y))
+            Show(img, width, height, min_x, min_y, max_x, max_y, clearBackground);
+        }
+
+        /// <summary>
+        /// show the position uncertainty distribution within the given region
+        /// </summary>
+        /// <param name="img">bitmap image (3bpp)</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="min_x_mm"></param>
+        /// <param name="min_y_mm"></param>
+        /// <param name="max_x_mm"></param>
+        /// <param name="max_y_mm"></param>
+        public void Show(Byte[] img, int width, int height,
+                         float min_x_mm, float min_y_mm,
+                         float max_x_mm, float max_y_mm,
+                         bool clearBackground)
+        {
+            if (clearBackground)
+            {
+                // clear the image
+                for (int i = 0; i < width * height * 3; i++)
+                    img[i] = (Byte)250;
+            }
+
+            if ((max_x_mm > min_x_mm) && (max_y_mm > min_y_mm))
             {
                 for (int sample = 0; sample < Poses.Count; sample++)
                 {
                     possiblePose pose = (possiblePose)Poses[sample];
-                    int x = (int)((pose.x - min_x) * (width-1) / (max_x - min_x));
-                    int y = height - 1 - (int)((pose.y - min_y) * (height - 1) / (max_y - min_y));
-                    int n = ((y * width) + x) * 3;
-                    for (int col = 0; col < 3; col++)
-                        img[n + col] = (Byte)0;
+                    int x = (int)((pose.x - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
+                    if ((x > 0) && (x < width))
+                    {
+                        int y = height - 1 - (int)((pose.y - min_y_mm) * (height - 1) / (max_y_mm - min_y_mm));
+                        if ((y > 0) && (y < height))
+                        {
+                            int n = ((y * width) + x) * 3;
+                            for (int col = 0; col < 3; col++)
+                                img[n + col] = (Byte)0;
+                        }
+                    }
                 }
             }
         }
+
 
         /// <summary>
         /// removes low probability poses
@@ -230,6 +278,8 @@ namespace sentience.core
                 rob.y = best_pose.y;
                 rob.pan = best_pose.pan;
             }
+
+            PosesEvaluated = false;
         }
 
         /// <summary>
@@ -247,14 +297,27 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// resets the pose list to the current known robot position
+        /// </summary>
+        public void Reset()
+        {
+            // create some initial poses
+            Poses.Clear();
+            createNewPoses(rob.x, rob.y, rob.pan);
+            initialised = true;
+        }
+
+        /// <summary>
         /// predict the next time step
         /// </summary>
         public void Predict(float time_elapsed_sec)
         {
             if (time_elapsed_sec > 0)
             {
+                if (!initialised) Reset();
+
                 // remove low probability poses
-                Prune();
+                if (PosesEvaluated) Prune();
                 
                 if (InputType == INPUTTYPE_WHEEL_ANGULAR_VELOCITY)
                 {
