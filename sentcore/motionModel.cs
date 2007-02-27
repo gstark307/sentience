@@ -78,17 +78,17 @@ namespace sentience.core
             int i = 0;
             while (i < 2)
             {
-                motion_noise[i] = 0.05f;
+                motion_noise[i] = 0.04f;
                 i++;
             }
             while (i < 4)
             {
-                motion_noise[i] = 0.0002f;
+                motion_noise[i] = 0.00005f;
                 i++;
             }
             while (i < motion_noise.Length)
             {
-                motion_noise[i] = 0.0005f;
+                motion_noise[i] = 0.00001f;
                 i++;
             }
 
@@ -270,8 +270,25 @@ namespace sentience.core
 
             if (best_pose != null)
             {
+                // choose a good pose, but not necessarily the best
+                // this avoids too much elitism
+                possiblePose best = null;
+                int tries = 0;
+                float best_score = best_pose.score * 80 / 100;
+                while (tries < 4)
+                {
+                    possiblePose pose = (possiblePose)Poses[rnd.Next(Poses.Count-1)];
+                    if (pose.score > best_score)
+                    {
+                        best = pose;
+                        best_score = pose.score;
+                    }
+                    tries++;
+                }
+                if (best == null) best = best_pose;
+
                 // create new poses to maintain the population
-                createNewPoses(best_pose.x, best_pose.y, best_pose.pan);
+                createNewPoses(best.x, best.y, best.pan);
 
                 // update the robot position with the best available pose
                 rob.x = best_pose.x;
