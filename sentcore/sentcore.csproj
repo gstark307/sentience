@@ -40,6 +40,7 @@
     <Compile Include="FASTlines.cs" />
     <Compile Include="motionModel.cs" />
     <Compile Include="polyfit.cs" />
+    <Compile Include="possiblePath.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
     <Compile Include="FAST.cs" />
     <Compile Include="specialMath.cs" />

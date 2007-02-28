@@ -19,6 +19,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -30,7 +31,6 @@ namespace sentience.core
         public float x, y;
         public float pan; 
         public float score;
-        public int time_steps;  //the number of time steps for which this pose has been updated
 
         public possiblePose(int index, float x, float y, int pan, float score)
         {
@@ -47,7 +47,6 @@ namespace sentience.core
             this.y = y;
             this.pan = pan;
             this.score = 0;  // this should be a running average
-            this.time_steps = 1;
         }
 
         public pos3D subtract(pos3D pos)

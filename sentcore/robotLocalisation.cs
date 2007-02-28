@@ -42,7 +42,8 @@ namespace sentience.core
             // examine the pose list
             for (int sample = 0; sample < motion.survey_trial_poses; sample++)
             {
-                possiblePose pose = (possiblePose)motion.Poses[sample];
+                possiblePath path = (possiblePath)motion.Poses[sample];
+                possiblePose pose = path.current_pose;
 
                 // get the position of this pose inside the grid
                 pos3D relative_position = pose.subtract((pos3D)grid);
@@ -55,7 +56,7 @@ namespace sentience.core
                 grid.insert(trialPose, false, relative_position);
 
                 // update the score for this pose
-                motion.updatePoseScore(pose, grid.matchedCells());
+                motion.updatePoseScore(path, grid.matchedCells());
             }
 
             // indicate that the pose scores have been updated
@@ -71,7 +72,8 @@ namespace sentience.core
             // examine the pose list
             for (int sample = 0; sample < rob.motion.survey_trial_poses; sample++)
             {
-                possiblePose pose = (possiblePose)rob.motion.Poses[sample];
+                possiblePath path = (possiblePath)rob.motion.Poses[sample];
+                possiblePose pose = path.current_pose;
 
                 float dx = rob.x - pose.x;
                 float dy = rob.y - pose.y;
@@ -79,7 +81,7 @@ namespace sentience.core
                 float score = 1.0f / (1 + dist);
 
                 // update the score for this pose
-                rob.motion.updatePoseScore(pose, score);
+                rob.motion.updatePoseScore(path, score);
             }
 
             // indicate that the pose scores have been updated
