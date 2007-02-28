@@ -33,7 +33,7 @@ namespace sentience.core
         const int max_path_length = 500;
 
         // the most probable path taken by the robot
-        private possiblePath best_path = null;
+        private particlePath best_path = null;
 
         private Random rnd = new Random();
         private robot rob;
@@ -55,6 +55,9 @@ namespace sentience.core
 
         // list of poses
         public ArrayList Poses;
+
+        // stores all active paths so that they're not garbage collected
+        private ArrayList ActivePoses;
 
         // pose score threshold in the range 0-100 below which low probability poses are pruned
         int cull_threshold = 75;
@@ -78,6 +81,7 @@ namespace sentience.core
         {
             this.rob = rob;
             Poses = new ArrayList();
+            ActivePoses = new ArrayList();
             motion_noise = new float[6];
 
             // some default noise values
@@ -109,8 +113,9 @@ namespace sentience.core
         {
             for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
             {
-                possiblePath path = new possiblePath(x, y, pan, max_path_length);                
+                particlePath path = new particlePath(x, y, pan, max_path_length);                
                 Poses.Add(path);
+                ActivePoses.Add(path);
             }
         }
 
@@ -118,12 +123,13 @@ namespace sentience.core
         /// create some new poses based upon the given parent
         /// </summary>
         /// <param name="parent_path"></param>
-        private void createNewPoses(possiblePath parent_path)
+        private void createNewPoses(particlePath parent_path)
         {
             for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
             {
-                possiblePath path = new possiblePath(parent_path);
+                particlePath path = new particlePath(parent_path);
                 Poses.Add(path);
+                ActivePoses.Add(path);
             }
         }
 
@@ -146,7 +152,7 @@ namespace sentience.core
         /// </summary>
         /// <param name="pose"></param>
         /// <param name="time_elapsed_sec"></param>
-        private void sample_motion_model_velocity(possiblePath path, float time_elapsed_sec)
+        private void sample_motion_model_velocity(particlePath path, float time_elapsed_sec)
         {
             // calculate noisy velocities
             float fwd_velocity = forward_velocity + sample_normal_distribution(
@@ -172,13 +178,8 @@ namespace sentience.core
                               (fraction * (float)Math.Cos(pan2));
             float new_pan = pan2 + (v * time_elapsed_sec);
 
-            possiblePose new_pose = new possiblePose(new_x, new_y, new_pan);
+            particlePose new_pose = new particlePose(new_x, new_y, new_pan);
             path.Add(new_pose);
-
-            //if (path.current_pose.time_steps < pose_maturation)
-            //    new_pose.time_steps = path.current_pose.time_steps + 1;
-            //else
-            //    new_pose.time_steps = path.current_pose.time_steps;
         }
 
         /// <summary>
@@ -196,7 +197,7 @@ namespace sentience.core
             float max_y = -99999;
             for (int sample = 0; sample < Poses.Count; sample++)
             {
-                possiblePose pose = ((possiblePath)Poses[sample]).current_pose;
+                particlePose pose = ((particlePath)Poses[sample]).current_pose;
                 if (pose.x < min_x) min_x = pose.x;
                 if (pose.y < min_y) min_y = pose.y;
                 if (pose.x > max_x) max_x = pose.x;
@@ -231,7 +232,7 @@ namespace sentience.core
             {
                 for (int sample = 0; sample < Poses.Count; sample++)
                 {
-                    possiblePose pose = ((possiblePath)Poses[sample]).current_pose;
+                    particlePose pose = ((particlePath)Poses[sample]).current_pose;
                     int x = (int)((pose.x - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
                     if ((x > 0) && (x < width))
                     {
@@ -281,9 +282,9 @@ namespace sentience.core
                 int prev_x = -1, prev_y = -1;
                 if ((max_x_mm > min_x_mm) && (max_y_mm > min_y_mm))
                 {
-                    for (int p = 0; p < best_path.path.Count; p++)
+                    particlePose pose = best_path.current_pose;
+                    while (pose.parent != null)
                     {
-                        possiblePose pose = (possiblePose)best_path.path[p];
                         x = (int)((pose.x - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
                         if ((x > 0) && (x < width))
                         {
@@ -293,12 +294,15 @@ namespace sentience.core
                         else x = -1;
                         if ((x > -1) && (y > -1))
                         {
-                            if (p > 0)
+                            if (prev_x > -1)
                                 util.drawLine(img, width, height, x, y, prev_x, prev_y, r, g, b, 0, false);
 
                             prev_x = x;
                             prev_y = y;
                         }
+
+                        // move along the list
+                        pose = pose.parent;
                     }
                 }
             }
@@ -319,8 +323,8 @@ namespace sentience.core
             ArrayList maturePoses = new ArrayList();
             for (int sample = 0; sample < Poses.Count; sample++)
             {
-                possiblePath path = (possiblePath)Poses[sample];
-                possiblePose pose = path.current_pose;
+                particlePath path = (particlePath)Poses[sample];
+                particlePose pose = path.current_pose;
 
                 // use poses which are considered to be mature, or which
                 // have a negative score.  A negative pose score indicates
@@ -344,22 +348,29 @@ namespace sentience.core
             float threshold = max_score * cull_threshold / 100;
             for (int mature = 0; mature < maturePoses.Count; mature++)
             {
-                possiblePath path = (possiblePath)maturePoses[mature];
+                particlePath path = (particlePath)maturePoses[mature];
                 float score = path.current_pose.score;
                 if (score < threshold)
+                {
+                    // remove mapping particles for this path
+                    if (path.Remove()) 
+                        ActivePoses.Remove(path);
+
+                    // now remove the path itself
                     Poses.Remove(path);
+                }
             }
 
             if (best_path != null)
             {
                 // choose a good pose, but not necessarily the best
                 // this avoids too much elitism
-                possiblePath best = null;
+                particlePath best = null;
                 int tries = 0;
                 float best_score = best_path.current_pose.score * 80 / 100;
                 while (tries < 4)
                 {
-                    possiblePath path = (possiblePath)Poses[rnd.Next(Poses.Count-1)];
+                    particlePath path = (particlePath)Poses[rnd.Next(Poses.Count-1)];
                     if (path.current_pose.score > best_score)
                     {
                         best = path;
@@ -389,7 +400,7 @@ namespace sentience.core
         /// </summary>
         /// <param name="pose"></param>
         /// <param name="new_score"></param>
-        public void updatePoseScore(possiblePath path, float new_score)
+        public void updatePoseScore(particlePath path, float new_score)
         {
             float fraction = 1.0f / (float)pose_maturation;
             path.current_pose.score = (path.current_pose.score * (1.0f - fraction)) + (new_score * fraction);
@@ -430,7 +441,7 @@ namespace sentience.core
 
                 // update poses
                 for (int sample = 0; sample < Poses.Count; sample++)
-                    sample_motion_model_velocity((possiblePath)Poses[sample], time_elapsed_sec);
+                    sample_motion_model_velocity((particlePath)Poses[sample], time_elapsed_sec);
             }
         }
 

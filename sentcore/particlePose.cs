@@ -25,14 +25,17 @@ using System.Text;
 
 namespace sentience.core
 {
-    public class possiblePose
+    public class particlePose
     {
         public int index;
         public float x, y;
         public float pan; 
         public float score;
 
-        public possiblePose(int index, float x, float y, int pan, float score)
+        public particlePose parent = null;
+        public int no_of_children = 0;
+
+        public particlePose(int index, float x, float y, int pan, float score)
         {
             this.index = index;
             this.x = x;
@@ -41,7 +44,7 @@ namespace sentience.core
             this.score = score;
         }
 
-        public possiblePose(float x, float y, float pan)
+        public particlePose(float x, float y, float pan)
         {
             this.x = x;
             this.y = y;
@@ -56,6 +59,13 @@ namespace sentience.core
             sum.y = y - pos.y;
             sum.pan = pan - pos.pan;
             return (sum);
+        }
+
+        /// <summary>
+        /// remove the mapping particles associated with this pose
+        /// </summary>
+        public void Remove()
+        {
         }
     }
 }

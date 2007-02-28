@@ -42,8 +42,8 @@ namespace sentience.core
             // examine the pose list
             for (int sample = 0; sample < motion.survey_trial_poses; sample++)
             {
-                possiblePath path = (possiblePath)motion.Poses[sample];
-                possiblePose pose = path.current_pose;
+                particlePath path = (particlePath)motion.Poses[sample];
+                particlePose pose = path.current_pose;
 
                 // get the position of this pose inside the grid
                 pos3D relative_position = pose.subtract((pos3D)grid);
@@ -72,8 +72,8 @@ namespace sentience.core
             // examine the pose list
             for (int sample = 0; sample < rob.motion.survey_trial_poses; sample++)
             {
-                possiblePath path = (possiblePath)rob.motion.Poses[sample];
-                possiblePose pose = path.current_pose;
+                particlePath path = (particlePath)rob.motion.Poses[sample];
+                particlePose pose = path.current_pose;
 
                 float dx = rob.x - pose.x;
                 float dy = rob.y - pose.y;

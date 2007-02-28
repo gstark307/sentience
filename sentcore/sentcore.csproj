@@ -39,8 +39,9 @@
     <Compile Include="calibrationStereo.cs" />
     <Compile Include="FASTlines.cs" />
     <Compile Include="motionModel.cs" />
+    <Compile Include="particlePath.cs" />
+    <Compile Include="particlePose.cs" />
     <Compile Include="polyfit.cs" />
-    <Compile Include="possiblePath.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
     <Compile Include="FAST.cs" />
     <Compile Include="specialMath.cs" />
@@ -65,7 +66,6 @@
     <Compile Include="stereoFeatures.cs" />
     <Compile Include="stereoHead.cs" />
     <Compile Include="stereoModel.cs" />
-    <Compile Include="possiblePose.cs" />
     <Compile Include="viewpoint.cs" />
   </ItemGroup>
   <ItemGroup>

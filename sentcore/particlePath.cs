@@ -28,10 +28,13 @@ namespace sentience.core
     /// <summary>
     /// stores a series of robot poses
     /// </summary>
-    public class possiblePath
+    public class particlePath
     {
+        // the index in the path arraylist at which the parent path connects to this path
+        public particlePose branch_pose = null;
+
         // the current pose
-        public possiblePose current_pose = null;
+        public particlePose current_pose = null;
 
         // the maximum number of poses which may be stored within the path
         public int max_length;
@@ -41,49 +44,71 @@ namespace sentience.core
 
         // total score for all poses within the path
         public float total_score = 0;
+        public int total_poses = 0;
 
-        public possiblePath(int max_length)
+        public particlePath(int max_length)
         {
             this.max_length = max_length;
             path = new ArrayList();
         }
 
-        public possiblePath(possiblePath parent)
+        public particlePath(particlePath parent)
         {
+            parent.current_pose.no_of_children++;
             current_pose = parent.current_pose;
+            branch_pose = parent.current_pose;
 
-            this.max_length = parent.max_length;
-
-            // copy the path of the parent
-            path = (ArrayList)parent.path.Clone();
-
+            this.max_length = parent.max_length;            
+            path = new ArrayList();
             total_score = parent.total_score;
+            total_poses = parent.total_poses;
         }
 
-        public possiblePath(float x, float y, float pan,
+        public particlePath(float x, float y, float pan,
                             int max_length)
         {
             this.max_length = max_length;
             path = new ArrayList();
-            Add(new possiblePose(x, y, pan));
+            Add(new particlePose(x, y, pan));
         }
 
-        public void Add(possiblePose pose)
+        public void Add(particlePose pose)
         {
+            // set the parent of this pose
+            pose.parent = current_pose;
+
             // set the current pose
             current_pose = pose;
 
             // add the pose to the path
             path.Add(pose);
+
             total_score += pose.score;
+            total_poses++;
 
             // ensure that the path does not exceed a maximum length
             if (path.Count > max_length)
-            {
-                possiblePose victim = (possiblePose)path[0];
-                total_score -= victim.score;
                 path.RemoveAt(0);
+        }
+
+        /// <summary>
+        /// remove the mapping particles associated with this path
+        /// </summary>
+        public bool Remove()
+        {
+            int children = 0;
+            particlePose pose = current_pose;
+            while ((pose != branch_pose) && (children < 1))
+            {
+                children = pose.no_of_children;
+                pose.Remove();
+                pose = pose.parent;
             }
+            if (pose != null) pose.no_of_children--;
+            if (pose == branch_pose)
+                return (true);
+            else
+                return (false);
         }
     }
 }
