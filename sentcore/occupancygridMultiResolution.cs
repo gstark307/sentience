@@ -28,7 +28,7 @@ namespace sentience.core
 {
     public class occupancygridMultiResolution : pos3D
     {
-        public occupancygrid[] grid;
+        public occupancygridClassic[] grid;
         public int levels;
         public int dimension;
         public float cellSize_mm;
@@ -39,10 +39,10 @@ namespace sentience.core
             this.dimension = dimension;
             this.cellSize_mm = max_cellSize_mm;
 
-            grid = new occupancygrid[levels];
+            grid = new occupancygridClassic[levels];
             for (int l = 0; l < levels; l++)
             {
-                grid[l] = new occupancygrid(dimension, getCellSize(l));
+                grid[l] = new occupancygridClassic(dimension, getCellSize(l));
                 grid[l].parent = this;
             }
         }

@@ -65,11 +65,13 @@ namespace sentience.core
         }
 
         public particlePath(float x, float y, float pan,
-                            int max_length)
+                            int max_length, UInt32 time_step)
         {
             this.max_length = max_length;
             path = new ArrayList();
-            Add(new particlePose(x, y, pan));
+            particlePose pose = new particlePose(x, y, pan);
+            pose.time_step = time_step;
+            Add(pose);
         }
 
         public void Add(particlePose pose)

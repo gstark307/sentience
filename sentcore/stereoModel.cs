@@ -793,6 +793,61 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// create a list of rays to be stored within poses
+        /// </summary>
+        /// <param name="head">head configuration</param>
+        /// <returns></returns>
+        public ArrayList createObservation(stereoHead head)
+        {
+            ArrayList result = new ArrayList();
+
+            for (int cam = 0; cam < head.no_of_cameras; cam++)
+            {
+                // get data for this stereo camera
+                baseline = head.calibration[cam].baseline;
+                image_width = head.calibration[cam].leftcam.image_width;
+                image_height = head.calibration[cam].leftcam.image_height;
+
+                // some head geometry
+                pos3D headOrientation = head.cameraPosition[cam];
+                pos3D cameraOrientation = new pos3D(0, 0, 0);
+                cameraOrientation.pan = headOrientation.pan;
+                cameraOrientation.tilt = headOrientation.tilt;
+                cameraOrientation.roll = headOrientation.roll;
+
+                if (head.features[cam] != null)  // if there are stereo features associated with this camera
+                {
+                    float[] stereo_features = head.features[cam].features;
+                    float[] uncertainties = head.features[cam].uncertainties;
+                    int f2 = 0;
+                    for (int f = 0; f < stereo_features.Length; f += 3)
+                    {
+                        // get the parameters of the feature
+                        float image_x = stereo_features[f];
+                        float image_y = stereo_features[f + 1];
+                        float disparity = stereo_features[f + 2];
+
+                        // create a ray
+                        evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2], head.features[cam].colour[f2, 0], head.features[cam].colour[f2, 1], head.features[cam].colour[f2, 2]);
+
+                        if (ray != null)
+                        {
+                            // convert from camera-centric coordinates to head coordinates
+                            ray.translateRotate(cameraOrientation);
+
+                            // add to the result
+                            result.Add(ray);
+                        }
+                        f2++;
+                    }
+                }
+            }
+
+            return (result);
+        }
+
+
+        /// <summary>
         /// shows the probability distribution thrown into the grid
         /// </summary>
         /// <param name="img"></param>

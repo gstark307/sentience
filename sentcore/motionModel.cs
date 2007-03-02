@@ -32,6 +32,9 @@ namespace sentience.core
         // the maximum length of paths containing possible poses
         const int max_path_length = 500;
 
+        // time step index which may be assigned to poses
+        private UInt32 time_step = 0;
+
         // the most probable path taken by the robot
         private particlePath best_path = null;
 
@@ -113,7 +116,7 @@ namespace sentience.core
         {
             for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
             {
-                particlePath path = new particlePath(x, y, pan, max_path_length);                
+                particlePath path = new particlePath(x, y, pan, max_path_length, time_step);
                 Poses.Add(path);
                 ActivePoses.Add(path);
             }
@@ -179,6 +182,7 @@ namespace sentience.core
             float new_pan = pan2 + (v * time_elapsed_sec);
 
             particlePose new_pose = new particlePose(new_x, new_y, new_pan);
+            new_pose.time_step = time_step;
             path.Add(new_pose);
         }
 
@@ -442,6 +446,25 @@ namespace sentience.core
                 // update poses
                 for (int sample = 0; sample < Poses.Count; sample++)
                     sample_motion_model_velocity((particlePath)Poses[sample], time_elapsed_sec);
+
+                time_step++;
+
+                // check for rollovers
+                if (time_step > UInt32.MaxValue - 10)
+                    time_step = 0;
+            }
+        }
+
+        /// <summary>
+        /// update all current poses with the current observation
+        /// </summary>
+        /// <param name="stereo_rays"></param>
+        public void AddObservation(ArrayList stereo_rays)
+        {
+            for (int p = 0; p < Poses.Count; p++)
+            {
+                particlePath path = (particlePath)Poses[p];
+                path.current_pose.AddObservation(stereo_rays, rob.LocalGrid);
             }
         }
 

@@ -56,6 +56,18 @@ namespace sentience.core
         #endregion
 
         /// <summary>
+        /// convert probability to log odds
+        /// </summary>
+        /// <param name="probability"></param>
+        /// <returns></returns>
+        public static float LogOdds(float probability)
+        {
+            if (probability >= 1.0f) probability = 0.999f;
+            return ((float)Math.Log(probability / (1.0f - probability)));
+        }
+
+
+        /// <summary>
         /// does the line intersect with the given line?
         /// </summary>
         /// <param name="x0"></param>

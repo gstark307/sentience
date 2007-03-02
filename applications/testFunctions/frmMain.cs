@@ -191,7 +191,7 @@ namespace WindowsApplication1
 
         private void test_grid()
         {
-            occupancygrid grd = new occupancygrid(128, 32);
+            occupancygridClassic grd = new occupancygridClassic(128, 32);
             pos3D robotPosition = new pos3D(0, 0, 0);
             pos3D robotOrientation = new pos3D(0, 0, 0);
 
@@ -284,41 +284,6 @@ namespace WindowsApplication1
             txtMappingTime.Text = Convert.ToString(mappingTime);
         }
 
-
-        private void test_intercepts()
-        {
-            pos3D robotPosition = new pos3D(0, 0, 0);
-            pos3D robotOrientation = new pos3D(0, 0, 0);
-
-            beginStopWatch();
-
-            for (int cam = 0; cam < 4; cam++)
-            {
-                //invent some stereo features
-                for (int f = 0; f < stereo_features.Length; f += 3)
-                {
-                    stereo_features[f] = rnd.Next(robot_head.image_width - 1);
-                    //stereo_features[f + 1] = robot_head.image_height / 2; // rnd.Next(robot_head.image_height - 1);
-                    stereo_features[f + 1] = rnd.Next(robot_head.image_height - 1);
-                    stereo_features[f + 2] = rnd.Next(robot_head.image_width * 35 / 100);
-                }
-                robot_head.setStereoFeatures(cam, stereo_features, stereo_uncertainties, stereo_features.Length);
-            }
-            view[0] = stereo_model.createViewpoint(robot_head, robotOrientation);
-            view[0].showAbove(img_rays, standard_width, standard_height, 2000, 155, 155, 155, true, 0, false);
-
-            robotPosition.y += 200;
-            robotPosition.pan += 0.03f;
-            view[1] = view[0].createTrialPose(robotPosition.pan, robotPosition.x, robotPosition.y);
-            view[1].showAbove(img_rays, standard_width, standard_height, 2000, 0, 0, 255, true, 0, false);
-
-            ArrayList intersects = new ArrayList();
-            view[0].matchingScore(view[1], 200, 80, intersects);
-            view[0].showPoints(img_rays, standard_width, standard_height, intersects, 2000, 255, 255, 0);
-
-            long mappingTime = endStopWatch();
-            txtMappingTime.Text = Convert.ToString(mappingTime);
-        }
 
         /*
         private void test_survey(int offset_x, int offset_y)

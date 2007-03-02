@@ -32,9 +32,19 @@ namespace sentience.core
         public float pan; 
         public float score;
 
+        // observation made form this location
+        //public ArrayList rays;
+
+        // stores the grid cells (particlePoseObservedGridCell) which were observed from this pose
+        public ArrayList observed_grid_cells;
+
+        // the time step on which this particle was created
+        public UInt32 time_step;
+
         public particlePose parent = null;
         public int no_of_children = 0;
 
+        /*
         public particlePose(int index, float x, float y, int pan, float score)
         {
             this.index = index;
@@ -42,7 +52,9 @@ namespace sentience.core
             this.y = y;
             this.pan = pan;
             this.score = score;
+            observed_grid_cells = new ArrayList();
         }
+         */
 
         public particlePose(float x, float y, float pan)
         {
@@ -50,6 +62,7 @@ namespace sentience.core
             this.y = y;
             this.pan = pan;
             this.score = 0;  // this should be a running average
+            observed_grid_cells = new ArrayList();
         }
 
         public pos3D subtract(pos3D pos)
@@ -62,10 +75,36 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// add an observation taken from this pose
+        /// </summary>
+        /// <param name="rays"></param>
+        public void AddObservation(ArrayList stereo_rays, occupancygridMultiHypothesis grid)
+        {
+            // itterate through each ray
+            //rays = new ArrayList();
+            for (int r = 0; r < stereo_rays.Count; r++)
+            {
+                // observed ray.  Note that this is in an egocentric
+                // coordinate frame relative to the head of the robot
+                evidenceRay ray = (evidenceRay)stereo_rays[r];
+                
+                // translate and rotate this ray appropriately for the pose
+                evidenceRay trial_ray = ray.trialPose(pan, x, y);
+
+                // TODO: update the grid cells for this ray
+                grid.Insert(trial_ray, this);
+
+                // add to the observation
+                //rays.Add(trial_ray);
+            }
+        }
+
+        /// <summary>
         /// remove the mapping particles associated with this pose
         /// </summary>
         public void Remove()
         {
+            //rays = null;
         }
     }
 }

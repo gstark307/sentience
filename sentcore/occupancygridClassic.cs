@@ -80,7 +80,10 @@ namespace sentience.core
         }
     }
 
-    public class occupancygrid
+    /// <summary>
+    /// enjoy the classic flavour
+    /// </summary>
+    public class occupancygridClassic
     {
         public occupancygridMultiResolution parent = null;
 
@@ -118,7 +121,7 @@ namespace sentience.core
             gaussLookup = stereoModel.createGaussianLookup(50);
         }
 
-        public occupancygrid(int dimension, float cellSize_mm)  
+        public occupancygridClassic(int dimension, float cellSize_mm)  
         {
             init(dimension, cellSize_mm);
         }

@@ -37,17 +37,13 @@ namespace sentience.core
         //rays thrown from this viewpoint
         public ArrayList[] rays;
 
-        //pointers to adjacent views
-        public viewpoint next = null;
-        public viewpoint previous = null;
-
         /// <summary>
         /// constructor
         /// </summary>
         /// <param name="no_of_cameras"></param>
         public viewpoint(int no_of_cameras)
         {
-            odometry_position = new pos3D(0, 0, 0);
+            //odometry_position = new pos3D(0, 0, 0);
             init(no_of_cameras);
         }
 
@@ -348,38 +344,6 @@ namespace sentience.core
 
 
 
-        /// <summary>
-        /// used for showing intersection points
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="points"></param>
-        /// <param name="scale"></param>
-        /// <param name="r"></param>
-        /// <param name="g"></param>
-        /// <param name="b"></param>
-        public void showPoints(Byte[] img, int img_width, int img_height, ArrayList points, int scale, Byte r, Byte g, Byte b)
-        {
-            int half_width = img_width / 2;
-            int half_height = img_height / 2;
 
-            //img.clear();
-            for (int i = 0; i < points.Count; i++)
-            {
-                pos3D pt = (pos3D)points[i];
-                int x = half_width + (int)(pt.x * half_width / scale);
-                int y = half_height + (int)(pt.y * half_height / scale);
-                if ((x > 0) && (y > 0) && (x < img_width) && (y < img_height))
-                {
-                    for (int xx = x - 1; xx <= x; xx++)
-                        for (int yy = y - 1; yy <= y; yy++)
-                        {
-                            int n = ((img_width * yy) + xx)*3;
-                            img[n+2] = r;
-                            img[n+1] = g;
-                            img[n] = b;
-                        }
-                }
-            }
-        }
     }
 }

@@ -81,7 +81,7 @@ namespace sentience.core
         public int LocalGridDimension = 128;      // Cubic dimension of the local grid in cells
         public float LocalGridCellSize_mm = 32;   // Size of each grid cell (voxel) in millimetres
         public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
-        public occupancygridMultiResolution LocalGrid;  // grid containing the current local observations
+        public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
        
 
         #region "constructors"
@@ -131,7 +131,7 @@ namespace sentience.core
         private void createLocalGrid()
         {
             // create the local grid
-            LocalGrid = new occupancygridMultiResolution(LocalGridLevels, LocalGridDimension, (int)LocalGridCellSize_mm);
+            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, (int)LocalGridCellSize_mm);
         }
 
         /// <summary>
@@ -390,7 +390,7 @@ namespace sentience.core
             bool out_of_bounds = false;
             pos3D new_grid_centre = new pos3D(LocalGrid.x, LocalGrid.y, LocalGrid.z);
 
-            float innermost_gridSize_mm = LocalGrid.getCellSize(LocalGrid.levels - 1);
+            float innermost_gridSize_mm = LocalGrid.cellSize_mm; // .getCellSize(LocalGrid.levels - 1);
             float border = innermost_gridSize_mm / 4.0f;
             if (x < LocalGrid.x - border)
             {
@@ -442,8 +442,8 @@ namespace sentience.core
                                              Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
                     LocalGridPath.Load(grid_filename);
                     
-                    // update the local grid using the loaded path
-                    LocalGrid.insert(LocalGridPath, false);
+                    // TODO: update the local grid using the loaded path
+                    //LocalGrid.insert(LocalGridPath, false);
                 }
 
             }
@@ -456,16 +456,17 @@ namespace sentience.core
                 // load stereo images
                 loadImages(images, mapping);
 
-                // create a viewpoint from the stereo features
-                // using either the mapping or localisation sensor model
-                viewpoint v = null;
+                // create an observation as a set of rays from the stereo correspondence results
+                ArrayList stereo_rays = null;
                 if (mapping)
-                    v = sensorModelMapping.createViewpoint(head, (pos3D)this);
+                    stereo_rays = sensorModelMapping.createObservation(head);
                 else
-                    v = sensorModelLocalisation.createViewpoint(head, null);
-                v.SetPosition(x, y, z);
-                v.odometry_position.pan = pan;
+                    stereo_rays = sensorModelLocalisation.createObservation(head);
 
+                // update all current poses with the observation
+                motion.AddObservation(stereo_rays);
+
+                /*
                 // store the viewpoint in the path
                 LocalGridPath.Add(v);
 
@@ -486,6 +487,7 @@ namespace sentience.core
                     // localise within the grid
                     robotLocalisation.surveyPoses(v, LocalGrid, motion);
                 }
+                 */
             }
         }
 

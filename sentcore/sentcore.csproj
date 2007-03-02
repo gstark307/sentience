@@ -39,6 +39,9 @@
     <Compile Include="calibrationStereo.cs" />
     <Compile Include="FASTlines.cs" />
     <Compile Include="motionModel.cs" />
+    <Compile Include="occupancygridClassic.cs" />
+    <Compile Include="occupancygridMultiHypothesis.cs" />
+    <Compile Include="particleGridCell.cs" />
     <Compile Include="particlePath.cs" />
     <Compile Include="particlePose.cs" />
     <Compile Include="polyfit.cs" />
@@ -54,7 +57,6 @@
     <Compile Include="sentience_stereo.cs" />
     <Compile Include="occupancygridMultiResolution.cs" />
     <Compile Include="MersenneTwister.cs" />
-    <Compile Include="occupancygrid.cs" />
     <Compile Include="robotOdometry.cs" />
     <Compile Include="robot.cs" />
     <Compile Include="stereoCorrespondence.cs" />
