@@ -41,6 +41,7 @@ namespace sentience.core
 
         // the path with which this pose is associated
         public UInt32 path_ID;
+        public ArrayList previous_paths;
 
         // the time step on which this particle was created
         public UInt32 time_step;
@@ -99,6 +100,7 @@ namespace sentience.core
                 grid.Remove(hypothesis);
             }
             observed_grid_cells.Clear();
+            if (previous_paths != null) previous_paths.Clear();
         }
     }
 }

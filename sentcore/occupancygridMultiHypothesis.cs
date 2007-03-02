@@ -18,6 +18,36 @@ namespace sentience.core
         // list of occupancy hypotheses, of type particleGridCell
         public ArrayList Hypothesis;
 
+        /// <summary>
+        /// returns the probability of occupancy at this grid cell
+        /// warning: this could potentially suffer from path ID rollover problems
+        /// </summary>
+        /// <param name="path_ID"></param>
+        /// <returns>probability value</returns>
+        public float GetProbability(particlePose pose)
+        {           
+            float probabilityLogOdds = 0;
+
+            if (pose.previous_paths != null)
+            {
+                UInt32 curr_path_ID = UInt32.MaxValue;
+                int i = Hypothesis.Count - 1;
+                // cycle through the path IDs for this pose            
+                for (int p = 0; p < pose.previous_paths.Count; p++)
+                {
+                    UInt32 path_ID = (UInt32)pose.previous_paths[p];
+                    while ((i >= 0) && (curr_path_ID >= path_ID))
+                    {
+                        particleGridCell h = (particleGridCell)Hypothesis[i];
+                        curr_path_ID = h.pose.path_ID;
+                        if (curr_path_ID == path_ID) probabilityLogOdds += h.probabilityLogOdds;
+                        i--;
+                    }
+                }
+            }
+            return (util.LogOddsToProbability(probabilityLogOdds));
+        }
+
         public occupancygridCellMultiHypothesis()
         {
             occupied = false;
@@ -99,23 +129,22 @@ namespace sentience.core
         /// inserts the given ray into the grid
         /// </summary>
         /// <param name="ray"></param>
-        public void Insert(evidenceRay ray, particlePose origin)
+        public float Insert(evidenceRay ray, particlePose origin)
         {
             const int OCCUPIED_SENSORMODEL = 0;
             const int VACANT_SENSORMODEL = 1;
             float xdist_mm=0, ydist_mm=0, zdist_mm=0, x=0, y=0, z=0, occ;
             float prob = 0;
-            float occupied;
+            float matchingScore = 0;  // total localisation matching score
             int rayWidth = 0;
             int widest_point;
+            particleGridCell hypothesis;
 
             rayWidth = (int)(ray.width / cellSize_mm);
             if (rayWidth < 2) rayWidth = 2;
 
             for (int j = OCCUPIED_SENSORMODEL; j <= VACANT_SENSORMODEL; j++)
             {
-                occupied = 0;
-
                 if (j == OCCUPIED_SENSORMODEL)
                 {
                     // distance between the beginning and end of the probably
@@ -181,89 +210,46 @@ namespace sentience.core
                         {
                             // get the probability at this point using the sensor model
                             if (j == OCCUPIED_SENSORMODEL)
-                                prob = 0; // TODO
+                                prob = 0; // TODO  ray.probability(x, y, gaussLookup, forwardBias);
                             else
+                                // calculate the probability from the vacancy model
                                 prob = vacancyFunction(i / (float)steps, steps);
 
-
                             if (cell[x_cell, y_cell] == null)
+                            {
                                 // generate a grid cell if necessary
                                 cell[x_cell, y_cell] = new occupancygridCellMultiHypothesis();
+                            }
                             else
                             {
-                                // TODO: localise using this grid cell
+                                // only localise using occupancy, not vacancy
+                                if (j == OCCUPIED_SENSORMODEL)
+                                {
+                                    // localise using this grid cell
+                                    // first get the existing probability value at this cell
+                                    occ = cell[x_cell, y_cell].GetProbability(origin);
+                                    // combine the results
+                                    float prob2 = ((prob * occ) + ((1.0f - prob) * (1.0f - occ)));
+                                    // update the localisation matching score
+                                    matchingScore += util.LogOdds(prob2);
+                                }
                             }
 
-                            // add a hypothesis to this grid coordinate
+                            // add a new hypothesis to this grid coordinate
                             // note that this is also added to the original pose
-                            particleGridCell hypothesis = new particleGridCell(x_cell, y_cell, util.LogOdds(prob), origin);
+                            hypothesis = new particleGridCell(x_cell, y_cell, prob, origin);
                             cell[x_cell, y_cell].Hypothesis.Add(hypothesis);
                             origin.observed_grid_cells.Add(hypothesis);
 
-                            if (j == OCCUPIED_SENSORMODEL)
-                            {
-                                    // probability of the ray at this point
-                                    //prob = ray.probability(x, y, gaussLookup, forwardBias);
-                                    //prob = 0.5f + (prob / (2.0f * steps));
-                            }
-
-
-                                /*
-                                if ((mapping) || ((c != null) && (!mapping)))
-                                {
-                                    // update the occupancy of the cell using sensor 
-                                    // model probability densities
-                                    if (j == 0)
-                                    {
-                                        // update localisation for this grid hypothesis
-                                        occ = c.occupancy;
-                                        float prob2 = ((prob * occ) + ((1.0f - prob) * (1.0f - occ)));
-                                        occupied += prob2;  // increment the total occupancy score
-
-                                        // insert new data into this grid hypothesis
-                                        updateGridCell(prob, x_cell, y_cell, z_cell, ray_wdth, longest_axis, ray.colour, ref occupied);
-                                    }
-                                    else
-                                    {
-                                        // vacant part of the sensor model
-                                        if (mapping)
-                                        {
-                                            //prob = vacancyFunction_accurate(ray, i / (float)steps, steps);
-                                            prob = vacancyFunction(i / (float)steps, steps);
-                                            updateGridCell(prob, xx_cell, yy_cell, zz_cell, ray_wdth, longest_axis, ray.colour, ref occupied);
-
-                                            if (interpolationEnabled)
-                                            {
-                                                c = cell[xx_cell, yy_cell, zz_cell];
-
-                                                updateOccupancyPeak(x_cell_float, y_cell_float, z_cell_float);
-                                                c.setProbability(x_cell_float, y_cell_float, z_cell_float, -1);
-                                                //c.setProbability(x_cell_float - x_cell_incr, y_cell_float - y_cell_incr, z_cell_float - z_cell_incr, prob2);
-                                                //c.setProbability(x_cell_float + x_cell_incr, y_cell_float + y_cell_incr, z_cell_float + z_cell_incr, prob3);
-                                            }
-                                        }
-                                    }
-                                }
-                                */
                         }
                         else i = steps;
                     }
                     else i = steps;
                     i++;
                 }
-
-                // break out!
-                /*
-                if (!mapping)
-                {
-                    matchedCells += occupied;
-                    break;
-                }
-
-                occupiedCells += (int)occupied;
-                 */
             }
 
+            return (matchingScore);
         }
 
         #endregion

@@ -30,6 +30,9 @@ namespace sentience.core
     /// </summary>
     public class particlePath
     {
+        // maximum history to store for path IDs within each particlePose 
+        const int MAX_PATH_HISTORY = 50;
+
         // a unique ID for this path
         public UInt32 ID;
 
@@ -84,6 +87,30 @@ namespace sentience.core
             // set the parent of this pose
             pose.parent = current_pose;
 
+            // update the list of previous path IDs
+            if (branch_pose != null)
+            {
+                if (current_pose == branch_pose)
+                {
+                    pose.previous_paths = new ArrayList();
+                    int min = branch_pose.previous_paths.Count - MAX_PATH_HISTORY;
+                    if (min < 0) min = 0;
+                    for (int i = min; i < branch_pose.previous_paths.Count; i++)
+                        pose.previous_paths.Add((UInt32)branch_pose.previous_paths[i]);
+                    pose.previous_paths.Add(pose.path_ID);
+                }
+                else pose.previous_paths = pose.parent.previous_paths;
+            }
+            else
+            {
+                if (pose.parent == null)
+                {
+                    pose.previous_paths = new ArrayList();
+                    pose.previous_paths.Add(pose.path_ID);
+                }
+                else pose.previous_paths = pose.parent.previous_paths;
+            }
+
             // set the current pose
             current_pose = pose;
 
@@ -125,7 +152,10 @@ namespace sentience.core
                         {
                             children = pose.no_of_children;
                             pose.path_ID = path_ID;
-                            if (children < 1) pose = pose.parent;
+                            if (children < 1)
+                            {
+                                pose = pose.parent;
+                            }
                         }
                     }
                 }

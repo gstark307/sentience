@@ -66,6 +66,16 @@ namespace sentience.core
             return ((float)Math.Log(probability / (1.0f - probability)));
         }
 
+        /// <summary>
+        /// convert a log odds value back into a probability value
+        /// </summary>
+        /// <param name="logodds"></param>
+        /// <returns></returns>
+        public static float LogOddsToProbability(float logodds)
+        {
+            return(1.0f - (1.0f/(1.0f + (float)Math.Exp(logodds))));
+        }
+
 
         /// <summary>
         /// does the line intersect with the given line?
