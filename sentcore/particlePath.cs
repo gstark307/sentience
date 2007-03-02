@@ -31,7 +31,7 @@ namespace sentience.core
     public class particlePath
     {
         // maximum history to store for path IDs within each particlePose 
-        const int MAX_PATH_HISTORY = 50;
+        const int MAX_PATH_HISTORY = 500;
 
         // a unique ID for this path
         public UInt32 ID;

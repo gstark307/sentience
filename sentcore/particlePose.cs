@@ -72,8 +72,12 @@ namespace sentience.core
         /// add an observation taken from this pose
         /// </summary>
         /// <param name="rays"></param>
-        public void AddObservation(ArrayList stereo_rays, occupancygridMultiHypothesis grid)
+        public float AddObservation(ArrayList stereo_rays, 
+                                   occupancygridMultiHypothesis grid)
         {
+            // clear the localisation score
+            float localisation_score = 0;
+
             // itterate through each ray
             for (int r = 0; r < stereo_rays.Count; r++)
             {
@@ -84,9 +88,11 @@ namespace sentience.core
                 // translate and rotate this ray appropriately for the pose
                 evidenceRay trial_ray = ray.trialPose(pan, x, y);
 
-                // update the grid cells for this ray
-                grid.Insert(trial_ray, this);
+                // update the grid cells for this ray and update the
+                // localisation score accordingly
+                localisation_score += grid.Insert(trial_ray, this);
             }
+            return (localisation_score);
         }
 
         /// <summary>

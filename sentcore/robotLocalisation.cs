@@ -29,44 +29,9 @@ namespace sentience.core
     public class robotLocalisation
     {
         /// <summary>
-        /// Perform a survey over the given possible poses
-        /// Tries to match a viewpoint within a grid and updates the pose scores accordingly
-        /// </summary>
-        /// <param name="current_view">viewpoint containing range data</param>
-        /// <param name="grid">occupancy grid</param>
-        /// <param name="motion">motion model</param>
-        public static void surveyPoses(viewpoint current_view,
-                                       occupancygridMultiResolution grid,
-                                       motionModel motion)
-        {
-            // examine the pose list
-            for (int sample = 0; sample < motion.survey_trial_poses; sample++)
-            {
-                particlePath path = (particlePath)motion.Poses[sample];
-                particlePose pose = path.current_pose;
-
-                // get the position of this pose inside the grid
-                pos3D relative_position = pose.subtract((pos3D)grid);
-
-                // The trial pose is generated
-                viewpoint trialPose = current_view.createTrialPose(pose.pan, pose.x, pose.y);
-
-                // insert the trial pose into the grid and record the number
-                // of matched cells
-                grid.insert(trialPose, false, relative_position);
-
-                // update the score for this pose
-                motion.updatePoseScore(path, grid.matchedCells());
-            }
-
-            // indicate that the pose scores have been updated
-            motion.PosesEvaluated = true;
-        }
-
-        /// <summary>
         /// generate scores for poses.  This is only for testing purposes.
         /// </summary>
-        /// <param name="rob"></param>
+        /// <param name="rob"></param>        
         public static void surveyPosesDummy(robot rob)
         {
             // examine the pose list
@@ -87,7 +52,7 @@ namespace sentience.core
             // indicate that the pose scores have been updated
             rob.motion.PosesEvaluated = true;
         }
-
+        
 
 
 

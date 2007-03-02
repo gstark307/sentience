@@ -38,9 +38,8 @@ namespace sentience.core
         // of possible poses
         public motionModel motion;         
 
-        // sensor models used for mapping and localisation
-        public stereoModel sensorModelMapping;
-        public stereoModel sensorModelLocalisation;
+        // One sensor model.  There's only one sensor model....one sensor mooodeeel...
+        public stereoModel inverseSensorModel;
 
         // routines for performing stereo correspondence
         public stereoCorrespondence correspondence;
@@ -146,14 +145,9 @@ namespace sentience.core
             head = new stereoHead(no_of_stereo_cameras);
 
             // sensor model used for mapping
-            sensorModelMapping = new stereoModel();
-            sensorModelMapping.no_of_stereo_features = 300;
-            correspondence = new stereoCorrespondence(sensorModelMapping.no_of_stereo_features);
-
-            // sensor model used for localisation
-            sensorModelLocalisation = new stereoModel();
-            sensorModelLocalisation.mapping = false;
-            sensorModelLocalisation.no_of_stereo_features = 100;
+            inverseSensorModel = new stereoModel();
+            inverseSensorModel.no_of_stereo_features = 100;
+            correspondence = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
 
             // add a local occupancy grid
             createLocalGrid();
@@ -189,8 +183,7 @@ namespace sentience.core
         {
             head.initDualCam();
 
-            initSensorModel(sensorModelMapping, 78, head.image_width, head.image_height, head.baseline_mm);
-            initSensorModel(sensorModelLocalisation, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(inverseSensorModel, 78, head.image_width, head.image_height, head.baseline_mm);
         }
 
         public void initQuadCam()
@@ -198,8 +191,7 @@ namespace sentience.core
             head.initQuadCam();
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
-            initSensorModel(sensorModelMapping, 78, head.image_width, head.image_height, head.baseline_mm);
-            initSensorModel(sensorModelLocalisation, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(inverseSensorModel, 78, head.image_width, head.image_height, head.baseline_mm);
         }
 
         public void initRobotSingleStereo()
@@ -207,8 +199,7 @@ namespace sentience.core
             head.initSingleStereoCamera(false);
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
-            initSensorModel(sensorModelMapping, 78, head.image_width, head.image_height, head.baseline_mm);
-            initSensorModel(sensorModelLocalisation, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(inverseSensorModel, 78, head.image_width, head.image_height, head.baseline_mm);
         }
 
         #endregion
@@ -287,23 +278,19 @@ namespace sentience.core
 
         public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, bool mapping)
         {
-            stereoModel sensorModel = sensorModelMapping;
-            if (!mapping) sensorModel = sensorModelLocalisation;
-            correspondence.setRequiredFeatures(sensorModel.no_of_stereo_features);
+            correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
-            return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, sensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
+            return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
         public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, bool mapping)
         {
-            stereoModel sensorModel = sensorModelMapping;
-            if (!mapping) sensorModel = sensorModelLocalisation;
-            correspondence.setRequiredFeatures(sensorModel.no_of_stereo_features);
+            correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
             // set the calibration data for this camera
             correspondence.setCalibration(head.calibration[stereo_cam_index]);
 
-            return (correspondence.loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, sensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
+            return (correspondence.loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
         #endregion
@@ -321,7 +308,7 @@ namespace sentience.core
 
         public void setMappingParameters(float sigma)
         {
-            sensorModelMapping.sigma = sigma;
+            inverseSensorModel.sigma = sigma;
         }
 
         public void setStereoParameters(int max_disparity, int difference_threshold,
@@ -346,7 +333,7 @@ namespace sentience.core
         /// <returns></returns>
         public viewpoint getViewpoint()
         {
-            return (sensorModelMapping.createViewpoint(head, (pos3D)this));
+            return (inverseSensorModel.createViewpoint(head, (pos3D)this));
         }
 
         #endregion
@@ -385,7 +372,7 @@ namespace sentience.core
         /// check if the robot has moved out of bounds of the current local grid
         /// if so, create a new grid for it to move into and centre it appropriately
         /// </summary>
-        private void checkOutOfBounds(bool mapping)
+        private void checkOutOfBounds()
         {
             bool out_of_bounds = false;
             pos3D new_grid_centre = new pos3D(LocalGrid.x, LocalGrid.y, LocalGrid.z);
@@ -435,17 +422,13 @@ namespace sentience.core
                 LocalGrid.y = new_grid_centre.y;
                 LocalGrid.z = new_grid_centre.z;
 
-                if (!mapping)
-                {
-                    // file name of the grid to be loaded
-                    grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid.x / border)) + "_" +
-                                             Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
-                    LocalGridPath.Load(grid_filename);
+                // file name of the grid to be loaded
+                grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid.x / border)) + "_" +
+                                         Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
+                LocalGridPath.Load(grid_filename);
                     
-                    // TODO: update the local grid using the loaded path
-                    //LocalGrid.insert(LocalGridPath, false);
-                }
-
+                // TODO: update the local grid using the loaded path
+                //LocalGrid.insert(LocalGridPath, false);
             }
         }
 
@@ -458,36 +441,17 @@ namespace sentience.core
 
                 // create an observation as a set of rays from the stereo correspondence results
                 ArrayList stereo_rays = null;
-                if (mapping)
-                    stereo_rays = sensorModelMapping.createObservation(head);
-                else
-                    stereo_rays = sensorModelLocalisation.createObservation(head);
+                stereo_rays = inverseSensorModel.createObservation(head);
 
                 // update all current poses with the observation
                 motion.AddObservation(stereo_rays);
-
-                /*
-                // store the viewpoint in the path
-                LocalGridPath.Add(v);
-
+               
                 // what's the relative position of the robot inside the grid ?
                 pos3D relative_position = new pos3D(x - LocalGrid.x, y - LocalGrid.y, 0);
                 relative_position.pan = pan - LocalGrid.pan;
 
                 // have we moved off the current grid ?
-                checkOutOfBounds(mapping);
-
-                if (mapping)
-                {
-                    // update the grid
-                    LocalGrid.insert(v, mapping, relative_position);
-                }
-                else
-                {
-                    // localise within the grid
-                    robotLocalisation.surveyPoses(v, LocalGrid, motion);
-                }
-                 */
+                checkOutOfBounds();                
             }
         }
 
@@ -695,8 +659,7 @@ namespace sentience.core
             XmlElement nodeSensorModels = doc.CreateElement("SensorModels");
             nodeRobot.AppendChild(nodeSensorModels);
 
-            nodeSensorModels.AppendChild(sensorModelMapping.getXml(doc, nodeSensorModels));
-            nodeSensorModels.AppendChild(sensorModelLocalisation.getXml(doc, nodeSensorModels));
+            nodeSensorModels.AppendChild(inverseSensorModel.getXml(doc, nodeSensorModels));
 
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
@@ -940,15 +903,13 @@ namespace sentience.core
 
                 head.image_width = head.calibration[cameraIndex].leftcam.image_width;
                 head.image_height = head.calibration[cameraIndex].leftcam.image_height;
-                initSensorModel(sensorModelMapping, head.image_width, head.image_height, (int)head.calibration[cameraIndex].leftcam.camera_FOV_degrees, head.baseline_mm);
-                initSensorModel(sensorModelLocalisation, head.image_width, head.image_height, (int)head.calibration[cameraIndex].leftcam.camera_FOV_degrees, head.baseline_mm);
+                initSensorModel(inverseSensorModel, head.image_width, head.image_height, (int)head.calibration[cameraIndex].leftcam.camera_FOV_degrees, head.baseline_mm);
                 cameraIndex++;
             }
 
             if (xnod.Name == "SensorModels")
             {
-                sensorModelMapping.LoadFromXml(xnod.FirstChild, level + 1);
-                sensorModelLocalisation.LoadFromXml(xnod.FirstChild, level + 1);
+                inverseSensorModel.LoadFromXml(xnod.FirstChild, level + 1);
             }
 
             if (xnod.Name == "MotionModel")

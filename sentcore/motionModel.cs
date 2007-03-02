@@ -496,8 +496,13 @@ namespace sentience.core
             for (int p = 0; p < Poses.Count; p++)
             {
                 particlePath path = (particlePath)Poses[p];
-                path.current_pose.AddObservation(stereo_rays, rob.LocalGrid);
+                float localisation_score = path.current_pose.AddObservation(stereo_rays, rob.LocalGrid);
+                updatePoseScore(path, localisation_score);
             }
+
+            // adding an observation is sufficient to update the 
+            // pose localisation scores.  This is, after all, SLAM.
+            PosesEvaluated = true;
         }
 
         #endregion

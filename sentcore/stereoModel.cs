@@ -967,6 +967,18 @@ namespace sentience.core
             return (gaussLookup);
         }
 
+        public static float[] createHalfGaussianLookup(int levels)
+        {
+            float[] gaussLookup = new float[levels];
+
+            for (int i = 0; i < levels; i++)
+            {
+                float fract = (i / (float)levels);
+                gaussLookup[i] = stereoModel.Gaussian(fract);
+            }
+            return (gaussLookup);
+        }
+
 
         /// <summary>
         /// inserts a line with gaussian probability distribution into the grid
