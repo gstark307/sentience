@@ -35,6 +35,9 @@ namespace sentience.core
         // time step index which may be assigned to poses
         private UInt32 time_step = 0;
 
+        // counter used to uniquely identify paths
+        private UInt32 path_ID = 0;
+
         // the most probable path taken by the robot
         private particlePath best_path = null;
 
@@ -80,6 +83,8 @@ namespace sentience.core
 
         private bool initialised = false;
 
+        #region "initialisation"
+
         public motionModel(robot rob)
         {
             this.rob = rob;
@@ -109,6 +114,24 @@ namespace sentience.core
             createNewPoses(rob.x, rob.y, rob.pan);
         }
 
+        #endregion
+
+        #region "creation of new paths"
+
+        /// <summary>
+        /// add a new path to the list
+        /// </summary>
+        /// <param name="path"></param>
+        private void createNewPose(particlePath path)
+        {
+            Poses.Add(path);
+            ActivePoses.Add(path);
+
+            // increment the path ID
+            path_ID++;
+            if (path_ID > UInt32.MaxValue - 10) path_ID = 0; // rollover
+        }
+
         /// <summary>
         /// creates some new poses
         /// </summary>
@@ -116,9 +139,8 @@ namespace sentience.core
         {
             for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
             {
-                particlePath path = new particlePath(x, y, pan, max_path_length, time_step);
-                Poses.Add(path);
-                ActivePoses.Add(path);
+                particlePath path = new particlePath(x, y, pan, max_path_length, time_step, path_ID);
+                createNewPose(path);
             }
         }
 
@@ -130,11 +152,14 @@ namespace sentience.core
         {
             for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
             {
-                particlePath path = new particlePath(parent_path);
-                Poses.Add(path);
-                ActivePoses.Add(path);
+                particlePath path = new particlePath(parent_path, path_ID);
+                createNewPose(path);
             }
         }
+
+        #endregion
+
+        #region "apply motion model"
 
         /// <summary>
         /// return a random gaussian distributed value
@@ -181,10 +206,97 @@ namespace sentience.core
                               (fraction * (float)Math.Cos(pan2));
             float new_pan = pan2 + (v * time_elapsed_sec);
 
-            particlePose new_pose = new particlePose(new_x, new_y, new_pan);
+            particlePose new_pose = new particlePose(new_x, new_y, new_pan, path.ID);
             new_pose.time_step = time_step;
             path.Add(new_pose);
         }
+
+        /// <summary>
+        /// removes low probability poses
+        /// Note that a maturity threshold is used, so that poses which may initially 
+        /// be unfairly judged as improbable have time to prove their worth
+        /// </summary>
+        private void Prune()
+        {
+            best_path = null;
+
+            // gather mature poses
+            float max_score = 0;
+            ArrayList maturePoses = new ArrayList();
+            for (int sample = 0; sample < Poses.Count; sample++)
+            {
+                particlePath path = (particlePath)Poses[sample];
+                particlePose pose = path.current_pose;
+
+                // use poses which are considered to be mature, or which
+                // have a negative score.  A negative pose score indicates
+                // that it has collided with occupied space within a grid map
+                if ((path.path.Count >= pose_maturation) || (pose.score < 0))
+                {
+                    maturePoses.Add(path);
+                }
+
+                // record the maximum score
+                // Note that the score for each pose should be calculated as a running average
+                float score = pose.score;
+                if (score > max_score)
+                {
+                    max_score = score;
+                    best_path = path;
+                }
+            }
+
+            // remove mature poses with a score below the cull threshold
+            float threshold = max_score * cull_threshold / 100;
+            for (int mature = 0; mature < maturePoses.Count; mature++)
+            {
+                particlePath path = (particlePath)maturePoses[mature];
+                float score = path.current_pose.score;
+                if (score < threshold)
+                {
+                    // remove mapping hypotheses for this path
+                    if (path.Remove(rob.LocalGrid))
+                        ActivePoses.Remove(path);
+
+                    // now remove the path itself
+                    Poses.Remove(path);
+                }
+            }
+
+            if (best_path != null)
+            {
+                // choose a good pose, but not necessarily the best
+                // this avoids too much elitism
+                particlePath best = null;
+                int tries = 0;
+                float best_score = best_path.current_pose.score * 80 / 100;
+                while (tries < 4)
+                {
+                    particlePath path = (particlePath)Poses[rnd.Next(Poses.Count - 1)];
+                    if (path.current_pose.score > best_score)
+                    {
+                        best = path;
+                        best_score = path.current_pose.score;
+                    }
+                    tries++;
+                }
+                if (best == null) best = best_path;
+
+                // create new poses to maintain the population
+                createNewPoses(best);
+
+                // update the robot position with the best available pose
+                rob.x = best_path.current_pose.x;
+                rob.y = best_path.current_pose.y;
+                rob.pan = best_path.current_pose.pan;
+            }
+
+            PosesEvaluated = false;
+        }
+
+        #endregion
+
+        #region "display functions"
 
         /// <summary>
         /// show the position uncertainty distribution
@@ -312,89 +424,9 @@ namespace sentience.core
             }
         }
 
+        #endregion
 
-        /// <summary>
-        /// removes low probability poses
-        /// Note that a maturity threshold is used, so that poses which may initially 
-        /// be unfairly judged as improbable have time to prove their worth
-        /// </summary>
-        private void Prune()
-        {
-            best_path = null;
-
-            // gather mature poses
-            float max_score = 0;
-            ArrayList maturePoses = new ArrayList();
-            for (int sample = 0; sample < Poses.Count; sample++)
-            {
-                particlePath path = (particlePath)Poses[sample];
-                particlePose pose = path.current_pose;
-
-                // use poses which are considered to be mature, or which
-                // have a negative score.  A negative pose score indicates
-                // that it has collided with occupied space within a grid map
-                if ((path.path.Count >= pose_maturation) || (pose.score < 0))
-                {
-                    maturePoses.Add(path);
-                }
-
-                // record the maximum score
-                // Note that the score for each pose should be calculated as a running average
-                float score = pose.score;
-                if (score > max_score)
-                {
-                    max_score = score;
-                    best_path = path;
-                }
-            }
-
-            // remove mature poses with a score below the cull threshold
-            float threshold = max_score * cull_threshold / 100;
-            for (int mature = 0; mature < maturePoses.Count; mature++)
-            {
-                particlePath path = (particlePath)maturePoses[mature];
-                float score = path.current_pose.score;
-                if (score < threshold)
-                {
-                    // remove mapping particles for this path
-                    if (path.Remove()) 
-                        ActivePoses.Remove(path);
-
-                    // now remove the path itself
-                    Poses.Remove(path);
-                }
-            }
-
-            if (best_path != null)
-            {
-                // choose a good pose, but not necessarily the best
-                // this avoids too much elitism
-                particlePath best = null;
-                int tries = 0;
-                float best_score = best_path.current_pose.score * 80 / 100;
-                while (tries < 4)
-                {
-                    particlePath path = (particlePath)Poses[rnd.Next(Poses.Count-1)];
-                    if (path.current_pose.score > best_score)
-                    {
-                        best = path;
-                        best_score = path.current_pose.score;
-                    }
-                    tries++;
-                }
-                if (best == null) best = best_path;
-
-                // create new poses to maintain the population
-                createNewPoses(best);
-
-                // update the robot position with the best available pose
-                rob.x = best_path.current_pose.x;
-                rob.y = best_path.current_pose.y;
-                rob.pan = best_path.current_pose.pan;
-            }
-
-            PosesEvaluated = false;
-        }
+        #region "update poses"
 
         /// <summary>
         /// updates the given pose score using a running average
@@ -467,6 +499,8 @@ namespace sentience.core
                 path.current_pose.AddObservation(stereo_rays, rob.LocalGrid);
             }
         }
+
+        #endregion
 
         #region "saving and loading"
 

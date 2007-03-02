@@ -87,6 +87,15 @@ namespace sentience.core
         #region "grid update"
 
         /// <summary>
+        /// removes an occupancy hypothesis from a grid cell
+        /// </summary>
+        /// <param name="hypothesis"></param>
+        public void Remove(particleGridCell hypothesis)
+        {
+            cell[hypothesis.x, hypothesis.y].Hypothesis.Remove(hypothesis);
+        }
+
+        /// <summary>
         /// inserts the given ray into the grid
         /// </summary>
         /// <param name="ray"></param>
@@ -170,31 +179,33 @@ namespace sentience.core
                         int y_cell = (int)Math.Round(y / (float)cellSize_mm);
                         if ((y_cell > -1) && (y_cell < dimension_cells))
                         {
-                            int z_cell = (int)Math.Round(z / (float)cellSize_mm);
-                            if ((z_cell > -1) && (z_cell < dimension_cells))
-                            {
-                                // get the probability at this point using the sensor model
-                                if (j == OCCUPIED_SENSORMODEL)
-                                    prob = 0;
-                                else
-                                    prob = vacancyFunction(i / (float)steps, steps);
+                            // get the probability at this point using the sensor model
+                            if (j == OCCUPIED_SENSORMODEL)
+                                prob = 0; // TODO
+                            else
+                                prob = vacancyFunction(i / (float)steps, steps);
 
+
+                            if (cell[x_cell, y_cell] == null)
                                 // generate a grid cell if necessary
-                                if (cell[x_cell, y_cell] == null)
-                                    cell[x_cell, y_cell] = new occupancygridCellMultiHypothesis();
+                                cell[x_cell, y_cell] = new occupancygridCellMultiHypothesis();
+                            else
+                            {
+                                // TODO: localise using this grid cell
+                            }
 
-                                // add a hypothesis to this grid coordinate
-                                // note that this is also added to the original pose
-                                particleGridCell hypothesis = new particleGridCell(x_cell, y_cell, util.LogOdds(prob), origin);
-                                cell[x_cell, y_cell].Hypothesis.Add(hypothesis);
-                                origin.observed_grid_cells.Add(hypothesis);
+                            // add a hypothesis to this grid coordinate
+                            // note that this is also added to the original pose
+                            particleGridCell hypothesis = new particleGridCell(x_cell, y_cell, util.LogOdds(prob), origin);
+                            cell[x_cell, y_cell].Hypothesis.Add(hypothesis);
+                            origin.observed_grid_cells.Add(hypothesis);
 
-                                if (j == OCCUPIED_SENSORMODEL)
-                                {
+                            if (j == OCCUPIED_SENSORMODEL)
+                            {
                                     // probability of the ray at this point
                                     //prob = ray.probability(x, y, gaussLookup, forwardBias);
                                     //prob = 0.5f + (prob / (2.0f * steps));
-                                }
+                            }
 
 
                                 /*
@@ -234,9 +245,6 @@ namespace sentience.core
                                     }
                                 }
                                 */
-
-                            }
-                            else i = steps;
                         }
                         else i = steps;
                     }

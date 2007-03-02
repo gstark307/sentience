@@ -27,16 +27,20 @@ namespace sentience.core
 {
     public class particlePose
     {
-        public int index;
+        // position of the pose in millimetres
         public float x, y;
-        public float pan; 
+
+        // pan angle in radians
+        public float pan;
+
+        // localisation score
         public float score;
 
-        // observation made form this location
-        //public ArrayList rays;
-
-        // stores the grid cells (particlePoseObservedGridCell) which were observed from this pose
+        // grid cells (particlePoseObservedGridCell) which were observed from this pose
         public ArrayList observed_grid_cells;
+
+        // the path with which this pose is associated
+        public UInt32 path_ID;
 
         // the time step on which this particle was created
         public UInt32 time_step;
@@ -44,24 +48,13 @@ namespace sentience.core
         public particlePose parent = null;
         public int no_of_children = 0;
 
-        /*
-        public particlePose(int index, float x, float y, int pan, float score)
-        {
-            this.index = index;
-            this.x = x;
-            this.y = y;
-            this.pan = pan;
-            this.score = score;
-            observed_grid_cells = new ArrayList();
-        }
-         */
-
-        public particlePose(float x, float y, float pan)
+        public particlePose(float x, float y, float pan, UInt32 path_ID)
         {
             this.x = x;
             this.y = y;
             this.pan = pan;
             this.score = 0;  // this should be a running average
+            this.path_ID = path_ID;
             observed_grid_cells = new ArrayList();
         }
 
@@ -81,7 +74,6 @@ namespace sentience.core
         public void AddObservation(ArrayList stereo_rays, occupancygridMultiHypothesis grid)
         {
             // itterate through each ray
-            //rays = new ArrayList();
             for (int r = 0; r < stereo_rays.Count; r++)
             {
                 // observed ray.  Note that this is in an egocentric
@@ -91,20 +83,22 @@ namespace sentience.core
                 // translate and rotate this ray appropriately for the pose
                 evidenceRay trial_ray = ray.trialPose(pan, x, y);
 
-                // TODO: update the grid cells for this ray
+                // update the grid cells for this ray
                 grid.Insert(trial_ray, this);
-
-                // add to the observation
-                //rays.Add(trial_ray);
             }
         }
 
         /// <summary>
         /// remove the mapping particles associated with this pose
         /// </summary>
-        public void Remove()
+        public void Remove(occupancygridMultiHypothesis grid)
         {
-            //rays = null;
+            for (int i = 0; i < observed_grid_cells.Count; i++)
+            {
+                particleGridCell hypothesis = (particleGridCell)observed_grid_cells[i];
+                grid.Remove(hypothesis);
+            }
+            observed_grid_cells.Clear();
         }
     }
 }

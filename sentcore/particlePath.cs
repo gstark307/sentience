@@ -30,6 +30,9 @@ namespace sentience.core
     /// </summary>
     public class particlePath
     {
+        // a unique ID for this path
+        public UInt32 ID;
+
         // the index in the path arraylist at which the parent path connects to this path
         public particlePose branch_pose = null;
 
@@ -52,8 +55,9 @@ namespace sentience.core
             path = new ArrayList();
         }
 
-        public particlePath(particlePath parent)
+        public particlePath(particlePath parent, UInt32 path_ID)
         {
+            ID = path_ID;
             parent.current_pose.no_of_children++;
             current_pose = parent.current_pose;
             branch_pose = parent.current_pose;
@@ -65,11 +69,12 @@ namespace sentience.core
         }
 
         public particlePath(float x, float y, float pan,
-                            int max_length, UInt32 time_step)
+                            int max_length, UInt32 time_step, UInt32 path_ID)
         {
+            ID = path_ID;
             this.max_length = max_length;
             path = new ArrayList();
-            particlePose pose = new particlePose(x, y, pan);
+            particlePose pose = new particlePose(x, y, pan, ID);
             pose.time_step = time_step;
             Add(pose);
         }
@@ -96,17 +101,35 @@ namespace sentience.core
         /// <summary>
         /// remove the mapping particles associated with this path
         /// </summary>
-        public bool Remove()
+        public bool Remove(occupancygridMultiHypothesis grid)
         {
-            int children = 0;
+            UInt32 path_ID = 0;
             particlePose pose = current_pose;
-            while ((pose != branch_pose) && (children < 1))
+            if (current_pose != null)
             {
-                children = pose.no_of_children;
-                pose.Remove();
-                pose = pose.parent;
+                path_ID = current_pose.path_ID;
+                while ((pose != branch_pose) && (path_ID == pose.path_ID))
+                {
+                    pose.Remove(grid);
+                    if (path_ID == pose.path_ID) pose = pose.parent;
+                }
+                if (pose != null)
+                {
+                    pose.no_of_children--;
+                    if (pose.no_of_children == 0)
+                    {
+                        // there are no children remaining, so label the previous path
+                        // with the current path ID
+                        int children = 0;
+                        while ((pose != null) && (children < 1))
+                        {
+                            children = pose.no_of_children;
+                            pose.path_ID = path_ID;
+                            if (children < 1) pose = pose.parent;
+                        }
+                    }
+                }
             }
-            if (pose != null) pose.no_of_children--;
             if (pose == branch_pose)
                 return (true);
             else
