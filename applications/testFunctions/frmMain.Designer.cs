@@ -42,14 +42,14 @@ namespace WindowsApplication1
             // 
             this.picRays.Location = new System.Drawing.Point(15, 12);
             this.picRays.Name = "picRays";
-            this.picRays.Size = new System.Drawing.Size(769, 585);
+            this.picRays.Size = new System.Drawing.Size(769, 879);
             this.picRays.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picRays.TabIndex = 0;
             this.picRays.TabStop = false;
             // 
             // txtMappingTime
             // 
-            this.txtMappingTime.Location = new System.Drawing.Point(105, 625);
+            this.txtMappingTime.Location = new System.Drawing.Point(103, 897);
             this.txtMappingTime.Name = "txtMappingTime";
             this.txtMappingTime.Size = new System.Drawing.Size(63, 20);
             this.txtMappingTime.TabIndex = 1;
@@ -57,7 +57,7 @@ namespace WindowsApplication1
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 625);
+            this.label1.Location = new System.Drawing.Point(10, 897);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(70, 13);
             this.label1.TabIndex = 2;
@@ -66,7 +66,7 @@ namespace WindowsApplication1
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(193, 625);
+            this.label2.Location = new System.Drawing.Point(191, 897);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(94, 13);
             this.label2.TabIndex = 4;
@@ -74,7 +74,7 @@ namespace WindowsApplication1
             // 
             // txtPositionError
             // 
-            this.txtPositionError.Location = new System.Drawing.Point(293, 625);
+            this.txtPositionError.Location = new System.Drawing.Point(291, 897);
             this.txtPositionError.Name = "txtPositionError";
             this.txtPositionError.Size = new System.Drawing.Size(63, 20);
             this.txtPositionError.TabIndex = 3;
@@ -82,7 +82,7 @@ namespace WindowsApplication1
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(379, 625);
+            this.label3.Location = new System.Drawing.Point(377, 897);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(115, 13);
             this.label3.TabIndex = 6;
@@ -90,7 +90,7 @@ namespace WindowsApplication1
             // 
             // txtAngularError
             // 
-            this.txtAngularError.Location = new System.Drawing.Point(500, 625);
+            this.txtAngularError.Location = new System.Drawing.Point(498, 897);
             this.txtAngularError.Name = "txtAngularError";
             this.txtAngularError.Size = new System.Drawing.Size(63, 20);
             this.txtAngularError.TabIndex = 5;
@@ -99,7 +99,7 @@ namespace WindowsApplication1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(791, 681);
+            this.ClientSize = new System.Drawing.Size(791, 929);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.txtAngularError);
             this.Controls.Add(this.label2);

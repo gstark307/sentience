@@ -91,19 +91,18 @@ namespace WindowsApplication1
             rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             picRays.Image = rays;
 
-            test_motion_model(true);
+            //test_motion_model(true);
 
             //stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false);
             //stereo_model.showDistribution(img_rays, standard_width, standard_height);
             //stereo_model.showSurveyDistribution(500, img_rays, standard_width, standard_height);
 
-            //stereo_model.updateRayModel(grid_layer, grid_dimension, img_rays, standard_width, standard_height);
+            createSensorModelLookup();
 
             //test_head();
             //test_head2();
             //test_grid();
             //test_trial_poses();
-            //test_intercepts();
 
             int offset_x = rnd.Next(1000) - 500;
             int offset_y = rnd.Next(1000) - 500;
@@ -112,6 +111,14 @@ namespace WindowsApplication1
 
             updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
             //picRays.Refresh();
+        }
+
+        private void createSensorModelLookup()
+        {
+            int divisor = 6;
+            grid_dimension = 18000;
+            grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
+            stereo_model.updateRayModel(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor);
         }
 
         private void test_head()

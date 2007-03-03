@@ -10,6 +10,9 @@ namespace sentience.core
     /// </summary>
     public class occupancygridCellMultiHypothesis
     {
+        // a value which is returned by the probability method if no evidence was discovered
+        public const int NO_OCCUPANCY_EVIDENCE = 99999999;
+
         // current best estimate of whether this cell is occupied or not
         // note that unknown cells are simply null pointers
         // This boolean value is convenient for display purposes
@@ -27,6 +30,7 @@ namespace sentience.core
         public float GetProbability(particlePose pose)
         {           
             float probabilityLogOdds = 0;
+            int hits = 0;
 
             if (pose.previous_paths != null)
             {
@@ -40,14 +44,26 @@ namespace sentience.core
                     {
                         particleGridCell h = (particleGridCell)Hypothesis[i];
                         curr_path_ID = h.pose.path_ID;
-                        if (curr_path_ID == path_ID) probabilityLogOdds += h.probabilityLogOdds;
+                        if (curr_path_ID == path_ID)
+                            // only use evidence older than the current time 
+                            // step to avoid getting into a muddle
+                            if (pose.time_step > h.pose.time_step)
+                            {
+                                probabilityLogOdds += h.probabilityLogOdds;
+                                hits++;
+                            }
                         i--;
                     }
                 }
             }
 
-            // at the end we convert the total log odds value into a probability
-            return (util.LogOddsToProbability(probabilityLogOdds));
+            if (hits > 0)
+            {
+                // at the end we convert the total log odds value into a probability
+                return (util.LogOddsToProbability(probabilityLogOdds));
+            }
+            else
+                return (NO_OCCUPANCY_EVIDENCE);
         }
 
         public occupancygridCellMultiHypothesis()
@@ -270,11 +286,14 @@ namespace sentience.core
                                         // first get the existing probability value at this cell
                                         occ = cell[x_cell2, y_cell2].GetProbability(origin);
 
-                                        // combine the results
-                                        float prob2 = ((prob * occ) + ((1.0f - prob) * (1.0f - occ)));
+                                        if (occ != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                        {
+                                            // combine the results
+                                            float prob2 = ((prob * occ) + ((1.0f - prob) * (1.0f - occ)));
 
-                                        // update the localisation matching score
-                                        matchingScore += util.LogOdds(prob2);
+                                            // update the localisation matching score
+                                            matchingScore += util.LogOdds(prob2);
+                                        }
                                     }
                                 }
 
