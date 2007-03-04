@@ -129,7 +129,7 @@ namespace sentience.core
         public void updateRayModel(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor)
         {
             // half a pixel of horizontal uncertainty
-            sigma = 1.0f / (image_width * 2) * FOV_horizontal;
+            sigma = 1.8f / (image_width * 2) * FOV_horizontal;
             sigma *= image_width / 320;
             this.divisor = divisor;
 
@@ -143,7 +143,7 @@ namespace sentience.core
             int max_dist = grid_dimension;
             int x = (image_width)*499/1000;
 
-            for (int disparity_pixels = 1; disparity_pixels < max_disparity; disparity_pixels++)
+            for (int disparity_pixels = 3; disparity_pixels < max_disparity; disparity_pixels++)
             {
                 int disp = disparity_pixels;
                 int xx = x + disp;
@@ -187,7 +187,7 @@ namespace sentience.core
                     float max = 0;
                     int start = -1;
 
-                    float min_prob = 0.01f;
+                    float min_prob = 0.0f;
                     int max_length = 0;
                     int x2 = (grid_layer.GetLength(0) / 2);
                     int winner = x2;
@@ -196,17 +196,19 @@ namespace sentience.core
                         int length = 0;
                         for (int l = 0; l < ray_model_length; l++)
                             if (grid_layer[xx2, l, 2] == 2)
-                                if (grid_layer[xx2, l, 1] > min_prob) length++;
+                            {
+                                float cellval = grid_layer[xx2, l, 1];
+                                if (cellval > min_prob) length++;
+                            }
                         if (length > max_length)
                         {
                             max_length = length;
                             winner = xx2;
                         }
                     }
-                    //start = 0;
                     for (int l = 0; l < ray_model_length; l++)
                     {
-                        int y2 = l;
+                        int y2 = ray_model_length-1-l;
                         if ((y2 > -1) && (y2 < grid_dimension))
                         {
                             if ((grid_layer[winner, y2, 2] == 2) && (grid_layer[winner, y2, 1] != 0))
@@ -223,7 +225,7 @@ namespace sentience.core
                         }
                     }
 
-                    ray_model_to_image(img, img_width, img_height);
+                    ray_model_to_graph_image(img, img_width, img_height);
                     /*
                     for (int gx = 0; gx < grid_dimension / divisor; gx++)
                         for (int gy = 0; gy < grid_dimension; gy++)
@@ -1340,12 +1342,12 @@ namespace sentience.core
 
                 for (int y = 0; y < img_height; y++)
                 {
-                    int n = (((img_height - 1 - y) * img_width) + x) * 3;
+                    int n = (((img_height-1-y) * img_width) + x) * 3;
                     if (n < img.Length)
                     {
                         if (max_value > 0)
                         {
-                            int yy = y* ray_model.GetLength(1) / img_height;
+                            int yy = y * ray_model.GetLength(1) / img_height;
                             float value = ray_model[xx, yy] * 255 / max_value;
 
                             for (int col = 0; col < 3; col++) img[n + col] = (Byte)value;
@@ -1355,6 +1357,49 @@ namespace sentience.core
                 }
             }
         }
+
+        /// <summary>
+        /// displays ray models for each disparity as a graph
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        public void ray_model_to_graph_image(Byte[] img, int img_width, int img_height)
+        {
+            float max_value = 0.20f;
+
+            // clear the image
+            for (int i = 0; i < img.Length; i++) img[i] = 255;
+
+            // for each possible diaparity value
+            for (int disparity_pixels = 3; disparity_pixels < ray_model.GetLength(0); disparity_pixels++)
+            {
+                int prev_i = 0;
+                float prev_value = -1;
+                for (int i = 0; i < ray_model.GetLength(1); i++)
+                {
+                    //if (ray_model[disparity_pixels, i] != prev_value)
+                    {
+                        if (i > 0)
+                        {
+                            int x = i * img_width / ray_model.GetLength(1);
+                            int y = (int)(ray_model[disparity_pixels, i] * img_height / max_value);
+                            if (y >= img_height) y = img_height - 1;
+                            y = img_height - 1 - y;
+                            int prev_x = prev_i * img_width / ray_model.GetLength(1);
+                            int prev_y = (int)(ray_model[disparity_pixels, prev_i] * img_height / max_value);
+                            if (prev_y >= img_height) prev_y = img_height - 1;
+                            prev_y = img_height - 1 - prev_y;
+                            util.drawLine(img, img_width, img_height, prev_x, prev_y, x, y, 0, 0, 0, 0, false);
+                        }
+                        prev_value = ray_model[disparity_pixels, i];
+                        prev_i = i;
+                    }
+                }
+            }
+
+        }
+
 
         /// <summary>
         /// inserts grid cells into an image object
