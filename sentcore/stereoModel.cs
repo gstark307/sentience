@@ -126,7 +126,7 @@ namespace sentience.core
         /// <param name="grid_layer"></param>
         /// <param name="grid_dimension"></param>
         /// <param name="img"></param>
-        public void updateRayModel(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor)
+        public void updateRayModel(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor, bool apply_smoothing)
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.8f / (image_width * 2) * FOV_horizontal;
@@ -216,6 +216,7 @@ namespace sentience.core
                     if (max_length > 0) scaling_factor = 1.0f / total_probability;
 
                     float max = 0;
+                    int max_index = 0;
                     for (int l = 0; l < ray_model_length; l++)
                     {
                         int y2 = ray_model_length-1-l;
@@ -229,9 +230,39 @@ namespace sentience.core
                                     if (start == -1) start = l;
                                     ray_model[disparity_pixels, l - start] = cellval;
                                     if (cellval > max)
+                                    {
                                         max = cellval;
+                                        max_index = l - start;
+                                    }
                                 }
                             }
+                        }
+                    }
+
+                    if (apply_smoothing)
+                    {
+                        float[] probvalues = new float[ray_model_length];
+                        int radius = 20;
+                        for (int itt = 0; itt < 10; itt++)
+                        {
+                            for (int i = 0; i < ray_model_length; i++)
+                            {
+                                float value = 0;
+                                int hits = 0;
+                                for (int j = i - radius; j < i + radius; j++)
+                                {
+                                    if ((j >= 0) && (j < ray_model_length))
+                                    {
+                                        value += ((j - (i - radius)) * ray_model[disparity_pixels, j]);
+                                        hits++;
+                                    }
+                                }
+                                if (hits > 0) value /= hits;
+                                probvalues[i] = value;
+                            }
+                            for (int i = 0; i < ray_model_length; i++)
+                                if (ray_model[disparity_pixels, i] > max/200.0f)
+                                    ray_model[disparity_pixels, i] = probvalues[i];
                         }
                     }
 
@@ -1078,8 +1109,8 @@ namespace sentience.core
                             {
                                 if ((xx2 >= 0) && (xx2 < grid_dimension/divisor) && (yy2 >= 0) && (yy2 < grid_dimension))
                                 {
-                                    int xx3 = (int)(Math.Round(xx2));
-                                    int yy3 = (int)(Math.Round(yy2));
+                                    int xx3 = (int)xx2;
+                                    int yy3 = (int)yy2;
                                     if (grid_layer[xx3, yy3, 2] < rayNumber)
                                     {
                                         dxx = xx2 - cx;
@@ -1131,8 +1162,8 @@ namespace sentience.core
                             {
                                 if ((xx2 >= 0) && (xx2 < grid_dimension / divisor) && (yy2 >= 0) && (yy2 < grid_dimension))
                                 {
-                                    int xx3 = (int)(Math.Round(xx2));
-                                    int yy3 = (int)(Math.Round(yy2));
+                                    int xx3 = (int)xx2;
+                                    int yy3 = (int)yy2;
                                     if (grid_layer[xx3, yy3, 2] < rayNumber)
                                     {
                                         dxx = xx2 - cx;
