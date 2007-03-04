@@ -128,11 +128,12 @@ namespace sentience.core
         /// <param name="img"></param>
         public void updateRayModel(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor)
         {
-            // ensure that rays are fat enough to be clearly seen
-            sigma = 0.002f;
+            // half a pixel of horizontal uncertainty
+            sigma = 1.0f / (image_width * 2) * FOV_horizontal;
+            sigma *= image_width / 320;
             this.divisor = divisor;
 
-            int max_disparity = image_width * 35 / 100;
+            int max_disparity = 10 * image_width / 320; // image_width * 35 / 100;
 
             ray_model_length = grid_dimension;
             if (ray_model == null)
@@ -142,7 +143,7 @@ namespace sentience.core
             int max_dist = grid_dimension;
             int x = (image_width)*499/1000;
 
-            for (int disparity_pixels = 0; disparity_pixels < 10; disparity_pixels++)
+            for (int disparity_pixels = 1; disparity_pixels < max_disparity; disparity_pixels++)
             {
                 int disp = disparity_pixels;
                 int xx = x + disp;
@@ -181,12 +182,12 @@ namespace sentience.core
 
                     throwRay(-baseline / 2, xx, min_dist, max_dist, grid_layer, grid_dimension, 1);
                     throwRay(baseline / 2, x, min_dist, max_dist, grid_layer, grid_dimension, 2);
-                    max_prob *= 2;
                     grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height);
 
                     float max = 0;
                     int start = -1;
 
+                    float min_prob = 0.01f;
                     int max_length = 0;
                     int x2 = (grid_layer.GetLength(0) / 2);
                     int winner = x2;
@@ -194,25 +195,30 @@ namespace sentience.core
                     {
                         int length = 0;
                         for (int l = 0; l < ray_model_length; l++)
-                            if (grid_layer[xx2, l, 1] != 0) length++;
+                            if (grid_layer[xx2, l, 2] == 2)
+                                if (grid_layer[xx2, l, 1] > min_prob) length++;
                         if (length > max_length)
                         {
                             max_length = length;
                             winner = xx2;
                         }
                     }
-
+                    //start = 0;
                     for (int l = 0; l < ray_model_length; l++)
                     {
-                        int y2 = l; // (int)(y_start + (l * (y_end - y_start) / ray_model_length));
+                        int y2 = l;
                         if ((y2 > -1) && (y2 < grid_dimension))
                         {
-                            if (grid_layer[winner, y2, 1] != 0)
+                            if ((grid_layer[winner, y2, 2] == 2) && (grid_layer[winner, y2, 1] != 0))
                             {
-                                if (start == -1) start = l;
-                                ray_model[disparity_pixels, l - start] = grid_layer[winner, y2, 1];
-                                if (grid_layer[winner, y2, 1] > max)
-                                    max = grid_layer[winner, y2, 1];
+                                float cellval = grid_layer[winner, y2, 1];
+                                if (cellval > min_prob)
+                                {
+                                    if (start == -1) start = l;
+                                    ray_model[disparity_pixels, l - start] = cellval;
+                                    if (cellval > max)
+                                        max = cellval;
+                                }
                             }
                         }
                     }
@@ -1319,30 +1325,33 @@ namespace sentience.core
         /// <param name="img_height"></param>
         public void ray_model_to_image(Byte[] img, int img_width, int img_height)
         {
-            for (int x = 0; x < image_width; x++)
+            for (int x = 0; x < img_width; x++)
             {
-                int xx = x * ray_model.GetLength(0) / image_width;
+                int xx = x * ray_model.GetLength(0) / img_width;
 
                 // find the max
                 float max_value=0;
-                for (int y = 0; y < image_height; y++)
+                for (int y = 0; y < img_height; y++)
                 {
-                    int yy = y * ray_model.GetLength(1) / image_height;
+                    int yy = y * ray_model.GetLength(1) / img_height;
 
                     if (ray_model[xx, yy] > max_value) max_value = ray_model[xx, yy];
                 }
 
-                for (int y = 0; y < image_height; y++)
+                for (int y = 0; y < img_height; y++)
                 {
-                    int n = ((y * img_width) + x) * 3;                    
-                    if (max_value > 0)
+                    int n = (((img_height - 1 - y) * img_width) + x) * 3;
+                    if (n < img.Length)
                     {
-                        int yy = y * ray_model.GetLength(1) / image_height;
-                        float value = ray_model[xx, yy] * 255 / max_value;
+                        if (max_value > 0)
+                        {
+                            int yy = y* ray_model.GetLength(1) / img_height;
+                            float value = ray_model[xx, yy] * 255 / max_value;
 
-                        for (int col = 0; col < 3; col++) img[n + col] = (Byte)255; // value;
-                    }                
-                    else for (int col = 0; col < 3; col++) img[n + col] = (Byte)0;
+                            for (int col = 0; col < 3; col++) img[n + col] = (Byte)value;
+                        }
+                        else for (int col = 0; col < 3; col++) img[n + col] = (Byte)0;
+                    }
                 }
             }
         }

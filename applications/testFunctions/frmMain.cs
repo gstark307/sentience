@@ -116,7 +116,7 @@ namespace WindowsApplication1
         private void createSensorModelLookup()
         {
             int divisor = 6;
-            grid_dimension = 18000;
+            grid_dimension = 10000;
             grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
             stereo_model.updateRayModel(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor);
         }
