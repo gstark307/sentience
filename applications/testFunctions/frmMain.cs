@@ -93,11 +93,13 @@ namespace WindowsApplication1
 
             //test_motion_model(true);
 
-            //stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false);
+            //stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false, true);
             //stereo_model.showDistribution(img_rays, standard_width, standard_height);
             //stereo_model.showSurveyDistribution(500, img_rays, standard_width, standard_height);
 
-            createSensorModelLookup();
+            //createSensorModelLookup();
+
+            createSingleRayModel();
 
             //test_head();
             //test_head2();
@@ -111,6 +113,14 @@ namespace WindowsApplication1
 
             updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
             //picRays.Refresh();
+        }
+
+        private void createSingleRayModel()
+        {
+            int divisor = 6;
+            grid_dimension = 10000;
+            grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
+            stereo_model.showSingleRay(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor);
         }
 
         private void createSensorModelLookup()

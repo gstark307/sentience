@@ -41,7 +41,7 @@ namespace sentience.core
         public int image_height = 240;
         public float focal_length = 5; // mm
         public float baseline = 100; // mm
-        public float sigma = 0.005f;  //angular uncertainty magnitude (standard deviation) pixels per mm of range
+        public float sigma = 0.04f; //0.005f;  //angular uncertainty magnitude (standard deviation) pixels per mm of range
         private float max_prob = 0.0f;
         private int max_prob_x, max_prob_y;
         private int starting_y;
@@ -133,7 +133,7 @@ namespace sentience.core
             sigma *= image_width / 320;
             this.divisor = divisor;
 
-            int max_disparity = 10 * image_width / 320; // image_width * 35 / 100;
+            int max_disparity = 10 * image_width / 320;
 
             ray_model_length = grid_dimension;
             if (ray_model == null)
@@ -145,8 +145,7 @@ namespace sentience.core
 
             for (int disparity_pixels = 3; disparity_pixels < max_disparity; disparity_pixels++)
             {
-                int disp = disparity_pixels;
-                int xx = x + disp;
+                int xx = x + disparity_pixels;
 
                 // clear the grid
                 max_prob = 0.0f;
@@ -182,7 +181,6 @@ namespace sentience.core
 
                     throwRay(-baseline / 2, xx, min_dist, max_dist, grid_layer, grid_dimension, 1);
                     throwRay(baseline / 2, x, min_dist, max_dist, grid_layer, grid_dimension, 2);
-                    grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height);
 
                     int start = -1;
 
@@ -196,7 +194,8 @@ namespace sentience.core
                         int length = 0;
                         float tot = 0;
                         for (int l = 0; l < ray_model_length; l++)
-                            if (grid_layer[xx2, l, 2] == 2)
+                            if ((grid_layer[xx2, l, 2] == 2) && 
+                                (grid_layer[xx2, l, 0] > 1))
                             {
                                 float cellval = grid_layer[xx2, l, 1];
                                 if (cellval > min_prob)
@@ -222,7 +221,9 @@ namespace sentience.core
                         int y2 = ray_model_length-1-l;
                         if ((y2 > -1) && (y2 < grid_dimension))
                         {
-                            if ((grid_layer[winner, y2, 2] == 2) && (grid_layer[winner, y2, 1] != 0))
+                            if ((grid_layer[winner, y2, 2] == 2) && 
+                                (grid_layer[winner, y2, 1] != 0) && 
+                                (grid_layer[winner, y2, 0] > 1))
                             {
                                 float cellval = grid_layer[winner, y2, 1] * scaling_factor;
                                 if (cellval > min_prob)
@@ -239,6 +240,7 @@ namespace sentience.core
                         }
                     }
 
+                    
                     if (apply_smoothing)
                     {
                         float[] probvalues = new float[ray_model_length];
@@ -264,34 +266,79 @@ namespace sentience.core
                                 if (ray_model[disparity_pixels, i] > max/200.0f)
                                     ray_model[disparity_pixels, i] = probvalues[i];
                         }
-                    }
+                    }                    
 
                     ray_model_to_graph_image(img, img_width, img_height);
-                    /*
-                    for (int gx = 0; gx < grid_dimension / divisor; gx++)
-                        for (int gy = 0; gy < grid_dimension; gy++)
-                        {
-                            grid_layer[gx, gy, 0] = 0;
-                            grid_layer[gx, gy, 1] = 0;
-                            grid_layer[gx, gy, 2] = 0;
-                        }
-                    max_prob = 0.0f;
-
-                    for (int l = 0; l < ray_model_length; l++)
-                        for (int w = 0; w < ray_model_width; w++)
-                        {
-                            ray_model[l, w] = ray_model[l, w] * 255 / max;
-
-                            grid_layer[l, w, 0] = 1;
-                            grid_layer[l, w, 1] = ray_model[l, w];
-                            grid_layer[l, w, 2] = 2;
-                        }
-                    grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height);
-                     */
                 }
             }
             this.divisor = 1;
         }
+
+        /// <summary>
+        /// show a single ray model, with both occupancy and vacancy
+        /// </summary>
+        /// <param name="grid_layer"></param>
+        /// <param name="grid_dimension"></param>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        /// <param name="divisor"></param>
+        public void showSingleRay(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor)
+        {
+            // half a pixel of horizontal uncertainty
+            sigma = 1.8f / (image_width * 2) * FOV_horizontal;
+            sigma *= image_width / 320;
+            this.divisor = divisor;
+
+            int min_dist = (int)baseline;
+            int max_dist = grid_dimension;
+            int x = (image_width) * 499 / 1000;
+
+            int disparity_pixels = 3;
+
+            int xx = x + disparity_pixels;
+
+            // clear the grid
+            max_prob = 0.0f;
+            for (int gx = 0; gx < grid_dimension / divisor; gx++)
+                for (int gy = 0; gy < grid_dimension; gy++)
+                {
+                    grid_layer[gx, gy, 0] = 0;
+                    grid_layer[gx, gy, 1] = 0;
+                    grid_layer[gx, gy, 2] = 0;
+                }
+
+            float x_start = 0, y_start = 0;
+            float x_end = 0, y_end = 0;
+            float x_left = 0, y_left = 0;
+            float x_right = 0, y_right = 0;
+            float confidence = 1;
+            raysIntersection(xx, x, grid_dimension, confidence,
+                                 ref x_start, ref y_start, ref x_end, ref y_end,
+                                 ref x_left, ref y_left, ref x_right, ref y_right);
+            if (x_right > x_left)
+            {
+                if (y_start < -1) y_start = -y_start;
+                if (y_end < -1) y_end = -y_end;
+
+                if (y_start > 0)
+                    min_dist = (int)y_start;
+                else
+                    min_dist = 100;
+
+                max_dist = grid_dimension;
+                if ((y_end > 0) && (y_end < grid_dimension))
+                    max_dist = (int)y_end;
+
+                min_dist = 0;
+
+                throwRay(-baseline / 2, xx, min_dist, max_dist, grid_layer, grid_dimension, 1);
+                throwRay(baseline / 2, x, min_dist, max_dist, grid_layer, grid_dimension, 2);
+                grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height, true);
+            }
+            this.divisor = 1;
+        }
+
 
         #region "old stuff no longer used"
 
@@ -1111,6 +1158,7 @@ namespace sentience.core
                                 {
                                     int xx3 = (int)xx2;
                                     int yy3 = (int)yy2;
+
                                     if (grid_layer[xx3, yy3, 2] < rayNumber)
                                     {
                                         dxx = xx2 - cx;
@@ -1126,7 +1174,7 @@ namespace sentience.core
                                             grid_layer[xx3, yy3, 1] += incr;
                                         else
                                             grid_layer[xx3, yy3, 1] *= incr;
-                                        if ((grid_layer[xx3, yy3, 1] > max_prob)) // && (yy2 > starting_y))
+                                        if (grid_layer[xx3, yy3, 1] > max_prob)
                                         {
                                             max_prob = grid_layer[xx3, yy3, 1];
                                             if (yy2 > starting_y)
@@ -1135,7 +1183,7 @@ namespace sentience.core
                                                 max_prob_y = yy3;
                                             }
                                         }
-                                        if (grid_layer[xx3, yy3, 2] == rayNumber - 1)
+                                        if ((grid_layer[xx3, yy3, 2] == rayNumber - 1) || (grid_layer[xx3, yy3, 2] == 0))
                                             grid_layer[xx3, yy3, 2] = rayNumber;
                                     }
                                 }
@@ -1164,6 +1212,7 @@ namespace sentience.core
                                 {
                                     int xx3 = (int)xx2;
                                     int yy3 = (int)yy2;
+
                                     if (grid_layer[xx3, yy3, 2] < rayNumber)
                                     {
                                         dxx = xx2 - cx;
@@ -1188,7 +1237,7 @@ namespace sentience.core
                                                 max_prob_y = yy3;
                                             }
                                         }
-                                        if (grid_layer[xx3, yy3, 2] == rayNumber - 1)
+                                        if ((grid_layer[xx3, yy3, 2] == rayNumber - 1) || (grid_layer[xx3, yy3, 2] == 0))
                                             grid_layer[xx3, yy3, 2] = rayNumber;
                                     }
                                 }
@@ -1261,7 +1310,10 @@ namespace sentience.core
         /// <param name="grid_layer"></param>
         /// <param name="grid_dimension"></param>
         /// <param name="img"></param>
-        public void showProbabilities(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, bool show_ray_outlines)
+        public void showProbabilities(float[, ,] grid_layer, int grid_dimension, 
+                                      Byte[] img, int img_width, int img_height, 
+                                      bool show_ray_outlines,
+                                      bool show_vacancy)
         {
             int min_dist = (int)baseline;
             int max_dist = grid_dimension;
@@ -1313,6 +1365,8 @@ namespace sentience.core
 
                         starting_y = (int)(y_start + 50);
 
+                        if (show_vacancy) min_dist = 0;
+
                         throwRay(-baseline / 2, xx+offset, min_dist, max_dist, grid_layer, grid_dimension,1);
                         throwRay(baseline / 2, x+offset, min_dist, max_dist, grid_layer, grid_dimension,2);
                         
@@ -1355,7 +1409,7 @@ namespace sentience.core
                                          255, 0, 0, 0, false);
                             //}                        
                         }
-                        else grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height);
+                        else grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height, show_vacancy);
                         
                     }                    
 
@@ -1478,10 +1532,12 @@ namespace sentience.core
         /// <param name="grid_layer"></param>
         /// <param name="grid_dimension"></param>
         /// <param name="img"></param>
-        public void grid_layer_to_image(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height)
+        public void grid_layer_to_image(float[, ,] grid_layer, int grid_dimension, 
+                                        Byte[] img, int img_width, int img_height,
+                                        bool show_vacancy)
         {
-            float max = max_prob / 2;
-            if (max < 0.000001f) max = 0.000001f;
+            float max = max_prob / 70;
+            if (max < 0.000000001f) max = 0.000000001f;
 
             for (int x = 0; x < img_width; x++)
             {
@@ -1492,17 +1548,45 @@ namespace sentience.core
                     {
                         int yy = y * grid_dimension / img_height;
 
-                        if (grid_layer[xx, yy, 2] == 2)
+                        if ((grid_layer[xx, yy, 2] == 2) &&
+                            (grid_layer[xx, yy, 0] > 1))
                         {
-                            int cellval = (int)((Math.Sqrt(grid_layer[xx, yy, 1])) * 255 / max);
+                            int cellval = (int)(grid_layer[xx, yy, 1] * 255 / max);
                             if (cellval > 255) cellval = 255;
                             Byte cell_value = (Byte)cellval;
                             int n = ((img_width * y) + x) * 3;
                             if (img[n] < cell_value)
-                            {
+                            {                                
                                 img[n] = cell_value;
                                 img[n + 1] = cell_value;
                                 img[n + 2] = cell_value;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (show_vacancy)
+            {
+                for (int x = 0; x < img_width; x++)
+                {
+                    int xx = x * (grid_dimension / divisor) / img_width;
+                    if ((xx > -1) && (xx < (grid_dimension / divisor)))
+                    {
+                        for (int y = 0; y < img_height; y++)
+                        {
+                            int yy = y * grid_dimension / img_height;
+
+                            int n = ((img_width * y) + x) * 3;
+                            if ((grid_layer[xx, yy, 1] > 0) && (img[n] == 0))
+                            {                                
+                                int cellval = (int)(grid_layer[xx, yy, 1] * 255 * 5.0f);
+                                if (cellval > 255) cellval = 255;
+                                //cellval = 50;
+                                Byte cell_value = (Byte)cellval;
+                                img[n] = cell_value;
+                                img[n + 1] = 0;
+                                img[n + 2] = 0;
                             }
                         }
                     }
@@ -1641,7 +1725,7 @@ namespace sentience.core
                 float by = grid_dimension - 1 - (int)(uy1);
 
                 //check this value, which should be the height of the gaussian
-                float magnitude = 1.0f / uncertainty; // (1.0f / (1.0f + (uncertainty / 20.0f)));
+                float magnitude = 1.0f / uncertainty;
 
                 addGaussianLine(tx, ty, bx, by, 2, magnitude, grid_layer, grid_dimension, rayNumber);
             }
