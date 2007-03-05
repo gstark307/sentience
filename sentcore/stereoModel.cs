@@ -47,9 +47,11 @@ namespace sentience.core
         private int starting_y;
         public bool undistort = true;
 
-        private int ray_model_length = 1500;
-        //private int ray_model_width = 200;
+        private const int ray_model_normal_length = 300;
+        private int ray_model_max_length = 1500;
         private float[,] ray_model = null;
+        private int[] ray_model_length = null;
+        //private float ray_model_interval_pixels = 0.5f;
 
         // variables used to show the survey scores
         //private float max_trial_pose_score = 1;
@@ -58,7 +60,7 @@ namespace sentience.core
         //private float[] prevTrialPoseScore = new float[2000];
 
         // adjustment factor for peak probability density
-        private float peak_density_adjust = 0;
+        //private float peak_density_adjust = 0;
 
         // number of features to use when updating or probing the grid
         public int no_of_stereo_features = 100;
@@ -119,6 +121,44 @@ namespace sentience.core
    4943,   4951,   4957,   4967,   4969,   4973,   4987,   4993,   4999,   5003, 
    5009,   5011,   5021,   5023,   5039,   5051,   5059,   5077,  5081,   5087 };
 
+
+        #region "calculation of the sensor model lookup table"
+
+        /// <summary>
+        /// Ok, so we've calculated the ray models in stupifying detail
+        /// now let's compress them down to some more compact and less memory-hogging form
+        /// </summary>
+        /// <param name="max_length"></param>
+        private void compressRayModels(int max_length)
+        {           
+            float[,] new_ray_model = new float[ray_model.GetLength(0), max_length];
+            int[] new_ray_model_length = new int[ray_model.GetLength(0)];
+
+            for (int d = 1; d < ray_model.GetLength(0); d++)
+            {
+                int prev_index = 0;
+                for (int i = 0; i < max_length; i++)
+                {
+                    int next_index = (i + 1) * ray_model_max_length / max_length;
+                    // sum the probabilities
+                    float total_probability = 0;
+                    for (int j = prev_index; j < next_index; j++)
+                    {
+                        // is there a DJ in the house ?
+                        total_probability += ray_model[d, j];
+                    }
+                    if (total_probability > 0)
+                        new_ray_model[d, i] = total_probability;
+                    prev_index = next_index;
+                }
+                new_ray_model_length[d] = ray_model_length[d] * max_length / ray_model_max_length;
+            }
+
+            // finally swap the arrays
+            ray_model = new_ray_model;
+            ray_model_length = new_ray_model_length;
+        }
+
         /// <summary>
         /// creates a ray model
         /// Grid dimension should be 1000
@@ -133,19 +173,22 @@ namespace sentience.core
             sigma *= image_width / 320;
             this.divisor = divisor;
 
-            int max_disparity = 10 * image_width / 320;
+            float max_disparity = 10 * image_width / 320;
 
-            ray_model_length = grid_dimension;
+            ray_model_max_length = grid_dimension;
             if (ray_model == null)
-                ray_model = new float[max_disparity, ray_model_length];
+            {
+                ray_model = new float[(int)(max_disparity * 2) + 1, ray_model_max_length];
+                ray_model_length = new int[(int)(max_disparity * 2) + 1];
+            }
 
             int min_dist = (int)baseline;
             int max_dist = grid_dimension;
             int x = (image_width)*499/1000;
 
-            for (int disparity_pixels = 3; disparity_pixels < max_disparity; disparity_pixels++)
+            for (float disparity_pixels = 1; disparity_pixels < max_disparity; disparity_pixels += 0.5f)
             {
-                int xx = x + disparity_pixels;
+                float xx = x + disparity_pixels;
 
                 // clear the grid
                 max_prob = 0.0f;
@@ -193,7 +236,7 @@ namespace sentience.core
                     {
                         int length = 0;
                         float tot = 0;
-                        for (int l = 0; l < ray_model_length; l++)
+                        for (int l = 0; l < ray_model_max_length; l++)
                             if ((grid_layer[xx2, l, 2] == 2) && 
                                 (grid_layer[xx2, l, 0] > 1))
                             {
@@ -212,67 +255,80 @@ namespace sentience.core
                         }
                     }
                     float scaling_factor = 1;
-                    if (max_length > 0) scaling_factor = 1.0f / total_probability;
-
-                    float max = 0;
-                    int max_index = 0;
-                    for (int l = 0; l < ray_model_length; l++)
+                    if (total_probability > 0)
                     {
-                        int y2 = ray_model_length-1-l;
-                        if ((y2 > -1) && (y2 < grid_dimension))
+                        if (max_length > 0) scaling_factor = 1.0f / total_probability;
+
+                        // record the length of the ray model
+                        ray_model_length[(int)(disparity_pixels * 2)] = max_length;
+
+                        float max = 0;
+                        int max_index = 0;
+                        for (int l = 0; l < ray_model_max_length; l++)
                         {
-                            if ((grid_layer[winner, y2, 2] == 2) && 
-                                (grid_layer[winner, y2, 1] != 0) && 
-                                (grid_layer[winner, y2, 0] > 1))
+                            int y2 = ray_model_max_length - 1 - l;
+                            if ((y2 > -1) && (y2 < grid_dimension))
                             {
-                                float cellval = grid_layer[winner, y2, 1] * scaling_factor;
-                                if (cellval > min_prob)
+                                if ((grid_layer[winner, y2, 2] == 2) &&
+                                    (grid_layer[winner, y2, 1] != 0) &&
+                                    (grid_layer[winner, y2, 0] > 1))
                                 {
-                                    if (start == -1) start = l;
-                                    ray_model[disparity_pixels, l - start] = cellval;
-                                    if (cellval > max)
+                                    float cellval = grid_layer[winner, y2, 1] * scaling_factor;
+                                    if (cellval > min_prob)
                                     {
-                                        max = cellval;
-                                        max_index = l - start;
+                                        if (start == -1) start = l;
+                                        ray_model[(int)(disparity_pixels * 2), l - start] = cellval;
+                                        if (cellval > max)
+                                        {
+                                            max = cellval;
+                                            max_index = l - start;
+                                        }
                                     }
                                 }
+                            }
+                        }
+
+
+                        if (apply_smoothing)
+                        {
+                            float[] probvalues = new float[ray_model_max_length];
+                            int radius = 20;
+                            for (int itt = 0; itt < 10; itt++)
+                            {
+                                for (int i = 0; i < ray_model_max_length; i++)
+                                {
+                                    float value = 0;
+                                    int hits = 0;
+                                    for (int j = i - radius; j < i + radius; j++)
+                                    {
+                                        if ((j >= 0) && (j < ray_model_max_length))
+                                        {
+                                            value += ((j - (i - radius)) * ray_model[(int)(disparity_pixels * 2), j]);
+                                            hits++;
+                                        }
+                                    }
+                                    if (hits > 0) value /= hits;
+                                    probvalues[i] = value;
+                                }
+                                for (int i = 0; i < ray_model_max_length; i++)
+                                    if (ray_model[(int)(disparity_pixels * 2), i] > max / 200.0f)
+                                        ray_model[(int)(disparity_pixels * 2), i] = probvalues[i];
                             }
                         }
                     }
-
                     
-                    if (apply_smoothing)
-                    {
-                        float[] probvalues = new float[ray_model_length];
-                        int radius = 20;
-                        for (int itt = 0; itt < 10; itt++)
-                        {
-                            for (int i = 0; i < ray_model_length; i++)
-                            {
-                                float value = 0;
-                                int hits = 0;
-                                for (int j = i - radius; j < i + radius; j++)
-                                {
-                                    if ((j >= 0) && (j < ray_model_length))
-                                    {
-                                        value += ((j - (i - radius)) * ray_model[disparity_pixels, j]);
-                                        hits++;
-                                    }
-                                }
-                                if (hits > 0) value /= hits;
-                                probvalues[i] = value;
-                            }
-                            for (int i = 0; i < ray_model_length; i++)
-                                if (ray_model[disparity_pixels, i] > max/200.0f)
-                                    ray_model[disparity_pixels, i] = probvalues[i];
-                        }
-                    }                    
-
-                    ray_model_to_graph_image(img, img_width, img_height);
                 }
             }
+
+            // compress the array down to a more managable size
+            compressRayModels(ray_model_normal_length);
+
+            ray_model_to_graph_image(img, img_width, img_height);
+
             this.divisor = 1;
         }
+
+        #endregion
 
         /// <summary>
         /// show a single ray model, with both occupancy and vacancy
@@ -283,7 +339,7 @@ namespace sentience.core
         /// <param name="img_width"></param>
         /// <param name="img_height"></param>
         /// <param name="divisor"></param>
-        public void showSingleRay(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor)
+        public void showSingleRay(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor, bool show_outline)
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.8f / (image_width * 2) * FOV_horizontal;
@@ -294,9 +350,9 @@ namespace sentience.core
             int max_dist = grid_dimension;
             int x = (image_width) * 499 / 1000;
 
-            int disparity_pixels = 3;
+            float disparity_pixels = 3;
 
-            int xx = x + disparity_pixels;
+            float xx = x + disparity_pixels;
 
             // clear the grid
             max_prob = 0.0f;
@@ -335,6 +391,27 @@ namespace sentience.core
                 throwRay(-baseline / 2, xx, min_dist, max_dist, grid_layer, grid_dimension, 1);
                 throwRay(baseline / 2, x, min_dist, max_dist, grid_layer, grid_dimension, 2);
                 grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height, true);
+
+                if (show_outline)
+                {
+
+                    util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                                 (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                                 255, 0, 0, 0, false);
+                    util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                                 (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
+                                 255, 0, 0, 0, false);
+                    util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                                 (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
+                                 255, 0, 0, 0, false);
+                    util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                                 (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
+                                 255, 0, 0, 0, false);
+                    util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                                 (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
+                                 255, 0, 0, 0, false);
+                }
+
             }
             this.divisor = 1;
         }
@@ -1000,6 +1077,7 @@ namespace sentience.core
 
         /// <summary>
         /// do the two given rays intersect?  If so then return the intersection point
+        /// this isn't really used anymore and should probably be removed
         /// </summary>
         /// <param name="ray1"></param>
         /// <param name="ray2"></param>
@@ -1377,14 +1455,14 @@ namespace sentience.core
                             //img.drawLine((int)(x_start * img.width / grid_dimension), img.height - 1 - (int)(y_start * img.height / grid_dimension),
                             //             (int)(x_end * img.width / grid_dimension), img.height - 1 - (int)(y_end * img.height / grid_dimension),
                             //             255, 0, 0, 0);
-                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / grid_dimension), img_height - 1 - (int)(y_left * img_height / grid_dimension),
-                                         (int)(x_right * img_width / grid_dimension), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension/divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                                         (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
-                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / grid_dimension), img_height - 1 - (int)(y_left * img_height / grid_dimension),
-                                         (int)(x_start * img_width / grid_dimension), img_height - 1 - (int)(y_start * img_height / grid_dimension),
+                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                                         (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
-                            util.drawLine(img, img_width, img_height, (int)(x_right * img_width / grid_dimension), img_height - 1 - (int)(y_right * img_height / grid_dimension),
-                                         (int)(x_start * img_width / grid_dimension), img_height - 1 - (int)(y_start * img_height / grid_dimension),
+                            util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                                         (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
                             /*
                             img.drawLine((int)(max_prob_x * img.width / grid_dimension), (int)(max_prob_y * img.height / grid_dimension),
@@ -1401,11 +1479,11 @@ namespace sentience.core
                             if ((dir1 == dir2) && (y_end > y_left))
                             {
                              */
-                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / grid_dimension), img_height - 1 - (int)(y_left * img_height / grid_dimension),
-                                         (int)(x_end * img_width / grid_dimension), img_height - 1 - (int)(y_end * img_height / grid_dimension),
+                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                                         (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
-                            util.drawLine(img, img_width, img_height, (int)(x_right * img_width / grid_dimension), img_height - 1 - (int)(y_right * img_height / grid_dimension),
-                                         (int)(x_end * img_width / grid_dimension), img_height - 1 - (int)(y_end * img_height / grid_dimension),
+                            util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                                         (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
                             //}                        
                         }
@@ -1478,9 +1556,9 @@ namespace sentience.core
             for (int i = 0; i < img.Length; i++) img[i] = 255;
 
             // find the maximum probability
-            for (int disparity_pixels = 3; disparity_pixels < ray_model.GetLength(0); disparity_pixels++)
+            for (int disparity_pixels = 1; disparity_pixels < ray_model.GetLength(0); disparity_pixels++)
             {
-                for (int i = 0; i < ray_model.GetLength(1); i++)
+                for (int i = 0; i < ray_model_length[disparity_pixels]; i++)
                 {
                     if (ray_model[disparity_pixels, i] > 0)
                     {
@@ -1496,11 +1574,11 @@ namespace sentience.core
             {
                 max_value *= 1.1f;
                 // for each possible diaparity value
-                for (int disparity_pixels = 3; disparity_pixels < ray_model.GetLength(0); disparity_pixels+=2)
+                for (int disparity_pixels = 1; disparity_pixels < ray_model.GetLength(0); disparity_pixels+=2)
                 {
                     int prev_i = 0;
                     float prev_value = -1;
-                    for (int i = 0; i < ray_model.GetLength(1); i++)
+                    for (int i = 0; i < ray_model_length[disparity_pixels]; i++)
                     {
                         if (ray_model[disparity_pixels, i] != prev_value)
                         {
@@ -1736,36 +1814,30 @@ namespace sentience.core
 
         public XmlElement getXml(XmlDocument doc, XmlElement parent)
         {
-            if (mapping)
-                util.AddComment(doc, parent, "Sensor model used to update grid maps");            
-            else
-                util.AddComment(doc, parent, "Sensor model used to localise within grids");
+            util.AddComment(doc, parent, "Inverse sensor model data");
 
-            String ModelName = "SensorModelMapping";
-            if (!mapping) ModelName = "SensorModelLocalisation";
+            XmlElement nodeSensorModels = doc.CreateElement("InverseSensorModels");
+            parent.AppendChild(nodeSensorModels);
 
-            XmlElement nodeSensorModel = doc.CreateElement(ModelName);
-            parent.AppendChild(nodeSensorModel);
+            util.AddComment(doc, nodeSensorModels, "Interval between models in pixels");
+            util.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "0.5");
 
-            if (!mapping)
+            util.AddComment(doc, nodeSensorModels, "Model Data");
+            for (int d = 0; d < ray_model.GetLength(0); d++)
             {
-                util.AddComment(doc, nodeSensorModel, "Number of features to use when performing grid based localisation");
-                util.AddTextElement(doc, nodeSensorModel, "NoOfFeatures", Convert.ToString(no_of_stereo_features));
+                if (ray_model_length[d] > 0)
+                {
+                    String dataStr = "";
+                    for (int i = 0; i < ray_model_length[d]; i++)
+                    {
+                        dataStr += Convert.ToString(ray_model[d, i]);
+                        if (i < ray_model_length[d] - 1) dataStr += ",";
+                    }
+                    util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
+                }
             }
-            else
-            {
-                util.AddComment(doc, nodeSensorModel, "Number of features to use when updating the grid");
-                util.AddTextElement(doc, nodeSensorModel, "NoOfFeatures", Convert.ToString(no_of_stereo_features));
-            }
-
-            util.AddComment(doc, nodeSensorModel, "Observation Error Standard Deviation");
-            util.AddTextElement(doc, nodeSensorModel, "ObservationErrorStandardDeviation", Convert.ToString(sigma));
-
-            util.AddComment(doc, nodeSensorModel, "Adjustment factor for probability peak density");
-            util.AddTextElement(doc, nodeSensorModel, "PeakDensityAdjust", Convert.ToString(peak_density_adjust));
-
             
-            return (nodeSensorModel);
+            return (nodeSensorModels);
         }
 
         /// <summary>
@@ -1802,6 +1874,20 @@ namespace sentience.core
             doc.Save(filename);
         }
 
+        public void LoadSensorModelData(ArrayList rayModelsData)
+        {
+            ray_model = new float[rayModelsData.Count + 3, ray_model_normal_length];
+            ray_model_length = new int[ray_model.GetLength(0) + 1];
+            for (int i = 0; i < rayModelsData.Count; i++)
+            {
+                int d = i + 2;
+                String[] dataStr = ((String)rayModelsData[i]).Split(',');
+                ray_model_length[d] = dataStr.Length;
+                for (int j = 0; j < dataStr.Length; j++)
+                    ray_model[d, j] = Convert.ToSingle(dataStr[j]);
+            }
+        }
+
         /// <summary>
         /// load camera calibration parameters from file
         /// </summary>
@@ -1824,7 +1910,9 @@ namespace sentience.core
                 XmlNode xnodDE = xd.DocumentElement;
 
                 // recursively walk the node tree
-                LoadFromXml(xnodDE, 0);
+                ArrayList rayModelsData = new ArrayList();
+                LoadFromXml(xnodDE, 0, rayModelsData);
+                LoadSensorModelData(rayModelsData);
 
                 // close the reader
                 xtr.Close();
@@ -1838,28 +1926,28 @@ namespace sentience.core
         /// </summary>
         /// <param name="xnod"></param>
         /// <param name="level"></param>
-        public void LoadFromXml(XmlNode xnod, int level)
+        public void LoadFromXml(XmlNode xnod, int level, ArrayList rayModelsData)
         {
             XmlNode xnodWorking;
 
-            if (xnod.Name == "ObservationErrorStandardDeviation")
+            if (xnod.Name == "SensorModelInterval")
             {
-                sigma = Convert.ToSingle(xnod.InnerText);
+                float ray_model_interval_pixels = Convert.ToSingle(xnod.InnerText);
             }
 
-            if (xnod.Name == "PeakDensityAdjust")
+            if (xnod.Name == "RayModel")
             {
-                peak_density_adjust = Convert.ToSingle(xnod.InnerText);
+                rayModelsData.Add(xnod.InnerText);                
             }
 
             // call recursively on all children of the current node
             if ((xnod.HasChildNodes) &&
-                ((xnod.Name == "SensorModelMapping") || (xnod.Name == "SensorModelLocalisation")))
+                (xnod.Name == "InverseSensorModels"))
             {
                 xnodWorking = xnod.FirstChild;
                 while (xnodWorking != null)
                 {
-                    LoadFromXml(xnodWorking, level + 1);
+                    LoadFromXml(xnodWorking, level + 1, rayModelsData);
                     xnodWorking = xnodWorking.NextSibling;
                 }
             }

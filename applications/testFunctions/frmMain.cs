@@ -97,9 +97,9 @@ namespace WindowsApplication1
             //stereo_model.showDistribution(img_rays, standard_width, standard_height);
             //stereo_model.showSurveyDistribution(500, img_rays, standard_width, standard_height);
 
-            //createSensorModelLookup();
+            createSensorModelLookup();
 
-            createSingleRayModel();
+            //createSingleRayModel();
 
             //test_head();
             //test_head2();
@@ -120,15 +120,16 @@ namespace WindowsApplication1
             int divisor = 6;
             grid_dimension = 10000;
             grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
-            stereo_model.showSingleRay(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor);
+            stereo_model.showSingleRay(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, false);
         }
 
         private void createSensorModelLookup()
         {
-            int divisor = 6;
-            grid_dimension = 10000;
+            int divisor = 40;
+            grid_dimension = 20000;
             grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
-            stereo_model.updateRayModel(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, true);
+            stereo_model.updateRayModel(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, false);
+            stereo_model.Save("InverseSensorModels.xml");
         }
 
         private void test_head()

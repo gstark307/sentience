@@ -656,10 +656,7 @@ namespace sentience.core
                 nodeSensorPlatform.AppendChild(head.calibration[i].getXml(doc, nodeSensorPlatform, 2));
             }
 
-            XmlElement nodeSensorModels = doc.CreateElement("SensorModels");
-            nodeRobot.AppendChild(nodeSensorModels);
-
-            nodeSensorModels.AppendChild(inverseSensorModel.getXml(doc, nodeSensorModels));
+            nodeRobot.AppendChild(inverseSensorModel.getXml(doc, nodeRobot));
 
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
@@ -907,9 +904,11 @@ namespace sentience.core
                 cameraIndex++;
             }
 
-            if (xnod.Name == "SensorModels")
+            if (xnod.Name == "InverseSensorModels")
             {
-                inverseSensorModel.LoadFromXml(xnod.FirstChild, level + 1);
+                ArrayList rayModelsData = new ArrayList();
+                inverseSensorModel.LoadFromXml(xnod.FirstChild, level + 1, rayModelsData);
+                inverseSensorModel.LoadSensorModelData(rayModelsData);
             }
 
             if (xnod.Name == "MotionModel")
