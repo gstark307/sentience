@@ -98,6 +98,9 @@ namespace robotDesigner
             this.tabRobot = new System.Windows.Forms.TabControl();
             this.tabGeometry = new System.Windows.Forms.TabPage();
             this.tabPerception = new System.Windows.Forms.TabPage();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.txtSensorModelsStatus = new System.Windows.Forms.TextBox();
+            this.cmdGenerateSensorModels = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.txtGridInterval = new System.Windows.Forms.TextBox();
             this.label26 = new System.Windows.Forms.Label();
@@ -107,9 +110,6 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.cmdGenerateSensorModels = new System.Windows.Forms.Button();
-            this.txtSensorModelsStatus = new System.Windows.Forms.TextBox();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -119,8 +119,8 @@ namespace robotDesigner
             this.tabRobot.SuspendLayout();
             this.tabGeometry.SuspendLayout();
             this.tabPerception.SuspendLayout();
-            this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -815,6 +815,37 @@ namespace robotDesigner
             this.tabPerception.Text = "Perception";
             this.tabPerception.UseVisualStyleBackColor = true;
             // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.txtSensorModelsStatus);
+            this.groupBox4.Controls.Add(this.cmdGenerateSensorModels);
+            this.groupBox4.Location = new System.Drawing.Point(247, 19);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(261, 143);
+            this.groupBox4.TabIndex = 3;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Sensor Models";
+            // 
+            // txtSensorModelsStatus
+            // 
+            this.txtSensorModelsStatus.Location = new System.Drawing.Point(6, 25);
+            this.txtSensorModelsStatus.Multiline = true;
+            this.txtSensorModelsStatus.Name = "txtSensorModelsStatus";
+            this.txtSensorModelsStatus.Size = new System.Drawing.Size(249, 43);
+            this.txtSensorModelsStatus.TabIndex = 3;
+            this.txtSensorModelsStatus.Text = "No sensor models have been generated";
+            this.txtSensorModelsStatus.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // cmdGenerateSensorModels
+            // 
+            this.cmdGenerateSensorModels.Location = new System.Drawing.Point(76, 89);
+            this.cmdGenerateSensorModels.Name = "cmdGenerateSensorModels";
+            this.cmdGenerateSensorModels.Size = new System.Drawing.Size(112, 34);
+            this.cmdGenerateSensorModels.TabIndex = 2;
+            this.cmdGenerateSensorModels.Text = "Create";
+            this.cmdGenerateSensorModels.UseVisualStyleBackColor = true;
+            this.cmdGenerateSensorModels.Click += new System.EventHandler(this.cmdGenerateSensorModels_Click);
+            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.txtGridInterval);
@@ -907,37 +938,6 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.txtSensorModelsStatus);
-            this.groupBox4.Controls.Add(this.cmdGenerateSensorModels);
-            this.groupBox4.Location = new System.Drawing.Point(247, 23);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(261, 139);
-            this.groupBox4.TabIndex = 3;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Sensor Models";
-            // 
-            // cmdGenerateSensorModels
-            // 
-            this.cmdGenerateSensorModels.Location = new System.Drawing.Point(76, 89);
-            this.cmdGenerateSensorModels.Name = "cmdGenerateSensorModels";
-            this.cmdGenerateSensorModels.Size = new System.Drawing.Size(112, 34);
-            this.cmdGenerateSensorModels.TabIndex = 2;
-            this.cmdGenerateSensorModels.Text = "Create";
-            this.cmdGenerateSensorModels.UseVisualStyleBackColor = true;
-            this.cmdGenerateSensorModels.Click += new System.EventHandler(this.cmdGenerateSensorModels_Click);
-            // 
-            // txtSensorModelsStatus
-            // 
-            this.txtSensorModelsStatus.Location = new System.Drawing.Point(6, 25);
-            this.txtSensorModelsStatus.Multiline = true;
-            this.txtSensorModelsStatus.Name = "txtSensorModelsStatus";
-            this.txtSensorModelsStatus.Size = new System.Drawing.Size(249, 43);
-            this.txtSensorModelsStatus.TabIndex = 3;
-            this.txtSensorModelsStatus.Text = "No sensor models have been generated";
-            this.txtSensorModelsStatus.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -964,10 +964,10 @@ namespace robotDesigner
             this.tabRobot.ResumeLayout(false);
             this.tabGeometry.ResumeLayout(false);
             this.tabPerception.ResumeLayout(false);
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 

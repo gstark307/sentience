@@ -177,6 +177,9 @@ namespace sentience.core
             model.baseline = baseline_mm;
             model.FOV_horizontal = FOV_degrees * (float)Math.PI / 180.0f;
             model.FOV_vertical = model.FOV_horizontal * image_height / image_width;
+            // 1/2 pixel standard deviation
+            model.sigma = 1.0f / (image_width * 2) * model.FOV_horizontal;
+            model.sigma *= image_width / 320; // makes the uncertainty invariant of resolution
         }
 
         public void initDualCam()

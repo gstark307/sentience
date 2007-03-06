@@ -210,6 +210,11 @@ namespace robotDesigner
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 LoadCalibration(openFileDialog1.FileName);
+
+                // sensor models may need to be recalculated
+                // for the new cell size
+                rob.inverseSensorModel.ray_model = null;
+                updateSensorModelStatus();
             }
         }
 
@@ -236,7 +241,7 @@ namespace robotDesigner
         private void cmdGenerateSensorModels_Click(object sender, EventArgs e)
         {
             update();
-            txtSensorModelsStatus.Text = "Please wait whilst sensor models are being generated";
+            txtSensorModelsStatus.Text = "Please wait whilst sensor models are being generated.  This may take several minutes.";
             cmdGenerateSensorModels.Enabled = false;
             rob.inverseSensorModel.createLookupTable(Convert.ToInt32(txtGridCellDimension.Text));
             updateSensorModelStatus();
