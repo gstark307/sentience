@@ -33,6 +33,9 @@ namespace robotDesigner
     {
         robot rob = new robot(1);
 
+        // whether the grid cell size has changed
+        bool cellSizeChanged = false;
+
         public frmMain()
         {
             InitializeComponent();
@@ -95,12 +98,14 @@ namespace robotDesigner
                 txtGridDimension.Text = Convert.ToString(rob.LocalGridDimension);
                 txtGridCellDimension.Text = Convert.ToString(rob.LocalGridCellSize_mm);
                 txtGridInterval.Text = Convert.ToString(rob.LocalGridInterval_mm);
+
+                updateSensorModelStatus();
             }
         }
 
         public void update()
         {
-            int no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);
+            int no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);            
             robot new_rob = new robot(no_of_cameras);
 
             for (int i = 0; i < rob.head.no_of_cameras; i++)
@@ -159,16 +164,21 @@ namespace robotDesigner
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            update();
+        {           
+            stereoModel sensormodel = rob.inverseSensorModel;
+            if (sensormodel.ray_model != null)
+            {
+                update();
+                if (sensormodel.ray_model != null) rob.inverseSensorModel = sensormodel;
 
-            saveFileDialog1.DefaultExt = "xml";
-            saveFileDialog1.FileName = rob.Name + ".xml";
-            saveFileDialog1.Filter = "Xml files|*.xml";
-            saveFileDialog1.Title = "Save robot design file";
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
-                rob.Save(saveFileDialog1.FileName);
-
+                saveFileDialog1.DefaultExt = "xml";
+                saveFileDialog1.FileName = rob.Name + ".xml";
+                saveFileDialog1.Filter = "Xml files|*.xml";
+                saveFileDialog1.Title = "Save robot design file";
+                if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                    rob.Save(saveFileDialog1.FileName);
+            }
+            else MessageBox.Show("Please update the sensor models before saving");
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -185,7 +195,9 @@ namespace robotDesigner
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
+            stereoModel sensormodel = rob.inverseSensorModel;
             update();
+            if (sensormodel.ray_model != null) rob.inverseSensorModel = sensormodel;
             rob.Save("robotdesign.xml");
         }
 
@@ -210,6 +222,55 @@ namespace robotDesigner
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 LoadSensorModels(openFileDialog1.FileName);
+            }
+        }
+
+        private void updateSensorModelStatus()
+        {
+            if (rob.inverseSensorModel.ray_model == null)
+                txtSensorModelsStatus.Text = "No sensor models have been generated.  Click below to make some.";
+            else
+                txtSensorModelsStatus.Text = "Click below to regenerate the sensor models.";
+        }
+
+        private void cmdGenerateSensorModels_Click(object sender, EventArgs e)
+        {
+            update();
+            txtSensorModelsStatus.Text = "Please wait whilst sensor models are being generated";
+            cmdGenerateSensorModels.Enabled = false;
+            rob.inverseSensorModel.createLookupTable(Convert.ToInt32(txtGridCellDimension.Text));
+            updateSensorModelStatus();
+            MessageBox.Show("Sensor models have been updated");
+            cmdGenerateSensorModels.Enabled = true;
+        }
+
+        private void txtGridDimension_TextChanged(object sender, EventArgs e)
+        {
+            cellSizeChanged = true;
+        }
+
+        private void txtGridCellDimension_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            cellSizeChanged = true;
+            if (e.KeyChar == 13)
+            {
+                // sensor models may need to be recalculated
+                // for the new cell size
+                rob.inverseSensorModel.ray_model = null;
+                updateSensorModelStatus();
+            }
+
+        }
+
+        private void txtGridCellDimension_Leave(object sender, EventArgs e)
+        {
+            if (cellSizeChanged)
+            {
+                // sensor models may need to be recalculated
+                // for the new cell size
+                rob.inverseSensorModel.ray_model = null;
+                updateSensorModelStatus();
+                cellSizeChanged = false;
             }
         }
     }

@@ -172,18 +172,36 @@ namespace sentience.core
 
         /// <summary>
         /// inserts the given ray into the grid
+        /// There are three components to the sensor model used here:
+        /// two areas determining the probably vacant area and one for 
+        /// the probably occupied space
         /// </summary>
-        /// <param name="ray"></param>
-        public float Insert(evidenceRay ray, particlePose origin)
+        /// <param name="ray">ray object to be inserted into the grid</param>
+        /// <param name="origin">the pose of the robot</param>
+        /// <param name="sensormodel">the sensor model to be used</param>
+        /// <param name="leftcam_x">x position of the left camera in millimetres</param>
+        /// <param name="leftcam_y">y position of the left camera in millimetres</param>
+        /// <param name="rightcam_x">x position of the right camera in millimetres</param>
+        /// <param name="rightcam_y">y position of the right camera in millimetres</param>
+        public float Insert(evidenceRay ray, particlePose origin,
+                            stereoModel sensormodel,
+                            float leftcam_x, float leftcam_y,
+                            float rightcam_x, float rightcam_y)
         {
             // some constants to aid readability
             const int OCCUPIED_SENSORMODEL = 0;
-            const int VACANT_SENSORMODEL = 1;
+            const int VACANT_SENSORMODEL_LEFT_CAMERA = 1;
+            const int VACANT_SENSORMODEL_RIGHT_CAMERA = 2;
 
             const int X_AXIS = 0;
             const int Y_AXIS = 1;
 
+            // which lookup table to use
+            int sensormodel_index = (int)(ray.disparity * 2);
+
             float xdist_mm=0, ydist_mm=0, zdist_mm=0, x=0, y=0, z=0, occ;
+            float occupied_dx = 0, occupied_dy = 0, occupied_dz = 0;
+            float intersect_x = 0, intersect_y = 0, intersect_z = 0;
             float centre_prob=0, prob = 0; // probability values at the centre axis and outside
             float matchingScore = 0;  // total localisation matching score
             int rayWidth = 0;         // widest point in the ray in cells
@@ -196,30 +214,53 @@ namespace sentience.core
 
             int max_dimension_cells = dimension_cells - rayWidth;
 
-            for (int j = OCCUPIED_SENSORMODEL; j <= VACANT_SENSORMODEL; j++)
+            for (int modelcomponent = OCCUPIED_SENSORMODEL; modelcomponent <= VACANT_SENSORMODEL_RIGHT_CAMERA; modelcomponent++)
             {
-                if (j == OCCUPIED_SENSORMODEL)
+                switch (modelcomponent)
                 {
-                    // distance between the beginning and end of the probably
-                    // occupied area
-                    xdist_mm = ray.vertices[1].x - ray.vertices[0].x;
-                    ydist_mm = ray.vertices[1].y - ray.vertices[0].y;
-                    zdist_mm = ray.vertices[1].z - ray.vertices[0].z;
-                    x = ray.vertices[0].x;
-                    y = ray.vertices[0].y;
-                    z = ray.vertices[0].z;
-                }
+                    case OCCUPIED_SENSORMODEL:
+                        {
+                            // distance between the beginning and end of the probably
+                            // occupied area
+                            occupied_dx = ray.vertices[1].x - ray.vertices[0].x;
+                            occupied_dy = ray.vertices[1].y - ray.vertices[0].y;
+                            occupied_dz = ray.vertices[1].z - ray.vertices[0].z;
+                            intersect_x = ray.vertices[0].x + (occupied_dx * ray.fattestPoint);
+                            intersect_y = ray.vertices[0].y + (occupied_dx * ray.fattestPoint);
+                            intersect_z = ray.vertices[0].z + (occupied_dz * ray.fattestPoint);
 
-                if (j == VACANT_SENSORMODEL)
-                {
-                    // distance between the observation point (pose) and the beginning of
-                    // the probably occupied area of the sensor model
-                    xdist_mm = ray.vertices[0].x - ray.observedFrom.x;
-                    ydist_mm = ray.vertices[0].y - ray.observedFrom.y;
-                    zdist_mm = ray.vertices[0].z - ray.observedFrom.z;
-                    x = ray.observedFrom.x;
-                    y = ray.observedFrom.y;
-                    z = ray.observedFrom.z;
+                            xdist_mm = occupied_dx;
+                            ydist_mm = occupied_dy;
+                            zdist_mm = occupied_dz;
+                            x = ray.vertices[0].x;
+                            y = ray.vertices[0].y;
+                            z = ray.vertices[0].z;
+                            break;
+                        }
+                    case VACANT_SENSORMODEL_LEFT_CAMERA:
+                        {
+                            // distance between the left camera and the left side of
+                            // the probably occupied area of the sensor model                            
+                            xdist_mm = intersect_x - leftcam_x;
+                            ydist_mm = intersect_y - leftcam_y;
+                            zdist_mm = intersect_z - ray.observedFrom.z;
+                            x = leftcam_x;
+                            y = leftcam_y;
+                            z = ray.observedFrom.z;
+                            break;
+                        }
+                    case VACANT_SENSORMODEL_RIGHT_CAMERA:
+                        {
+                            // distance between the right camera and the right side of
+                            // the probably occupied area of the sensor model
+                            xdist_mm = intersect_x - rightcam_x;
+                            ydist_mm = intersect_y - rightcam_y;
+                            zdist_mm = intersect_z - ray.observedFrom.z;
+                            x = rightcam_x;
+                            y = rightcam_y;
+                            z = ray.observedFrom.z;
+                            break;
+                        }
                 }
 
                 // which is the longest axis ?
@@ -232,8 +273,14 @@ namespace sentience.core
                     longest_axis = Y_AXIS;
                 }
 
+                // ensure that the vacancy model does not overlap
+                // the probably occupied area
+                // This is crude and could potentially leave a gap
+                if (modelcomponent != OCCUPIED_SENSORMODEL)
+                    longest -= ray.width;
+
                 int steps = (int)(longest / cellSize_mm);
-                if (j == 0)
+                if (modelcomponent == OCCUPIED_SENSORMODEL)
                     widest_point = (int)(ray.fattestPoint * steps / ray.length);
                 else
                     widest_point = steps;
@@ -264,11 +311,10 @@ namespace sentience.core
                             int x_cell2 = x_cell;
                             int y_cell2 = y_cell;
 
-
                             // get the probability at this point 
                             // for the central axis of the ray using the inverse sensor model
-                            if (j == OCCUPIED_SENSORMODEL)
-                                centre_prob = 1; // TODO  ray.probability(x, y, gaussLookup, forwardBias);
+                            if (modelcomponent == OCCUPIED_SENSORMODEL)
+                                centre_prob = sensormodel.ray_model[sensormodel_index, i];
                             else
                                 // calculate the probability from the vacancy model
                                 centre_prob = vacancyFunction(i / (float)steps, steps);
@@ -300,7 +346,7 @@ namespace sentience.core
                                 else
                                 {
                                     // only localise using occupancy, not vacancy
-                                    if (j == OCCUPIED_SENSORMODEL)
+                                    if (modelcomponent == OCCUPIED_SENSORMODEL)
                                     {
                                         // localise using this grid cell
                                         // first get the existing probability value at this cell

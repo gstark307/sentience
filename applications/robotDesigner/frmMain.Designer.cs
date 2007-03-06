@@ -31,8 +31,11 @@ namespace robotDesigner
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.importCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importSensorModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpBody = new System.Windows.Forms.GroupBox();
             this.label22 = new System.Windows.Forms.Label();
@@ -104,9 +107,9 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.importSensorModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.cmdGenerateSensorModels = new System.Windows.Forms.Button();
+            this.txtSensorModelsStatus = new System.Windows.Forms.TextBox();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -117,6 +120,7 @@ namespace robotDesigner
             this.tabGeometry.SuspendLayout();
             this.tabPerception.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -150,6 +154,18 @@ namespace robotDesigner
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
+            // saveAsToolStripMenuItem
+            // 
+            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.saveAsToolStripMenuItem.Text = "Save As...";
+            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(186, 6);
+            // 
             // importCalibrationToolStripMenuItem
             // 
             this.importCalibrationToolStripMenuItem.Name = "importCalibrationToolStripMenuItem";
@@ -157,12 +173,17 @@ namespace robotDesigner
             this.importCalibrationToolStripMenuItem.Text = "Import Calibration";
             this.importCalibrationToolStripMenuItem.Click += new System.EventHandler(this.importCalibrationToolStripMenuItem_Click);
             // 
-            // saveAsToolStripMenuItem
+            // importSensorModelsToolStripMenuItem
             // 
-            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.saveAsToolStripMenuItem.Text = "Save As...";
-            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            this.importSensorModelsToolStripMenuItem.Name = "importSensorModelsToolStripMenuItem";
+            this.importSensorModelsToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.importSensorModelsToolStripMenuItem.Text = "Import Sensor Models";
+            this.importSensorModelsToolStripMenuItem.Click += new System.EventHandler(this.importSensorModelsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(186, 6);
             // 
             // exitToolStripMenuItem
             // 
@@ -784,6 +805,7 @@ namespace robotDesigner
             // 
             // tabPerception
             // 
+            this.tabPerception.Controls.Add(this.groupBox4);
             this.tabPerception.Controls.Add(this.groupBox3);
             this.tabPerception.Location = new System.Drawing.Point(4, 22);
             this.tabPerception.Name = "tabPerception";
@@ -854,6 +876,7 @@ namespace robotDesigner
             this.txtGridDimension.TabIndex = 3;
             this.txtGridDimension.Text = "128";
             this.txtGridDimension.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtGridDimension.TextChanged += new System.EventHandler(this.txtGridDimension_TextChanged);
             // 
             // label28
             // 
@@ -872,6 +895,8 @@ namespace robotDesigner
             this.txtGridCellDimension.TabIndex = 1;
             this.txtGridCellDimension.Text = "32";
             this.txtGridCellDimension.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtGridCellDimension.Leave += new System.EventHandler(this.txtGridCellDimension_Leave);
+            this.txtGridCellDimension.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtGridCellDimension_KeyPress);
             // 
             // label29
             // 
@@ -882,22 +907,36 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
-            // importSensorModelsToolStripMenuItem
+            // groupBox4
             // 
-            this.importSensorModelsToolStripMenuItem.Name = "importSensorModelsToolStripMenuItem";
-            this.importSensorModelsToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.importSensorModelsToolStripMenuItem.Text = "Import Sensor Models";
-            this.importSensorModelsToolStripMenuItem.Click += new System.EventHandler(this.importSensorModelsToolStripMenuItem_Click);
+            this.groupBox4.Controls.Add(this.txtSensorModelsStatus);
+            this.groupBox4.Controls.Add(this.cmdGenerateSensorModels);
+            this.groupBox4.Location = new System.Drawing.Point(247, 23);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(261, 139);
+            this.groupBox4.TabIndex = 3;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Sensor Models";
             // 
-            // toolStripSeparator1
+            // cmdGenerateSensorModels
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(186, 6);
+            this.cmdGenerateSensorModels.Location = new System.Drawing.Point(76, 89);
+            this.cmdGenerateSensorModels.Name = "cmdGenerateSensorModels";
+            this.cmdGenerateSensorModels.Size = new System.Drawing.Size(112, 34);
+            this.cmdGenerateSensorModels.TabIndex = 2;
+            this.cmdGenerateSensorModels.Text = "Create";
+            this.cmdGenerateSensorModels.UseVisualStyleBackColor = true;
+            this.cmdGenerateSensorModels.Click += new System.EventHandler(this.cmdGenerateSensorModels_Click);
             // 
-            // toolStripSeparator2
+            // txtSensorModelsStatus
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(186, 6);
+            this.txtSensorModelsStatus.Location = new System.Drawing.Point(6, 25);
+            this.txtSensorModelsStatus.Multiline = true;
+            this.txtSensorModelsStatus.Name = "txtSensorModelsStatus";
+            this.txtSensorModelsStatus.Size = new System.Drawing.Size(249, 43);
+            this.txtSensorModelsStatus.TabIndex = 3;
+            this.txtSensorModelsStatus.Text = "No sensor models have been generated";
+            this.txtSensorModelsStatus.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // frmMain
             // 
@@ -927,6 +966,8 @@ namespace robotDesigner
             this.tabPerception.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1013,6 +1054,9 @@ namespace robotDesigner
         private System.Windows.Forms.ToolStripMenuItem importSensorModelsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.TextBox txtSensorModelsStatus;
+        private System.Windows.Forms.Button cmdGenerateSensorModels;
     }
 }
 

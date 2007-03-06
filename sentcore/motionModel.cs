@@ -490,13 +490,16 @@ namespace sentience.core
         /// <summary>
         /// update all current poses with the current observation
         /// </summary>
-        /// <param name="stereo_rays"></param>
+        /// <param name="stereo_rays">list of evidence rays to be inserted into the grid</param>
         public void AddObservation(ArrayList stereo_rays)
         {
             for (int p = 0; p < Poses.Count; p++)
             {
                 particlePath path = (particlePath)Poses[p];
-                float localisation_score = path.current_pose.AddObservation(stereo_rays, rob.LocalGrid);
+                float localisation_score = 
+                    path.current_pose.AddObservation(stereo_rays, 
+                                                     rob.LocalGrid, 
+                                                     rob.inverseSensorModel);
                 updatePoseScore(path, localisation_score);
             }
 

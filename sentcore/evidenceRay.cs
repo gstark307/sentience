@@ -184,7 +184,7 @@ namespace sentience.core
         /// <summary>
         /// translate and rotate the ray by the given values
         /// </summary>
-        /// <param name="r"></param>
+        /// <param name="r"></param>        
         public void translateRotate(pos3D r)
         {
             //take a note of where the ray was observed from
@@ -209,6 +209,7 @@ namespace sentience.core
             for (int v = 0; v < 2; v++)
                 vertices[v] = vertices[v].translate(r.x, r.y, r.z);
         }
+        
 
         /// <summary>
         /// returns a version of this evidence ray rotated through the given 
@@ -222,6 +223,7 @@ namespace sentience.core
             evidenceRay rotated_ray = new evidenceRay();
             float new_pan_angle = extra_pan + pan_angle;
 
+            // as observed from the centre of the camera baseline
             rotated_ray.observedFrom = new pos3D(translation_x, translation_y, 0);
             rotated_ray.fattestPoint = fattestPoint;
 

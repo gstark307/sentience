@@ -49,7 +49,7 @@ namespace sentience.core
 
         private int ray_model_normal_length = 500;
         private int ray_model_max_length = 1500;
-        private float[,] ray_model = null;
+        public float[,] ray_model = null;
         private int[] ray_model_length = null;
         //private float ray_model_interval_pixels = 0.5f;
 
@@ -127,6 +127,18 @@ namespace sentience.core
         /// <summary>
         /// creates a lookup table for sensor models at different visual disparities
         /// </summary>
+        public void createLookupTable(int gridCellSize_mm)
+        {
+            int width = 320;
+            int height = 240;
+            Byte[] img_result = new Byte[width * height * 3];
+            createLookupTable(gridCellSize_mm, img_result, width, height);            
+        }
+
+
+        /// <summary>
+        /// creates a lookup table for sensor models at different visual disparities
+        /// </summary>
         /// <param name="img_result"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
@@ -175,6 +187,10 @@ namespace sentience.core
                         prev_index = next_index;
                     }
                     new_ray_model_length[d] = ray_model_length[d] * ray_model_normal_length / ray_model_max_length;
+
+                    // if there's only one grid cell give it the full probability
+                    // (it's gotta be in there somewhere!)
+                    if (new_ray_model_length[d] == 1) new_ray_model[d, 0] = 1.0f;
                 }
 
                 // finally swap the arrays
@@ -200,11 +216,11 @@ namespace sentience.core
                                     int gridCellSize_mm)
         {
             // half a pixel of horizontal uncertainty
-            sigma = 1.8f / (image_width * 2) * FOV_horizontal;
+            sigma = 1.0f / (image_width * 2) * FOV_horizontal;
             sigma *= image_width / 320;
             this.divisor = divisor;
 
-            float max_disparity = 10 * image_width / 320;
+            float max_disparity = (10 * image_width / 100);
 
             ray_model_max_length = grid_dimension;
             if (ray_model == null)
@@ -291,7 +307,7 @@ namespace sentience.core
                         if (max_length > 0) scaling_factor = 1.0f / total_probability;
 
                         // record the length of the ray model
-                        ray_model_length[(int)(disparity_pixels * 2)] = max_length;
+                        ray_model_length[(int)(disparity_pixels * 2)] = max_length+1;
 
                         float max = 0;
                         int max_index = 0;
@@ -1832,17 +1848,14 @@ namespace sentience.core
             util.AddComment(doc, nodeSensorModels, "Model Data");
             for (int d = 0; d < ray_model.GetLength(0); d++)
             {
-                //if (ray_model_length[d] > 0)
+                String dataStr = "";
+                for (int i = 0; i < ray_model_length[d]; i++)
                 {
-                    String dataStr = "";
-                    for (int i = 0; i < ray_model_length[d]; i++)
-                    {
-                        dataStr += Convert.ToString(ray_model[d, i]);
-                        if (i < ray_model_length[d] - 1) dataStr += ",";
-                    }
-                    if (dataStr == "") dataStr = "0";
-                    util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
+                    dataStr += Convert.ToString(ray_model[d, i]);
+                    if (i < ray_model_length[d] - 1) dataStr += ",";
                 }
+                if (dataStr != "")
+                    util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
             }
             
             return (nodeSensorModels);
@@ -1898,12 +1911,13 @@ namespace sentience.core
 
             // initialise the ray model array
             ray_model = new float[rayModelsData.Count + 3, ray_model_normal_length];
-            ray_model_length = new int[ray_model.GetLength(0) + 1];
+            ray_model_length = new int[ray_model.GetLength(0) + 2];
 
             // insert the data into the array
             for (int i = 0; i < rayModelsData.Count; i++)
             {
-                int d = i;
+                int d = i+2; // we add 2 here because the first two slots
+                             // corresponding to zero and 0.5 pixel disparity don't exist
                 String[] dataStr = ((String)rayModelsData[i]).Split(',');
                 ray_model_length[d] = dataStr.Length;
                 for (int j = 0; j < dataStr.Length; j++)

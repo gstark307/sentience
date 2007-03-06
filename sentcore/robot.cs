@@ -183,7 +183,7 @@ namespace sentience.core
         {
             head.initDualCam();
 
-            initSensorModel(inverseSensorModel, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(inverseSensorModel, head.image_width, head.image_height, 78, head.baseline_mm);
         }
 
         public void initQuadCam()
@@ -191,7 +191,7 @@ namespace sentience.core
             head.initQuadCam();
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
-            initSensorModel(inverseSensorModel, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(inverseSensorModel, head.image_width, head.image_height, 78, head.baseline_mm);
         }
 
         public void initRobotSingleStereo()
@@ -199,7 +199,7 @@ namespace sentience.core
             head.initSingleStereoCamera(false);
 
             // using Creative Webcam NX Ultra - 78 degrees FOV
-            initSensorModel(inverseSensorModel, 78, head.image_width, head.image_height, head.baseline_mm);
+            initSensorModel(inverseSensorModel, head.image_width, head.image_height, 78, head.baseline_mm);
         }
 
         #endregion
@@ -656,7 +656,8 @@ namespace sentience.core
                 nodeSensorPlatform.AppendChild(head.calibration[i].getXml(doc, nodeSensorPlatform, 2));
             }
 
-            nodeRobot.AppendChild(inverseSensorModel.getXml(doc, nodeRobot));
+            if (inverseSensorModel.ray_model != null)
+                nodeRobot.AppendChild(inverseSensorModel.getXml(doc, nodeRobot));
 
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
@@ -896,7 +897,7 @@ namespace sentience.core
             if (xnod.Name == "StereoCamera")
             {
                 int camIndex = 0;
-                head.calibration[cameraIndex].LoadFromXml(xnod.FirstChild, level + 1, ref camIndex);
+                head.calibration[cameraIndex].LoadFromXml(xnod, level + 1, ref camIndex);
 
                 head.image_width = head.calibration[cameraIndex].leftcam.image_width;
                 head.image_height = head.calibration[cameraIndex].leftcam.image_height;
@@ -907,13 +908,13 @@ namespace sentience.core
             if (xnod.Name == "InverseSensorModels")
             {
                 ArrayList rayModelsData = new ArrayList();
-                inverseSensorModel.LoadFromXml(xnod.FirstChild, level + 1, rayModelsData);
+                inverseSensorModel.LoadFromXml(xnod, level + 1, rayModelsData);
                 inverseSensorModel.LoadSensorModelData(rayModelsData);
             }
 
             if (xnod.Name == "MotionModel")
             {
-                motion.LoadFromXml(xnod.FirstChild, level + 1);
+                motion.LoadFromXml(xnod, level + 1);
             }
 
             // call recursively on all children of the current node
