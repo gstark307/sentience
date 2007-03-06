@@ -47,7 +47,7 @@ namespace sentience.core
         private int starting_y;
         public bool undistort = true;
 
-        private const int ray_model_normal_length = 300;
+        private int ray_model_normal_length = 500;
         private int ray_model_max_length = 1500;
         private float[,] ray_model = null;
         private int[] ray_model_length = null;
@@ -125,48 +125,79 @@ namespace sentience.core
         #region "calculation of the sensor model lookup table"
 
         /// <summary>
-        /// Ok, so we've calculated the ray models in stupifying detail
-        /// now let's compress them down to some more compact and less memory-hogging form
+        /// creates a lookup table for sensor models at different visual disparities
         /// </summary>
-        /// <param name="max_length"></param>
-        private void compressRayModels(int max_length)
-        {           
-            float[,] new_ray_model = new float[ray_model.GetLength(0), max_length];
-            int[] new_ray_model_length = new int[ray_model.GetLength(0)];
-
-            for (int d = 1; d < ray_model.GetLength(0); d++)
-            {
-                int prev_index = 0;
-                for (int i = 0; i < max_length; i++)
-                {
-                    int next_index = (i + 1) * ray_model_max_length / max_length;
-                    // sum the probabilities
-                    float total_probability = 0;
-                    for (int j = prev_index; j < next_index; j++)
-                    {
-                        // is there a DJ in the house ?
-                        total_probability += ray_model[d, j];
-                    }
-                    if (total_probability > 0)
-                        new_ray_model[d, i] = total_probability;
-                    prev_index = next_index;
-                }
-                new_ray_model_length[d] = ray_model_length[d] * max_length / ray_model_max_length;
-            }
-
-            // finally swap the arrays
-            ray_model = new_ray_model;
-            ray_model_length = new_ray_model_length;
+        /// <param name="img_result"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void createLookupTable(int gridCellSize_mm, Byte[] img_result, int width, int height)
+        {
+            int divisor = 40;
+            int grid_dimension = 20000;
+            float[,,] grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
+            updateRayModel(grid_layer, grid_dimension, 
+                           img_result, width, height,
+                           divisor, false, gridCellSize_mm);
+            Save("InverseSensorModels.xml");
         }
 
         /// <summary>
-        /// creates a ray model
-        /// Grid dimension should be 1000
+        /// Ok, so we've calculated the ray models in stupifying detail
+        /// now let's compress them down to some more compact and less memory-hogging form
+        /// so that each array element corresponds to a single occupancy grid cell, which
+        /// makes updating the grid a simple process
         /// </summary>
-        /// <param name="grid_layer"></param>
-        /// <param name="grid_dimension"></param>
-        /// <param name="img"></param>
-        public void updateRayModel(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor, bool apply_smoothing)
+        /// <param name="gridCellSize_mm">Size of each occupancy grid cell in millimetres</param>
+        private void compressRayModels(int gridCellSize_mm)
+        {
+            if (ray_model != null)
+            {
+                ray_model_normal_length = ray_model.GetLength(1) / gridCellSize_mm;
+
+                float[,] new_ray_model = new float[ray_model.GetLength(0), ray_model_normal_length];
+                int[] new_ray_model_length = new int[ray_model.GetLength(0)];
+
+                for (int d = 1; d < ray_model.GetLength(0); d++)
+                {
+                    int prev_index = 0;
+                    for (int i = 0; i < ray_model_normal_length; i++)
+                    {
+                        int next_index = (i + 1) * ray_model_max_length / ray_model_normal_length;
+                        // sum the probabilities
+                        float total_probability = 0;
+                        for (int j = prev_index; j < next_index; j++)
+                        {
+                            // is there a DJ in the house ?
+                            total_probability += ray_model[d, j];
+                        }
+                        if (total_probability > 0)
+                            new_ray_model[d, i] = total_probability;
+                        prev_index = next_index;
+                    }
+                    new_ray_model_length[d] = ray_model_length[d] * ray_model_normal_length / ray_model_max_length;
+                }
+
+                // finally swap the arrays
+                ray_model = new_ray_model;
+                ray_model_length = new_ray_model_length;
+            }
+        }
+
+        /// <summary>
+        /// creates a lookup table for sensor models
+        /// </summary>
+        /// <param name="grid_layer">the grid upon which the rays will be drawn</param>
+        /// <param name="grid_dimension">size of the grid</param>
+        /// <param name="img">image within which to display the results</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="divisor">a dividing factor used to make the width of the grid smaller than its length</param>
+        /// <param name="apply_smoothing">try to smooth the data to remove pixelation effects</param>
+        /// <param name="gridCellSize_mm">Size of each occupancy grid cell in millimetres</param>
+        private void updateRayModel(float[, ,] grid_layer, int grid_dimension, 
+                                    Byte[] img, int img_width, int img_height, 
+                                    int divisor, bool apply_smoothing,
+                                    int gridCellSize_mm)
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.8f / (image_width * 2) * FOV_horizontal;
@@ -321,7 +352,7 @@ namespace sentience.core
             }
 
             // compress the array down to a more managable size
-            compressRayModels(ray_model_normal_length);
+            compressRayModels(gridCellSize_mm);
 
             ray_model_to_graph_image(img, img_width, img_height);
 
@@ -333,13 +364,16 @@ namespace sentience.core
         /// <summary>
         /// show a single ray model, with both occupancy and vacancy
         /// </summary>
-        /// <param name="grid_layer"></param>
-        /// <param name="grid_dimension"></param>
-        /// <param name="img"></param>
-        /// <param name="img_width"></param>
-        /// <param name="img_height"></param>
-        /// <param name="divisor"></param>
-        public void showSingleRay(float[, ,] grid_layer, int grid_dimension, Byte[] img, int img_width, int img_height, int divisor, bool show_outline)
+        /// <param name="grid_layer">the grid upon which the rays will be drawn</param>
+        /// <param name="grid_dimension">size of the grid</param>
+        /// <param name="img">image within which to display the result</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="divisor">a dividing factor used to make the width of the grid smaller than its length</param>
+        /// <param name="show_outline">draw a border around the probably occupied area</param>
+        public void showSingleRay(float[, ,] grid_layer, int grid_dimension, 
+                                  Byte[] img, int img_width, int img_height, 
+                                  int divisor, bool show_outline)
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.8f / (image_width * 2) * FOV_horizontal;
@@ -1055,7 +1089,7 @@ namespace sentience.core
 
 
         /// <summary>
-        /// shows the probability distribution thrown into the grid
+        /// shows the gaussian distribution thrown into the grid
         /// </summary>
         /// <param name="img"></param>
         public void showDistribution(Byte[] img, int img_width, int img_height)
@@ -1330,7 +1364,20 @@ namespace sentience.core
         #endregion
 
 
-        public evidenceRay createRay(float x, float y, float disparity, float uncertainty, Byte r, Byte g, Byte b)
+        /// <summary>
+        /// creates a ray object which may be used to update occupancy grids
+        /// </summary>
+        /// <param name="x">x position of the feature within the camera image</param>
+        /// <param name="y">y position of the feature within the camera image</param>
+        /// <param name="disparity">stereo disparity in pixels</param>
+        /// <param name="uncertainty">standard deviation</param>
+        /// <param name="r">red colour component of the ray</param>
+        /// <param name="g">green colour component of the ray</param>
+        /// <param name="b">blue colour component of the ray</param>
+        /// <returns>evidence ray object</returns>
+        public evidenceRay createRay(float x, float y, float disparity, 
+                                     float uncertainty, 
+                                     Byte r, Byte g, Byte b)
         {
             evidenceRay ray = null;
             float x1 = x + disparity;
@@ -1502,44 +1549,6 @@ namespace sentience.core
             }
         }
 
-        /// <summary>
-        /// show ray models
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="img_width"></param>
-        /// <param name="img_height"></param>
-        public void ray_model_to_image(Byte[] img, int img_width, int img_height)
-        {
-            for (int x = 0; x < img_width; x++)
-            {
-                int xx = x * ray_model.GetLength(0) / img_width;
-
-                // find the max
-                float max_value=0;
-                for (int y = 0; y < img_height; y++)
-                {
-                    int yy = y * ray_model.GetLength(1) / img_height;
-
-                    if (ray_model[xx, yy] > max_value) max_value = ray_model[xx, yy];
-                }
-
-                for (int y = 0; y < img_height; y++)
-                {
-                    int n = (((img_height-1-y) * img_width) + x) * 3;
-                    if (n < img.Length)
-                    {
-                        if (max_value > 0)
-                        {
-                            int yy = y * ray_model.GetLength(1) / img_height;
-                            float value = ray_model[xx, yy] * 255 / max_value;
-
-                            for (int col = 0; col < 3; col++) img[n + col] = (Byte)value;
-                        }
-                        else for (int col = 0; col < 3; col++) img[n + col] = (Byte)0;
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// displays ray models for each disparity as a graph
@@ -1761,10 +1770,8 @@ namespace sentience.core
             // calc uncertainty in angle (+/- half a pixel)
             float angular_uncertainty = FOV_horizontal / (image_width * 2);
 
-            // convert x positions to angles
+            // convert x positions an angle
             int half_width = image_width / 2;
-            //float left_angle = ((float)Math.PI / 2) + ((left_x - half_width) * FOV / image_width);
-            //float right_angle = ((float)Math.PI / 2) + ((right_x - half_width) * FOV / image_width);
             float angle = ((x - half_width) * FOV_horizontal / (float)image_width);
 
             int offset_x = (grid_dimension / (2*divisor)) + (int)(offset);
@@ -1825,7 +1832,7 @@ namespace sentience.core
             util.AddComment(doc, nodeSensorModels, "Model Data");
             for (int d = 0; d < ray_model.GetLength(0); d++)
             {
-                if (ray_model_length[d] > 0)
+                //if (ray_model_length[d] > 0)
                 {
                     String dataStr = "";
                     for (int i = 0; i < ray_model_length[d]; i++)
@@ -1833,6 +1840,7 @@ namespace sentience.core
                         dataStr += Convert.ToString(ray_model[d, i]);
                         if (i < ray_model_length[d] - 1) dataStr += ",";
                     }
+                    if (dataStr == "") dataStr = "0";
                     util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
                 }
             }
@@ -1874,13 +1882,28 @@ namespace sentience.core
             doc.Save(filename);
         }
 
+        /// <summary>
+        /// creates a new sensor model array from the given list of loaded ray models
+        /// </summary>
+        /// <param name="rayModelsData">list containing ray model data as strings</param>
         public void LoadSensorModelData(ArrayList rayModelsData)
         {
-            ray_model = new float[rayModelsData.Count + 3, ray_model_normal_length];
-            ray_model_length = new int[ray_model.GetLength(0) + 1];
+            // get the maximum array size needed to store the data
+            ray_model_normal_length = 10;
             for (int i = 0; i < rayModelsData.Count; i++)
             {
-                int d = i + 2;
+                String[] dataStr = ((String)rayModelsData[i]).Split(',');
+                if (dataStr.Length > ray_model_normal_length) ray_model_normal_length = dataStr.Length;
+            }
+
+            // initialise the ray model array
+            ray_model = new float[rayModelsData.Count + 3, ray_model_normal_length];
+            ray_model_length = new int[ray_model.GetLength(0) + 1];
+
+            // insert the data into the array
+            for (int i = 0; i < rayModelsData.Count; i++)
+            {
+                int d = i;
                 String[] dataStr = ((String)rayModelsData[i]).Split(',');
                 ray_model_length[d] = dataStr.Length;
                 for (int j = 0; j < dataStr.Length; j++)

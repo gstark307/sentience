@@ -49,6 +49,15 @@ namespace robotDesigner
         }
 
         /// <summary>
+        /// load sensor models from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void LoadSensorModels(String filename)
+        {
+            rob.inverseSensorModel.Load(filename);
+        }
+
+        /// <summary>
         /// load a robot design file
         /// </summary>
         /// <param name="filename"></param>
@@ -189,6 +198,18 @@ namespace robotDesigner
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 LoadCalibration(openFileDialog1.FileName);
+            }
+        }
+
+        private void importSensorModelsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.DefaultExt = "xml";
+            openFileDialog1.FileName = ".xml";
+            openFileDialog1.Filter = "Xml files|*.xml";
+            openFileDialog1.Title = "Load sensor model data";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                LoadSensorModels(openFileDialog1.FileName);
             }
         }
     }

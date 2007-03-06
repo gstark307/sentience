@@ -106,8 +106,8 @@ namespace WindowsApplication1
             //test_grid();
             //test_trial_poses();
 
-            int offset_x = rnd.Next(1000) - 500;
-            int offset_y = rnd.Next(1000) - 500;
+            //int offset_x = rnd.Next(1000) - 500;
+            //int offset_y = rnd.Next(1000) - 500;
             //test_survey(offset_x, offset_y);
             //test_survey_pan(50, 50);
 
@@ -125,11 +125,7 @@ namespace WindowsApplication1
 
         private void createSensorModelLookup()
         {
-            int divisor = 40;
-            grid_dimension = 20000;
-            grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
-            stereo_model.updateRayModel(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, false);
-            stereo_model.Save("InverseSensorModels.xml");
+            stereo_model.createLookupTable(32, img_rays, standard_width, standard_height);
         }
 
         private void test_head()

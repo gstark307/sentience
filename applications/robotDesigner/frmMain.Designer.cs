@@ -37,15 +37,19 @@ namespace robotDesigner
             this.grpBody = new System.Windows.Forms.GroupBox();
             this.label22 = new System.Windows.Forms.Label();
             this.cmbBodyShape = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.cmbPropulsion = new System.Windows.Forms.ComboBox();
             this.txtBodyHeight = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.txtBodyLength = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.txtBodyWidth = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.cmbPropulsion = new System.Windows.Forms.ComboBox();
             this.grpPropulsion = new System.Windows.Forms.GroupBox();
+            this.txtMotorTorque = new System.Windows.Forms.TextBox();
+            this.label30 = new System.Windows.Forms.Label();
+            this.txtMotorNoLoadSpeedRPM = new System.Windows.Forms.TextBox();
+            this.label27 = new System.Windows.Forms.Label();
             this.txtWheelBaseForward = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
             this.txtWheelBase = new System.Windows.Forms.TextBox();
@@ -100,10 +104,9 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.txtMotorNoLoadSpeedRPM = new System.Windows.Forms.TextBox();
-            this.label27 = new System.Windows.Forms.Label();
-            this.txtMotorTorque = new System.Windows.Forms.TextBox();
-            this.label30 = new System.Windows.Forms.Label();
+            this.importSensorModelsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -130,8 +133,11 @@ namespace robotDesigner
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
-            this.importCalibrationToolStripMenuItem,
             this.saveAsToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.importCalibrationToolStripMenuItem,
+            this.importSensorModelsToolStripMenuItem,
+            this.toolStripSeparator1,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
@@ -140,28 +146,28 @@ namespace robotDesigner
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // importCalibrationToolStripMenuItem
             // 
             this.importCalibrationToolStripMenuItem.Name = "importCalibrationToolStripMenuItem";
-            this.importCalibrationToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.importCalibrationToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.importCalibrationToolStripMenuItem.Text = "Import Calibration";
             this.importCalibrationToolStripMenuItem.Click += new System.EventHandler(this.importCalibrationToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.saveAsToolStripMenuItem.Text = "Save As...";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -203,29 +209,6 @@ namespace robotDesigner
             this.cmbBodyShape.Size = new System.Drawing.Size(93, 21);
             this.cmbBodyShape.TabIndex = 24;
             this.cmbBodyShape.Text = "Square";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(22, 26);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(31, 13);
-            this.label4.TabIndex = 7;
-            this.label4.Text = "Type";
-            // 
-            // cmbPropulsion
-            // 
-            this.cmbPropulsion.FormattingEnabled = true;
-            this.cmbPropulsion.Items.AddRange(new object[] {
-            "Wheels",
-            "Tracks",
-            "Legs"});
-            this.cmbPropulsion.Location = new System.Drawing.Point(170, 19);
-            this.cmbPropulsion.Name = "cmbPropulsion";
-            this.cmbPropulsion.Size = new System.Drawing.Size(93, 21);
-            this.cmbPropulsion.TabIndex = 6;
-            this.cmbPropulsion.Text = "Wheels";
-            this.cmbPropulsion.SelectedIndexChanged += new System.EventHandler(this.cmbPropulsion_SelectedIndexChanged);
             // 
             // txtBodyHeight
             // 
@@ -281,6 +264,29 @@ namespace robotDesigner
             this.label1.TabIndex = 0;
             this.label1.Text = "Width mm";
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(22, 26);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(31, 13);
+            this.label4.TabIndex = 7;
+            this.label4.Text = "Type";
+            // 
+            // cmbPropulsion
+            // 
+            this.cmbPropulsion.FormattingEnabled = true;
+            this.cmbPropulsion.Items.AddRange(new object[] {
+            "Wheels",
+            "Tracks",
+            "Legs"});
+            this.cmbPropulsion.Location = new System.Drawing.Point(170, 19);
+            this.cmbPropulsion.Name = "cmbPropulsion";
+            this.cmbPropulsion.Size = new System.Drawing.Size(93, 21);
+            this.cmbPropulsion.TabIndex = 6;
+            this.cmbPropulsion.Text = "Wheels";
+            this.cmbPropulsion.SelectedIndexChanged += new System.EventHandler(this.cmbPropulsion_SelectedIndexChanged);
+            // 
             // grpPropulsion
             // 
             this.grpPropulsion.Controls.Add(this.txtMotorTorque);
@@ -308,6 +314,42 @@ namespace robotDesigner
             this.grpPropulsion.TabIndex = 2;
             this.grpPropulsion.TabStop = false;
             this.grpPropulsion.Text = "Propulsion";
+            // 
+            // txtMotorTorque
+            // 
+            this.txtMotorTorque.Location = new System.Drawing.Point(170, 237);
+            this.txtMotorTorque.Name = "txtMotorTorque";
+            this.txtMotorTorque.Size = new System.Drawing.Size(59, 20);
+            this.txtMotorTorque.TabIndex = 22;
+            this.txtMotorTorque.Text = "80";
+            this.txtMotorTorque.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label30
+            // 
+            this.label30.AutoSize = true;
+            this.label30.Location = new System.Drawing.Point(22, 243);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(133, 13);
+            this.label30.TabIndex = 21;
+            this.label30.Text = "Motor torque rating Kg/mm";
+            // 
+            // txtMotorNoLoadSpeedRPM
+            // 
+            this.txtMotorNoLoadSpeedRPM.Location = new System.Drawing.Point(170, 211);
+            this.txtMotorNoLoadSpeedRPM.Name = "txtMotorNoLoadSpeedRPM";
+            this.txtMotorNoLoadSpeedRPM.Size = new System.Drawing.Size(59, 20);
+            this.txtMotorNoLoadSpeedRPM.TabIndex = 20;
+            this.txtMotorNoLoadSpeedRPM.Text = "175";
+            this.txtMotorNoLoadSpeedRPM.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(22, 217);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(131, 13);
+            this.label27.TabIndex = 19;
+            this.label27.Text = "Motor no load speed RPM";
             // 
             // txtWheelBaseForward
             // 
@@ -746,7 +788,7 @@ namespace robotDesigner
             this.tabPerception.Location = new System.Drawing.Point(4, 22);
             this.tabPerception.Name = "tabPerception";
             this.tabPerception.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPerception.Size = new System.Drawing.Size(547, 550);
+            this.tabPerception.Size = new System.Drawing.Size(547, 641);
             this.tabPerception.TabIndex = 1;
             this.tabPerception.Text = "Perception";
             this.tabPerception.UseVisualStyleBackColor = true;
@@ -840,41 +882,22 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
-            // txtMotorNoLoadSpeedRPM
+            // importSensorModelsToolStripMenuItem
             // 
-            this.txtMotorNoLoadSpeedRPM.Location = new System.Drawing.Point(170, 211);
-            this.txtMotorNoLoadSpeedRPM.Name = "txtMotorNoLoadSpeedRPM";
-            this.txtMotorNoLoadSpeedRPM.Size = new System.Drawing.Size(59, 20);
-            this.txtMotorNoLoadSpeedRPM.TabIndex = 20;
-            this.txtMotorNoLoadSpeedRPM.Text = "175";
-            this.txtMotorNoLoadSpeedRPM.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.importSensorModelsToolStripMenuItem.Name = "importSensorModelsToolStripMenuItem";
+            this.importSensorModelsToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.importSensorModelsToolStripMenuItem.Text = "Import Sensor Models";
+            this.importSensorModelsToolStripMenuItem.Click += new System.EventHandler(this.importSensorModelsToolStripMenuItem_Click);
             // 
-            // label27
+            // toolStripSeparator1
             // 
-            this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(22, 217);
-            this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(131, 13);
-            this.label27.TabIndex = 19;
-            this.label27.Text = "Motor no load speed RPM";
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(186, 6);
             // 
-            // txtMotorTorque
+            // toolStripSeparator2
             // 
-            this.txtMotorTorque.Location = new System.Drawing.Point(170, 237);
-            this.txtMotorTorque.Name = "txtMotorTorque";
-            this.txtMotorTorque.Size = new System.Drawing.Size(59, 20);
-            this.txtMotorTorque.TabIndex = 22;
-            this.txtMotorTorque.Text = "80";
-            this.txtMotorTorque.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // label30
-            // 
-            this.label30.AutoSize = true;
-            this.label30.Location = new System.Drawing.Point(22, 243);
-            this.label30.Name = "label30";
-            this.label30.Size = new System.Drawing.Size(133, 13);
-            this.label30.TabIndex = 21;
-            this.label30.Text = "Motor torque rating Kg/mm";
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(186, 6);
             // 
             // frmMain
             // 
@@ -987,6 +1010,9 @@ namespace robotDesigner
         private System.Windows.Forms.Label label30;
         private System.Windows.Forms.TextBox txtMotorNoLoadSpeedRPM;
         private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.ToolStripMenuItem importSensorModelsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 
