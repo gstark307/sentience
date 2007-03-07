@@ -28,6 +28,33 @@ using CenterSpace.Free;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// stores a lookup table for sensor models
+    /// The first dimension is the visual disparity in 0.5 pixel steps
+    /// The second dimension is the probability value at each distance
+    /// Normally the lookup is quantised such that each array element corresponds
+    /// to a single occupancy grid cell
+    /// </summary>
+    public class rayModelLookup
+    {
+        // stores the sensor models
+        public float[,] probability = null;
+
+        // the length of each sensor model, given as an array index
+        public int[] length = null;
+
+        public int dimension_disparity, dimension_probability;
+
+        public rayModelLookup(int max_disparity_pixels,
+                              int max_sensor_model_length)
+        {
+            dimension_disparity = max_disparity_pixels * 2;
+            dimension_probability = max_sensor_model_length;
+            probability = new float[dimension_disparity, dimension_probability];
+            length = new int[dimension_disparity];
+        }
+    }
+
     public class stereoModel
     {
         Random rnd = new Random();
@@ -49,8 +76,9 @@ namespace sentience.core
 
         private int ray_model_normal_length = 500;
         private int ray_model_max_length = 1500;
-        public float[,] ray_model = null;
-        private int[] ray_model_length = null;
+        public rayModelLookup ray_model = null;
+        //public float[,] ray_model = null;
+        //private int[] ray_model_length = null;
         //private float ray_model_interval_pixels = 0.5f;
 
         // variables used to show the survey scores
@@ -164,38 +192,37 @@ namespace sentience.core
         {
             if (ray_model != null)
             {
-                ray_model_normal_length = ray_model.GetLength(1) / gridCellSize_mm;
+                ray_model_normal_length = ray_model.dimension_probability / gridCellSize_mm;
 
-                float[,] new_ray_model = new float[ray_model.GetLength(0), ray_model_normal_length];
-                int[] new_ray_model_length = new int[ray_model.GetLength(0)];
+                rayModelLookup new_ray_model = new rayModelLookup(ray_model.dimension_disparity, ray_model_normal_length);
 
-                for (int d = 1; d < ray_model.GetLength(0); d++)
+                for (int d = 1; d < ray_model.dimension_disparity; d++)
                 {
                     int prev_index = 0;
                     for (int i = 0; i < ray_model_normal_length; i++)
                     {
-                        int next_index = (i + 1) * ray_model_max_length / ray_model_normal_length;
+                        int next_index = (i + 1) * ray_model.dimension_probability / new_ray_model.dimension_probability;
                         // sum the probabilities
                         float total_probability = 0;
                         for (int j = prev_index; j < next_index; j++)
                         {
                             // is there a DJ in the house ?
-                            total_probability += ray_model[d, j];
+                            total_probability += ray_model.probability[d, j];
                         }
                         if (total_probability > 0)
-                            new_ray_model[d, i] = total_probability;
+                            new_ray_model.probability[d, i] = total_probability;
                         prev_index = next_index;
                     }
-                    new_ray_model_length[d] = ray_model_length[d] * ray_model_normal_length / ray_model_max_length;
+                    new_ray_model.length[d] = ray_model.length[d] * new_ray_model.dimension_probability / ray_model.dimension_probability;
 
                     // if there's only one grid cell give it the full probability
                     // (it's gotta be in there somewhere!)
-                    if (new_ray_model_length[d] == 1) new_ray_model[d, 0] = 1.0f;
+                    if (new_ray_model.length[d] == 1) new_ray_model.probability[d, 0] = 1.0f;
                 }
 
                 // finally swap the arrays
                 ray_model = new_ray_model;
-                ray_model_length = new_ray_model_length;
+                //ray_model_length = new_ray_model_length;
             }
         }
 
@@ -225,8 +252,7 @@ namespace sentience.core
             ray_model_max_length = grid_dimension;
             if (ray_model == null)
             {
-                ray_model = new float[(int)(max_disparity * 2) + 1, ray_model_max_length];
-                ray_model_length = new int[(int)(max_disparity * 2) + 1];
+                ray_model = new rayModelLookup((int)(max_disparity) + 1, ray_model_max_length);
             }
 
             int min_dist = (int)baseline;
@@ -307,7 +333,7 @@ namespace sentience.core
                         if (max_length > 0) scaling_factor = 1.0f / total_probability;
 
                         // record the length of the ray model
-                        ray_model_length[(int)(disparity_pixels * 2)] = max_length+1;
+                        ray_model.length[(int)(disparity_pixels * 2)] = max_length+1;
 
                         float max = 0;
                         int max_index = 0;
@@ -324,7 +350,7 @@ namespace sentience.core
                                     if (cellval > min_prob)
                                     {
                                         if (start == -1) start = l;
-                                        ray_model[(int)(disparity_pixels * 2), l - start] = cellval;
+                                        ray_model.probability[(int)(disparity_pixels * 2), l - start] = cellval;
                                         if (cellval > max)
                                         {
                                             max = cellval;
@@ -350,7 +376,7 @@ namespace sentience.core
                                     {
                                         if ((j >= 0) && (j < ray_model_max_length))
                                         {
-                                            value += ((j - (i - radius)) * ray_model[(int)(disparity_pixels * 2), j]);
+                                            value += ((j - (i - radius)) * ray_model.probability[(int)(disparity_pixels * 2), j]);
                                             hits++;
                                         }
                                     }
@@ -358,8 +384,8 @@ namespace sentience.core
                                     probvalues[i] = value;
                                 }
                                 for (int i = 0; i < ray_model_max_length; i++)
-                                    if (ray_model[(int)(disparity_pixels * 2), i] > max / 200.0f)
-                                        ray_model[(int)(disparity_pixels * 2), i] = probvalues[i];
+                                    if (ray_model.probability[(int)(disparity_pixels * 2), i] > max / 200.0f)
+                                        ray_model.probability[(int)(disparity_pixels * 2), i] = probvalues[i];
                             }
                         }
                     }
@@ -1581,16 +1607,16 @@ namespace sentience.core
             for (int i = 0; i < img.Length; i++) img[i] = 255;
 
             // find the maximum probability
-            for (int disparity_pixels = 1; disparity_pixels < ray_model.GetLength(0); disparity_pixels++)
+            for (int disparity_pixels = 1; disparity_pixels < ray_model.dimension_disparity; disparity_pixels++)
             {
-                for (int i = 0; i < ray_model_length[disparity_pixels]; i++)
+                for (int i = 0; i < ray_model.length[disparity_pixels]; i++)
                 {
-                    if (ray_model[disparity_pixels, i] > 0)
+                    if (ray_model.probability[disparity_pixels, i] > 0)
                     {
                         if (i > max_length) max_length = i;
 
-                        if (ray_model[disparity_pixels, i] > max_value)
-                            max_value = ray_model[disparity_pixels, i];
+                        if (ray_model.probability[disparity_pixels, i] > max_value)
+                            max_value = ray_model.probability[disparity_pixels, i];
                     }
                 }
             }
@@ -1599,27 +1625,27 @@ namespace sentience.core
             {
                 max_value *= 1.1f;
                 // for each possible diaparity value
-                for (int disparity_pixels = 1; disparity_pixels < ray_model.GetLength(0); disparity_pixels+=2)
+                for (int disparity_pixels = 1; disparity_pixels < ray_model.dimension_disparity; disparity_pixels+=2)
                 {
                     int prev_i = 0;
                     float prev_value = -1;
-                    for (int i = 0; i < ray_model_length[disparity_pixels]; i++)
+                    for (int i = 0; i < ray_model.length[disparity_pixels]; i++)
                     {
-                        if (ray_model[disparity_pixels, i] != prev_value)
+                        if (ray_model.probability[disparity_pixels, i] != prev_value)
                         {
                             if (i > 0)
                             {
                                 int x = i * img_width / max_length;
-                                int y = (int)(ray_model[disparity_pixels, i] * img_height / max_value);
+                                int y = (int)(ray_model.probability[disparity_pixels, i] * img_height / max_value);
                                 if (y >= img_height) y = img_height - 1;
                                 y = img_height - 1 - y;
                                 int prev_x = prev_i * img_width / max_length;
-                                int prev_y = (int)(ray_model[disparity_pixels, prev_i] * img_height / max_value);
+                                int prev_y = (int)(ray_model.probability[disparity_pixels, prev_i] * img_height / max_value);
                                 if (prev_y >= img_height) prev_y = img_height - 1;
                                 prev_y = img_height - 1 - prev_y;
                                 util.drawLine(img, img_width, img_height, prev_x, prev_y, x, y, 0, 0, 0, 0, false);
                             }
-                            prev_value = ray_model[disparity_pixels, i];
+                            prev_value = ray_model.probability[disparity_pixels, i];
                             prev_i = i;
                         }
                     }
@@ -1846,13 +1872,13 @@ namespace sentience.core
             util.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "0.5");
 
             util.AddComment(doc, nodeSensorModels, "Model Data");
-            for (int d = 0; d < ray_model.GetLength(0); d++)
+            for (int d = 0; d < ray_model.dimension_disparity; d++)
             {
                 String dataStr = "";
-                for (int i = 0; i < ray_model_length[d]; i++)
+                for (int i = 0; i < ray_model.length[d]; i++)
                 {
-                    dataStr += Convert.ToString(ray_model[d, i]);
-                    if (i < ray_model_length[d] - 1) dataStr += ",";
+                    dataStr += Convert.ToString(ray_model.probability[d, i]);
+                    if (i < ray_model.length[d] - 1) dataStr += ",";
                 }
                 if (dataStr != "")
                     util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
@@ -1910,8 +1936,7 @@ namespace sentience.core
             }
 
             // initialise the ray model array
-            ray_model = new float[rayModelsData.Count + 3, ray_model_normal_length];
-            ray_model_length = new int[ray_model.GetLength(0) + 2];
+            ray_model = new rayModelLookup((rayModelsData.Count/2)+1, ray_model_normal_length);
 
             // insert the data into the array
             for (int i = 0; i < rayModelsData.Count; i++)
@@ -1919,9 +1944,9 @@ namespace sentience.core
                 int d = i+2; // we add 2 here because the first two slots
                              // corresponding to zero and 0.5 pixel disparity don't exist
                 String[] dataStr = ((String)rayModelsData[i]).Split(',');
-                ray_model_length[d] = dataStr.Length;
+                ray_model.length[d] = dataStr.Length;
                 for (int j = 0; j < dataStr.Length; j++)
-                    ray_model[d, j] = Convert.ToSingle(dataStr[j]);
+                    ray_model.probability[d, j] = Convert.ToSingle(dataStr[j]);
             }
         }
 

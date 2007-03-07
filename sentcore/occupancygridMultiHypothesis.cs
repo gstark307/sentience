@@ -314,7 +314,7 @@ namespace sentience.core
                             // get the probability at this point 
                             // for the central axis of the ray using the inverse sensor model
                             if (modelcomponent == OCCUPIED_SENSORMODEL)
-                                centre_prob = sensormodel.ray_model[sensormodel_index, i];
+                                centre_prob = sensormodel.ray_model.probability[sensormodel_index, i];
                             else
                                 // calculate the probability from the vacancy model
                                 centre_prob = vacancyFunction(i / (float)steps, steps);
