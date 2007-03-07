@@ -107,6 +107,9 @@ namespace sentience.core
         // size of each grid cell in millimetres
         public int cellSize_mm;
 
+        // when localising search a wider area than when mapping
+        public int localisation_search_cells = 1;
+
         // cells of the grid
         occupancygridCellMultiHypothesis[,] cell;
 
@@ -171,6 +174,35 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// returns the localisation probability
+        /// </summary>
+        /// <param name="x_cell">x grid coordinate</param>
+        /// <param name="y_cell">y grid coordinate</param>
+        /// <param name="origin">pose of the robot</param>
+        /// <param name="sensorModelProbability">probability value from a specific point in the ray, taken from the sensor model</param>
+        /// <returns>log odds probability of there being a match between the ray and the grid</returns>
+        private float localiseProbability(int x_cell, int y_cell,
+                                          particlePose origin,
+                                          float sensorModelProbability)
+        {
+            float value = 0;
+
+            // localise using this grid cell
+            // first get the existing probability value at this cell
+            float occ = cell[x_cell, y_cell].GetProbability(origin);
+
+            if (occ != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+            {
+                // combine the results
+                float prob2 = ((sensorModelProbability * occ) + ((1.0f - sensorModelProbability) * (1.0f - occ)));
+
+                // localisation matching score, expressed as log odds
+                value = util.LogOdds(prob2);
+            }
+            return (value);
+        }
+
+        /// <summary>
         /// inserts the given ray into the grid
         /// There are three components to the sensor model used here:
         /// two areas determining the probably vacant area and one for 
@@ -199,7 +231,7 @@ namespace sentience.core
             // which lookup table to use
             int sensormodel_index = (int)(ray.disparity * 2);
 
-            float xdist_mm=0, ydist_mm=0, zdist_mm=0, x=0, y=0, z=0, occ;
+            float xdist_mm=0, ydist_mm=0, zdist_mm=0, x=0, y=0, z=0;
             float occupied_dx = 0, occupied_dy = 0, occupied_dz = 0;
             float intersect_x = 0, intersect_y = 0, intersect_z = 0;
             float centre_prob=0, prob = 0; // probability values at the centre axis and outside
@@ -348,17 +380,19 @@ namespace sentience.core
                                     // only localise using occupancy, not vacancy
                                     if (modelcomponent == OCCUPIED_SENSORMODEL)
                                     {
-                                        // localise using this grid cell
-                                        // first get the existing probability value at this cell
-                                        occ = cell[x_cell2, y_cell2].GetProbability(origin);
-
-                                        if (occ != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                        // note that we search within a small radius to give a
+                                        // better chance of finding some occupied cells
+                                        if (longest_axis == X_AXIS)
                                         {
-                                            // combine the results
-                                            float prob2 = ((prob * occ) + ((1.0f - prob) * (1.0f - occ)));
-
-                                            // update the localisation matching score
-                                            matchingScore += util.LogOdds(prob2);
+                                            for (int y_cell3 = y_cell2 - localisation_search_cells; y_cell3 <= y_cell2 + localisation_search_cells; y_cell3++)
+                                                if ((y_cell3 > -1) && (y_cell3 < dimension_cells))
+                                                    matchingScore += localiseProbability(x_cell2, y_cell3, origin, prob);
+                                        }
+                                        if (longest_axis == Y_AXIS)
+                                        {
+                                            for (int x_cell3 = x_cell2 - localisation_search_cells; x_cell3 <= x_cell2 + localisation_search_cells; x_cell3++)
+                                                if ((x_cell3>-1) && (x_cell3 < dimension_cells))
+                                                    matchingScore += localiseProbability(x_cell3, y_cell2, origin, prob);
                                         }
                                     }
                                 }

@@ -1272,6 +1272,8 @@ namespace sentience.core
             baseline = head.calibration[camera_index].baseline;
             image_width = head.calibration[camera_index].leftcam.image_width;
             image_height = head.calibration[camera_index].leftcam.image_height;
+            FOV_horizontal = head.calibration[camera_index].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
+            FOV_vertical = FOV_horizontal * image_height / image_width;
 
             // some head geometry
             pos3D headOrientation = head.cameraPosition[camera_index];
