@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using sentience.calibration;
 
 namespace sentience.core
 {
@@ -74,47 +75,52 @@ namespace sentience.core
         /// <param name="rays">list of ray objects in this observation</param>
         /// <param name="grid">the occupancy grid into which to insert the observation</param>
         /// <param name="sensormodel">the sensor model to use for updating the grid</param>
-        public float AddObservation(ArrayList stereo_rays, 
+        public float AddObservation(ArrayList[] stereo_rays, 
                                     occupancygridMultiHypothesis grid,
-                                    stereoModel sensormodel)
+                                    rayModelLookup[] sensormodel_lookup,
+                                    calibrationStereo[] calibration)
         {
             // clear the localisation score
             float localisation_score = 0;
 
-            // where are the left and right cameras?
-            // these position offsets will be used to calculate the 
-            // location of both cameras, and is used as the origin 
-            // for the vacancy part of the sensor model
-            float cam_dx = sensormodel.baseline * (float)Math.Sin(pan - (Math.PI / 2));
-            float cam_dy = sensormodel.baseline * (float)Math.Cos(pan - (Math.PI / 2));
-            float leftcam_x=0, leftcam_y=0, rightcam_x=0, rightcam_y=0;
-
-            // itterate through each ray
-            for (int r = 0; r < stereo_rays.Count; r++)
+            // itterate for each stereo camera
+            for (int cam = 0; cam < stereo_rays.Length; cam++)
             {
-                // observed ray.  Note that this is in an egocentric
-                // coordinate frame relative to the head of the robot
-                evidenceRay ray = (evidenceRay)stereo_rays[r];
-                
-                // translate and rotate this ray appropriately for the pose
-                evidenceRay trial_ray = ray.trialPose(pan, x, y);
+                // where are the left and right cameras?
+                // these position offsets will be used to calculate the 
+                // location of both cameras, and is used as the origin 
+                // for the vacancy part of the sensor model
+                float cam_dx = calibration[cam].baseline * (float)Math.Sin(pan - (Math.PI / 2));
+                float cam_dy = calibration[cam].baseline * (float)Math.Cos(pan - (Math.PI / 2));
+                float leftcam_x = 0, leftcam_y = 0, rightcam_x = 0, rightcam_y = 0;
 
-                if (r == 0)
+                // itterate through each ray
+                for (int r = 0; r < stereo_rays[cam].Count; r++)
                 {
-                    // where are the left and right cameras
-                    // we only need to do this once, since the origin
-                    // will be the same for all rays
-                    leftcam_x = trial_ray.observedFrom.x + cam_dx;
-                    leftcam_y = trial_ray.observedFrom.y + cam_dy;
-                    rightcam_x = trial_ray.observedFrom.x - cam_dx;
-                    rightcam_y = trial_ray.observedFrom.y - cam_dy;
-                }
+                    // observed ray.  Note that this is in an egocentric
+                    // coordinate frame relative to the head of the robot
+                    evidenceRay ray = (evidenceRay)stereo_rays[cam][r];
 
-                // update the grid cells for this ray and update the
-                // localisation score accordingly
-                localisation_score += grid.Insert(trial_ray, this, sensormodel,
-                                                  leftcam_x, leftcam_y,
-                                                  rightcam_x, rightcam_y);
+                    // translate and rotate this ray appropriately for the pose
+                    evidenceRay trial_ray = ray.trialPose(pan, x, y);
+
+                    if (r == 0)
+                    {
+                        // where are the left and right cameras
+                        // we only need to do this once, since the origin
+                        // will be the same for all rays
+                        leftcam_x = trial_ray.observedFrom.x + cam_dx;
+                        leftcam_y = trial_ray.observedFrom.y + cam_dy;
+                        rightcam_x = trial_ray.observedFrom.x - cam_dx;
+                        rightcam_y = trial_ray.observedFrom.y - cam_dy;
+                    }
+
+                    // update the grid cells for this ray and update the
+                    // localisation score accordingly
+                    localisation_score += grid.Insert(trial_ray, this, sensormodel_lookup[cam],
+                                                      leftcam_x, leftcam_y,
+                                                      rightcam_x, rightcam_y);
+                }
             }
             return (localisation_score);
         }

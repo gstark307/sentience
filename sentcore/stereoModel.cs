@@ -45,14 +45,179 @@ namespace sentience.core
 
         public int dimension_disparity, dimension_probability;
 
-        public rayModelLookup(int max_disparity_pixels,
-                              int max_sensor_model_length)
+        private void init(int max_disparity_pixels,
+                          int max_sensor_model_length)
         {
             dimension_disparity = max_disparity_pixels * 2;
             dimension_probability = max_sensor_model_length;
             probability = new float[dimension_disparity, dimension_probability];
             length = new int[dimension_disparity];
         }
+
+        public rayModelLookup(int max_disparity_pixels,
+                              int max_sensor_model_length)
+        {
+            init(max_disparity_pixels, max_sensor_model_length);
+        }
+
+        #region "saving and loading"
+
+        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        {
+            util.AddComment(doc, parent, "Inverse sensor model data");
+
+            XmlElement nodeSensorModels = doc.CreateElement("InverseSensorModels");
+            parent.AppendChild(nodeSensorModels);
+
+            util.AddComment(doc, nodeSensorModels, "Interval between models in pixels");
+            util.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "0.5");
+
+            util.AddComment(doc, nodeSensorModels, "Model Data");
+            for (int d = 0; d < dimension_disparity; d++)
+            {
+                String dataStr = "";
+                for (int i = 0; i < length[d]; i++)
+                {
+                    dataStr += Convert.ToString(probability[d, i]);
+                    if (i < length[d] - 1) dataStr += ",";
+                }
+                if (dataStr != "")
+                    util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
+            }
+
+            return (nodeSensorModels);
+        }
+
+        /// <summary>
+        /// return an Xml document containing camera calibration parameters
+        /// </summary>
+        /// <returns></returns>
+        private XmlDocument getXmlDocument()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
+            doc.AppendChild(commentnode);
+
+            XmlElement nodeSentience = doc.CreateElement("Sentience");
+            doc.AppendChild(nodeSentience);
+
+            nodeSentience.AppendChild(getXml(doc, nodeSentience));
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save camera calibration parameters as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void Save(String filename)
+        {
+            XmlDocument doc = getXmlDocument();
+            doc.Save(filename);
+        }
+
+        /// <summary>
+        /// creates a new sensor model array from the given list of loaded ray models
+        /// </summary>
+        /// <param name="rayModelsData">list containing ray model data as strings</param>
+        public void LoadSensorModelData(ArrayList rayModelsData)
+        {
+            // get the maximum array size needed to store the data
+            int ray_model_normal_length = 10;
+            for (int i = 0; i < rayModelsData.Count; i++)
+            {
+                String[] dataStr = ((String)rayModelsData[i]).Split(',');
+                if (dataStr.Length > ray_model_normal_length) ray_model_normal_length = dataStr.Length;
+            }
+
+            // initialise the ray model array
+            init((rayModelsData.Count / 2) + 1, ray_model_normal_length);
+
+            // insert the data into the array
+            for (int i = 0; i < rayModelsData.Count; i++)
+            {
+                int d = i + 2; // we add 2 here because the first two slots
+                // corresponding to zero and 0.5 pixel disparity don't exist
+                String[] dataStr = ((String)rayModelsData[i]).Split(',');
+                length[d] = dataStr.Length;
+                for (int j = 0; j < dataStr.Length; j++)
+                    probability[d, j] = Convert.ToSingle(dataStr[j]);
+            }
+        }
+
+        /// <summary>
+        /// load camera calibration parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public bool Load(String filename)
+        {
+            bool loaded = false;
+
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+                ArrayList rayModelsData = new ArrayList();
+                LoadFromXml(xnodDE, 0, rayModelsData);
+                LoadSensorModelData(rayModelsData);
+
+                // close the reader
+                xtr.Close();
+                loaded = true;
+            }
+            return (loaded);
+        }
+
+        /// <summary>
+        /// parse an xml node to extract camera calibration parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(XmlNode xnod, int level, ArrayList rayModelsData)
+        {
+            XmlNode xnodWorking;
+
+            if (xnod.Name == "SensorModelInterval")
+            {
+                float ray_model_interval_pixels = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "RayModel")
+            {
+                rayModelsData.Add(xnod.InnerText);
+            }
+
+            // call recursively on all children of the current node
+            if ((xnod.HasChildNodes) &&
+                (xnod.Name == "InverseSensorModels"))
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1, rayModelsData);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+        #endregion
+
     }
 
     public class stereoModel
@@ -155,14 +320,36 @@ namespace sentience.core
         /// <summary>
         /// creates a lookup table for sensor models at different visual disparities
         /// </summary>
+        public void createLookupTables(stereoHead robot_head, int gridCellSize_mm)
+        {
+            int width = 100;
+            int height = 100;
+            Byte[] img_result = new Byte[width * height * 3];
+
+            for (int cam = 0; cam < robot_head.no_of_cameras; cam++)
+            {
+                // update parameters based upon the calibration data
+                image_width = robot_head.calibration[cam].leftcam.image_width;
+                image_height = robot_head.calibration[cam].leftcam.image_height;
+                baseline = robot_head.baseline_mm;
+                FOV_horizontal = robot_head.calibration[cam].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
+                FOV_vertical = FOV_horizontal * image_height / image_width;
+
+                // create the lookup
+                createLookupTable(gridCellSize_mm, img_result, width, height);
+
+                // attach the lookup table to the relevant camera
+                robot_head.sensormodel[cam] = ray_model;
+            }
+        }
+
         public void createLookupTable(int gridCellSize_mm)
         {
             int width = 320;
             int height = 240;
             Byte[] img_result = new Byte[width * height * 3];
-            createLookupTable(gridCellSize_mm, img_result, width, height);            
+            createLookupTable(gridCellSize_mm, img_result, width, height);
         }
-
 
         /// <summary>
         /// creates a lookup table for sensor models at different visual disparities
@@ -178,7 +365,7 @@ namespace sentience.core
             updateRayModel(grid_layer, grid_dimension, 
                            img_result, width, height,
                            divisor, false, gridCellSize_mm);
-            Save("InverseSensorModels.xml");
+            ray_model.Save("InverseSensorModels.xml");
         }
 
         /// <summary>
@@ -250,10 +437,7 @@ namespace sentience.core
             float max_disparity = (10 * image_width / 100);
 
             ray_model_max_length = grid_dimension;
-            if (ray_model == null)
-            {
-                ray_model = new rayModelLookup((int)(max_disparity) + 1, ray_model_max_length);
-            }
+            ray_model = new rayModelLookup((int)(max_disparity) + 1, ray_model_max_length);
 
             int min_dist = (int)baseline;
             int max_dist = grid_dimension;
@@ -1080,49 +1264,49 @@ namespace sentience.core
         /// </summary>
         /// <param name="head">head configuration</param>
         /// <returns></returns>
-        public ArrayList createObservation(stereoHead head)
+        public ArrayList createObservation(stereoHead head, int camera_index)
         {
             ArrayList result = new ArrayList();
 
-            for (int cam = 0; cam < head.no_of_cameras; cam++)
+            // get data for this stereo camera
+            baseline = head.calibration[camera_index].baseline;
+            image_width = head.calibration[camera_index].leftcam.image_width;
+            image_height = head.calibration[camera_index].leftcam.image_height;
+
+            // some head geometry
+            pos3D headOrientation = head.cameraPosition[camera_index];
+            pos3D cameraOrientation = new pos3D(0, 0, 0);
+            cameraOrientation.pan = headOrientation.pan;
+            cameraOrientation.tilt = headOrientation.tilt;
+            cameraOrientation.roll = headOrientation.roll;
+
+            if (head.features[camera_index] != null)  // if there are stereo features associated with this camera
             {
-                // get data for this stereo camera
-                baseline = head.calibration[cam].baseline;
-                image_width = head.calibration[cam].leftcam.image_width;
-                image_height = head.calibration[cam].leftcam.image_height;
-
-                // some head geometry
-                pos3D headOrientation = head.cameraPosition[cam];
-                pos3D cameraOrientation = new pos3D(0, 0, 0);
-                cameraOrientation.pan = headOrientation.pan;
-                cameraOrientation.tilt = headOrientation.tilt;
-                cameraOrientation.roll = headOrientation.roll;
-
-                if (head.features[cam] != null)  // if there are stereo features associated with this camera
+                float[] stereo_features = head.features[camera_index].features;
+                float[] uncertainties = head.features[camera_index].uncertainties;
+                int f2 = 0;
+                for (int f = 0; f < stereo_features.Length; f += 3)
                 {
-                    float[] stereo_features = head.features[cam].features;
-                    float[] uncertainties = head.features[cam].uncertainties;
-                    int f2 = 0;
-                    for (int f = 0; f < stereo_features.Length; f += 3)
+                    // get the parameters of the feature
+                    float image_x = stereo_features[f];
+                    float image_y = stereo_features[f + 1];
+                    float disparity = stereo_features[f + 2];
+
+                    // create a ray
+                    evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2], 
+                                                head.features[camera_index].colour[f2, 0],
+                                                head.features[camera_index].colour[f2, 1],
+                                                head.features[camera_index].colour[f2, 2]);
+
+                    if (ray != null)
                     {
-                        // get the parameters of the feature
-                        float image_x = stereo_features[f];
-                        float image_y = stereo_features[f + 1];
-                        float disparity = stereo_features[f + 2];
+                        // convert from camera-centric coordinates to head coordinates
+                        ray.translateRotate(cameraOrientation);
 
-                        // create a ray
-                        evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2], head.features[cam].colour[f2, 0], head.features[cam].colour[f2, 1], head.features[cam].colour[f2, 2]);
-
-                        if (ray != null)
-                        {
-                            // convert from camera-centric coordinates to head coordinates
-                            ray.translateRotate(cameraOrientation);
-
-                            // add to the result
-                            result.Add(ray);
-                        }
-                        f2++;
+                        // add to the result
+                        result.Add(ray);
                     }
+                    f2++;
                 }
             }
 
@@ -1857,165 +2041,6 @@ namespace sentience.core
                 addGaussianLine(tx, ty, bx, by, 2, magnitude, grid_layer, grid_dimension, rayNumber);
             }
         }
-
-
-        #region "saving and loading"
-
-        public XmlElement getXml(XmlDocument doc, XmlElement parent)
-        {
-            util.AddComment(doc, parent, "Inverse sensor model data");
-
-            XmlElement nodeSensorModels = doc.CreateElement("InverseSensorModels");
-            parent.AppendChild(nodeSensorModels);
-
-            util.AddComment(doc, nodeSensorModels, "Interval between models in pixels");
-            util.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "0.5");
-
-            util.AddComment(doc, nodeSensorModels, "Model Data");
-            for (int d = 0; d < ray_model.dimension_disparity; d++)
-            {
-                String dataStr = "";
-                for (int i = 0; i < ray_model.length[d]; i++)
-                {
-                    dataStr += Convert.ToString(ray_model.probability[d, i]);
-                    if (i < ray_model.length[d] - 1) dataStr += ",";
-                }
-                if (dataStr != "")
-                    util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
-            }
-            
-            return (nodeSensorModels);
-        }
-
-        /// <summary>
-        /// return an Xml document containing camera calibration parameters
-        /// </summary>
-        /// <returns></returns>
-        private XmlDocument getXmlDocument()
-        {
-            // Create the document.
-            XmlDocument doc = new XmlDocument();
-
-            // Insert the xml processing instruction and the root node
-            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
-            doc.PrependChild(dec);
-
-            XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
-            doc.AppendChild(commentnode);
-
-            XmlElement nodeSentience = doc.CreateElement("Sentience");
-            doc.AppendChild(nodeSentience);
-
-            nodeSentience.AppendChild(getXml(doc, nodeSentience));
-
-            return (doc);
-        }
-
-        /// <summary>
-        /// save camera calibration parameters as an xml file
-        /// </summary>
-        /// <param name="filename">file name to save as</param>
-        public void Save(String filename)
-        {
-            XmlDocument doc = getXmlDocument();
-            doc.Save(filename);
-        }
-
-        /// <summary>
-        /// creates a new sensor model array from the given list of loaded ray models
-        /// </summary>
-        /// <param name="rayModelsData">list containing ray model data as strings</param>
-        public void LoadSensorModelData(ArrayList rayModelsData)
-        {
-            // get the maximum array size needed to store the data
-            ray_model_normal_length = 10;
-            for (int i = 0; i < rayModelsData.Count; i++)
-            {
-                String[] dataStr = ((String)rayModelsData[i]).Split(',');
-                if (dataStr.Length > ray_model_normal_length) ray_model_normal_length = dataStr.Length;
-            }
-
-            // initialise the ray model array
-            ray_model = new rayModelLookup((rayModelsData.Count/2)+1, ray_model_normal_length);
-
-            // insert the data into the array
-            for (int i = 0; i < rayModelsData.Count; i++)
-            {
-                int d = i+2; // we add 2 here because the first two slots
-                             // corresponding to zero and 0.5 pixel disparity don't exist
-                String[] dataStr = ((String)rayModelsData[i]).Split(',');
-                ray_model.length[d] = dataStr.Length;
-                for (int j = 0; j < dataStr.Length; j++)
-                    ray_model.probability[d, j] = Convert.ToSingle(dataStr[j]);
-            }
-        }
-
-        /// <summary>
-        /// load camera calibration parameters from file
-        /// </summary>
-        /// <param name="filename"></param>
-        public bool Load(String filename)
-        {
-            bool loaded = false;
-
-            if (File.Exists(filename))
-            {
-                // use an XmlTextReader to open an XML document
-                XmlTextReader xtr = new XmlTextReader(filename);
-                xtr.WhitespaceHandling = WhitespaceHandling.None;
-
-                // load the file into an XmlDocuent
-                XmlDocument xd = new XmlDocument();
-                xd.Load(xtr);
-
-                // get the document root node
-                XmlNode xnodDE = xd.DocumentElement;
-
-                // recursively walk the node tree
-                ArrayList rayModelsData = new ArrayList();
-                LoadFromXml(xnodDE, 0, rayModelsData);
-                LoadSensorModelData(rayModelsData);
-
-                // close the reader
-                xtr.Close();
-                loaded = true;
-            }
-            return (loaded);
-        }
-
-        /// <summary>
-        /// parse an xml node to extract camera calibration parameters
-        /// </summary>
-        /// <param name="xnod"></param>
-        /// <param name="level"></param>
-        public void LoadFromXml(XmlNode xnod, int level, ArrayList rayModelsData)
-        {
-            XmlNode xnodWorking;
-
-            if (xnod.Name == "SensorModelInterval")
-            {
-                float ray_model_interval_pixels = Convert.ToSingle(xnod.InnerText);
-            }
-
-            if (xnod.Name == "RayModel")
-            {
-                rayModelsData.Add(xnod.InnerText);                
-            }
-
-            // call recursively on all children of the current node
-            if ((xnod.HasChildNodes) &&
-                (xnod.Name == "InverseSensorModels"))
-            {
-                xnodWorking = xnod.FirstChild;
-                while (xnodWorking != null)
-                {
-                    LoadFromXml(xnodWorking, level + 1, rayModelsData);
-                    xnodWorking = xnodWorking.NextSibling;
-                }
-            }
-        }
-
-        #endregion
 
     }
 }

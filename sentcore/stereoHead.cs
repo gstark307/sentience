@@ -31,16 +31,17 @@ namespace sentience.core
     /// </summary>
     public class stereoHead : pos3D
     {
-        public int no_of_cameras;         //number of cameras on the head
+        public int no_of_cameras;                // number of cameras on the head
 
-        public int baseline_mm = 100;            //distance between cameras
-        public int image_width = 640;
-        public int image_height = 480;
+        public int baseline_mm = 100;            // distance between cameras
+        public int image_width = 320;
+        public int image_height = 240;
 
-        public pos3D[] cameraPosition;           //position and orientation of each camera
-        public stereoFeatures[] features;        //stereo features observed by each camera
-        public String[] imageFilename;           //filename of raw image for each camera
+        public pos3D[] cameraPosition;           // position and orientation of each camera
+        public stereoFeatures[] features;        // stereo features observed by each camera
+        public String[] imageFilename;           // filename of raw image for each camera
         public calibrationStereo[] calibration;  // calibration data for each camera
+        public rayModelLookup[] sensormodel;     // sensor model data for each camera
 
         public stereoHead(int no_of_cameras) : base(0,0,0)
         {
@@ -59,6 +60,8 @@ namespace sentience.core
                 cameraPosition[cam] = new pos3D(0, 0, 0);
                 features[cam] = null; // new stereoFeatures();
             }
+            // sensor models
+            sensormodel = new rayModelLookup[no_of_cameras];
 
             if (no_of_cameras == 4) initQuadCam();
             if (no_of_cameras == 2) initDualCam();

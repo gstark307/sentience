@@ -36,6 +36,8 @@ namespace robotDesigner
         // whether the grid cell size has changed
         bool cellSizeChanged = false;
 
+        private int current_stereo_camera_index = 0;
+
         public frmMain()
         {
             InitializeComponent();
@@ -48,7 +50,7 @@ namespace robotDesigner
         /// <param name="filename"></param>
         public void LoadCalibration(String filename)
         {
-            rob.head.calibration[0].Load(filename);
+            rob.head.calibration[current_stereo_camera_index].Load(filename);
         }
 
         /// <summary>
@@ -57,7 +59,7 @@ namespace robotDesigner
         /// <param name="filename"></param>
         public void LoadSensorModels(String filename)
         {
-            rob.inverseSensorModel.Load(filename);
+            rob.head.sensormodel[current_stereo_camera_index].Load(filename);
         }
 
         /// <summary>
@@ -111,6 +113,7 @@ namespace robotDesigner
             for (int i = 0; i < rob.head.no_of_cameras; i++)
             {
                 new_rob.head.calibration[i] = rob.head.calibration[i];
+                new_rob.head.sensormodel[i] = rob.head.sensormodel[i];
             }
             rob = new_rob;
 
@@ -165,11 +168,9 @@ namespace robotDesigner
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {           
-            stereoModel sensormodel = rob.inverseSensorModel;
-            if (sensormodel.ray_model != null)
+            if (rob.head.sensormodel[0] != null)
             {
                 update();
-                if (sensormodel.ray_model != null) rob.inverseSensorModel = sensormodel;
 
                 saveFileDialog1.DefaultExt = "xml";
                 saveFileDialog1.FileName = rob.Name + ".xml";
@@ -195,9 +196,7 @@ namespace robotDesigner
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            stereoModel sensormodel = rob.inverseSensorModel;
             update();
-            if (sensormodel.ray_model != null) rob.inverseSensorModel = sensormodel;
             rob.Save("robotdesign.xml");
         }
 
@@ -213,7 +212,7 @@ namespace robotDesigner
 
                 // sensor models may need to be recalculated
                 // for the new cell size
-                rob.inverseSensorModel.ray_model = null;
+                rob.head.sensormodel[0] = null;
                 updateSensorModelStatus();
             }
         }
@@ -232,7 +231,7 @@ namespace robotDesigner
 
         private void updateSensorModelStatus()
         {
-            if (rob.inverseSensorModel.ray_model == null)
+            if (rob.head.sensormodel[0] == null)
                 txtSensorModelsStatus.Text = "No sensor models have been generated.  Click below to make some.";
             else
                 txtSensorModelsStatus.Text = "Click below to regenerate the sensor models.";
@@ -243,7 +242,7 @@ namespace robotDesigner
             update();
             txtSensorModelsStatus.Text = "Please wait whilst sensor models are being generated.  This may take several minutes.";
             cmdGenerateSensorModels.Enabled = false;
-            rob.inverseSensorModel.createLookupTable(Convert.ToInt32(txtGridCellDimension.Text));
+            rob.inverseSensorModel.createLookupTables(rob.head, Convert.ToInt32(txtGridCellDimension.Text));
             updateSensorModelStatus();
             MessageBox.Show("Sensor models have been updated");
             cmdGenerateSensorModels.Enabled = true;
@@ -261,7 +260,7 @@ namespace robotDesigner
             {
                 // sensor models may need to be recalculated
                 // for the new cell size
-                rob.inverseSensorModel.ray_model = null;
+                rob.head.sensormodel[0] = null;
                 updateSensorModelStatus();
             }
 
@@ -273,7 +272,7 @@ namespace robotDesigner
             {
                 // sensor models may need to be recalculated
                 // for the new cell size
-                rob.inverseSensorModel.ray_model = null;
+                rob.head.sensormodel[0] = null;
                 updateSensorModelStatus();
                 cellSizeChanged = false;
             }

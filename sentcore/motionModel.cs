@@ -491,7 +491,7 @@ namespace sentience.core
         /// update all current poses with the current observation
         /// </summary>
         /// <param name="stereo_rays">list of evidence rays to be inserted into the grid</param>
-        public void AddObservation(ArrayList stereo_rays)
+        public void AddObservation(ArrayList[] stereo_rays)
         {
             for (int p = 0; p < Poses.Count; p++)
             {
@@ -499,7 +499,8 @@ namespace sentience.core
                 float localisation_score = 
                     path.current_pose.AddObservation(stereo_rays, 
                                                      rob.LocalGrid, 
-                                                     rob.inverseSensorModel);
+                                                     rob.head.sensormodel,
+                                                     rob.head.calibration);
                 updatePoseScore(path, localisation_score);
             }
 

@@ -184,7 +184,7 @@ namespace sentience.core
         /// <param name="rightcam_x">x position of the right camera in millimetres</param>
         /// <param name="rightcam_y">y position of the right camera in millimetres</param>
         public float Insert(evidenceRay ray, particlePose origin,
-                            stereoModel sensormodel,
+                            rayModelLookup sensormodel_lookup,
                             float leftcam_x, float leftcam_y,
                             float rightcam_x, float rightcam_y)
         {
@@ -314,7 +314,7 @@ namespace sentience.core
                             // get the probability at this point 
                             // for the central axis of the ray using the inverse sensor model
                             if (modelcomponent == OCCUPIED_SENSORMODEL)
-                                centre_prob = sensormodel.ray_model.probability[sensormodel_index, i];
+                                centre_prob = sensormodel_lookup.probability[sensormodel_index, i];
                             else
                                 // calculate the probability from the vacancy model
                                 centre_prob = vacancyFunction(i / (float)steps, steps);

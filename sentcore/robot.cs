@@ -38,7 +38,7 @@ namespace sentience.core
         // of possible poses
         public motionModel motion;         
 
-        // One sensor model.  There's only one sensor model....one sensor mooodeeel...
+        // object used to construct rays and sensor models
         public stereoModel inverseSensorModel;
 
         // routines for performing stereo correspondence
@@ -443,8 +443,9 @@ namespace sentience.core
                 loadImages(images, mapping);
 
                 // create an observation as a set of rays from the stereo correspondence results
-                ArrayList stereo_rays = null;
-                stereo_rays = inverseSensorModel.createObservation(head);
+                ArrayList[] stereo_rays = new ArrayList[head.no_of_cameras];
+                for (int cam = 0; cam < head.no_of_cameras; cam++)
+                    stereo_rays[cam] = inverseSensorModel.createObservation(head, cam);
 
                 // update all current poses with the observation
                 motion.AddObservation(stereo_rays);
@@ -454,7 +455,7 @@ namespace sentience.core
                 relative_position.pan = pan - LocalGrid.pan;
 
                 // have we moved off the current grid ?
-                checkOutOfBounds();                
+                checkOutOfBounds(); 
             }
         }
 
@@ -657,10 +658,10 @@ namespace sentience.core
             for (int i = 0; i < head.no_of_cameras; i++)
             {
                 nodeSensorPlatform.AppendChild(head.calibration[i].getXml(doc, nodeSensorPlatform, 2));
-            }
 
-            if (inverseSensorModel.ray_model != null)
-                nodeRobot.AppendChild(inverseSensorModel.getXml(doc, nodeRobot));
+                if (head.sensormodel[i] != null)
+                    nodeSensorPlatform.AppendChild(head.sensormodel[i].getXml(doc, nodeRobot));
+            }
 
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
@@ -911,8 +912,9 @@ namespace sentience.core
             if (xnod.Name == "InverseSensorModels")
             {
                 ArrayList rayModelsData = new ArrayList();
-                inverseSensorModel.LoadFromXml(xnod, level + 1, rayModelsData);
-                inverseSensorModel.LoadSensorModelData(rayModelsData);
+                head.sensormodel[cameraIndex - 1] = new rayModelLookup(1, 1);
+                head.sensormodel[cameraIndex-1].LoadFromXml(xnod, level + 1, rayModelsData);
+                head.sensormodel[cameraIndex-1].LoadSensorModelData(rayModelsData);
             }
 
             if (xnod.Name == "MotionModel")
