@@ -52,7 +52,7 @@ namespace sentience.core
 
         // resolution of the images returned as results
         public int results_image_width = 640;
-        public int results_image_height = 640;
+        public int results_image_height = 480;
 
         // image showing the path through which the robot has moved, together with
         // pose uncertainty

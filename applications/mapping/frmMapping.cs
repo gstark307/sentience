@@ -32,28 +32,11 @@ namespace StereoMapping
 {
     public partial class frmMapping : common
     {
-        float sigma = 0.005f;
+        // default path for loading and saving files
+        String defaultPath = System.Windows.Forms.Application.StartupPath + "\\";
 
-
-        processstereo stereo = new processstereo();
-        processstereo stereo2 = new processstereo();
-        static String app_path = System.AppDomain.CurrentDomain.BaseDirectory + "\\";
-        bool show_features = false;
-        int position_index = 0;
-        int no_of_glimpses = 1;
-
-        robot sentience_robot;
-        //Byte[] bmp;
-        robotOdometry position;
-        occupancygridMultiResolution map;
-        robotTestTracks track;
-
-        Bitmap bmpGrid;
-        Byte[] img_grid;
-        int grid_width = 400;
-        int grid_height = 400;
-
-        //String TrackName = "test";
+        // simulation object
+        simulation sim;
 
         public frmMapping()
         {
@@ -63,205 +46,118 @@ namespace StereoMapping
 
         private void init()
         {
-            sentience_robot = new robot(2);
-            sentience_robot.initRobotSingleStereo();
-            sentience_robot.setMappingParameters(sigma);
+            sim = new simulation(defaultPath + "robotdesign.xml", defaultPath);
+            LoadSimulation(defaultPath + "simulation.xml");
 
-            position = new robotOdometry();
+            lstPathSegments.Items.Clear();
+            lstPathSegments.Columns.Clear();
 
-            // grid map
-            map = new occupancygridMultiResolution(1, 128, 40); //50);
+            //lst.Dock = DockStyle.Fill;
+            lstPathSegments.View = View.Details;
+            lstPathSegments.Sorting = SortOrder.None;
 
-            img_grid = new Byte[grid_width * grid_height * 3];
-            bmpGrid = new Bitmap(grid_width, grid_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            picGrid.Image = bmpGrid;
+            // Create and initialize column headers for myListView.
+            ColumnHeader columnHeader0 = new ColumnHeader();
+            columnHeader0.Text = "x";
+            columnHeader0.Width = 50;
+            ColumnHeader columnHeader1 = new ColumnHeader();
+            columnHeader1.Text = "y";
+            columnHeader1.Width = 50;
+            ColumnHeader columnHeader2 = new ColumnHeader();
+            columnHeader2.Text = "heading";
+            columnHeader2.Width = 70;
+            ColumnHeader columnHeader3 = new ColumnHeader();
+            columnHeader3.Text = "Steps";
+            columnHeader3.Width = 50;
+            ColumnHeader columnHeader4 = new ColumnHeader();
+            columnHeader4.Text = "Size mm";
+            columnHeader4.Width = 80;
+            ColumnHeader columnHeader5 = new ColumnHeader();
+            columnHeader5.Text = "Heading change";
+            columnHeader5.Width = 100;
 
-            track = new robotTestTracks();
-            int trackType;
-
-            
-            trackType = 3;
-            no_of_glimpses = 45*2;
-            track.Add(sentience_robot, app_path, "c1", 1, "test", trackType, true);
-            
-
-            /*
-            trackType = 4;
-            no_of_glimpses = 64;
-            track.Add(sentience_robot, app_path, "r1", 1, "test", true, trackType, true);
-             */
-            
-            /*
-            trackType = 5;
-            no_of_glimpses = ((21 * 2 * 3) - 2) + (16 * 2 * 3);
-            track.Add(sentience_robot, app_path, "r2", 1, "test", true, trackType, true);
-            */
-        }
-
-
-        private void createMap()
-        {
-            map.Clear();
-            map.insert(track.getMappingTrack(0));
-            map.Save(0, "testmap.grd");
-        }
-
-
-        public void showStereoFeatures(robot rob, int position_index,
-                               PictureBox picCamera0)
-        {
-            Byte[] bmp0 = null;
-
-            String left_filename0 = (String)track.image_filenames_stereoCamera0[position_index*2];
-
-            stereoFeatures left_features = (stereoFeatures)track.features_stereoCamera0[position_index];
-            bmp0 = util.loadFromBitmap(left_filename0, rob.head.image_width, rob.head.image_height, 3);
-
-            showStereoFeatures(rob.head.image_width, rob.head.image_height, 
-                               bmp0, picCamera0, left_features, 9999);
-        }
-
-        public void showVacancyFunction(robot rob, PictureBox pic)
-        {
-            Byte[] bmp = new Byte[rob.head.image_width * rob.head.image_height * 3];
-            map.showVacancyFunction(bmp, rob.head.image_width, rob.head.image_height);
-
-            if (pic.Image == null)
-                pic.Image = new Bitmap(rob.head.image_width, rob.head.image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-
-            updatebitmap_unsafe(bmp, (Bitmap)pic.Image);
-
-            pic.Refresh();
+            // Add the column headers to myListView.
+            lstPathSegments.Columns.AddRange(new ColumnHeader[] { columnHeader0, columnHeader1, 
+                                                          columnHeader2, columnHeader3,
+                                                          columnHeader4, columnHeader5  });
 
         }
 
-
-        private void showRays(robot rob, PictureBox pic)
+        private void LoadSimulation(String filename)
         {
-            Byte[] bmp0 = null;
-            Byte[] bmp1 = null;
-
-            String left_filename = (String)track.image_filenames_stereoCamera0[position_index * 2];
-            String right_filename = (String)track.image_filenames_stereoCamera0[(position_index * 2) + 1];
-
-            bmp0 = util.loadFromBitmap(left_filename, rob.head.image_width, rob.head.image_height, 3);
-            bmp1 = util.loadFromBitmap(right_filename, rob.head.image_width, rob.head.image_height, 3);
-
-            // find stereo correspondences            
-            stereo2.correspondence_algorithm_type = 0;
-            stereo2.stereoMatch(bmp0, bmp1, rob.head.image_width, rob.head.image_height, true);
-
-            if (pic.Image == null)
-                pic.Image = new Bitmap(rob.head.image_width, rob.head.image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-
-            updatebitmap_unsafe(stereo2.getRaysImage(rob.head.image_width, rob.head.image_height), (Bitmap)pic.Image);
-            
-            pic.Refresh();
-        }
-
-        public void showDepthMap(robot rob, int position_index,
-                                 PictureBox pic)
-        {
-            Byte[] bmp0 = null;
-            Byte[] bmp1 = null;
-
-            String left_filename = (String)track.image_filenames_stereoCamera0[position_index * 2];
-            String right_filename = (String)track.image_filenames_stereoCamera0[(position_index * 2) + 1];
-
-            bmp0 = util.loadFromBitmap(left_filename, rob.head.image_width, rob.head.image_height, 3);
-            bmp1 = util.loadFromBitmap(right_filename, rob.head.image_width, rob.head.image_height, 3);
-
-            // find stereo correspondences
-            stereo.correspondence_algorithm_type = 1;
-            stereo.stereoMatch(bmp0, bmp1, rob.head.image_width, rob.head.image_height, true);
-
-            Byte[] disp_bmp_data = new Byte[rob.head.image_width * rob.head.image_height * 3];
-            stereo.getDisparityMap(disp_bmp_data, rob.head.image_width, rob.head.image_height, 0);
-            if (pic.Image == null)
-                pic.Image = new Bitmap(rob.head.image_width, rob.head.image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            updatebitmap_unsafe(disp_bmp_data, (Bitmap)pic.Image);
-            pic.Refresh();
-            /*
-            String filename = "track_disparitymap" + Convert.ToString(position_index) + ".jpg";
-            if (File.Exists(filename)) File.Delete(filename);
-            pic.Image.Save(filename,System.Drawing.Imaging.ImageFormat.Jpeg);
-             */
-        }
-
-
-
-        private void showStereoFeatures(int image_width, int image_height, Byte[] background, PictureBox pic, stereoFeatures features, int threshold)
-        {
-            Pen p;
-            SolidBrush brush;
-            Rectangle rect;
-            int i, radius_x, max_radius_x, radius_y, max_radius_y, x, y;
-            Graphics gr;
-
-            if (background != null)
+            if (sim.Load(filename))
             {
-                pic.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                updatebitmap_unsafe(background, (Bitmap)pic.Image);
-
-                gr = Graphics.FromImage(pic.Image);
-                rect = new Rectangle();
-
-                max_radius_x = pic.Image.Width / 30;
-                max_radius_y = pic.Image.Width / 30;
-
-                brush = new SolidBrush(Color.FromArgb(120, 0, 160, 0));
-                p = new Pen(brush);
-
-                for (i = 0; i < features.features.Length; i += 3)
-                {
-                    float disparity = features.features[i + 2];
-                    radius_x = (int)(disparity / 2);
-                    radius_y = radius_x;
-                    x = (int)(features.features[i]);
-                    y = (int)(features.features[i + 1]);
-                    rect.X = x;
-                    rect.Y = y;
-                    rect.Width = radius_x * 2;
-                    rect.Height = radius_y * 2;
-
-                    if (disparity < threshold)
-                        gr.FillEllipse(brush, rect);
-                    else
-                        gr.DrawEllipse(p, rect);
-                }
-                pic.Refresh();
+                txtRobotDefinitionFile.Text = sim.RobotDesignFile;
+                txtStereoImagesPath.Text = sim.ImagesPath;
             }
         }
 
-        private void cmdMap_Click(object sender, EventArgs e)
+        private void update()
         {
-            createMap();
-            MessageBox.Show("Map generated");
-        }
+            sim.RobotDesignFile = txtRobotDefinitionFile.Text;
+            sim.ImagesPath = txtStereoImagesPath.Text;
 
-        private void cmdShowFeatures_Click(object sender, EventArgs e)
-        {
-            position_index = 1;
-            show_features = !show_features;
-        }
-
-        private void timAnimate_Tick(object sender, EventArgs e)
-        {
-            if (show_features)
+            if (sim.RobotDesignFile != "")
             {
-                lblPositionIndex.Text = Convert.ToString(position_index);
-                showStereoFeatures(sentience_robot, position_index, picGrid);
-                showDepthMap(sentience_robot, position_index, picDepthMap);
-                showVacancyFunction(sentience_robot, picRays);
-                //showRays(sentience_robot, picRays);
-                position_index++;
-                if (position_index >= no_of_glimpses) position_index = 1;
+                sim.Reset();
+
+                if (sim.ImagesPath != "")
+                    sim.Save(defaultPath + "simulation.xml");
             }
         }
 
-        private void frmMapping_Load(object sender, EventArgs e)
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            update();
 
+            saveFileDialog1.DefaultExt = "xml";
+            saveFileDialog1.FileName = "simulation_" + sim.rob.Name + ".xml";
+            saveFileDialog1.Filter = "Xml files|*.xml";
+            saveFileDialog1.Title = "Save simulation file";
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                sim.Save(saveFileDialog1.FileName);
+        }
+
+        private void cmdRobotDefinitionBrowse_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.DefaultExt = "xml";
+            openFileDialog1.FileName = ".xml";
+            openFileDialog1.Filter = "Xml files|*.xml";
+            openFileDialog1.Title = "Load robot design file";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                txtRobotDefinitionFile.Text = openFileDialog1.FileName;
+                update();
+            }
+
+        }
+
+        private void cmdStereoImagesPathBrowse_Click(object sender, EventArgs e)
+        {
+            folderBrowserDialog1.Description = "Set stereo images path";
+            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            {
+                txtStereoImagesPath.Text = folderBrowserDialog1.SelectedPath;
+                update();
+            }
+        }
+
+        private void frmMapping_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            sim.Save(defaultPath + "simulation.xml");
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.DefaultExt = "xml";
+            openFileDialog1.FileName = ".xml";
+            openFileDialog1.Filter = "Xml files|*.xml";
+            openFileDialog1.Title = "Open simulation file";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                LoadSimulation(openFileDialog1.FileName);
+                update();
+            }
         }
 
     }
