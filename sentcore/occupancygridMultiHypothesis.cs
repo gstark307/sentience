@@ -43,7 +43,7 @@ namespace sentience.core
 
         /// <summary>
         /// returns the probability of occupancy at this grid cell
-        /// warning: this could potentially suffer from path ID rollover problems
+        /// warning: this could potentially suffer from path ID or time step rollover problems
         /// </summary>
         /// <param name="path_ID"></param>
         /// <returns>probability value</returns>
@@ -120,10 +120,11 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        private void init(int dimension_cells, int cellSize_mm)
+        private void init(int dimension_cells, int cellSize_mm, int localisationRadius_mm)
         {
             this.dimension_cells = dimension_cells;
             this.cellSize_mm = cellSize_mm;
+            this.localisation_search_cells = localisationRadius_mm / cellSize_mm;
             cell = new occupancygridCellMultiHypothesis[dimension_cells, dimension_cells];
 
             // make a lookup table for gaussians - saves doing a lot of floating point maths
@@ -135,10 +136,10 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        public occupancygridMultiHypothesis(int dimension_cells, int cellSize_mm)
+        public occupancygridMultiHypothesis(int dimension_cells, int cellSize_mm, int localisationRadius_mm)
             : base(0, 0,0)
         {
-            init(dimension_cells, cellSize_mm);
+            init(dimension_cells, cellSize_mm, localisationRadius_mm);
         }
 
         #endregion
@@ -228,13 +229,14 @@ namespace sentience.core
             const int X_AXIS = 0;
             const int Y_AXIS = 1;
 
-            // which lookup table to use
+            // which disparity index in the lookup table to use
+            // we multiply by 2 because the lookup is in half pixel steps
             int sensormodel_index = (int)(ray.disparity * 2);
 
             float xdist_mm=0, ydist_mm=0, zdist_mm=0, x=0, y=0, z=0;
             float occupied_dx = 0, occupied_dy = 0, occupied_dz = 0;
             float intersect_x = 0, intersect_y = 0, intersect_z = 0;
-            float centre_prob=0, prob = 0; // probability values at the centre axis and outside
+            float centre_prob = 0, prob = 0, prob_localisation = 0; // probability values at the centre axis and outside
             float matchingScore = 0;  // total localisation matching score
             int rayWidth = 0;         // widest point in the ray in cells
             int widest_point;         // widest point index
@@ -331,14 +333,18 @@ namespace sentience.core
                     else
                         ray_wdth = (steps - i + widest_point) * rayWidth / (steps - widest_point);
 
+                    // localisation rays are wider, to enable a more effective matching score
+                    // which is not too narrowly focussed and brittle
+                    int ray_wdth_localisation = ray_wdth + localisation_search_cells;
+
                     x += x_incr;
                     y += y_incr;
                     z += z_incr;
                     int x_cell = (int)Math.Round(x / (float)cellSize_mm);
-                    if ((x_cell > ray_wdth) && (x_cell < max_dimension_cells))
+                    if ((x_cell > ray_wdth_localisation) && (x_cell < dimension_cells - ray_wdth_localisation))
                     {
                         int y_cell = (int)Math.Round(y / (float)cellSize_mm);
-                        if ((y_cell > ray_wdth) && (y_cell < max_dimension_cells))
+                        if ((y_cell > ray_wdth_localisation) && (y_cell < dimension_cells - ray_wdth_localisation))
                         {
                             int x_cell2 = x_cell;
                             int y_cell2 = y_cell;
@@ -352,9 +358,14 @@ namespace sentience.core
                                 centre_prob = vacancyFunction(i / (float)steps, steps);
 
 
-                            // width of the ray
-                            for (int width = -ray_wdth; width <= ray_wdth; width++)
+                            // width of the localisation ray
+                            for (int width = -ray_wdth_localisation; width <= ray_wdth_localisation; width++)
                             {
+                                // is the width currently inside the mapping area of the ray ?
+                                bool isInsideMappingRayWidth = false;
+                                if ((width >= -ray_wdth) && (width <= ray_wdth))
+                                    isInsideMappingRayWidth = true;
+
                                 // adjust the x or y cell position depending upon the 
                                 // deviation from the main axis of the ray
                                 if (longest_axis == Y_AXIS)
@@ -364,44 +375,51 @@ namespace sentience.core
 
                                 // probability at the central axis
                                 prob = centre_prob;
+                                prob_localisation = centre_prob;
 
                                 // probabilities are symmetrical about the axis of the ray
                                 // this multiplier implements a gaussian distribution around the centre
-                                if (width != 0)
-                                    prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
+                                if (width != 0) // don't bother if this is the centre of the ray
+                                {
+                                    // the probability used for wide localisation rays
+                                    prob_localisation *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth_localisation];
+                                    
+                                    // the probability used for narrower mapping rays
+                                    if (isInsideMappingRayWidth)
+                                        prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
+                                }
 
                                 if (cell[x_cell2, y_cell2] == null)
                                 {
-                                    // generate a grid cell if necessary
-                                    cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis();
+                                    if (isInsideMappingRayWidth)
+                                    {
+                                        // generate a grid cell if necessary
+                                        cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis();
+                                    }
                                 }
                                 else
                                 {
                                     // only localise using occupancy, not vacancy
                                     if (modelcomponent == OCCUPIED_SENSORMODEL)
                                     {
-                                        // note that we search within a small radius to give a
-                                        // better chance of finding some occupied cells
+                                        // update the matching score, by combining the probability
+                                        // of the grid cell with the probability from the localisation ray
                                         if (longest_axis == X_AXIS)
-                                        {
-                                            for (int y_cell3 = y_cell2 - localisation_search_cells; y_cell3 <= y_cell2 + localisation_search_cells; y_cell3++)
-                                                if ((y_cell3 > -1) && (y_cell3 < dimension_cells))
-                                                    matchingScore += localiseProbability(x_cell2, y_cell3, origin, prob);
-                                        }
+                                            matchingScore += localiseProbability(x_cell2, y_cell2, origin, prob_localisation);
+
                                         if (longest_axis == Y_AXIS)
-                                        {
-                                            for (int x_cell3 = x_cell2 - localisation_search_cells; x_cell3 <= x_cell2 + localisation_search_cells; x_cell3++)
-                                                if ((x_cell3>-1) && (x_cell3 < dimension_cells))
-                                                    matchingScore += localiseProbability(x_cell3, y_cell2, origin, prob);
-                                        }
+                                            matchingScore += localiseProbability(x_cell2, y_cell2, origin, prob_localisation);
                                     }
                                 }
 
-                                // add a new hypothesis to this grid coordinate
-                                // note that this is also added to the original pose
-                                hypothesis = new particleGridCell(x_cell2, y_cell2, prob, origin);
-                                cell[x_cell2, y_cell2].Hypothesis.Add(hypothesis);
-                                origin.observed_grid_cells.Add(hypothesis);
+                                if (isInsideMappingRayWidth)
+                                {
+                                    // add a new hypothesis to this grid coordinate
+                                    // note that this is also added to the original pose
+                                    hypothesis = new particleGridCell(x_cell2, y_cell2, prob, origin);
+                                    cell[x_cell2, y_cell2].Hypothesis.Add(hypothesis);
+                                    origin.observed_grid_cells.Add(hypothesis);
+                                }
                             }
                         }
                         else i = steps;

@@ -110,6 +110,8 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
+            this.txtLocalGridLocalisationRadius = new System.Windows.Forms.TextBox();
+            this.label31 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -848,6 +850,8 @@ namespace robotDesigner
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.txtLocalGridLocalisationRadius);
+            this.groupBox3.Controls.Add(this.label31);
             this.groupBox3.Controls.Add(this.txtGridInterval);
             this.groupBox3.Controls.Add(this.label26);
             this.groupBox3.Controls.Add(this.txtGridLevels);
@@ -858,7 +862,7 @@ namespace robotDesigner
             this.groupBox3.Controls.Add(this.label29);
             this.groupBox3.Location = new System.Drawing.Point(17, 19);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(217, 143);
+            this.groupBox3.Size = new System.Drawing.Size(217, 170);
             this.groupBox3.TabIndex = 2;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Local Occupancy Map";
@@ -937,6 +941,24 @@ namespace robotDesigner
             this.label29.Size = new System.Drawing.Size(95, 13);
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
+            // 
+            // txtLocalGridLocalisationRadius
+            // 
+            this.txtLocalGridLocalisationRadius.Location = new System.Drawing.Point(131, 130);
+            this.txtLocalGridLocalisationRadius.Name = "txtLocalGridLocalisationRadius";
+            this.txtLocalGridLocalisationRadius.Size = new System.Drawing.Size(59, 20);
+            this.txtLocalGridLocalisationRadius.TabIndex = 9;
+            this.txtLocalGridLocalisationRadius.Text = "64";
+            this.txtLocalGridLocalisationRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label31
+            // 
+            this.label31.AutoSize = true;
+            this.label31.Location = new System.Drawing.Point(17, 130);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(113, 13);
+            this.label31.TabIndex = 8;
+            this.label31.Text = "Localisation radius mm";
             // 
             // frmMain
             // 
@@ -1057,6 +1079,8 @@ namespace robotDesigner
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.TextBox txtSensorModelsStatus;
         private System.Windows.Forms.Button cmdGenerateSensorModels;
+        private System.Windows.Forms.TextBox txtLocalGridLocalisationRadius;
+        private System.Windows.Forms.Label label31;
     }
 }
 

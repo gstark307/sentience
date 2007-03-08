@@ -31,6 +31,10 @@ namespace robotDesigner
 {
     public partial class frmMain : Form
     {
+        // default path for loading and saving files
+        String defaultPath = System.Windows.Forms.Application.StartupPath + "\\";
+
+        // robot object
         robot rob = new robot(1);
 
         // whether the grid cell size has changed
@@ -41,7 +45,7 @@ namespace robotDesigner
         public frmMain()
         {
             InitializeComponent();
-            LoadRobot("robotdesign.xml");
+            LoadRobot(defaultPath + "robotdesign.xml");
         }
 
         /// <summary>
@@ -100,6 +104,7 @@ namespace robotDesigner
                 txtGridDimension.Text = Convert.ToString(rob.LocalGridDimension);
                 txtGridCellDimension.Text = Convert.ToString(rob.LocalGridCellSize_mm);
                 txtGridInterval.Text = Convert.ToString(rob.LocalGridInterval_mm);
+                txtLocalGridLocalisationRadius.Text = Convert.ToString(rob.LocalGridLocalisationRadius_mm);
 
                 updateSensorModelStatus();
             }
@@ -151,6 +156,7 @@ namespace robotDesigner
             rob.LocalGridDimension = Convert.ToInt32(txtGridDimension.Text);
             rob.LocalGridCellSize_mm = Convert.ToSingle(txtGridCellDimension.Text);
             rob.LocalGridInterval_mm = Convert.ToSingle(txtGridInterval.Text);
+            rob.LocalGridLocalisationRadius_mm = Convert.ToSingle(txtLocalGridLocalisationRadius.Text);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -197,7 +203,7 @@ namespace robotDesigner
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             update();
-            rob.Save("robotdesign.xml");
+            rob.Save(defaultPath + "robotdesign.xml");
         }
 
         private void importCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
@@ -212,7 +218,7 @@ namespace robotDesigner
 
                 // sensor models may need to be recalculated
                 // for the new cell size
-                rob.head.sensormodel[0] = null;
+                rob.head.sensormodel[current_stereo_camera_index] = null;
                 updateSensorModelStatus();
             }
         }

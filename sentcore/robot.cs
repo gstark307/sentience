@@ -80,6 +80,7 @@ namespace sentience.core
         public int LocalGridDimension = 128;      // Cubic dimension of the local grid in cells
         public float LocalGridCellSize_mm = 32;   // Size of each grid cell (voxel) in millimetres
         public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
+        public float LocalGridLocalisationRadius_mm = 64;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
        
 
@@ -130,7 +131,7 @@ namespace sentience.core
         private void createLocalGrid()
         {
             // create the local grid
-            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, (int)LocalGridCellSize_mm);
+            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm);
         }
 
         /// <summary>
@@ -678,6 +679,9 @@ namespace sentience.core
             util.AddComment(doc, nodeOccupancyGrid, "The distance which the robot must travel before new data is inserted into the grid during mapping");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridIntervalMillimetres", Convert.ToString(LocalGridInterval_mm));
 
+            util.AddComment(doc, nodeOccupancyGrid, "An extra radius applied when localising within the grid, to make localisation rays wider");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLocalisationRadiusMillimetres", Convert.ToString(LocalGridLocalisationRadius_mm));            
+
             nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
 
             return (nodeRobot);
@@ -896,7 +900,12 @@ namespace sentience.core
             {
                 LocalGridInterval_mm = Convert.ToSingle(xnod.InnerText);
             }
-            
+
+            if (xnod.Name == "LocalGridLocalisationRadiusMillimetres")
+            {
+                LocalGridLocalisationRadius_mm = Convert.ToSingle(xnod.InnerText);
+            }
+                        
 
             if (xnod.Name == "StereoCamera")
             {
