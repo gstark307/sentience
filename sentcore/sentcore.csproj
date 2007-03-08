@@ -47,6 +47,8 @@
     <Compile Include="polyfit.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
     <Compile Include="FAST.cs" />
+    <Compile Include="simulation.cs" />
+    <Compile Include="simulationPathSegment.cs" />
     <Compile Include="specialMath.cs" />
     <Compile Include="classimage.cs" />
     <Compile Include="sentienceRadar.cs" />

@@ -19,6 +19,8 @@
 */
 
 using System;
+using System.IO;
+using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -165,5 +167,130 @@ namespace sentience.core
             else
                 return (false);
         }
+
+        #region "saving and loading"
+
+        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        {
+            XmlElement nodePath = doc.CreateElement("RobotPath");
+            parent.AppendChild(nodePath);
+
+            util.AddComment(doc, nodePath, "The path through which the robot has moved, as an X,Y coordinate");
+            util.AddComment(doc, nodePath, "in millimetres followed by the heading in degrees");
+             
+            for (int i = 0; i < path.Count; i++)
+            {
+                particlePose pose = (particlePose)path[i];
+                util.AddTextElement(doc, nodePath, "Pose", Convert.ToString(pose.x) + "," +
+                                                           Convert.ToString(pose.y) + "," +
+                                                           Convert.ToString(pose.pan * 180 / Math.PI));
+            }
+
+            return (nodePath);
+        }
+
+        /// <summary>
+        /// return an Xml document containing camera calibration parameters
+        /// </summary>
+        /// <returns></returns>
+        private XmlDocument getXmlDocument()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
+            doc.AppendChild(commentnode);
+
+            XmlElement nodeSentience = doc.CreateElement("Sentience");
+            doc.AppendChild(nodeSentience);
+
+            nodeSentience.AppendChild(getXml(doc, nodeSentience));
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save camera calibration parameters as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void Save(String filename)
+        {
+            XmlDocument doc = getXmlDocument();
+            doc.Save(filename);
+        }
+
+        /// <summary>
+        /// load camera calibration parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public bool Load(String filename)
+        {
+            bool loaded = false;
+
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                path.Clear();
+
+                // recursively walk the node tree
+                LoadFromXml(xnodDE, 0);
+
+                // close the reader
+                xtr.Close();
+                loaded = true;
+            }
+            return (loaded);
+        }
+
+        /// <summary>
+        /// parse an xml node to extract camera calibration parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(XmlNode xnod, int level)
+        {
+            XmlNode xnodWorking;
+
+            if (xnod.Name == "Pose")
+            {
+                String[] poseStr = xnod.InnerText.Split(',');
+                particlePose new_pose = new particlePose(Convert.ToSingle(poseStr[0]),
+                                                         Convert.ToSingle(poseStr[1]),
+                                                         Convert.ToSingle(poseStr[2])*(float)Math.PI/180.0f, 0);
+                Add(new_pose);
+            }
+
+
+            // call recursively on all children of the current node
+            if ((xnod.HasChildNodes) &&
+                ((xnod.Name == "RobotPath") ||
+                 (xnod.Name == "Sentience")
+                 ))
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+        #endregion
+
     }
 }

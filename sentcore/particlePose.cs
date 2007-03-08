@@ -138,5 +138,6 @@ namespace sentience.core
             observed_grid_cells.Clear();
             if (previous_paths != null) previous_paths.Clear();
         }
+
     }
 }
