@@ -136,10 +136,10 @@ namespace sentience.core
         /// </summary>
         private float loadImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, stereoHead head, int no_of_stereo_features, int bytes_per_pixel,
                                  int algorithm_type)
-        {            
-            stereointerface.loadImage(fullres_left, head.image_width, head.image_height, true, bytes_per_pixel);
+        {
+            stereointerface.loadImage(fullres_left, head.calibration[stereo_cam_index].leftcam.image_width, head.calibration[stereo_cam_index].leftcam.image_height, true, bytes_per_pixel);
 
-            stereointerface.loadImage(fullres_right, head.image_width, head.image_height, false, bytes_per_pixel);
+            stereointerface.loadImage(fullres_right, head.calibration[stereo_cam_index].leftcam.image_width, head.calibration[stereo_cam_index].leftcam.image_height, false, bytes_per_pixel);
             
             // calculate stereo disparity features
             int peaks_per_row = 5;

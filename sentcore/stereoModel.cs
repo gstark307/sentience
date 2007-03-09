@@ -331,7 +331,7 @@ namespace sentience.core
                 // update parameters based upon the calibration data
                 image_width = robot_head.calibration[cam].leftcam.image_width;
                 image_height = robot_head.calibration[cam].leftcam.image_height;
-                baseline = robot_head.baseline_mm;
+                baseline = robot_head.calibration[cam].baseline;
                 FOV_horizontal = robot_head.calibration[cam].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
                 FOV_vertical = FOV_horizontal * image_height / image_width;
 
@@ -1205,61 +1205,6 @@ namespace sentience.core
 
 
         /// <summary>
-        /// create a viewpoint using the given head, which contains the positions
-        /// of all cameras and their observed stereo features
-        /// </summary>
-        /// <param name="head"></param>
-        /// <returns></returns>
-        public viewpoint createViewpoint(stereoHead head, pos3D robotOrientation)
-        {
-            baseline = head.baseline_mm;
-            image_width = head.image_width;
-            image_height = head.image_height;
-
-            // create the viewpoint
-            viewpoint view = new viewpoint(head.no_of_cameras);
-
-            for (int cam = 0; cam < head.no_of_cameras; cam++)
-            {
-                pos3D headOrientation = head.cameraPosition[cam];
-                pos3D cameraOrientation = new pos3D(0, 0, 0);
-                cameraOrientation.pan = headOrientation.pan;
-                if (robotOrientation != null) cameraOrientation.pan += robotOrientation.pan;
-                cameraOrientation.tilt = headOrientation.tilt;
-                cameraOrientation.roll = headOrientation.roll;
-
-                if (head.features[cam] != null)  // if there are stereo features associated with this camera
-                {
-                    float[] stereo_features = head.features[cam].features;
-                    float[] uncertainties = head.features[cam].uncertainties;
-                    int f2 = 0;
-                    for (int f = 0; f < stereo_features.Length; f += 3)
-                    {
-                        // get the parameters of the feature
-                        float image_x = stereo_features[f];
-                        float image_y = stereo_features[f + 1];
-                        float disparity = stereo_features[f + 2];
-
-                        // create a ray
-                        evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2], head.features[cam].colour[f2, 0], head.features[cam].colour[f2, 1], head.features[cam].colour[f2, 2]);
-
-                        if (ray != null)
-                        {
-                            // convert from camera-centric coordinates to real world coordinates
-                            ray.translateRotate(cameraOrientation);
-
-                            // add to the viewpoint
-                            view.rays[cam].Add(ray);
-                        }
-                        f2++;
-                    }
-                }
-            }
-
-            return (view);
-        }
-
-        /// <summary>
         /// create a list of rays to be stored within poses
         /// </summary>
         /// <param name="head">head configuration</param>
@@ -1274,6 +1219,9 @@ namespace sentience.core
             image_height = head.calibration[camera_index].leftcam.image_height;
             FOV_horizontal = head.calibration[camera_index].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
             FOV_vertical = FOV_horizontal * image_height / image_width;
+            sigma = 1.0f / (image_width * 2) * FOV_horizontal;  // half pixel standard deviation
+            sigma *= image_width / 320; // makes the uncertainty invariant of resolution
+
 
             // some head geometry
             pos3D headOrientation = head.cameraPosition[camera_index];

@@ -466,8 +466,7 @@ namespace sentience.core
                 float localisation_score = 
                     path.current_pose.AddObservation(stereo_rays, 
                                                      rob.LocalGrid, 
-                                                     rob.head.sensormodel,
-                                                     rob.head.calibration);
+                                                     rob.head);
                 updatePoseScore(path, localisation_score);
             }
 

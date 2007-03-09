@@ -33,9 +33,9 @@ namespace sentience.core
     {
         public int no_of_cameras;                // number of cameras on the head
 
-        public int baseline_mm = 100;            // distance between cameras
-        public int image_width = 320;
-        public int image_height = 240;
+        //public int baseline_mm = 100;            // distance between cameras
+        //public int image_width = 320;
+        //public int image_height = 240;
 
         public pos3D[] cameraPosition;           // position and orientation of each camera
         public stereoFeatures[] features;        // stereo features observed by each camera
@@ -63,11 +63,14 @@ namespace sentience.core
             // sensor models
             sensormodel = new rayModelLookup[no_of_cameras];
 
+            /*
             if (no_of_cameras == 4) initQuadCam();
             if (no_of_cameras == 2) initDualCam();
             if (no_of_cameras == 1) initSingleStereoCamera(false);
+             */
         }
 
+        /*
         public void initQuadCam()
         {
             if (no_of_cameras == 4)
@@ -89,7 +92,9 @@ namespace sentience.core
                 cameraPosition[3].pan = -(float)Math.PI;
             }
         }
+         */
 
+        /*
         public void initQuadCamRotated()
         {
             if (no_of_cameras == 4)
@@ -111,8 +116,9 @@ namespace sentience.core
                 cameraPosition[3].pan = -(float)(Math.PI * 5 / 4);
             }
         }
+        */
 
-
+        /*
         public void initDualCam()
         {
             image_width = 320;
@@ -132,7 +138,9 @@ namespace sentience.core
                 cameraPosition[1].pan = -pan_angle;
             }
         }
+        */
 
+        /*
         public void initSingleStereoCamera(bool rolled)
         {
             image_width = 320;
@@ -145,6 +153,7 @@ namespace sentience.core
             cameraPosition[0].roll = -roll_angle;
             cameraPosition[0].pan = pan_angle;
         }
+         */
 
         /// <summary>
         /// loads calibration data for the given camera
@@ -155,6 +164,7 @@ namespace sentience.core
         {
             // load the data
             calibration[camera_index].Load(calibrationFilename);
+            cameraPosition[camera_index] = calibration[camera_index].positionOrientation;
 
             // create the rectification lookup tables
             calibration[camera_index].updateCalibrationMaps();
@@ -245,7 +255,7 @@ namespace sentience.core
                 stereoFeatures feat = features[camera_index];
                 int x = (int)feat.features[idx];
                 int y = (int)feat.features[idx + 1];
-                int n = ((y * image_width) + x) * 3;
+                int n = ((y * calibration[camera_index].leftcam.image_width) + x) * 3;
                 feat.colour[f, 2] = img[n];
                 feat.colour[f, 1] = img[n+1];
                 feat.colour[f, 0] = img[n+2];

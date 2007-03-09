@@ -95,7 +95,7 @@ namespace sentience.core
             : base(0, 0, 0)
         {
             init(no_of_stereo_cameras);
-            initDualCam();
+            //initDualCam();
         }
 
         #endregion
@@ -169,6 +169,7 @@ namespace sentience.core
         /// <param name="image_height"></param>
         /// <param name="FOV_degrees"></param>
         /// <param name="baseline_mm"></param>
+        /*
         private void initSensorModel(stereoModel model,
                                      int image_width, int image_height,
                                      int FOV_degrees, int baseline_mm)
@@ -182,7 +183,9 @@ namespace sentience.core
             model.sigma = 1.0f / (image_width * 2) * model.FOV_horizontal;
             model.sigma *= image_width / 320; // makes the uncertainty invariant of resolution
         }
+         */
 
+        /*
         public void initDualCam()
         {
             head.initDualCam();
@@ -205,6 +208,7 @@ namespace sentience.core
             // using Creative Webcam NX Ultra - 78 degrees FOV
             initSensorModel(inverseSensorModel, head.image_width, head.image_height, 78, head.baseline_mm);
         }
+         */
 
         #endregion
 
@@ -213,81 +217,18 @@ namespace sentience.core
         // odometry
         public long leftWheelCounts, rightWheelCounts;
 
-        /// <summary>
-        /// save the current position and stereo features to file
-        /// </summary>
-        /// <param name="binfile"></param>
-        public void savePathPoint(BinaryWriter binfile)
-        {
-            // save the position and orientation
-            // note that the position and pan angle here is just naively calculated 
-            // from odometry with no filtering
-            binfile.Write(x);
-            binfile.Write(y);
-            binfile.Write(pan);
-
-            // save the stereo features
-            head.saveStereoFeatures(binfile);
-        }
-
-        /// <summary>
-        /// load path point data from file
-        /// </summary>
-        /// <param name="binfile"></param>
-        /// <param name="rPath"></param>
-        public void loadPathPoint(BinaryReader binfile, robotPath rPath)
-        {
-            // load position into the odometry
-            float xx=-999, yy=0, ppan=0;
-            try
-            {
-                xx = binfile.ReadSingle();
-                yy = binfile.ReadSingle();
-                ppan = binfile.ReadSingle();
-            }
-            catch
-            {
-            }
-
-            if (xx != -999)
-            {
-                // load stereo features
-                head.loadStereoFeatures(binfile);
-
-                viewpoint view = getViewpoint();
-                view.odometry_position.x = xx;
-                view.odometry_position.y = yy;
-                view.odometry_position.pan = ppan;
-                rPath.Add(view);
-            }
-        }
-
-        /// <summary>
-        /// update the given path using the current viewpoint
-        /// </summary>
-        /// <param name="path"></param>
-        public void updatePath(robotPath path)
-        {
-            viewpoint view = getViewpoint();
-            view.odometry_position.x = x;
-            view.odometry_position.y = y;
-            view.odometry_position.z = z;
-            view.odometry_position.pan = pan;
-            path.Add(view);
-        }
-
         #endregion
 
         #region "image loading"
 
-        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, bool mapping)
+        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
         {
             correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
             return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
-        public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel, bool mapping)
+        public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
         {
             correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
@@ -328,24 +269,7 @@ namespace sentience.core
 
         #endregion
 
-        #region "viewpoints"
-
-        /// <summary>
-        /// calculates a viewpoint based upon the stereo features currently
-        /// associated with the head of the robot
-        /// </summary>
-        /// <returns></returns>
-        public viewpoint getViewpoint()
-        {
-            return (inverseSensorModel.createViewpoint(head, (pos3D)this));
-        }
-
-        #endregion
-
         #region "update routines"
-
-        // the path which was used to construct the current local grid
-        private robotPath LocalGridPath = new robotPath();
 
         // the previous position and orientation of the robot
         private pos3D previousPosition = new pos3D(-1,-1,0);
@@ -362,13 +286,13 @@ namespace sentience.core
             previousPosition.tilt = tilt;
         }
 
-        private void loadImages(ArrayList images, bool mapping)
+        private void loadImages(ArrayList images)
         {
             for (int i = 0; i < images.Count / 2; i++)
             {
                 Byte[] left_image = (Byte[])images[i * 2];
                 Byte[] right_image = (Byte[])images[(i * 2) + 1];
-                loadRawImages(i, left_image, right_image, 3, mapping);
+                loadRawImages(i, left_image, right_image, 3);
             }
         }
 
@@ -413,10 +337,10 @@ namespace sentience.core
                 // store the path which was used to create the previous grid
                 // this is far more efficient in terms of memory and disk storage
                 // than trying to store the entire grid, most of which will be just empty cells
-                LocalGridPath.Save(grid_filename);          
+                //LocalGridPath.Save(grid_filename);          
 
                 // clear out the path data
-                LocalGridPath.Clear();
+                //LocalGridPath.Clear();
 
                 // make a new grid
                 createLocalGrid();
@@ -429,7 +353,7 @@ namespace sentience.core
                 // file name of the grid to be loaded
                 grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid.x / border)) + "_" +
                                          Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
-                LocalGridPath.Load(grid_filename);
+                //LocalGridPath.Load(grid_filename);
                     
                 // TODO: update the local grid using the loaded path
                 //LocalGrid.insert(LocalGridPath, false);
@@ -441,7 +365,7 @@ namespace sentience.core
             if (images != null)
             {
                 // load stereo images
-                loadImages(images, mapping);
+                loadImages(images);
 
                 // create an observation as a set of rays from the stereo correspondence results
                 ArrayList[] stereo_rays = new ArrayList[head.no_of_cameras];
@@ -912,9 +836,10 @@ namespace sentience.core
                 int camIndex = 0;
                 head.calibration[cameraIndex].LoadFromXml(xnod, level + 1, ref camIndex);
 
-                head.image_width = head.calibration[cameraIndex].leftcam.image_width;
-                head.image_height = head.calibration[cameraIndex].leftcam.image_height;
-                initSensorModel(inverseSensorModel, head.image_width, head.image_height, (int)head.calibration[cameraIndex].leftcam.camera_FOV_degrees, head.baseline_mm);
+                // set the position of the camera relative to the robots head
+                head.cameraPosition[cameraIndex] = head.calibration[cameraIndex].positionOrientation;
+
+                //initSensorModel(inverseSensorModel, head.image_width, head.image_height, (int)head.calibration[cameraIndex].leftcam.camera_FOV_degrees, head.baseline_mm);
                 cameraIndex++;
             }
 

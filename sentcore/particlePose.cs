@@ -75,10 +75,10 @@ namespace sentience.core
         /// <param name="rays">list of ray objects in this observation</param>
         /// <param name="grid">the occupancy grid into which to insert the observation</param>
         /// <param name="sensormodel">the sensor model to use for updating the grid</param>
+        /// <param name="head_pan">pan angle of the head</param>
         public float AddObservation(ArrayList[] stereo_rays, 
                                     occupancygridMultiHypothesis grid,
-                                    rayModelLookup[] sensormodel_lookup,
-                                    calibrationStereo[] calibration)
+                                    stereoHead head)
         {
             // clear the localisation score
             float localisation_score = 0;
@@ -86,12 +86,21 @@ namespace sentience.core
             // itterate for each stereo camera
             for (int cam = 0; cam < stereo_rays.Length; cam++)
             {
+                // position of the centre of the baseline of the camera
+                // this should be adjusted depending upon the position of the 
+                // robots head relative to the centre of rotation of its body
+                pos3D camera_centre = new pos3D(head.x, head.y, head.z);
+                camera_centre.rotate(pan, 0, 0);
+                camera_centre.translate(x, y, 0);
+
                 // where are the left and right cameras?
                 // these position offsets will be used to calculate the 
                 // location of both cameras, and is used as the origin 
                 // for the vacancy part of the sensor model
-                float cam_dx = calibration[cam].baseline * (float)Math.Sin(pan - (Math.PI / 2));
-                float cam_dy = calibration[cam].baseline * (float)Math.Cos(pan - (Math.PI / 2));
+                float baseline_length = head.calibration[cam].baseline / 2;
+                baseline_length *= (float)Math.Cos(head.calibration[cam].positionOrientation.roll); // correct for camera roll angle
+                float cam_dx = baseline_length * (float)Math.Sin(camera_centre.pan - (Math.PI / 2));
+                float cam_dy = baseline_length * (float)Math.Cos(camera_centre.pan - (Math.PI / 2));
                 float leftcam_x = 0, leftcam_y = 0, rightcam_x = 0, rightcam_y = 0;
 
                 // itterate through each ray
@@ -102,22 +111,22 @@ namespace sentience.core
                     evidenceRay ray = (evidenceRay)stereo_rays[cam][r];
 
                     // translate and rotate this ray appropriately for the pose
-                    evidenceRay trial_ray = ray.trialPose(pan, x, y);
+                    evidenceRay trial_ray = ray.trialPose(camera_centre.pan, camera_centre.x, camera_centre.y);
 
                     if (r == 0)
                     {
                         // where are the left and right cameras
                         // we only need to do this once, since the origin
                         // will be the same for all rays
-                        leftcam_x = trial_ray.observedFrom.x + cam_dx;
-                        leftcam_y = trial_ray.observedFrom.y + cam_dy;
-                        rightcam_x = trial_ray.observedFrom.x - cam_dx;
-                        rightcam_y = trial_ray.observedFrom.y - cam_dy;
+                        leftcam_x = camera_centre.x + cam_dx;
+                        leftcam_y = camera_centre.y + cam_dy;
+                        rightcam_x = camera_centre.x - cam_dx;
+                        rightcam_y = camera_centre.y - cam_dy;
                     }
 
                     // update the grid cells for this ray and update the
                     // localisation score accordingly
-                    localisation_score += grid.Insert(trial_ray, this, sensormodel_lookup[cam],
+                    localisation_score += grid.Insert(trial_ray, this, head.sensormodel[cam],
                                                       leftcam_x, leftcam_y,
                                                       rightcam_x, rightcam_y);
                 }

@@ -67,6 +67,7 @@ namespace sentience.core
 
         /// <summary>
         /// reset the simulation
+        /// Note that the path or pathSegment data is not reset
         /// </summary>
         public void Reset()
         {

@@ -92,6 +92,7 @@ namespace StereoMapping
                 txtTitle.Text = sim.Name;
                 txtRobotDefinitionFile.Text = sim.RobotDesignFile;
                 txtStereoImagesPath.Text = sim.ImagesPath;
+                update();
                 showPathSegments();
                 showNextPose();
             }
