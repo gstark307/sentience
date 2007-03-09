@@ -51,6 +51,7 @@ namespace StereoMapping
 
             lstPathSegments.Items.Clear();
             lstPathSegments.Columns.Clear();
+            lstPathSegments.FullRowSelect = true;
 
             //lst.Dock = DockStyle.Fill;
             lstPathSegments.View = View.Details;
@@ -80,20 +81,25 @@ namespace StereoMapping
             lstPathSegments.Columns.AddRange(new ColumnHeader[] { columnHeader0, columnHeader1, 
                                                           columnHeader2, columnHeader3,
                                                           columnHeader4, columnHeader5  });
-
+            showPathSegments();
+            showNextPose();
         }
 
         private void LoadSimulation(String filename)
         {
             if (sim.Load(filename))
             {
+                txtTitle.Text = sim.Name;
                 txtRobotDefinitionFile.Text = sim.RobotDesignFile;
                 txtStereoImagesPath.Text = sim.ImagesPath;
+                showPathSegments();
+                showNextPose();
             }
         }
 
         private void update()
         {
+            sim.Name = txtTitle.Text;
             sim.RobotDesignFile = txtRobotDefinitionFile.Text;
             sim.ImagesPath = txtStereoImagesPath.Text;
 
@@ -144,6 +150,7 @@ namespace StereoMapping
 
         private void frmMapping_FormClosing(object sender, FormClosingEventArgs e)
         {
+            sim.Name = txtTitle.Text;
             sim.Save(defaultPath + "simulation.xml");
         }
 
@@ -157,6 +164,98 @@ namespace StereoMapping
             {
                 LoadSimulation(openFileDialog1.FileName);
                 update();
+            }
+        }
+
+        /// <summary>
+        /// display the path segments within the list view
+        /// </summary>
+        private void showPathSegments()
+        {
+            // add items to the list
+            lstPathSegments.Items.Clear();
+            for (int i = 0; i < sim.pathSegments.Count; i++)
+            {
+                simulationPathSegment segment = (simulationPathSegment)sim.pathSegments[i];
+
+                ListViewItem result = new ListViewItem(new string[] 
+                                    {Convert.ToString(segment.x), 
+                                     Convert.ToString(segment.y), 
+                                     Convert.ToString(segment.pan*180.0f/(float)Math.PI),
+                                     Convert.ToString(segment.no_of_steps),
+                                     Convert.ToString(segment.distance_per_step_mm),
+                                     Convert.ToString(segment.pan_per_step*180.0f/(float)Math.PI)});
+                lstPathSegments.Items.Add(result);
+            }
+
+            // create an image to display the path
+            picPath.Image = new Bitmap(sim.results_image_width, sim.results_image_height, 
+                                       System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            Byte[] path_img = new Byte[sim.results_image_width * sim.results_image_height * 3];
+            sim.ShowPath(path_img, sim.results_image_width, sim.results_image_height);
+            updatebitmap_unsafe(path_img, (Bitmap)(picPath.Image));
+
+        }
+
+        /// <summary>
+        /// show the next pose
+        /// </summary>
+        private void showNextPose()
+        {
+            if (sim.path.current_pose != null)
+            {
+                txtX.Text = Convert.ToString(sim.path.current_pose.x);
+                txtY.Text = Convert.ToString(sim.path.current_pose.y);
+                txtHeading.Text = Convert.ToString(sim.path.current_pose.pan * 180.0f / (float)Math.PI);
+            }
+        }
+
+        private void cmdAdd_Click(object sender, EventArgs e)
+        {
+            if (txtX.Text != "")
+            {
+                if (txtY.Text != "")
+                {
+                    if (txtHeading.Text != "")
+                    {
+                        if (txtNoOfSteps.Text != "")
+                        {
+                            if (txtDistPerStep.Text != "")
+                            {
+                                if (txtHeadingChangePerStep.Text != "")
+                                {
+                                    // add the new path segment
+                                    sim.Add(Convert.ToSingle(txtX.Text), Convert.ToSingle(txtY.Text),
+                                            Convert.ToSingle(txtHeading.Text)*(float)Math.PI/180.0f, Convert.ToInt32(txtNoOfSteps.Text),
+                                            Convert.ToSingle(txtDistPerStep.Text),
+                                            Convert.ToSingle(txtHeadingChangePerStep.Text) * (float)Math.PI / 180.0f);
+
+                                    // show the next pose in the path segment sequence
+                                    showNextPose();
+
+                                    // clear the entry boxes
+                                    txtNoOfSteps.Text = "";
+                                    txtDistPerStep.Text = "";
+                                    txtHeadingChangePerStep.Text = "";
+
+                                    // update the list view
+                                    showPathSegments();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private void cmdRemovePathSegment_Click(object sender, EventArgs e)
+        {
+            if (lstPathSegments.SelectedIndices.Count > 0)
+            {
+                sim.RemoveSegment(lstPathSegments.SelectedIndices[0]);
+                showPathSegments();
+                showNextPose();
             }
         }
 

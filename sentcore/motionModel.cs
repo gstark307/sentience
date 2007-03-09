@@ -364,7 +364,7 @@ namespace sentience.core
             }
 
             // show the path
-            ShowPath(img, width, height, 0, 255, 0, min_x_mm, min_y_mm, max_x_mm, max_y_mm, false);
+            ShowPath(img, width, height, 0, 255, 0, 0, min_x_mm, min_y_mm, max_x_mm, max_y_mm, false);
         }
 
 
@@ -380,48 +380,15 @@ namespace sentience.core
         /// <param name="max_y_mm"></param>
         /// <param name="clearBackground"></param>
         public void ShowPath(Byte[] img, int width, int height,
-                             int r, int g, int b,
+                             int r, int g, int b, int line_thickness,
                              float min_x_mm, float min_y_mm,
                              float max_x_mm, float max_y_mm,
                              bool clearBackground)
         {
-            if (clearBackground)
-            {
-                // clear the image
-                for (int i = 0; i < width * height * 3; i++)
-                    img[i] = (Byte)250;
-            }
-
             if (best_path != null)
-            {
-                int x = -1, y = -1;
-                int prev_x = -1, prev_y = -1;
-                if ((max_x_mm > min_x_mm) && (max_y_mm > min_y_mm))
-                {
-                    particlePose pose = best_path.current_pose;
-                    while (pose.parent != null)
-                    {
-                        x = (int)((pose.x - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
-                        if ((x > 0) && (x < width))
-                        {
-                            y = height - 1 - (int)((pose.y - min_y_mm) * (height - 1) / (max_y_mm - min_y_mm));
-                            if ((y < 0) || (y >= height)) y = -1;
-                        }
-                        else x = -1;
-                        if ((x > -1) && (y > -1))
-                        {
-                            if (prev_x > -1)
-                                util.drawLine(img, width, height, x, y, prev_x, prev_y, r, g, b, 0, false);
-
-                            prev_x = x;
-                            prev_y = y;
-                        }
-
-                        // move along the list
-                        pose = pose.parent;
-                    }
-                }
-            }
+                best_path.Show(img, width, height, r, g, b, line_thickness,
+                               min_x_mm, min_y_mm, max_x_mm, max_y_mm, 
+                               clearBackground);
         }
 
         #endregion

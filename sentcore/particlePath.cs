@@ -168,6 +168,64 @@ namespace sentience.core
                 return (false);
         }
 
+        /// <summary>
+        /// show the path
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
+        /// <param name="min_x_mm"></param>
+        /// <param name="min_y_mm"></param>
+        /// <param name="max_x_mm"></param>
+        /// <param name="max_y_mm"></param>
+        /// <param name="clearBackground"></param>
+        public void Show(Byte[] img, int width, int height,
+                             int r, int g, int b, int line_thickness,
+                             float min_x_mm, float min_y_mm,
+                             float max_x_mm, float max_y_mm,
+                             bool clearBackground)
+        {
+            if (clearBackground)
+            {
+                for (int i = 0; i < width * height * 3; i++)
+                    img[i] = 255;
+            }
+
+            int x = -1, y = -1;
+            int prev_x = -1, prev_y = -1;
+            if ((max_x_mm > min_x_mm) && (max_y_mm > min_y_mm))
+            {
+                particlePose pose = current_pose;
+                if (pose != null)
+                {
+                    while (pose.parent != null)
+                    {
+                        x = (int)((pose.x - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
+                        if ((x > 0) && (x < width))
+                        {
+                            y = height - 1 - (int)((pose.y - min_y_mm) * (height - 1) / (max_y_mm - min_y_mm));
+                            if ((y < 0) || (y >= height)) y = -1;
+                        }
+                        else x = -1;
+                        if ((x > -1) && (y > -1))
+                        {
+                            if (prev_x > -1)
+                                util.drawLine(img, width, height, x, y, prev_x, prev_y, r, g, b, line_thickness, false);
+
+                            prev_x = x;
+                            prev_y = y;
+                        }
+
+                        // move along the list
+                        pose = pose.parent;
+                    }
+                }
+            }
+        }
+
         #region "saving and loading"
 
         public XmlElement getXml(XmlDocument doc, XmlElement parent)

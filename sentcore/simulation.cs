@@ -43,6 +43,8 @@ namespace sentience.core
         // stores individual poses along the path
         public particlePath path = null;
 
+        private float min_x=0, min_y=0, max_x=0, max_y=0;
+
         // segments which make up the path
         public ArrayList pathSegments = null;
 
@@ -83,6 +85,34 @@ namespace sentience.core
             Reset();
         }
 
+        /// <summary>
+        /// show the path through which the robot moves
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void ShowPath(Byte[] img, int width, int height)
+        {
+            float min_xx = min_x;
+            float max_xx = max_x;
+            if (max_xx - min_xx < 10)
+            {
+                min_xx = -5;
+                max_xx = 5;
+            }
+            float min_yy = min_y;
+            float max_yy = max_y;
+            if (max_yy - min_yy < 10)
+            {
+                min_yy = -5;
+                max_yy = 5;
+            }
+
+            if (path != null)
+                path.Show(img, width, height,
+                      0, 0, 0, 1, min_xx-100, min_yy-100, max_xx+100, max_yy+100, true);
+        }
+
 
         /// <summary>
         /// add a path segment
@@ -96,16 +126,44 @@ namespace sentience.core
         {
             simulationPathSegment segment = new simulationPathSegment(x, y, pan, no_of_steps, dist_per_step_mm, pan_per_step);
             pathSegments.Add(segment);
+            updatePath();
+        }
 
-            // create a path if needed
-            if (path == null) path = new particlePath(999999999);
+        /// <summary>
+        /// turns a list of path segments into a list of individual poses
+        /// </summary>
+        private void updatePath()
+        {
+            path = new particlePath(999999999);
 
-            // update the list of poses
-            ArrayList poses = segment.getPoses();
-            for (int i = 0; i < poses.Count; i++)
+            min_x = 9999;
+            min_y = 9999;
+            max_x = -9999;
+            max_y = -9999;
+            for (int s = 0; s < pathSegments.Count; s++)
             {
-                particlePose pose = (particlePose)poses[i];
-                path.Add(pose);
+                simulationPathSegment segment = (simulationPathSegment)pathSegments[s];
+
+                // update the list of poses
+                ArrayList poses = segment.getPoses();
+                for (int i = 0; i < poses.Count; i++)
+                {
+                    particlePose pose = (particlePose)poses[i];
+                    if (pose.x < min_x) min_x = pose.x;
+                    if (pose.y < min_y) min_y = pose.y;
+                    if (pose.x > max_x) max_x = pose.x;
+                    if (pose.y > max_y) max_y = pose.y;
+                    path.Add(pose);
+                }
+            }
+        }
+
+        public void RemoveSegment(int index)
+        {
+            if (index < pathSegments.Count)
+            {
+                pathSegments.RemoveAt(index);
+                updatePath();
             }
         }
 
@@ -126,8 +184,8 @@ namespace sentience.core
             XmlElement nodeSimulation = doc.CreateElement("Simulation");
             parent.AppendChild(nodeSimulation);
 
-            util.AddComment(doc, nodeSimulation, "Name");
-            util.AddTextElement(doc, nodeSimulation, "Name", Name);
+            util.AddComment(doc, nodeSimulation, "Name or title of the simulation");
+            util.AddTextElement(doc, nodeSimulation, "SimulationName", Name);
 
             util.AddComment(doc, nodeSimulation, "The path and filename for the xml file which contains the robot design definition");
             util.AddTextElement(doc, nodeSimulation, "RobotDesignFile", RobotDesignFile);
@@ -143,17 +201,21 @@ namespace sentience.core
                 for (int i = 0; i < pathSegments.Count; i++)
                 {
                     simulationPathSegment segment = (simulationPathSegment)pathSegments[i];
-                    util.AddComment(doc, nodePath, "The initial pose of the robot at the beginning of this path segment");
-                    util.AddComment(doc, nodePath, "X,Y position in millimetres, followed by heading in degrees");
-                    util.AddTextElement(doc, nodePath, "InitialPose", Convert.ToString(segment.x) + "," +
+
+                    XmlElement nodePathSegment = doc.CreateElement("PathSegment");
+                    nodePath.AppendChild(nodePathSegment);
+
+                    util.AddComment(doc, nodePathSegment, "The initial pose of the robot at the beginning of this path segment");
+                    util.AddComment(doc, nodePathSegment, "X,Y position in millimetres, followed by heading in degrees");
+                    util.AddTextElement(doc, nodePathSegment, "InitialPose", Convert.ToString(segment.x) + "," +
                                                                Convert.ToString(segment.y) + "," +
                                                                Convert.ToString(segment.pan * 180.0f / Math.PI));
-                    util.AddComment(doc, nodePath, "The number of steps which this segment consists of");
-                    util.AddTextElement(doc, nodePath, "NumberOfSteps", Convert.ToString(segment.no_of_steps));
-                    util.AddComment(doc, nodePath, "The distance of each step in millimetres");
-                    util.AddTextElement(doc, nodePath, "StepSizeMillimetres", Convert.ToString(segment.distance_per_step_mm));
-                    util.AddComment(doc, nodePath, "The change in heading per step in degrees");
-                    util.AddTextElement(doc, nodePath, "HeadingChangePerStep", Convert.ToString(segment.pan_per_step));
+                    util.AddComment(doc, nodePathSegment, "The number of steps which this segment consists of");
+                    util.AddTextElement(doc, nodePathSegment, "NumberOfSteps", Convert.ToString(segment.no_of_steps));
+                    util.AddComment(doc, nodePathSegment, "The distance of each step in millimetres");
+                    util.AddTextElement(doc, nodePathSegment, "StepSizeMillimetres", Convert.ToString(segment.distance_per_step_mm));
+                    util.AddComment(doc, nodePathSegment, "The change in heading per step in degrees");
+                    util.AddTextElement(doc, nodePathSegment, "HeadingChangePerStep", Convert.ToString(segment.pan_per_step * 180.0f / Math.PI));
                 }
                 
             }
@@ -239,7 +301,7 @@ namespace sentience.core
         {
             XmlNode xnodWorking;
 
-            if (xnod.Name == "Name")
+            if (xnod.Name == "SimulationName")
             {
                 Name = xnod.InnerText;
             }
@@ -268,8 +330,8 @@ namespace sentience.core
             }
             if (xnod.Name == "HeadingChangePerStep")
             {
-                float temp_pan_per_step = Convert.ToSingle(xnod.InnerText);
-                Add(Convert.ToSingle(temp_poseStr[0]), Convert.ToSingle(temp_poseStr[1]), Convert.ToSingle(temp_poseStr[2]),
+                float temp_pan_per_step = Convert.ToSingle(xnod.InnerText) * (float)Math.PI / 180.0f;
+                Add(Convert.ToSingle(temp_poseStr[0]), Convert.ToSingle(temp_poseStr[1]), Convert.ToSingle(temp_poseStr[2])*(float)Math.PI/180.0f,
                     temp_no_of_steps, temp_dist_per_step, temp_pan_per_step);
             }
             
@@ -278,7 +340,8 @@ namespace sentience.core
             if ((xnod.HasChildNodes) &&
                 ((xnod.Name == "Simulation") ||
                  (xnod.Name == "Sentience") ||
-                 (xnod.Name == "RobotPath")
+                 (xnod.Name == "RobotPath") ||
+                 (xnod.Name == "PathSegment")
                  ))
             {
                 xnodWorking = xnod.FirstChild;
