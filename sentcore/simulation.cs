@@ -217,6 +217,9 @@ namespace sentience.core
         public ArrayList GetBenchmarks()
         {
             ArrayList benchmarks = new ArrayList();
+            benchmarks.Add("Grid particles " + Convert.ToString(rob.LocalGrid.total_valid_hypotheses));
+            benchmarks.Add("Garbage        " + Convert.ToString(rob.LocalGrid.total_garbage_hypotheses));
+
             benchmarks.Add("Stereo correspondence  " + Convert.ToString(rob.benchmark_stereo_correspondence) + " mS");
             benchmarks.Add("Observation update     " + Convert.ToString(rob.benchmark_observation_update) + " mS");
             benchmarks.Add("Prediction             " + Convert.ToString(rob.benchmark_prediction) + " mS");

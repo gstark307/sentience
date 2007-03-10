@@ -229,7 +229,7 @@ namespace sentience.core
             // gather mature poses
             float max_score = 0;
             ArrayList maturePoses = new ArrayList();
-            for (int sample = 0; sample < Poses.Count; sample++)
+            for (int sample = Poses.Count-1; sample >= 0; sample--)
             {
                 particlePath path = (particlePath)Poses[sample];
                 particlePose pose = path.current_pose;
@@ -239,7 +239,8 @@ namespace sentience.core
                 // that it has collided with occupied space within a grid map
                 if ((path.path.Count >= pose_maturation) || (pose.score < 0))
                 {
-                    maturePoses.Add(path);
+                    // store the index of the pose
+                    maturePoses.Add(sample);
                 }
 
                 // record the maximum score
@@ -256,8 +257,14 @@ namespace sentience.core
             float threshold = max_score * cull_threshold / 100;
             for (int mature = 0; mature < maturePoses.Count; mature++)
             {
-                particlePath path = (particlePath)maturePoses[mature];
+                // index of the mature pose
+                int index = (int)maturePoses[mature];
+
+                // get the score for this pose
+                particlePath path = (particlePath)Poses[index];
                 float score = path.current_pose.score;
+
+                // remove the pose if it's below the culling threshold
                 if (score < threshold)
                 {
                     // remove mapping hypotheses for this path
@@ -265,7 +272,7 @@ namespace sentience.core
                         ActivePoses.Remove(path);
 
                     // now remove the path itself
-                    Poses.Remove(path);
+                    Poses.RemoveAt(index);
                 }
             }
 

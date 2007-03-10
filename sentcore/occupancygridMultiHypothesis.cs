@@ -49,8 +49,10 @@ namespace sentience.core
         /// <summary>
         /// any old iron...
         /// </summary>
-        public void GarbageCollect()
+        public int GarbageCollect()
         {
+            int collected_items = 0;
+
             int i = Hypothesis.Count - 1;
             while ((i >= 0) && (garbage_entries > 0))
             {
@@ -59,9 +61,11 @@ namespace sentience.core
                 {
                     Hypothesis.RemoveAt(i);
                     garbage_entries--;
+                    collected_items++;
                 }
                 i--;
             }
+            return (collected_items);
         }
 
         #endregion
@@ -159,6 +163,12 @@ namespace sentience.core
         // when localising search a wider area than when mapping
         public int localisation_search_cells = 1;
 
+        // the total number of hypotheses (particles) within the grid
+        public int total_valid_hypotheses = 0;
+
+        // the total amount of garbage awaiting collection
+        public int total_garbage_hypotheses = 0;
+
         // cells of the grid
         occupancygridCellMultiHypothesis[,] cell;
 
@@ -227,6 +237,8 @@ namespace sentience.core
 
             cell[hypothesis.x, hypothesis.y].garbage_entries++;
             hypothesis.Enabled = false;
+            total_garbage_hypotheses++;
+            total_valid_hypotheses--;
         }
 
         /// <summary>
@@ -240,7 +252,10 @@ namespace sentience.core
             {
                 int x = rnd.Next(dimension_cells - 1);
                 int y = rnd.Next(dimension_cells - 1);
-                if (cell[x, y] != null) cell[x, y].GarbageCollect();
+                if (cell[x, y] != null)
+                {
+                    total_garbage_hypotheses -= cell[x, y].GarbageCollect();
+                }
             }
         }
 
@@ -489,6 +504,7 @@ namespace sentience.core
                                     hypothesis = new particleGridCell(x_cell2, y_cell2, prob, origin);
                                     cell[x_cell2, y_cell2].Hypothesis.Add(hypothesis);
                                     origin.observed_grid_cells.Add(hypothesis);
+                                    total_valid_hypotheses++;
                                 }
                             }
                         }
