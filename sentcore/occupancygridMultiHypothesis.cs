@@ -512,7 +512,8 @@ namespace sentience.core
         /// <param name="img">bitmap image</param>
         /// <param name="width">width in pixels</param>
         /// <param name="height">height in pixels</param>
-        public void Show(Byte[] img, int width, int height)
+        /// <param name="pose">pose from which the map is observed</param>
+        public void Show(Byte[] img, int width, int height, particlePose pose)
         {
             for (int y = 0; y < height; y++)
             {
@@ -520,21 +521,23 @@ namespace sentience.core
                 for (int x = 0; x < width; x++)
                 {
                     int cell_x = x * (dimension_cells - 1) / width;
+
                     int n = ((y * width) + x) * 3;
 
-                    for (int c = 0; c < 3; c++)
+                    if (cell[cell_x, cell_y] == null)
                     {
-                        if (cell[cell_x, cell_y] == null)
-                        {
-                            img[n + c] = (Byte)255;
-                        }
-                        else
-                        {
-                            if (cell[cell_x,cell_y].occupied)
-                                img[n + c] = (Byte)0;
+                        for (int c = 0; c < 3; c++)
+                            img[n + c] = (Byte)255; // terra incognita
+                    }
+                    else
+                    {
+                        float prob = cell[cell_x, cell_y].GetProbability(pose);
+
+                        for (int c = 0; c < 3; c++)
+                            if (prob > 0.5f)
+                                img[n + c] = (Byte)0;  // occupied
                             else
-                                img[n + c] = (Byte)200;
-                        }
+                                img[n + c] = (Byte)200;  // vacant
                     }
                 }
             }

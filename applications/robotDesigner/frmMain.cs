@@ -91,6 +91,7 @@ namespace robotDesigner
                 txtMotorTorque.Text = Convert.ToString(rob.MotorTorqueKgMm);
                 txtCameraBaseline.Text = Convert.ToString(rob.head.calibration[0].baseline);
                 txtCameraFOV.Text = Convert.ToString(rob.head.calibration[0].leftcam.camera_FOV_degrees);
+                txtRollAngle.Text = Convert.ToString(rob.head.calibration[0].positionOrientation.roll * 180.0f / (float)Math.PI);
                 cmbHeadType.SelectedIndex = rob.HeadType;
                 txtHeadSize.Text = Convert.ToString(rob.HeadSize_mm);
                 cmbHeadShape.SelectedIndex = rob.HeadShape;
@@ -142,6 +143,7 @@ namespace robotDesigner
                 rob.head.calibration[i].baseline = Convert.ToSingle(txtCameraBaseline.Text);
                 rob.head.calibration[i].leftcam.camera_FOV_degrees = Convert.ToSingle(txtCameraFOV.Text);
                 rob.head.calibration[i].rightcam.camera_FOV_degrees = Convert.ToSingle(txtCameraFOV.Text);
+                rob.head.calibration[i].positionOrientation.roll = Convert.ToSingle(txtRollAngle.Text) * (float)Math.PI / 180.0f;
             }
             rob.HeadType = Convert.ToInt32(cmbHeadType.SelectedIndex);
             rob.HeadSize_mm = Convert.ToSingle(txtHeadSize.Text);

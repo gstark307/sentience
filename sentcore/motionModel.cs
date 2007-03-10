@@ -39,7 +39,7 @@ namespace sentience.core
         private UInt32 path_ID = 0;
 
         // the most probable path taken by the robot
-        private particlePath best_path = null;
+        public particlePath best_path = null;
 
         private Random rnd = new Random();
         private robot rob;

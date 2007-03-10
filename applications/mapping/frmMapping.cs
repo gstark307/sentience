@@ -200,6 +200,18 @@ namespace StereoMapping
         }
 
         /// <summary>
+        /// displays the occupancy grid
+        /// </summary>
+        private void showOccupancyGrid()
+        {
+            picGridMap.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
+                                          System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
+            sim.ShowGrid(grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells);
+            updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
+        }
+
+        /// <summary>
         /// show the next pose
         /// </summary>
         private void showNextPose()
@@ -315,6 +327,9 @@ namespace StereoMapping
         {
             ArrayList images = getStereoImages(sim.current_time_step);
             sim.RunOneStep(images);
+
+            // show the grid
+            showOccupancyGrid();
 
             // show the benchmarks
             ArrayList benchmarks = sim.GetBenchmarks();

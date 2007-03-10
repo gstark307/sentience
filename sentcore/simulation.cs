@@ -225,6 +225,17 @@ namespace sentience.core
         }
 
 
+        /// <summary>
+        /// show the occupancy grid
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void ShowGrid(Byte[] img, int width, int height)
+        {
+            rob.ShowGrid(img, width, height);
+        }
+
         #region "saving and loading"
 
         private String[] temp_poseStr;

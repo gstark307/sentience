@@ -549,6 +549,23 @@ namespace sentience.core
 
         #endregion
 
+        #region "display functions"
+
+        /// <summary>
+        /// show the occupancy grid
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void ShowGrid(Byte[] img, int width, int height)
+        {
+            if (motion.best_path != null)
+                if (motion.best_path.current_pose != null)
+                    LocalGrid.Show(img, width, height, motion.best_path.current_pose);
+        }
+
+        #endregion
+
         #region "saving and loading"
 
         public XmlElement getXml(XmlDocument doc, XmlElement parent)
