@@ -76,7 +76,7 @@ namespace sentience.core
         {           
             float probabilityLogOdds = 0;
             int hits = 0;
-            int step_size = 1 + (Hypothesis.Count / 10);
+            int step_size = 10 + (Hypothesis.Count / 10);
 
             if (pose.previous_paths != null)
             {
