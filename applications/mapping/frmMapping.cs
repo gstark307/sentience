@@ -20,6 +20,7 @@
 
 using System;
 using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -258,6 +259,72 @@ namespace StereoMapping
                 showPathSegments();
                 showNextPose();
             }
+        }
+
+
+        /// <summary>
+        /// retrieves a set of stereo images for the given time step
+        /// filenames should be in the format "camera_0_left_2.jpg" where
+        /// the first number is the index of the stereo camera and the second 
+        /// number is the time step upon which the image was taken
+        /// </summary>
+        /// <param name="time_step"></param>
+        /// <returns></returns>
+        private ArrayList getStereoImages(int time_step)
+        {
+            ArrayList images = new ArrayList();
+
+            // get the file names for the left and right images for this time step
+            String[] left_file = Directory.GetFiles(sim.ImagesPath, "*left_" + Convert.ToString(time_step+1) + ".jpg");
+            String[] right_file = Directory.GetFiles(sim.ImagesPath, "*right_" + Convert.ToString(time_step+1) + ".jpg");
+            for (int i = 0; i < left_file.Length; i++)
+            {
+                // load the images as bitmap objects
+                Bitmap left_image = new Bitmap(left_file[i]);
+                Bitmap right_image = new Bitmap(right_file[i]);
+
+                // extract the raw byte arrays
+                Byte[] left_bmp = updatebitmap_unsafe(left_image);
+                Byte[] right_bmp = updatebitmap_unsafe(right_image);
+
+                // put the byte arrays into the list of results
+                images.Add(left_bmp);
+                images.Add(right_bmp);
+
+                // show the current images
+                // this is a good way of checking that updatebitmap returned a valid byte array
+                picLeftImage.Image = new Bitmap(left_image.Width, left_image.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                picRightImage.Image = new Bitmap(right_image.Width, right_image.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                updatebitmap_unsafe(left_bmp, (Bitmap)(picLeftImage.Image));
+                updatebitmap_unsafe(right_bmp, (Bitmap)(picRightImage.Image));
+            }
+
+            return (images);
+        }
+
+        /// <summary>
+        /// reset the simulation
+        /// </summary>
+        private void Simulation_Reset()
+        {
+            sim.Reset();
+        }
+
+        // run the simulation one step forwards
+        private void Simulation_RunOneStep()
+        {
+            ArrayList images = getStereoImages(sim.current_time_step);
+            sim.RunOneStep(images);
+        }
+
+        private void cmdRunOneStep_Click(object sender, EventArgs e)
+        {
+            Simulation_RunOneStep();
+        }
+
+        private void cmdReset_Click(object sender, EventArgs e)
+        {
+            Simulation_Reset();
         }
 
     }

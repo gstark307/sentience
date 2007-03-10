@@ -78,8 +78,14 @@ namespace sentience.core
         // speed in mm / sec
         public float forward_velocity = 0;
 
+        // forward acceleration in mm/sec^2
+        public float forward_acceleration = 0;
+
         // angular speed in radians / sec
         public float angular_velocity = 0;
+
+        // angular acceleration in radians/sec^2
+        public float angular_acceleration = 0;
 
         private bool initialised = false;
 

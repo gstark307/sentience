@@ -360,7 +360,7 @@ namespace sentience.core
             }
         }
 
-        private void update(ArrayList images, bool mapping)
+        private void update(ArrayList images)
         {
             if (images != null)
             {
@@ -393,28 +393,38 @@ namespace sentience.core
         /// <param name="pan">pan angle in radians</param>
         /// <param name="mapping">mapping or localisation</param>
         public void updateFromKnownPosition(ArrayList images,
-                                            float x, float y, float pan, 
-                                            bool mapping)                   
+                                            float x, float y, float pan)                   
         {
             // update the grid
-            update(images, mapping);
+            update(images);
 
             // set the robot at the known position
             this.x = x;
             this.y = y;
             this.pan = pan;
 
-            if (!mapping)
+            // update the motion model
+            motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
+            if (!((previousPosition.x == -1) && (previousPosition.y == -1)))
             {
-                // update the motion model
-                motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
-                if (!((previousPosition.x == -1) && (previousPosition.y == -1)))
-                {
-                    motion.forward_velocity = y - previousPosition.y;
-                    motion.angular_velocity = pan - previousPosition.pan;
-                    motion.Predict(1);
-                }
+                float time_per_index_sec = 1;
+
+                float dx = x - previousPosition.x;
+                float dy = y - previousPosition.y;
+                float distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                float acceleration = (2 * (distance - (motion.forward_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                float forward_velocity = motion.forward_velocity + (acceleration * time_per_index_sec);
+                motion.forward_acceleration = forward_velocity - motion.forward_velocity;
+                motion.forward_velocity = forward_velocity;
+
+                distance = pan - previousPosition.pan;
+                acceleration = (2 * (distance - (motion.angular_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                float angular_velocity = motion.angular_velocity + (acceleration * time_per_index_sec);
+                motion.angular_velocity = angular_velocity;
+
+                motion.Predict(time_per_index_sec);
             }
+
             storePreviousPosition();
         }
 
@@ -435,10 +445,10 @@ namespace sentience.core
         /// <param name="mapping">mapping or localisation</param>
         public void updateFromEncoderPositions(ArrayList images,
                                                long left_wheel_encoder, long right_wheel_encoder,
-                                               float time_elapsed_sec, bool mapping)
+                                               float time_elapsed_sec)
         {
             // update the grid
-            update(images, mapping);
+            update(images);
 
             float wheel_circumference_mm = (float)Math.PI * WheelDiameter_mm;
             long countsPerWheelRev = CountsPerRev * GearRatio;
@@ -474,17 +484,18 @@ namespace sentience.core
         /// <param name="forward_velocity">forward velocity in mm/sec</param>
         /// <param name="angular_velocity">angular velocity in radians/sec</param>
         /// <param name="time_elapsed_sec">time elapsed since the last update in sec</param>
-        /// <param name="mapping">mapping or localisation</param>
         public void updateFromVelocities(ArrayList images, 
                                          float forward_velocity, float angular_velocity,
-                                         float time_elapsed_sec, bool mapping)
+                                         float time_elapsed_sec)
         {
             // update the grid
-            update(images, mapping);
+            update(images);
 
             // update the motion model
             motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
+            motion.forward_acceleration = forward_velocity - motion.forward_velocity;
             motion.forward_velocity = forward_velocity;
+            motion.angular_acceleration = angular_velocity - motion.angular_velocity;
             motion.angular_velocity = angular_velocity;
             motion.Predict(time_elapsed_sec);
 

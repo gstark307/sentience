@@ -66,14 +66,30 @@ namespace StereoMapping
             this.label9 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.txtTitle = new System.Windows.Forms.TextBox();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabParameters = new System.Windows.Forms.TabPage();
+            this.tabSimulation = new System.Windows.Forms.TabPage();
+            this.cmdReset = new System.Windows.Forms.Button();
+            this.picGridMap = new System.Windows.Forms.PictureBox();
+            this.cmdRunOneStep = new System.Windows.Forms.Button();
+            this.picLeftImage = new System.Windows.Forms.PictureBox();
+            this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tabParameters.SuspendLayout();
+            this.tabSimulation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
             // 
-            this.picPath.Location = new System.Drawing.Point(447, 139);
+            this.picPath.Location = new System.Drawing.Point(452, 113);
             this.picPath.Name = "picPath";
             this.picPath.Size = new System.Drawing.Size(343, 314);
             this.picPath.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -94,7 +110,7 @@ namespace StereoMapping
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(804, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(845, 24);
             this.menuStrip1.TabIndex = 4;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -140,7 +156,7 @@ namespace StereoMapping
             // 
             // txtRobotDefinitionFile
             // 
-            this.txtRobotDefinitionFile.Location = new System.Drawing.Point(115, 64);
+            this.txtRobotDefinitionFile.Location = new System.Drawing.Point(120, 38);
             this.txtRobotDefinitionFile.Name = "txtRobotDefinitionFile";
             this.txtRobotDefinitionFile.Size = new System.Drawing.Size(598, 20);
             this.txtRobotDefinitionFile.TabIndex = 5;
@@ -148,7 +164,7 @@ namespace StereoMapping
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 68);
+            this.label1.Location = new System.Drawing.Point(17, 42);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(86, 13);
             this.label1.TabIndex = 6;
@@ -156,7 +172,7 @@ namespace StereoMapping
             // 
             // cmdRobotDefinitionBrowse
             // 
-            this.cmdRobotDefinitionBrowse.Location = new System.Drawing.Point(719, 63);
+            this.cmdRobotDefinitionBrowse.Location = new System.Drawing.Point(724, 37);
             this.cmdRobotDefinitionBrowse.Name = "cmdRobotDefinitionBrowse";
             this.cmdRobotDefinitionBrowse.Size = new System.Drawing.Size(54, 20);
             this.cmdRobotDefinitionBrowse.TabIndex = 7;
@@ -166,7 +182,7 @@ namespace StereoMapping
             // 
             // cmdStereoImagesPathBrowse
             // 
-            this.cmdStereoImagesPathBrowse.Location = new System.Drawing.Point(719, 89);
+            this.cmdStereoImagesPathBrowse.Location = new System.Drawing.Point(724, 63);
             this.cmdStereoImagesPathBrowse.Name = "cmdStereoImagesPathBrowse";
             this.cmdStereoImagesPathBrowse.Size = new System.Drawing.Size(54, 20);
             this.cmdStereoImagesPathBrowse.TabIndex = 10;
@@ -177,7 +193,7 @@ namespace StereoMapping
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 94);
+            this.label2.Location = new System.Drawing.Point(17, 68);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(99, 13);
             this.label2.TabIndex = 9;
@@ -185,7 +201,7 @@ namespace StereoMapping
             // 
             // txtStereoImagesPath
             // 
-            this.txtStereoImagesPath.Location = new System.Drawing.Point(115, 90);
+            this.txtStereoImagesPath.Location = new System.Drawing.Point(120, 64);
             this.txtStereoImagesPath.Name = "txtStereoImagesPath";
             this.txtStereoImagesPath.Size = new System.Drawing.Size(598, 20);
             this.txtStereoImagesPath.TabIndex = 8;
@@ -194,7 +210,7 @@ namespace StereoMapping
             // 
             this.lstPathSegments.FullRowSelect = true;
             this.lstPathSegments.HideSelection = false;
-            this.lstPathSegments.Location = new System.Drawing.Point(15, 139);
+            this.lstPathSegments.Location = new System.Drawing.Point(20, 113);
             this.lstPathSegments.Name = "lstPathSegments";
             this.lstPathSegments.Size = new System.Drawing.Size(426, 175);
             this.lstPathSegments.TabIndex = 11;
@@ -318,7 +334,7 @@ namespace StereoMapping
             this.grpNewPathSegment.Controls.Add(this.label6);
             this.grpNewPathSegment.Controls.Add(this.label5);
             this.grpNewPathSegment.Controls.Add(this.txtNoOfSteps);
-            this.grpNewPathSegment.Location = new System.Drawing.Point(15, 320);
+            this.grpNewPathSegment.Location = new System.Drawing.Point(20, 294);
             this.grpNewPathSegment.Name = "grpNewPathSegment";
             this.grpNewPathSegment.Size = new System.Drawing.Size(426, 139);
             this.grpNewPathSegment.TabIndex = 24;
@@ -348,7 +364,7 @@ namespace StereoMapping
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(12, 123);
+            this.label9.Location = new System.Drawing.Point(17, 97);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(79, 13);
             this.label9.TabIndex = 25;
@@ -357,7 +373,7 @@ namespace StereoMapping
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(12, 42);
+            this.label10.Location = new System.Drawing.Point(17, 16);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(78, 13);
             this.label10.TabIndex = 27;
@@ -365,29 +381,132 @@ namespace StereoMapping
             // 
             // txtTitle
             // 
-            this.txtTitle.Location = new System.Drawing.Point(115, 38);
+            this.txtTitle.Location = new System.Drawing.Point(120, 12);
             this.txtTitle.Name = "txtTitle";
             this.txtTitle.Size = new System.Drawing.Size(598, 20);
             this.txtTitle.TabIndex = 26;
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.tabParameters);
+            this.tabControl1.Controls.Add(this.tabSimulation);
+            this.tabControl1.Location = new System.Drawing.Point(12, 27);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(823, 471);
+            this.tabControl1.TabIndex = 28;
+            // 
+            // tabParameters
+            // 
+            this.tabParameters.Controls.Add(this.label10);
+            this.tabParameters.Controls.Add(this.picPath);
+            this.tabParameters.Controls.Add(this.txtTitle);
+            this.tabParameters.Controls.Add(this.txtRobotDefinitionFile);
+            this.tabParameters.Controls.Add(this.label9);
+            this.tabParameters.Controls.Add(this.label1);
+            this.tabParameters.Controls.Add(this.grpNewPathSegment);
+            this.tabParameters.Controls.Add(this.cmdRobotDefinitionBrowse);
+            this.tabParameters.Controls.Add(this.lstPathSegments);
+            this.tabParameters.Controls.Add(this.txtStereoImagesPath);
+            this.tabParameters.Controls.Add(this.cmdStereoImagesPathBrowse);
+            this.tabParameters.Controls.Add(this.label2);
+            this.tabParameters.Location = new System.Drawing.Point(4, 22);
+            this.tabParameters.Name = "tabParameters";
+            this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
+            this.tabParameters.Size = new System.Drawing.Size(815, 445);
+            this.tabParameters.TabIndex = 0;
+            this.tabParameters.Text = "Parameters";
+            this.tabParameters.UseVisualStyleBackColor = true;
+            // 
+            // tabSimulation
+            // 
+            this.tabSimulation.Controls.Add(this.label12);
+            this.tabSimulation.Controls.Add(this.label11);
+            this.tabSimulation.Controls.Add(this.picRightImage);
+            this.tabSimulation.Controls.Add(this.picLeftImage);
+            this.tabSimulation.Controls.Add(this.cmdReset);
+            this.tabSimulation.Controls.Add(this.picGridMap);
+            this.tabSimulation.Controls.Add(this.cmdRunOneStep);
+            this.tabSimulation.Location = new System.Drawing.Point(4, 22);
+            this.tabSimulation.Name = "tabSimulation";
+            this.tabSimulation.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSimulation.Size = new System.Drawing.Size(815, 445);
+            this.tabSimulation.TabIndex = 1;
+            this.tabSimulation.Text = "Simulation";
+            this.tabSimulation.UseVisualStyleBackColor = true;
+            // 
+            // cmdReset
+            // 
+            this.cmdReset.Location = new System.Drawing.Point(20, 22);
+            this.cmdReset.Name = "cmdReset";
+            this.cmdReset.Size = new System.Drawing.Size(76, 27);
+            this.cmdReset.TabIndex = 27;
+            this.cmdReset.Text = "Reset";
+            this.cmdReset.UseVisualStyleBackColor = true;
+            this.cmdReset.Click += new System.EventHandler(this.cmdReset_Click);
+            // 
+            // picGridMap
+            // 
+            this.picGridMap.Location = new System.Drawing.Point(260, 38);
+            this.picGridMap.Name = "picGridMap";
+            this.picGridMap.Size = new System.Drawing.Size(538, 401);
+            this.picGridMap.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picGridMap.TabIndex = 26;
+            this.picGridMap.TabStop = false;
+            // 
+            // cmdRunOneStep
+            // 
+            this.cmdRunOneStep.Location = new System.Drawing.Point(105, 22);
+            this.cmdRunOneStep.Name = "cmdRunOneStep";
+            this.cmdRunOneStep.Size = new System.Drawing.Size(76, 27);
+            this.cmdRunOneStep.TabIndex = 25;
+            this.cmdRunOneStep.Text = "Step";
+            this.cmdRunOneStep.UseVisualStyleBackColor = true;
+            this.cmdRunOneStep.Click += new System.EventHandler(this.cmdRunOneStep_Click);
+            // 
+            // picLeftImage
+            // 
+            this.picLeftImage.Location = new System.Drawing.Point(20, 145);
+            this.picLeftImage.Name = "picLeftImage";
+            this.picLeftImage.Size = new System.Drawing.Size(108, 96);
+            this.picLeftImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picLeftImage.TabIndex = 28;
+            this.picLeftImage.TabStop = false;
+            // 
+            // picRightImage
+            // 
+            this.picRightImage.Location = new System.Drawing.Point(134, 145);
+            this.picRightImage.Name = "picRightImage";
+            this.picRightImage.Size = new System.Drawing.Size(108, 96);
+            this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picRightImage.TabIndex = 29;
+            this.picRightImage.TabStop = false;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(17, 120);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(83, 13);
+            this.label11.TabIndex = 30;
+            this.label11.Text = "The robots view";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(259, 22);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(82, 13);
+            this.label12.TabIndex = 31;
+            this.label12.Text = "Occupancy grid";
             // 
             // frmMapping
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(804, 481);
-            this.Controls.Add(this.label10);
-            this.Controls.Add(this.txtTitle);
-            this.Controls.Add(this.label9);
-            this.Controls.Add(this.grpNewPathSegment);
-            this.Controls.Add(this.lstPathSegments);
-            this.Controls.Add(this.cmdStereoImagesPathBrowse);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.txtStereoImagesPath);
-            this.Controls.Add(this.cmdRobotDefinitionBrowse);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.txtRobotDefinitionFile);
+            this.ClientSize = new System.Drawing.Size(845, 510);
+            this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.lblPositionIndex);
-            this.Controls.Add(this.picPath);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmMapping";
@@ -398,6 +517,14 @@ namespace StereoMapping
             this.menuStrip1.PerformLayout();
             this.grpNewPathSegment.ResumeLayout(false);
             this.grpNewPathSegment.PerformLayout();
+            this.tabControl1.ResumeLayout(false);
+            this.tabParameters.ResumeLayout(false);
+            this.tabParameters.PerformLayout();
+            this.tabSimulation.ResumeLayout(false);
+            this.tabSimulation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -442,6 +569,16 @@ namespace StereoMapping
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TextBox txtTitle;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabParameters;
+        private System.Windows.Forms.TabPage tabSimulation;
+        private System.Windows.Forms.PictureBox picGridMap;
+        private System.Windows.Forms.Button cmdRunOneStep;
+        private System.Windows.Forms.Button cmdReset;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.PictureBox picRightImage;
+        private System.Windows.Forms.PictureBox picLeftImage;
+        private System.Windows.Forms.Label label12;
     }
 }
 

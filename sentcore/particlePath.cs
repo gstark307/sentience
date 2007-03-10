@@ -127,6 +127,42 @@ namespace sentience.core
                 path.RemoveAt(0);
         }
 
+
+        /// <summary>
+        /// returns a list containing the robots velocity at each point in the path
+        /// </summary>
+        /// <param name="starting_forward_velocity">the forward velocity to start with in mm/sec</param>
+        /// <param name="starting_angular_velocity">the angular velocity to start with in radians/sec</param>
+        /// <param name="time_per_index_sec">time taken between indexes along the path in seconds</param>
+        /// <returns></returns>
+        public ArrayList getVelocities(float starting_forward_velocity,
+                                       float starting_angular_velocity,
+                                       float time_per_index_sec)
+        {
+            ArrayList result = new ArrayList();
+
+            float forward_velocity = starting_forward_velocity;
+            float angular_velocity = starting_angular_velocity;
+            for (int i = 1; i < path.Count; i++)
+            {
+                particlePose prev_pose = (particlePose)path[i-1];
+                particlePose pose = (particlePose)path[i];
+
+                float dx = pose.x - prev_pose.x;
+                float dy = pose.y - prev_pose.y;
+                float distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                float acceleration = (2 * (distance - (forward_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                forward_velocity = forward_velocity + (acceleration * time_per_index_sec);
+                result.Add(forward_velocity);
+
+                distance = pose.pan - prev_pose.pan;
+                acceleration = (2 * (distance - (angular_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                angular_velocity = angular_velocity + (acceleration * time_per_index_sec);
+                result.Add(angular_velocity);
+            }
+            return (result);
+        }
+
         /// <summary>
         /// remove the mapping particles associated with this path
         /// </summary>

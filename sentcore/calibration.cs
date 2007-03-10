@@ -2664,18 +2664,21 @@ namespace sentience.calibration
         /// </summary>
         public void updateCalibrationMap()
         {
-            updateCalibrationMap(image_width, image_height, fitter, scale, rotation);
-
-            calibration_map = new int[image_width * image_height];
-            for (int i = 0; i < temp_calibration_map.Length; i++)
-                calibration_map[i] = temp_calibration_map[i];
-            calibration_map_inverse = new int[image_width, image_height, 2];
-            for (int x = 0; x < image_width; x++)
+            if ((fitter != null) && (scale > 0) && (image_height > 0))
             {
-                for (int y = 0; y < image_height; y++)
+                updateCalibrationMap(image_width, image_height, fitter, scale, rotation);
+
+                calibration_map = new int[image_width * image_height];
+                for (int i = 0; i < temp_calibration_map.Length; i++)
+                    calibration_map[i] = temp_calibration_map[i];
+                calibration_map_inverse = new int[image_width, image_height, 2];
+                for (int x = 0; x < image_width; x++)
                 {
-                    calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
-                    calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                    for (int y = 0; y < image_height; y++)
+                    {
+                        calibration_map_inverse[x, y, 0] = temp_calibration_map_inverse[x, y, 0];
+                        calibration_map_inverse[x, y, 1] = temp_calibration_map_inverse[x, y, 1];
+                    }
                 }
             }
         }
@@ -3028,7 +3031,12 @@ namespace sentience.calibration
             }
 
             if (xnod.Name == "RMSerror")
+            {
                 min_RMS_error = Convert.ToSingle(xnod.InnerText);
+
+                // update the calibration lookup table
+                updateCalibrationMap();
+            }
 
             // if this is an element, extract any attributes
             /*

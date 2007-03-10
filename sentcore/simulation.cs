@@ -43,6 +43,15 @@ namespace sentience.core
         // stores individual poses along the path
         public particlePath path = null;
 
+        // a list containing the forward and angular velocity values along the path
+        ArrayList velocities;
+
+        // time which elapses per step in seconds
+        public float time_per_index_sec = 2;
+
+        // the current time step which the simulation is on
+        public int current_time_step = 0;
+
         private float min_x=0, min_y=0, max_x=0, max_y=0;
 
         // segments which make up the path
@@ -76,6 +85,9 @@ namespace sentience.core
 
             // load the design file
             rob.Load(RobotDesignFile);
+
+            current_time_step = 0;
+            updatePath();
         }
 
         public simulation(String RobotDesignFile, String ImagesPath)
@@ -157,8 +169,15 @@ namespace sentience.core
                     path.Add(pose);
                 }
             }
+
+            // update the path velocities
+            velocities = path.getVelocities(0, 0, time_per_index_sec);
         }
 
+        /// <summary>
+        /// removes a path segment
+        /// </summary>
+        /// <param name="index"></param>
         public void RemoveSegment(int index)
         {
             if (index < pathSegments.Count)
@@ -169,8 +188,26 @@ namespace sentience.core
         }
 
 
-        public void Run()
+
+        /// <summary>
+        /// run the simulation, one step at a time
+        /// </summary>
+        /// <param name="images">stereo image bitmaps for this time step</param>
+        public void RunOneStep(ArrayList images)
         {
+            if (path != null)
+            {
+                if (images.Count > 1)
+                {
+                    float forward_velocity = (float)velocities[current_time_step * 2];
+                    float angular_velocity = (float)velocities[(current_time_step * 2) + 1];
+                    rob.updateFromVelocities(images, forward_velocity, angular_velocity, time_per_index_sec);
+                }
+
+                // increment the simulation time step
+                if (current_time_step < path.path.Count-1)
+                    current_time_step++;
+            }
         }
 
 
@@ -194,10 +231,13 @@ namespace sentience.core
             util.AddComment(doc, nodeSimulation, "Path where the stereo images can be found");
             util.AddTextElement(doc, nodeSimulation, "ImagesPath", ImagesPath);
 
+            util.AddComment(doc, nodeSimulation, "The time which elapses for each step along the path in seconds");
+            util.AddTextElement(doc, nodeSimulation, "SimulationTimeStepSeconds", Convert.ToString(time_per_index_sec));
+
             if (pathSegments != null)
             {
                 XmlElement nodePath = doc.CreateElement("RobotPath");
-                parent.AppendChild(nodePath);
+                nodeSimulation.AppendChild(nodePath);
 
                 for (int i = 0; i < pathSegments.Count; i++)
                 {
@@ -316,6 +356,11 @@ namespace sentience.core
             {
                 ImagesPath = xnod.InnerText;
             }
+
+            if (xnod.Name == "SimulationTimeStepSeconds")
+            {
+                time_per_index_sec = Convert.ToSingle(xnod.InnerText);
+            }            
 
             if (xnod.Name == "InitialPose")
             {

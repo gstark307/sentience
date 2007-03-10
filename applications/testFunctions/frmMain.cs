@@ -46,7 +46,6 @@ namespace WindowsApplication1
         stereoHead robot_head;
         float[] stereo_features;
         float[] stereo_uncertainties;
-        viewpoint[] view;
         private float[] pos3D_x;
         private float[] pos3D_y;
 
@@ -85,7 +84,6 @@ namespace WindowsApplication1
             robot_head = new stereoHead(4);            
             stereo_features = new float[900];
             stereo_uncertainties = new float[900];
-            view = new viewpoint[10];
 
             img_rays = new Byte[standard_width * standard_height * 3];
             rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -127,7 +125,7 @@ namespace WindowsApplication1
         {
             stereo_model.createLookupTable(32, img_rays, standard_width, standard_height);
         }
-
+        /*
         private void test_head()
         {
             pos3D robotPosition = new pos3D(0, 0, 0);
@@ -162,8 +160,9 @@ namespace WindowsApplication1
             long mappingTime = endStopWatch();
             txtMappingTime.Text = Convert.ToString(mappingTime);
         }
+        */
 
-
+        /*
         private void test_head2()
         {
             robot_head = new stereoHead(2);            
@@ -201,8 +200,9 @@ namespace WindowsApplication1
             long mappingTime = endStopWatch();
             txtMappingTime.Text = Convert.ToString(mappingTime);
         }
+        */
 
-
+        /*
         private void test_grid()
         {
             occupancygridClassic grd = new occupancygridClassic(128, 32);
@@ -239,6 +239,7 @@ namespace WindowsApplication1
 
             grd.show(img_rays, standard_width, standard_height);
         }
+        */
 
         private void test_motion_model(bool closed_loop)
         {
@@ -255,7 +256,7 @@ namespace WindowsApplication1
             for (int y = min_y_mm; y < max_y_mm; y += step_size)
             {
                 if (closed_loop) robotLocalisation.surveyPosesDummy(rob);
-                rob.updateFromKnownPosition(null, x, y, pan, false);
+                rob.updateFromKnownPosition(null, x, y, pan);
                 
                 rob.motion.Show(img_rays, standard_width, standard_height, 
                                 min_x_mm, min_y_mm, max_x_mm, max_y_mm,
@@ -264,7 +265,7 @@ namespace WindowsApplication1
             }
         }
 
-
+        /*
         private void test_trial_poses()
         {
             pos3D robotPosition = new pos3D(0, 0, 0);
@@ -297,7 +298,7 @@ namespace WindowsApplication1
             long mappingTime = endStopWatch();
             txtMappingTime.Text = Convert.ToString(mappingTime);
         }
-
+        */
 
         /*
         private void test_survey(int offset_x, int offset_y)

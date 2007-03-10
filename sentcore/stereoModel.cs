@@ -1213,15 +1213,17 @@ namespace sentience.core
         {
             ArrayList result = new ArrayList();
 
-            // get data for this stereo camera
+            // get essential data for this stereo camera
             baseline = head.calibration[camera_index].baseline;
             image_width = head.calibration[camera_index].leftcam.image_width;
             image_height = head.calibration[camera_index].leftcam.image_height;
             FOV_horizontal = head.calibration[camera_index].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
             FOV_vertical = FOV_horizontal * image_height / image_width;
-            sigma = 1.0f / (image_width * 2) * FOV_horizontal;  // half pixel standard deviation
-            sigma *= image_width / 320; // makes the uncertainty invariant of resolution
 
+            // calculate observational uncertainty as a standard deviation
+            // of half a pixel
+            sigma = 1.0f / (image_width * 2) * FOV_horizontal;
+            //sigma *= image_width / 320; // makes the uncertainty invariant of resolution
 
             // some head geometry
             pos3D headOrientation = head.cameraPosition[camera_index];
