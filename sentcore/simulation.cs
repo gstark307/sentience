@@ -210,6 +210,20 @@ namespace sentience.core
             }
         }
 
+        /// <summary>
+        /// returns a list of performance benchmarks
+        /// </summary>
+        /// <returns></returns>
+        public ArrayList GetBenchmarks()
+        {
+            ArrayList benchmarks = new ArrayList();
+            benchmarks.Add("Stereo correspondence  " + Convert.ToString(rob.benchmark_stereo_correspondence) + " mS");
+            benchmarks.Add("Observation update     " + Convert.ToString(rob.benchmark_observation_update) + " mS");
+            benchmarks.Add("Prediction             " + Convert.ToString(rob.benchmark_prediction) + " mS");
+            benchmarks.Add("Garbage collection     " + Convert.ToString(rob.benchmark_garbage_collection) + " mS");
+            return (benchmarks);
+        }
+
 
         #region "saving and loading"
 

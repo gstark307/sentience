@@ -69,22 +69,24 @@ namespace StereoMapping
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabParameters = new System.Windows.Forms.TabPage();
             this.tabSimulation = new System.Windows.Forms.TabPage();
+            this.label13 = new System.Windows.Forms.Label();
+            this.lstBenchmarks = new System.Windows.Forms.ListView();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.cmdReset = new System.Windows.Forms.Button();
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
-            this.picLeftImage = new System.Windows.Forms.PictureBox();
-            this.picRightImage = new System.Windows.Forms.PictureBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.label12 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabParameters.SuspendLayout();
             this.tabSimulation.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -420,6 +422,8 @@ namespace StereoMapping
             // 
             // tabSimulation
             // 
+            this.tabSimulation.Controls.Add(this.label13);
+            this.tabSimulation.Controls.Add(this.lstBenchmarks);
             this.tabSimulation.Controls.Add(this.label12);
             this.tabSimulation.Controls.Add(this.label11);
             this.tabSimulation.Controls.Add(this.picRightImage);
@@ -434,6 +438,60 @@ namespace StereoMapping
             this.tabSimulation.TabIndex = 1;
             this.tabSimulation.Text = "Simulation";
             this.tabSimulation.UseVisualStyleBackColor = true;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(17, 253);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(96, 13);
+            this.label13.TabIndex = 33;
+            this.label13.Text = "Benchmark timings";
+            // 
+            // lstBenchmarks
+            // 
+            this.lstBenchmarks.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstBenchmarks.Location = new System.Drawing.Point(20, 269);
+            this.lstBenchmarks.Name = "lstBenchmarks";
+            this.lstBenchmarks.Size = new System.Drawing.Size(222, 124);
+            this.lstBenchmarks.TabIndex = 32;
+            this.lstBenchmarks.UseCompatibleStateImageBehavior = false;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(259, 22);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(82, 13);
+            this.label12.TabIndex = 31;
+            this.label12.Text = "Occupancy grid";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(17, 120);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(83, 13);
+            this.label11.TabIndex = 30;
+            this.label11.Text = "The robots view";
+            // 
+            // picRightImage
+            // 
+            this.picRightImage.Location = new System.Drawing.Point(134, 145);
+            this.picRightImage.Name = "picRightImage";
+            this.picRightImage.Size = new System.Drawing.Size(108, 96);
+            this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picRightImage.TabIndex = 29;
+            this.picRightImage.TabStop = false;
+            // 
+            // picLeftImage
+            // 
+            this.picLeftImage.Location = new System.Drawing.Point(20, 145);
+            this.picLeftImage.Name = "picLeftImage";
+            this.picLeftImage.Size = new System.Drawing.Size(108, 96);
+            this.picLeftImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picLeftImage.TabIndex = 28;
+            this.picLeftImage.TabStop = false;
             // 
             // cmdReset
             // 
@@ -464,42 +522,6 @@ namespace StereoMapping
             this.cmdRunOneStep.UseVisualStyleBackColor = true;
             this.cmdRunOneStep.Click += new System.EventHandler(this.cmdRunOneStep_Click);
             // 
-            // picLeftImage
-            // 
-            this.picLeftImage.Location = new System.Drawing.Point(20, 145);
-            this.picLeftImage.Name = "picLeftImage";
-            this.picLeftImage.Size = new System.Drawing.Size(108, 96);
-            this.picLeftImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picLeftImage.TabIndex = 28;
-            this.picLeftImage.TabStop = false;
-            // 
-            // picRightImage
-            // 
-            this.picRightImage.Location = new System.Drawing.Point(134, 145);
-            this.picRightImage.Name = "picRightImage";
-            this.picRightImage.Size = new System.Drawing.Size(108, 96);
-            this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picRightImage.TabIndex = 29;
-            this.picRightImage.TabStop = false;
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(17, 120);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(83, 13);
-            this.label11.TabIndex = 30;
-            this.label11.Text = "The robots view";
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(259, 22);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(82, 13);
-            this.label12.TabIndex = 31;
-            this.label12.Text = "Occupancy grid";
-            // 
             // frmMapping
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -522,9 +544,9 @@ namespace StereoMapping
             this.tabParameters.PerformLayout();
             this.tabSimulation.ResumeLayout(false);
             this.tabSimulation.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -579,6 +601,8 @@ namespace StereoMapping
         private System.Windows.Forms.PictureBox picRightImage;
         private System.Windows.Forms.PictureBox picLeftImage;
         private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.ListView lstBenchmarks;
+        private System.Windows.Forms.Label label13;
     }
 }
 

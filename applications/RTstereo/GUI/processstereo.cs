@@ -158,8 +158,8 @@ namespace WindowsApplication1
         {
             Byte[] img_rays = new Byte[img_width * img_height * 3];
             robot_head.setStereoFeatures(0, features.features, features.uncertainties, features.features.Length);
-            viewpoint v = stereo_model.createViewpoint(robot_head, null);
-            v.showAbove(img_rays, img_width, img_height, 2000, 255, 255, 255, true, 50, true);
+            //viewpoint v = stereo_model.createViewpoint(robot_head, null);
+            //v.showAbove(img_rays, img_width, img_height, 2000, 255, 255, 255, true, 50, true);
             return (img_rays);
         }
 

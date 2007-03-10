@@ -315,6 +315,13 @@ namespace StereoMapping
         {
             ArrayList images = getStereoImages(sim.current_time_step);
             sim.RunOneStep(images);
+
+            // show the benchmarks
+            ArrayList benchmarks = sim.GetBenchmarks();
+            lstBenchmarks.View = View.List;
+            lstBenchmarks.Items.Clear();
+            for (int i = 0; i < benchmarks.Count; i++)
+                lstBenchmarks.Items.Add((String)benchmarks[i]);
         }
 
         private void cmdRunOneStep_Click(object sender, EventArgs e)

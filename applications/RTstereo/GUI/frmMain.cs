@@ -30,6 +30,7 @@ using System.Drawing.Imaging;
 using System.Text;
 using System.Windows.Forms;
 using DirectX.Capture;
+using sentience.core;
 
 namespace WindowsApplication1
 {
@@ -78,7 +79,7 @@ namespace WindowsApplication1
         // used for storing path data
         int viewpointNumber = 1;
 
-        DateTime stopWatchTime;
+        private stopwatch clock = new stopwatch();
 
         Byte[] background_bmp = null;
 
@@ -292,26 +293,6 @@ namespace WindowsApplication1
         {
             
         }
-
-        #region "timing fuinctions"
-
-        private void beginStopWatch()
-        {
-            stopWatchTime = DateTime.Now;
-        }
-
-        private long endStopWatch()
-        {
-            DateTime currentTime = DateTime.Now;
-            TimeSpan timeDiff;
-            long milliseconds;
-
-            timeDiff = currentTime.Subtract(stopWatchTime);
-            milliseconds = (long)timeDiff.TotalMilliseconds;
-            return (milliseconds);
-        }
-
-        #endregion
 
 
         #region "stuff not used"
@@ -613,7 +594,7 @@ namespace WindowsApplication1
                 if (readyToUpdate)
                 {
                     // start timing the stereo processing
-                    beginStopWatch();
+                    clock.Start();
 
                     // find stereo correspondences
                     stereo.stereoMatch(global_variables.left_bmp, global_variables.right_bmp,
@@ -628,7 +609,7 @@ namespace WindowsApplication1
                     }
 
                     // how long did the processing take ?
-                    processingTime = (int)endStopWatch();
+                    processingTime = (int)clock.Stop();
 
                     // update the frames per second and other info
                     updateProcessingTime(processingTime);

@@ -31,6 +31,15 @@ namespace sentience.core
     {        
         public int no_of_stereo_cameras;   // number of stereo cameras on the head
 
+        // object used for taking benchmark timings
+        private stopwatch clock = new stopwatch();
+
+        // timing results in milliseconds
+        public long benchmark_stereo_correspondence;
+        public long benchmark_observation_update;
+        public long benchmark_garbage_collection;
+        public long benchmark_prediction;
+
         // head geometry, stereo features and calibration data
         public stereoHead head;            
 
@@ -288,12 +297,17 @@ namespace sentience.core
 
         private void loadImages(ArrayList images)
         {
+            clock.Start();
+
             for (int i = 0; i < images.Count / 2; i++)
             {
                 Byte[] left_image = (Byte[])images[i * 2];
                 Byte[] right_image = (Byte[])images[(i * 2) + 1];
                 loadRawImages(i, left_image, right_image, 3);
             }
+
+            clock.Stop();
+            benchmark_stereo_correspondence = clock.time_elapsed_mS;
         }
 
         /// <summary>
@@ -363,7 +377,7 @@ namespace sentience.core
         private void update(ArrayList images)
         {
             if (images != null)
-            {
+            {                
                 // load stereo images
                 loadImages(images);
 
@@ -372,12 +386,27 @@ namespace sentience.core
                 for (int cam = 0; cam < head.no_of_cameras; cam++)
                     stereo_rays[cam] = inverseSensorModel.createObservation(head, cam);
 
+                clock.Start();
+
                 // update all current poses with the observation
                 motion.AddObservation(stereo_rays);
+
+                clock.Stop();
+                benchmark_observation_update = clock.time_elapsed_mS;
                
                 // what's the relative position of the robot inside the grid ?
                 pos3D relative_position = new pos3D(x - LocalGrid.x, y - LocalGrid.y, 0);
                 relative_position.pan = pan - LocalGrid.pan;
+
+                clock.Start();
+
+                // randomly garbage collect a percentage of the grid cells
+                // this removes dead hypotheses which would otherwise clogg
+                // up the system
+                LocalGrid.GarbageCollect(5);
+
+                clock.Stop();
+                benchmark_garbage_collection = clock.time_elapsed_mS;
 
                 // have we moved off the current grid ?
                 checkOutOfBounds(); 
@@ -422,7 +451,12 @@ namespace sentience.core
                 float angular_velocity = motion.angular_velocity + (acceleration * time_per_index_sec);
                 motion.angular_velocity = angular_velocity;
 
+                clock.Start();
+
                 motion.Predict(time_per_index_sec);
+
+                clock.Stop();
+                benchmark_prediction = clock.time_elapsed_mS;
             }
 
             storePreviousPosition();
@@ -466,9 +500,14 @@ namespace sentience.core
                 motion.RightWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;
             }
 
+            clock.Start();
+
             // update the motion model
             motion.InputType = motionModel.INPUTTYPE_WHEEL_ANGULAR_VELOCITY;
             motion.Predict(time_elapsed_sec);
+
+            clock.Stop();
+            benchmark_prediction = clock.time_elapsed_mS;
 
             prev_left_wheel_encoder = left_wheel_encoder;
             prev_right_wheel_encoder = right_wheel_encoder;
@@ -497,7 +536,13 @@ namespace sentience.core
             motion.forward_velocity = forward_velocity;
             motion.angular_acceleration = angular_velocity - motion.angular_velocity;
             motion.angular_velocity = angular_velocity;
+
+            clock.Start();
+
             motion.Predict(time_elapsed_sec);
+
+            clock.Stop();
+            benchmark_prediction = clock.time_elapsed_mS;
 
             storePreviousPosition();
         }

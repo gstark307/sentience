@@ -41,17 +41,30 @@ namespace sentience.core
         // list of occupancy hypotheses, of type particleGridCell
         public ArrayList Hypothesis;
 
+        #region "garbage collection"
+
+        // the number of garbage hypotheses accumulated within this grid cell
+        public int garbage_entries = 0;
+
         /// <summary>
         /// any old iron...
         /// </summary>
         public void GarbageCollect()
         {
-            for (int i = Hypothesis.Count - 1; i >= 0; i++)
+            int i = Hypothesis.Count - 1;
+            while ((i >= 0) && (garbage_entries > 0))
             {
                 particleGridCell h = (particleGridCell)Hypothesis[i];
-                if (!h.Enabled) Hypothesis.RemoveAt(i);
+                if (!h.Enabled)
+                {
+                    Hypothesis.RemoveAt(i);
+                    garbage_entries--;
+                }
+                i--;
             }
         }
+
+        #endregion
 
         /// <summary>
         /// returns the probability of occupancy at this grid cell
@@ -63,31 +76,33 @@ namespace sentience.core
         {           
             float probabilityLogOdds = 0;
             int hits = 0;
-            ArrayList garbage = null;
-            int max_garbage_entries = Hypothesis.Count / 2;
+            int step_size = 1 + (Hypothesis.Count / 10);
 
             if (pose.previous_paths != null)
             {
                 UInt32 curr_path_ID = UInt32.MaxValue;
                 int i = Hypothesis.Count - 1;
 
-                UInt32 path_ID = (UInt32)pose.previous_paths[0];
-                bool found = false;
-                while ((i >= 0) && (!found))
-                {
-                    particleGridCell h = (particleGridCell)Hypothesis[i];
-                    if (h.pose.path_ID > path_ID)
-                    {
-                        curr_path_ID = h.pose.path_ID;
-                        i -= 10;
-                    }
-                    else found = true;
-                }
-
                 // cycle through the path IDs for this pose            
                 for (int p = 0; p < pose.previous_paths.Count; p++)
                 {
-                    path_ID = (UInt32)pose.previous_paths[p];
+                    UInt32 path_ID = (UInt32)pose.previous_paths[p];
+
+                    // quickly find the first entry
+                    bool found = false;
+                    int start_i = i;
+                    while ((i >= 0) && (!found))
+                    {
+                        particleGridCell h = (particleGridCell)Hypothesis[i];
+                        if (h.pose.path_ID > path_ID)
+                        {
+                            curr_path_ID = h.pose.path_ID;
+                            i -= step_size;
+                        }
+                        else found = true;
+                    }
+                    if (start_i != i) i += step_size;
+
 
                     while ((i >= 0) && (curr_path_ID >= path_ID))
                     {
@@ -104,26 +119,8 @@ namespace sentience.core
                                     hits++;
                                 }
                         }
-                        else
-                        {
-                            // store the indexes of dead hypotheses
-                            // which will be garbage collected later
-                            if (garbage == null) garbage = new ArrayList();
-                            if (garbage.Count < max_garbage_entries) garbage.Add(i);
-                        }
                         i--;
                     }
-                }
-            }
-
-            // garbage collect dead hypotheses if any were encountered
-            // during the search
-            if (garbage != null)
-            {
-                for (int i = 0; i < garbage.Count; i++)
-                {
-                    int index = (int)garbage[i];
-                    Hypothesis.RemoveAt(index);
                 }
             }
 
@@ -148,6 +145,8 @@ namespace sentience.core
     /// </summary>
     public class occupancygridMultiHypothesis : pos3D
     {
+        private Random rnd = new Random();
+
         // a quick lookup table for gaussian values
         private float[] gaussianLookup;
 
@@ -226,7 +225,23 @@ namespace sentience.core
             // and then have it subsequently removed by garbage collection
             //cell[hypothesis.x, hypothesis.y].Hypothesis.Remove(hypothesis);
 
+            cell[hypothesis.x, hypothesis.y].garbage_entries++;
             hypothesis.Enabled = false;
+        }
+
+        /// <summary>
+        /// remove any casualties from the battlefield
+        /// </summary>
+        /// <param name="percentage">the percentage of grid cells to sample for garbage</param>
+        public void GarbageCollect(int percentage)
+        {
+            int tries = dimension_cells * dimension_cells * percentage / 100;
+            for (int i = 0; i < tries; i++)
+            {
+                int x = rnd.Next(dimension_cells - 1);
+                int y = rnd.Next(dimension_cells - 1);
+                if (cell[x, y] != null) cell[x, y].GarbageCollect();
+            }
         }
 
         /// <summary>

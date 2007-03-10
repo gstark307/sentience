@@ -60,6 +60,7 @@
     <Compile Include="robotOdometry.cs" />
     <Compile Include="robot.cs" />
     <Compile Include="stereoCorrespondence.cs" />
+    <Compile Include="stopwatch.cs" />
     <Compile Include="util.cs" />
     <Compile Include="evidenceRay.cs" />
     <Compile Include="pos3D.cs" />
