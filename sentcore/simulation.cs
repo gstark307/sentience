@@ -205,7 +205,7 @@ namespace sentience.core
                 }
 
                 // increment the simulation time step
-                if (current_time_step < path.path.Count-1)
+                if (current_time_step < path.path.Count-2)
                     current_time_step++;
             }
         }

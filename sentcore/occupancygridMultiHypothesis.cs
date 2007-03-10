@@ -42,6 +42,18 @@ namespace sentience.core
         public ArrayList Hypothesis;
 
         /// <summary>
+        /// any old iron...
+        /// </summary>
+        public void GarbageCollect()
+        {
+            for (int i = Hypothesis.Count - 1; i >= 0; i++)
+            {
+                particleGridCell h = (particleGridCell)Hypothesis[i];
+                if (!h.Enabled) Hypothesis.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
         /// returns the probability of occupancy at this grid cell
         /// warning: this could potentially suffer from path ID or time step rollover problems
         /// </summary>
@@ -51,29 +63,67 @@ namespace sentience.core
         {           
             float probabilityLogOdds = 0;
             int hits = 0;
+            ArrayList garbage = null;
+            int max_garbage_entries = Hypothesis.Count / 2;
 
             if (pose.previous_paths != null)
             {
                 UInt32 curr_path_ID = UInt32.MaxValue;
                 int i = Hypothesis.Count - 1;
+
+                UInt32 path_ID = (UInt32)pose.previous_paths[0];
+                bool found = false;
+                while ((i >= 0) && (!found))
+                {
+                    particleGridCell h = (particleGridCell)Hypothesis[i];
+                    if (h.pose.path_ID > path_ID)
+                    {
+                        curr_path_ID = h.pose.path_ID;
+                        i -= 10;
+                    }
+                    else found = true;
+                }
+
                 // cycle through the path IDs for this pose            
                 for (int p = 0; p < pose.previous_paths.Count; p++)
                 {
-                    UInt32 path_ID = (UInt32)pose.previous_paths[p];
+                    path_ID = (UInt32)pose.previous_paths[p];
+
                     while ((i >= 0) && (curr_path_ID >= path_ID))
                     {
                         particleGridCell h = (particleGridCell)Hypothesis[i];
                         curr_path_ID = h.pose.path_ID;
-                        if (curr_path_ID == path_ID)
-                            // only use evidence older than the current time 
-                            // step to avoid getting into a muddle
-                            if (pose.time_step > h.pose.time_step)
-                            {
-                                probabilityLogOdds += h.probabilityLogOdds;
-                                hits++;
-                            }
+                        if (h.Enabled)
+                        {
+                            if (curr_path_ID == path_ID)
+                                // only use evidence older than the current time 
+                                // step to avoid getting into a muddle
+                                if (pose.time_step > h.pose.time_step)
+                                {
+                                    probabilityLogOdds += h.probabilityLogOdds;
+                                    hits++;
+                                }
+                        }
+                        else
+                        {
+                            // store the indexes of dead hypotheses
+                            // which will be garbage collected later
+                            if (garbage == null) garbage = new ArrayList();
+                            if (garbage.Count < max_garbage_entries) garbage.Add(i);
+                        }
                         i--;
                     }
+                }
+            }
+
+            // garbage collect dead hypotheses if any were encountered
+            // during the search
+            if (garbage != null)
+            {
+                for (int i = 0; i < garbage.Count; i++)
+                {
+                    int index = (int)garbage[i];
+                    Hypothesis.RemoveAt(index);
                 }
             }
 
@@ -171,7 +221,12 @@ namespace sentience.core
         /// <param name="hypothesis"></param>
         public void Remove(particleGridCell hypothesis)
         {
-            cell[hypothesis.x, hypothesis.y].Hypothesis.Remove(hypothesis);
+            // removing in this way is very inefficient
+            // its better simply to dissable the hypothesis 
+            // and then have it subsequently removed by garbage collection
+            //cell[hypothesis.x, hypothesis.y].Hypothesis.Remove(hypothesis);
+
+            hypothesis.Enabled = false;
         }
 
         /// <summary>

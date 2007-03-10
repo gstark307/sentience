@@ -29,6 +29,10 @@ namespace sentience.core
     /// </summary>
     public class particleGridCell
     {
+        // whether this particle is enabled or dead
+        // this flag allows the system to go around collecting garbage
+        public bool Enabled;
+
         // grid cell coordinate
         public short x, y;
 
@@ -44,6 +48,7 @@ namespace sentience.core
             this.y = (short)y;
             this.probabilityLogOdds = util.LogOdds(probability); // store as log odds
             this.pose = pose;
+            Enabled = true;
         }
     }
 }
