@@ -105,7 +105,9 @@ namespace robotDesigner
                 txtGridDimension.Text = Convert.ToString(rob.LocalGridDimension);
                 txtGridCellDimension.Text = Convert.ToString(rob.LocalGridCellSize_mm);
                 txtGridInterval.Text = Convert.ToString(rob.LocalGridInterval_mm);
+                txtMappingRange.Text = Convert.ToString(rob.LocalGridMappingRange_mm);
                 txtLocalGridLocalisationRadius.Text = Convert.ToString(rob.LocalGridLocalisationRadius_mm);
+                txtTrialPoses.Text = Convert.ToString(rob.motion.survey_trial_poses);
 
                 updateSensorModelStatus();
             }
@@ -158,7 +160,9 @@ namespace robotDesigner
             rob.LocalGridDimension = Convert.ToInt32(txtGridDimension.Text);
             rob.LocalGridCellSize_mm = Convert.ToSingle(txtGridCellDimension.Text);
             rob.LocalGridInterval_mm = Convert.ToSingle(txtGridInterval.Text);
+            rob.LocalGridMappingRange_mm = Convert.ToSingle(txtMappingRange.Text);
             rob.LocalGridLocalisationRadius_mm = Convert.ToSingle(txtLocalGridLocalisationRadius.Text);
+            rob.motion.survey_trial_poses = Convert.ToInt32(txtTrialPoses.Text);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -270,6 +274,7 @@ namespace robotDesigner
                 // for the new cell size
                 rob.head.sensormodel[0] = null;
                 updateSensorModelStatus();
+                checkLocalisationRadius();
             }
 
         }
@@ -283,7 +288,25 @@ namespace robotDesigner
                 rob.head.sensormodel[0] = null;
                 updateSensorModelStatus();
                 cellSizeChanged = false;
+                checkLocalisationRadius();
             }
+        }
+
+        private void checkLocalisationRadius()
+        {
+            // don't allow the localisation radius to be smaller than the grid cell size
+            float locRadius = Convert.ToSingle(txtLocalGridLocalisationRadius.Text);
+            float dimension = Convert.ToSingle(txtGridCellDimension.Text);
+            if (locRadius < dimension)
+            {
+                locRadius = dimension;
+                txtLocalGridLocalisationRadius.Text = Convert.ToString(dimension);
+            }
+        }
+
+        private void txtLocalGridLocalisationRadius_Leave(object sender, EventArgs e)
+        {
+            checkLocalisationRadius();
         }
     }
 }

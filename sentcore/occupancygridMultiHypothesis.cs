@@ -63,7 +63,7 @@ namespace sentience.core
                     garbage_entries--;
                     collected_items++;
                 }
-                i--;
+                i-=2;
             }
             return (collected_items);
         }
@@ -169,6 +169,9 @@ namespace sentience.core
         // the total amount of garbage awaiting collection
         public int total_garbage_hypotheses = 0;
 
+        // the maximum range of features to insert into the grid
+        private int max_mapping_range_cells;
+
         // cells of the grid
         occupancygridCellMultiHypothesis[,] cell;
 
@@ -179,11 +182,12 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        private void init(int dimension_cells, int cellSize_mm, int localisationRadius_mm)
+        private void init(int dimension_cells, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
         {
             this.dimension_cells = dimension_cells;
             this.cellSize_mm = cellSize_mm;
             this.localisation_search_cells = localisationRadius_mm / cellSize_mm;
+            this.max_mapping_range_cells = maxMappingRange_mm / dimension_cells;
             cell = new occupancygridCellMultiHypothesis[dimension_cells, dimension_cells];
 
             // make a lookup table for gaussians - saves doing a lot of floating point maths
@@ -195,10 +199,10 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        public occupancygridMultiHypothesis(int dimension_cells, int cellSize_mm, int localisationRadius_mm)
+        public occupancygridMultiHypothesis(int dimension_cells, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
             : base(0, 0,0)
         {
-            init(dimension_cells, cellSize_mm, localisationRadius_mm);
+            init(dimension_cells, cellSize_mm, localisationRadius_mm, maxMappingRange_mm);
         }
 
         #endregion
@@ -214,7 +218,8 @@ namespace sentience.core
         private float vacancyFunction(float fraction, int steps)
         {
             float min_vacancy_probability = 0.0f;
-            float max_vacancy_probability = 0.1f;
+            //float max_vacancy_probability = 0.00000000001f;
+            float max_vacancy_probability = 0.001f;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
             return (0.5f - (prob / steps));
@@ -335,6 +340,10 @@ namespace sentience.core
 
             for (int modelcomponent = OCCUPIED_SENSORMODEL; modelcomponent <= VACANT_SENSORMODEL_RIGHT_CAMERA; modelcomponent++)
             {
+                // the range from the cameras from which insertion of data begins
+                // for vacancy rays this will be zero, but will be non-zero for the occupancy area
+                int startingRange = 0;
+
                 switch (modelcomponent)
                 {
                     case OCCUPIED_SENSORMODEL:
@@ -399,6 +408,15 @@ namespace sentience.core
                     longest -= ray.width;
 
                 int steps = (int)(longest / cellSize_mm);
+                if (steps < 1) steps = 1;
+
+                // calculate the range from the cameras to the start of the ray in grid cells
+                if (modelcomponent == OCCUPIED_SENSORMODEL)
+                    if (longest_axis == Y_AXIS)
+                        startingRange = (int)Math.Abs((ray.vertices[0].y - ray.observedFrom.y) / cellSize_mm);
+                    else
+                        startingRange = (int)Math.Abs((ray.vertices[0].x - ray.observedFrom.x) / cellSize_mm);
+
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
                     widest_point = (int)(ray.fattestPoint * steps / ray.length);
                 else
@@ -497,7 +515,7 @@ namespace sentience.core
                                     }
                                 }
 
-                                if (isInsideMappingRayWidth)
+                                if ((isInsideMappingRayWidth) && (i + startingRange < max_mapping_range_cells))
                                 {
                                     // add a new hypothesis to this grid coordinate
                                     // note that this is also added to the original pose

@@ -444,16 +444,16 @@ namespace StereoMapping
             this.label13.AutoSize = true;
             this.label13.Location = new System.Drawing.Point(17, 253);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(96, 13);
+            this.label13.Size = new System.Drawing.Size(25, 13);
             this.label13.TabIndex = 33;
-            this.label13.Text = "Benchmark timings";
+            this.label13.Text = "Info";
             // 
             // lstBenchmarks
             // 
             this.lstBenchmarks.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lstBenchmarks.Location = new System.Drawing.Point(20, 269);
             this.lstBenchmarks.Name = "lstBenchmarks";
-            this.lstBenchmarks.Size = new System.Drawing.Size(222, 124);
+            this.lstBenchmarks.Size = new System.Drawing.Size(222, 170);
             this.lstBenchmarks.TabIndex = 32;
             this.lstBenchmarks.UseCompatibleStateImageBehavior = false;
             // 

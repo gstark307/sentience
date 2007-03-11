@@ -89,6 +89,7 @@ namespace sentience.core
         public int LocalGridDimension = 128;      // Cubic dimension of the local grid in cells
         public float LocalGridCellSize_mm = 32;   // Size of each grid cell (voxel) in millimetres
         public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
+        public float LocalGridMappingRange_mm = 2000;  // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
         public float LocalGridLocalisationRadius_mm = 64;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
        
@@ -140,7 +141,7 @@ namespace sentience.core
         private void createLocalGrid()
         {
             // create the local grid
-            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm);
+            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm);
         }
 
         /// <summary>
@@ -677,7 +678,11 @@ namespace sentience.core
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridIntervalMillimetres", Convert.ToString(LocalGridInterval_mm));
 
             util.AddComment(doc, nodeOccupancyGrid, "An extra radius applied when localising within the grid, to make localisation rays wider");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLocalisationRadiusMillimetres", Convert.ToString(LocalGridLocalisationRadius_mm));            
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLocalisationRadiusMillimetres", Convert.ToString(LocalGridLocalisationRadius_mm));
+
+            util.AddComment(doc, nodeOccupancyGrid, "When updating the grid map this is the maximum range within which cells will be updated");
+            util.AddComment(doc, nodeOccupancyGrid, "This prevents the system from being slowed down by the insertion of a lot of very long range rays");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridMappingRangeMillimetres", Convert.ToString(LocalGridMappingRange_mm));            
 
             nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
 
@@ -902,7 +907,11 @@ namespace sentience.core
             {
                 LocalGridLocalisationRadius_mm = Convert.ToSingle(xnod.InnerText);
             }
-                        
+
+            if (xnod.Name == "LocalGridMappingRangeMillimetres")
+            {
+                LocalGridMappingRange_mm = Convert.ToSingle(xnod.InnerText);
+            }            
 
             if (xnod.Name == "StereoCamera")
             {

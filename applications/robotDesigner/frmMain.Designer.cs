@@ -89,6 +89,8 @@ namespace robotDesigner
             this.txtName = new System.Windows.Forms.TextBox();
             this.label16 = new System.Windows.Forms.Label();
             this.grpStereoCamera = new System.Windows.Forms.GroupBox();
+            this.txtRollAngle = new System.Windows.Forms.TextBox();
+            this.label32 = new System.Windows.Forms.Label();
             this.txtCameraFOV = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.txtCameraBaseline = new System.Windows.Forms.TextBox();
@@ -98,12 +100,15 @@ namespace robotDesigner
             this.tabRobot = new System.Windows.Forms.TabControl();
             this.tabGeometry = new System.Windows.Forms.TabPage();
             this.tabPerception = new System.Windows.Forms.TabPage();
+            this.grpLocalisation = new System.Windows.Forms.GroupBox();
+            this.txtTrialPoses = new System.Windows.Forms.TextBox();
+            this.label33 = new System.Windows.Forms.Label();
+            this.txtLocalGridLocalisationRadius = new System.Windows.Forms.TextBox();
+            this.label31 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.txtSensorModelsStatus = new System.Windows.Forms.TextBox();
             this.cmdGenerateSensorModels = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.txtLocalGridLocalisationRadius = new System.Windows.Forms.TextBox();
-            this.label31 = new System.Windows.Forms.Label();
             this.txtGridInterval = new System.Windows.Forms.TextBox();
             this.label26 = new System.Windows.Forms.Label();
             this.txtGridLevels = new System.Windows.Forms.TextBox();
@@ -112,8 +117,8 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.txtRollAngle = new System.Windows.Forms.TextBox();
-            this.label32 = new System.Windows.Forms.Label();
+            this.txtMappingRange = new System.Windows.Forms.TextBox();
+            this.label34 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -123,6 +128,7 @@ namespace robotDesigner
             this.tabRobot.SuspendLayout();
             this.tabGeometry.SuspendLayout();
             this.tabPerception.SuspendLayout();
+            this.grpLocalisation.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.SuspendLayout();
@@ -744,6 +750,24 @@ namespace robotDesigner
             this.grpStereoCamera.TabStop = false;
             this.grpStereoCamera.Text = "Stereo Camera";
             // 
+            // txtRollAngle
+            // 
+            this.txtRollAngle.Location = new System.Drawing.Point(131, 71);
+            this.txtRollAngle.Name = "txtRollAngle";
+            this.txtRollAngle.Size = new System.Drawing.Size(59, 20);
+            this.txtRollAngle.TabIndex = 7;
+            this.txtRollAngle.Text = "0";
+            this.txtRollAngle.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label32
+            // 
+            this.label32.AutoSize = true;
+            this.label32.Location = new System.Drawing.Point(17, 74);
+            this.label32.Name = "label32";
+            this.label32.Size = new System.Drawing.Size(95, 13);
+            this.label32.TabIndex = 6;
+            this.label32.Text = "Roll angle degrees";
+            // 
             // txtCameraFOV
             // 
             this.txtCameraFOV.Location = new System.Drawing.Point(131, 45);
@@ -811,6 +835,7 @@ namespace robotDesigner
             // 
             // tabPerception
             // 
+            this.tabPerception.Controls.Add(this.grpLocalisation);
             this.tabPerception.Controls.Add(this.groupBox4);
             this.tabPerception.Controls.Add(this.groupBox3);
             this.tabPerception.Location = new System.Drawing.Point(4, 22);
@@ -820,6 +845,56 @@ namespace robotDesigner
             this.tabPerception.TabIndex = 1;
             this.tabPerception.Text = "Perception";
             this.tabPerception.UseVisualStyleBackColor = true;
+            // 
+            // grpLocalisation
+            // 
+            this.grpLocalisation.Controls.Add(this.txtTrialPoses);
+            this.grpLocalisation.Controls.Add(this.label33);
+            this.grpLocalisation.Controls.Add(this.txtLocalGridLocalisationRadius);
+            this.grpLocalisation.Controls.Add(this.label31);
+            this.grpLocalisation.Location = new System.Drawing.Point(17, 201);
+            this.grpLocalisation.Name = "grpLocalisation";
+            this.grpLocalisation.Size = new System.Drawing.Size(217, 102);
+            this.grpLocalisation.TabIndex = 4;
+            this.grpLocalisation.TabStop = false;
+            this.grpLocalisation.Text = "Localisation";
+            // 
+            // txtTrialPoses
+            // 
+            this.txtTrialPoses.Location = new System.Drawing.Point(131, 58);
+            this.txtTrialPoses.Name = "txtTrialPoses";
+            this.txtTrialPoses.Size = new System.Drawing.Size(59, 20);
+            this.txtTrialPoses.TabIndex = 11;
+            this.txtTrialPoses.Text = "100";
+            this.txtTrialPoses.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Location = new System.Drawing.Point(17, 58);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(58, 13);
+            this.label33.TabIndex = 10;
+            this.label33.Text = "Trial poses";
+            // 
+            // txtLocalGridLocalisationRadius
+            // 
+            this.txtLocalGridLocalisationRadius.Location = new System.Drawing.Point(131, 32);
+            this.txtLocalGridLocalisationRadius.Name = "txtLocalGridLocalisationRadius";
+            this.txtLocalGridLocalisationRadius.Size = new System.Drawing.Size(59, 20);
+            this.txtLocalGridLocalisationRadius.TabIndex = 9;
+            this.txtLocalGridLocalisationRadius.Text = "64";
+            this.txtLocalGridLocalisationRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtLocalGridLocalisationRadius.Leave += new System.EventHandler(this.txtLocalGridLocalisationRadius_Leave);
+            // 
+            // label31
+            // 
+            this.label31.AutoSize = true;
+            this.label31.Location = new System.Drawing.Point(17, 32);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(113, 13);
+            this.label31.TabIndex = 8;
+            this.label31.Text = "Localisation radius mm";
             // 
             // groupBox4
             // 
@@ -854,8 +929,8 @@ namespace robotDesigner
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.txtLocalGridLocalisationRadius);
-            this.groupBox3.Controls.Add(this.label31);
+            this.groupBox3.Controls.Add(this.txtMappingRange);
+            this.groupBox3.Controls.Add(this.label34);
             this.groupBox3.Controls.Add(this.txtGridInterval);
             this.groupBox3.Controls.Add(this.label26);
             this.groupBox3.Controls.Add(this.txtGridLevels);
@@ -866,28 +941,10 @@ namespace robotDesigner
             this.groupBox3.Controls.Add(this.label29);
             this.groupBox3.Location = new System.Drawing.Point(17, 19);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(217, 170);
+            this.groupBox3.Size = new System.Drawing.Size(217, 166);
             this.groupBox3.TabIndex = 2;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Local Occupancy Map";
-            // 
-            // txtLocalGridLocalisationRadius
-            // 
-            this.txtLocalGridLocalisationRadius.Location = new System.Drawing.Point(131, 130);
-            this.txtLocalGridLocalisationRadius.Name = "txtLocalGridLocalisationRadius";
-            this.txtLocalGridLocalisationRadius.Size = new System.Drawing.Size(59, 20);
-            this.txtLocalGridLocalisationRadius.TabIndex = 9;
-            this.txtLocalGridLocalisationRadius.Text = "64";
-            this.txtLocalGridLocalisationRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // label31
-            // 
-            this.label31.AutoSize = true;
-            this.label31.Location = new System.Drawing.Point(17, 130);
-            this.label31.Name = "label31";
-            this.label31.Size = new System.Drawing.Size(113, 13);
-            this.label31.TabIndex = 8;
-            this.label31.Text = "Localisation radius mm";
             // 
             // txtGridInterval
             // 
@@ -964,23 +1021,23 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
-            // txtRollAngle
+            // txtMappingRange
             // 
-            this.txtRollAngle.Location = new System.Drawing.Point(131, 71);
-            this.txtRollAngle.Name = "txtRollAngle";
-            this.txtRollAngle.Size = new System.Drawing.Size(59, 20);
-            this.txtRollAngle.TabIndex = 7;
-            this.txtRollAngle.Text = "0";
-            this.txtRollAngle.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtMappingRange.Location = new System.Drawing.Point(131, 130);
+            this.txtMappingRange.Name = "txtMappingRange";
+            this.txtMappingRange.Size = new System.Drawing.Size(59, 20);
+            this.txtMappingRange.TabIndex = 9;
+            this.txtMappingRange.Text = "2000";
+            this.txtMappingRange.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // label32
+            // label34
             // 
-            this.label32.AutoSize = true;
-            this.label32.Location = new System.Drawing.Point(17, 74);
-            this.label32.Name = "label32";
-            this.label32.Size = new System.Drawing.Size(95, 13);
-            this.label32.TabIndex = 6;
-            this.label32.Text = "Roll angle degrees";
+            this.label34.AutoSize = true;
+            this.label34.Location = new System.Drawing.Point(17, 130);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(97, 13);
+            this.label34.TabIndex = 8;
+            this.label34.Text = "Mapping range mm";
             // 
             // frmMain
             // 
@@ -1008,6 +1065,8 @@ namespace robotDesigner
             this.tabRobot.ResumeLayout(false);
             this.tabGeometry.ResumeLayout(false);
             this.tabPerception.ResumeLayout(false);
+            this.grpLocalisation.ResumeLayout(false);
+            this.grpLocalisation.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
@@ -1105,6 +1164,11 @@ namespace robotDesigner
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.TextBox txtRollAngle;
         private System.Windows.Forms.Label label32;
+        private System.Windows.Forms.GroupBox grpLocalisation;
+        private System.Windows.Forms.TextBox txtTrialPoses;
+        private System.Windows.Forms.Label label33;
+        private System.Windows.Forms.TextBox txtMappingRange;
+        private System.Windows.Forms.Label label34;
     }
 }
 
