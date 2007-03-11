@@ -247,7 +247,7 @@ namespace sentience.core
                 }
             }
 
-            // remove mature poses with a score below the cull threshold
+            // It's culling season: remove mature poses with a score below the cull threshold
             float threshold = min_score + ((max_score-min_score) * cull_threshold / 100);
             for (int mature = 0; mature < maturePoses.Count; mature++)
             {
@@ -272,22 +272,16 @@ namespace sentience.core
 
             if (best_path != null)
             {
-                // choose a good pose, but not necessarily the best
-                // this avoids too much elitism
+                // generate new poses from the ones which have survived culling
                 int new_poses_required = survey_trial_poses - Poses.Count;
                 int max = Poses.Count;
-                //float score_threshold = best_path.current_pose.score * 50 / 100;
-                while (new_poses_required > 0)
+                for (int i = 0; i < new_poses_required; i++)
                 {
                     particlePath path = (particlePath)Poses[rnd.Next(max)];
 
                     particlePath p = new particlePath(path, path_ID);
                     createNewPose(p);
-                    new_poses_required--;                        
                 }
-
-                // create new poses to maintain the population
-                //createNewPoses(best);
 
                 // update the robot position with the best available pose
                 rob.x = best_path.current_pose.x;
