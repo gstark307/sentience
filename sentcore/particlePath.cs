@@ -152,11 +152,13 @@ namespace sentience.core
                 float dy = pose.y - prev_pose.y;
                 float distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
                 float acceleration = (2 * (distance - (forward_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                acceleration /= time_per_index_sec;
                 forward_velocity = forward_velocity + (acceleration * time_per_index_sec);
                 result.Add(forward_velocity);
 
                 distance = pose.pan - prev_pose.pan;
                 acceleration = (2 * (distance - (angular_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                acceleration /= time_per_index_sec;
                 angular_velocity = angular_velocity + (acceleration * time_per_index_sec);
                 result.Add(angular_velocity);
             }

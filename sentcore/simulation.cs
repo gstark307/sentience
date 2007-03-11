@@ -84,7 +84,7 @@ namespace sentience.core
             rob = new robot();
 
             // load the design file
-            rob.Load(RobotDesignFile);
+            rob.Load(RobotDesignFile);            
 
             current_time_step = 0;
             updatePath();
@@ -124,6 +124,37 @@ namespace sentience.core
             if (path != null)
                 path.Show(img, width, height,
                       0, 0, 0, 1, min_xx-100, min_yy-100, max_xx+100, max_yy+100, true);
+        }
+
+        /// <summary>
+        /// show the motion uncertainty
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="clear_background"></param>
+        public void ShowMotionUncertainty(Byte[] img, int width, int height, 
+                                          bool clear_background)
+        {
+            float min_xx = min_x;
+            float max_xx = max_x;
+            if (max_xx - min_xx < 10)
+            {
+                min_xx = -5;
+                max_xx = 5;
+            }
+            float min_yy = min_y;
+            float max_yy = max_y;
+            if (max_yy - min_yy < 10)
+            {
+                min_yy = -5;
+                max_yy = 5;
+            }
+
+            if (clear_background)
+                rob.motion.Show(img, width, height,
+                                min_xx-100, min_yy-100, max_xx+100, max_yy+100,
+                                clear_background);
         }
 
 

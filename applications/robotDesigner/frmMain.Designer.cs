@@ -109,6 +109,8 @@ namespace robotDesigner
             this.txtSensorModelsStatus = new System.Windows.Forms.TextBox();
             this.cmdGenerateSensorModels = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.txtMappingRange = new System.Windows.Forms.TextBox();
+            this.label34 = new System.Windows.Forms.Label();
             this.txtGridInterval = new System.Windows.Forms.TextBox();
             this.label26 = new System.Windows.Forms.Label();
             this.txtGridLevels = new System.Windows.Forms.TextBox();
@@ -117,8 +119,6 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.txtMappingRange = new System.Windows.Forms.TextBox();
-            this.label34 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -883,7 +883,7 @@ namespace robotDesigner
             this.txtLocalGridLocalisationRadius.Name = "txtLocalGridLocalisationRadius";
             this.txtLocalGridLocalisationRadius.Size = new System.Drawing.Size(59, 20);
             this.txtLocalGridLocalisationRadius.TabIndex = 9;
-            this.txtLocalGridLocalisationRadius.Text = "64";
+            this.txtLocalGridLocalisationRadius.Text = "200";
             this.txtLocalGridLocalisationRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.txtLocalGridLocalisationRadius.Leave += new System.EventHandler(this.txtLocalGridLocalisationRadius_Leave);
             // 
@@ -946,6 +946,24 @@ namespace robotDesigner
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Local Occupancy Map";
             // 
+            // txtMappingRange
+            // 
+            this.txtMappingRange.Location = new System.Drawing.Point(131, 130);
+            this.txtMappingRange.Name = "txtMappingRange";
+            this.txtMappingRange.Size = new System.Drawing.Size(59, 20);
+            this.txtMappingRange.TabIndex = 9;
+            this.txtMappingRange.Text = "2500";
+            this.txtMappingRange.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label34
+            // 
+            this.label34.AutoSize = true;
+            this.label34.Location = new System.Drawing.Point(17, 130);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(97, 13);
+            this.label34.TabIndex = 8;
+            this.label34.Text = "Mapping range mm";
+            // 
             // txtGridInterval
             // 
             this.txtGridInterval.Location = new System.Drawing.Point(131, 104);
@@ -1007,7 +1025,7 @@ namespace robotDesigner
             this.txtGridCellDimension.Name = "txtGridCellDimension";
             this.txtGridCellDimension.Size = new System.Drawing.Size(59, 20);
             this.txtGridCellDimension.TabIndex = 1;
-            this.txtGridCellDimension.Text = "32";
+            this.txtGridCellDimension.Text = "100";
             this.txtGridCellDimension.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.txtGridCellDimension.Leave += new System.EventHandler(this.txtGridCellDimension_Leave);
             this.txtGridCellDimension.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtGridCellDimension_KeyPress);
@@ -1020,24 +1038,6 @@ namespace robotDesigner
             this.label29.Size = new System.Drawing.Size(95, 13);
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
-            // 
-            // txtMappingRange
-            // 
-            this.txtMappingRange.Location = new System.Drawing.Point(131, 130);
-            this.txtMappingRange.Name = "txtMappingRange";
-            this.txtMappingRange.Size = new System.Drawing.Size(59, 20);
-            this.txtMappingRange.TabIndex = 9;
-            this.txtMappingRange.Text = "2000";
-            this.txtMappingRange.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // label34
-            // 
-            this.label34.AutoSize = true;
-            this.label34.Location = new System.Drawing.Point(17, 130);
-            this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(97, 13);
-            this.label34.TabIndex = 8;
-            this.label34.Text = "Mapping range mm";
             // 
             // frmMain
             // 

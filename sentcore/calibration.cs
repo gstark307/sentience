@@ -2664,7 +2664,7 @@ namespace sentience.calibration
         /// </summary>
         public void updateCalibrationMap()
         {
-            if ((fitter != null) && (scale > 0) && (image_height > 0))
+            if ((fitter != null) && (scale > 0) && (image_height > 0) && (centre_of_distortion != null))
             {
                 updateCalibrationMap(image_width, image_height, fitter, scale, rotation);
 

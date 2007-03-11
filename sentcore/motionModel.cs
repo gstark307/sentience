@@ -228,6 +228,7 @@ namespace sentience.core
 
             // gather mature poses
             float max_score = 0;
+            float min_score = float.MaxValue;
             ArrayList maturePoses = new ArrayList();
             for (int sample = Poses.Count-1; sample >= 0; sample--)
             {
@@ -237,7 +238,7 @@ namespace sentience.core
                 // use poses which are considered to be mature, or which
                 // have a negative score.  A negative pose score indicates
                 // that it has collided with occupied space within a grid map
-                if ((path.path.Count >= pose_maturation) || (pose.score < 0))
+                if ((path.path.Count >= pose_maturation) || (pose.score <= 0))
                 {
                     // store the index of the pose
                     maturePoses.Add(sample);
@@ -251,10 +252,15 @@ namespace sentience.core
                     max_score = score;
                     best_path = path;
                 }
+                else
+                {
+                    if (score < min_score)
+                        min_score = score;
+                }
             }
 
             // remove mature poses with a score below the cull threshold
-            float threshold = max_score * cull_threshold / 100;
+            float threshold = min_score + ((max_score-min_score) * cull_threshold / 100);
             for (int mature = 0; mature < maturePoses.Count; mature++)
             {
                 // index of the mature pose

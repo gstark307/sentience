@@ -153,7 +153,7 @@ namespace sentience.core
             util.AddTextElement(doc, elem, "PositionMillimetres", Convert.ToString(x) + "," +
                                                        Convert.ToString(y) + "," +
                                                        Convert.ToString(z));
-            util.AddComment(doc, elem, "Orientation in degrees");
+            util.AddComment(doc, elem, "Orientation in degrees - pan, tilt and roll");
             util.AddTextElement(doc, elem, "OrientationDegrees", Convert.ToString(pan / (float)Math.PI * 180.0f) + "," +
                                                                  Convert.ToString(tilt / (float)Math.PI * 180.0f) + "," +
                                                                  Convert.ToString(roll / (float)Math.PI * 180.0f));

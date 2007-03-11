@@ -78,6 +78,9 @@ namespace StereoMapping
             this.cmdReset = new System.Windows.Forms.Button();
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
+            this.tabUncertainty = new System.Windows.Forms.TabPage();
+            this.label14 = new System.Windows.Forms.Label();
+            this.picMotionUncertainty = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -87,6 +90,8 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
+            this.tabUncertainty.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picMotionUncertainty)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -392,6 +397,7 @@ namespace StereoMapping
             // 
             this.tabControl1.Controls.Add(this.tabParameters);
             this.tabControl1.Controls.Add(this.tabSimulation);
+            this.tabControl1.Controls.Add(this.tabUncertainty);
             this.tabControl1.Location = new System.Drawing.Point(12, 27);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -522,6 +528,35 @@ namespace StereoMapping
             this.cmdRunOneStep.UseVisualStyleBackColor = true;
             this.cmdRunOneStep.Click += new System.EventHandler(this.cmdRunOneStep_Click);
             // 
+            // tabUncertainty
+            // 
+            this.tabUncertainty.Controls.Add(this.label14);
+            this.tabUncertainty.Controls.Add(this.picMotionUncertainty);
+            this.tabUncertainty.Location = new System.Drawing.Point(4, 22);
+            this.tabUncertainty.Name = "tabUncertainty";
+            this.tabUncertainty.Size = new System.Drawing.Size(815, 445);
+            this.tabUncertainty.TabIndex = 2;
+            this.tabUncertainty.Text = "Uncertainty";
+            this.tabUncertainty.UseVisualStyleBackColor = true;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(138, 14);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(94, 13);
+            this.label14.TabIndex = 33;
+            this.label14.Text = "Motion uncertainty";
+            // 
+            // picMotionUncertainty
+            // 
+            this.picMotionUncertainty.Location = new System.Drawing.Point(139, 30);
+            this.picMotionUncertainty.Name = "picMotionUncertainty";
+            this.picMotionUncertainty.Size = new System.Drawing.Size(538, 401);
+            this.picMotionUncertainty.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picMotionUncertainty.TabIndex = 32;
+            this.picMotionUncertainty.TabStop = false;
+            // 
             // frmMapping
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -547,6 +582,9 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
+            this.tabUncertainty.ResumeLayout(false);
+            this.tabUncertainty.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picMotionUncertainty)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -603,6 +641,9 @@ namespace StereoMapping
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.ListView lstBenchmarks;
         private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TabPage tabUncertainty;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.PictureBox picMotionUncertainty;
     }
 }
 

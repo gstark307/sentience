@@ -39,6 +39,9 @@ namespace StereoMapping
         // simulation object
         simulation sim;
 
+        // motion uncertainty image
+        Byte[] uncertainty_img = null;
+
         public frmMapping()
         {
             InitializeComponent();
@@ -212,6 +215,19 @@ namespace StereoMapping
         }
 
         /// <summary>
+        /// shows the motion uncertainty
+        /// </summary>
+        private void showMotionUncertainty()
+        {
+            int dimension_mm = sim.rob.LocalGrid.dimension_cells;
+            picMotionUncertainty.Image = new Bitmap(dimension_mm, dimension_mm,
+                                                    System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            uncertainty_img = new Byte[dimension_mm * dimension_mm * 3];
+            sim.ShowMotionUncertainty(uncertainty_img, dimension_mm, dimension_mm, true);
+            updatebitmap_unsafe(uncertainty_img, (Bitmap)(picMotionUncertainty.Image));
+        }
+
+        /// <summary>
         /// show the next pose
         /// </summary>
         private void showNextPose()
@@ -319,6 +335,7 @@ namespace StereoMapping
         /// </summary>
         private void Simulation_Reset()
         {
+            uncertainty_img = null;
             sim.Reset();
         }
 
@@ -330,6 +347,9 @@ namespace StereoMapping
 
             // show the grid
             showOccupancyGrid();
+
+            // show uncertainty
+            showMotionUncertainty();
 
             // show the benchmarks
             ArrayList benchmarks = sim.GetBenchmarks();

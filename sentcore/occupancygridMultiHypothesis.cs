@@ -219,7 +219,7 @@ namespace sentience.core
         {
             float min_vacancy_probability = 0.0f;
             //float max_vacancy_probability = 0.00000000001f;
-            float max_vacancy_probability = 0.001f;
+            float max_vacancy_probability = 0.01f;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
             return (0.5f - (prob / steps));
@@ -274,21 +274,22 @@ namespace sentience.core
         /// <returns>log odds probability of there being a match between the ray and the grid</returns>
         private float localiseProbability(int x_cell, int y_cell,
                                           particlePose origin,
-                                          float sensorModelProbability)
+                                          float sensormodel_probability)
         {
             float value = 0;
 
             // localise using this grid cell
             // first get the existing probability value at this cell
-            float occ = cell[x_cell, y_cell].GetProbability(origin);
+            float existing_probability = cell[x_cell, y_cell].GetProbability(origin);
 
-            if (occ != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+            if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
                 // combine the results
-                float prob2 = ((sensorModelProbability * occ) + ((1.0f - sensorModelProbability) * (1.0f - occ)));
+                float combined_probability = ((sensormodel_probability * existing_probability) +
+                              ((1.0f - sensormodel_probability) * (1.0f - existing_probability)));
 
                 // localisation matching score, expressed as log odds
-                value = util.LogOdds(prob2);
+                value = util.LogOdds(combined_probability);
             }
             return (value);
         }
@@ -328,7 +329,7 @@ namespace sentience.core
             if (sensormodel_index >= sensormodel_lookup.probability.GetLength(0))
                 sensormodel_index = sensormodel_lookup.probability.GetLength(0) - 1;
 
-            float xdist_mm=0, ydist_mm=0, zdist_mm=0, x=0, y=0, z=0;
+            float xdist_mm=0, ydist_mm=0, zdist_mm=0, xx_mm=0, yy_mm=0, zz_mm=0;
             float occupied_dx = 0, occupied_dy = 0, occupied_dz = 0;
             float intersect_x = 0, intersect_y = 0, intersect_z = 0;
             float centre_prob = 0, prob = 0, prob_localisation = 0; // probability values at the centre axis and outside
@@ -340,6 +341,10 @@ namespace sentience.core
             // ray width at the fattest point in cells
             rayWidth = (int)(ray.width / (cellSize_mm * 2));
             if (rayWidth < 1) rayWidth = 1;
+
+            // calculate the centre position of the grid in millimetres
+            int grid_centre_x_mm = (int)(x - (dimension_cells * cellSize_mm / 2));
+            int grid_centre_y_mm = (int)(y - (dimension_cells * cellSize_mm / 2));
 
             int max_dimension_cells = dimension_cells - rayWidth;
 
@@ -366,9 +371,9 @@ namespace sentience.core
                             xdist_mm = occupied_dx;
                             ydist_mm = occupied_dy;
                             zdist_mm = occupied_dz;
-                            x = ray.vertices[0].x;
-                            y = ray.vertices[0].y;
-                            z = ray.vertices[0].z;
+                            xx_mm = ray.vertices[0].x;
+                            yy_mm = ray.vertices[0].y;
+                            zz_mm = ray.vertices[0].z;
                             break;
                         }
                     case VACANT_SENSORMODEL_LEFT_CAMERA:
@@ -378,9 +383,9 @@ namespace sentience.core
                             xdist_mm = intersect_x - leftcam_x;
                             ydist_mm = intersect_y - leftcam_y;
                             zdist_mm = intersect_z - ray.observedFrom.z;
-                            x = leftcam_x;
-                            y = leftcam_y;
-                            z = ray.observedFrom.z;
+                            xx_mm = leftcam_x;
+                            yy_mm = leftcam_y;
+                            zz_mm = ray.observedFrom.z;
                             break;
                         }
                     case VACANT_SENSORMODEL_RIGHT_CAMERA:
@@ -390,9 +395,9 @@ namespace sentience.core
                             xdist_mm = intersect_x - rightcam_x;
                             ydist_mm = intersect_y - rightcam_y;
                             zdist_mm = intersect_z - ray.observedFrom.z;
-                            x = rightcam_x;
-                            y = rightcam_y;
-                            z = ray.observedFrom.z;
+                            xx_mm = rightcam_x;
+                            yy_mm = rightcam_y;
+                            zz_mm = ray.observedFrom.z;
                             break;
                         }
                 }
@@ -430,35 +435,35 @@ namespace sentience.core
                     widest_point = steps;
 
                 // calculate increment values in millimetres
-                float x_incr = xdist_mm / steps;
-                float y_incr = ydist_mm / steps;
-                float z_incr = zdist_mm / steps;
+                float x_incr_mm = xdist_mm / steps;
+                float y_incr_mm = ydist_mm / steps;
+                float z_incr_mm = zdist_mm / steps;
 
                 // step through the ray, one grid cell at a time
-                int i = 0;
-                while (i < steps)
+                int grid_step = 0;
+                while (grid_step < steps)
                 {
                     // calculate the width of the ray in cells at this point
                     // using a diamond shape ray model
                     int ray_wdth = 0;
-                    if (i < widest_point)
-                        ray_wdth = i * rayWidth / widest_point;
+                    if (grid_step < widest_point)
+                        ray_wdth = grid_step * rayWidth / widest_point;
                     else
-                        ray_wdth = (steps - i + widest_point) * rayWidth / (steps - widest_point);
+                        ray_wdth = (steps - grid_step + widest_point) * rayWidth / (steps - widest_point);
 
                     // localisation rays are wider, to enable a more effective matching score
                     // which is not too narrowly focussed and brittle
                     int ray_wdth_localisation = ray_wdth + localisation_search_cells;
 
-                    x += x_incr;
-                    y += y_incr;
-                    z += z_incr;
+                    xx_mm += x_incr_mm;
+                    yy_mm += y_incr_mm;
+                    zz_mm += z_incr_mm;
                     // convert the x millimetre position into a grid cell position
-                    int x_cell = (int)Math.Round(x / (float)cellSize_mm);
+                    int x_cell = (int)Math.Round((xx_mm - grid_centre_x_mm) / (float)cellSize_mm);
                     if ((x_cell > ray_wdth_localisation) && (x_cell < dimension_cells - ray_wdth_localisation))
                     {
                         // convert the y millimetre position into a grid cell position
-                        int y_cell = (int)Math.Round(y / (float)cellSize_mm);
+                        int y_cell = (int)Math.Round((yy_mm - grid_centre_y_mm) / (float)cellSize_mm);
                         if ((y_cell > ray_wdth_localisation) && (y_cell < dimension_cells - ray_wdth_localisation))
                         {
                             int x_cell2 = x_cell;
@@ -467,10 +472,10 @@ namespace sentience.core
                             // get the probability at this point 
                             // for the central axis of the ray using the inverse sensor model
                             if (modelcomponent == OCCUPIED_SENSORMODEL)
-                                centre_prob = sensormodel_lookup.probability[sensormodel_index, i];
+                                centre_prob = sensormodel_lookup.probability[sensormodel_index, grid_step];
                             else
                                 // calculate the probability from the vacancy model
-                                centre_prob = vacancyFunction(i / (float)steps, steps);
+                                centre_prob = vacancyFunction(grid_step / (float)steps, steps);
 
 
                             // width of the localisation ray
@@ -528,7 +533,7 @@ namespace sentience.core
                                     }
                                 }
 
-                                if ((isInsideMappingRayWidth) && (i + startingRange < max_mapping_range_cells))
+                                if ((isInsideMappingRayWidth) && (grid_step + startingRange < max_mapping_range_cells))
                                 {
                                     // add a new hypothesis to this grid coordinate
                                     // note that this is also added to the original pose
@@ -539,10 +544,10 @@ namespace sentience.core
                                 }
                             }
                         }
-                        else i = steps;  // its the end of the ray, break out of the loop
+                        else grid_step = steps;  // its the end of the ray, break out of the loop
                     }
-                    else i = steps;  // its the end of the ray, break out of the loop
-                    i++;
+                    else grid_step = steps;  // its the end of the ray, break out of the loop
+                    grid_step++;
                 }
             }
 

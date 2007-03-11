@@ -87,10 +87,10 @@ namespace sentience.core
         // grid settings
         public int LocalGridLevels = 1;           // The number of scales used within the local grid
         public int LocalGridDimension = 128;      // Cubic dimension of the local grid in cells
-        public float LocalGridCellSize_mm = 32;   // Size of each grid cell (voxel) in millimetres
+        public float LocalGridCellSize_mm = 100;   // Size of each grid cell (voxel) in millimetres
         public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
-        public float LocalGridMappingRange_mm = 2000;  // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
-        public float LocalGridLocalisationRadius_mm = 64;  // an extra radius applied when localising within the grid, to make localisation rays wider
+        public float LocalGridMappingRange_mm = 2500;  // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
+        public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
        
 

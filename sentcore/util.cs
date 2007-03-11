@@ -62,7 +62,8 @@ namespace sentience.core
         /// <returns></returns>
         public static float LogOdds(float probability)
         {
-            if (probability >= 1.0f) probability = 0.999f;
+            if (probability > 0.999f) probability = 0.999f;
+            if (probability < 0.001f) probability = 0.001f;
             return ((float)Math.Log(probability / (1.0f - probability)));
         }
 
