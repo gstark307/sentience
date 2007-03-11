@@ -242,6 +242,7 @@ namespace sentience.core
             rotated_ray.length = length;
             rotated_ray.width = width;
             rotated_ray.start_dist = start_dist;
+            rotated_ray.disparity = disparity;
 
             return (rotated_ray);
         }

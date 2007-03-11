@@ -321,7 +321,12 @@ namespace sentience.core
 
             // which disparity index in the lookup table to use
             // we multiply by 2 because the lookup is in half pixel steps
-            int sensormodel_index = (int)(ray.disparity * 2);
+            int sensormodel_index = (int)Math.Round(ray.disparity * 2);
+
+            // beyond a certain disparity the ray model for occupied space
+            // is always only going to be only a single grid cell
+            if (sensormodel_index >= sensormodel_lookup.probability.GetLength(0))
+                sensormodel_index = sensormodel_lookup.probability.GetLength(0) - 1;
 
             float xdist_mm=0, ydist_mm=0, zdist_mm=0, x=0, y=0, z=0;
             float occupied_dx = 0, occupied_dy = 0, occupied_dz = 0;
@@ -338,6 +343,7 @@ namespace sentience.core
 
             int max_dimension_cells = dimension_cells - rayWidth;
 
+            // consider each of the three parts of the sensor model
             for (int modelcomponent = OCCUPIED_SENSORMODEL; modelcomponent <= VACANT_SENSORMODEL_RIGHT_CAMERA; modelcomponent++)
             {
                 // the range from the cameras from which insertion of data begins
@@ -417,14 +423,18 @@ namespace sentience.core
                     else
                         startingRange = (int)Math.Abs((ray.vertices[0].x - ray.observedFrom.x) / cellSize_mm);
 
+                // what is the widest point of the ray in cells
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
                     widest_point = (int)(ray.fattestPoint * steps / ray.length);
                 else
                     widest_point = steps;
+
+                // calculate increment values in millimetres
                 float x_incr = xdist_mm / steps;
                 float y_incr = ydist_mm / steps;
                 float z_incr = zdist_mm / steps;
 
+                // step through the ray, one grid cell at a time
                 int i = 0;
                 while (i < steps)
                 {
@@ -443,9 +453,11 @@ namespace sentience.core
                     x += x_incr;
                     y += y_incr;
                     z += z_incr;
+                    // convert the x millimetre position into a grid cell position
                     int x_cell = (int)Math.Round(x / (float)cellSize_mm);
                     if ((x_cell > ray_wdth_localisation) && (x_cell < dimension_cells - ray_wdth_localisation))
                     {
+                        // convert the y millimetre position into a grid cell position
                         int y_cell = (int)Math.Round(y / (float)cellSize_mm);
                         if ((y_cell > ray_wdth_localisation) && (y_cell < dimension_cells - ray_wdth_localisation))
                         {
@@ -494,6 +506,7 @@ namespace sentience.core
 
                                 if (cell[x_cell2, y_cell2] == null)
                                 {
+                                    // this cell has not been mapped yet
                                     if (isInsideMappingRayWidth)
                                     {
                                         // generate a grid cell if necessary
@@ -526,9 +539,9 @@ namespace sentience.core
                                 }
                             }
                         }
-                        else i = steps;
+                        else i = steps;  // its the end of the ray, break out of the loop
                     }
-                    else i = steps;
+                    else i = steps;  // its the end of the ray, break out of the loop
                     i++;
                 }
             }
