@@ -443,12 +443,14 @@ namespace sentience.core
                 float dy = y - previousPosition.y;
                 float distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
                 float acceleration = (2 * (distance - (motion.forward_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                acceleration /= time_per_index_sec;
                 float forward_velocity = motion.forward_velocity + (acceleration * time_per_index_sec);
-                motion.forward_acceleration = forward_velocity - motion.forward_velocity;
+                motion.forward_acceleration = acceleration; // forward_velocity - motion.forward_velocity;
                 motion.forward_velocity = forward_velocity;
 
                 distance = pan - previousPosition.pan;
                 acceleration = (2 * (distance - (motion.angular_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                acceleration /= time_per_index_sec;
                 float angular_velocity = motion.angular_velocity + (acceleration * time_per_index_sec);
                 motion.angular_velocity = angular_velocity;
 

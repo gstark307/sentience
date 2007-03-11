@@ -249,7 +249,7 @@ namespace WindowsApplication1
             int min_y_mm = 0;
             int max_x_mm = 1000;
             int max_y_mm = 1000;
-            int step_size = (max_y_mm - min_y_mm) / 20;
+            int step_size = (max_y_mm - min_y_mm) / 15;
             int x = (max_x_mm - min_x_mm) / 2;
             bool initial = true;
             float pan = 0; // (float)Math.PI / 4;

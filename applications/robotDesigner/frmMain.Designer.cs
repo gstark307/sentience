@@ -119,6 +119,8 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
+            this.txtCullingThreshold = new System.Windows.Forms.TextBox();
+            this.label35 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -848,13 +850,15 @@ namespace robotDesigner
             // 
             // grpLocalisation
             // 
+            this.grpLocalisation.Controls.Add(this.txtCullingThreshold);
+            this.grpLocalisation.Controls.Add(this.label35);
             this.grpLocalisation.Controls.Add(this.txtTrialPoses);
             this.grpLocalisation.Controls.Add(this.label33);
             this.grpLocalisation.Controls.Add(this.txtLocalGridLocalisationRadius);
             this.grpLocalisation.Controls.Add(this.label31);
             this.grpLocalisation.Location = new System.Drawing.Point(17, 201);
             this.grpLocalisation.Name = "grpLocalisation";
-            this.grpLocalisation.Size = new System.Drawing.Size(217, 102);
+            this.grpLocalisation.Size = new System.Drawing.Size(217, 122);
             this.grpLocalisation.TabIndex = 4;
             this.grpLocalisation.TabStop = false;
             this.grpLocalisation.Text = "Localisation";
@@ -1039,6 +1043,25 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
+            // txtCullingThreshold
+            // 
+            this.txtCullingThreshold.Location = new System.Drawing.Point(131, 84);
+            this.txtCullingThreshold.Name = "txtCullingThreshold";
+            this.txtCullingThreshold.Size = new System.Drawing.Size(59, 20);
+            this.txtCullingThreshold.TabIndex = 13;
+            this.txtCullingThreshold.Text = "50";
+            this.txtCullingThreshold.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtCullingThreshold.Leave += new System.EventHandler(this.txtCullingThreshold_Leave);
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Location = new System.Drawing.Point(17, 84);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(84, 13);
+            this.label35.TabIndex = 12;
+            this.label35.Text = "Culling threshold";
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1169,6 +1192,8 @@ namespace robotDesigner
         private System.Windows.Forms.Label label33;
         private System.Windows.Forms.TextBox txtMappingRange;
         private System.Windows.Forms.Label label34;
+        private System.Windows.Forms.TextBox txtCullingThreshold;
+        private System.Windows.Forms.Label label35;
     }
 }
 

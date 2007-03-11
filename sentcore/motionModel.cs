@@ -66,7 +66,7 @@ namespace sentience.core
         private ArrayList ActivePoses;
 
         // pose score threshold in the range 0-100 below which low probability poses are pruned
-        int cull_threshold = 75;
+        public int cull_threshold = 75;
 
         // standard deviation values for noise within the motion model
         public float[] motion_noise;
@@ -102,17 +102,17 @@ namespace sentience.core
             int i = 0;
             while (i < 2)
             {
-                motion_noise[i] = 0.04f;
+                motion_noise[i] = 0.08f;
                 i++;
             }
             while (i < 4)
             {
-                motion_noise[i] = 0.00005f;
+                motion_noise[i] = 0.00025f;
                 i++;
             }
             while (i < motion_noise.Length)
             {
-                motion_noise[i] = 0.00001f;
+                motion_noise[i] = 0.00005f;
                 i++;
             }
 
@@ -150,18 +150,6 @@ namespace sentience.core
             }
         }
 
-        /// <summary>
-        /// create some new poses based upon the given parent
-        /// </summary>
-        /// <param name="parent_path"></param>
-        private void createNewPoses(particlePath parent_path)
-        {
-            for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
-            {
-                particlePath path = new particlePath(parent_path, path_ID);
-                createNewPose(path);
-            }
-        }
 
         #endregion
 
@@ -286,23 +274,20 @@ namespace sentience.core
             {
                 // choose a good pose, but not necessarily the best
                 // this avoids too much elitism
-                particlePath best = null;
-                int tries = 0;
-                float best_score = best_path.current_pose.score * 80 / 100;
-                while (tries < 4)
+                int new_poses_required = survey_trial_poses - Poses.Count;
+                int max = Poses.Count;
+                //float score_threshold = best_path.current_pose.score * 50 / 100;
+                while (new_poses_required > 0)
                 {
-                    particlePath path = (particlePath)Poses[rnd.Next(Poses.Count - 1)];
-                    if (path.current_pose.score > best_score)
-                    {
-                        best = path;
-                        best_score = path.current_pose.score;
-                    }
-                    tries++;
+                    particlePath path = (particlePath)Poses[rnd.Next(max)];
+
+                    particlePath p = new particlePath(path, path_ID);
+                    createNewPose(p);
+                    new_poses_required--;                        
                 }
-                if (best == null) best = best_path;
 
                 // create new poses to maintain the population
-                createNewPoses(best);
+                //createNewPoses(best);
 
                 // update the robot position with the best available pose
                 rob.x = best_path.current_pose.x;
