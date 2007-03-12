@@ -323,6 +323,14 @@ namespace sentience.core
             // which disparity index in the lookup table to use
             // we multiply by 2 because the lookup is in half pixel steps
             int sensormodel_index = (int)Math.Round(ray.disparity * 2);
+            
+            // the initial models are blank, so just default to the one disparity pixel model
+            bool small_disparity_value = false;
+            if (sensormodel_index < 2)
+            {
+                sensormodel_index = 2;
+                small_disparity_value = true;
+            }
 
             // beyond a certain disparity the ray model for occupied space
             // is always only going to be only a single grid cell
@@ -339,8 +347,7 @@ namespace sentience.core
             particleGridCell hypothesis;
 
             // ray width at the fattest point in cells
-            rayWidth = (int)(ray.width / (cellSize_mm * 2));
-            if (rayWidth < 1) rayWidth = 1;
+            rayWidth = (int)Math.Round(ray.width / (cellSize_mm * 2));
 
             // calculate the centre position of the grid in millimetres
             int grid_centre_x_mm = (int)(x - (dimension_cells * cellSize_mm / 2));
@@ -371,6 +378,9 @@ namespace sentience.core
                             xdist_mm = occupied_dx;
                             ydist_mm = occupied_dy;
                             zdist_mm = occupied_dz;
+
+                            // begin insertion at the beginning of the 
+                            // probably occupied area
                             xx_mm = ray.vertices[0].x;
                             yy_mm = ray.vertices[0].y;
                             zz_mm = ray.vertices[0].z;
@@ -383,6 +393,8 @@ namespace sentience.core
                             xdist_mm = intersect_x - leftcam_x;
                             ydist_mm = intersect_y - leftcam_y;
                             zdist_mm = intersect_z - ray.observedFrom.z;
+
+                            // begin insertion from the left camera position
                             xx_mm = leftcam_x;
                             yy_mm = leftcam_y;
                             zz_mm = ray.observedFrom.z;
@@ -395,6 +407,8 @@ namespace sentience.core
                             xdist_mm = intersect_x - rightcam_x;
                             ydist_mm = intersect_y - rightcam_y;
                             zdist_mm = intersect_z - ray.observedFrom.z;
+
+                            // begin insertion from the right camera position
                             xx_mm = rightcam_x;
                             yy_mm = rightcam_y;
                             zz_mm = ray.observedFrom.z;
@@ -423,10 +437,12 @@ namespace sentience.core
 
                 // calculate the range from the cameras to the start of the ray in grid cells
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
+                {
                     if (longest_axis == Y_AXIS)
                         startingRange = (int)Math.Abs((ray.vertices[0].y - ray.observedFrom.y) / cellSize_mm);
                     else
                         startingRange = (int)Math.Abs((ray.vertices[0].x - ray.observedFrom.x) / cellSize_mm);
+                }
 
                 // what is the widest point of the ray in cells
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
@@ -443,13 +459,29 @@ namespace sentience.core
                 int grid_step = 0;
                 while (grid_step < steps)
                 {
+                    // is this position inside the maximum mapping range
+                    bool withinMappingRange = true;
+                    if (grid_step + startingRange > max_mapping_range_cells)
+                        withinMappingRange = false;
+
                     // calculate the width of the ray in cells at this point
                     // using a diamond shape ray model
                     int ray_wdth = 0;
-                    if (grid_step < widest_point)
-                        ray_wdth = grid_step * rayWidth / widest_point;
-                    else
-                        ray_wdth = (steps - grid_step + widest_point) * rayWidth / (steps - widest_point);
+                    if (rayWidth > 0)
+                    {
+                        if (grid_step < widest_point)
+                            ray_wdth = grid_step * rayWidth / widest_point;
+                        else
+                        {
+                            if (!small_disparity_value)
+                                // most disparity values tail off to some point in the distance
+                                ray_wdth = (steps - grid_step + widest_point) * rayWidth / (steps - widest_point);
+                            else
+                                // for very small disparity values the ray model has an infinite tail
+                                // and maintains its width after the widest point
+                                ray_wdth = rayWidth; 
+                        }
+                    }
 
                     // localisation rays are wider, to enable a more effective matching score
                     // which is not too narrowly focussed and brittle
@@ -509,16 +541,7 @@ namespace sentience.core
                                         prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
                                 }
 
-                                if (cell[x_cell2, y_cell2] == null)
-                                {
-                                    // this cell has not been mapped yet
-                                    if (isInsideMappingRayWidth)
-                                    {
-                                        // generate a grid cell if necessary
-                                        cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis();
-                                    }
-                                }
-                                else
+                                if (cell[x_cell2, y_cell2] != null)
                                 {
                                     // only localise using occupancy, not vacancy
                                     if (modelcomponent == OCCUPIED_SENSORMODEL)
@@ -533,8 +556,12 @@ namespace sentience.core
                                     }
                                 }
 
-                                if ((isInsideMappingRayWidth) && (grid_step + startingRange < max_mapping_range_cells))
+                                if ((isInsideMappingRayWidth) && (withinMappingRange))
                                 {
+                                    // generate a grid cell if necessary
+                                    if (cell[x_cell2, y_cell2] == null)
+                                        cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis();
+
                                     // add a new hypothesis to this grid coordinate
                                     // note that this is also added to the original pose
                                     hypothesis = new particleGridCell(x_cell2, y_cell2, prob, origin);

@@ -97,11 +97,16 @@ namespace sentience.core
                 // these position offsets will be used to calculate the 
                 // location of both cameras, and is used as the origin 
                 // for the vacancy part of the sensor model
-                float baseline_length = head.calibration[cam].baseline / 2;
-                baseline_length *= (float)Math.Cos(head.calibration[cam].positionOrientation.roll); // correct for camera roll angle
-                float cam_dx = baseline_length * (float)Math.Sin(camera_centre.pan - (Math.PI / 2));
-                float cam_dy = baseline_length * (float)Math.Cos(camera_centre.pan - (Math.PI / 2));
-                float leftcam_x = 0, leftcam_y = 0, rightcam_x = 0, rightcam_y = 0;
+                float half_baseline_length = head.calibration[cam].baseline / 2;
+                half_baseline_length *= (float)Math.Cos(head.calibration[cam].positionOrientation.roll); // correct for camera roll angle
+                float cam_dx = half_baseline_length * (float)Math.Sin(camera_centre.pan - (Math.PI / 2));
+                float cam_dy = half_baseline_length * (float)Math.Cos(camera_centre.pan - (Math.PI / 2));
+                
+                // where are the left and right cameras?
+                float leftcam_x = camera_centre.x + cam_dx;
+                float leftcam_y = camera_centre.y + cam_dy;
+                float rightcam_x = camera_centre.x - cam_dx;
+                float rightcam_y = camera_centre.y - cam_dy;
 
                 // itterate through each ray
                 for (int r = 0; r < stereo_rays[cam].Count; r++)
@@ -112,17 +117,6 @@ namespace sentience.core
 
                     // translate and rotate this ray appropriately for the pose
                     evidenceRay trial_ray = ray.trialPose(camera_centre.pan, camera_centre.x, camera_centre.y);
-
-                    if (r == 0)
-                    {
-                        // where are the left and right cameras
-                        // we only need to do this once, since the origin
-                        // will be the same for all rays
-                        leftcam_x = camera_centre.x + cam_dx;
-                        leftcam_y = camera_centre.y + cam_dy;
-                        rightcam_x = camera_centre.x - cam_dx;
-                        rightcam_y = camera_centre.y - cam_dy;
-                    }
 
                     // update the grid cells for this ray and update the
                     // localisation score accordingly
