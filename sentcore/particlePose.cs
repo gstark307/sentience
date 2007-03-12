@@ -77,36 +77,42 @@ namespace sentience.core
         /// <param name="sensormodel">the sensor model to use for updating the grid</param>
         /// <param name="head_pan">pan angle of the head</param>
         public float AddObservation(ArrayList[] stereo_rays, 
-                                    occupancygridMultiHypothesis grid,
-                                    stereoHead head)
+                                    robot rob)
         {
             // clear the localisation score
             float localisation_score = 0;
 
+            // calculate the position of the centre of the head relative to 
+            // the centre of rotation of the robots body
+            pos3D head_centroid = new pos3D(-(rob.BodyWidth_mm/2) + rob.head.x, 
+                                            -(rob.BodyLength_mm/2) + rob.head.y,
+                                            rob.head.z);
+
+            // location of the centre of the head on the grid map
+            // adjusted for the robot pose and the head pan and tilt angle.
+            // Note that the positions and orientations of individual cameras
+            // on the head have already been accounted for within stereoModel.createObservation
+            pos3D head_location = head_centroid.rotate(rob.head.pan + pan, rob.head.tilt, 0);
+            head_location = head_location.translate(x, y, 0);
+
+            
             // itterate for each stereo camera
             for (int cam = 0; cam < stereo_rays.Length; cam++)
             {
-                // position of the centre of the baseline of the camera
-                // this should be adjusted depending upon the position of the 
-                // robots head relative to the centre of rotation of its body
-                pos3D camera_centre = new pos3D(head.x, head.y, head.z);
-                camera_centre.rotate(pan, 0, 0);
-                camera_centre.translate(x, y, 0);
+                // calculate the position of the centre of the stereo camera
+                // (baseline centre point)
+                pos3D camera_centre_location = new pos3D(rob.head.calibration[cam].positionOrientation.x, rob.head.calibration[cam].positionOrientation.y, rob.head.calibration[cam].positionOrientation.y);
+                camera_centre_location = camera_centre_location.rotate(rob.head.calibration[cam].positionOrientation.pan + rob.head.pan + pan, rob.head.calibration[cam].positionOrientation.tilt, rob.head.calibration[cam].positionOrientation.roll);
+                camera_centre_location = camera_centre_location.translate(head_location.x, head_location.y, head_location.z);
 
                 // where are the left and right cameras?
-                // these position offsets will be used to calculate the 
-                // location of both cameras, and is used as the origin 
-                // for the vacancy part of the sensor model
-                float half_baseline_length = head.calibration[cam].baseline / 2;
-                half_baseline_length *= (float)Math.Cos(head.calibration[cam].positionOrientation.roll); // correct for camera roll angle
-                float cam_dx = half_baseline_length * (float)Math.Sin(camera_centre.pan - (Math.PI / 2));
-                float cam_dy = half_baseline_length * (float)Math.Cos(camera_centre.pan - (Math.PI / 2));
-                
-                // where are the left and right cameras?
-                float leftcam_x = camera_centre.x + cam_dx;
-                float leftcam_y = camera_centre.y + cam_dy;
-                float rightcam_x = camera_centre.x - cam_dx;
-                float rightcam_y = camera_centre.y - cam_dy;
+                // we need to know this for the origins of the vacancy models
+                float half_baseline_length = rob.head.calibration[cam].baseline / 2;
+                pos3D left_camera_location = new pos3D(-half_baseline_length, 0, 0);
+                left_camera_location = left_camera_location.rotate(rob.head.calibration[cam].positionOrientation.pan + rob.head.pan + pan, rob.head.calibration[cam].positionOrientation.tilt + rob.head.tilt, rob.head.calibration[cam].positionOrientation.roll);
+                pos3D right_camera_location = new pos3D(-left_camera_location.x, -left_camera_location.y, -left_camera_location.z);
+                left_camera_location = left_camera_location.translate(camera_centre_location.x, camera_centre_location.y, camera_centre_location.z);
+                right_camera_location = right_camera_location.translate(camera_centre_location.x, camera_centre_location.y, camera_centre_location.z);
 
                 // itterate through each ray
                 for (int r = 0; r < stereo_rays[cam].Count; r++)
@@ -116,13 +122,13 @@ namespace sentience.core
                     evidenceRay ray = (evidenceRay)stereo_rays[cam][r];
 
                     // translate and rotate this ray appropriately for the pose
-                    evidenceRay trial_ray = ray.trialPose(camera_centre.pan, camera_centre.x, camera_centre.y);
+                    evidenceRay trial_ray = ray.trialPose(camera_centre_location.pan, camera_centre_location.x, camera_centre_location.y);
 
                     // update the grid cells for this ray and update the
                     // localisation score accordingly
-                    localisation_score += grid.Insert(trial_ray, this, head.sensormodel[cam],
-                                                      leftcam_x, leftcam_y,
-                                                      rightcam_x, rightcam_y);
+                    localisation_score += 
+                        rob.LocalGrid.Insert(trial_ray, this, rob.head.sensormodel[cam],
+                                             left_camera_location, right_camera_location);
                 }
             }
             return (localisation_score);

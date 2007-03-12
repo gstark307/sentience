@@ -463,8 +463,7 @@ namespace sentience.core
                 particlePath path = (particlePath)Poses[p];
                 float localisation_score = 
                     path.current_pose.AddObservation(stereo_rays, 
-                                                     rob.LocalGrid, 
-                                                     rob.head);
+                                                     rob);
                 updatePoseScore(path, localisation_score);
             }
 

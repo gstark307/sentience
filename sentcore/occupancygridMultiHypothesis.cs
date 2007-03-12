@@ -309,8 +309,7 @@ namespace sentience.core
         /// <param name="rightcam_y">y position of the right camera in millimetres</param>
         public float Insert(evidenceRay ray, particlePose origin,
                             rayModelLookup sensormodel_lookup,
-                            float leftcam_x, float leftcam_y,
-                            float rightcam_x, float rightcam_y)
+                            pos3D left_camera_location, pos3D right_camera_location)
         {
             // some constants to aid readability
             const int OCCUPIED_SENSORMODEL = 0;
@@ -390,28 +389,28 @@ namespace sentience.core
                         {
                             // distance between the left camera and the left side of
                             // the probably occupied area of the sensor model                            
-                            xdist_mm = intersect_x - leftcam_x;
-                            ydist_mm = intersect_y - leftcam_y;
-                            zdist_mm = intersect_z - ray.observedFrom.z;
+                            xdist_mm = intersect_x - left_camera_location.x;
+                            ydist_mm = intersect_y - left_camera_location.y;
+                            zdist_mm = intersect_z - left_camera_location.z;
 
                             // begin insertion from the left camera position
-                            xx_mm = leftcam_x;
-                            yy_mm = leftcam_y;
-                            zz_mm = ray.observedFrom.z;
+                            xx_mm = left_camera_location.x;
+                            yy_mm = left_camera_location.y;
+                            zz_mm = left_camera_location.z;
                             break;
                         }
                     case VACANT_SENSORMODEL_RIGHT_CAMERA:
                         {
                             // distance between the right camera and the right side of
                             // the probably occupied area of the sensor model
-                            xdist_mm = intersect_x - rightcam_x;
-                            ydist_mm = intersect_y - rightcam_y;
-                            zdist_mm = intersect_z - ray.observedFrom.z;
+                            xdist_mm = intersect_x - right_camera_location.x;
+                            ydist_mm = intersect_y - right_camera_location.y;
+                            zdist_mm = intersect_z - right_camera_location.z;
 
                             // begin insertion from the right camera position
-                            xx_mm = rightcam_x;
-                            yy_mm = rightcam_y;
-                            zz_mm = ray.observedFrom.z;
+                            xx_mm = right_camera_location.x;
+                            yy_mm = right_camera_location.y;
+                            zz_mm = right_camera_location.z;
                             break;
                         }
                 }
