@@ -231,6 +231,58 @@ namespace sentience.core
             drawLine(img, img_width, img_height, tx, by, tx, ty, r, g, b, line_width, false);
         }
 
+        /// <summary>
+        /// draw a rotated box
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="box_width"></param>
+        /// <param name="box_height"></param>
+        /// <param name="rotation"></param>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
+        /// <param name="line_width"></param>
+        public static void drawBox(Byte[] img, int img_width, int img_height,
+                                   int x, int y, int box_width, int box_height,
+                                   float rotation, int r, int g, int b, int line_width)
+        {
+            int tx = -box_width/2;
+            int ty = -box_height/2;
+            int bx = box_width/2;
+            int by = box_height/2;
+            int[] xx = new int[4];
+            int[] yy = new int[4];
+            xx[0] = tx;
+            yy[0] = ty;
+            xx[1] = bx;
+            yy[1] = ty;
+            xx[2] = bx;
+            yy[2] = by;
+            xx[3] = tx;
+            yy[3] = by;
+
+            int prev_x2 = 0, prev_y2 = 0;
+            for (int i = 0; i < 5; i++)
+            {
+                int index = i;
+                if (i >= 4) index = 0;
+                float dist = (float)Math.Sqrt((xx[index] * xx[index]) + (yy[index] * yy[index]));
+                float angle = (float)Math.Acos(xx[index] / dist);
+                if (yy[index] < 0) angle = ((float)Math.PI * 2) - angle;
+
+                int x2 = x + (int)(dist * (float)Math.Sin(angle + rotation));
+                int y2 = y + (int)(dist * (float)Math.Cos(angle + rotation));
+                if (i > 0)
+                    drawLine(img, img_width, img_height, x2, y2, prev_x2, prev_y2, r, g, b, line_width, false);
+                prev_x2 = x2;
+                prev_y2 = y2;
+            }
+        }
+
         public static void drawCross(Byte[] img, int img_width, int img_height,
                                      int x, int y, int radius, int r, int g, int b, int line_width)
         {

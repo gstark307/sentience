@@ -79,6 +79,7 @@ namespace StereoMapping
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
             this.tabUncertainty = new System.Windows.Forms.TabPage();
+            this.picBestPose = new System.Windows.Forms.PictureBox();
             this.label14 = new System.Windows.Forms.Label();
             this.picMotionUncertainty = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
@@ -91,6 +92,7 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
             this.tabUncertainty.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picMotionUncertainty)).BeginInit();
             this.SuspendLayout();
             // 
@@ -530,6 +532,7 @@ namespace StereoMapping
             // 
             // tabUncertainty
             // 
+            this.tabUncertainty.Controls.Add(this.picBestPose);
             this.tabUncertainty.Controls.Add(this.label14);
             this.tabUncertainty.Controls.Add(this.picMotionUncertainty);
             this.tabUncertainty.Location = new System.Drawing.Point(4, 22);
@@ -539,10 +542,19 @@ namespace StereoMapping
             this.tabUncertainty.Text = "Uncertainty";
             this.tabUncertainty.UseVisualStyleBackColor = true;
             // 
+            // picBestPose
+            // 
+            this.picBestPose.Location = new System.Drawing.Point(562, 30);
+            this.picBestPose.Name = "picBestPose";
+            this.picBestPose.Size = new System.Drawing.Size(239, 234);
+            this.picBestPose.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picBestPose.TabIndex = 34;
+            this.picBestPose.TabStop = false;
+            // 
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(138, 14);
+            this.label14.Location = new System.Drawing.Point(17, 14);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(94, 13);
             this.label14.TabIndex = 33;
@@ -550,7 +562,7 @@ namespace StereoMapping
             // 
             // picMotionUncertainty
             // 
-            this.picMotionUncertainty.Location = new System.Drawing.Point(139, 30);
+            this.picMotionUncertainty.Location = new System.Drawing.Point(18, 30);
             this.picMotionUncertainty.Name = "picMotionUncertainty";
             this.picMotionUncertainty.Size = new System.Drawing.Size(538, 401);
             this.picMotionUncertainty.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -584,6 +596,7 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
             this.tabUncertainty.ResumeLayout(false);
             this.tabUncertainty.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picMotionUncertainty)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -644,6 +657,7 @@ namespace StereoMapping
         private System.Windows.Forms.TabPage tabUncertainty;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.PictureBox picMotionUncertainty;
+        private System.Windows.Forms.PictureBox picBestPose;
     }
 }
 

@@ -159,6 +159,21 @@ namespace sentience.core
 
 
         /// <summary>
+        /// show the best pose
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="clear_background"></param>
+        public void ShowBestPose(Byte[] img, int width, int height,
+                                 bool clear_background)
+        {
+            rob.motion.ShowBestPose(img, width, height,
+                                    clear_background);
+        }
+
+
+        /// <summary>
         /// add a path segment
         /// </summary>
         /// <param name="x">x coordinate in millimetres</param>

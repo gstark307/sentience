@@ -138,6 +138,21 @@ namespace sentience.core
             return(new pos3D(this.x + x, this.y + y, this.z + z));
         }
 
+        /// <summary>
+        /// copy the position from another
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public void copyFrom(pos3D other)
+        {
+            x = other.x;
+            y = other.y;
+            z = other.z;
+            pan = other.pan;
+            tilt = other.tilt;
+            roll = other.roll;
+        }
+
 
         #region "saving and loading"
 

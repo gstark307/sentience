@@ -296,6 +296,25 @@ namespace sentience.core
 
         #region "display functions"
 
+        public void ShowBestPose(Byte[] img, int width, int height,
+                         bool clear_background)
+        {
+            if (best_path != null)
+            {
+                particlePose best_pose = best_path.current_pose;
+                if (best_pose != null)
+                {
+                    int min_x = (int)(best_pose.x - rob.BodyWidth_mm);
+                    int min_y = (int)(best_pose.y - rob.BodyLength_mm);
+                    int max_x = (int)(best_pose.x + rob.BodyWidth_mm);
+                    int max_y = (int)(best_pose.y + rob.BodyLength_mm);
+
+                    best_pose.Show(rob, img, width, height,
+                                   clear_background, min_x, min_y, max_x, max_y,1);
+                }
+            }
+        }
+
         /// <summary>
         /// show the position uncertainty distribution
         /// </summary>

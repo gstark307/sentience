@@ -228,6 +228,20 @@ namespace StereoMapping
         }
 
         /// <summary>
+        /// show the current best pose
+        /// </summary>
+        private void showBestPose()
+        {
+            int dimension_mm = sim.rob.LocalGrid.dimension_cells;
+            picBestPose.Image = new Bitmap(dimension_mm, dimension_mm,
+                                           System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            Byte[] best_pose_img = new Byte[dimension_mm * dimension_mm * 3];
+            sim.ShowBestPose(best_pose_img, dimension_mm, dimension_mm, true);
+            updatebitmap_unsafe(best_pose_img, (Bitmap)(picBestPose.Image));
+        }
+
+
+        /// <summary>
         /// show the next pose
         /// </summary>
         private void showNextPose()
@@ -350,6 +364,9 @@ namespace StereoMapping
 
             // show uncertainty
             showMotionUncertainty();
+
+            // show the best pose
+            showBestPose();
 
             // show the benchmarks
             ArrayList benchmarks = sim.GetBenchmarks();
