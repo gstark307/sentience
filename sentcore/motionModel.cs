@@ -212,61 +212,47 @@ namespace sentience.core
         /// </summary>
         private void Prune()
         {
+            float max_score = 0;
             best_path = null;
 
-            // gather mature poses
-            float max_score = 0;
-            float min_score = float.MaxValue;
-            ArrayList maturePoses = new ArrayList();
-            for (int sample = Poses.Count-1; sample >= 0; sample--)
+            // sort poses by score
+            for (int i = 0; i < Poses.Count-1; i++)
             {
-                particlePath path = (particlePath)Poses[sample];
-                particlePose pose = path.current_pose;
-
-                // use poses which are considered to be mature, or which
-                // have a negative score.  A negative pose score indicates
-                // that it has collided with occupied space within a grid map
-                if ((path.path.Count >= pose_maturation) || (pose.score <= 0))
+                particlePath p1 = (particlePath)Poses[i];
+                max_score = p1.current_pose.score;
+                particlePath winner = null;
+                int winner_index = 0;
+                for (int j = i + 1; j < Poses.Count; j++)
                 {
-                    // store the index of the pose
-                    maturePoses.Add(sample);
+                    particlePath p2 = (particlePath)Poses[i];
+                    if (p2.current_pose.score > max_score)
+                    {
+                        max_score = p2.current_pose.score;
+                        winner = p2;
+                        winner_index = j;
+                    }
                 }
-
-                // record the maximum score
-                // Note that the score for each pose should be calculated as a running average
-                float score = pose.score;
-                if (score > max_score)
+                if (winner != null)
                 {
-                    max_score = score;
-                    best_path = path;
-                }
-                else
-                {
-                    if (score < min_score)
-                        min_score = score;
+                    Poses[i] = winner;
+                    Poses[winner_index] = p1;
                 }
             }
+            best_path = (particlePath)Poses[0];
 
-            // It's culling season: remove mature poses with a score below the cull threshold
-            float threshold = min_score + ((max_score-min_score) * cull_threshold / 100);
-            for (int mature = 0; mature < maturePoses.Count; mature++)
+            // It's culling season
+            int cull_index = (100 - cull_threshold) * Poses.Count / 100;
+            for (int i = Poses.Count - 1; i > cull_index; i--)
             {
-                // index of the mature pose
-                int index = (int)maturePoses[mature];
-
-                // get the score for this pose
-                particlePath path = (particlePath)Poses[index];
-                float score = path.current_pose.score;
-
-                // remove the pose if it's below the culling threshold
-                if (score < threshold)
+                particlePath path = (particlePath)Poses[i];
+                if (path.path.Count >= pose_maturation)
                 {
                     // remove mapping hypotheses for this path
                     if (path.Remove(rob.LocalGrid))
                         ActivePoses.Remove(path);
 
                     // now remove the path itself
-                    Poses.RemoveAt(index);
+                    Poses.RemoveAt(i);
                 }
             }
 
@@ -310,7 +296,7 @@ namespace sentience.core
                     int max_y = (int)(best_pose.y + rob.BodyLength_mm);
 
                     best_pose.Show(rob, img, width, height,
-                                   clear_background, min_x, min_y, max_x, max_y,1);
+                                   clear_background, min_x, min_y, max_x, max_y, 0);
                 }
             }
         }

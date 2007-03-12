@@ -1,4 +1,6 @@
 /*
+    Note:  this class does almost nothing and is pending deletion 
+ 
     Sentience 3D Perception System
     Copyright (C) 2000-2007 Bob Mottram
     fuzzgun@gmail.com
