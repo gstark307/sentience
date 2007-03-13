@@ -404,7 +404,7 @@ namespace sentience.core
                 // randomly garbage collect a percentage of the grid cells
                 // this removes dead hypotheses which would otherwise clogg
                 // up the system
-                LocalGrid.GarbageCollect(20);
+                LocalGrid.GarbageCollect(90);
 
                 clock.Stop();
                 benchmark_garbage_collection = clock.time_elapsed_mS;

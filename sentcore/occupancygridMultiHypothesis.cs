@@ -63,7 +63,7 @@ namespace sentience.core
                     garbage_entries--;
                     collected_items++;
                 }
-                i-=2;
+                i--;
             }
             return (collected_items);
         }
@@ -151,6 +151,9 @@ namespace sentience.core
     {
         private Random rnd = new Random();
 
+        // list grid cells which need to be cleared of garbage
+        private ArrayList garbage;
+
         // a quick lookup table for gaussian values
         private float[] gaussianLookup;
 
@@ -192,6 +195,8 @@ namespace sentience.core
 
             // make a lookup table for gaussians - saves doing a lot of floating point maths
             gaussianLookup = stereoModel.createHalfGaussianLookup(10);
+
+            garbage = new ArrayList();
         }
 
         /// <summary>
@@ -235,14 +240,16 @@ namespace sentience.core
         /// <param name="hypothesis"></param>
         public void Remove(particleGridCell hypothesis)
         {
-            // removing in this way is very inefficient
-            // its better simply to dissable the hypothesis 
-            // and then have it subsequently removed by garbage collection
-            //cell[hypothesis.x, hypothesis.y].Hypothesis.Remove(hypothesis);
+            // add this to the list of garbage to be collected
+            if (cell[hypothesis.x, hypothesis.y].garbage_entries == 0)
+                garbage.Add(cell[hypothesis.x, hypothesis.y]);
 
+            // increment the heap of garbage
             cell[hypothesis.x, hypothesis.y].garbage_entries++;
-            hypothesis.Enabled = false;
             total_garbage_hypotheses++;
+
+            // mark this hypothesis as rubbish
+            hypothesis.Enabled = false;
             total_valid_hypotheses--;
         }
 
@@ -250,7 +257,7 @@ namespace sentience.core
         /// remove any casualties from the battlefield
         /// </summary>
         /// <param name="percentage">the percentage of grid cells to sample for garbage</param>
-        public void GarbageCollect(int percentage)
+        public void GarbageCollectRandom(int percentage)
         {
             int tries = dimension_cells * dimension_cells * percentage / 100;
             for (int i = 0; i < tries; i++)
@@ -263,6 +270,24 @@ namespace sentience.core
                 }
             }
         }
+
+        public void GarbageCollect(int percentage)
+        {
+            int max = garbage.Count-1;
+            for (int i = max; i >= 0; i--)
+            {
+                int index = i;
+
+                occupancygridCellMultiHypothesis c = (occupancygridCellMultiHypothesis)garbage[index];
+                if (c.garbage_entries > 0)
+                    total_garbage_hypotheses -= c.GarbageCollect();
+
+                // if the garbage has been cleared remove the entry
+                if (c.garbage_entries == 0)
+                    garbage.RemoveAt(index);
+            }
+        }
+
 
         /// <summary>
         /// returns the localisation probability

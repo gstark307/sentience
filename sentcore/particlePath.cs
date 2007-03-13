@@ -166,44 +166,61 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// remove all poses along the path until a branch point is located
+        /// </summary>
+        /// <param name="pose"></param>
+        /// <returns></returns>
+        private particlePose CollapseBranch(particlePose pose,
+                                            occupancygridMultiHypothesis grid)
+        {
+            int children = 0;
+            while ((pose != branch_pose) &&
+                   (pose.path_ID == ID) &&
+                   (children == 0))
+            {
+                if (pose != current_pose)
+                    children = pose.no_of_children;
+
+                if (children == 0)
+                    if (pose.path_ID == ID)
+                    {
+                        pose.Remove(grid);
+                        pose = pose.parent;
+                    }
+            }
+            return (pose);
+        }
+
+        /// <summary>
         /// remove the mapping particles associated with this path
         /// </summary>
         public bool Remove(occupancygridMultiHypothesis grid)
         {
+            bool remove_from_active_paths = true;
+
             particlePose pose = current_pose;
             if (current_pose != null)
             {
-                while ((pose != branch_pose) && (pose.path_ID == ID))
-                {
-                    pose.Remove(grid);
-                    if (pose.path_ID == ID) pose = pose.parent;
-                }
+                pose = CollapseBranch(pose, grid);
                 if (pose != null)
-                {
-                    pose.no_of_children--;
-                    if (pose.no_of_children == 0)
+                    if (pose != current_pose)
                     {
-                        // get the ID number of the previous path
-                        UInt32 path_ID = pose.path_ID;
-                        // there are no children remaining, so label the previous path
-                        // with the current path ID
-                        int children = 0;
-                        while ((pose != null) && (children < 1))
+                        if (pose.no_of_children > 0)
                         {
-                            children = pose.no_of_children;                            
-                            if (children < 1)
-                            {
-                                pose.path_ID = path_ID;
-                                pose = pose.parent;
-                            }
+                            // reduce the number of children at the branch point
+                            pose.no_of_children--;
+
+                            // if the earlier part of the tree has the same
+                            // path ID, and has other branches then don't remove it
+                            if (pose.path_ID == ID)
+                                if (pose.no_of_children > 0)
+                                    remove_from_active_paths = false;
                         }
                     }
-                }
+                 
             }
-            if (pose == branch_pose)
-                return (true);
-            else
-                return (false);
+
+            return (remove_from_active_paths);
         }
 
         /// <summary>

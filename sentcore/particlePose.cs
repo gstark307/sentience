@@ -243,8 +243,10 @@ namespace sentience.core
                 particleGridCell hypothesis = (particleGridCell)observed_grid_cells[i];
                 grid.Remove(hypothesis);
             }
-            observed_grid_cells.Clear();
-            if (previous_paths != null) previous_paths.Clear();
+
+            // since the pose is going to be cleared anyway we may not need to do this
+            //observed_grid_cells.Clear();
+            //if (previous_paths != null) previous_paths.Clear();
         }
 
     }
