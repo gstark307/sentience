@@ -285,6 +285,13 @@ namespace sentience.core
 
         #region "display functions"
 
+        /// <summary>
+        /// show an above view of the robot using the best available pose
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="clear_background"></param>
         public void ShowBestPose(Byte[] img, int width, int height,
                          bool clear_background)
         {
@@ -298,6 +305,31 @@ namespace sentience.core
                     int max_x = (int)(best_pose.x + rob.BodyWidth_mm);
                     int max_y = (int)(best_pose.y + rob.BodyLength_mm);
 
+                    ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, clear_background);
+                }
+            }
+        }
+
+        /// <summary>
+        /// show an above view of the robot using the best available pose
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="min_x"></param>
+        /// <param name="min_y"></param>
+        /// <param name="max_x"></param>
+        /// <param name="max_y"></param>
+        /// <param name="clear_background"></param>
+        public void ShowBestPose(Byte[] img, int width, int height,
+                                 int min_x, int min_y, int max_x, int max_y,
+                                 bool clear_background)
+        {
+            if (best_path != null)
+            {
+                particlePose best_pose = best_path.current_pose;
+                if (best_pose != null)
+                {
                     best_pose.Show(rob, img, width, height,
                                    clear_background, min_x, min_y, max_x, max_y, 0);
                 }

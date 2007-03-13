@@ -106,13 +106,13 @@ namespace sentience.core
             int yy = (int)((y - min_y_mm) * height / h);
             int wdth = (int)(rob.BodyWidth_mm * width / w);
             int hght = (int)(rob.BodyLength_mm * height / h);
-            util.drawBox(img, width, height, xx, yy, wdth, hght, pan, 0, 0, 0, line_width);
+            util.drawBox(img, width, height, xx, yy, wdth, hght, pan, 0, 255, 0, line_width);
 
             // draw the head
             xx = (int)((head_location.x - min_x_mm) * width / w);
             yy = (int)((head_location.y - min_y_mm) * height / h);
             int radius = (int)(rob.HeadSize_mm * width / w);
-            util.drawBox(img, width, height, xx, yy, radius, radius, head_location.pan, 0, 0, 0, line_width);
+            util.drawBox(img, width, height, xx, yy, radius, radius, head_location.pan, 0, 255, 0, line_width);
 
             // draw the cameras
             for (int cam = 0; cam < rob.head.no_of_cameras; cam++)
@@ -123,7 +123,7 @@ namespace sentience.core
                 wdth = (int)((rob.head.calibration[cam].baseline / 4) * width / w);
                 hght = (int)((rob.head.calibration[cam].baseline / 12) * height / h);
                 if (hght < 1) hght = 1;
-                util.drawBox(img, width, height, xx, yy, wdth, hght, left_camera_location[cam].pan + (float)(Math.PI/2), 255, 0, 0, line_width);
+                util.drawBox(img, width, height, xx, yy, wdth, hght, left_camera_location[cam].pan + (float)(Math.PI/2), 0, 255, 0, line_width);
 
                 // draw the right camera
                 xx = (int)((right_camera_location[cam].x - min_x_mm) * width / w);

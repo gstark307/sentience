@@ -210,7 +210,7 @@ namespace StereoMapping
             picGridMap.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
                                           System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
-            sim.ShowGrid(grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells);
+            sim.ShowGrid(grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
             updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
         }
 

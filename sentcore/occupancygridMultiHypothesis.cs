@@ -103,7 +103,6 @@ namespace sentience.core
         /// <param name="h"></param>
         public void AddHypothesis(particleGridCell h)
         {
-            h.array_index = Hypothesis.Count;
             Hypothesis.Add(h);
         }
 
@@ -228,7 +227,7 @@ namespace sentience.core
             this.dimension_cells = dimension_cells;
             this.cellSize_mm = cellSize_mm;
             this.localisation_search_cells = localisationRadius_mm / cellSize_mm;
-            this.max_mapping_range_cells = maxMappingRange_mm / dimension_cells;
+            this.max_mapping_range_cells = maxMappingRange_mm / cellSize_mm;
             cell = new occupancygridCellMultiHypothesis[dimension_cells, dimension_cells];
 
             // make a lookup table for gaussians - saves doing a lot of floating point maths
@@ -260,9 +259,8 @@ namespace sentience.core
         /// <returns></returns>
         private float vacancyFunction(float fraction, int steps)
         {
-            float min_vacancy_probability = 1.0f;
-            //float max_vacancy_probability = 0.00000000001f;
-            float max_vacancy_probability = 2.0f;
+            float min_vacancy_probability = 0.1f;
+            float max_vacancy_probability = 0.5f;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
             return (0.5f - (prob / steps));
@@ -662,9 +660,19 @@ namespace sentience.core
 
                         for (int c = 0; c < 3; c++)
                             if (prob > 0.5f)
-                                img[n + c] = (Byte)0;  // occupied
+                            {
+                                if (prob > 0.7f)
+                                    img[n + c] = (Byte)0;  // occupied
+                                else
+                                    img[n + c] = (Byte)100;  // occupied
+                            }
                             else
-                                img[n + c] = (Byte)200;  // vacant
+                            {
+                                if (prob < 0.3f)
+                                    img[n + c] = (Byte)230;  // vacant
+                                else
+                                    img[n + c] = (Byte)200;  // vacant
+                            }
                     }
                 }
             }
