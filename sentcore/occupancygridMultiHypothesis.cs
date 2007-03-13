@@ -39,12 +39,13 @@ namespace sentience.core
         public bool occupied;
 
         // list of occupancy hypotheses, of type particleGridCell
-        public ArrayList Hypothesis;
+        private ArrayList Hypothesis;
 
         #region "garbage collection"
 
         // the number of garbage hypotheses accumulated within this grid cell
         public int garbage_entries = 0;
+        public ArrayList garbage;
 
         /// <summary>
         /// any old iron...
@@ -68,7 +69,43 @@ namespace sentience.core
             return (collected_items);
         }
 
+        /*
+        public int GarbageCollect()
+        {
+            int collected_items = 0;
+            int min = garbage.Count;
+            garbage.Sort();
+            for (int i = garbage.Count-1; i >= 0; i--)
+            {
+                int victim_index = (int)garbage[i];
+                if (victim_index < min) min = victim_index;
+                Hypothesis.RemoveAt(victim_index);
+                garbage.RemoveAt(i);
+                garbage_entries--;
+                collected_items++;
+            }
+            // reindex the remaining hypotheses
+            for (int i = 0; i < Hypothesis.Count; i++)
+            {
+                particleGridCell h = (particleGridCell)Hypothesis[i];
+                h.array_index = i;
+            }
+            return (collected_items);
+        }
+        */
+
         #endregion
+
+        /// <summary>
+        /// add a new occupancy hypothesis to the list
+        /// for this grid cell
+        /// </summary>
+        /// <param name="h"></param>
+        public void AddHypothesis(particleGridCell h)
+        {
+            h.array_index = Hypothesis.Count;
+            Hypothesis.Add(h);
+        }
 
         /// <summary>
         /// returns the probability of occupancy at this grid cell
@@ -141,6 +178,7 @@ namespace sentience.core
         {
             occupied = false;
             Hypothesis = new ArrayList();
+            garbage = new ArrayList();
         }
     }
 
@@ -222,9 +260,9 @@ namespace sentience.core
         /// <returns></returns>
         private float vacancyFunction(float fraction, int steps)
         {
-            float min_vacancy_probability = 0.0f;
+            float min_vacancy_probability = 1.0f;
             //float max_vacancy_probability = 0.00000000001f;
-            float max_vacancy_probability = 1.0f;
+            float max_vacancy_probability = 2.0f;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
             return (0.5f - (prob / steps));
@@ -240,12 +278,16 @@ namespace sentience.core
         /// <param name="hypothesis"></param>
         public void Remove(particleGridCell hypothesis)
         {
+            occupancygridCellMultiHypothesis c = cell[hypothesis.x, hypothesis.y];
+
             // add this to the list of garbage to be collected
-            if (cell[hypothesis.x, hypothesis.y].garbage_entries == 0)
-                garbage.Add(cell[hypothesis.x, hypothesis.y]);
+            if (c.garbage_entries == 0)                             
+                garbage.Add(c);
+
+            //c.garbage.Add(hypothesis.array_index);
 
             // increment the heap of garbage
-            cell[hypothesis.x, hypothesis.y].garbage_entries++;
+            c.garbage_entries++;
             total_garbage_hypotheses++;
 
             // mark this hypothesis as rubbish
@@ -253,28 +295,10 @@ namespace sentience.core
             total_valid_hypotheses--;
         }
 
-        /// <summary>
-        /// remove any casualties from the battlefield
-        /// </summary>
-        /// <param name="percentage">the percentage of grid cells to sample for garbage</param>
-        public void GarbageCollectRandom(int percentage)
-        {
-            int tries = dimension_cells * dimension_cells * percentage / 100;
-            for (int i = 0; i < tries; i++)
-            {
-                int x = rnd.Next(dimension_cells - 1);
-                int y = rnd.Next(dimension_cells - 1);
-                if (cell[x, y] != null)
-                {
-                    total_garbage_hypotheses -= cell[x, y].GarbageCollect();
-                }
-            }
-        }
-
         public void GarbageCollect(int percentage)
         {
             int max = garbage.Count-1;
-            for (int i = max; i > 0; i--)
+            for (int i = max; i >= 0; i--)
             {
                 int index = i;
 
@@ -589,7 +613,7 @@ namespace sentience.core
                                     // add a new hypothesis to this grid coordinate
                                     // note that this is also added to the original pose
                                     hypothesis = new particleGridCell(x_cell2, y_cell2, prob, origin);
-                                    cell[x_cell2, y_cell2].Hypothesis.Add(hypothesis);
+                                    cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
                                     origin.observed_grid_cells.Add(hypothesis);
                                     total_valid_hypotheses++;
                                 }

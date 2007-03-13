@@ -29,6 +29,9 @@ namespace sentience.core
     /// </summary>
     public class particleGridCell
     {
+        // array index in the hypothesis list for each grid cell
+        public int array_index;
+
         // whether this particle is enabled or dead
         // this flag allows the system to go around collecting garbage
         public bool Enabled;
