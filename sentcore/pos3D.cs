@@ -135,7 +135,11 @@ namespace sentience.core
         /// <returns></returns>
         public pos3D translate(float x, float y, float z)
         {
-            return(new pos3D(this.x + x, this.y + y, this.z + z));
+            pos3D result = new pos3D(this.x + x, this.y + y, this.z + z);
+            result.pan = pan;
+            result.tilt = tilt;
+            result.roll = roll;
+            return(result);
         }
 
         /// <summary>

@@ -219,7 +219,7 @@ namespace sentience.core
         {
             float min_vacancy_probability = 0.0f;
             //float max_vacancy_probability = 0.00000000001f;
-            float max_vacancy_probability = 0.01f;
+            float max_vacancy_probability = 1.0f;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
             return (0.5f - (prob / steps));

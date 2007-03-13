@@ -170,30 +170,30 @@ namespace sentience.core
         /// </summary>
         public bool Remove(occupancygridMultiHypothesis grid)
         {
-            UInt32 path_ID = 0;
             particlePose pose = current_pose;
             if (current_pose != null)
             {
-                path_ID = current_pose.path_ID;
-                while ((pose != branch_pose) && (path_ID == pose.path_ID))
+                while ((pose != branch_pose) && (pose.path_ID == ID))
                 {
                     pose.Remove(grid);
-                    if (path_ID == pose.path_ID) pose = pose.parent;
+                    if (pose.path_ID == ID) pose = pose.parent;
                 }
                 if (pose != null)
                 {
                     pose.no_of_children--;
                     if (pose.no_of_children == 0)
                     {
+                        // get the ID number of the previous path
+                        UInt32 path_ID = pose.path_ID;
                         // there are no children remaining, so label the previous path
                         // with the current path ID
                         int children = 0;
                         while ((pose != null) && (children < 1))
                         {
-                            children = pose.no_of_children;
-                            pose.path_ID = path_ID;
+                            children = pose.no_of_children;                            
                             if (children < 1)
                             {
+                                pose.path_ID = path_ID;
                                 pose = pose.parent;
                             }
                         }

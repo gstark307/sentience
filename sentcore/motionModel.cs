@@ -238,6 +238,8 @@ namespace sentience.core
                     Poses[winner_index] = p1;
                 }
             }
+
+            // the best path is at the top
             best_path = (particlePath)Poses[0];
 
             // It's culling season
@@ -246,13 +248,14 @@ namespace sentience.core
             {
                 particlePath path = (particlePath)Poses[i];
                 if (path.path.Count >= pose_maturation)
-                {
+                {                    
                     // remove mapping hypotheses for this path
                     if (path.Remove(rob.LocalGrid))
                         ActivePoses.Remove(path);
 
                     // now remove the path itself
                     Poses.RemoveAt(i);
+                    
                 }
             }
 
