@@ -274,7 +274,7 @@ namespace sentience.core
         public void GarbageCollect(int percentage)
         {
             int max = garbage.Count-1;
-            for (int i = max; i >= 0; i--)
+            for (int i = max; i > 0; i--)
             {
                 int index = i;
 
@@ -297,7 +297,7 @@ namespace sentience.core
         /// <param name="origin">pose of the robot</param>
         /// <param name="sensorModelProbability">probability value from a specific point in the ray, taken from the sensor model</param>
         /// <returns>log odds probability of there being a match between the ray and the grid</returns>
-        private float localiseProbability(int x_cell, int y_cell,
+        private float matchingProbability(int x_cell, int y_cell,
                                           particlePose origin,
                                           float sensormodel_probability)
         {
@@ -573,10 +573,10 @@ namespace sentience.core
                                         // update the matching score, by combining the probability
                                         // of the grid cell with the probability from the localisation ray
                                         if (longest_axis == X_AXIS)
-                                            matchingScore += localiseProbability(x_cell2, y_cell2, origin, prob_localisation);
+                                            matchingScore += matchingProbability(x_cell2, y_cell2, origin, prob_localisation);
 
                                         if (longest_axis == Y_AXIS)
-                                            matchingScore += localiseProbability(x_cell2, y_cell2, origin, prob_localisation);
+                                            matchingScore += matchingProbability(x_cell2, y_cell2, origin, prob_localisation);
                                     }
                                 }
 

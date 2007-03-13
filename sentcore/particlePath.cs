@@ -119,7 +119,7 @@ namespace sentience.core
             // add the pose to the path
             path.Add(pose);
 
-            total_score += pose.score;
+            //total_score += pose.score;
             total_poses++;
 
             // ensure that the path does not exceed a maximum length

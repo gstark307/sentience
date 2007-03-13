@@ -212,22 +212,22 @@ namespace sentience.core
         /// </summary>
         private void Prune()
         {
-            float max_score = 0;
+            float max_score = float.MinValue;
             best_path = null;
 
             // sort poses by score
             for (int i = 0; i < Poses.Count-1; i++)
             {
                 particlePath p1 = (particlePath)Poses[i];
-                max_score = p1.current_pose.score;
+                max_score = p1.total_score;
                 particlePath winner = null;
                 int winner_index = 0;
                 for (int j = i + 1; j < Poses.Count; j++)
                 {
                     particlePath p2 = (particlePath)Poses[i];
-                    if (p2.current_pose.score > max_score)
+                    if (p2.total_score > max_score)
                     {
-                        max_score = p2.current_pose.score;
+                        max_score = p2.total_score;
                         winner = p2;
                         winner_index = j;
                     }
@@ -402,17 +402,15 @@ namespace sentience.core
         #region "update poses"
 
         /// <summary>
-        /// updates the given pose score using a running average
-        /// Using a running average prevents dinosaurs who have been around for a long
-        /// time from dominating the pose list despite recent poor performances.  
-        /// Successful poses must have received high scores relatively recently.
+        /// updates the given path with the score obtained from the current pose
+        /// Note that scores are always expressed as log odds matching probability
+        /// from grid localisation
         /// </summary>
         /// <param name="pose"></param>
         /// <param name="new_score"></param>
         public void updatePoseScore(particlePath path, float new_score)
         {
-            float fraction = 1.0f / (float)pose_maturation;
-            path.current_pose.score = (path.current_pose.score * (1.0f - fraction)) + (new_score * fraction);
+            path.total_score += new_score;
         }
 
         /// <summary>
@@ -469,10 +467,10 @@ namespace sentience.core
             for (int p = 0; p < Poses.Count; p++)
             {
                 particlePath path = (particlePath)Poses[p];
-                float localisation_score = 
+                float logodds_localisation_score = 
                     path.current_pose.AddObservation(stereo_rays, 
                                                      rob);
-                updatePoseScore(path, localisation_score);
+                updatePoseScore(path, logodds_localisation_score);
             }
 
             // adding an observation is sufficient to update the 

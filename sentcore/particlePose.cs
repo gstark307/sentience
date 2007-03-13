@@ -34,9 +34,6 @@ namespace sentience.core
         // pan angle in radians
         public float pan;
 
-        // localisation score
-        public float score;
-
         // grid cells (particlePoseObservedGridCell) which were observed from this pose
         public ArrayList observed_grid_cells;
 
@@ -55,7 +52,6 @@ namespace sentience.core
             this.x = x;
             this.y = y;
             this.pan = pan;
-            this.score = 0;  // this should be a running average
             this.path_ID = path_ID;
             observed_grid_cells = new ArrayList();
         }
@@ -230,6 +226,7 @@ namespace sentience.core
                                              right_camera_location[cam]);
                 }
             }
+
             return (localisation_score);
         }
 
