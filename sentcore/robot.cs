@@ -143,7 +143,7 @@ namespace sentience.core
         {
             // create the local grid
             LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm);
-            LocalGrid.y = 4000;  //test
+            LocalGrid.y = 2500;  //test
         }
 
         /// <summary>
@@ -683,8 +683,11 @@ namespace sentience.core
             util.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLevels", Convert.ToString(LocalGridLevels));
 
-            util.AddComment(doc, nodeOccupancyGrid, "Cubic dimension of the local grid in cells");
+            util.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the XY plane in cells");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimension", Convert.ToString(LocalGridDimension));
+
+            util.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the vertical (Z) plane in cells");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimensionVertical", Convert.ToString(LocalGridDimensionVertical));
 
             util.AddComment(doc, nodeOccupancyGrid, "Size of each grid cell (voxel) in millimetres");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridCellSizeMillimetres", Convert.ToString(LocalGridCellSize_mm));
@@ -906,6 +909,11 @@ namespace sentience.core
             if (xnod.Name == "LocalGridDimension")
             {
                 LocalGridDimension = Convert.ToInt32(xnod.InnerText);
+            }
+
+            if (xnod.Name == "LocalGridDimensionVertical")
+            {
+                LocalGridDimensionVertical = Convert.ToInt32(xnod.InnerText);
             }
 
             if (xnod.Name == "LocalGridCellSizeMillimetres")

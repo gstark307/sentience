@@ -27,18 +27,17 @@ namespace sentience.core
 {
     /// <summary>
     /// occupancy grid cell capable of storing multiple hypotheses
+    /// There is one grid cell of this type per X,Y coordinate within the occupancy grid.
+    /// The grid cell object stores the vertical positions of particles so
+    /// that no 3D information is lost
     /// </summary>
     public class occupancygridCellMultiHypothesis
     {
         // a value which is returned by the probability method if no evidence was discovered
         public const int NO_OCCUPANCY_EVIDENCE = 99999999;
 
-        // current best estimate of whether this cell is occupied or not
-        // note that unknown cells are simply null pointers
-        // This boolean value is convenient for display purposes
-        //public bool occupied;
-
         // list of occupancy hypotheses, of type particleGridCell
+        // each hypothesis list corresponds to a particular vertical (z) cell index
         private ArrayList[] Hypothesis;
 
         #region "garbage collection"
@@ -96,6 +95,8 @@ namespace sentience.core
 
         #endregion
 
+        #region "hypothesis updates"
+
         /// <summary>
         /// add a new occupancy hypothesis to the list
         /// for this grid cell
@@ -108,6 +109,10 @@ namespace sentience.core
                 Hypothesis[vertical_index] = new ArrayList();
             Hypothesis[vertical_index].Add(h);
         }
+
+        #endregion
+
+        #region "probability calculations"
 
         /// <summary>
         /// return the probability of occupancy for the entire cell
@@ -204,12 +209,18 @@ namespace sentience.core
                 return (NO_OCCUPANCY_EVIDENCE);
         }
 
+        #endregion
+
+        #region "initialisation"
+
         public occupancygridCellMultiHypothesis(int vertical_dimension_cells)
         {
             //occupied = false;
             Hypothesis = new ArrayList[vertical_dimension_cells];
             garbage = new bool[vertical_dimension_cells];
         }
+
+        #endregion
     }
 
     /// <summary>

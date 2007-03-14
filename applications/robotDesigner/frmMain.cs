@@ -273,6 +273,8 @@ namespace robotDesigner
             cellSizeChanged = true;
             if (e.KeyChar == 13)
             {
+                updateGridWidth();
+                updateGridHeight();
                 // sensor models may need to be recalculated
                 // for the new cell size
                 rob.head.sensormodel[0] = null;
@@ -287,6 +289,7 @@ namespace robotDesigner
             if (cellSizeChanged)
             {
                 updateGridWidth();
+                updateGridHeight();
                 // sensor models may need to be recalculated
                 // for the new cell size
                 rob.head.sensormodel[0] = null;
@@ -323,9 +326,22 @@ namespace robotDesigner
 
         private void updateGridWidth()
         {
-            int dimension = Convert.ToInt32(txtGridWidth.Text) / Convert.ToInt32(txtGridCellDimension.Text);
-            dimension = (int)(dimension / 8) * 8; // this just ensures that the grid will display properly
-            txtGridWidth.Text = Convert.ToString(dimension * Convert.ToInt32(txtGridCellDimension.Text));
+            if (txtGridWidth.Text != "")
+            {
+                int dimension = Convert.ToInt32(txtGridWidth.Text) / Convert.ToInt32(txtGridCellDimension.Text);
+                dimension = (int)(dimension / 8) * 8; // this just ensures that the grid will display properly
+                txtGridWidth.Text = Convert.ToString(dimension * Convert.ToInt32(txtGridCellDimension.Text));
+            }
+        }
+
+        private void updateGridHeight()
+        {
+            if (txtGridHeight.Text != "")
+            {
+                int dimension = Convert.ToInt32(txtGridHeight.Text) / Convert.ToInt32(txtGridCellDimension.Text);
+                dimension = (int)(dimension / 8) * 8; // this just ensures that the grid will display properly
+                txtGridHeight.Text = Convert.ToString(dimension * Convert.ToInt32(txtGridCellDimension.Text));
+            }
         }
 
         private void txtGridWidth_Leave(object sender, EventArgs e)
@@ -337,6 +353,17 @@ namespace robotDesigner
         {
             if (e.KeyChar == 13)
                 updateGridWidth();
+        }
+
+        private void txtGridHeight_Leave(object sender, EventArgs e)
+        {
+            updateGridHeight();
+        }
+
+        private void txtGridHeight_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == 13)
+                updateGridHeight();
         }
     }
 }

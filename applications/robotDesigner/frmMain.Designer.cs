@@ -981,6 +981,8 @@ namespace robotDesigner
             this.txtGridHeight.TabIndex = 11;
             this.txtGridHeight.Text = "3000";
             this.txtGridHeight.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtGridHeight.Leave += new System.EventHandler(this.txtGridHeight_Leave);
+            this.txtGridHeight.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtGridHeight_KeyPress);
             // 
             // label36
             // 

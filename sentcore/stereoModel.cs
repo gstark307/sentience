@@ -143,11 +143,14 @@ namespace sentience.core
             for (int i = 0; i < rayModelsData.Count; i++)
             {
                 int d = i + 2; // we add 2 here because the first two slots
-                // corresponding to zero and 0.5 pixel disparity don't exist
-                String[] dataStr = ((String)rayModelsData[i]).Split(',');
-                length[d] = dataStr.Length;
-                for (int j = 0; j < dataStr.Length; j++)
-                    probability[d, j] = Convert.ToSingle(dataStr[j]);
+                if (d < length.Length)
+                {
+                    // corresponding to zero and 0.5 pixel disparity don't exist
+                    String[] dataStr = ((String)rayModelsData[i]).Split(',');
+                    length[d] = dataStr.Length;
+                    for (int j = 0; j < dataStr.Length; j++)
+                        probability[d, j] = Convert.ToSingle(dataStr[j]);
+                }
             }
         }
 
