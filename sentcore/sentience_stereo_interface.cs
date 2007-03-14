@@ -29,6 +29,12 @@ namespace sentience.core
 
     public class sentience_stereo_interface
     {
+        // types of correspondence algorithm
+        public const int CORRESPONDENCE_SIMPLE = 0;
+        public const int CORRESPONDENCE_CONTOURS = 1;
+        public const int CORRESPONDENCE_FAST = 2;
+        public const int CORRESPONDENCE_LINES = 3;
+
         int image_width = 0;
         int image_height = 0;
         int bytes_per_pixel;
@@ -37,7 +43,7 @@ namespace sentience.core
         sentience_stereo stereovision;
         sentience_stereo_contours stereovision_contours;
         sentience_stereo_FAST stereovision_FAST;
-        int currentAlgorithmType = 0;
+        int currentAlgorithmType = CORRESPONDENCE_SIMPLE;
         FASTlines line_detector = null;
 
         calibrationStereo calibration = null;
@@ -151,7 +157,9 @@ namespace sentience.core
         /// </summary>
         public void loadImage(Byte[] image_data, int width, int height, bool isLeftImage, int bytesPerPixel)
         {
-            if ((isLeftImage) && ((currentAlgorithmType == 2) || (currentAlgorithmType == 3)))
+            if ((isLeftImage) && 
+                ((currentAlgorithmType == CORRESPONDENCE_FAST) ||
+                (currentAlgorithmType == CORRESPONDENCE_LINES)))
             {
                 if (line_detector == null) line_detector = new FASTlines();
                 line_detector.drawLines = false;
@@ -216,19 +224,19 @@ namespace sentience.core
             currentAlgorithmType = algorithm_type;
             switch (algorithm_type)
             {
-                case 0:  // feature based stereo
+                case CORRESPONDENCE_SIMPLE:  // feature based stereo
                     {
                         stereovision.update(left_image, right_image, image_width, image_height, bytes_per_pixel,
                                             calibration_offset_x, calibration_offset_y, image_threshold, peaks_per_row);
                         break;
                     }
-                case 1:  // contour based stereo
+                case CORRESPONDENCE_CONTOURS:  // contour based stereo
                     {
                         stereovision_contours.update(left_image, right_image, image_width, image_height,
                                                      calibration_offset_x, calibration_offset_y, true);
                         break;
                     }
-                case 2:  // FAST corners based stereo
+                case CORRESPONDENCE_FAST:  // FAST corners based stereo
                     {
                         stereovision_contours.vertical_compression = 4;
                         stereovision_contours.disparity_map_compression = 3;
@@ -237,7 +245,7 @@ namespace sentience.core
                         updateFASTCornerDisparities();
                         break;
                     }
-                case 3:  // stereo lines
+                case CORRESPONDENCE_LINES:  // stereo lines
                     {
                         stereovision_contours.vertical_compression = 4;
                         stereovision_contours.disparity_map_compression = 3;
@@ -259,7 +267,7 @@ namespace sentience.core
         /// <param name="threshold"></param>
         public void getCloseObjects(Byte[] raw_image, Byte[] output_img, Byte[] background_img, int wdth, int hght, int threshold)
         {
-            if (currentAlgorithmType == 1)
+            if (currentAlgorithmType == CORRESPONDENCE_CONTOURS)
                 stereovision_contours.getCloseObjects(raw_image, output_img, background_img, wdth, hght, threshold);
         }
 
@@ -271,8 +279,9 @@ namespace sentience.core
         /// <param name="width"></param>
         /// <param name="height"></param>
         public void getDisparityMap(Byte[] img, int width, int height, int threshold)
-        {            
-            if ((currentAlgorithmType == 1) || (currentAlgorithmType == 3))
+        {
+            if ((currentAlgorithmType == CORRESPONDENCE_CONTOURS) ||
+                (currentAlgorithmType == CORRESPONDENCE_LINES))
                 stereovision_contours.getDisparityMap(img, width, height, threshold);
         }
 
@@ -287,7 +296,7 @@ namespace sentience.core
 
             switch(currentAlgorithmType)
             {
-                case 0:
+                case CORRESPONDENCE_SIMPLE:
                     {
                         // get features from non-maximal suppression
                         max = stereovision.no_of_selected_features * 3;
@@ -297,7 +306,7 @@ namespace sentience.core
                         }
                         break;
                     }
-                case 1:
+                case CORRESPONDENCE_CONTOURS:
                     {
                         // get features from the disparity map
                         max = stereovision_contours.no_of_selected_features * 3;
@@ -308,7 +317,7 @@ namespace sentience.core
                         }
                         break;
                     }
-                case 2:
+                case CORRESPONDENCE_FAST:
                     {
                         // get FAST corner features from non-maximal suppression
                         if (line_detector != null)
@@ -330,7 +339,7 @@ namespace sentience.core
                         }
                         break;
                     }
-                case 3:
+                case CORRESPONDENCE_LINES:
                     {
                         // get features from the disparity map
                         max = stereovision_contours.no_of_selected_features * 3;

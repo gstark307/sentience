@@ -52,7 +52,9 @@ namespace sentience.core
 
         // routines for performing stereo correspondence
         public stereoCorrespondence correspondence;
-        int correspondence_algorithm_type = 1;  //the type of stereo correspondance algorithm to be used
+
+        //the type of stereo correspondance algorithm to be used
+        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;  
 
         public String Name = "My Robot";          // name of the robot
         public float TotalMass_kg;                // total mass of the robot
@@ -159,6 +161,11 @@ namespace sentience.core
 
             // sensor model used for mapping
             inverseSensorModel = new stereoModel();
+
+            // set the number of stereo features to be detected and inserted into the grid
+            // on each time step.  This figure should be large enough to get reasonable
+            // detail, but not so large that the mapping consumes a huge amount of 
+            // processing resource
             inverseSensorModel.no_of_stereo_features = 100;
             correspondence = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
 

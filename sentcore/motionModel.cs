@@ -225,7 +225,8 @@ namespace sentience.core
                 for (int j = i + 1; j < Poses.Count; j++)
                 {
                     particlePath p2 = (particlePath)Poses[i];
-                    if (p2.total_score > max_score)
+                    if ((p2.total_score > max_score) ||
+                        ((max_score == 0) && (p2.total_score != 0)))
                     {
                         max_score = p2.total_score;
                         winner = p2;

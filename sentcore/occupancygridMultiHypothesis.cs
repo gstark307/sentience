@@ -33,7 +33,8 @@ namespace sentience.core
     /// </summary>
     public class occupancygridCellMultiHypothesis
     {
-        // a value which is returned by the probability method if no evidence was discovered
+        // a value which is returned by the probability method 
+        // if no occupancy evidence was discovered
         public const int NO_OCCUPANCY_EVIDENCE = 99999999;
 
         // list of occupancy hypotheses, of type particleGridCell
@@ -44,11 +45,16 @@ namespace sentience.core
 
         // the number of garbage hypotheses accumulated within this grid cell
         public int garbage_entries = 0;
+
+        // array of flags, one for each vertical cell, indicating whether
+        // any trash has accumulated at that position
         public bool[] garbage;
 
         /// <summary>
         /// any old iron...
         /// </summary>
+        /// <param name="vertical_index">the z position at which to check for garbage</param>
+        /// <returns>the amount of garbage collected</returns>
         public int GarbageCollect(int vertical_index)
         {
             int collected_items = 0;
@@ -59,7 +65,7 @@ namespace sentience.core
                 while ((i >= 0) && (garbage_entries > 0))
                 {
                     particleGridCell h = (particleGridCell)Hypothesis[vertical_index][i];
-                    if (!h.Enabled)
+                    if (!h.Enabled) // has this hypothesis been marked for deletion?
                     {
                         Hypothesis[vertical_index].RemoveAt(i);
                         garbage_entries--;
@@ -69,6 +75,10 @@ namespace sentience.core
                 }
                 // there is no longer any garbage at this vertical index
                 garbage[vertical_index] = false;
+
+                // no hypotheses exist, so remove the list to save on memory usage
+                if (Hypothesis[vertical_index].Count == 0)
+                    Hypothesis[vertical_index] = null;
             }
             return (collected_items);
         }
@@ -76,7 +86,7 @@ namespace sentience.core
         /// <summary>
         /// collect garbage for all vertical indices
         /// </summary>
-        /// <returns></returns>
+        /// <returns>the amount of garbage collected</returns>
         public int GarbageCollect()
         {
             int collected_items = 0;
@@ -101,7 +111,7 @@ namespace sentience.core
         /// add a new occupancy hypothesis to the list
         /// for this grid cell
         /// </summary>
-        /// <param name="h"></param>
+        /// <param name="h">the hypothesis to be added to this grid cell</param>
         public void AddHypothesis(particleGridCell h)
         {
             int vertical_index = h.z;
@@ -118,7 +128,7 @@ namespace sentience.core
         /// return the probability of occupancy for the entire cell
         /// </summary>
         /// <param name="pose"></param>
-        /// <returns></returns>
+        /// <returns>probability as log odds</returns>
         public float GetProbability(particlePose pose)
         {
             float probabilityLogOdds = 0;
@@ -228,6 +238,7 @@ namespace sentience.core
     /// </summary>
     public class occupancygridMultiHypothesis : pos3D
     {
+        // random number generator
         private Random rnd = new Random();
 
         // list grid cells which need to be cleared of garbage
@@ -236,13 +247,13 @@ namespace sentience.core
         // a quick lookup table for gaussian values
         private float[] gaussianLookup;
 
-        // the number of cells across
+        // the number of cells across in the (xy) plane
         public int dimension_cells;
 
         // the number of cells in the vertical (z) axis
         public int dimension_cells_vertical;
 
-        // size of each grid cell in millimetres
+        // size of each grid cell (voxel) in millimetres
         public int cellSize_mm;
 
         // when localising search a wider area than when mapping
