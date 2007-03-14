@@ -396,8 +396,10 @@ namespace sentience.core
             rayWidth = (int)Math.Round(ray.width / (cellSize_mm * 2));
 
             // calculate the centre position of the grid in millimetres
-            int grid_centre_x_mm = (int)(x - (dimension_cells * cellSize_mm / 2));
-            int grid_centre_y_mm = (int)(y - (dimension_cells * cellSize_mm / 2));
+            int half_grid_width_mm = dimension_cells * cellSize_mm / 2;
+            int grid_centre_x_mm = (int)(x - half_grid_width_mm);
+            int grid_centre_y_mm = (int)(y - half_grid_width_mm);
+            int grid_centre_z_mm = (int)(z - half_grid_width_mm);
 
             int max_dimension_cells = dimension_cells - rayWidth;
 
@@ -544,6 +546,9 @@ namespace sentience.core
                         int y_cell = (int)Math.Round((yy_mm - grid_centre_y_mm) / (float)cellSize_mm);
                         if ((y_cell > ray_wdth_localisation) && (y_cell < dimension_cells - ray_wdth_localisation))
                         {
+                            // convert the z millimetre position into a grid cell position
+                            int z_cell = (int)Math.Round((zz_mm - grid_centre_z_mm) / (float)cellSize_mm);
+
                             int x_cell2 = x_cell;
                             int y_cell2 = y_cell;
 
@@ -610,7 +615,7 @@ namespace sentience.core
 
                                     // add a new hypothesis to this grid coordinate
                                     // note that this is also added to the original pose
-                                    hypothesis = new particleGridCell(x_cell2, y_cell2, prob, origin);
+                                    hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, prob, origin);
                                     cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
                                     origin.observed_grid_cells.Add(hypothesis);
                                     total_valid_hypotheses++;
