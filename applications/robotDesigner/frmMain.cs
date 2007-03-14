@@ -102,7 +102,8 @@ namespace robotDesigner
                 cmbCameraOrientation.SelectedIndex = rob.CameraOrientation;
 
                 txtGridLevels.Text = Convert.ToString(rob.LocalGridLevels);
-                txtGridDimension.Text = Convert.ToString(rob.LocalGridDimension);
+                txtGridWidth.Text = Convert.ToString(rob.LocalGridDimension * rob.LocalGridCellSize_mm);
+                txtGridHeight.Text = Convert.ToString(rob.LocalGridDimensionVertical * rob.LocalGridCellSize_mm);
                 txtGridCellDimension.Text = Convert.ToString(rob.LocalGridCellSize_mm);
                 txtGridInterval.Text = Convert.ToString(rob.LocalGridInterval_mm);
                 txtMappingRange.Text = Convert.ToString(rob.LocalGridMappingRange_mm);
@@ -157,9 +158,9 @@ namespace robotDesigner
             rob.head.no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);
             rob.CameraOrientation = Convert.ToInt32(cmbCameraOrientation.SelectedIndex);
 
-            rob.LocalGridLevels = Convert.ToInt32(txtGridLevels.Text);
-            rob.LocalGridDimension = Convert.ToInt32(txtGridDimension.Text);
             rob.LocalGridCellSize_mm = Convert.ToSingle(txtGridCellDimension.Text);
+            rob.LocalGridLevels = Convert.ToInt32(txtGridLevels.Text);
+            rob.LocalGridDimension = (int)(Convert.ToInt32(txtGridWidth.Text) / rob.LocalGridCellSize_mm);            
             rob.LocalGridInterval_mm = Convert.ToSingle(txtGridInterval.Text);
             rob.LocalGridMappingRange_mm = Convert.ToSingle(txtMappingRange.Text);
             rob.LocalGridLocalisationRadius_mm = Convert.ToSingle(txtLocalGridLocalisationRadius.Text);
@@ -285,6 +286,7 @@ namespace robotDesigner
         {
             if (cellSizeChanged)
             {
+                updateGridWidth();
                 // sensor models may need to be recalculated
                 // for the new cell size
                 rob.head.sensormodel[0] = null;
@@ -317,6 +319,24 @@ namespace robotDesigner
             if (cull_threshold < 10) cull_threshold = 10;
             if (cull_threshold > 90) cull_threshold = 90;
             txtCullingThreshold.Text = Convert.ToString(cull_threshold);
+        }
+
+        private void updateGridWidth()
+        {
+            int dimension = Convert.ToInt32(txtGridWidth.Text) / Convert.ToInt32(txtGridCellDimension.Text);
+            dimension = (int)(dimension / 8) * 8; // this just ensures that the grid will display properly
+            txtGridWidth.Text = Convert.ToString(dimension * Convert.ToInt32(txtGridCellDimension.Text));
+        }
+
+        private void txtGridWidth_Leave(object sender, EventArgs e)
+        {
+            updateGridWidth();
+        }
+
+        private void txtGridWidth_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == 13)
+                updateGridWidth();
         }
     }
 }

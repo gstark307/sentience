@@ -85,11 +85,12 @@ namespace sentience.core
         public int CameraOrientation = 0;         // the general configuration of camera positions
 
         // grid settings
-        public int LocalGridLevels = 1;           // The number of scales used within the local grid
-        public int LocalGridDimension = 128;      // Cubic dimension of the local grid in cells
-        public float LocalGridCellSize_mm = 100;   // Size of each grid cell (voxel) in millimetres
-        public float LocalGridInterval_mm = 100;  // The distance which the robot must travel before new data is inserted into the grid during mapping
-        public float LocalGridMappingRange_mm = 2500;  // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
+        public int LocalGridLevels = 1;               // The number of scales used within the local grid
+        public int LocalGridDimension = 128;          // dimension of the local grid in cells (x-y plane)
+        public int LocalGridDimensionVertical = 100;  // vertical (z) dimension of the local grid in cells
+        public float LocalGridCellSize_mm = 100;      // Size of each grid cell (voxel) in millimetres
+        public float LocalGridInterval_mm = 100;      // The distance which the robot must travel before new data is inserted into the grid during mapping
+        public float LocalGridMappingRange_mm = 2500; // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
         public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
        
@@ -141,7 +142,7 @@ namespace sentience.core
         private void createLocalGrid()
         {
             // create the local grid
-            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm);
+            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm);
             LocalGrid.y = 4000;  //test
         }
 

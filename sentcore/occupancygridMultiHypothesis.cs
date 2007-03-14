@@ -36,63 +36,63 @@ namespace sentience.core
         // current best estimate of whether this cell is occupied or not
         // note that unknown cells are simply null pointers
         // This boolean value is convenient for display purposes
-        public bool occupied;
+        //public bool occupied;
 
         // list of occupancy hypotheses, of type particleGridCell
-        private ArrayList Hypothesis;
+        private ArrayList[] Hypothesis;
 
         #region "garbage collection"
 
         // the number of garbage hypotheses accumulated within this grid cell
         public int garbage_entries = 0;
-        public ArrayList garbage;
+        public bool[] garbage;
 
         /// <summary>
         /// any old iron...
         /// </summary>
-        public int GarbageCollect()
+        public int GarbageCollect(int vertical_index)
         {
             int collected_items = 0;
 
-            int i = Hypothesis.Count - 1;
-            while ((i >= 0) && (garbage_entries > 0))
+            if (Hypothesis[vertical_index] != null)
             {
-                particleGridCell h = (particleGridCell)Hypothesis[i];
-                if (!h.Enabled)
+                int i = Hypothesis[vertical_index].Count - 1;
+                while ((i >= 0) && (garbage_entries > 0))
                 {
-                    Hypothesis.RemoveAt(i);
-                    garbage_entries--;
-                    collected_items++;
+                    particleGridCell h = (particleGridCell)Hypothesis[vertical_index][i];
+                    if (!h.Enabled)
+                    {
+                        Hypothesis[vertical_index].RemoveAt(i);
+                        garbage_entries--;
+                        collected_items++;
+                    }
+                    i--;
                 }
-                i--;
+                // there is no longer any garbage at this vertical index
+                garbage[vertical_index] = false;
             }
             return (collected_items);
         }
 
-        /*
+        /// <summary>
+        /// collect garbage for all vertical indices
+        /// </summary>
+        /// <returns></returns>
         public int GarbageCollect()
         {
             int collected_items = 0;
-            int min = garbage.Count;
-            garbage.Sort();
-            for (int i = garbage.Count-1; i >= 0; i--)
+
+            if (garbage_entries > 0)
             {
-                int victim_index = (int)garbage[i];
-                if (victim_index < min) min = victim_index;
-                Hypothesis.RemoveAt(victim_index);
-                garbage.RemoveAt(i);
-                garbage_entries--;
-                collected_items++;
-            }
-            // reindex the remaining hypotheses
-            for (int i = 0; i < Hypothesis.Count; i++)
-            {
-                particleGridCell h = (particleGridCell)Hypothesis[i];
-                h.array_index = i;
+                for (int i = 0; i < garbage.Length; i++)
+                {
+                    if (garbage[i] == true)
+                        collected_items += GarbageCollect(i);
+                }
             }
             return (collected_items);
         }
-        */
+
 
         #endregion
 
@@ -103,63 +103,91 @@ namespace sentience.core
         /// <param name="h"></param>
         public void AddHypothesis(particleGridCell h)
         {
-            Hypothesis.Add(h);
+            int vertical_index = h.z;
+            if (Hypothesis[vertical_index] == null) 
+                Hypothesis[vertical_index] = new ArrayList();
+            Hypothesis[vertical_index].Add(h);
         }
 
         /// <summary>
-        /// returns the probability of occupancy at this grid cell
+        /// return the probability of occupancy for the entire cell
+        /// </summary>
+        /// <param name="pose"></param>
+        /// <returns></returns>
+        public float GetProbability(particlePose pose)
+        {
+            float probabilityLogOdds = 0;
+
+            for (int i = 0; i < Hypothesis.Length; i++)
+            {
+                if (Hypothesis[i] != null)
+                {
+                    float probLO = GetProbability(pose, i, true);
+                    if (probLO != NO_OCCUPANCY_EVIDENCE)
+                        probabilityLogOdds += probLO;
+                }
+            }
+            return (util.LogOddsToProbability(probabilityLogOdds));
+        }
+
+        /// <summary>
+        /// returns the probability of occupancy at this grid cell at the given vertical (z) coordinate
         /// warning: this could potentially suffer from path ID or time step rollover problems
         /// </summary>
         /// <param name="path_ID"></param>
         /// <returns>probability value</returns>
-        public float GetProbability(particlePose pose)
-        {           
-            float probabilityLogOdds = 0;
+        public float GetProbability(particlePose pose, int vertical_index, bool returnLogOdds)
+        {
             int hits = 0;
-            int step_size = 10 + (Hypothesis.Count / 10);
+            float probabilityLogOdds = 0;
 
-            if (pose.previous_paths != null)
-            {
-                UInt32 curr_path_ID = UInt32.MaxValue;
-                int i = Hypothesis.Count - 1;
+            if (Hypothesis[vertical_index] != null)
+            {                
+                int step_size = 10 + (Hypothesis[vertical_index].Count / 10);
 
-                // cycle through the path IDs for this pose            
-                for (int p = 0; p < pose.previous_paths.Count; p++)
+                if (pose.previous_paths != null)
                 {
-                    UInt32 path_ID = (UInt32)pose.previous_paths[p];
+                    UInt32 curr_path_ID = UInt32.MaxValue;
+                    int i = Hypothesis[vertical_index].Count - 1;
 
-                    // quickly find the first entry
-                    bool found = false;
-                    int start_i = i;
-                    while ((i >= 0) && (!found))
+                    // cycle through the path IDs for this pose            
+                    for (int p = 0; p < pose.previous_paths.Count; p++)
                     {
-                        particleGridCell h = (particleGridCell)Hypothesis[i];
-                        if (h.pose.path_ID > path_ID)
+                        UInt32 path_ID = (UInt32)pose.previous_paths[p];
+
+                        // quickly find the first entry
+                        bool found = false;
+                        int start_i = i;
+                        while ((i >= 0) && (!found))
                         {
+                            particleGridCell h = (particleGridCell)Hypothesis[vertical_index][i];
+                            if (h.pose.path_ID > path_ID)
+                            {
+                                curr_path_ID = h.pose.path_ID;
+                                i -= step_size;
+                            }
+                            else found = true;
+                        }
+                        if (start_i != i) i += step_size;
+
+
+                        while ((i >= 0) && (curr_path_ID >= path_ID))
+                        {
+                            particleGridCell h = (particleGridCell)Hypothesis[vertical_index][i];
                             curr_path_ID = h.pose.path_ID;
-                            i -= step_size;
+                            if (h.Enabled)
+                            {
+                                if (curr_path_ID == path_ID)
+                                    // only use evidence older than the current time 
+                                    // step to avoid getting into a muddle
+                                    if (pose.time_step > h.pose.time_step)
+                                    {
+                                        probabilityLogOdds += h.probabilityLogOdds;
+                                        hits++;
+                                    }
+                            }
+                            i--;
                         }
-                        else found = true;
-                    }
-                    if (start_i != i) i += step_size;
-
-
-                    while ((i >= 0) && (curr_path_ID >= path_ID))
-                    {
-                        particleGridCell h = (particleGridCell)Hypothesis[i];
-                        curr_path_ID = h.pose.path_ID;
-                        if (h.Enabled)
-                        {
-                            if (curr_path_ID == path_ID)
-                                // only use evidence older than the current time 
-                                // step to avoid getting into a muddle
-                                if (pose.time_step > h.pose.time_step)
-                                {
-                                    probabilityLogOdds += h.probabilityLogOdds;
-                                    hits++;
-                                }
-                        }
-                        i--;
                     }
                 }
             }
@@ -167,17 +195,20 @@ namespace sentience.core
             if (hits > 0)
             {
                 // at the end we convert the total log odds value into a probability
-                return (util.LogOddsToProbability(probabilityLogOdds));
+                if (returnLogOdds)
+                    return (probabilityLogOdds);
+                else
+                    return (util.LogOddsToProbability(probabilityLogOdds));
             }
             else
                 return (NO_OCCUPANCY_EVIDENCE);
         }
 
-        public occupancygridCellMultiHypothesis()
+        public occupancygridCellMultiHypothesis(int vertical_dimension_cells)
         {
-            occupied = false;
-            Hypothesis = new ArrayList();
-            garbage = new ArrayList();
+            //occupied = false;
+            Hypothesis = new ArrayList[vertical_dimension_cells];
+            garbage = new bool[vertical_dimension_cells];
         }
     }
 
@@ -196,6 +227,9 @@ namespace sentience.core
 
         // the number of cells across
         public int dimension_cells;
+
+        // the number of cells in the vertical (z) axis
+        public int dimension_cells_vertical;
 
         // size of each grid cell in millimetres
         public int cellSize_mm;
@@ -222,9 +256,10 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        private void init(int dimension_cells, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
+        private void init(int dimension_cells, int dimension_cells_vertical, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
         {
             this.dimension_cells = dimension_cells;
+            this.dimension_cells_vertical = dimension_cells_vertical;
             this.cellSize_mm = cellSize_mm;
             this.localisation_search_cells = localisationRadius_mm / cellSize_mm;
             this.max_mapping_range_cells = maxMappingRange_mm / cellSize_mm;
@@ -241,10 +276,10 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        public occupancygridMultiHypothesis(int dimension_cells, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
+        public occupancygridMultiHypothesis(int dimension_cells, int dimension_cells_vertical, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
             : base(0, 0,0)
         {
-            init(dimension_cells, cellSize_mm, localisationRadius_mm, maxMappingRange_mm);
+            init(dimension_cells, dimension_cells_vertical, cellSize_mm, localisationRadius_mm, maxMappingRange_mm);
         }
 
         #endregion
@@ -260,7 +295,7 @@ namespace sentience.core
         private float vacancyFunction(float fraction, int steps)
         {
             float min_vacancy_probability = 0.1f;
-            float max_vacancy_probability = 0.5f;
+            float max_vacancy_probability = 1.0f;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
             return (0.5f - (prob / steps));
@@ -282,7 +317,7 @@ namespace sentience.core
             if (c.garbage_entries == 0)                             
                 garbage.Add(c);
 
-            //c.garbage.Add(hypothesis.array_index);
+            c.garbage[hypothesis.z] = true;
 
             // increment the heap of garbage
             c.garbage_entries++;
@@ -319,7 +354,7 @@ namespace sentience.core
         /// <param name="origin">pose of the robot</param>
         /// <param name="sensorModelProbability">probability value from a specific point in the ray, taken from the sensor model</param>
         /// <returns>log odds probability of there being a match between the ray and the grid</returns>
-        private float matchingProbability(int x_cell, int y_cell,
+        private float matchingProbability(int x_cell, int y_cell, int z_cell,
                                           particlePose origin,
                                           float sensormodel_probability)
         {
@@ -327,7 +362,7 @@ namespace sentience.core
 
             // localise using this grid cell
             // first get the existing probability value at this cell
-            float existing_probability = cell[x_cell, y_cell].GetProbability(origin);
+            float existing_probability = cell[x_cell, y_cell].GetProbability(origin, z_cell, false);
 
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
@@ -397,9 +432,10 @@ namespace sentience.core
 
             // calculate the centre position of the grid in millimetres
             int half_grid_width_mm = dimension_cells * cellSize_mm / 2;
+            //int half_grid_width_vertical_mm = dimension_cells_vertical * cellSize_mm / 2;
             int grid_centre_x_mm = (int)(x - half_grid_width_mm);
             int grid_centre_y_mm = (int)(y - half_grid_width_mm);
-            int grid_centre_z_mm = (int)(z - half_grid_width_mm);
+            int grid_centre_z_mm = (int)z;
 
             int max_dimension_cells = dimension_cells - rayWidth;
 
@@ -548,79 +584,83 @@ namespace sentience.core
                         {
                             // convert the z millimetre position into a grid cell position
                             int z_cell = (int)Math.Round((zz_mm - grid_centre_z_mm) / (float)cellSize_mm);
-
-                            int x_cell2 = x_cell;
-                            int y_cell2 = y_cell;
-
-                            // get the probability at this point 
-                            // for the central axis of the ray using the inverse sensor model
-                            if (modelcomponent == OCCUPIED_SENSORMODEL)
-                                centre_prob = sensormodel_lookup.probability[sensormodel_index, grid_step];
-                            else
-                                // calculate the probability from the vacancy model
-                                centre_prob = vacancyFunction(grid_step / (float)steps, steps);
-
-
-                            // width of the localisation ray
-                            for (int width = -ray_wdth_localisation; width <= ray_wdth_localisation; width++)
+                            if ((z_cell >= 0) && (z_cell < dimension_cells_vertical))
                             {
-                                // is the width currently inside the mapping area of the ray ?
-                                bool isInsideMappingRayWidth = false;
-                                if ((width >= -ray_wdth) && (width <= ray_wdth))
-                                    isInsideMappingRayWidth = true;
 
-                                // adjust the x or y cell position depending upon the 
-                                // deviation from the main axis of the ray
-                                if (longest_axis == Y_AXIS)
-                                    x_cell2 = x_cell + width;
+                                int x_cell2 = x_cell;
+                                int y_cell2 = y_cell;
+
+                                // get the probability at this point 
+                                // for the central axis of the ray using the inverse sensor model
+                                if (modelcomponent == OCCUPIED_SENSORMODEL)
+                                    centre_prob = 0.5f + (sensormodel_lookup.probability[sensormodel_index, grid_step] / 2.0f);
                                 else
-                                    y_cell2 = y_cell + width;
+                                    // calculate the probability from the vacancy model
+                                    centre_prob = vacancyFunction(grid_step / (float)steps, steps);
 
-                                // probability at the central axis
-                                prob = centre_prob;
-                                prob_localisation = centre_prob;
 
-                                // probabilities are symmetrical about the axis of the ray
-                                // this multiplier implements a gaussian distribution around the centre
-                                if (width != 0) // don't bother if this is the centre of the ray
+                                // width of the localisation ray
+                                for (int width = -ray_wdth_localisation; width <= ray_wdth_localisation; width++)
                                 {
-                                    // the probability used for wide localisation rays
-                                    prob_localisation *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth_localisation];
-                                    
-                                    // the probability used for narrower mapping rays
-                                    if (isInsideMappingRayWidth)
-                                        prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
-                                }
+                                    // is the width currently inside the mapping area of the ray ?
+                                    bool isInsideMappingRayWidth = false;
+                                    if ((width >= -ray_wdth) && (width <= ray_wdth))
+                                        isInsideMappingRayWidth = true;
 
-                                if (cell[x_cell2, y_cell2] != null)
-                                {
-                                    // only localise using occupancy, not vacancy
-                                    if (modelcomponent == OCCUPIED_SENSORMODEL)
+                                    // adjust the x or y cell position depending upon the 
+                                    // deviation from the main axis of the ray
+                                    if (longest_axis == Y_AXIS)
+                                        x_cell2 = x_cell + width;
+                                    else
+                                        y_cell2 = y_cell + width;
+
+                                    // probability at the central axis
+                                    prob = centre_prob;
+                                    prob_localisation = centre_prob;
+
+                                    // probabilities are symmetrical about the axis of the ray
+                                    // this multiplier implements a gaussian distribution around the centre
+                                    if (width != 0) // don't bother if this is the centre of the ray
                                     {
-                                        // update the matching score, by combining the probability
-                                        // of the grid cell with the probability from the localisation ray
-                                        if (longest_axis == X_AXIS)
-                                            matchingScore += matchingProbability(x_cell2, y_cell2, origin, prob_localisation);
+                                        // the probability used for wide localisation rays
+                                        prob_localisation *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth_localisation];
 
-                                        if (longest_axis == Y_AXIS)
-                                            matchingScore += matchingProbability(x_cell2, y_cell2, origin, prob_localisation);
+                                        // the probability used for narrower mapping rays
+                                        if (isInsideMappingRayWidth)
+                                            prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
+                                    }
+
+                                    if (cell[x_cell2, y_cell2] != null)
+                                    {
+                                        // only localise using occupancy, not vacancy
+                                        if (modelcomponent == OCCUPIED_SENSORMODEL)
+                                        {
+                                            // update the matching score, by combining the probability
+                                            // of the grid cell with the probability from the localisation ray
+                                            if (longest_axis == X_AXIS)
+                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation);
+
+                                            if (longest_axis == Y_AXIS)
+                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation);
+                                        }
+                                    }
+
+                                    if ((isInsideMappingRayWidth) && (withinMappingRange))
+                                    {
+                                        // generate a grid cell if necessary
+                                        if (cell[x_cell2, y_cell2] == null)
+                                            cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
+
+                                        // add a new hypothesis to this grid coordinate
+                                        // note that this is also added to the original pose
+                                        hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, prob, origin);
+                                        cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
+                                        origin.observed_grid_cells.Add(hypothesis);
+                                        total_valid_hypotheses++;
                                     }
                                 }
-
-                                if ((isInsideMappingRayWidth) && (withinMappingRange))
-                                {
-                                    // generate a grid cell if necessary
-                                    if (cell[x_cell2, y_cell2] == null)
-                                        cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis();
-
-                                    // add a new hypothesis to this grid coordinate
-                                    // note that this is also added to the original pose
-                                    hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, prob, origin);
-                                    cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
-                                    origin.observed_grid_cells.Add(hypothesis);
-                                    total_valid_hypotheses++;
-                                }
                             }
+                            else grid_step = steps;  // its the end of the ray, break out of the loop
                         }
                         else grid_step = steps;  // its the end of the ray, break out of the loop
                     }

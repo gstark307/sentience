@@ -101,6 +101,8 @@ namespace robotDesigner
             this.tabGeometry = new System.Windows.Forms.TabPage();
             this.tabPerception = new System.Windows.Forms.TabPage();
             this.grpLocalisation = new System.Windows.Forms.GroupBox();
+            this.txtCullingThreshold = new System.Windows.Forms.TextBox();
+            this.label35 = new System.Windows.Forms.Label();
             this.txtTrialPoses = new System.Windows.Forms.TextBox();
             this.label33 = new System.Windows.Forms.Label();
             this.txtLocalGridLocalisationRadius = new System.Windows.Forms.TextBox();
@@ -109,18 +111,18 @@ namespace robotDesigner
             this.txtSensorModelsStatus = new System.Windows.Forms.TextBox();
             this.cmdGenerateSensorModels = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.txtGridHeight = new System.Windows.Forms.TextBox();
+            this.label36 = new System.Windows.Forms.Label();
             this.txtMappingRange = new System.Windows.Forms.TextBox();
             this.label34 = new System.Windows.Forms.Label();
             this.txtGridInterval = new System.Windows.Forms.TextBox();
             this.label26 = new System.Windows.Forms.Label();
             this.txtGridLevels = new System.Windows.Forms.TextBox();
             this.label25 = new System.Windows.Forms.Label();
-            this.txtGridDimension = new System.Windows.Forms.TextBox();
+            this.txtGridWidth = new System.Windows.Forms.TextBox();
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.txtCullingThreshold = new System.Windows.Forms.TextBox();
-            this.label35 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -863,6 +865,25 @@ namespace robotDesigner
             this.grpLocalisation.TabStop = false;
             this.grpLocalisation.Text = "Localisation";
             // 
+            // txtCullingThreshold
+            // 
+            this.txtCullingThreshold.Location = new System.Drawing.Point(131, 84);
+            this.txtCullingThreshold.Name = "txtCullingThreshold";
+            this.txtCullingThreshold.Size = new System.Drawing.Size(59, 20);
+            this.txtCullingThreshold.TabIndex = 13;
+            this.txtCullingThreshold.Text = "70";
+            this.txtCullingThreshold.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtCullingThreshold.Leave += new System.EventHandler(this.txtCullingThreshold_Leave);
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Location = new System.Drawing.Point(17, 84);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(84, 13);
+            this.label35.TabIndex = 12;
+            this.label35.Text = "Culling threshold";
+            // 
             // txtTrialPoses
             // 
             this.txtTrialPoses.Location = new System.Drawing.Point(131, 58);
@@ -887,7 +908,7 @@ namespace robotDesigner
             this.txtLocalGridLocalisationRadius.Name = "txtLocalGridLocalisationRadius";
             this.txtLocalGridLocalisationRadius.Size = new System.Drawing.Size(59, 20);
             this.txtLocalGridLocalisationRadius.TabIndex = 9;
-            this.txtLocalGridLocalisationRadius.Text = "200";
+            this.txtLocalGridLocalisationRadius.Text = "64";
             this.txtLocalGridLocalisationRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.txtLocalGridLocalisationRadius.Leave += new System.EventHandler(this.txtLocalGridLocalisationRadius_Leave);
             // 
@@ -933,22 +954,42 @@ namespace robotDesigner
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.txtGridHeight);
+            this.groupBox3.Controls.Add(this.label36);
             this.groupBox3.Controls.Add(this.txtMappingRange);
             this.groupBox3.Controls.Add(this.label34);
             this.groupBox3.Controls.Add(this.txtGridInterval);
             this.groupBox3.Controls.Add(this.label26);
             this.groupBox3.Controls.Add(this.txtGridLevels);
             this.groupBox3.Controls.Add(this.label25);
-            this.groupBox3.Controls.Add(this.txtGridDimension);
+            this.groupBox3.Controls.Add(this.txtGridWidth);
             this.groupBox3.Controls.Add(this.label28);
             this.groupBox3.Controls.Add(this.txtGridCellDimension);
             this.groupBox3.Controls.Add(this.label29);
             this.groupBox3.Location = new System.Drawing.Point(17, 19);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(217, 166);
+            this.groupBox3.Size = new System.Drawing.Size(217, 167);
             this.groupBox3.TabIndex = 2;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Local Occupancy Map";
+            // 
+            // txtGridHeight
+            // 
+            this.txtGridHeight.Location = new System.Drawing.Point(131, 78);
+            this.txtGridHeight.Name = "txtGridHeight";
+            this.txtGridHeight.Size = new System.Drawing.Size(59, 20);
+            this.txtGridHeight.TabIndex = 11;
+            this.txtGridHeight.Text = "3000";
+            this.txtGridHeight.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Location = new System.Drawing.Point(17, 78);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(77, 13);
+            this.label36.TabIndex = 10;
+            this.label36.Text = "Grid height mm";
             // 
             // txtMappingRange
             // 
@@ -956,7 +997,7 @@ namespace robotDesigner
             this.txtMappingRange.Name = "txtMappingRange";
             this.txtMappingRange.Size = new System.Drawing.Size(59, 20);
             this.txtMappingRange.TabIndex = 9;
-            this.txtMappingRange.Text = "2500";
+            this.txtMappingRange.Text = "2000";
             this.txtMappingRange.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label34
@@ -974,7 +1015,7 @@ namespace robotDesigner
             this.txtGridInterval.Name = "txtGridInterval";
             this.txtGridInterval.Size = new System.Drawing.Size(59, 20);
             this.txtGridInterval.TabIndex = 7;
-            this.txtGridInterval.Text = "200";
+            this.txtGridInterval.Text = "100";
             this.txtGridInterval.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label26
@@ -988,40 +1029,44 @@ namespace robotDesigner
             // 
             // txtGridLevels
             // 
-            this.txtGridLevels.Location = new System.Drawing.Point(131, 78);
+            this.txtGridLevels.Location = new System.Drawing.Point(131, 156);
             this.txtGridLevels.Name = "txtGridLevels";
             this.txtGridLevels.Size = new System.Drawing.Size(59, 20);
             this.txtGridLevels.TabIndex = 5;
             this.txtGridLevels.Text = "1";
             this.txtGridLevels.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtGridLevels.Visible = false;
             // 
             // label25
             // 
             this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(17, 78);
+            this.label25.Location = new System.Drawing.Point(17, 156);
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(60, 13);
             this.label25.TabIndex = 4;
             this.label25.Text = "Grid Levels";
+            this.label25.Visible = false;
             // 
-            // txtGridDimension
+            // txtGridWidth
             // 
-            this.txtGridDimension.Location = new System.Drawing.Point(131, 52);
-            this.txtGridDimension.Name = "txtGridDimension";
-            this.txtGridDimension.Size = new System.Drawing.Size(59, 20);
-            this.txtGridDimension.TabIndex = 3;
-            this.txtGridDimension.Text = "128";
-            this.txtGridDimension.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtGridDimension.TextChanged += new System.EventHandler(this.txtGridDimension_TextChanged);
+            this.txtGridWidth.Location = new System.Drawing.Point(131, 52);
+            this.txtGridWidth.Name = "txtGridWidth";
+            this.txtGridWidth.Size = new System.Drawing.Size(59, 20);
+            this.txtGridWidth.TabIndex = 3;
+            this.txtGridWidth.Text = "4000";
+            this.txtGridWidth.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.txtGridWidth.Leave += new System.EventHandler(this.txtGridWidth_Leave);
+            this.txtGridWidth.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtGridWidth_KeyPress);
+            this.txtGridWidth.TextChanged += new System.EventHandler(this.txtGridDimension_TextChanged);
             // 
             // label28
             // 
             this.label28.AutoSize = true;
             this.label28.Location = new System.Drawing.Point(17, 55);
             this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(108, 13);
+            this.label28.Size = new System.Drawing.Size(76, 13);
             this.label28.TabIndex = 2;
-            this.label28.Text = "Grid Dimension (cells)";
+            this.label28.Text = "Grid Width mm";
             // 
             // txtGridCellDimension
             // 
@@ -1029,7 +1074,7 @@ namespace robotDesigner
             this.txtGridCellDimension.Name = "txtGridCellDimension";
             this.txtGridCellDimension.Size = new System.Drawing.Size(59, 20);
             this.txtGridCellDimension.TabIndex = 1;
-            this.txtGridCellDimension.Text = "100";
+            this.txtGridCellDimension.Text = "32";
             this.txtGridCellDimension.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.txtGridCellDimension.Leave += new System.EventHandler(this.txtGridCellDimension_Leave);
             this.txtGridCellDimension.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtGridCellDimension_KeyPress);
@@ -1042,25 +1087,6 @@ namespace robotDesigner
             this.label29.Size = new System.Drawing.Size(95, 13);
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
-            // 
-            // txtCullingThreshold
-            // 
-            this.txtCullingThreshold.Location = new System.Drawing.Point(131, 84);
-            this.txtCullingThreshold.Name = "txtCullingThreshold";
-            this.txtCullingThreshold.Size = new System.Drawing.Size(59, 20);
-            this.txtCullingThreshold.TabIndex = 13;
-            this.txtCullingThreshold.Text = "50";
-            this.txtCullingThreshold.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtCullingThreshold.Leave += new System.EventHandler(this.txtCullingThreshold_Leave);
-            // 
-            // label35
-            // 
-            this.label35.AutoSize = true;
-            this.label35.Location = new System.Drawing.Point(17, 84);
-            this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(84, 13);
-            this.label35.TabIndex = 12;
-            this.label35.Text = "Culling threshold";
             // 
             // frmMain
             // 
@@ -1164,7 +1190,7 @@ namespace robotDesigner
         private System.Windows.Forms.TabPage tabGeometry;
         private System.Windows.Forms.TabPage tabPerception;
         private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.TextBox txtGridDimension;
+        private System.Windows.Forms.TextBox txtGridWidth;
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.TextBox txtGridCellDimension;
         private System.Windows.Forms.Label label29;
@@ -1194,6 +1220,8 @@ namespace robotDesigner
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.TextBox txtCullingThreshold;
         private System.Windows.Forms.Label label35;
+        private System.Windows.Forms.TextBox txtGridHeight;
+        private System.Windows.Forms.Label label36;
     }
 }
 
