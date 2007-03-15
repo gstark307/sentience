@@ -95,7 +95,14 @@ namespace sentience.core
         public float LocalGridMappingRange_mm = 2500; // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
         public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
-       
+
+        // when scan matching is used this is the maximum change in
+        // the robots pan angle which is detectable per time step
+        // This should not be bigger than a third of the horizontal field of view
+        public int ScanMatchingMaxPanAngleChange = 20;
+
+        // keeps an estimate of the robots pan angle based upon scan matching
+        public float ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
 
         #region "constructors"
 
@@ -306,15 +313,57 @@ namespace sentience.core
         }
 
         private void loadImages(ArrayList images)
-        {
+        {            
             clock.Start();
+
+            bool scanMatchesFound = false;
 
             for (int i = 0; i < images.Count / 2; i++)
             {
                 Byte[] left_image = (Byte[])images[i * 2];
                 Byte[] right_image = (Byte[])images[(i * 2) + 1];
                 loadRawImages(i, left_image, right_image, 3);
+
+                // perform scan matching for forwards or rearwards looking cameras
+                float pan_angle = head.pan + head.cameraPosition[i].pan;
+                if ((pan_angle == 0) || (pan_angle == (float)Math.PI))
+                {
+                    // create a scan matching object if needed
+                    if (head.scanmatch[i] == null)
+                        head.scanmatch[i] = new scanMatching();
+
+                    // perform scan matching
+                    head.scanmatch[i].update(correspondence.getRectifiedImage(true),
+                                             head.calibration[i].leftcam.image_width,
+                                             head.calibration[i].leftcam.image_height,
+                                             head.calibration[i].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f,
+                                             head.cameraPosition[i].roll,
+                                             ScanMatchingMaxPanAngleChange * (float)Math.PI / 180.0f);
+                    if (head.scanmatch[i].pan_angle_change != scanMatching.NOT_MATCHED)
+                    {
+                        scanMatchesFound = true;
+                        if (ScanMatchingPanAngleEstimate == scanMatching.NOT_MATCHED)
+                        {
+                            // if this is the first time a match has been found 
+                            // use the current pan estimate
+                            ScanMatchingPanAngleEstimate = pan;
+                        }
+                        else
+                        {
+                            if (pan_angle == 0)
+                                // forward facing camera
+                                ScanMatchingPanAngleEstimate += head.scanmatch[i].pan_angle_change;
+                            else
+                                // rearward facing camera
+                                ScanMatchingPanAngleEstimate -= head.scanmatch[i].pan_angle_change;
+                        }
+                    }
+                }                 
+                else head.scanmatch[i] = null;
             }
+
+            // if no scan matches were found set the robots pan angle estimate accordingly
+            if (!scanMatchesFound) ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
 
             clock.Stop();
             benchmark_stereo_correspondence = clock.time_elapsed_mS;

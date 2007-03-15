@@ -42,6 +42,7 @@ namespace sentience.core
         public String[] imageFilename;           // filename of raw image for each camera
         public calibrationStereo[] calibration;  // calibration data for each camera
         public rayModelLookup[] sensormodel;     // sensor model data for each camera
+        public scanMatching[] scanmatch;         // simple scan matching
 
         public stereoHead(int no_of_cameras) : base(0,0,0)
         {
@@ -62,6 +63,8 @@ namespace sentience.core
             }
             // sensor models
             sensormodel = new rayModelLookup[no_of_cameras];
+            //scan matching
+            scanmatch = new scanMatching[no_of_cameras];
 
             /*
             if (no_of_cameras == 4) initQuadCam();

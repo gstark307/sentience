@@ -26,7 +26,10 @@ using sentience.calibration;
 
 namespace sentience.core
 {
-
+    /// <summary>
+    /// an interface class which allows multiple types of stereo
+    /// correspondence algorithm to be selected
+    /// </summary>
     public class sentience_stereo_interface
     {
         // types of correspondence algorithm
@@ -35,18 +38,24 @@ namespace sentience.core
         public const int CORRESPONDENCE_FAST = 2;
         public const int CORRESPONDENCE_LINES = 3;
 
-        int image_width = 0;
-        int image_height = 0;
-        int bytes_per_pixel;
-        Byte[] left_image = null;
-        Byte[] right_image = null;        
-        sentience_stereo stereovision;
-        sentience_stereo_contours stereovision_contours;
-        sentience_stereo_FAST stereovision_FAST;
-        int currentAlgorithmType = CORRESPONDENCE_SIMPLE;
-        FASTlines line_detector = null;
+        // left and right images (mono) and their dimensions
+        public int image_width = 0;
+        public int image_height = 0;
+        private int bytes_per_pixel;
+        public Byte[] left_image = null;
+        public Byte[] right_image = null;
+        
+        // objects to handle different types of stereo correspondence
+        private sentience_stereo stereovision;
+        private sentience_stereo_contours stereovision_contours;
+        private sentience_stereo_FAST stereovision_FAST;
 
-        calibrationStereo calibration = null;
+        // the current type of algorithm being used
+        private int currentAlgorithmType = CORRESPONDENCE_SIMPLE;
+        private FASTlines line_detector = null;
+
+        // calibration parameters for this stereo camera
+        private calibrationStereo calibration = null;
 
         public sentience_stereo_interface()
         {
@@ -151,9 +160,9 @@ namespace sentience.core
         }
 
         /// <summary>
-        /// load mono image data (single byte per pixel)
-        /// Note that this assumes that the the image_data array has already been locked
-        /// by the calling program
+        /// loads a colour image with the given number of bytes per pixel
+        /// and stores it as a mono image, also applying the camera calibration
+        /// lookup table
         /// </summary>
         public void loadImage(Byte[] image_data, int width, int height, bool isLeftImage, int bytesPerPixel)
         {
@@ -165,8 +174,6 @@ namespace sentience.core
                 line_detector.drawLines = false;
                 line_detector.Update(image_data, width, height);
             }
-
-            int j;
 
             if ((image_width != width) || (image_height != height))
             {
@@ -180,7 +187,7 @@ namespace sentience.core
 
             
             int tot, offset;
-            for (j = 0; j < width * height; j++)
+            for (int j = 0; j < width * height; j++)
             {
                 int n = j;
                 

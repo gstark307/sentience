@@ -1,5 +1,5 @@
 /*
-    Sentience 3D Perception System
+    The main stereo correspondence class
     Copyright (C) 2000-2007 Bob Mottram
     fuzzgun@gmail.com
 
@@ -26,17 +26,44 @@ using sentience.calibration;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// the main stereo correspondence class
+    /// </summary>
     public class stereoCorrespondence
     {
+        // an interface to different stereo correspondence algorithms
         sentience_stereo_interface stereointerface = new sentience_stereo_interface();
 
         public stereoCorrespondence(int no_of_stereo_features)
         {
             stereointerface.setRequiredFeatures(no_of_stereo_features);
-            stereointerface.setDifferenceThreshold(100); //600);
+            stereointerface.setDifferenceThreshold(100);
             stereointerface.setMaxDisparity(5);
         }
 
+        /// <summary>
+        /// returns the left and right rectified images
+        /// </summary>
+        /// <param name="left_image">left rectified mono image</param>
+        /// <param name="right_image">right rectified mono image</param>
+        public void getRectifiedImages(ref Byte[] left_image, ref Byte[] right_image)
+        {
+            left_image = stereointerface.left_image;
+            right_image = stereointerface.right_image;
+        }
+        
+        /// <summary>
+        /// returns a rectified image from the left or right camera
+        /// </summary>
+        /// <param name="leftImage"></param>
+        /// <returns>rectified bitmap image - one byte per pixel</returns>
+        public Byte[] getRectifiedImage(bool leftImage)
+        {
+            if (leftImage)
+                return (stereointerface.left_image);
+            else
+                return (stereointerface.right_image);
+        }
 
         /// <summary>
         /// return a disparity map
@@ -49,33 +76,6 @@ namespace sentience.core
             stereointerface.getDisparityMap(img, width, height, threshold);
         }
 
-
-        public void LoadCalibration(String filename, ref int calibration_offset_x, ref int calibration_offset_y)
-        {
-            StreamReader oRead = null;
-            String str;
-            bool filefound = true;
-
-            try
-            {
-                oRead = File.OpenText(filename);
-            }
-            catch
-            {
-                filefound = false;
-            }
-
-            if (filefound)
-            {
-                str = oRead.ReadLine();
-                if (str != null) calibration_offset_x = Convert.ToInt32(str);
-
-                str = oRead.ReadLine();
-                if (str != null) calibration_offset_y = Convert.ToInt32(str);
-
-                oRead.Close();
-            }
-        }
 
         /// <summary>
         /// set the calibration data

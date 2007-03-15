@@ -343,7 +343,7 @@ namespace sentience.core
         /// <summary>
         /// get a score for a corner feature
         /// </summary>
-        /// <param name="imp"></param>
+        /// <param name="imp">mono bitmap image - one byte per pixel</param>
         /// <param name="pointer_dir"></param>
         /// <param name="barrier"></param>
         /// <returns></returns>
@@ -602,6 +602,15 @@ namespace sentience.core
             return (lines);
         }
 
+        /// <summary>
+        /// detect FAST corners
+        /// Note that non-maximal supression should be carried out after running this function
+        /// </summary>
+        /// <param name="img">image - one byte per pixel</param>
+        /// <param name="xsize"></param>
+        /// <param name="ysize"></param>
+        /// <param name="barrier">detection threshold</param>
+        /// <returns>array of corner features</returns>
         public static unsafe FASTcorner[] fast_corner_detect_10(Byte[] img, int xsize, int ysize, int barrier)
         {
             int boundary = 3, y, cb, c_b;

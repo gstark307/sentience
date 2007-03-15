@@ -191,12 +191,18 @@ namespace sentience.core
 
             float fraction = 0;
             if (Math.Abs(ang_velocity) > 0.000001f) fraction = fwd_velocity / ang_velocity;
-            float pan2 = path.current_pose.pan + (ang_velocity * time_elapsed_sec);
+            float current_pan = path.current_pose.pan;
+
+            // if scan matching is active use the current estimated pan angle
+            if (rob.ScanMatchingPanAngleEstimate != scanMatching.NOT_MATCHED)
+                current_pan = rob.ScanMatchingPanAngleEstimate;
+
+            float pan2 = current_pan + (ang_velocity * time_elapsed_sec);
 
             // update the pose
-            float new_y = path.current_pose.y - (fraction * (float)Math.Sin(path.current_pose.pan)) +
+            float new_y = path.current_pose.y - (fraction * (float)Math.Sin(current_pan)) +
                               (fraction * (float)Math.Sin(pan2));
-            float new_x = path.current_pose.x + (fraction * (float)Math.Cos(path.current_pose.pan)) -
+            float new_x = path.current_pose.x + (fraction * (float)Math.Cos(current_pan)) -
                               (fraction * (float)Math.Cos(pan2));
             float new_pan = pan2 + (v * time_elapsed_sec);
 
@@ -272,6 +278,11 @@ namespace sentience.core
                     particlePath p = new particlePath(path, path_ID);
                     createNewPose(p);
                 }
+
+                // if the robot has rotated through a large angle since
+                // the previous time step then reset the scan matching estimate
+                if (Math.Abs(best_path.current_pose.pan - rob.pan) > rob.ScanMatchingMaxPanAngleChange * Math.PI / 180)
+                    rob.ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
 
                 // update the robot position with the best available pose
                 rob.x = best_path.current_pose.x;
