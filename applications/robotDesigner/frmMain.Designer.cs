@@ -123,6 +123,8 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
+            this.label37 = new System.Windows.Forms.Label();
+            this.chkEnableScanMatching = new System.Windows.Forms.CheckBox();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -482,7 +484,8 @@ namespace robotDesigner
             this.cmbWheelFeedback.Items.AddRange(new object[] {
             "None",
             "Encoder",
-            "Resolver"});
+            "Resolver",
+            "Inertial"});
             this.cmbWheelFeedback.Location = new System.Drawing.Point(170, 77);
             this.cmbWheelFeedback.Name = "cmbWheelFeedback";
             this.cmbWheelFeedback.Size = new System.Drawing.Size(93, 21);
@@ -852,6 +855,8 @@ namespace robotDesigner
             // 
             // grpLocalisation
             // 
+            this.grpLocalisation.Controls.Add(this.chkEnableScanMatching);
+            this.grpLocalisation.Controls.Add(this.label37);
             this.grpLocalisation.Controls.Add(this.txtCullingThreshold);
             this.grpLocalisation.Controls.Add(this.label35);
             this.grpLocalisation.Controls.Add(this.txtTrialPoses);
@@ -860,7 +865,7 @@ namespace robotDesigner
             this.grpLocalisation.Controls.Add(this.label31);
             this.grpLocalisation.Location = new System.Drawing.Point(17, 201);
             this.grpLocalisation.Name = "grpLocalisation";
-            this.grpLocalisation.Size = new System.Drawing.Size(217, 122);
+            this.grpLocalisation.Size = new System.Drawing.Size(217, 141);
             this.grpLocalisation.TabIndex = 4;
             this.grpLocalisation.TabStop = false;
             this.grpLocalisation.Text = "Localisation";
@@ -1090,6 +1095,24 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(17, 110);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(115, 13);
+            this.label37.TabIndex = 14;
+            this.label37.Text = "Enable Scan Matching";
+            // 
+            // chkEnableScanMatching
+            // 
+            this.chkEnableScanMatching.AutoSize = true;
+            this.chkEnableScanMatching.Location = new System.Drawing.Point(154, 110);
+            this.chkEnableScanMatching.Name = "chkEnableScanMatching";
+            this.chkEnableScanMatching.Size = new System.Drawing.Size(15, 14);
+            this.chkEnableScanMatching.TabIndex = 5;
+            this.chkEnableScanMatching.UseVisualStyleBackColor = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1224,6 +1247,8 @@ namespace robotDesigner
         private System.Windows.Forms.Label label35;
         private System.Windows.Forms.TextBox txtGridHeight;
         private System.Windows.Forms.Label label36;
+        private System.Windows.Forms.CheckBox chkEnableScanMatching;
+        private System.Windows.Forms.Label label37;
     }
 }
 

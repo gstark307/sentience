@@ -96,6 +96,9 @@ namespace sentience.core
         public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
 
+        // whether to enable scan matching for more accurate pose estimation
+        public bool EnableScanMatching = true;
+
         // when scan matching is used this is the maximum change in
         // the robots pan angle which is detectable per time step
         // This should not be bigger than a third of the horizontal field of view
@@ -332,30 +335,33 @@ namespace sentience.core
                     if (head.scanmatch[i] == null)
                         head.scanmatch[i] = new scanMatching();
 
-                    // perform scan matching
-                    head.scanmatch[i].update(correspondence.getRectifiedImage(true),
-                                             head.calibration[i].leftcam.image_width,
-                                             head.calibration[i].leftcam.image_height,
-                                             head.calibration[i].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f,
-                                             head.cameraPosition[i].roll,
-                                             ScanMatchingMaxPanAngleChange * (float)Math.PI / 180.0f);
-                    if (head.scanmatch[i].pan_angle_change != scanMatching.NOT_MATCHED)
+                    if (EnableScanMatching)
                     {
-                        scanMatchesFound = true;
-                        if (ScanMatchingPanAngleEstimate == scanMatching.NOT_MATCHED)
+                        // perform scan matching
+                        head.scanmatch[i].update(correspondence.getRectifiedImage(true),
+                                                 head.calibration[i].leftcam.image_width,
+                                                 head.calibration[i].leftcam.image_height,
+                                                 head.calibration[i].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f,
+                                                 head.cameraPosition[i].roll,
+                                                 ScanMatchingMaxPanAngleChange * (float)Math.PI / 180.0f);
+                        if (head.scanmatch[i].pan_angle_change != scanMatching.NOT_MATCHED)
                         {
-                            // if this is the first time a match has been found 
-                            // use the current pan estimate
-                            ScanMatchingPanAngleEstimate = pan;
-                        }
-                        else
-                        {
-                            if (pan_angle == 0)
-                                // forward facing camera
-                                ScanMatchingPanAngleEstimate += head.scanmatch[i].pan_angle_change;
+                            scanMatchesFound = true;
+                            if (ScanMatchingPanAngleEstimate == scanMatching.NOT_MATCHED)
+                            {
+                                // if this is the first time a match has been found 
+                                // use the current pan estimate
+                                ScanMatchingPanAngleEstimate = pan;
+                            }
                             else
-                                // rearward facing camera
-                                ScanMatchingPanAngleEstimate -= head.scanmatch[i].pan_angle_change;
+                            {
+                                if (pan_angle == 0)
+                                    // forward facing camera
+                                    ScanMatchingPanAngleEstimate += head.scanmatch[i].pan_angle_change;
+                                else
+                                    // rearward facing camera
+                                    ScanMatchingPanAngleEstimate -= head.scanmatch[i].pan_angle_change;
+                            }
                         }
                     }
                 }                 
@@ -739,6 +745,9 @@ namespace sentience.core
             util.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLevels", Convert.ToString(LocalGridLevels));
 
+            util.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
+            util.AddTextElement(doc, nodeOccupancyGrid, "EnableScanMatching", Convert.ToString(EnableScanMatching));
+
             util.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the XY plane in cells");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimension", Convert.ToString(LocalGridDimension));
 
@@ -955,6 +964,16 @@ namespace sentience.core
             {
                 int no_of_cameras = Convert.ToInt32(xnod.InnerText);
                 init(no_of_cameras);
+            }
+
+            if (xnod.Name == "EnableScanMatching")
+            {
+                String str = xnod.InnerText.ToUpper();
+                if ((str =="TRUE") || (str == "YES") || (str == "ON") || 
+                    (str == "ENABLE") || (str == "ENABLED"))
+                    EnableScanMatching = true;
+                else
+                    EnableScanMatching = false;
             }
 
             if (xnod.Name == "LocalGridLevels")

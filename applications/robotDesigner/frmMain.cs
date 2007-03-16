@@ -110,6 +110,7 @@ namespace robotDesigner
                 txtLocalGridLocalisationRadius.Text = Convert.ToString(rob.LocalGridLocalisationRadius_mm);
                 txtTrialPoses.Text = Convert.ToString(rob.motion.survey_trial_poses);
                 txtCullingThreshold.Text = Convert.ToString(rob.motion.cull_threshold);
+                chkEnableScanMatching.Checked = rob.EnableScanMatching;
 
                 updateSensorModelStatus();
             }
@@ -166,6 +167,7 @@ namespace robotDesigner
             rob.LocalGridLocalisationRadius_mm = Convert.ToSingle(txtLocalGridLocalisationRadius.Text);
             rob.motion.survey_trial_poses = Convert.ToInt32(txtTrialPoses.Text);
             rob.motion.cull_threshold = Convert.ToInt32(txtCullingThreshold.Text);
+            rob.EnableScanMatching = chkEnableScanMatching.Checked;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
