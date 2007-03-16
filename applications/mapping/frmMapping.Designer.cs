@@ -69,6 +69,10 @@ namespace StereoMapping
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabParameters = new System.Windows.Forms.TabPage();
             this.tabSimulation = new System.Windows.Forms.TabPage();
+            this.label15 = new System.Windows.Forms.Label();
+            this.txtMeanColourVariance = new System.Windows.Forms.TextBox();
+            this.cmdOptimise = new System.Windows.Forms.Button();
+            this.cmdStopSimulation = new System.Windows.Forms.Button();
             this.cmdRunSimulation = new System.Windows.Forms.Button();
             this.label13 = new System.Windows.Forms.Label();
             this.lstBenchmarks = new System.Windows.Forms.ListView();
@@ -80,11 +84,9 @@ namespace StereoMapping
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
             this.tabUncertainty = new System.Windows.Forms.TabPage();
+            this.picOptimisationScore = new System.Windows.Forms.PictureBox();
             this.picBestPose = new System.Windows.Forms.PictureBox();
-            this.label14 = new System.Windows.Forms.Label();
-            this.picMotionUncertainty = new System.Windows.Forms.PictureBox();
             this.timSimulation = new System.Windows.Forms.Timer(this.components);
-            this.cmdStopSimulation = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -95,8 +97,8 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
             this.tabUncertainty.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picOptimisationScore)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMotionUncertainty)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -433,6 +435,9 @@ namespace StereoMapping
             // 
             // tabSimulation
             // 
+            this.tabSimulation.Controls.Add(this.label15);
+            this.tabSimulation.Controls.Add(this.txtMeanColourVariance);
+            this.tabSimulation.Controls.Add(this.cmdOptimise);
             this.tabSimulation.Controls.Add(this.cmdStopSimulation);
             this.tabSimulation.Controls.Add(this.cmdRunSimulation);
             this.tabSimulation.Controls.Add(this.label13);
@@ -452,9 +457,45 @@ namespace StereoMapping
             this.tabSimulation.Text = "Simulation";
             this.tabSimulation.UseVisualStyleBackColor = true;
             // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(17, 415);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(112, 13);
+            this.label15.TabIndex = 38;
+            this.label15.Text = "Mean Colour Variance";
+            // 
+            // txtMeanColourVariance
+            // 
+            this.txtMeanColourVariance.Location = new System.Drawing.Point(134, 412);
+            this.txtMeanColourVariance.Name = "txtMeanColourVariance";
+            this.txtMeanColourVariance.Size = new System.Drawing.Size(108, 20);
+            this.txtMeanColourVariance.TabIndex = 37;
+            // 
+            // cmdOptimise
+            // 
+            this.cmdOptimise.Location = new System.Drawing.Point(20, 79);
+            this.cmdOptimise.Name = "cmdOptimise";
+            this.cmdOptimise.Size = new System.Drawing.Size(76, 27);
+            this.cmdOptimise.TabIndex = 36;
+            this.cmdOptimise.Text = "Optimise";
+            this.cmdOptimise.UseVisualStyleBackColor = true;
+            this.cmdOptimise.Click += new System.EventHandler(this.cmdOptimise_Click);
+            // 
+            // cmdStopSimulation
+            // 
+            this.cmdStopSimulation.Location = new System.Drawing.Point(105, 46);
+            this.cmdStopSimulation.Name = "cmdStopSimulation";
+            this.cmdStopSimulation.Size = new System.Drawing.Size(76, 27);
+            this.cmdStopSimulation.TabIndex = 35;
+            this.cmdStopSimulation.Text = "Stop";
+            this.cmdStopSimulation.UseVisualStyleBackColor = true;
+            this.cmdStopSimulation.Click += new System.EventHandler(this.cmdStopSimulation_Click);
+            // 
             // cmdRunSimulation
             // 
-            this.cmdRunSimulation.Location = new System.Drawing.Point(20, 55);
+            this.cmdRunSimulation.Location = new System.Drawing.Point(20, 46);
             this.cmdRunSimulation.Name = "cmdRunSimulation";
             this.cmdRunSimulation.Size = new System.Drawing.Size(76, 27);
             this.cmdRunSimulation.TabIndex = 34;
@@ -476,7 +517,7 @@ namespace StereoMapping
             this.lstBenchmarks.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lstBenchmarks.Location = new System.Drawing.Point(20, 269);
             this.lstBenchmarks.Name = "lstBenchmarks";
-            this.lstBenchmarks.Size = new System.Drawing.Size(222, 170);
+            this.lstBenchmarks.Size = new System.Drawing.Size(222, 137);
             this.lstBenchmarks.TabIndex = 32;
             this.lstBenchmarks.UseCompatibleStateImageBehavior = false;
             // 
@@ -518,7 +559,7 @@ namespace StereoMapping
             // 
             // cmdReset
             // 
-            this.cmdReset.Location = new System.Drawing.Point(20, 22);
+            this.cmdReset.Location = new System.Drawing.Point(20, 13);
             this.cmdReset.Name = "cmdReset";
             this.cmdReset.Size = new System.Drawing.Size(76, 27);
             this.cmdReset.TabIndex = 27;
@@ -537,7 +578,7 @@ namespace StereoMapping
             // 
             // cmdRunOneStep
             // 
-            this.cmdRunOneStep.Location = new System.Drawing.Point(105, 22);
+            this.cmdRunOneStep.Location = new System.Drawing.Point(105, 13);
             this.cmdRunOneStep.Name = "cmdRunOneStep";
             this.cmdRunOneStep.Size = new System.Drawing.Size(76, 27);
             this.cmdRunOneStep.TabIndex = 25;
@@ -547,15 +588,23 @@ namespace StereoMapping
             // 
             // tabUncertainty
             // 
+            this.tabUncertainty.Controls.Add(this.picOptimisationScore);
             this.tabUncertainty.Controls.Add(this.picBestPose);
-            this.tabUncertainty.Controls.Add(this.label14);
-            this.tabUncertainty.Controls.Add(this.picMotionUncertainty);
             this.tabUncertainty.Location = new System.Drawing.Point(4, 22);
             this.tabUncertainty.Name = "tabUncertainty";
             this.tabUncertainty.Size = new System.Drawing.Size(815, 445);
             this.tabUncertainty.TabIndex = 2;
             this.tabUncertainty.Text = "Uncertainty";
             this.tabUncertainty.UseVisualStyleBackColor = true;
+            // 
+            // picOptimisationScore
+            // 
+            this.picOptimisationScore.Location = new System.Drawing.Point(18, 30);
+            this.picOptimisationScore.Name = "picOptimisationScore";
+            this.picOptimisationScore.Size = new System.Drawing.Size(538, 162);
+            this.picOptimisationScore.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picOptimisationScore.TabIndex = 35;
+            this.picOptimisationScore.TabStop = false;
             // 
             // picBestPose
             // 
@@ -566,38 +615,10 @@ namespace StereoMapping
             this.picBestPose.TabIndex = 34;
             this.picBestPose.TabStop = false;
             // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(17, 14);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(94, 13);
-            this.label14.TabIndex = 33;
-            this.label14.Text = "Motion uncertainty";
-            // 
-            // picMotionUncertainty
-            // 
-            this.picMotionUncertainty.Location = new System.Drawing.Point(18, 30);
-            this.picMotionUncertainty.Name = "picMotionUncertainty";
-            this.picMotionUncertainty.Size = new System.Drawing.Size(538, 401);
-            this.picMotionUncertainty.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picMotionUncertainty.TabIndex = 32;
-            this.picMotionUncertainty.TabStop = false;
-            // 
             // timSimulation
             // 
             this.timSimulation.Interval = 500;
             this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
-            // 
-            // cmdStopSimulation
-            // 
-            this.cmdStopSimulation.Location = new System.Drawing.Point(105, 55);
-            this.cmdStopSimulation.Name = "cmdStopSimulation";
-            this.cmdStopSimulation.Size = new System.Drawing.Size(76, 27);
-            this.cmdStopSimulation.TabIndex = 35;
-            this.cmdStopSimulation.Text = "Stop";
-            this.cmdStopSimulation.UseVisualStyleBackColor = true;
-            this.cmdStopSimulation.Click += new System.EventHandler(this.cmdStopSimulation_Click);
             // 
             // frmMapping
             // 
@@ -625,9 +646,8 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
             this.tabUncertainty.ResumeLayout(false);
-            this.tabUncertainty.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picOptimisationScore)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMotionUncertainty)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -685,12 +705,14 @@ namespace StereoMapping
         private System.Windows.Forms.ListView lstBenchmarks;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.TabPage tabUncertainty;
-        private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.PictureBox picMotionUncertainty;
         private System.Windows.Forms.PictureBox picBestPose;
         private System.Windows.Forms.Button cmdRunSimulation;
         private System.Windows.Forms.Timer timSimulation;
         private System.Windows.Forms.Button cmdStopSimulation;
+        private System.Windows.Forms.Button cmdOptimise;
+        private System.Windows.Forms.PictureBox picOptimisationScore;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.TextBox txtMeanColourVariance;
     }
 }
 

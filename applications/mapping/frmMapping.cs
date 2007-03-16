@@ -35,6 +35,7 @@ namespace StereoMapping
     public partial class frmMapping : common
     {
         bool simulation_running = false;
+        bool optimiser_running = false;
         bool busy = false;
 
         // default path for loading and saving files
@@ -43,24 +44,66 @@ namespace StereoMapping
         // robot simulation object
         simulation sim;
 
-        // motion uncertainty image
-        Byte[] uncertainty_img = null;
-
-        // object used for auto tuning
-        selfopt autotuner;
-
         public frmMapping()
         {
             InitializeComponent();
             init();
         }
 
+        #region "autotuner"
+
+        // object used for auto tuning
+        selfopt autotuner;
+
+        /// <summary>
+        /// initialises the autotuner
+        /// </summary>
+        private void initAutotuner()
+        {
+            autotuner = new selfopt(50, simulation.NO_OF_TUNING_PARAMETERS);
+
+            autotuner.smallerScoresAreBetter = true;
+            autotuner.parameterName[0] = "Motion model culling threshold";
+            autotuner.setParameterRange(0, 50, 90);
+            autotuner.setParameterStepSize(0, 1);
+
+            autotuner.parameterName[1] = "Localisation radius";
+            autotuner.setParameterRange(1, sim.rob.LocalGridCellSize_mm * 2, sim.rob.LocalGridCellSize_mm * 4);
+            autotuner.setParameterStepSize(1, sim.rob.LocalGridCellSize_mm);
+
+            autotuner.parameterName[2] = "Number of position uncertainty particles";
+            autotuner.setParameterRange(2, 40, 60);
+            autotuner.setParameterStepSize(2, 1);
+
+            autotuner.Randomize(false);
+        }
+
+        /// <summary>
+        /// load up the next set of test parameters for evaluation
+        /// </summary>
+        private void nextAutotunerInstance()
+        {
+            String parameters = "";
+
+            for (int i = 0; i < simulation.NO_OF_TUNING_PARAMETERS; i++)
+            {
+                parameters += Convert.ToString(autotuner.getParameter(i));
+                if (i < simulation.NO_OF_TUNING_PARAMETERS - 1)
+                    parameters += ",";
+            }
+            sim.SetTuningParameters(parameters);
+        }
+
+        #endregion
+
         private void init()
         {
+            // create the simulation object
             sim = new simulation(defaultPath + "robotdesign.xml", defaultPath);
             LoadSimulation(defaultPath + "simulation.xml");
 
-            autotuner = new selfopt(50, sim.tuningParameters.Length);
+            // initialise the autotuner
+            initAutotuner();
 
             lstPathSegments.Items.Clear();
             lstPathSegments.Columns.Clear();
@@ -223,18 +266,6 @@ namespace StereoMapping
             updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
         }
 
-        /// <summary>
-        /// shows the motion uncertainty
-        /// </summary>
-        private void showMotionUncertainty()
-        {
-            int dimension_mm = sim.rob.LocalGrid.dimension_cells;
-            picMotionUncertainty.Image = new Bitmap(dimension_mm, dimension_mm,
-                                                    System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            uncertainty_img = new Byte[dimension_mm * dimension_mm * 3];
-            sim.ShowMotionUncertainty(uncertainty_img, dimension_mm, dimension_mm, true);
-            updatebitmap_unsafe(uncertainty_img, (Bitmap)(picMotionUncertainty.Image));
-        }
 
         /// <summary>
         /// show the current best pose
@@ -358,7 +389,6 @@ namespace StereoMapping
         /// </summary>
         private void Simulation_Reset()
         {
-            uncertainty_img = null;
             sim.Reset();
         }
 
@@ -375,9 +405,6 @@ namespace StereoMapping
             // show the grid
             showOccupancyGrid();
 
-            // show uncertainty
-            showMotionUncertainty();
-
             // show the best pose
             showBestPose();
 
@@ -390,7 +417,27 @@ namespace StereoMapping
 
             if (prev_time_step == sim.current_time_step)
             {
-                simulation_running = false;
+                if (optimiser_running)
+                {
+                    // get the score for this simulation run
+                    float score = sim.GetMeanColourVariance();
+                    txtMeanColourVariance.Text = Convert.ToString((int)(score * 100000) / 100000.0f);
+
+                    // set the score for this run
+                    autotuner.setScore(score);
+
+                    // show the score graph
+                    picOptimisationScore.Image = new Bitmap(640, 200, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    Byte[] score_img = new Byte[640 * 200 * 3];
+                    autotuner.showHistory(score_img, 640, 200);
+                    updatebitmap_unsafe(score_img, (Bitmap)(picOptimisationScore.Image));
+
+                    // load the next instance
+                    nextAutotunerInstance();
+                }
+                else simulation_running = false;
+
+                // reset the simulation
                 Simulation_Reset();
             }
 
@@ -409,6 +456,11 @@ namespace StereoMapping
 
         private void cmdRunSimulation_Click(object sender, EventArgs e)
         {
+            cmdOptimise.Enabled = false;
+            cmdRunOneStep.Enabled = false;
+            cmdReset.Enabled = false;
+            cmdRunSimulation.Enabled = false;
+
             simulation_running = true;
             timSimulation.Enabled = true;
         }
@@ -423,8 +475,28 @@ namespace StereoMapping
 
         private void cmdStopSimulation_Click(object sender, EventArgs e)
         {
+            cmdReset.Enabled = true;
+            cmdRunOneStep.Enabled = true;
+            cmdRunSimulation.Enabled = true;
+            cmdOptimise.Enabled = true;
+
             simulation_running = false;
+            optimiser_running = false;
             timSimulation.Enabled = false;
+        }
+
+        private void cmdOptimise_Click(object sender, EventArgs e)
+        {
+            cmdReset.Enabled = false;
+            cmdRunOneStep.Enabled = false;
+            cmdRunSimulation.Enabled = false;
+            cmdOptimise.Enabled = false;
+
+            Simulation_Reset();
+            nextAutotunerInstance();
+            optimiser_running = true;
+            simulation_running = true;
+            timSimulation.Enabled = true;
         }
 
     }

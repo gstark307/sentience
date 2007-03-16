@@ -60,7 +60,8 @@ namespace sentience.core
 
         public robot rob;
 
-        public float[] tuningParameters;
+        public const int NO_OF_TUNING_PARAMETERS = 3;
+        private float[] tuningParameters;
 
         #region "results of the simulation"
 
@@ -76,6 +77,25 @@ namespace sentience.core
         public Byte[] grid_map;
 
         #endregion
+
+        /// <summary>
+        /// set the tuning parameters from a comma separated string
+        /// </summary>
+        /// <param name="parameters">comma separated tuning parameters</param>
+        public void SetTuningParameters(String parameters)
+        {
+            tuningParameters = new float[NO_OF_TUNING_PARAMETERS];
+            String[] str = parameters.Split(',');
+            for (int i = 0; i < str.Length; i++)
+                tuningParameters[i] = Convert.ToSingle(str[i]);
+
+            // Motion model culling threshold
+            rob.motion.cull_threshold = (int)tuningParameters[0];
+            // Localisation radius
+            rob.LocalGridLocalisationRadius_mm = tuningParameters[1];
+            // Number of position uncertainty particles
+            rob.motion.survey_trial_poses = (int)tuningParameters[2];
+        }
 
         /// <summary>
         /// reset the simulation
@@ -288,6 +308,7 @@ namespace sentience.core
             benchmarks.Add("Observation update     " + Convert.ToString(rob.benchmark_observation_update) + " mS");
             benchmarks.Add("Prediction             " + Convert.ToString(rob.benchmark_prediction) + " mS");
             benchmarks.Add("Garbage collection     " + Convert.ToString(rob.benchmark_garbage_collection) + " mS");
+
             return (benchmarks);
         }
 

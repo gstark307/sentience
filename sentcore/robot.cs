@@ -54,7 +54,7 @@ namespace sentience.core
         public stereoCorrespondence correspondence;
 
         //the type of stereo correspondance algorithm to be used
-        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_LINES; //.CORRESPONDENCE_CONTOURS;  
+        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;  
 
         public String Name = "My Robot";          // name of the robot
         public float TotalMass_kg;                // total mass of the robot
