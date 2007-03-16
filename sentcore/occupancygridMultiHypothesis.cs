@@ -132,12 +132,13 @@ namespace sentience.core
         public float GetProbability(particlePose pose, int x, int y)
         {
             float probabilityLogOdds = 0;
+            float[] colour = new float[3];
 
             for (int i = 0; i < Hypothesis.Length; i++)
             {
                 if (Hypothesis[i] != null)
                 {
-                    float probLO = GetProbability(pose, x, y, i, true);
+                    float probLO = GetProbability(pose, x, y, i, true, colour);
                     if (probLO != NO_OCCUPANCY_EVIDENCE)
                         probabilityLogOdds += probLO;
                 }
@@ -151,7 +152,8 @@ namespace sentience.core
         /// </summary>
         /// <param name="path_ID"></param>
         /// <returns>probability value</returns>
-        public float GetProbability(particlePose pose, int x, int y, int z, bool returnLogOdds)
+        public float GetProbability(particlePose pose, int x, int y, int z, bool returnLogOdds,
+                                    float[] colour)
         {
             int hits = 0;
             float probabilityLogOdds = 0;
@@ -160,6 +162,9 @@ namespace sentience.core
             {                
                 if (pose.previous_paths != null)
                 {
+                    for (int col = 0; col < 3; col++)
+                        colour[col] = 0;
+
                     // cycle through the path IDs for this pose            
                     for (int p = 0; p < pose.previous_paths.Count; p++)
                     {
@@ -179,17 +184,27 @@ namespace sentience.core
                                     if (pose.time_step > h.pose.time_step)
                                     {
                                         probabilityLogOdds += h.probabilityLogOdds;
+
+                                        for (int col = 0; col < 3; col++)
+                                            colour[col] += h.colour[col];
+
                                         hits++;
                                     }
                                 }
                             }
                         }
                     }
+
+
                 }
             }
 
             if (hits > 0)
             {
+                // calculate the average colour
+                for (int col = 0; col < 3; col++)
+                    colour[col] /= hits;
+
                 // at the end we convert the total log odds value into a probability
                 if (returnLogOdds)
                     return (probabilityLogOdds);
@@ -360,22 +375,34 @@ namespace sentience.core
         /// <returns>log odds probability of there being a match between the ray and the grid</returns>
         private float matchingProbability(int x_cell, int y_cell, int z_cell,
                                           particlePose origin,
-                                          float sensormodel_probability)
+                                          float sensormodel_probability,
+                                          Byte[] colour)
         {
             float value = 0;
 
             // localise using this grid cell
             // first get the existing probability value at this cell
-            float existing_probability = cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell, false);
+            float[] existing_colour = new float[3];
+            float existing_probability =
+                cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell, 
+                                                    false, existing_colour);
 
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
-                // combine the results
-                float combined_probability = ((sensormodel_probability * existing_probability) +
+                // combine the probabilities
+                float occupancy_probability = ((sensormodel_probability * existing_probability) +
                               ((1.0f - sensormodel_probability) * (1.0f - existing_probability)));
 
+                // get the colour difference between the map and the observation
+                float colour_difference = 0;
+                for (int col = 0; col < 3; col++)
+                    colour_difference += Math.Abs(colour[col] - existing_colour[col]);
+
+                // turn the colour difference into a probability
+                float colour_probability = 1.0f - (colour_difference / (3 * 255.0f));
+
                 // localisation matching score, expressed as log odds
-                value = util.LogOdds(combined_probability);
+                value = util.LogOdds(occupancy_probability * colour_probability);
             }
             return (value);
         }
@@ -642,10 +669,10 @@ namespace sentience.core
                                             // update the matching score, by combining the probability
                                             // of the grid cell with the probability from the localisation ray
                                             if (longest_axis == X_AXIS)
-                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation);
+                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation, ray.colour);
 
                                             if (longest_axis == Y_AXIS)
-                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation);
+                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation, ray.colour);
                                         }
                                     }
 
@@ -657,7 +684,9 @@ namespace sentience.core
 
                                         // add a new hypothesis to this grid coordinate
                                         // note that this is also added to the original pose
-                                        hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, prob, origin);
+                                        hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, 
+                                                                          prob, origin,
+                                                                          ray.colour);
                                         cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
                                         origin.AddHypothesis(hypothesis, dimension_cells, dimension_cells_vertical);
                                         total_valid_hypotheses++;

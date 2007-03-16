@@ -258,6 +258,16 @@ namespace sentience.core
                 stereoFeatures feat = features[camera_index];
                 int x = (int)feat.features[idx];
                 int y = (int)feat.features[idx + 1];
+
+                // correct the positions using the inverse calibration lookup
+                if (calibration[camera_index].leftcam.calibration_map_inverse != null)
+                {
+                    int x2 = calibration[camera_index].leftcam.calibration_map_inverse[x, y, 0];
+                    int y2 = calibration[camera_index].leftcam.calibration_map_inverse[x, y, 1];
+                    x = x2;
+                    y = y2;
+                }
+
                 int n = ((y * calibration[camera_index].leftcam.image_width) + x) * 3;
                 feat.colour[f, 2] = img[n];
                 feat.colour[f, 1] = img[n+1];

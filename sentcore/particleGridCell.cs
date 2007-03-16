@@ -36,19 +36,25 @@ namespace sentience.core
         // grid cell coordinate
         public short x, y, z;
 
+        // observed colour
+        public Byte[] colour;
+
         // probability of occupancy, taken from the sensor model and stored as log odds
         public float probabilityLogOdds;
 
         // the pose which made this observation
         public particlePose pose;
 
-        public particleGridCell(int x, int y, int z, float probability, particlePose pose)
+        public particleGridCell(int x, int y, int z, 
+                                float probability, particlePose pose,
+                                Byte[] colour)
         {
             this.x = (short)x;
             this.y = (short)y;
             this.z = (short)z;
             this.probabilityLogOdds = util.LogOdds(probability); // store as log odds
             this.pose = pose;
+            this.colour = colour;
             Enabled = true;
         }
     }

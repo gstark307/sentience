@@ -244,6 +244,9 @@ namespace sentience.core
             rotated_ray.start_dist = start_dist;
             rotated_ray.disparity = disparity;
 
+            for (int col = 0; col < 3; col++)
+                rotated_ray.colour[col] = colour[col];
+
             return (rotated_ray);
         }
     }

@@ -118,7 +118,7 @@ namespace sentience.core
                 map_cache[x] = new ArrayList[grid_dimension][];
 
             if (map_cache[x][y] == null)
-                map_cache[x][y] = new ArrayList[grid_dimension];
+                map_cache[x][y] = new ArrayList[grid_dimension_vertical];
 
             if (map_cache[x][y][z] == null)
                 map_cache[x][y][z] = new ArrayList();
@@ -135,6 +135,8 @@ namespace sentience.core
         /// <returns>Occupancy hypotheses</returns>
         public ArrayList GetHypotheses(int x, int y, int z)
         {
+            // most of time we will be returning nulls, so
+            // prioritise these conditions
             if (map_cache[x] == null)
                 return (null);
             else
