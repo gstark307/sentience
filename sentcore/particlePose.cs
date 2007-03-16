@@ -38,7 +38,7 @@ namespace sentience.core
         public ArrayList observed_grid_cells;
 
         // the path with which this pose is associated
-        public UInt32 path_ID;
+        public particlePath path;
         public ArrayList previous_paths;
 
         // the time step on which this particle was created
@@ -47,12 +47,12 @@ namespace sentience.core
         public particlePose parent = null;
         public int no_of_children = 0;
 
-        public particlePose(float x, float y, float pan, UInt32 path_ID)
+        public particlePose(float x, float y, float pan, particlePath path)
         {
             this.x = x;
             this.y = y;
             this.pan = pan;
-            this.path_ID = path_ID;
+            this.path = path;
             observed_grid_cells = new ArrayList();
         }
 
@@ -63,6 +63,19 @@ namespace sentience.core
             sum.y = y - pos.y;
             sum.pan = pan - pos.pan;
             return (sum);
+        }
+
+        /// <summary>
+        /// add a new grid hypothesis to this pose
+        /// </summary>
+        /// <param name="hypothesis">occupancy hypothesis for a grid cell</param>
+        public void AddHypothesis(particleGridCell hypothesis, int grid_dimension_vertical)
+        {
+            observed_grid_cells.Add(hypothesis);
+            if (path != null)
+            {
+                path.Add(hypothesis, grid_dimension_vertical);
+            }
         }
 
         /// <summary>

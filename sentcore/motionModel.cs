@@ -145,7 +145,7 @@ namespace sentience.core
         {
             for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
             {
-                particlePath path = new particlePath(x, y, pan, max_path_length, time_step, path_ID);
+                particlePath path = new particlePath(x, y, pan, max_path_length, time_step, path_ID, rob.LocalGridDimension);
                 createNewPose(path);
             }
         }
@@ -206,7 +206,7 @@ namespace sentience.core
                               (fraction * (float)Math.Cos(pan2));
             float new_pan = pan2 + (v * time_elapsed_sec);
 
-            particlePose new_pose = new particlePose(new_x, new_y, new_pan, path.ID);
+            particlePose new_pose = new particlePose(new_x, new_y, new_pan, path);
             new_pose.time_step = time_step;
             path.Add(new_pose);
         }
@@ -275,7 +275,7 @@ namespace sentience.core
                 {
                     particlePath path = (particlePath)Poses[rnd.Next(max)];
 
-                    particlePath p = new particlePath(path, path_ID);
+                    particlePath p = new particlePath(path, path_ID, rob.LocalGridDimension);
                     createNewPose(p);
                 }
 

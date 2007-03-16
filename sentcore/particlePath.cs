@@ -54,13 +54,15 @@ namespace sentience.core
         public float total_score = 0;
         public int total_poses = 0;
 
+        #region "constructors"
+
         public particlePath(int max_length)
         {
             this.max_length = max_length;
             path = new ArrayList();
         }
 
-        public particlePath(particlePath parent, UInt32 path_ID)
+        public particlePath(particlePath parent, UInt32 path_ID, int grid_dimension_cells)
         {
             ID = path_ID;
             parent.current_pose.no_of_children++;
@@ -71,21 +73,83 @@ namespace sentience.core
             path = new ArrayList();
             total_score = parent.total_score;
             total_poses = parent.total_poses;
+
+            // map cache for this path
+            map_cache = new ArrayList[grid_dimension_cells, grid_dimension_cells][];
         }
 
         public particlePath(float x, float y, float pan,
-                            int max_length, UInt32 time_step, UInt32 path_ID)
+                            int max_length, UInt32 time_step, UInt32 path_ID,
+                            int grid_dimension_cells)
         {
             ID = path_ID;
             this.max_length = max_length;
             path = new ArrayList();
-            particlePose pose = new particlePose(x, y, pan, ID);
+            particlePose pose = new particlePose(x, y, pan, this);
             pose.time_step = time_step;
             Add(pose);
+
+            // map cache for this path
+            map_cache = new ArrayList[grid_dimension_cells, grid_dimension_cells][];
         }
 
+        #endregion
+
+        #region "map cache"
+
+        // grid map cache for quick lookup
+        private ArrayList[,][] map_cache;
+
+        /// <summary>
+        /// adds a new hypothesis to the map cache
+        /// </summary>
+        /// <param name="hypothesis"></param>
+        public void Add(particleGridCell hypothesis, int grid_dimension_vertical)
+        {
+            int x = hypothesis.x;
+            int y = hypothesis.y;
+            int z = hypothesis.z;
+
+            // create a new list for this grid coordinate if necessary
+            if (map_cache[x, y] == null)
+                map_cache[x, y] = new ArrayList[grid_dimension_vertical];
+
+            if (map_cache[x, y][z] == null)
+                map_cache[x, y][z] = new ArrayList();
+
+            // add to the list
+            map_cache[x, y][z].Add(hypothesis);
+        }
+
+        /// <summary>
+        /// returns the list of hypotheses for the given grid cell location
+        /// </summary>
+        /// <param name="x">x coordinate of the grid cell</param>
+        /// <param name="y">y coordinate of the grid cell</param>
+        /// <returns>Occupancy hypotheses</returns>
+        public ArrayList GetHypotheses(int x, int y, int z)
+        {
+            if (map_cache[x, y] == null)
+                return (null);
+            else
+            {
+                if (map_cache[x, y][z] == null)
+                    return (null);
+                else
+                    return (map_cache[x, y][z]);
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// add a new pose to the path
+        /// </summary>
+        /// <param name="pose"></param>
         public void Add(particlePose pose)
         {
+            pose.path = this;
+
             // set the parent of this pose
             pose.parent = current_pose;
 
@@ -98,8 +162,8 @@ namespace sentience.core
                     int min = branch_pose.previous_paths.Count - MAX_PATH_HISTORY;
                     if (min < 0) min = 0;
                     for (int i = min; i < branch_pose.previous_paths.Count; i++)
-                        pose.previous_paths.Add((UInt32)branch_pose.previous_paths[i]);
-                    pose.previous_paths.Add(pose.path_ID);
+                        pose.previous_paths.Add((particlePath)branch_pose.previous_paths[i]);
+                    pose.previous_paths.Add(this);
                 }
                 else pose.previous_paths = pose.parent.previous_paths;
             }
@@ -108,7 +172,7 @@ namespace sentience.core
                 if (pose.parent == null)
                 {
                     pose.previous_paths = new ArrayList();
-                    pose.previous_paths.Add(pose.path_ID);
+                    pose.previous_paths.Add(this);
                 }
                 else pose.previous_paths = pose.parent.previous_paths;
             }
@@ -175,14 +239,14 @@ namespace sentience.core
         {
             int children = 0;
             while ((pose != branch_pose) &&
-                   (pose.path_ID == ID) &&
+                   (pose.path == this) &&
                    (children == 0))
             {
                 if (pose != current_pose)
                     children = pose.no_of_children;
 
                 if (children == 0)
-                    if (pose.path_ID == ID)
+                    if (pose.path == this)
                     {
                         pose.Remove(grid);
                         pose = pose.parent;
@@ -212,7 +276,7 @@ namespace sentience.core
 
                             // if the earlier part of the tree has the same
                             // path ID, and has other branches then don't remove it
-                            if (pose.path_ID == ID)
+                            if (pose.path == this)
                                 if (pose.no_of_children > 0)
                                     remove_from_active_paths = false;
                         }
@@ -383,7 +447,7 @@ namespace sentience.core
                 String[] poseStr = xnod.InnerText.Split(',');
                 particlePose new_pose = new particlePose(Convert.ToSingle(poseStr[0]),
                                                          Convert.ToSingle(poseStr[1]),
-                                                         Convert.ToSingle(poseStr[2])*(float)Math.PI/180.0f, 0);
+                                                         Convert.ToSingle(poseStr[2])*(float)Math.PI/180.0f, null);
                 Add(new_pose);
             }
 

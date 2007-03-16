@@ -129,7 +129,7 @@ namespace sentience.core
         /// </summary>
         /// <param name="pose"></param>
         /// <returns>probability as log odds</returns>
-        public float GetProbability(particlePose pose)
+        public float GetProbability(particlePose pose, int x, int y)
         {
             float probabilityLogOdds = 0;
 
@@ -137,7 +137,7 @@ namespace sentience.core
             {
                 if (Hypothesis[i] != null)
                 {
-                    float probLO = GetProbability(pose, i, true);
+                    float probLO = GetProbability(pose, x, y, i, true);
                     if (probLO != NO_OCCUPANCY_EVIDENCE)
                         probabilityLogOdds += probLO;
                 }
@@ -151,48 +151,29 @@ namespace sentience.core
         /// </summary>
         /// <param name="path_ID"></param>
         /// <returns>probability value</returns>
-        public float GetProbability(particlePose pose, int vertical_index, bool returnLogOdds)
+        public float GetProbability(particlePose pose, int x, int y, int z, bool returnLogOdds)
         {
             int hits = 0;
             float probabilityLogOdds = 0;
 
-            if (Hypothesis[vertical_index] != null)
+            if (Hypothesis[z] != null)
             {                
-                int step_size = 10 + (Hypothesis[vertical_index].Count / 10);
-
                 if (pose.previous_paths != null)
                 {
-                    UInt32 curr_path_ID = UInt32.MaxValue;
-                    int i = Hypothesis[vertical_index].Count - 1;
-
                     // cycle through the path IDs for this pose            
                     for (int p = 0; p < pose.previous_paths.Count; p++)
                     {
-                        UInt32 path_ID = (UInt32)pose.previous_paths[p];
+                        particlePath path = (particlePath)pose.previous_paths[p];
 
-                        // quickly find the first entry
-                        bool found = false;
-                        int start_i = i;
-                        while ((i >= 0) && (!found))
+                        // do any hypotheses for this path exist at this location ?
+                        ArrayList map_cache_observations = path.GetHypotheses(x, y, z);
+                        if (map_cache_observations != null)
                         {
-                            particleGridCell h = (particleGridCell)Hypothesis[vertical_index][i];
-                            if (h.pose.path_ID > path_ID)
+                            for (int i = 0; i < map_cache_observations.Count; i++)
                             {
-                                curr_path_ID = h.pose.path_ID;
-                                i -= step_size;
-                            }
-                            else found = true;
-                        }
-                        if (start_i != i) i += step_size;
-
-
-                        while ((i >= 0) && (curr_path_ID >= path_ID))
-                        {
-                            particleGridCell h = (particleGridCell)Hypothesis[vertical_index][i];
-                            curr_path_ID = h.pose.path_ID;
-                            if (h.Enabled)
-                            {
-                                if (curr_path_ID == path_ID)
+                                particleGridCell h = (particleGridCell)map_cache_observations[i];
+                                if (h.Enabled)
+                                {
                                     // only use evidence older than the current time 
                                     // step to avoid getting into a muddle
                                     if (pose.time_step > h.pose.time_step)
@@ -200,8 +181,8 @@ namespace sentience.core
                                         probabilityLogOdds += h.probabilityLogOdds;
                                         hits++;
                                     }
+                                }
                             }
-                            i--;
                         }
                     }
                 }
@@ -218,6 +199,7 @@ namespace sentience.core
             else
                 return (NO_OCCUPANCY_EVIDENCE);
         }
+
 
         #endregion
 
@@ -384,7 +366,7 @@ namespace sentience.core
 
             // localise using this grid cell
             // first get the existing probability value at this cell
-            float existing_probability = cell[x_cell, y_cell].GetProbability(origin, z_cell, false);
+            float existing_probability = cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell, false);
 
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
@@ -677,7 +659,7 @@ namespace sentience.core
                                         // note that this is also added to the original pose
                                         hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, prob, origin);
                                         cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
-                                        origin.observed_grid_cells.Add(hypothesis);
+                                        origin.AddHypothesis(hypothesis, dimension_cells_vertical);
                                         total_valid_hypotheses++;
                                     }
                                 }
@@ -723,7 +705,7 @@ namespace sentience.core
                     }
                     else
                     {
-                        float prob = cell[cell_x, cell_y].GetProbability(pose);
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y);
 
                         for (int c = 0; c < 3; c++)
                             if (prob > 0.5f)

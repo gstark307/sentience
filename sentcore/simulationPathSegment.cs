@@ -39,7 +39,7 @@ namespace sentience.core
             float curr_pan = pan;
             for (int i = 0; i < no_of_steps-1; i++)
             {
-                particlePose pose = new particlePose(xx, yy, curr_pan, 0);
+                particlePose pose = new particlePose(xx, yy, curr_pan, null);
                 result.Add(pose);
                 curr_pan += pan_per_step;
                 xx += (distance_per_step_mm * (float)Math.Sin(curr_pan));
