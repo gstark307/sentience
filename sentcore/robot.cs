@@ -41,7 +41,7 @@ namespace sentience.core
         public long benchmark_prediction;
 
         // head geometry, stereo features and calibration data
-        public stereoHead head;            
+        public stereoHead head;
 
         // describes how the robot moves, used to predict the next step as a probabilistic distribution
         // of possible poses
@@ -54,7 +54,7 @@ namespace sentience.core
         public stereoCorrespondence correspondence;
 
         //the type of stereo correspondance algorithm to be used
-        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;  
+        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_LINES; //.CORRESPONDENCE_CONTOURS;  
 
         public String Name = "My Robot";          // name of the robot
         public float TotalMass_kg;                // total mass of the robot
@@ -437,6 +437,21 @@ namespace sentience.core
                 // TODO: update the local grid using the loaded path
                 //LocalGrid.insert(LocalGridPath, false);
             }
+        }
+
+        /// <summary>
+        /// returns the average colour variance for the entire occupancy grid
+        /// </summary>
+        /// <returns></returns>
+        public float GetMeanColourVariance()
+        {
+            float mean_variance = 0;
+
+            if (motion.best_path != null)
+                if (motion.best_path.current_pose != null)
+                    mean_variance = LocalGrid.GetMeanColourVariance(motion.best_path.current_pose);
+
+            return (mean_variance);
         }
 
         private void update(ArrayList images)

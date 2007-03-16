@@ -33,6 +33,9 @@ namespace StereoMapping
 {
     public partial class frmMapping : common
     {
+        bool simulation_running = false;
+        bool busy = false;
+
         // default path for loading and saving files
         String defaultPath = System.Windows.Forms.Application.StartupPath + "\\";
 
@@ -356,6 +359,10 @@ namespace StereoMapping
         // run the simulation one step forwards
         private void Simulation_RunOneStep()
         {
+            busy = true;
+
+            int prev_time_step = sim.current_time_step;
+
             ArrayList images = getStereoImages(sim.current_time_step);
             sim.RunOneStep(images);
 
@@ -374,6 +381,14 @@ namespace StereoMapping
             lstBenchmarks.Items.Clear();
             for (int i = 0; i < benchmarks.Count; i++)
                 lstBenchmarks.Items.Add((String)benchmarks[i]);
+
+            if (prev_time_step == sim.current_time_step)
+            {
+                simulation_running = false;
+                Simulation_Reset();
+            }
+
+            busy = false;
         }
 
         private void cmdRunOneStep_Click(object sender, EventArgs e)
@@ -384,6 +399,26 @@ namespace StereoMapping
         private void cmdReset_Click(object sender, EventArgs e)
         {
             Simulation_Reset();
+        }
+
+        private void cmdRunSimulation_Click(object sender, EventArgs e)
+        {
+            simulation_running = true;
+            timSimulation.Enabled = true;
+        }
+
+        private void timSimulation_Tick(object sender, EventArgs e)
+        {
+            if ((simulation_running) && (!busy))
+            {
+                Simulation_RunOneStep();
+            }
+        }
+
+        private void cmdStopSimulation_Click(object sender, EventArgs e)
+        {
+            simulation_running = false;
+            timSimulation.Enabled = false;
         }
 
     }

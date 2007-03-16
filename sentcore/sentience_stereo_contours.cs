@@ -615,17 +615,17 @@ namespace sentience.core
                 }
             }
 
-            /*
+            
             // remove snow
             filterDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 10);
             
             // smooth the disparity map
             if (useSmoothing)
             {
-                smoothDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
-                //smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 1);
+                //smoothDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
+                smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 1);
             }
-            */
+            
             
 
             //update the selected features

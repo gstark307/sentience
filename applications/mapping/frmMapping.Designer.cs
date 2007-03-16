@@ -69,6 +69,7 @@ namespace StereoMapping
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabParameters = new System.Windows.Forms.TabPage();
             this.tabSimulation = new System.Windows.Forms.TabPage();
+            this.cmdRunSimulation = new System.Windows.Forms.Button();
             this.label13 = new System.Windows.Forms.Label();
             this.lstBenchmarks = new System.Windows.Forms.ListView();
             this.label12 = new System.Windows.Forms.Label();
@@ -82,6 +83,8 @@ namespace StereoMapping
             this.picBestPose = new System.Windows.Forms.PictureBox();
             this.label14 = new System.Windows.Forms.Label();
             this.picMotionUncertainty = new System.Windows.Forms.PictureBox();
+            this.timSimulation = new System.Windows.Forms.Timer(this.components);
+            this.cmdStopSimulation = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -430,6 +433,8 @@ namespace StereoMapping
             // 
             // tabSimulation
             // 
+            this.tabSimulation.Controls.Add(this.cmdStopSimulation);
+            this.tabSimulation.Controls.Add(this.cmdRunSimulation);
             this.tabSimulation.Controls.Add(this.label13);
             this.tabSimulation.Controls.Add(this.lstBenchmarks);
             this.tabSimulation.Controls.Add(this.label12);
@@ -446,6 +451,16 @@ namespace StereoMapping
             this.tabSimulation.TabIndex = 1;
             this.tabSimulation.Text = "Simulation";
             this.tabSimulation.UseVisualStyleBackColor = true;
+            // 
+            // cmdRunSimulation
+            // 
+            this.cmdRunSimulation.Location = new System.Drawing.Point(20, 55);
+            this.cmdRunSimulation.Name = "cmdRunSimulation";
+            this.cmdRunSimulation.Size = new System.Drawing.Size(76, 27);
+            this.cmdRunSimulation.TabIndex = 34;
+            this.cmdRunSimulation.Text = "Run";
+            this.cmdRunSimulation.UseVisualStyleBackColor = true;
+            this.cmdRunSimulation.Click += new System.EventHandler(this.cmdRunSimulation_Click);
             // 
             // label13
             // 
@@ -569,6 +584,21 @@ namespace StereoMapping
             this.picMotionUncertainty.TabIndex = 32;
             this.picMotionUncertainty.TabStop = false;
             // 
+            // timSimulation
+            // 
+            this.timSimulation.Interval = 500;
+            this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
+            // 
+            // cmdStopSimulation
+            // 
+            this.cmdStopSimulation.Location = new System.Drawing.Point(105, 55);
+            this.cmdStopSimulation.Name = "cmdStopSimulation";
+            this.cmdStopSimulation.Size = new System.Drawing.Size(76, 27);
+            this.cmdStopSimulation.TabIndex = 35;
+            this.cmdStopSimulation.Text = "Stop";
+            this.cmdStopSimulation.UseVisualStyleBackColor = true;
+            this.cmdStopSimulation.Click += new System.EventHandler(this.cmdStopSimulation_Click);
+            // 
             // frmMapping
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -658,6 +688,9 @@ namespace StereoMapping
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.PictureBox picMotionUncertainty;
         private System.Windows.Forms.PictureBox picBestPose;
+        private System.Windows.Forms.Button cmdRunSimulation;
+        private System.Windows.Forms.Timer timSimulation;
+        private System.Windows.Forms.Button cmdStopSimulation;
     }
 }
 

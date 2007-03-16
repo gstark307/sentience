@@ -374,6 +374,35 @@ namespace sentience.core
         #region "grid update"
 
         /// <summary>
+        /// returns the average colour variance for the entire grid
+        /// </summary>
+        /// <returns></returns>
+        public float GetMeanColourVariance(particlePose pose)
+        {
+            float[] mean_colour = new float[3];
+            float total_variance = 0;
+            int hits = 0;
+
+            for (int cell_y = 0; cell_y < dimension_cells; cell_y++)
+            {
+                for (int cell_x = 0; cell_x < dimension_cells; cell_x++)
+                {
+                    if (cell[cell_x, cell_y] != null)
+                    {
+                        float mean_variance = 0;
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                                                                         mean_colour, ref mean_variance);
+                        total_variance += mean_variance;
+                        hits++;
+                    }
+                }
+            }
+            if (hits > 0) total_variance /= hits;
+            return (total_variance);
+        }
+
+
+        /// <summary>
         /// removes an occupancy hypothesis from a grid cell
         /// </summary>
         /// <param name="hypothesis"></param>

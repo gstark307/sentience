@@ -84,7 +84,7 @@ namespace sentience.core
             rob = new robot();
 
             // load the design file
-            rob.Load(RobotDesignFile);            
+            rob.Load(RobotDesignFile);
 
             current_time_step = 0;
             updatePath();
@@ -257,6 +257,15 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// returns the average colour variance for the grid
+        /// </summary>
+        /// <returns></returns>
+        public float GetMeanColourVariance()
+        {
+            return (rob.GetMeanColourVariance());
+        }
+
+        /// <summary>
         /// returns a list of performance benchmarks
         /// </summary>
         /// <returns></returns>
@@ -285,7 +294,7 @@ namespace sentience.core
         /// <param name="height"></param>
         public void ShowGrid(Byte[] img, int width, int height, bool show_robot)
         {
-            rob.ShowGrid(img, width, height, show_robot, true);
+            rob.ShowGrid(img, width, height, show_robot, false);
         }
 
         #region "saving and loading"
