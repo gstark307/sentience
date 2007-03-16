@@ -75,7 +75,7 @@ namespace sentience.core
             total_poses = parent.total_poses;
 
             // map cache for this path
-            map_cache = new ArrayList[grid_dimension_cells, grid_dimension_cells][];
+            map_cache = new ArrayList[grid_dimension_cells][][];
         }
 
         public particlePath(float x, float y, float pan,
@@ -90,7 +90,7 @@ namespace sentience.core
             Add(pose);
 
             // map cache for this path
-            map_cache = new ArrayList[grid_dimension_cells, grid_dimension_cells][];
+            map_cache = new ArrayList[grid_dimension_cells][][];
         }
 
         #endregion
@@ -98,27 +98,33 @@ namespace sentience.core
         #region "map cache"
 
         // grid map cache for quick lookup
-        private ArrayList[,][] map_cache;
+        private ArrayList[][][] map_cache;
 
         /// <summary>
         /// adds a new hypothesis to the map cache
         /// </summary>
         /// <param name="hypothesis"></param>
-        public void Add(particleGridCell hypothesis, int grid_dimension_vertical)
+        public void Add(particleGridCell hypothesis, int grid_dimension, int grid_dimension_vertical)
         {
             int x = hypothesis.x;
             int y = hypothesis.y;
             int z = hypothesis.z;
 
             // create a new list for this grid coordinate if necessary
-            if (map_cache[x, y] == null)
-                map_cache[x, y] = new ArrayList[grid_dimension_vertical];
+            // allocating memory as its needed for each grid dimension
+            // is far more efficient than just allocating a big three 
+            // dimensional chunk in one go
+            if (map_cache[x] == null)
+                map_cache[x] = new ArrayList[grid_dimension][];
 
-            if (map_cache[x, y][z] == null)
-                map_cache[x, y][z] = new ArrayList();
+            if (map_cache[x][y] == null)
+                map_cache[x][y] = new ArrayList[grid_dimension];
+
+            if (map_cache[x][y][z] == null)
+                map_cache[x][y][z] = new ArrayList();
 
             // add to the list
-            map_cache[x, y][z].Add(hypothesis);
+            map_cache[x][y][z].Add(hypothesis);
         }
 
         /// <summary>
@@ -129,14 +135,19 @@ namespace sentience.core
         /// <returns>Occupancy hypotheses</returns>
         public ArrayList GetHypotheses(int x, int y, int z)
         {
-            if (map_cache[x, y] == null)
+            if (map_cache[x] == null)
                 return (null);
             else
             {
-                if (map_cache[x, y][z] == null)
+                if (map_cache[x][y] == null)
                     return (null);
                 else
-                    return (map_cache[x, y][z]);
+                {
+                    if (map_cache[x][y][z] == null)
+                        return (null);
+                    else
+                        return (map_cache[x][y][z]);
+                }
             }
         }
 

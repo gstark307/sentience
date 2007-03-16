@@ -659,7 +659,7 @@ namespace sentience.core
                                         // note that this is also added to the original pose
                                         hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, prob, origin);
                                         cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
-                                        origin.AddHypothesis(hypothesis, dimension_cells_vertical);
+                                        origin.AddHypothesis(hypothesis, dimension_cells, dimension_cells_vertical);
                                         total_valid_hypotheses++;
                                     }
                                 }
