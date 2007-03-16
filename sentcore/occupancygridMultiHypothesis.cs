@@ -129,19 +129,38 @@ namespace sentience.core
         /// </summary>
         /// <param name="pose"></param>
         /// <returns>probability as log odds</returns>
-        public float GetProbability(particlePose pose, int x, int y)
+        public float GetProbability(particlePose pose, int x, int y, 
+                                    float[] mean_colour, ref float mean_variance)
         {
             float probabilityLogOdds = 0;
-            float[] colour = new float[3];
+            float[] colour = new float[3];            
+            int hits = 0;
+            mean_variance = 0;
+
+            for (int col = 0; col < 3; col++)
+                mean_colour[col] = 0;
 
             for (int i = 0; i < Hypothesis.Length; i++)
             {
                 if (Hypothesis[i] != null)
                 {
-                    float probLO = GetProbability(pose, x, y, i, true, colour);
+                    float variance = 0;
+                    float probLO = GetProbability(pose, x, y, i, true, colour, ref variance);
                     if (probLO != NO_OCCUPANCY_EVIDENCE)
+                    {
                         probabilityLogOdds += probLO;
+                        for (int col = 0; col < 3; col++)
+                            mean_colour[col] += colour[col];
+                        mean_variance += variance;
+                        hits++;
+                    }
                 }
+            }
+            if (hits > 0)
+            {
+                mean_variance /= hits;
+                for (int col = 0; col < 3; col++)
+                    mean_colour[col] /= hits;
             }
             return (util.LogOddsToProbability(probabilityLogOdds));
         }
@@ -153,15 +172,20 @@ namespace sentience.core
         /// <param name="path_ID"></param>
         /// <returns>probability value</returns>
         public float GetProbability(particlePose pose, int x, int y, int z, bool returnLogOdds,
-                                    float[] colour)
+                                    float[] colour, ref float mean_variance)
         {
             int hits = 0;
             float probabilityLogOdds = 0;
+            float[] min_level = null;
+            float[] max_level = null;
+            mean_variance = 1;
 
             if (Hypothesis[z] != null)
             {                
                 if (pose.previous_paths != null)
                 {
+                    min_level = new float[3];
+                    max_level = new float[3];
                     for (int col = 0; col < 3; col++)
                         colour[col] = 0;
 
@@ -185,8 +209,27 @@ namespace sentience.core
                                     {
                                         probabilityLogOdds += h.probabilityLogOdds;
 
+                                        // update mean colour and variance
                                         for (int col = 0; col < 3; col++)
-                                            colour[col] += h.colour[col];
+                                        {
+                                            Byte level = h.colour[col];
+                                            colour[col] += level;
+
+                                            // update colour variance
+                                            if (hits > 0)
+                                            {
+                                                if (level < min_level[col])
+                                                    min_level[col] = level;
+
+                                                if (level > max_level[col])
+                                                    max_level[col] = level;
+                                            }
+                                            else
+                                            {
+                                                min_level[col] = level;
+                                                max_level[col] = level;
+                                            }
+                                        }
 
                                         hits++;
                                     }
@@ -201,6 +244,12 @@ namespace sentience.core
 
             if (hits > 0)
             {
+                // calculate mean colour variance                
+                mean_variance = 0;
+                for (int col = 0; col < 3; col++)
+                    mean_variance += max_level[col] - min_level[col];
+                mean_variance /= (3 * 255.0f);
+
                 // calculate the average colour
                 for (int col = 0; col < 3; col++)
                     colour[col] /= hits;
@@ -379,17 +428,18 @@ namespace sentience.core
                                           Byte[] colour)
         {
             float value = 0;
+            float colour_variance = 0;
 
             // localise using this grid cell
             // first get the existing probability value at this cell
             float[] existing_colour = new float[3];
             float existing_probability =
-                cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell, 
-                                                    false, existing_colour);
+                cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell,
+                                                    false, existing_colour, ref colour_variance);
 
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
-                // combine the probabilities
+                // combine the occupancy probabilities
                 float occupancy_probability = ((sensormodel_probability * existing_probability) +
                               ((1.0f - sensormodel_probability) * (1.0f - existing_probability)));
 
@@ -400,8 +450,9 @@ namespace sentience.core
 
                 // turn the colour difference into a probability
                 float colour_probability = 1.0f - (colour_difference / (3 * 255.0f));
+                colour_probability *= colour_variance;
 
-                // localisation matching score, expressed as log odds
+                // localisation matching probability, expressed as log odds
                 value = util.LogOdds(occupancy_probability * colour_probability);
             }
             return (value);
@@ -709,6 +760,14 @@ namespace sentience.core
 
         #region "display functions"
 
+        public void Show(Byte[] img, int width, int height, particlePose pose, bool colour)
+        {
+            if (!colour)
+                Show(img, width, height, pose);
+            else
+                ShowColour(img, width, height, pose);
+        }
+
         /// <summary>
         /// show the grid map as an image
         /// </summary>
@@ -716,8 +775,10 @@ namespace sentience.core
         /// <param name="width">width in pixels</param>
         /// <param name="height">height in pixels</param>
         /// <param name="pose">pose from which the map is observed</param>
-        public void Show(Byte[] img, int width, int height, particlePose pose)
+        private void Show(Byte[] img, int width, int height, particlePose pose)
         {
+            float[] mean_colour = new float[3];
+
             for (int y = 0; y < height; y++)
             {
                 int cell_y = y * (dimension_cells-1) / height;
@@ -734,7 +795,9 @@ namespace sentience.core
                     }
                     else
                     {
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y);
+                        float mean_variance = 0;
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y, 
+                                                                         mean_colour, ref mean_variance);
 
                         for (int c = 0; c < 3; c++)
                             if (prob > 0.5f)
@@ -751,6 +814,55 @@ namespace sentience.core
                                 else
                                     img[n + c] = (Byte)200;  // vacant
                             }
+                    }
+                }
+            }
+        }
+
+        private void ShowColour(Byte[] img, int width, int height, particlePose pose)
+        {
+            float[] mean_colour = new float[3];
+
+            for (int y = 0; y < height; y++)
+            {
+                int cell_y = y * (dimension_cells - 1) / height;
+                for (int x = 0; x < width; x++)
+                {
+                    int cell_x = x * (dimension_cells - 1) / width;
+
+                    int n = ((y * width) + x) * 3;
+
+                    if (cell[cell_x, cell_y] == null)
+                    {
+                        for (int c = 0; c < 3; c++)
+                            img[n + c] = (Byte)255; // terra incognita
+                    }
+                    else
+                    {
+                        float mean_variance = 0;
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y, 
+                                                                         mean_colour, ref mean_variance);
+
+                        if ((mean_variance < 0.7f) || (prob < 0.5f))
+                        {
+                            for (int c = 0; c < 3; c++)
+                                if (prob > 0.6f)
+                                {
+                                    img[n + c] = (Byte)mean_colour[c];  // occupied
+                                }
+                                else
+                                {
+                                    if (prob < 0.3f)
+                                        img[n + c] = (Byte)200;
+                                    else
+                                        img[n + c] = (Byte)255;
+                                }
+                        }
+                        else
+                        {
+                            for (int c = 0; c < 3; c++)
+                                img[n + c] = (Byte)255;
+                        }
                     }
                 }
             }

@@ -624,12 +624,12 @@ namespace sentience.core
         /// <param name="img"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void ShowGrid(Byte[] img, int width, int height, bool show_robot)
+        public void ShowGrid(Byte[] img, int width, int height, bool show_robot, bool colour)
         {
             if (motion.best_path != null)
                 if (motion.best_path.current_pose != null)
                 {
-                    LocalGrid.Show(img, width, height, motion.best_path.current_pose);
+                    LocalGrid.Show(img, width, height, motion.best_path.current_pose, colour);
                     if (show_robot)
                     {
                         int half_grid_dimension_mm = LocalGrid.dimension_cells * LocalGrid.cellSize_mm / 2;

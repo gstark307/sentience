@@ -1248,10 +1248,10 @@ namespace sentience.core
                     float disparity = stereo_features[f + 2];
 
                     // create a ray
-                    evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2], 
-                                                head.features[camera_index].colour[f2, 0],
-                                                head.features[camera_index].colour[f2, 1],
-                                                head.features[camera_index].colour[f2, 2]);
+                    evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2],
+                                                    head.features[camera_index].colour[f2, 0],
+                                                    head.features[camera_index].colour[f2, 1],
+                                                    head.features[camera_index].colour[f2, 2]);
 
                     if (ray != null)
                     {
