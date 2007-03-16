@@ -28,6 +28,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using sentience.core;
+using sentience.learn;
 
 namespace StereoMapping
 {
@@ -39,11 +40,14 @@ namespace StereoMapping
         // default path for loading and saving files
         String defaultPath = System.Windows.Forms.Application.StartupPath + "\\";
 
-        // simulation object
+        // robot simulation object
         simulation sim;
 
         // motion uncertainty image
         Byte[] uncertainty_img = null;
+
+        // object used for auto tuning
+        selfopt autotuner;
 
         public frmMapping()
         {
@@ -55,6 +59,8 @@ namespace StereoMapping
         {
             sim = new simulation(defaultPath + "robotdesign.xml", defaultPath);
             LoadSimulation(defaultPath + "simulation.xml");
+
+            autotuner = new selfopt(50, sim.tuningParameters.Length);
 
             lstPathSegments.Items.Clear();
             lstPathSegments.Columns.Clear();

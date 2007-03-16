@@ -52,12 +52,15 @@ namespace sentience.core
         // the current time step which the simulation is on
         public int current_time_step = 0;
 
+
         private float min_x=0, min_y=0, max_x=0, max_y=0;
 
         // segments which make up the path
         public ArrayList pathSegments = null;
 
         public robot rob;
+
+        public float[] tuningParameters;
 
         #region "results of the simulation"
 
@@ -96,6 +99,9 @@ namespace sentience.core
             this.ImagesPath = ImagesPath;
             pathSegments = new ArrayList();
             Reset();
+
+            // parameters used for autotuning
+            tuningParameters = new float[10];
         }
 
         /// <summary>
