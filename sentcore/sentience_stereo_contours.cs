@@ -45,14 +45,6 @@ namespace sentience.core
         /// </remarks>
         public int required_features;
 
-        /// <remarks> 
-        /// this is used to set the minimum centre/surround blob difference
-        /// threshold below which matching does not occur.
-        /// It determines what the value for average_blob_difference will be.
-        /// values are in the range 1-100
-        /// </remarks>
-        public int difference_threshold;
-
         ///a fixed quantity (required_features) of selected point features
         public int no_of_selected_features;
         public float[] selected_features;
@@ -73,7 +65,7 @@ namespace sentience.core
         public int[,] scale_width;
 
         // step size used to speed up blob detection
-        public int step_size = 2;
+        public int step_size = 1;
 
         const int no_of_scales = 3;
 
@@ -617,6 +609,7 @@ namespace sentience.core
 
             
             // remove snow
+            /*
             filterDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 10);
             
             // smooth the disparity map
@@ -625,7 +618,7 @@ namespace sentience.core
                 //smoothDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
                 smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 1);
             }
-            
+            */
             
 
             //update the selected features

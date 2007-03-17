@@ -97,6 +97,9 @@ namespace sentience.core
         public float LocalGridVacancyWeighting = 1.0f; // a weighting applied to the vacancy part of the sensor model
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
 
+        // parameters discovered by auto tuning
+        public String TuningParameters = "";
+
         // whether to enable scan matching for more accurate pose estimation
         public bool EnableScanMatching = true;
 
@@ -156,7 +159,6 @@ namespace sentience.core
         {
             // create the local grid
             LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm, LocalGridVacancyWeighting);
-            LocalGrid.y = 2500;  //test
         }
 
         /// <summary>
@@ -273,6 +275,32 @@ namespace sentience.core
         #region "parameter setting"
 
         /// <summary>
+        /// set the tuning parameters from a comma separated string
+        /// </summary>
+        /// <param name="parameters">comma separated tuning parameters</param>
+        public void SetTuningParameters(String parameters)
+        {
+            this.TuningParameters = parameters;
+
+            String[] tuningParams = parameters.Split(',');
+            float[] tuningParameters = new float[tuningParams.Length];
+            for (int i = 0; i < tuningParams.Length; i++)
+                tuningParameters[i] = Convert.ToSingle(tuningParams[i]);
+
+            // Motion model culling threshold
+            motion.cull_threshold = (int)tuningParameters[0];
+            // Localisation radius
+            LocalGridLocalisationRadius_mm = tuningParameters[1];
+            // Number of position uncertainty particles
+            motion.survey_trial_poses = (int)tuningParameters[2];
+            // A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space
+            LocalGridVacancyWeighting = tuningParameters[3];
+            LocalGrid.vacancy_weighting = tuningParameters[3];
+            // surround radius percent (for contour stereo) and matching threshold
+            setStereoParameters(10, 100, tuningParameters[4], tuningParameters[5]);
+        }
+
+        /// <summary>
         /// set the type of stereo correspondence algorithm
         /// </summary>
         /// <param name="algorithm_type"></param>
@@ -295,6 +323,15 @@ namespace sentience.core
             correspondence.setRequiredFeatures(required_features);
             correspondence.setLocalAverageRadius(local_averaging_radius);
             correspondence.setContextRadii(context_radius_1, context_radius_2);
+        }
+
+        public void setStereoParameters(int max_disparity, int required_features, 
+                                        float surround_radius, float matching_threshold)
+        {
+            correspondence.setMaxDisparity(max_disparity);
+            correspondence.setRequiredFeatures(required_features);
+            correspondence.setSurroundRadius(surround_radius);
+            correspondence.setMatchingThreshold(matching_threshold);
         }
 
         #endregion
@@ -782,10 +819,16 @@ namespace sentience.core
 
             util.AddComment(doc, nodeOccupancyGrid, "When updating the grid map this is the maximum range within which cells will be updated");
             util.AddComment(doc, nodeOccupancyGrid, "This prevents the system from being slowed down by the insertion of a lot of very long range rays");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridMappingRangeMillimetres", Convert.ToString(LocalGridMappingRange_mm));            
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridMappingRangeMillimetres", Convert.ToString(LocalGridMappingRange_mm));
 
             util.AddComment(doc, nodeOccupancyGrid, "A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridVacancyWeighting", Convert.ToString(LocalGridVacancyWeighting));            
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridVacancyWeighting", Convert.ToString(LocalGridVacancyWeighting));
+
+            if (TuningParameters != "")
+            {
+                util.AddComment(doc, nodeOccupancyGrid, "Parameters discovered by auto tuning");
+                util.AddTextElement(doc, nodeOccupancyGrid, "TuningParameters", TuningParameters);
+            }
 
             nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
 
@@ -848,10 +891,14 @@ namespace sentience.core
                 XmlNode xnodDE = xd.DocumentElement;
 
                 // recursively walk the node tree
+                TuningParameters = "";
                 int cameraIndex = 0;
                 LoadFromXml(xnodDE, 0, ref cameraIndex);
 
                 createLocalGrid();
+
+                if (TuningParameters != "") 
+                    SetTuningParameters(TuningParameters);
                 
                 // close the reader
                 xtr.Close();
@@ -1034,6 +1081,11 @@ namespace sentience.core
             if (xnod.Name == "LocalGridVacancyWeighting")
             {
                 LocalGridVacancyWeighting = Convert.ToSingle(xnod.InnerText);
+            }
+
+            if (xnod.Name == "TuningParameters")
+            {
+                TuningParameters = xnod.InnerText;
             }           
 
             if (xnod.Name == "StereoCamera")

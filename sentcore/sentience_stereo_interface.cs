@@ -411,6 +411,16 @@ namespace sentience.core
             stereovision.localAverageRadius = radius;
         }
 
+        public void setSurroundRadius(float value)
+        {
+            stereovision_contours.surround_radius_percent = value;
+        }
+
+        public void setMatchingThreshold(float value)
+        {
+            stereovision_contours.match_threshold = value;
+        }
+
 
         /// <summary>
         /// set the maximum disparity as a percentage of image width

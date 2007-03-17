@@ -60,8 +60,6 @@ namespace sentience.core
 
         public robot rob;
 
-        public const int NO_OF_TUNING_PARAMETERS = 4;
-        private float[] tuningParameters;
 
         #region "results of the simulation"
 
@@ -86,20 +84,16 @@ namespace sentience.core
         /// <param name="parameters">comma separated tuning parameters</param>
         public void SetTuningParameters(String parameters)
         {
-            tuningParameters = new float[NO_OF_TUNING_PARAMETERS];
-            String[] str = parameters.Split(',');
-            for (int i = 0; i < str.Length; i++)
-                tuningParameters[i] = Convert.ToSingle(str[i]);
+            rob.SetTuningParameters(parameters);
+        }
 
-            // Motion model culling threshold
-            rob.motion.cull_threshold = (int)tuningParameters[0];
-            // Localisation radius
-            rob.LocalGridLocalisationRadius_mm = tuningParameters[1];
-            // Number of position uncertainty particles
-            rob.motion.survey_trial_poses = (int)tuningParameters[2];
-            // A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space
-            rob.LocalGridVacancyWeighting = tuningParameters[3];
-            rob.LocalGrid.vacancy_weighting = tuningParameters[3];
+        /// <summary>
+        /// returns a comma separated list of tuning parameters
+        /// </summary>
+        /// <returns></returns>
+        public String GetTuningParameters()
+        {
+            return (rob.TuningParameters);
         }
 
         /// <summary>
@@ -124,9 +118,6 @@ namespace sentience.core
             this.ImagesPath = ImagesPath;
             pathSegments = new ArrayList();
             Reset();
-
-            // parameters used for autotuning
-            tuningParameters = new float[10];
         }
 
         /// <summary>
@@ -274,6 +265,10 @@ namespace sentience.core
         {
             if (path != null)
             {
+                // position the grid so that the path fits inside it
+                rob.LocalGrid.x = (int)(min_x + ((max_x - min_x) / 2));
+                rob.LocalGrid.y = (int)(min_y + ((max_y - min_y) / 2));
+
                 if (images.Count > 1)
                 {
                     float forward_velocity = (float)velocities[current_time_step * 2];

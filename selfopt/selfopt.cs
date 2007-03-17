@@ -30,6 +30,8 @@ namespace sentience.learn
     {
         Random rnd = new Random();
 
+        public int parameters_per_instance;
+
         //store the history of best scores
         private int bestScoreHistoryIndex = 0;
         private float[] bestScoreHistory;
@@ -69,6 +71,7 @@ namespace sentience.learn
 
         private void init(int no_of_instances, int parameters_per_instance)
         {
+            this.parameters_per_instance = parameters_per_instance;
             instance = new selfoptInstance[no_of_instances];
             for (int i = 0; i < no_of_instances; i++)
                 instance[i] = new selfoptInstance(parameters_per_instance);

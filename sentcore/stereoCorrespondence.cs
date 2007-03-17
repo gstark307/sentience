@@ -194,6 +194,16 @@ namespace sentience.core
             stereointerface.setMaxDisparity(max_disparity);
         }
 
+        public void setSurroundRadius(float value)
+        {
+            stereointerface.setSurroundRadius(value);
+        }
+
+        public void setMatchingThreshold(float value)
+        {
+            stereointerface.setMatchingThreshold(value);
+        }
+
         public void setLocalAverageRadius(int radius)
         {
             stereointerface.setLocalAverageRadius(radius);

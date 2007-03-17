@@ -60,7 +60,9 @@ namespace StereoMapping
         /// </summary>
         private void initAutotuner()
         {
-            autotuner = new selfopt(50, simulation.NO_OF_TUNING_PARAMETERS);
+            const int NO_OF_TUNING_PARAMETERS = 6;
+
+            autotuner = new selfopt(50, NO_OF_TUNING_PARAMETERS);
 
             autotuner.smallerScoresAreBetter = true;
             autotuner.parameterName[0] = "Motion model culling threshold";
@@ -76,8 +78,16 @@ namespace StereoMapping
             autotuner.setParameterStepSize(2, 1);
 
             autotuner.parameterName[3] = "Vacancy weighting";
-            autotuner.setParameterRange(3, 0.1f, 1.0f);
-            autotuner.setParameterStepSize(3, 0.001f);
+            autotuner.setParameterRange(3, 0.1f, 2.0f);
+            autotuner.setParameterStepSize(3, 0.01f);
+
+            autotuner.parameterName[4] = "Surround radius percent";
+            autotuner.setParameterRange(4, 1.0f, 3.0f);
+            autotuner.setParameterStepSize(4, 0.05f);
+
+            autotuner.parameterName[5] = "Matching threshold";
+            autotuner.setParameterRange(5, 5.0f, 20.0f);
+            autotuner.setParameterStepSize(5, 0.1f);
 
             autotuner.Randomize(false);
         }
@@ -89,10 +99,10 @@ namespace StereoMapping
         {
             String parameters = "";
 
-            for (int i = 0; i < simulation.NO_OF_TUNING_PARAMETERS; i++)
+            for (int i = 0; i < autotuner.parameters_per_instance; i++)
             {
                 parameters += Convert.ToString(autotuner.getParameter(i));
-                if (i < simulation.NO_OF_TUNING_PARAMETERS - 1)
+                if (i < autotuner.parameters_per_instance - 1)
                     parameters += ",";
             }
             sim.SetTuningParameters(parameters);
@@ -105,9 +115,6 @@ namespace StereoMapping
             // create the simulation object
             sim = new simulation(defaultPath + "robotdesign.xml", defaultPath);
             LoadSimulation(defaultPath + "simulation.xml");
-
-            // initialise the autotuner
-            initAutotuner();
 
             lstPathSegments.Items.Clear();
             lstPathSegments.Columns.Clear();
@@ -152,6 +159,7 @@ namespace StereoMapping
                 txtTitle.Text = sim.Name;
                 txtRobotDefinitionFile.Text = sim.RobotDesignFile;
                 txtStereoImagesPath.Text = sim.ImagesPath;
+                txtTuningParameters.Text = sim.GetTuningParameters();
                 update();
                 showPathSegments();
                 showNextPose();
@@ -425,10 +433,24 @@ namespace StereoMapping
                 {
                     // get the score for this simulation run
                     float score = sim.GetMeanColourVariance();
-                    txtMeanColourVariance.Text = Convert.ToString((int)(score * 100000) / 100000.0f);
+                    txtMeanColourVariance.Text = Convert.ToString((int)(score * 1000000) / 1000000.0f);
 
                     // set the score for this run
                     autotuner.setScore(score);
+
+                    // if this is the best score save the result
+                    if (score == autotuner.best_score)
+                    {
+                        // save the robot design file with these tuning parameters
+                        if (txtRobotDefinitionFile.Text != "")
+                            sim.rob.Save(txtRobotDefinitionFile.Text);
+
+                        // display the parameters
+                        txtTuningParameters.Text = sim.GetTuningParameters();
+
+                        // show the best score
+                        txtBestScore.Text = Convert.ToString((int)(autotuner.best_score * 1000000) / 1000000.0f);
+                    }
 
                     // show the score graph
                     picOptimisationScore.Image = new Bitmap(640, 200, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -439,7 +461,11 @@ namespace StereoMapping
                     // load the next instance
                     nextAutotunerInstance();
                 }
-                else simulation_running = false;
+                else
+                {
+                    simulation_running = false;
+                    StopSimulation();
+                }
 
                 // reset the simulation
                 Simulation_Reset();
@@ -477,7 +503,7 @@ namespace StereoMapping
             }
         }
 
-        private void cmdStopSimulation_Click(object sender, EventArgs e)
+        private void StopSimulation()
         {
             cmdReset.Enabled = true;
             cmdRunOneStep.Enabled = true;
@@ -489,8 +515,23 @@ namespace StereoMapping
             timSimulation.Enabled = false;
         }
 
+        private void cmdStopSimulation_Click(object sender, EventArgs e)
+        {
+            StopSimulation();
+        }
+
         private void cmdOptimise_Click(object sender, EventArgs e)
         {
+            if (autotuner == null)            
+            {
+                // initialise the autotuner
+                initAutotuner();
+            }
+
+            // if parameters exist seed the autotuner accordingly
+            if (txtTuningParameters.Text != "")
+                autotuner.seed(txtTuningParameters.Text, 0.1f);
+
             cmdReset.Enabled = false;
             cmdRunOneStep.Enabled = false;
             cmdRunSimulation.Enabled = false;

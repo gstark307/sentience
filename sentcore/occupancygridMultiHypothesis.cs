@@ -748,7 +748,7 @@ namespace sentience.core
                                             prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
                                     }
 
-                                    if (cell[x_cell2, y_cell2] != null)
+                                    if ((cell[x_cell2, y_cell2] != null) && (withinMappingRange))
                                     {
                                         // only localise using occupancy, not vacancy
                                         if (modelcomponent == OCCUPIED_SENSORMODEL)
