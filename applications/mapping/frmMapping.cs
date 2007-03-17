@@ -427,6 +427,10 @@ namespace StereoMapping
             for (int i = 0; i < benchmarks.Count; i++)
                 lstBenchmarks.Items.Add((String)benchmarks[i]);
 
+            // save the images, so that they may be used to produce an animation
+            if (!optimiser_running)
+                picGridMap.Image.Save("Simulation_step_" + Convert.ToString(sim.current_time_step) + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+
             if (prev_time_step == sim.current_time_step)
             {
                 if (optimiser_running)
@@ -486,6 +490,9 @@ namespace StereoMapping
 
         private void cmdRunSimulation_Click(object sender, EventArgs e)
         {
+            if (txtTuningParameters.Text != "")
+                sim.SetTuningParameters(txtTuningParameters.Text);
+
             cmdOptimise.Enabled = false;
             cmdRunOneStep.Enabled = false;
             cmdReset.Enabled = false;

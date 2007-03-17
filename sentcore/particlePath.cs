@@ -88,9 +88,6 @@ namespace sentience.core
             particlePose pose = new particlePose(x, y, pan, this);
             pose.time_step = time_step;
             Add(pose);
-
-            // map cache for this path
-            map_cache = new ArrayList[grid_dimension_cells][][];
         }
 
         #endregion
@@ -114,6 +111,9 @@ namespace sentience.core
             // allocating memory as its needed for each grid dimension
             // is far more efficient than just allocating a big three 
             // dimensional chunk in one go
+            if (map_cache == null)
+                map_cache = new ArrayList[grid_dimension][][];
+
             if (map_cache[x] == null)
                 map_cache[x] = new ArrayList[grid_dimension][];
 
@@ -137,18 +137,23 @@ namespace sentience.core
         {
             // most of time we will be returning nulls, so
             // prioritise these conditions
-            if (map_cache[x] == null)
+            if (map_cache == null)
                 return (null);
             else
             {
-                if (map_cache[x][y] == null)
+                if (map_cache[x] == null)
                     return (null);
                 else
                 {
-                    if (map_cache[x][y][z] == null)
+                    if (map_cache[x][y] == null)
                         return (null);
                     else
-                        return (map_cache[x][y][z]);
+                    {
+                        if (map_cache[x][y][z] == null)
+                            return (null);
+                        else
+                            return (map_cache[x][y][z]);
+                    }
                 }
             }
         }

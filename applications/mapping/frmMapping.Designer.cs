@@ -68,7 +68,12 @@ namespace StereoMapping
             this.txtTitle = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabParameters = new System.Windows.Forms.TabPage();
+            this.txtTuningParameters = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
             this.tabSimulation = new System.Windows.Forms.TabPage();
+            this.label16 = new System.Windows.Forms.Label();
+            this.txtBestScore = new System.Windows.Forms.TextBox();
+            this.picOptimisationScore = new System.Windows.Forms.PictureBox();
             this.label15 = new System.Windows.Forms.Label();
             this.txtMeanColourVariance = new System.Windows.Forms.TextBox();
             this.cmdOptimise = new System.Windows.Forms.Button();
@@ -86,23 +91,18 @@ namespace StereoMapping
             this.tabUncertainty = new System.Windows.Forms.TabPage();
             this.picBestPose = new System.Windows.Forms.PictureBox();
             this.timSimulation = new System.Windows.Forms.Timer(this.components);
-            this.txtTuningParameters = new System.Windows.Forms.TextBox();
-            this.label14 = new System.Windows.Forms.Label();
-            this.picOptimisationScore = new System.Windows.Forms.PictureBox();
-            this.label16 = new System.Windows.Forms.Label();
-            this.txtBestScore = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabParameters.SuspendLayout();
             this.tabSimulation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picOptimisationScore)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
             this.tabUncertainty.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picOptimisationScore)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -439,6 +439,23 @@ namespace StereoMapping
             this.tabParameters.Text = "Parameters";
             this.tabParameters.UseVisualStyleBackColor = true;
             // 
+            // txtTuningParameters
+            // 
+            this.txtTuningParameters.Location = new System.Drawing.Point(120, 90);
+            this.txtTuningParameters.Multiline = true;
+            this.txtTuningParameters.Name = "txtTuningParameters";
+            this.txtTuningParameters.Size = new System.Drawing.Size(598, 37);
+            this.txtTuningParameters.TabIndex = 28;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(17, 94);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(96, 13);
+            this.label14.TabIndex = 29;
+            this.label14.Text = "Tuning Parameters";
+            // 
             // tabSimulation
             // 
             this.tabSimulation.Controls.Add(this.label16);
@@ -465,6 +482,31 @@ namespace StereoMapping
             this.tabSimulation.TabIndex = 1;
             this.tabSimulation.Text = "Simulation";
             this.tabSimulation.UseVisualStyleBackColor = true;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(17, 441);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(57, 13);
+            this.label16.TabIndex = 41;
+            this.label16.Text = "Best value";
+            // 
+            // txtBestScore
+            // 
+            this.txtBestScore.Location = new System.Drawing.Point(134, 438);
+            this.txtBestScore.Name = "txtBestScore";
+            this.txtBestScore.Size = new System.Drawing.Size(108, 20);
+            this.txtBestScore.TabIndex = 40;
+            // 
+            // picOptimisationScore
+            // 
+            this.picOptimisationScore.Location = new System.Drawing.Point(260, 446);
+            this.picOptimisationScore.Name = "picOptimisationScore";
+            this.picOptimisationScore.Size = new System.Drawing.Size(538, 55);
+            this.picOptimisationScore.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picOptimisationScore.TabIndex = 39;
+            this.picOptimisationScore.TabStop = false;
             // 
             // label15
             // 
@@ -607,9 +649,9 @@ namespace StereoMapping
             // 
             // picBestPose
             // 
-            this.picBestPose.Location = new System.Drawing.Point(562, 30);
+            this.picBestPose.Location = new System.Drawing.Point(677, 24);
             this.picBestPose.Name = "picBestPose";
-            this.picBestPose.Size = new System.Drawing.Size(239, 234);
+            this.picBestPose.Size = new System.Drawing.Size(115, 107);
             this.picBestPose.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picBestPose.TabIndex = 34;
             this.picBestPose.TabStop = false;
@@ -618,48 +660,6 @@ namespace StereoMapping
             // 
             this.timSimulation.Interval = 500;
             this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
-            // 
-            // txtTuningParameters
-            // 
-            this.txtTuningParameters.Location = new System.Drawing.Point(120, 90);
-            this.txtTuningParameters.Multiline = true;
-            this.txtTuningParameters.Name = "txtTuningParameters";
-            this.txtTuningParameters.Size = new System.Drawing.Size(598, 37);
-            this.txtTuningParameters.TabIndex = 28;
-            // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(17, 94);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(96, 13);
-            this.label14.TabIndex = 29;
-            this.label14.Text = "Tuning Parameters";
-            // 
-            // picOptimisationScore
-            // 
-            this.picOptimisationScore.Location = new System.Drawing.Point(260, 446);
-            this.picOptimisationScore.Name = "picOptimisationScore";
-            this.picOptimisationScore.Size = new System.Drawing.Size(538, 55);
-            this.picOptimisationScore.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picOptimisationScore.TabIndex = 39;
-            this.picOptimisationScore.TabStop = false;
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(17, 441);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(57, 13);
-            this.label16.TabIndex = 41;
-            this.label16.Text = "Best value";
-            // 
-            // txtBestScore
-            // 
-            this.txtBestScore.Location = new System.Drawing.Point(134, 438);
-            this.txtBestScore.Name = "txtBestScore";
-            this.txtBestScore.Size = new System.Drawing.Size(108, 20);
-            this.txtBestScore.TabIndex = 40;
             // 
             // frmMapping
             // 
@@ -683,12 +683,12 @@ namespace StereoMapping
             this.tabParameters.PerformLayout();
             this.tabSimulation.ResumeLayout(false);
             this.tabSimulation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picOptimisationScore)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
             this.tabUncertainty.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picOptimisationScore)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

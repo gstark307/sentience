@@ -54,7 +54,7 @@ namespace sentience.core
         public stereoCorrespondence correspondence;
 
         //the type of stereo correspondance algorithm to be used
-        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;  
+        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_LINES; // .CORRESPONDENCE_CONTOURS;  
 
         public String Name = "My Robot";          // name of the robot
         public float TotalMass_kg;                // total mass of the robot
@@ -686,7 +686,7 @@ namespace sentience.core
                     LocalGrid.Show(img, width, height, motion.best_path.current_pose, colour, scalegrid);
                     if (show_robot)
                     {
-                        int half_grid_dimension_mm = LocalGrid.dimension_cells * LocalGrid.cellSize_mm / 2;
+                        int half_grid_dimension_mm = (LocalGrid.dimension_cells * LocalGrid.cellSize_mm) / 2;
                         int min_x = (int)(LocalGrid.x - half_grid_dimension_mm);
                         int min_y = (int)(LocalGrid.y - half_grid_dimension_mm);
                         int max_x = (int)(LocalGrid.x + half_grid_dimension_mm);
