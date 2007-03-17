@@ -314,6 +314,10 @@ namespace sentience.core
         // the maximum range of features to insert into the grid
         private int max_mapping_range_cells;
 
+        // a weight value used to define how aggressively the
+        // carving out of space using the vacancy function works
+        public float vacancy_weighting = 1.0f;
+
         // cells of the grid
         occupancygridCellMultiHypothesis[,] cell;
 
@@ -324,13 +328,15 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        private void init(int dimension_cells, int dimension_cells_vertical, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
+        private void init(int dimension_cells, int dimension_cells_vertical, int cellSize_mm, 
+                          int localisationRadius_mm, int maxMappingRange_mm, float vacancyWeighting)
         {
             this.dimension_cells = dimension_cells;
             this.dimension_cells_vertical = dimension_cells_vertical;
             this.cellSize_mm = cellSize_mm;
             this.localisation_search_cells = localisationRadius_mm / cellSize_mm;
             this.max_mapping_range_cells = maxMappingRange_mm / cellSize_mm;
+            this.vacancy_weighting = vacancyWeighting;
             cell = new occupancygridCellMultiHypothesis[dimension_cells, dimension_cells];
 
             // make a lookup table for gaussians - saves doing a lot of floating point maths
@@ -344,10 +350,11 @@ namespace sentience.core
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        public occupancygridMultiHypothesis(int dimension_cells, int dimension_cells_vertical, int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm)
+        public occupancygridMultiHypothesis(int dimension_cells, int dimension_cells_vertical, 
+                                            int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm, float vacancyWeighting)
             : base(0, 0,0)
         {
-            init(dimension_cells, dimension_cells_vertical, cellSize_mm, localisationRadius_mm, maxMappingRange_mm);
+            init(dimension_cells, dimension_cells_vertical, cellSize_mm, localisationRadius_mm, maxMappingRange_mm, vacancyWeighting);
         }
 
         #endregion
@@ -363,7 +370,7 @@ namespace sentience.core
         private float vacancyFunction(float fraction, int steps)
         {
             float min_vacancy_probability = 0.1f;
-            float max_vacancy_probability = 1.0f;
+            float max_vacancy_probability = vacancy_weighting;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
             return (0.5f - (prob / steps));
@@ -789,12 +796,35 @@ namespace sentience.core
 
         #region "display functions"
 
-        public void Show(Byte[] img, int width, int height, particlePose pose, bool colour)
+        public void Show(Byte[] img, int width, int height, particlePose pose, 
+                         bool colour, bool scalegrid)
         {
             if (!colour)
                 Show(img, width, height, pose);
             else
                 ShowColour(img, width, height, pose);
+
+            if (scalegrid)
+            {
+                int r = 200;
+                int g = 200;
+                int b = 255;
+
+                // draw a grid to give an indication of scale
+                // where the grid resolution is one metre
+                float dimension_mm = cellSize_mm * dimension_cells;
+
+                for (float x = 0; x < dimension_mm; x += 1000)
+                {
+                    int xx = (int)(x * width / dimension_mm);
+                    util.drawLine(img, width, height, xx, 0, xx, height - 1, r, g, b, 0, false);
+                }
+                for (float y = 0; y < dimension_mm; y += 1000)
+                {
+                    int yy = (int)(y * height / dimension_mm);
+                    util.drawLine(img, width, height, 0, yy, width-1, yy, r, g, b, 0, false);
+                }
+            }
         }
 
         /// <summary>

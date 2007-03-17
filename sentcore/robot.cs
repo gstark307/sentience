@@ -94,6 +94,7 @@ namespace sentience.core
         public float LocalGridInterval_mm = 100;      // The distance which the robot must travel before new data is inserted into the grid during mapping
         public float LocalGridMappingRange_mm = 2500; // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
         public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
+        public float LocalGridVacancyWeighting = 1.0f; // a weighting applied to the vacancy part of the sensor model
         public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
 
         // whether to enable scan matching for more accurate pose estimation
@@ -154,7 +155,7 @@ namespace sentience.core
         private void createLocalGrid()
         {
             // create the local grid
-            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm);
+            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm, LocalGridVacancyWeighting);
             LocalGrid.y = 2500;  //test
         }
 
@@ -639,12 +640,13 @@ namespace sentience.core
         /// <param name="img"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void ShowGrid(Byte[] img, int width, int height, bool show_robot, bool colour)
+        public void ShowGrid(Byte[] img, int width, int height, bool show_robot, 
+                             bool colour, bool scalegrid)
         {
             if (motion.best_path != null)
                 if (motion.best_path.current_pose != null)
                 {
-                    LocalGrid.Show(img, width, height, motion.best_path.current_pose, colour);
+                    LocalGrid.Show(img, width, height, motion.best_path.current_pose, colour, scalegrid);
                     if (show_robot)
                     {
                         int half_grid_dimension_mm = LocalGrid.dimension_cells * LocalGrid.cellSize_mm / 2;
@@ -781,6 +783,9 @@ namespace sentience.core
             util.AddComment(doc, nodeOccupancyGrid, "When updating the grid map this is the maximum range within which cells will be updated");
             util.AddComment(doc, nodeOccupancyGrid, "This prevents the system from being slowed down by the insertion of a lot of very long range rays");
             util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridMappingRangeMillimetres", Convert.ToString(LocalGridMappingRange_mm));            
+
+            util.AddComment(doc, nodeOccupancyGrid, "A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space");
+            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridVacancyWeighting", Convert.ToString(LocalGridVacancyWeighting));            
 
             nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
 
@@ -1024,7 +1029,12 @@ namespace sentience.core
             if (xnod.Name == "LocalGridMappingRangeMillimetres")
             {
                 LocalGridMappingRange_mm = Convert.ToSingle(xnod.InnerText);
-            }            
+            }
+
+            if (xnod.Name == "LocalGridVacancyWeighting")
+            {
+                LocalGridVacancyWeighting = Convert.ToSingle(xnod.InnerText);
+            }           
 
             if (xnod.Name == "StereoCamera")
             {

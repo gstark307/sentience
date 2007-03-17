@@ -60,7 +60,7 @@ namespace sentience.core
 
         public robot rob;
 
-        public const int NO_OF_TUNING_PARAMETERS = 3;
+        public const int NO_OF_TUNING_PARAMETERS = 4;
         private float[] tuningParameters;
 
         #region "results of the simulation"
@@ -77,6 +77,8 @@ namespace sentience.core
         public Byte[] grid_map;
 
         #endregion
+
+
 
         /// <summary>
         /// set the tuning parameters from a comma separated string
@@ -95,6 +97,9 @@ namespace sentience.core
             rob.LocalGridLocalisationRadius_mm = tuningParameters[1];
             // Number of position uncertainty particles
             rob.motion.survey_trial_poses = (int)tuningParameters[2];
+            // A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space
+            rob.LocalGridVacancyWeighting = tuningParameters[3];
+            rob.LocalGrid.vacancy_weighting = tuningParameters[3];
         }
 
         /// <summary>
@@ -321,7 +326,7 @@ namespace sentience.core
         /// <param name="height"></param>
         public void ShowGrid(Byte[] img, int width, int height, bool show_robot)
         {
-            rob.ShowGrid(img, width, height, show_robot, false);
+            rob.ShowGrid(img, width, height, show_robot, false, true);
         }
 
         #region "saving and loading"

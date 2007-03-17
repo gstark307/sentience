@@ -64,16 +64,20 @@ namespace StereoMapping
 
             autotuner.smallerScoresAreBetter = true;
             autotuner.parameterName[0] = "Motion model culling threshold";
-            autotuner.setParameterRange(0, 50, 90);
+            autotuner.setParameterRange(0, 60, 90);
             autotuner.setParameterStepSize(0, 1);
 
             autotuner.parameterName[1] = "Localisation radius";
-            autotuner.setParameterRange(1, sim.rob.LocalGridCellSize_mm * 2, sim.rob.LocalGridCellSize_mm * 4);
+            autotuner.setParameterRange(1, sim.rob.LocalGridCellSize_mm * 1, sim.rob.LocalGridCellSize_mm * 3);
             autotuner.setParameterStepSize(1, sim.rob.LocalGridCellSize_mm);
 
             autotuner.parameterName[2] = "Number of position uncertainty particles";
             autotuner.setParameterRange(2, 40, 60);
             autotuner.setParameterStepSize(2, 1);
+
+            autotuner.parameterName[3] = "Vacancy weighting";
+            autotuner.setParameterRange(3, 0.1f, 1.0f);
+            autotuner.setParameterStepSize(3, 0.001f);
 
             autotuner.Randomize(false);
         }

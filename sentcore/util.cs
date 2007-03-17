@@ -64,7 +64,7 @@ namespace sentience.core
         {
             if (probability > 0.999f) probability = 0.999f;
             if (probability < 0.001f) probability = 0.001f;
-            return ((float)Math.Log(probability / (1.0f - probability)));
+            return ((float)Math.Log10(probability / (1.0f - probability)));
         }
 
         /// <summary>
