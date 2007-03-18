@@ -160,6 +160,7 @@ namespace StereoMapping
                 txtRobotDefinitionFile.Text = sim.RobotDesignFile;
                 txtStereoImagesPath.Text = sim.ImagesPath;
                 txtTuningParameters.Text = sim.GetTuningParameters();
+                txtBestScore.Text = Convert.ToString(sim.rob.MinimumColourVariance);
                 update();
                 showPathSegments();
                 showNextPose();
@@ -274,8 +275,22 @@ namespace StereoMapping
             picGridMap.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
                                           System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
-            sim.ShowGrid(grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
+            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_ABOVE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
             updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
+        }
+
+        private void showSideViews()
+        {
+            picGridSideViewLeft.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
+                                               System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
+            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_LEFT_SIDE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
+            updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewLeft.Image));
+
+            picGridSideViewRight.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
+                                               System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_RIGHT_SIDE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
+            updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewRight.Image));
         }
 
 
@@ -443,8 +458,14 @@ namespace StereoMapping
                     autotuner.setScore(score);
 
                     // if this is the best score save the result
-                    if (score == autotuner.best_score)
+                    if ((score == autotuner.best_score) &&
+                        (score < sim.rob.MinimumColourVariance))
                     {
+                        showSideViews();
+
+                        // set the minimum colour variance
+                        sim.rob.MinimumColourVariance = score;
+
                         // save the robot design file with these tuning parameters
                         if (txtRobotDefinitionFile.Text != "")
                             sim.rob.Save(txtRobotDefinitionFile.Text);
@@ -457,10 +478,10 @@ namespace StereoMapping
                     }
 
                     // show the score graph
-                    picOptimisationScore.Image = new Bitmap(640, 200, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                    Byte[] score_img = new Byte[640 * 200 * 3];
-                    autotuner.showHistory(score_img, 640, 200);
-                    updatebitmap_unsafe(score_img, (Bitmap)(picOptimisationScore.Image));
+                    //picGridSideView.Image = new Bitmap(640, 200, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    //Byte[] score_img = new Byte[640 * 200 * 3];
+                    //autotuner.showHistory(score_img, 640, 200);
+                    //updatebitmap_unsafe(score_img, (Bitmap)(picGridSideView.Image));
 
                     // load the next instance
                     nextAutotunerInstance();
@@ -469,6 +490,7 @@ namespace StereoMapping
                 {
                     simulation_running = false;
                     StopSimulation();
+                    showSideViews();
                 }
 
                 // reset the simulation

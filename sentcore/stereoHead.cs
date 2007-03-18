@@ -252,6 +252,9 @@ namespace sentience.core
         /// <param name="img"></param>
         public void updateFeatureColours(int camera_index, Byte[] img)
         {
+            int wdth = calibration[camera_index].leftcam.image_width;
+            int hght = calibration[camera_index].leftcam.image_height;
+
             for (int f = 0; f < features[camera_index].no_of_features; f++)
             {
                 int idx = f * 3;
@@ -262,16 +265,45 @@ namespace sentience.core
                 // correct the positions using the inverse calibration lookup
                 if (calibration[camera_index].leftcam.calibration_map_inverse != null)
                 {
-                    int x2 = calibration[camera_index].leftcam.calibration_map_inverse[x, y, 0];
-                    int y2 = calibration[camera_index].leftcam.calibration_map_inverse[x, y, 1];
-                    x = x2;
-                    y = y2;
+                    //int x2 = calibration[camera_index].leftcam.calibration_map_inverse[x, y, 0];
+                    //int y2 = calibration[camera_index].leftcam.calibration_map_inverse[x, y, 1];
+                    //x = x2;
+                    //y = y2;
                 }
 
-                int n = ((y * calibration[camera_index].leftcam.image_width) + x) * 3;
-                feat.colour[f, 2] = img[n];
-                feat.colour[f, 1] = img[n+1];
-                feat.colour[f, 0] = img[n+2];
+                
+                if (x > wdth - 2) x = wdth - 2;
+                int n = ((y * wdth) + x) * 3;
+                feat.colour[f, 2] = (Byte)((img[n] + img[n + 3]) / 2);
+                feat.colour[f, 1] = (Byte)((img[n + 1] + img[n + 4]) / 2);
+                feat.colour[f, 0] = (Byte)((img[n + 2] + img[n + 5]) / 2);
+                
+
+                /*
+                //testing colours
+                int middle = x * hght / wdth;
+                if (y > middle + (hght / 6))
+                {
+                    feat.colour[f, 2] = (Byte)255;
+                    feat.colour[f, 1] = 0;
+                    feat.colour[f, 0] = 0;
+                }
+                else
+                {
+                    if (y < middle - (hght / 6))
+                    {
+                        feat.colour[f, 2] = 0;
+                        feat.colour[f, 1] = 0;
+                        feat.colour[f, 0] = (Byte)255;
+                    }
+                    else
+                    {
+                        feat.colour[f, 2] = 0;
+                        feat.colour[f, 1] = (Byte)255;
+                        feat.colour[f, 0] = 0;
+                    }
+                }
+                 */
             }
         }
 

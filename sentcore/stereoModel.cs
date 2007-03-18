@@ -434,7 +434,7 @@ namespace sentience.core
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.0f / (image_width * 2) * FOV_horizontal;
-            sigma *= image_width / 320;
+            //sigma *= image_width / 320;
             this.divisor = divisor;
 
             float max_disparity = (10 * image_width / 100);

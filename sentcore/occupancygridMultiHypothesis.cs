@@ -284,6 +284,11 @@ namespace sentience.core
     /// </summary>
     public class occupancygridMultiHypothesis : pos3D
     {
+        // types of view of the occupancy grid returned by the Show method
+        public const int VIEW_ABOVE = 0;
+        public const int VIEW_LEFT_SIDE = 1;
+        public const int VIEW_RIGHT_SIDE = 2;
+
         // random number generator
         private Random rnd = new Random();
 
@@ -796,36 +801,120 @@ namespace sentience.core
 
         #region "display functions"
 
-        public void Show(Byte[] img, int width, int height, particlePose pose, 
+        public void Show(int view_type, 
+                         Byte[] img, int width, int height, particlePose pose, 
                          bool colour, bool scalegrid)
         {
-            if (!colour)
-                Show(img, width, height, pose);
-            else
-                ShowColour(img, width, height, pose);
-
-            if (scalegrid)
+            switch(view_type)
             {
-                int r = 200;
-                int g = 200;
-                int b = 255;
+                case VIEW_ABOVE:
+                    {
+                        if (!colour)
+                            Show(img, width, height, pose);
+                        else
+                            ShowColour(img, width, height, pose);
 
-                // draw a grid to give an indication of scale
-                // where the grid resolution is one metre
-                float dimension_mm = cellSize_mm * dimension_cells;
+                        if (scalegrid)
+                        {
+                            int r = 200;
+                            int g = 200;
+                            int b = 255;
 
-                for (float x = 0; x < dimension_mm; x += 1000)
+                            // draw a grid to give an indication of scale
+                            // where the grid resolution is one metre
+                            float dimension_mm = cellSize_mm * dimension_cells;
+
+                            for (float x = 0; x < dimension_mm; x += 1000)
+                            {
+                                int xx = (int)(x * width / dimension_mm);
+                                util.drawLine(img, width, height, xx, 0, xx, height - 1, r, g, b, 0, false);
+                            }
+                            for (float y = 0; y < dimension_mm; y += 1000)
+                            {
+                                int yy = (int)(y * height / dimension_mm);
+                                util.drawLine(img, width, height, 0, yy, width - 1, yy, r, g, b, 0, false);
+                            }
+                        }
+
+                        break;
+                    }
+                case VIEW_LEFT_SIDE:
+                    {
+                        ShowSide(img, width, height, pose, true);
+                        break;
+                    }
+                case VIEW_RIGHT_SIDE:
+                    {
+                        ShowSide(img, width, height, pose, false);
+                        break;
+                    }
+            }
+
+        }
+
+
+        private void ShowSide(Byte[] img, int width, int height, particlePose pose, bool leftSide)
+        {
+            float[] mean_colour = new float[3];
+
+            // clear the image
+            for (int i = 0; i < width * height * 3; i++)
+                img[i] = (Byte)255;
+
+            // show the left or right half of the grid
+            int start_x = 0;
+            int end_x = dimension_cells / 2;
+            if (!leftSide)
+            {
+                start_x = dimension_cells / 2;
+                end_x = dimension_cells;
+            }
+
+            for (int cell_x = start_x; cell_x < end_x; cell_x++)
+            {
+                for (int cell_y = 0; cell_y < dimension_cells; cell_y++)
                 {
-                    int xx = (int)(x * width / dimension_mm);
-                    util.drawLine(img, width, height, xx, 0, xx, height - 1, r, g, b, 0, false);
-                }
-                for (float y = 0; y < dimension_mm; y += 1000)
-                {
-                    int yy = (int)(y * height / dimension_mm);
-                    util.drawLine(img, width, height, 0, yy, width-1, yy, r, g, b, 0, false);
+                    if (cell[cell_x, cell_y] != null)
+                    {
+                        // what's the probability of there being a vertical structure here?
+                        float mean_variance = 0;
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                                                                         mean_colour, ref mean_variance);
+                        if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                        {
+                            if (prob > 0.45f)
+                            {
+                                // show this vertical grid section
+                                occupancygridCellMultiHypothesis c = cell[cell_x, cell_y];
+                                for (int cell_z = 0; cell_z < dimension_cells_vertical; cell_z++)
+                                {
+                                    prob = c.GetProbability(pose, cell_x, cell_y, cell_z, false, mean_colour, ref mean_variance);
+                                    if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                    {
+                                        if ((prob > 0.0f) && (mean_variance < 0.5f))
+                                        {
+                                            int multiplier = 4;
+                                            int x = cell_y * width / dimension_cells;
+                                            int y = (cell_z * height * multiplier / dimension_cells_vertical);
+                                            if ((y >= 0) && (y < height - multiplier))
+                                            {
+                                                for (int yy = y; yy <= y + multiplier; yy++)
+                                                {
+                                                    int n = ((yy * width) + x) * 3;
+                                                    for (int col = 0; col < 3; col++)
+                                                        img[n + 2 - col] = (Byte)mean_colour[col];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+
 
         /// <summary>
         /// show the grid map as an image
@@ -907,7 +996,7 @@ namespace sentience.core
                             for (int c = 0; c < 3; c++)
                                 if (prob > 0.6f)
                                 {
-                                    img[n + c] = (Byte)mean_colour[c];  // occupied
+                                    img[n + 2 - c] = (Byte)mean_colour[c];  // occupied
                                 }
                                 else
                                 {

@@ -100,6 +100,9 @@ namespace sentience.core
         // parameters discovered by auto tuning
         public String TuningParameters = "";
 
+        // minimum colour variance discovered during auto tuning
+        public float MinimumColourVariance = float.MaxValue;
+
         // whether to enable scan matching for more accurate pose estimation
         public bool EnableScanMatching = true;
 
@@ -677,21 +680,24 @@ namespace sentience.core
         /// <param name="img"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void ShowGrid(Byte[] img, int width, int height, bool show_robot, 
+        public void ShowGrid(int view_type, Byte[] img, int width, int height, bool show_robot, 
                              bool colour, bool scalegrid)
         {
             if (motion.best_path != null)
                 if (motion.best_path.current_pose != null)
                 {
-                    LocalGrid.Show(img, width, height, motion.best_path.current_pose, colour, scalegrid);
+                    LocalGrid.Show(view_type, img, width, height, motion.best_path.current_pose, colour, scalegrid);
                     if (show_robot)
                     {
-                        int half_grid_dimension_mm = (LocalGrid.dimension_cells * LocalGrid.cellSize_mm) / 2;
-                        int min_x = (int)(LocalGrid.x - half_grid_dimension_mm);
-                        int min_y = (int)(LocalGrid.y - half_grid_dimension_mm);
-                        int max_x = (int)(LocalGrid.x + half_grid_dimension_mm);
-                        int max_y = (int)(LocalGrid.y + half_grid_dimension_mm);
-                        motion.ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, false);
+                        if (view_type == occupancygridMultiHypothesis.VIEW_ABOVE)
+                        {
+                            int half_grid_dimension_mm = (LocalGrid.dimension_cells * LocalGrid.cellSize_mm) / 2;
+                            int min_x = (int)(LocalGrid.x - half_grid_dimension_mm);
+                            int min_y = (int)(LocalGrid.y - half_grid_dimension_mm);
+                            int max_x = (int)(LocalGrid.x + half_grid_dimension_mm);
+                            int max_y = (int)(LocalGrid.y + half_grid_dimension_mm);
+                            motion.ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, false);
+                        }
                     }
                 }
         }
@@ -828,6 +834,9 @@ namespace sentience.core
             {
                 util.AddComment(doc, nodeOccupancyGrid, "Parameters discovered by auto tuning");
                 util.AddTextElement(doc, nodeOccupancyGrid, "TuningParameters", TuningParameters);
+
+                util.AddComment(doc, nodeOccupancyGrid, "Minimum colour variance discovered by auto tuning");
+                util.AddTextElement(doc, nodeOccupancyGrid, "MinimumColourVariance", Convert.ToString(MinimumColourVariance));                
             }
 
             nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
@@ -1086,7 +1095,13 @@ namespace sentience.core
             if (xnod.Name == "TuningParameters")
             {
                 TuningParameters = xnod.InnerText;
+            }
+
+            if (xnod.Name == "MinimumColourVariance")
+            {
+                MinimumColourVariance = Convert.ToSingle(xnod.InnerText);
             }           
+            
 
             if (xnod.Name == "StereoCamera")
             {

@@ -319,9 +319,9 @@ namespace sentience.core
         /// <param name="img"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void ShowGrid(Byte[] img, int width, int height, bool show_robot)
+        public void ShowGrid(int view_type, Byte[] img, int width, int height, bool show_robot)
         {
-            rob.ShowGrid(img, width, height, show_robot, false, true);
+            rob.ShowGrid(view_type, img, width, height, show_robot, false, true);
         }
 
         #region "saving and loading"
