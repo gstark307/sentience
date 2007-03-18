@@ -321,7 +321,11 @@ namespace sentience.core
 
         // a weight value used to define how aggressively the
         // carving out of space using the vacancy function works
-        public float vacancy_weighting = 1.0f;
+        public float vacancy_weighting = 2.0f;
+
+        // take some shortcuts to speed things up
+        // this sacrifices some detail, but for most grid cell sizes is fine
+        public bool TurboMode = true;
 
         // cells of the grid
         occupancygridCellMultiHypothesis[,] cell;
@@ -404,8 +408,11 @@ namespace sentience.core
                         float mean_variance = 0;
                         float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
                                                                          mean_colour, ref mean_variance);
-                        total_variance += mean_variance;
-                        hits++;
+                        if (prob > 0.5)
+                        {
+                            total_variance += mean_variance;
+                            hits++;
+                        }
                     }
                 }
             }
@@ -468,7 +475,7 @@ namespace sentience.core
                                           float sensormodel_probability,
                                           Byte[] colour)
         {
-            float value = 0;
+            float value = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
             float colour_variance = 0;
 
             // localise using this grid cell
@@ -545,9 +552,10 @@ namespace sentience.core
             float occupied_dx = 0, occupied_dy = 0, occupied_dz = 0;
             float intersect_x = 0, intersect_y = 0, intersect_z = 0;
             float centre_prob = 0, prob = 0, prob_localisation = 0; // probability values at the centre axis and outside
-            float matchingScore = 0;  // total localisation matching score
+            float matchingScore = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;  // total localisation matching score
             int rayWidth = 0;         // widest point in the ray in cells
             int widest_point;         // widest point index
+            int step_size = 1;
             particleGridCell hypothesis;
 
             // ray width at the fattest point in cells
@@ -562,8 +570,12 @@ namespace sentience.core
 
             int max_dimension_cells = dimension_cells - rayWidth;
 
+            // in turbo mode only use a single vacancy ray
+            int max_modelcomponent = VACANT_SENSORMODEL_RIGHT_CAMERA;
+            if (TurboMode) max_modelcomponent = VACANT_SENSORMODEL_LEFT_CAMERA;
+
             // consider each of the three parts of the sensor model
-            for (int modelcomponent = OCCUPIED_SENSORMODEL; modelcomponent <= VACANT_SENSORMODEL_RIGHT_CAMERA; modelcomponent++)
+            for (int modelcomponent = OCCUPIED_SENSORMODEL; modelcomponent <= max_modelcomponent; modelcomponent++)
             {
                 // the range from the cameras from which insertion of data begins
                 // for vacancy rays this will be zero, but will be non-zero for the occupancy area
@@ -605,6 +617,7 @@ namespace sentience.core
                             xx_mm = left_camera_location.x;
                             yy_mm = left_camera_location.y;
                             zz_mm = left_camera_location.z;
+                            step_size = 2;
                             break;
                         }
                     case VACANT_SENSORMODEL_RIGHT_CAMERA:
@@ -619,6 +632,7 @@ namespace sentience.core
                             xx_mm = right_camera_location.x;
                             yy_mm = right_camera_location.y;
                             zz_mm = right_camera_location.z;
+                            step_size = 2;
                             break;
                         }
                 }
@@ -669,7 +683,14 @@ namespace sentience.core
                     // is this position inside the maximum mapping range
                     bool withinMappingRange = true;
                     if (grid_step + startingRange > max_mapping_range_cells)
+                    {
                         withinMappingRange = false;
+                        if ((grid_step==0) && (modelcomponent == OCCUPIED_SENSORMODEL))
+                        {
+                            grid_step = steps;
+                            modelcomponent = 9999;
+                        }
+                    }
 
                     // calculate the width of the ray in cells at this point
                     // using a diamond shape ray model
@@ -760,11 +781,20 @@ namespace sentience.core
                                         {
                                             // update the matching score, by combining the probability
                                             // of the grid cell with the probability from the localisation ray
+                                            float score = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
                                             if (longest_axis == X_AXIS)
-                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation, ray.colour);
+                                                score = matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation, ray.colour);
 
                                             if (longest_axis == Y_AXIS)
-                                                matchingScore += matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation, ray.colour);
+                                                score = matchingProbability(x_cell2, y_cell2, z_cell, origin, prob_localisation, ray.colour);
+
+                                            if (score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                            {
+                                                if (matchingScore != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                                    matchingScore += score;
+                                                else
+                                                    matchingScore = score;
+                                            }
                                         }
                                     }
 
@@ -790,7 +820,7 @@ namespace sentience.core
                         else grid_step = steps;  // its the end of the ray, break out of the loop
                     }
                     else grid_step = steps;  // its the end of the ray, break out of the loop
-                    grid_step++;
+                    grid_step += step_size;
                 }
             }
 
@@ -893,12 +923,12 @@ namespace sentience.core
                                     {
                                         if ((prob > 0.0f) && (mean_variance < 0.5f))
                                         {
-                                            int multiplier = 4;
+                                            int multiplier = 2;
                                             int x = cell_y * width / dimension_cells;
                                             int y = (cell_z * height * multiplier / dimension_cells_vertical);
-                                            if ((y >= 0) && (y < height - multiplier))
+                                            if ((y >= 0) && (y < height - multiplier-2))
                                             {
-                                                for (int yy = y; yy <= y + multiplier; yy++)
+                                                for (int yy = y; yy <= y + multiplier+2; yy++)
                                                 {
                                                     int n = ((yy * width) + x) * 3;
                                                     for (int col = 0; col < 3; col++)

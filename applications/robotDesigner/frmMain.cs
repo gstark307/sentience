@@ -161,7 +161,8 @@ namespace robotDesigner
 
             rob.LocalGridCellSize_mm = Convert.ToSingle(txtGridCellDimension.Text);
             rob.LocalGridLevels = Convert.ToInt32(txtGridLevels.Text);
-            rob.LocalGridDimension = (int)(Convert.ToInt32(txtGridWidth.Text) / rob.LocalGridCellSize_mm);            
+            rob.LocalGridDimension = (int)(Convert.ToInt32(txtGridWidth.Text) / rob.LocalGridCellSize_mm);
+            rob.LocalGridDimensionVertical = (int)(Convert.ToInt32(txtGridHeight.Text) / rob.LocalGridCellSize_mm);
             rob.LocalGridInterval_mm = Convert.ToSingle(txtGridInterval.Text);
             rob.LocalGridMappingRange_mm = Convert.ToSingle(txtMappingRange.Text);
             rob.LocalGridLocalisationRadius_mm = Convert.ToSingle(txtLocalGridLocalisationRadius.Text);
@@ -343,6 +344,7 @@ namespace robotDesigner
                 int dimension = Convert.ToInt32(txtGridHeight.Text) / Convert.ToInt32(txtGridCellDimension.Text);
                 dimension = (int)(dimension / 8) * 8; // this just ensures that the grid will display properly
                 txtGridHeight.Text = Convert.ToString(dimension * Convert.ToInt32(txtGridCellDimension.Text));
+                rob.LocalGridDimensionVertical = dimension;
             }
         }
 

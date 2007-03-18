@@ -74,11 +74,11 @@ namespace StereoMapping
             autotuner.setParameterStepSize(1, sim.rob.LocalGridCellSize_mm);
 
             autotuner.parameterName[2] = "Number of position uncertainty particles";
-            autotuner.setParameterRange(2, 40, 60);
+            autotuner.setParameterRange(2, 100, 200);
             autotuner.setParameterStepSize(2, 1);
 
             autotuner.parameterName[3] = "Vacancy weighting";
-            autotuner.setParameterRange(3, 0.1f, 2.0f);
+            autotuner.setParameterRange(3, 0.8f, 3.0f);
             autotuner.setParameterStepSize(3, 0.01f);
 
             autotuner.parameterName[4] = "Surround radius percent";

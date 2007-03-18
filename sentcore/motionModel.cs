@@ -512,8 +512,12 @@ namespace sentience.core
             {
                 particlePath path = (particlePath)Poses[p];
                 float logodds_localisation_score = 
-                    path.current_pose.AddObservation(stereo_rays, 
+                    path.current_pose.AddObservation(stereo_rays,
                                                      rob);
+
+                if (logodds_localisation_score == occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                    logodds_localisation_score = float.MinValue;
+
                 updatePoseScore(path, logodds_localisation_score);
             }
 

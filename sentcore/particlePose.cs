@@ -203,7 +203,7 @@ namespace sentience.core
                                     robot rob)
         {
             // clear the localisation score
-            float localisation_score = 0;
+            float localisation_score = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
 
             // get the positions of the head and cameras for this pose
             pos3D head_location = new pos3D(0,0,0);
@@ -216,10 +216,12 @@ namespace sentience.core
                                      ref right_camera_location);
             
             // itterate for each stereo camera
-            for (int cam = 0; cam < stereo_rays.Length; cam++)
+            int cam = 0;
+            while (cam < stereo_rays.Length)
             {
                 // itterate through each ray
-                for (int r = 0; r < stereo_rays[cam].Count; r++)
+                int r = 0;
+                while (r < stereo_rays[cam].Count)
                 {
                     // observed ray.  Note that this is in an egocentric
                     // coordinate frame relative to the head of the robot
@@ -232,12 +234,19 @@ namespace sentience.core
 
                     // update the grid cells for this ray and update the
                     // localisation score accordingly
-                    localisation_score += 
+                    float score =
                         rob.LocalGrid.Insert(trial_ray, this, 
                                              rob.head.sensormodel[cam],
                                              left_camera_location[cam], 
                                              right_camera_location[cam]);
+                    if (score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                        if (localisation_score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                            localisation_score += score;
+                        else
+                            localisation_score = score;
+                    r++;
                 }
+                cam++;
             }
 
             return (localisation_score);
