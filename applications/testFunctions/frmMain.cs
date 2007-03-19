@@ -241,6 +241,32 @@ namespace WindowsApplication1
         }
         */
 
+        /// <summary>
+        /// generate scores for poses.  This is only for testing purposes.
+        /// </summary>
+        /// <param name="rob"></param>        
+        private void surveyPosesDummy(robot rob)
+        {
+            // examine the pose list
+            for (int sample = 0; sample < rob.motion.survey_trial_poses; sample++)
+            {
+                particlePath path = (particlePath)rob.motion.Poses[sample];
+                particlePose pose = path.current_pose;
+
+                float dx = rob.x - pose.x;
+                float dy = rob.y - pose.y;
+                float dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                float score = 1.0f / (1 + dist);
+
+                // update the score for this pose
+                rob.motion.updatePoseScore(path, score);
+            }
+
+            // indicate that the pose scores have been updated
+            rob.motion.PosesEvaluated = true;
+        }
+
+
         private void test_motion_model(bool closed_loop)
         {
             robot rob = new robot(1);
@@ -255,7 +281,7 @@ namespace WindowsApplication1
             float pan = 0; // (float)Math.PI / 4;
             for (int y = min_y_mm; y < max_y_mm; y += step_size)
             {
-                if (closed_loop) robotLocalisation.surveyPosesDummy(rob);
+                if (closed_loop) surveyPosesDummy(rob);
                 rob.updateFromKnownPosition(null, x, y, pan);
                 
                 rob.motion.Show(img_rays, standard_width, standard_height, 

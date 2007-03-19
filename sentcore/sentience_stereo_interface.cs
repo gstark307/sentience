@@ -75,6 +75,7 @@ namespace sentience.core
                 calibration = new calibrationStereo();
                 calibration.Load(calibrationFilename);
                 calibration.updateCalibrationMaps();
+                stereovision_contours.roll = calibration.positionOrientation.roll;
             }
             else calibration = null;
         }
@@ -86,6 +87,7 @@ namespace sentience.core
         public void setCalibration(calibrationStereo calib)
         {
             calibration = calib;
+            stereovision_contours.roll = calibration.positionOrientation.roll;
         }
 
         /// <summary>

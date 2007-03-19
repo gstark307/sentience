@@ -31,6 +31,9 @@ namespace sentience.core
 
         public bool useSmoothing = true;
 
+        // roll angle of the camera in radians
+        public float roll = 0;
+
         // max number of features per row
         private const int MAX_POINT_FEATURES = 6000;
 
@@ -606,17 +609,24 @@ namespace sentience.core
             }
 
             
-            // remove snow
-            /*
+            // remove snow            
             filterDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 10);
             
             // smooth the disparity map
             if (useSmoothing)
             {
-                //smoothDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
-                smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 1);
-            }
-            */
+                if ((roll > -Math.PI/8) && (roll < Math.PI/8))
+                    // conventional horizontal stereo camera mounting
+                    smoothDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
+                else
+                {
+                    // rolled camera mounting
+                    if (roll < 0)
+                        smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 1);
+                    else
+                        smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 0);
+                }
+            }            
             
 
             //update the selected features

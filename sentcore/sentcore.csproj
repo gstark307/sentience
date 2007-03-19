@@ -53,12 +53,10 @@
     <Compile Include="classimage.cs" />
     <Compile Include="sentienceRadar.cs" />
     <Compile Include="sentienceTracking.cs" />
-    <Compile Include="robotLocalisation.cs" />
     <Compile Include="sentience_stereo_contours.cs" />
     <Compile Include="sentience_stereo_interface.cs" />
     <Compile Include="sentience_stereo.cs" />
     <Compile Include="MersenneTwister.cs" />
-    <Compile Include="robotOdometry.cs" />
     <Compile Include="robot.cs" />
     <Compile Include="stereoCorrespondence.cs" />
     <Compile Include="stopwatch.cs" />
