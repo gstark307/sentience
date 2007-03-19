@@ -52,6 +52,10 @@ namespace sentience.core
         // the current time step which the simulation is on
         public int current_time_step = 0;
 
+        // position error between where the robot believes it is and 
+        // where it actually is according to the path data
+        public float position_error_mm;
+
 
         private float min_x=0, min_y=0, max_x=0, max_y=0;
 
@@ -109,6 +113,7 @@ namespace sentience.core
             rob.Load(RobotDesignFile);
 
             current_time_step = 0;
+            position_error_mm = 0;
             updatePath();
         }
 
@@ -273,7 +278,17 @@ namespace sentience.core
                 {
                     float forward_velocity = (float)velocities[current_time_step * 2];
                     float angular_velocity = (float)velocities[(current_time_step * 2) + 1];
+                    
+                    // get the robots position according to the path data
+                    float actual_x = ((particlePose)path.path[current_time_step]).x;
+                    float actual_y = ((particlePose)path.path[current_time_step]).y;
+
                     rob.updateFromVelocities(images, forward_velocity, angular_velocity, time_per_index_sec);
+
+                    // calculate the position error
+                    float err_x = actual_x - rob.x;
+                    float err_y = actual_y - rob.y;
+                    position_error_mm = (float)Math.Sqrt((err_x * err_x) + (err_y * err_y));
                 }
 
                 // increment the simulation time step

@@ -102,6 +102,7 @@ namespace sentience.core
 
         // minimum colour variance discovered during auto tuning
         public float MinimumColourVariance = float.MaxValue;
+        public float MinimumPositionError_mm = float.MaxValue;
 
         // whether to enable scan matching for more accurate pose estimation
         public bool EnableScanMatching = true;
@@ -835,8 +836,17 @@ namespace sentience.core
                 util.AddComment(doc, nodeOccupancyGrid, "Parameters discovered by auto tuning");
                 util.AddTextElement(doc, nodeOccupancyGrid, "TuningParameters", TuningParameters);
 
-                util.AddComment(doc, nodeOccupancyGrid, "Minimum colour variance discovered by auto tuning");
-                util.AddTextElement(doc, nodeOccupancyGrid, "MinimumColourVariance", Convert.ToString(MinimumColourVariance));                
+                if (MinimumColourVariance != float.MaxValue)
+                {
+                    util.AddComment(doc, nodeOccupancyGrid, "Minimum colour variance discovered by auto tuning");
+                    util.AddTextElement(doc, nodeOccupancyGrid, "MinimumColourVariance", Convert.ToString(MinimumColourVariance));
+                }
+
+                if (MinimumPositionError_mm != float.MaxValue)
+                {
+                    util.AddComment(doc, nodeOccupancyGrid, "Minimum position error found during auto tuning");
+                    util.AddTextElement(doc, nodeOccupancyGrid, "MinimumPositionErrorMillimetres", Convert.ToString(MinimumPositionError_mm));
+                }
             }
 
             nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
@@ -1101,7 +1111,12 @@ namespace sentience.core
             {
                 MinimumColourVariance = Convert.ToSingle(xnod.InnerText);
             }           
-            
+
+            if (xnod.Name == "MinimumPositionErrorMillimetres")
+            {
+                MinimumPositionError_mm = Convert.ToSingle(xnod.InnerText);
+            }           
+                        
 
             if (xnod.Name == "StereoCamera")
             {

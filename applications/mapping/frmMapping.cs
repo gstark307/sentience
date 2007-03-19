@@ -78,8 +78,8 @@ namespace StereoMapping
             autotuner.setParameterStepSize(2, 1);
 
             autotuner.parameterName[3] = "Vacancy weighting";
-            autotuner.setParameterRange(3, 0.8f, 3.0f);
-            autotuner.setParameterStepSize(3, 0.01f);
+            autotuner.setParameterRange(3, 0.8f, 5.0f);
+            autotuner.setParameterStepSize(3, 0.05f);
 
             autotuner.parameterName[4] = "Surround radius percent";
             autotuner.setParameterRange(4, 1.0f, 3.0f);
@@ -160,7 +160,7 @@ namespace StereoMapping
                 txtRobotDefinitionFile.Text = sim.RobotDesignFile;
                 txtStereoImagesPath.Text = sim.ImagesPath;
                 txtTuningParameters.Text = sim.GetTuningParameters();
-                txtBestScore.Text = Convert.ToString(sim.rob.MinimumColourVariance);
+                txtBestScore.Text = Convert.ToString(sim.rob.MinimumPositionError_mm);
                 update();
                 showPathSegments();
                 showNextPose();
@@ -451,20 +451,25 @@ namespace StereoMapping
                 if (optimiser_running)
                 {
                     // get the score for this simulation run
-                    float score = sim.GetMeanColourVariance();
-                    txtMeanColourVariance.Text = Convert.ToString((int)(score * 1000000) / 1000000.0f);
+                    float score = sim.position_error_mm;
+
+                    // show the position error
+                    txtPositionError.Text = Convert.ToString(sim.position_error_mm);
+
+                    // show the average colour variance
+                    txtMeanColourVariance.Text = Convert.ToString((int)(sim.GetMeanColourVariance() * 1000000) / 1000000.0f);
 
                     // set the score for this run
                     autotuner.setScore(score);
 
                     // if this is the best score save the result
                     if ((score == autotuner.best_score) &&
-                        (score < sim.rob.MinimumColourVariance))
+                        (score < sim.rob.MinimumPositionError_mm))
                     {
                         showSideViews();
 
-                        // set the minimum colour variance
-                        sim.rob.MinimumColourVariance = score;
+                        // set the minimum position error
+                        sim.rob.MinimumPositionError_mm = score;
 
                         // save the robot design file with these tuning parameters
                         if (txtRobotDefinitionFile.Text != "")

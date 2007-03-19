@@ -71,6 +71,9 @@ namespace StereoMapping
             this.txtTuningParameters = new System.Windows.Forms.TextBox();
             this.label14 = new System.Windows.Forms.Label();
             this.tabSimulation = new System.Windows.Forms.TabPage();
+            this.label18 = new System.Windows.Forms.Label();
+            this.txtPositionError = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
             this.picBestPose = new System.Windows.Forms.PictureBox();
             this.picGridSideViewRight = new System.Windows.Forms.PictureBox();
             this.label16 = new System.Windows.Forms.Label();
@@ -91,7 +94,6 @@ namespace StereoMapping
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
             this.timSimulation = new System.Windows.Forms.Timer(this.components);
-            this.label17 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -458,6 +460,8 @@ namespace StereoMapping
             // 
             // tabSimulation
             // 
+            this.tabSimulation.Controls.Add(this.label18);
+            this.tabSimulation.Controls.Add(this.txtPositionError);
             this.tabSimulation.Controls.Add(this.label17);
             this.tabSimulation.Controls.Add(this.picBestPose);
             this.tabSimulation.Controls.Add(this.picGridSideViewRight);
@@ -486,6 +490,31 @@ namespace StereoMapping
             this.tabSimulation.Text = "Simulation";
             this.tabSimulation.UseVisualStyleBackColor = true;
             // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(17, 422);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(87, 13);
+            this.label18.TabIndex = 46;
+            this.label18.Text = "Position error mm";
+            // 
+            // txtPositionError
+            // 
+            this.txtPositionError.Location = new System.Drawing.Point(134, 419);
+            this.txtPositionError.Name = "txtPositionError";
+            this.txtPositionError.Size = new System.Drawing.Size(108, 20);
+            this.txtPositionError.TabIndex = 45;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(102, 466);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(67, 13);
+            this.label17.TabIndex = 44;
+            this.label17.Text = "Current pose";
+            // 
             // picBestPose
             // 
             this.picBestPose.Location = new System.Drawing.Point(52, 482);
@@ -507,15 +536,15 @@ namespace StereoMapping
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(17, 441);
+            this.label16.Location = new System.Drawing.Point(17, 448);
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(57, 13);
+            this.label16.Size = new System.Drawing.Size(91, 13);
             this.label16.TabIndex = 41;
-            this.label16.Text = "Best value";
+            this.label16.Text = "Minimum error mm";
             // 
             // txtBestScore
             // 
-            this.txtBestScore.Location = new System.Drawing.Point(134, 438);
+            this.txtBestScore.Location = new System.Drawing.Point(134, 445);
             this.txtBestScore.Name = "txtBestScore";
             this.txtBestScore.Size = new System.Drawing.Size(108, 20);
             this.txtBestScore.TabIndex = 40;
@@ -532,7 +561,7 @@ namespace StereoMapping
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(17, 415);
+            this.label15.Location = new System.Drawing.Point(17, 396);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(112, 13);
             this.label15.TabIndex = 38;
@@ -540,7 +569,7 @@ namespace StereoMapping
             // 
             // txtMeanColourVariance
             // 
-            this.txtMeanColourVariance.Location = new System.Drawing.Point(134, 412);
+            this.txtMeanColourVariance.Location = new System.Drawing.Point(134, 393);
             this.txtMeanColourVariance.Name = "txtMeanColourVariance";
             this.txtMeanColourVariance.Size = new System.Drawing.Size(108, 20);
             this.txtMeanColourVariance.TabIndex = 37;
@@ -589,7 +618,7 @@ namespace StereoMapping
             this.lstBenchmarks.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lstBenchmarks.Location = new System.Drawing.Point(20, 269);
             this.lstBenchmarks.Name = "lstBenchmarks";
-            this.lstBenchmarks.Size = new System.Drawing.Size(222, 137);
+            this.lstBenchmarks.Size = new System.Drawing.Size(222, 113);
             this.lstBenchmarks.TabIndex = 32;
             this.lstBenchmarks.UseCompatibleStateImageBehavior = false;
             // 
@@ -662,15 +691,6 @@ namespace StereoMapping
             // 
             this.timSimulation.Interval = 500;
             this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(102, 466);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(67, 13);
-            this.label17.TabIndex = 44;
-            this.label17.Text = "Current pose";
             // 
             // frmMapping
             // 
@@ -770,6 +790,8 @@ namespace StereoMapping
         private System.Windows.Forms.PictureBox picGridSideViewRight;
         private System.Windows.Forms.PictureBox picBestPose;
         private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.TextBox txtPositionError;
     }
 }
 

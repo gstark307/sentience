@@ -275,7 +275,7 @@ namespace sentience.core
                 int max = Poses.Count;
                 for (int i = 0; i < new_poses_required; i++)
                 {
-                    particlePath path = (particlePath)Poses[rnd.Next(max)];
+                    particlePath path = (particlePath)Poses[rnd.Next(max-1)];
 
                     particlePath p = new particlePath(path, path_ID, rob.LocalGridDimension);
                     createNewPose(p);
