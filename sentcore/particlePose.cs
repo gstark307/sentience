@@ -95,7 +95,8 @@ namespace sentience.core
         public void Show(robot rob, 
                          Byte[] img, int width, int height, bool clearBackground,
                          int min_x_mm, int min_y_mm,
-                         int max_x_mm, int max_y_mm, int line_width)
+                         int max_x_mm, int max_y_mm, int line_width,
+                         bool showFieldOfView)
         {
             if (clearBackground)
                 for (int i = 0; i < width * height * 3; i++)
@@ -131,17 +132,34 @@ namespace sentience.core
             for (int cam = 0; cam < rob.head.no_of_cameras; cam++)
             {
                 // draw the left camera
-                xx = (int)((left_camera_location[cam].x - min_x_mm) * width / w);
-                yy = (int)((left_camera_location[cam].y - min_y_mm) * height / h);
+                int xx1 = (int)((left_camera_location[cam].x - min_x_mm) * width / w);
+                int yy1 = (int)((left_camera_location[cam].y - min_y_mm) * height / h);
                 wdth = (int)((rob.head.calibration[cam].baseline / 4) * width / w);
                 hght = (int)((rob.head.calibration[cam].baseline / 12) * height / h);
                 if (hght < 1) hght = 1;
-                util.drawBox(img, width, height, xx, yy, wdth, hght, left_camera_location[cam].pan + (float)(Math.PI/2), 0, 255, 0, line_width);
+                util.drawBox(img, width, height, xx1, yy1, wdth, hght, left_camera_location[cam].pan + (float)(Math.PI/2), 0, 255, 0, line_width);
 
                 // draw the right camera
-                xx = (int)((right_camera_location[cam].x - min_x_mm) * width / w);
-                yy = (int)((right_camera_location[cam].y - min_y_mm) * height / h);
-                util.drawBox(img, width, height, xx, yy, wdth, hght, right_camera_location[cam].pan + (float)(Math.PI / 2), 0, 255, 0, line_width);
+                int xx2 = (int)((right_camera_location[cam].x - min_x_mm) * width / w);
+                int yy2 = (int)((right_camera_location[cam].y - min_y_mm) * height / h);
+                util.drawBox(img, width, height, xx2, yy2, wdth, hght, right_camera_location[cam].pan + (float)(Math.PI / 2), 0, 255, 0, line_width);
+
+                if (showFieldOfView)
+                {
+                    float half_FOV = rob.head.calibration[cam].leftcam.camera_FOV_degrees * (float)Math.PI / 360.0f;
+                    int xx_ray = xx1 + (int)(width * Math.Sin(left_camera_location[cam].pan + half_FOV));
+                    int yy_ray = yy1 + (int)(width * Math.Cos(left_camera_location[cam].pan + half_FOV));
+                    util.drawLine(img, width, height, xx1, yy1, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                    xx_ray = xx1 + (int)(width * Math.Sin(left_camera_location[cam].pan - half_FOV));
+                    yy_ray = yy1 + (int)(width * Math.Cos(left_camera_location[cam].pan - half_FOV));
+                    util.drawLine(img, width, height, xx1, yy1, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                    xx_ray = xx2 + (int)(width * Math.Sin(right_camera_location[cam].pan + half_FOV));
+                    yy_ray = yy2 + (int)(width * Math.Cos(right_camera_location[cam].pan + half_FOV));
+                    util.drawLine(img, width, height, xx2, yy2, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                    xx_ray = xx2 + (int)(width * Math.Sin(right_camera_location[cam].pan - half_FOV));
+                    yy_ray = yy2 + (int)(width * Math.Cos(right_camera_location[cam].pan - half_FOV));
+                    util.drawLine(img, width, height, xx2, yy2, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                }
             }
         }
 
@@ -189,6 +207,7 @@ namespace sentience.core
                 pos3D right_camera_locn = new pos3D(-left_camera_locn.x, -left_camera_locn.y, -left_camera_locn.z);
                 left_camera_location[cam] = left_camera_locn.translate(camera_centre_location[cam].x, camera_centre_location[cam].y, camera_centre_location[cam].z);
                 right_camera_location[cam] = right_camera_locn.translate(camera_centre_location[cam].x, camera_centre_location[cam].y, camera_centre_location[cam].z);
+                right_camera_location[cam].pan = left_camera_location[cam].pan;
             }
         }
 

@@ -225,7 +225,7 @@ namespace sentience.core
 
     public class stereoModel
     {
-        Random rnd = new Random();
+        MersenneTwister rnd = new MersenneTwister(100);
 
         public bool mapping = true;
 

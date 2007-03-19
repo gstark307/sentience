@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using CenterSpace.Free;
 
 namespace sentience.core
 {
@@ -290,7 +291,7 @@ namespace sentience.core
         public const int VIEW_RIGHT_SIDE = 2;
 
         // random number generator
-        private Random rnd = new Random();
+        private MersenneTwister rnd = new MersenneTwister(100);
 
         // list grid cells which need to be cleared of garbage
         private ArrayList garbage;

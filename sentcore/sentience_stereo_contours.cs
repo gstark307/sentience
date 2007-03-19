@@ -21,15 +21,13 @@
 using System;
 using System.IO;
 using System.Collections;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.InteropServices;  //for DLL access
+using CenterSpace.Free;
 
 namespace sentience.core
 {
     public class sentience_stereo_contours
     {
-        Random rnd = new Random();
+        MersenneTwister rnd = new MersenneTwister(100);
 
         public bool useSmoothing = true;
 

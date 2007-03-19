@@ -71,6 +71,8 @@ namespace StereoMapping
             this.txtTuningParameters = new System.Windows.Forms.TextBox();
             this.label14 = new System.Windows.Forms.Label();
             this.tabSimulation = new System.Windows.Forms.TabPage();
+            this.picBestPose = new System.Windows.Forms.PictureBox();
+            this.picGridSideViewRight = new System.Windows.Forms.PictureBox();
             this.label16 = new System.Windows.Forms.Label();
             this.txtBestScore = new System.Windows.Forms.TextBox();
             this.picGridSideViewLeft = new System.Windows.Forms.PictureBox();
@@ -88,23 +90,20 @@ namespace StereoMapping
             this.cmdReset = new System.Windows.Forms.Button();
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
-            this.tabUncertainty = new System.Windows.Forms.TabPage();
-            this.picBestPose = new System.Windows.Forms.PictureBox();
             this.timSimulation = new System.Windows.Forms.Timer(this.components);
-            this.picGridSideViewRight = new System.Windows.Forms.PictureBox();
+            this.label17 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabParameters.SuspendLayout();
             this.tabSimulation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picGridSideViewRight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridSideViewLeft)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
-            this.tabUncertainty.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picGridSideViewRight)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -410,7 +409,6 @@ namespace StereoMapping
             // 
             this.tabControl1.Controls.Add(this.tabParameters);
             this.tabControl1.Controls.Add(this.tabSimulation);
-            this.tabControl1.Controls.Add(this.tabUncertainty);
             this.tabControl1.Location = new System.Drawing.Point(12, 27);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -436,7 +434,7 @@ namespace StereoMapping
             this.tabParameters.Location = new System.Drawing.Point(4, 22);
             this.tabParameters.Name = "tabParameters";
             this.tabParameters.Padding = new System.Windows.Forms.Padding(3);
-            this.tabParameters.Size = new System.Drawing.Size(815, 538);
+            this.tabParameters.Size = new System.Drawing.Size(815, 633);
             this.tabParameters.TabIndex = 0;
             this.tabParameters.Text = "Parameters";
             this.tabParameters.UseVisualStyleBackColor = true;
@@ -460,6 +458,8 @@ namespace StereoMapping
             // 
             // tabSimulation
             // 
+            this.tabSimulation.Controls.Add(this.label17);
+            this.tabSimulation.Controls.Add(this.picBestPose);
             this.tabSimulation.Controls.Add(this.picGridSideViewRight);
             this.tabSimulation.Controls.Add(this.label16);
             this.tabSimulation.Controls.Add(this.txtBestScore);
@@ -485,6 +485,24 @@ namespace StereoMapping
             this.tabSimulation.TabIndex = 1;
             this.tabSimulation.Text = "Simulation";
             this.tabSimulation.UseVisualStyleBackColor = true;
+            // 
+            // picBestPose
+            // 
+            this.picBestPose.Location = new System.Drawing.Point(52, 482);
+            this.picBestPose.Name = "picBestPose";
+            this.picBestPose.Size = new System.Drawing.Size(164, 142);
+            this.picBestPose.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picBestPose.TabIndex = 43;
+            this.picBestPose.TabStop = false;
+            // 
+            // picGridSideViewRight
+            // 
+            this.picGridSideViewRight.Location = new System.Drawing.Point(260, 538);
+            this.picGridSideViewRight.Name = "picGridSideViewRight";
+            this.picGridSideViewRight.Size = new System.Drawing.Size(538, 86);
+            this.picGridSideViewRight.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picGridSideViewRight.TabIndex = 42;
+            this.picGridSideViewRight.TabStop = false;
             // 
             // label16
             // 
@@ -640,38 +658,19 @@ namespace StereoMapping
             this.cmdRunOneStep.UseVisualStyleBackColor = true;
             this.cmdRunOneStep.Click += new System.EventHandler(this.cmdRunOneStep_Click);
             // 
-            // tabUncertainty
-            // 
-            this.tabUncertainty.Controls.Add(this.picBestPose);
-            this.tabUncertainty.Location = new System.Drawing.Point(4, 22);
-            this.tabUncertainty.Name = "tabUncertainty";
-            this.tabUncertainty.Size = new System.Drawing.Size(815, 538);
-            this.tabUncertainty.TabIndex = 2;
-            this.tabUncertainty.Text = "Uncertainty";
-            this.tabUncertainty.UseVisualStyleBackColor = true;
-            // 
-            // picBestPose
-            // 
-            this.picBestPose.Location = new System.Drawing.Point(677, 24);
-            this.picBestPose.Name = "picBestPose";
-            this.picBestPose.Size = new System.Drawing.Size(115, 107);
-            this.picBestPose.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picBestPose.TabIndex = 34;
-            this.picBestPose.TabStop = false;
-            // 
             // timSimulation
             // 
             this.timSimulation.Interval = 500;
             this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
             // 
-            // picGridSideViewRight
+            // label17
             // 
-            this.picGridSideViewRight.Location = new System.Drawing.Point(260, 538);
-            this.picGridSideViewRight.Name = "picGridSideViewRight";
-            this.picGridSideViewRight.Size = new System.Drawing.Size(538, 86);
-            this.picGridSideViewRight.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picGridSideViewRight.TabIndex = 42;
-            this.picGridSideViewRight.TabStop = false;
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(102, 466);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(67, 13);
+            this.label17.TabIndex = 44;
+            this.label17.Text = "Current pose";
             // 
             // frmMapping
             // 
@@ -695,13 +694,12 @@ namespace StereoMapping
             this.tabParameters.PerformLayout();
             this.tabSimulation.ResumeLayout(false);
             this.tabSimulation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picGridSideViewRight)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridSideViewLeft)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
-            this.tabUncertainty.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.picBestPose)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picGridSideViewRight)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -758,8 +756,6 @@ namespace StereoMapping
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.ListView lstBenchmarks;
         private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.TabPage tabUncertainty;
-        private System.Windows.Forms.PictureBox picBestPose;
         private System.Windows.Forms.Button cmdRunSimulation;
         private System.Windows.Forms.Timer timSimulation;
         private System.Windows.Forms.Button cmdStopSimulation;
@@ -772,6 +768,8 @@ namespace StereoMapping
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.TextBox txtBestScore;
         private System.Windows.Forms.PictureBox picGridSideViewRight;
+        private System.Windows.Forms.PictureBox picBestPose;
+        private System.Windows.Forms.Label label17;
     }
 }
 

@@ -191,7 +191,7 @@ namespace sentience.core
                                  bool clear_background)
         {
             rob.motion.ShowBestPose(img, width, height,
-                                    clear_background);
+                                    clear_background, true);
         }
 
 

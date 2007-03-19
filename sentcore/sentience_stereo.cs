@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using CenterSpace.Free;
 
 namespace sentience.core
 {
@@ -426,7 +427,7 @@ namespace sentience.core
             }
         }
 
-        public void getSelectedFeatures(Random rnd)
+        public void getSelectedFeatures(MersenneTwister rnd)
         {
             int i, n, index;
             float fx, fy, disp;

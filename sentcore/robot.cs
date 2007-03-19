@@ -696,7 +696,7 @@ namespace sentience.core
                             int min_y = (int)(LocalGrid.y - half_grid_dimension_mm);
                             int max_x = (int)(LocalGrid.x + half_grid_dimension_mm);
                             int max_y = (int)(LocalGrid.y + half_grid_dimension_mm);
-                            motion.ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, false);
+                            motion.ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, false, false);
                         }
                     }
                 }

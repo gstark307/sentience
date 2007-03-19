@@ -24,6 +24,7 @@ using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using CenterSpace.Free;
 
 namespace sentience.core
 {
@@ -41,7 +42,8 @@ namespace sentience.core
         // the most probable path taken by the robot
         public particlePath best_path = null;
 
-        private Random rnd = new Random();
+        private MersenneTwister rnd = new MersenneTwister(100);
+
         private robot rob;
 
         // have the pose scores been updated?
@@ -305,7 +307,7 @@ namespace sentience.core
         /// <param name="height"></param>
         /// <param name="clear_background"></param>
         public void ShowBestPose(Byte[] img, int width, int height,
-                         bool clear_background)
+                         bool clear_background, bool showFieldOfView)
         {
             if (best_path != null)
             {
@@ -317,7 +319,7 @@ namespace sentience.core
                     int max_x = (int)(best_pose.x + rob.BodyWidth_mm);
                     int max_y = (int)(best_pose.y + rob.BodyLength_mm);
 
-                    ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, clear_background);
+                    ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, clear_background, showFieldOfView);
                 }
             }
         }
@@ -335,7 +337,7 @@ namespace sentience.core
         /// <param name="clear_background"></param>
         public void ShowBestPose(Byte[] img, int width, int height,
                                  int min_x, int min_y, int max_x, int max_y,
-                                 bool clear_background)
+                                 bool clear_background, bool showFieldOfView)
         {
             if (best_path != null)
             {
@@ -343,7 +345,7 @@ namespace sentience.core
                 if (best_pose != null)
                 {
                     best_pose.Show(rob, img, width, height,
-                                   clear_background, min_x, min_y, max_x, max_y, 0);
+                                   clear_background, min_x, min_y, max_x, max_y, 0, showFieldOfView);
                 }
             }
         }
