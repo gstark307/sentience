@@ -279,6 +279,15 @@ namespace StereoMapping
             updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
         }
 
+        private void showPathTree()
+        {
+            picPathTree.Image = new Bitmap(640, 480,
+                                          System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            Byte[] tree_img = new Byte[640 * 480 * 3];
+            sim.ShowPathTree(tree_img, 640, 480);
+            updatebitmap_unsafe(tree_img, (Bitmap)(picPathTree.Image));
+        }
+
         private void showSideViews()
         {
             picGridSideViewLeft.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
@@ -432,6 +441,9 @@ namespace StereoMapping
             // show the grid
             showOccupancyGrid();
 
+            // show the possible paths
+            showPathTree();
+
             // show the best pose
             showBestPose();
 
@@ -488,6 +500,9 @@ namespace StereoMapping
                     //autotuner.showHistory(score_img, 640, 200);
                     //updatebitmap_unsafe(score_img, (Bitmap)(picGridSideView.Image));
 
+                    // reset the simulation
+                    Simulation_Reset();
+
                     // load the next instance
                     nextAutotunerInstance();
                 }
@@ -496,10 +511,12 @@ namespace StereoMapping
                     simulation_running = false;
                     StopSimulation();
                     showSideViews();
+
+                    // reset the simulation
+                    Simulation_Reset();
+
                 }
 
-                // reset the simulation
-                Simulation_Reset();
             }
 
             busy = false;

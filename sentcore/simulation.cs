@@ -339,6 +339,12 @@ namespace sentience.core
             rob.ShowGrid(view_type, img, width, height, show_robot, false, true);
         }
 
+        public void ShowPathTree(Byte[] img, int width, int height)
+        {
+            rob.ShowPathTree(img, width, height);
+        }
+
+
         #region "saving and loading"
 
         private String[] temp_poseStr;

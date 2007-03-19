@@ -56,6 +56,29 @@ namespace sentience.core
         #endregion
 
         /// <summary>
+        /// returns a fibonacci sequence
+        /// </summary>
+        /// <param name="n">the maximum index of the sequence</param>
+        /// <returns>array containing a sequence of integers</returns>
+        public static int[] Fibonacci(int n)
+        {
+            int[] sequence = new int[n];
+            int previous = -1;
+            int result = 1;
+            for (int i = 0; i <= n; ++i)
+            {
+                int sum = result + previous;
+                previous = result;
+                result = sum;
+                if (i > 0) sequence[i-1] = result;
+            }
+            return(sequence);
+        }
+
+
+        #region "probability"
+
+        /// <summary>
         /// convert probability to log odds
         /// </summary>
         /// <param name="probability"></param>
@@ -76,6 +99,8 @@ namespace sentience.core
         {
             return(1.0f - (1.0f/(1.0f + (float)Math.Exp(logodds))));
         }
+
+        #endregion
 
 
         /// <summary>
@@ -295,7 +320,31 @@ namespace sentience.core
             drawLine(img, img_width, img_height, tx, y, bx, y, r, g, b, line_width, false);
         }
 
-        
+        public static void drawCircle(Byte[] img, int img_width, int img_height,
+                                      int x, int y, int radius, int r, int g, int b, int line_width)
+        {
+            int points = 20;
+            int prev_xx = 0, prev_yy = 0;
+            for (int i = 0; i < points+1; i++)
+            {
+                float angle = i * 2 * (float)Math.PI / points;
+                int xx = x + (int)(radius * Math.Sin(angle));
+                int yy = y + (int)(radius * Math.Cos(angle));
+
+                if (i > 0)
+                    drawLine(img, img_width, img_height, prev_xx, prev_yy, xx, yy, r, g, b, line_width, false);
+                prev_xx = xx;
+                prev_yy = yy;
+            }
+        }
+
+        public static void drawSpot(Byte[] img, int img_width, int img_height,
+                                    int x, int y, int radius, int r, int g, int b)
+        {
+            for (int rr = 1; rr < radius; rr++)
+                drawCircle(img, img_width, img_height, x, y, rr, r, g, b, 1);
+        }
+
         //---------------------------------------------------------------------------------------------
         //draw a line between two points in the given image
         //---------------------------------------------------------------------------------------------

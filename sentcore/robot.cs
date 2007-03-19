@@ -703,6 +703,17 @@ namespace sentience.core
                 }
         }
 
+        /// <summary>
+        /// shows the tree of possible paths
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void ShowPathTree(Byte[] img, int width, int height)
+        {
+            motion.ShowTree(img, width, height, 0, 0, 0, 0);
+        }
+
         #endregion
 
         #region "saving and loading"

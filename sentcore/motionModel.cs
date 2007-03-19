@@ -36,6 +36,12 @@ namespace sentience.core
         // time step index which may be assigned to poses
         private UInt32 time_step = 0;
 
+        // the bounding box within which the path tree occurs
+        float min_tree_x = float.MaxValue;
+        float min_tree_y = float.MaxValue;
+        float max_tree_x = float.MinValue;
+        float max_tree_y = float.MinValue;
+
         // counter used to uniquely identify paths
         private UInt32 path_ID = 0;
 
@@ -227,6 +233,13 @@ namespace sentience.core
             for (int i = 0; i < Poses.Count-1; i++)
             {
                 particlePath p1 = (particlePath)Poses[i];
+
+                // kkep track of the bounding region within which the path tree occurs
+                if (p1.current_pose.x < min_tree_x) min_tree_x = p1.current_pose.x;
+                if (p1.current_pose.x > max_tree_x) max_tree_x = p1.current_pose.x;
+                if (p1.current_pose.y < min_tree_y) min_tree_y = p1.current_pose.y;
+                if (p1.current_pose.y > max_tree_y) max_tree_y = p1.current_pose.y;
+
                 max_score = p1.total_score;
                 particlePath winner = null;
                 int winner_index = 0;
@@ -275,7 +288,8 @@ namespace sentience.core
                 int max = Poses.Count;
                 for (int i = 0; i < new_poses_required; i++)
                 {
-                    particlePath path = (particlePath)Poses[rnd.Next(max-1)];
+                    int rand_index = rnd.Next(max-1);
+                    particlePath path = (particlePath)Poses[rand_index];
 
                     particlePath p = new particlePath(path, path_ID, rob.LocalGridDimension);
                     createNewPose(p);
@@ -443,6 +457,33 @@ namespace sentience.core
                                clearBackground);
         }
 
+        /// <summary>
+        /// show the tree of possible paths
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
+        /// <param name="line_thickness"></param>
+        public void ShowTree(Byte[] img, int width, int height,
+                             int r, int g, int b, int line_thickness)
+        {
+            for (int i = 0; i < ActivePoses.Count; i++)
+            {
+                bool clearBackground = false;
+                if (i == 0) clearBackground = true;
+
+                particlePath path = (particlePath)ActivePoses[i];
+                path.Show(img, width, height, r, g, b, line_thickness,
+                          min_tree_x, min_tree_y, max_tree_x, max_tree_y,
+                          clearBackground);
+            }
+                
+        }
+
+
         #endregion
 
         #region "update poses"
@@ -517,10 +558,8 @@ namespace sentience.core
                     path.current_pose.AddObservation(stereo_rays,
                                                      rob);
 
-                if (logodds_localisation_score == occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
-                    logodds_localisation_score = float.MinValue;
-
-                updatePoseScore(path, logodds_localisation_score);
+                if (logodds_localisation_score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                    updatePoseScore(path, logodds_localisation_score);
             }
 
             // adding an observation is sufficient to update the 

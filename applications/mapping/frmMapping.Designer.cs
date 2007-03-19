@@ -94,6 +94,9 @@ namespace StereoMapping
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
             this.timSimulation = new System.Windows.Forms.Timer(this.components);
+            this.tabPathTree = new System.Windows.Forms.TabPage();
+            this.label19 = new System.Windows.Forms.Label();
+            this.picPathTree = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -106,6 +109,8 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
+            this.tabPathTree.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picPathTree)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -411,6 +416,7 @@ namespace StereoMapping
             // 
             this.tabControl1.Controls.Add(this.tabParameters);
             this.tabControl1.Controls.Add(this.tabSimulation);
+            this.tabControl1.Controls.Add(this.tabPathTree);
             this.tabControl1.Location = new System.Drawing.Point(12, 27);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -692,6 +698,35 @@ namespace StereoMapping
             this.timSimulation.Interval = 500;
             this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
             // 
+            // tabPathTree
+            // 
+            this.tabPathTree.Controls.Add(this.label19);
+            this.tabPathTree.Controls.Add(this.picPathTree);
+            this.tabPathTree.Location = new System.Drawing.Point(4, 22);
+            this.tabPathTree.Name = "tabPathTree";
+            this.tabPathTree.Size = new System.Drawing.Size(815, 633);
+            this.tabPathTree.TabIndex = 2;
+            this.tabPathTree.Text = "Path Tree";
+            this.tabPathTree.UseVisualStyleBackColor = true;
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(17, 14);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(239, 13);
+            this.label19.TabIndex = 33;
+            this.label19.Text = "Possible paths which the robot could be following";
+            // 
+            // picPathTree
+            // 
+            this.picPathTree.Location = new System.Drawing.Point(18, 30);
+            this.picPathTree.Name = "picPathTree";
+            this.picPathTree.Size = new System.Drawing.Size(777, 582);
+            this.picPathTree.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picPathTree.TabIndex = 32;
+            this.picPathTree.TabStop = false;
+            // 
             // frmMapping
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -720,6 +755,9 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).EndInit();
+            this.tabPathTree.ResumeLayout(false);
+            this.tabPathTree.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picPathTree)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -792,6 +830,9 @@ namespace StereoMapping
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.TextBox txtPositionError;
+        private System.Windows.Forms.TabPage tabPathTree;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.PictureBox picPathTree;
     }
 }
 

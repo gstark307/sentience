@@ -45,6 +45,7 @@
     <Compile Include="particlePath.cs" />
     <Compile Include="particlePose.cs" />
     <Compile Include="polyfit.cs" />
+    <Compile Include="rayModelLookup.cs" />
     <Compile Include="scanMatching.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
     <Compile Include="FAST.cs" />
