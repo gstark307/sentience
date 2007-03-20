@@ -267,7 +267,6 @@ namespace sentience.core
 
             // the best path is at the top
             best_path = (particlePath)Poses[0];
-            float min_score = (best_path.local_score / best_path.path.Count) * 95 / 100;
 
             // It's culling season
             int cull_index = (100 - cull_threshold) * Poses.Count / 100;
@@ -276,30 +275,25 @@ namespace sentience.core
             {
                 particlePath path = (particlePath)Poses[i];
                 float sc = path.total_score;
-                if ((path.path.Count >= pose_maturation) || 
-                    (sc < min_score))
+                if (path.path.Count >= pose_maturation)
                 {                    
                     // remove mapping hypotheses for this path
                     path.Remove(rob.LocalGrid);
-                    //if (path.Remove(rob.LocalGrid))
-                      //  ActivePoses.Remove(path);
 
                     // now remove the path itself
                     Poses.RemoveAt(i);                    
                 }
             }
 
-            // garbage collect any dead paths            
+            // garbage collect any dead paths (R.I.P.)
             for (int i = 0; i < ActivePoses.Count; i++)
             {
                 particlePath path = (particlePath)ActivePoses[i];
                 if (!path.Enabled)
                 {
-                    //path.RemoveAll(rob.LocalGrid);
                     ActivePoses.Remove(path);
                 }
-            }
-            
+            }            
 
             if (best_path != null)
             {
@@ -312,7 +306,9 @@ namespace sentience.core
                 int new_poses_required = survey_trial_poses; // -Poses.Count;
                 int max = Poses.Count;
                 int n = 0, added = 0;
-                while ((n < new_poses_required*4) && (added < new_poses_required))
+                while ((max > 0) &&
+                       (n < new_poses_required*4) && 
+                       (added < new_poses_required))
                 {
                     // identify a potential parent at random, 
                     // from one of the surviving paths

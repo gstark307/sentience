@@ -301,27 +301,6 @@ namespace sentience.core
             return (pose);
         }
 
-
-        /// <summary>
-        /// remove all particles for this path from the grid
-        /// </summary>
-        /// <param name="grid"></param>
-        public void RemoveAll(occupancygridMultiHypothesis grid)
-        {
-            particlePose pose = current_pose;
-            int children = 0;
-            while ((pose != null) && (children == 0))
-            {
-                children = pose.no_of_children;
-                if (children == 0)
-                {
-                    pose.Remove(grid);
-                    pose = pose.parent;
-                }
-            }
-        }
-
-
         /// <summary>
         /// remove the mapping particles associated with this path
         /// </summary>
@@ -332,6 +311,7 @@ namespace sentience.core
             particlePose pose = current_pose;
             if (current_pose != null)
             {
+                // collapse this path down to the next branching point
                 pose = CollapseBranch(pose, grid);
                 if (pose != null)
                 {
@@ -341,21 +321,13 @@ namespace sentience.core
                         {
                             // reduce the number of children at the branch point
                             pose.no_of_children--;
-
-                            // if the earlier part of the tree has the same
-                            // path ID, and has other branches then don't remove it
-                            //if (pose.path == this)
-                                //if (pose.no_of_children > 0)
-                                    //Enabled = true;
                         }                        
                     }
 
-                    if (!Enabled)
-                    {
-                        incrementPathChildren(pose.path, -1);
-                        if (pose.path.total_children == 0)
-                            pose.path.Remove(grid);
-                    }
+                    // keep on truckin' down the line...
+                    incrementPathChildren(pose.path, -1);
+                    if (pose.path.total_children == 0)
+                        pose.path.Remove(grid);
                 }
             }
 
