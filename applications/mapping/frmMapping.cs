@@ -456,7 +456,10 @@ namespace StereoMapping
 
             // save the images, so that they may be used to produce an animation
             if (!optimiser_running)
+            {
                 picGridMap.Image.Save("Simulation_step_" + Convert.ToString(sim.current_time_step) + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                picPathTree.Image.Save("Path_tree_step_" + Convert.ToString(sim.current_time_step) + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+            }
 
             if (prev_time_step == sim.current_time_step)
             {
