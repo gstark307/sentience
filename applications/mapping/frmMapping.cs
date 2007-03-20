@@ -66,7 +66,7 @@ namespace StereoMapping
 
             autotuner.smallerScoresAreBetter = true;
             autotuner.parameterName[0] = "Motion model culling threshold";
-            autotuner.setParameterRange(0, 60, 90);
+            autotuner.setParameterRange(0, 90, 95);
             autotuner.setParameterStepSize(0, 1);
 
             autotuner.parameterName[1] = "Localisation radius";

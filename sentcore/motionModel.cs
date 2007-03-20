@@ -138,12 +138,15 @@ namespace sentience.core
         /// <param name="path"></param>
         private void createNewPose(particlePath path)
         {
-            Poses.Add(path);
+            Poses.Add(path);            
             ActivePoses.Add(path);
+
+            //if (path.branch_pose != null)
+            //    ActivePoses.Remove(path.branch_pose.path);
 
             // increment the path ID
             path_ID++;
-            if (path_ID > UInt32.MaxValue - 10) path_ID = 0; // rollover
+            if (path_ID > UInt32.MaxValue - 3) path_ID = 0; // rollover
         }
 
         /// <summary>
@@ -246,10 +249,11 @@ namespace sentience.core
                 for (int j = i + 1; j < Poses.Count; j++)
                 {
                     particlePath p2 = (particlePath)Poses[i];
-                    if ((p2.total_score > max_score) ||
-                        ((max_score == 0) && (p2.total_score != 0)))
+                    float sc = p2.total_score;
+                    if ((sc > max_score) ||
+                        ((max_score == 0) && (sc != 0)))
                     {
-                        max_score = p2.total_score;
+                        max_score = sc;
                         winner = p2;
                         winner_index = j;
                     }
@@ -259,52 +263,84 @@ namespace sentience.core
                     Poses[i] = winner;
                     Poses[winner_index] = p1;
                 }
-            }
+            }            
 
             // the best path is at the top
             best_path = (particlePath)Poses[0];
+            float min_score = (best_path.local_score / best_path.path.Count) * 95 / 100;
 
             // It's culling season
             int cull_index = (100 - cull_threshold) * Poses.Count / 100;
+            if (cull_index > Poses.Count - 2) cull_index = Poses.Count - 2;
             for (int i = Poses.Count - 1; i > cull_index; i--)
             {
                 particlePath path = (particlePath)Poses[i];
-                if (path.path.Count >= pose_maturation)
+                float sc = path.total_score;
+                if ((path.path.Count >= pose_maturation) || 
+                    (sc < min_score))
                 {                    
                     // remove mapping hypotheses for this path
-                    if (path.Remove(rob.LocalGrid))
-                        ActivePoses.Remove(path);
+                    path.Remove(rob.LocalGrid);
+                    //if (path.Remove(rob.LocalGrid))
+                      //  ActivePoses.Remove(path);
 
                     // now remove the path itself
-                    Poses.RemoveAt(i);
-                    
+                    Poses.RemoveAt(i);                    
                 }
             }
 
+            // garbage collect any dead paths            
+            for (int i = 0; i < ActivePoses.Count; i++)
+            {
+                particlePath path = (particlePath)ActivePoses[i];
+                if (!path.Enabled)
+                {
+                    //path.RemoveAll(rob.LocalGrid);
+                    ActivePoses.Remove(path);
+                }
+            }
+            
+
             if (best_path != null)
             {
-                // generate new poses from the ones which have survived culling
-                int new_poses_required = survey_trial_poses - Poses.Count;
-                int max = Poses.Count;
-                for (int i = 0; i < new_poses_required; i++)
-                {
-                    int rand_index = rnd.Next(max-1);
-                    particlePath path = (particlePath)Poses[rand_index];
+                // update the robot position with the best available pose
+                rob.x = best_path.current_pose.x;
+                rob.y = best_path.current_pose.y;
+                rob.pan = best_path.current_pose.pan;
 
-                    particlePath p = new particlePath(path, path_ID, rob.LocalGridDimension);
-                    createNewPose(p);
+                // generate new poses from the ones which have survived culling
+                int new_poses_required = survey_trial_poses; // -Poses.Count;
+                int max = Poses.Count;
+                int n = 0, added = 0;
+                while ((n < new_poses_required*4) && (added < new_poses_required))
+                {
+                    // identify a potential parent at random, 
+                    // from one of the surviving paths
+                    int random_parent_index = rnd.Next(max-1);
+                    particlePath parent_path = (particlePath)Poses[random_parent_index];
+                    
+                    // only mature parents can have children
+                    if (parent_path.path.Count >= pose_maturation)
+                    {
+                        // generate a child branching from the parent path
+                        particlePath child_path = new particlePath(parent_path, path_ID, rob.LocalGridDimension);
+                        createNewPose(child_path);
+                        added++;
+                    }
+                    n++;
                 }
+                
+                // like salmon, after parents spawn they die
+                if (added > 0)
+                    for (int i = max - 1; i >= 0; i--)
+                        Poses.RemoveAt(i);
 
                 // if the robot has rotated through a large angle since
                 // the previous time step then reset the scan matching estimate
                 if (Math.Abs(best_path.current_pose.pan - rob.pan) > rob.ScanMatchingMaxPanAngleChange * Math.PI / 180)
                     rob.ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
-
-                // update the robot position with the best available pose
-                rob.x = best_path.current_pose.x;
-                rob.y = best_path.current_pose.y;
-                rob.pan = best_path.current_pose.pan;
             }
+
 
             PosesEvaluated = false;
         }
@@ -474,7 +510,6 @@ namespace sentience.core
             {
                 bool clearBackground = false;
                 if (i == 0) clearBackground = true;
-
                 particlePath path = (particlePath)ActivePoses[i];
                 path.Show(img, width, height, r, g, b, line_thickness,
                           min_tree_x, min_tree_y, max_tree_x, max_tree_y,
@@ -498,6 +533,7 @@ namespace sentience.core
         public void updatePoseScore(particlePath path, float new_score)
         {
             path.total_score += new_score;
+            path.local_score += new_score;
         }
 
         /// <summary>

@@ -32,6 +32,10 @@ namespace sentience.core
     /// </summary>
     public class particlePath
     {
+        // used to indicate whether this path is currently active
+        // if false, this path may be garbage collected
+        public bool Enabled;
+
         // maximum history to store for path IDs within each particlePose 
         const int MAX_PATH_HISTORY = 500;
 
@@ -52,7 +56,9 @@ namespace sentience.core
 
         // total score for all poses within the path
         public float total_score = 0;
+        public float local_score = 0;
         public int total_poses = 0;
+        public int total_children = 0;
 
         #region "constructors"
 
@@ -60,6 +66,23 @@ namespace sentience.core
         {
             this.max_length = max_length;
             path = new ArrayList();
+            Enabled = true;
+        }
+
+        /// <summary>
+        /// increment or decrement the total number of child branches supported by this path
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="increment">increment of 1 or -1</param>
+        private void incrementPathChildren(particlePath path, int increment)
+        {
+            path.total_children += increment;
+            particlePath p = path;
+            while (p.branch_pose != null)
+            {
+                p = p.branch_pose.path;
+                p.total_children += increment;
+            }
         }
 
         public particlePath(particlePath parent, UInt32 path_ID, int grid_dimension_cells)
@@ -69,10 +92,13 @@ namespace sentience.core
             current_pose = parent.current_pose;
             branch_pose = parent.current_pose;
 
+            incrementPathChildren(parent, 1);
+
             this.max_length = parent.max_length;            
             path = new ArrayList();
             total_score = parent.total_score;
             total_poses = parent.total_poses;
+            Enabled = true;
 
             // map cache for this path
             map_cache = new ArrayList[grid_dimension_cells][][];
@@ -87,6 +113,7 @@ namespace sentience.core
             path = new ArrayList();
             particlePose pose = new particlePose(x, y, pan, this);
             pose.time_step = time_step;
+            Enabled = true;
             Add(pose);
         }
 
@@ -270,21 +297,44 @@ namespace sentience.core
                         pose = pose.parent;
                     }
             }
+
             return (pose);
         }
+
+
+        /// <summary>
+        /// remove all particles for this path from the grid
+        /// </summary>
+        /// <param name="grid"></param>
+        public void RemoveAll(occupancygridMultiHypothesis grid)
+        {
+            particlePose pose = current_pose;
+            int children = 0;
+            while ((pose != null) && (children == 0))
+            {
+                children = pose.no_of_children;
+                if (children == 0)
+                {
+                    pose.Remove(grid);
+                    pose = pose.parent;
+                }
+            }
+        }
+
 
         /// <summary>
         /// remove the mapping particles associated with this path
         /// </summary>
         public bool Remove(occupancygridMultiHypothesis grid)
         {
-            bool remove_from_active_paths = true;
+            Enabled = false;
 
             particlePose pose = current_pose;
             if (current_pose != null)
             {
                 pose = CollapseBranch(pose, grid);
                 if (pose != null)
+                {
                     if (pose != current_pose)
                     {
                         if (pose.no_of_children > 0)
@@ -294,15 +344,22 @@ namespace sentience.core
 
                             // if the earlier part of the tree has the same
                             // path ID, and has other branches then don't remove it
-                            if (pose.path == this)
-                                if (pose.no_of_children > 0)
-                                    remove_from_active_paths = false;
-                        }
+                            //if (pose.path == this)
+                                //if (pose.no_of_children > 0)
+                                    //Enabled = true;
+                        }                        
                     }
-                 
+
+                    if (!Enabled)
+                    {
+                        incrementPathChildren(pose.path, -1);
+                        if (pose.path.total_children == 0)
+                            pose.path.Remove(grid);
+                    }
+                }
             }
 
-            return (remove_from_active_paths);
+            return (!Enabled);
         }
 
         /// <summary>
