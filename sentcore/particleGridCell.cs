@@ -25,9 +25,26 @@ using System.Text;
 namespace sentience.core
 {
     /// <summary>
-    /// used to store a single grid cell hypothesis
+    /// grid particle base class
     /// </summary>
-    public class particleGridCell
+    public class particleGridCellBase
+    {
+        // observed colour
+        public Byte[] colour;
+
+        // probability of occupancy, taken from the sensor model and stored as log odds
+        public float probabilityLogOdds;
+
+        public particleGridCellBase()
+        {
+        }
+    }
+
+
+    /// <summary>
+    /// grid particle used to store a single hypothesis about occupancy
+    /// </summary>
+    public class particleGridCell : particleGridCellBase
     {
         // whether this particle is enabled or dead
         // this flag allows the system to go around collecting garbage
@@ -35,12 +52,6 @@ namespace sentience.core
 
         // grid cell coordinate
         public short x, y, z;
-
-        // observed colour
-        public Byte[] colour;
-
-        // probability of occupancy, taken from the sensor model and stored as log odds
-        public float probabilityLogOdds;
 
         // the pose which made this observation
         public particlePose pose;

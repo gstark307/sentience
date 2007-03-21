@@ -42,6 +42,9 @@ namespace sentience.core
         // each hypothesis list corresponds to a particular vertical (z) cell index
         private ArrayList[] Hypothesis;
 
+        // whether this cell has been distilled or not
+        public bool isDistilled;
+
         #region "garbage collection"
 
         // the number of garbage hypotheses accumulated within this grid cell
@@ -167,6 +170,73 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// returns the distilled probability for the given cell
+        /// </summary>
+        /// <param name="z">z coordinate (height) of the cell</param>
+        /// <param name="returnLogOdds">whether to return log odds or probability</param>
+        /// <param name="colour">returns the distilled colour of this cell</param>
+        /// <returns></returns>
+        public float GetProbabilityDistilled(int z, bool returnLogOdds,
+                                             float[] colour)
+        {
+            float prob;
+
+            if (distilled !=null)
+            {
+                prob = distilled[z].probabilityLogOdds;
+                if (!returnLogOdds)
+                    prob = util.LogOddsToProbability(prob);
+                
+                for (int col = 0; col < 3; col++)
+                    colour[col] = distilled[z].colour[col];
+            }
+            else
+                prob = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
+
+            return(prob);
+        }
+
+        /// <summary>
+        /// returns the distilled probability for the entire column
+        /// </summary>
+        /// <param name="colour">mean colour</param>
+        /// <returns></returns>
+        public float GetProbabilityDistilled(float[] colour)
+        {
+            float prob = 0;
+            int hits = 0;
+            for (int col = 0; col < 3; col++)
+                colour[col] = 0;
+
+            if (distilled != null)
+            {
+                for (int z = 0; z < distilled.Length; z++)
+                {
+                    if (distilled[z].probabilityLogOdds != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                    {
+                        prob += distilled[z].probabilityLogOdds;
+                        for (int col = 0; col < 3; col++)
+                            colour[col] += distilled[z].colour[col];
+                        hits++;
+                    }
+                }
+                if (hits > 0)
+                {
+                    prob = util.LogOddsToProbability(prob);
+                    for (int col = 0; col < 3; col++)
+                        colour[col] /= hits;
+                }
+                else
+                    prob = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
+            }
+            else
+                prob = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
+
+            return (prob);
+        }
+
+
+        /// <summary>
         /// returns the probability of occupancy at this grid cell at the given vertical (z) coordinate
         /// warning: this could potentially suffer from path ID or time step rollover problems
         /// </summary>
@@ -265,6 +335,50 @@ namespace sentience.core
                 return (NO_OCCUPANCY_EVIDENCE);
         }
 
+
+        #endregion
+
+        #region "distillation"
+
+        // distilled occupancy and colour data
+        // this is the total value of all particles for the best available pose summed together
+        private particleGridCellBase[] distilled;
+
+        /// <summary>
+        /// distill particles for this pose down into single values
+        /// </summary>
+        /// <param name="pose"></param>
+        public void Distill(particlePose pose, int x, int y)
+        {
+            float[] colour = new float[3];
+            float mean_variance = 0;
+
+            distilled = new particleGridCellBase[Hypothesis.Length];
+            for (int z = 0; z < Hypothesis.Length; z++)
+            {
+                distilled[z] = new particleGridCellBase();
+
+                // get the distilled probability
+                distilled[z].probabilityLogOdds =
+                    GetProbability(pose, x, y, z, true, colour, ref mean_variance);
+
+                // and update the distilled colour value
+                for (int col = 0; col < 3; col++)
+                    distilled[z].colour[col] = (Byte)colour[col];
+            }
+            isDistilled = true;
+        }
+
+        /// <summary>
+        /// sets distilled probability values
+        /// This is used when loading a grid from file
+        /// </summary>
+        /// <param name="distilled"></param>
+        public void SetDistilledValues(particleGridCellBase[] distilled)
+        {
+            this.distilled = distilled;
+            isDistilled = true;
+        }
 
         #endregion
 

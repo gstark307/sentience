@@ -72,6 +72,9 @@ namespace sentience.core
         // carving out of space using the vacancy function works
         public float vacancy_weighting = 2.0f;
 
+        // whether this grid has been distilled or not
+        public bool isDistilled;
+
         // take some shortcuts to speed things up
         // this sacrifices some detail, but for most grid cell sizes is fine
         public bool TurboMode = true;
@@ -723,8 +726,13 @@ namespace sentience.core
                     else
                     {
                         float mean_variance = 0;
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y, 
-                                                                         mean_colour, ref mean_variance);
+                        float prob;
+                        if (!cell[cell_x, cell_y].isDistilled)
+                            prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                                                                       mean_colour, ref mean_variance);
+                        else
+                            prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
+
 
                         for (int c = 0; c < 3; c++)
                             if (prob > 0.5f)
@@ -767,8 +775,12 @@ namespace sentience.core
                     else
                     {
                         float mean_variance = 0;
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y, 
-                                                                         mean_colour, ref mean_variance);
+                        float prob;
+                        if (!cell[cell_x, cell_y].isDistilled)
+                            prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                                                                       mean_colour, ref mean_variance);
+                        else
+                            prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
 
                         if ((mean_variance < 0.7f) || (prob < 0.5f))
                         {
@@ -800,18 +812,28 @@ namespace sentience.core
         #region "saving and loading"
 
         /// <summary>
-        /// save the occupancy grid data to file
-        /// This can be used to produce multiple tile files for a single grid
+        /// save the entire grid to a single file
+        /// </summary>
+        /// <param name="binfile"></param>
+        /// <param name="pose"></param>
+        public void Save(BinaryWriter binfile, particlePose pose)
+        {
+            SaveTile(binfile, pose, dimension_cells / 2, dimension_cells / 2, dimension_cells);
+        }
+
+        /// <summary>
+        /// save the occupancy grid data to file as a tile
+        /// it is expected that multiple tiles will be saved per grid
         /// </summary>
         /// <param name="binfile">file to write to</param>
         /// <param name="pose">best available pose</param>
         /// <param name="centre_x">centre of the tile in grid cells</param>
         /// <param name="centre_y">centre of the tile in grid cells</param>
         /// <param name="width_cells">width of the tile in grid cells</param>
-        public void Save(BinaryWriter binfile,
-                         particlePose pose, 
-                         int centre_x, int centre_y, 
-                         int width_cells)
+        public void SaveTile(BinaryWriter binfile,
+                             particlePose pose, 
+                             int centre_x, int centre_y, 
+                             int width_cells)
         {
             int half_width_cells = width_cells / 2;
 
@@ -877,7 +899,6 @@ namespace sentience.core
 
             // dummy variables needed by GetProbability
             float[] colour = new float[3];
-            float mean_variance = 0;
 
             if (occupied_cells > 0)
             {
@@ -891,9 +912,12 @@ namespace sentience.core
                     {
                         if (cell[x, y] != null)
                         {
+                            // distill particles down to single values
+                            cell[x, y].Distill(pose, x, y);
+
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
-                                float prob = cell[x, y].GetProbability(pose, x, y, z, false, colour, ref mean_variance);
+                                float prob = cell[x, y].GetProbabilityDistilled(z, false, colour);
                                 int index = (n * dimension_cells_vertical) + z;
                                 occupancy[index] = prob;
                                 for (int col = 0; col < 3; col++)
@@ -915,9 +939,24 @@ namespace sentience.core
             }
         }
 
-
+        /// <summary>
+        /// load an entire grid from a single file
+        /// </summary>
+        /// <param name="binfile"></param>
         public void Load(BinaryReader binfile)
         {
+            LoadTile(binfile);
+        }
+
+        /// <summary>
+        /// load tile data from file
+        /// </summary>
+        /// <param name="binfile"></param>
+        public void LoadTile(BinaryReader binfile)
+        {
+            // indicate that this grid contains distilled cell values
+            isDistilled = true;
+
             // read the bounding box
             int tx = binfile.ReadInt32();
             int ty = binfile.ReadInt32();
@@ -973,14 +1012,16 @@ namespace sentience.core
                     {
                         if (cell[x, y] != null)
                         {
+                            particleGridCellBase[] distilled = new particleGridCellBase[dimension_cells_vertical];
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
+                                distilled[z] = new particleGridCellBase();
                                 int index = (n * dimension_cells_vertical) + z;
-                                // TODO: decide how to handle this
-                                float prob = occupancy[index];
+                                distilled[z].probabilityLogOdds = occupancy[index];
                                 for (int col = 0; col < 3; col++)
-                                    colour[col] = colourData[(index * 3) + col];
+                                    distilled[z].colour[col] = colourData[(index * 3) + col];
                             }
+                            cell[x, y].SetDistilledValues(distilled);
                             n++;
                         }
                     }
