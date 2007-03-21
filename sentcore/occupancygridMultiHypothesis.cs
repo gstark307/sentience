@@ -19,9 +19,11 @@
 */
 
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.InteropServices;
 using CenterSpace.Free;
 
 namespace sentience.core
@@ -787,6 +789,199 @@ namespace sentience.core
                         {
                             for (int c = 0; c < 3; c++)
                                 img[n + c] = (Byte)255;
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region "saving and loading"
+
+        /// <summary>
+        /// save the occupancy grid data to file
+        /// This can be used to produce multiple tile files for a single grid
+        /// </summary>
+        /// <param name="binfile">file to write to</param>
+        /// <param name="pose">best available pose</param>
+        /// <param name="centre_x">centre of the tile in grid cells</param>
+        /// <param name="centre_y">centre of the tile in grid cells</param>
+        /// <param name="width_cells">width of the tile in grid cells</param>
+        public void Save(BinaryWriter binfile,
+                         particlePose pose, 
+                         int centre_x, int centre_y, 
+                         int width_cells)
+        {
+            int half_width_cells = width_cells / 2;
+
+            int tx = centre_x + half_width_cells;
+            int ty = centre_y + half_width_cells;
+            int bx = centre_x - half_width_cells;
+            int by = centre_y - half_width_cells;
+
+            // get the bounding region within which there are actice grid cells
+            for (int x = centre_x - half_width_cells; centre_x <= centre_x + half_width_cells; centre_x++)
+            {
+                if ((x >= 0) && (x < dimension_cells))
+                {
+                    for (int y = centre_y - half_width_cells; centre_y <= centre_y + half_width_cells; centre_y++)
+                    {
+                        if ((y >= 0) && (y < dimension_cells))
+                        {
+                            if (cell[x, y] != null)
+                            {
+                                if (x < tx) tx = x;
+                                if (y < ty) ty = y;
+                                if (x > bx) bx = x;
+                                if (y > by) by = y;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // write the bounding box dimensions to file
+            binfile.Write(tx);
+            binfile.Write(ty);
+            binfile.Write(bx);
+            binfile.Write(by);
+
+            // create a binary index
+            int w1 = bx - tx;
+            int w2 = by - ty;
+            bool[] binary_index = new bool[w1 * w2];
+            
+            int n = 0;
+            int occupied_cells = 0;
+            for (int y = ty; y <= by; y++)
+            {
+                for (int x = tx; x <= bx; x++)
+                {
+                    if (cell[x, y] != null)
+                    {
+                        occupied_cells++;
+                        binary_index[n] = true;
+                    }                    
+                    n++;
+                }
+            }
+
+            // write the binary index in one go by converting it to a byte array
+            // this is much faster than trying to write individual values one at a time
+            Byte[] buff = new Byte[Marshal.SizeOf(binary_index)];
+            GCHandle handle = GCHandle.Alloc(buff, GCHandleType.Pinned);
+            Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
+            handle.Free();
+            binfile.Write(buff);
+
+            // dummy variables needed by GetProbability
+            float[] colour = new float[3];
+            float mean_variance = 0;
+
+            if (occupied_cells > 0)
+            {
+                float[] occupancy = new float[occupied_cells * dimension_cells_vertical];
+                Byte[] colourData = new Byte[occupied_cells * dimension_cells_vertical * 3];
+
+                n = 0;
+                for (int y = ty; y <= by; y++)
+                {
+                    for (int x = tx; x <= bx; x++)
+                    {
+                        if (cell[x, y] != null)
+                        {
+                            for (int z = 0; z < dimension_cells_vertical; z++)
+                            {
+                                float prob = cell[x, y].GetProbability(pose, x, y, z, false, colour, ref mean_variance);
+                                int index = (n * dimension_cells_vertical) + z;
+                                occupancy[index] = prob;
+                                for (int col = 0; col < 3; col++)
+                                    colourData[(index * 3) + col] = (Byte)colour[col];
+                            }
+                            n++;
+                        }
+                    }
+                }
+
+                // write the occupancy data in one go by converting it to a byte array
+                // this is much faster than trying to write individual values one at a time
+                Byte[] occupancyData = new Byte[Marshal.SizeOf(occupancy)];
+                handle = GCHandle.Alloc(occupancyData, GCHandleType.Pinned);
+                Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
+                handle.Free();
+                binfile.Write(occupancyData);
+                binfile.Write(colourData);
+            }
+        }
+
+
+        public void Load(BinaryReader binfile)
+        {
+            // read the bounding box
+            int tx = binfile.ReadInt32();
+            int ty = binfile.ReadInt32();
+            int bx = binfile.ReadInt32();
+            int by = binfile.ReadInt32();
+
+            // create a binary index
+            int w1 = bx - tx;
+            int w2 = by - ty;
+            bool[] binary_index = new bool[w1 * w2];
+
+            //Read binary index as a byte array
+            Byte[] buff = binfile.ReadBytes(Marshal.SizeOf(binary_index));
+            GCHandle handle = GCHandle.Alloc(buff, GCHandleType.Pinned);
+            binary_index = (bool[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(bool[]));
+            handle.Free();
+
+            int n = 0;
+            int occupied_cells = 0;
+            for (int y = ty; y <= by; y++)
+            {
+                for (int x = tx; x <= bx; x++)
+                {
+                    if (binary_index[n])
+                    {
+                        cell[x, y] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
+                        occupied_cells++;
+                    }
+                    n++;
+                }
+            }
+
+            if (occupied_cells > 0)
+            {
+                float[] occupancy = new float[occupied_cells * dimension_cells_vertical];
+                Byte[] colourData = new Byte[occupied_cells * dimension_cells_vertical * 3];
+                Byte[] colour = new Byte[3];
+
+                //Read occupancy data as a byte array, then convert to floats
+                Byte[] occupancyData = binfile.ReadBytes(Marshal.SizeOf(occupancy));
+                handle = GCHandle.Alloc(occupancyData, GCHandleType.Pinned);
+                occupancy = (float[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(float[]));
+                handle.Free();
+
+                //Read colour data
+                binfile.Read(colourData, 0, occupied_cells * dimension_cells_vertical * 3);
+
+                // insert the data into the grid
+                n = 0;
+                for (int y = ty; y <= by; y++)
+                {
+                    for (int x = tx; x <= bx; x++)
+                    {
+                        if (cell[x, y] != null)
+                        {
+                            for (int z = 0; z < dimension_cells_vertical; z++)
+                            {
+                                int index = (n * dimension_cells_vertical) + z;
+                                // TODO: decide how to handle this
+                                float prob = occupancy[index];
+                                for (int col = 0; col < 3; col++)
+                                    colour[col] = colourData[(index * 3) + col];
+                            }
+                            n++;
                         }
                     }
                 }
