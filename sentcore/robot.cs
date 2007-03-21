@@ -1173,6 +1173,24 @@ namespace sentience.core
             }
         }
 
+        /// <summary>
+        /// save the occupancy grid to file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void SaveGrid(String filename)
+        {
+            LocalGrid.Save(filename, motion.best_path.current_pose);
+        }
+
+        /// <summary>
+        /// load the occupancy grid from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void LoadGrid(String filename)
+        {
+            LocalGrid.Load(filename);
+        }
+
         #endregion
 
     }

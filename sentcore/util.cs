@@ -55,6 +55,91 @@ namespace sentience.core
 
         #endregion
 
+        #region "array conversions"
+
+        /// <summary>
+        /// convert a float array to a byte array
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        public static Byte[] ToByteArray(float[] array)
+        {
+            Byte[] bytes = new Byte[array.Length * 4];
+            int x = 0;
+            foreach(float f in array)
+            {
+                Byte[] t = BitConverter.GetBytes(f);
+                for (int y = 0; y < 4; y++)
+                    bytes[x + y] = t[y];
+                x += 4;
+            }
+            return (bytes);
+        }
+
+        /// <summary>
+        /// converts a byte array to a float array
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        public static float[] ToFloatArray(Byte[] array)
+        {
+            float[] floats = new float[array.Length / 4];
+            for (int i = 0; i < floats.Length; i++)
+                floats[i] = BitConverter.ToSingle(array, i*4);
+            return (floats);
+        }
+
+        /// <summary>
+        /// convert a boolean array to a byte array
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        public static Byte[] ToByteArray(bool[] array)
+        {
+            int len = array.Length/8;
+            if (len * 8 < array.Length) len++;
+            Byte[] bytes = new Byte[len];
+            int offset = 0;
+            int n = 0;
+            int i = 0;
+            foreach (bool b in array)
+            {
+                if (array[i])
+                    bytes[n] = (Byte)(bytes[n] | (Byte)Math.Pow(2,offset));
+
+                i++;
+                offset++;
+                if (offset > 7)
+                {
+                    offset = 0;
+                    n++;
+                }
+            }
+            return (bytes);
+        }
+
+        /// <summary>
+        /// converts a byte array into a boolean array
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        public static bool[] ToBooleanArray(Byte[] array)
+        {
+            bool[] booleans = new bool[array.Length * 8];
+            for (int i = 0; i < array.Length; i++)
+            {
+                for (int offset = 0; offset < 8; offset++)
+                {
+                    int result = (int)array[i] & (int)Math.Pow(2, offset);
+                    if (result != 0)
+                        booleans[(i * 8) + offset] = true;
+                }
+            }
+            return (booleans);
+        }
+
+        #endregion
+
         /// <summary>
         /// returns a fibonacci sequence
         /// </summary>

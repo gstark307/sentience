@@ -514,6 +514,7 @@ namespace StereoMapping
                     simulation_running = false;
                     StopSimulation();
                     showSideViews();
+                    sim.rob.SaveGrid("testgrid.grd");
 
                     // reset the simulation
                     Simulation_Reset();

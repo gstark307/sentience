@@ -233,9 +233,16 @@ namespace sentience.core
             // localise using this grid cell
             // first get the existing probability value at this cell
             float[] existing_colour = new float[3];
-            float existing_probability =
-                cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell,
-                                                    false, existing_colour, ref colour_variance);
+            float existing_probability;
+
+            if (!isDistilled)
+                // use grid particles to calculate the probability
+                existing_probability =
+                    cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell,
+                                                        false, existing_colour, ref colour_variance);
+            else
+                // use distilled probability values
+                existing_probability = cell[x_cell, y_cell].GetProbabilityDistilled(existing_colour);
 
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
@@ -550,7 +557,9 @@ namespace sentience.core
                                         }
                                     }
 
-                                    if ((isInsideMappingRayWidth) && (withinMappingRange))
+                                    if ((!isDistilled) && 
+                                        (isInsideMappingRayWidth) && 
+                                        (withinMappingRange))
                                     {
                                         // generate a grid cell if necessary
                                         if (cell[x_cell2, y_cell2] == null)
@@ -571,7 +580,7 @@ namespace sentience.core
                         }
                         else grid_step = steps;  // its the end of the ray, break out of the loop
                     }
-                    else grid_step = steps;  // its the end of the ray, break out of the loop
+                    else grid_step = steps;  // time to bail out chaps!
                     grid_step += step_size;
                 }
             }
@@ -660,8 +669,13 @@ namespace sentience.core
                     {
                         // what's the probability of there being a vertical structure here?
                         float mean_variance = 0;
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
-                                                                         mean_colour, ref mean_variance);
+                        float prob;
+                        if (!cell[cell_x, cell_y].isDistilled)
+                            prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                                                                       mean_colour, ref mean_variance);
+                        else
+                            prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
+
                         if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         {
                             if (prob > 0.45f)
@@ -670,7 +684,12 @@ namespace sentience.core
                                 occupancygridCellMultiHypothesis c = cell[cell_x, cell_y];
                                 for (int cell_z = 0; cell_z < dimension_cells_vertical; cell_z++)
                                 {
-                                    prob = c.GetProbability(pose, cell_x, cell_y, cell_z, false, mean_colour, ref mean_variance);
+                                    mean_variance = 0;
+                                    if (!c.isDistilled)
+                                        prob = c.GetProbability(pose, cell_x, cell_y, cell_z, false, mean_colour, ref mean_variance);
+                                    else
+                                        prob = c.GetProbabilityDistilled(cell_z, false, mean_colour);
+
                                     if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                                     {
                                         if ((prob > 0.0f) && (mean_variance < 0.5f))
@@ -812,6 +831,20 @@ namespace sentience.core
         #region "saving and loading"
 
         /// <summary>
+        /// save the entire grid to file
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="pose">best available pose</param>
+        public void Save(String filename, particlePose pose)
+        {
+            FileStream fp = new FileStream(filename, FileMode.Create);
+            BinaryWriter binfile = new BinaryWriter(fp);
+            Save(binfile, pose);
+            binfile.Close();
+            fp.Close();
+        }
+
+        /// <summary>
         /// save the entire grid to a single file
         /// </summary>
         /// <param name="binfile"></param>
@@ -843,11 +876,11 @@ namespace sentience.core
             int by = centre_y - half_width_cells;
 
             // get the bounding region within which there are actice grid cells
-            for (int x = centre_x - half_width_cells; centre_x <= centre_x + half_width_cells; centre_x++)
+            for (int x = centre_x - half_width_cells; x <= centre_x + half_width_cells; x++)
             {
                 if ((x >= 0) && (x < dimension_cells))
                 {
-                    for (int y = centre_y - half_width_cells; centre_y <= centre_y + half_width_cells; centre_y++)
+                    for (int y = centre_y - half_width_cells; y <= centre_y + half_width_cells; y++)
                     {
                         if ((y >= 0) && (y < dimension_cells))
                         {
@@ -862,6 +895,8 @@ namespace sentience.core
                     }
                 }
             }
+            bx++;
+            by++;
 
             // write the bounding box dimensions to file
             binfile.Write(tx);
@@ -876,9 +911,9 @@ namespace sentience.core
             
             int n = 0;
             int occupied_cells = 0;
-            for (int y = ty; y <= by; y++)
+            for (int y = ty; y < by; y++)
             {
-                for (int x = tx; x <= bx; x++)
+                for (int x = tx; x < bx; x++)
                 {
                     if (cell[x, y] != null)
                     {
@@ -891,11 +926,7 @@ namespace sentience.core
 
             // write the binary index in one go by converting it to a byte array
             // this is much faster than trying to write individual values one at a time
-            Byte[] buff = new Byte[Marshal.SizeOf(binary_index)];
-            GCHandle handle = GCHandle.Alloc(buff, GCHandleType.Pinned);
-            Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
-            handle.Free();
-            binfile.Write(buff);
+            binfile.Write(util.ToByteArray(binary_index));
 
             // dummy variables needed by GetProbability
             float[] colour = new float[3];
@@ -906,9 +937,9 @@ namespace sentience.core
                 Byte[] colourData = new Byte[occupied_cells * dimension_cells_vertical * 3];
 
                 n = 0;
-                for (int y = ty; y <= by; y++)
+                for (int y = ty; y < by; y++)
                 {
-                    for (int x = tx; x <= bx; x++)
+                    for (int x = tx; x < bx; x++)
                     {
                         if (cell[x, y] != null)
                         {
@@ -930,13 +961,22 @@ namespace sentience.core
 
                 // write the occupancy data in one go by converting it to a byte array
                 // this is much faster than trying to write individual values one at a time
-                Byte[] occupancyData = new Byte[Marshal.SizeOf(occupancy)];
-                handle = GCHandle.Alloc(occupancyData, GCHandleType.Pinned);
-                Marshal.StructureToPtr(this, handle.AddrOfPinnedObject(), false);
-                handle.Free();
-                binfile.Write(occupancyData);
+                binfile.Write(util.ToByteArray(occupancy));
                 binfile.Write(colourData);
             }
+        }
+
+        /// <summary>
+        /// load an entire grid from a single file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void Load(String filename)
+        {
+            FileStream fp = new FileStream(filename, FileMode.Open);
+            BinaryReader binfile = new BinaryReader(fp);
+            Load(binfile);
+            binfile.Close();
+            fp.Close();
         }
 
         /// <summary>
@@ -969,10 +1009,10 @@ namespace sentience.core
             bool[] binary_index = new bool[w1 * w2];
 
             //Read binary index as a byte array
-            Byte[] buff = binfile.ReadBytes(Marshal.SizeOf(binary_index));
-            GCHandle handle = GCHandle.Alloc(buff, GCHandleType.Pinned);
-            binary_index = (bool[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(bool[]));
-            handle.Free();
+            //Byte[] buff = util.
+            //GCHandle handle = GCHandle.Alloc(buff, GCHandleType.Pinned);
+            //binary_index = (bool[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(bool[]));
+            //handle.Free();
 
             int n = 0;
             int occupied_cells = 0;
@@ -996,10 +1036,10 @@ namespace sentience.core
                 Byte[] colour = new Byte[3];
 
                 //Read occupancy data as a byte array, then convert to floats
-                Byte[] occupancyData = binfile.ReadBytes(Marshal.SizeOf(occupancy));
-                handle = GCHandle.Alloc(occupancyData, GCHandleType.Pinned);
-                occupancy = (float[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(float[]));
-                handle.Free();
+                //Byte[] occupancyData = binfile.ReadBytes(Marshal.SizeOf(occupancy));
+                //handle = GCHandle.Alloc(occupancyData, GCHandleType.Pinned);
+                //occupancy = (float[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(float[]));
+                //handle.Free();
 
                 //Read colour data
                 binfile.Read(colourData, 0, occupied_cells * dimension_cells_vertical * 3);

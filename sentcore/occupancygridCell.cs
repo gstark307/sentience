@@ -363,6 +363,7 @@ namespace sentience.core
                     GetProbability(pose, x, y, z, true, colour, ref mean_variance);
 
                 // and update the distilled colour value
+                distilled[z].colour = new Byte[3];
                 for (int col = 0; col < 3; col++)
                     distilled[z].colour[col] = (Byte)colour[col];
             }
