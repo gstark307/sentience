@@ -854,6 +854,16 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// save the entire grid as a byte array, suitable for subsequent compression
+        /// </summary>
+        /// <param name="pose"></param>
+        /// <returns></returns>
+        public Byte[] Save(particlePose pose)
+        {
+            return(SaveTile(pose, dimension_cells / 2, dimension_cells / 2, dimension_cells));
+        }
+
+        /// <summary>
         /// save the occupancy grid data to file as a tile
         /// it is expected that multiple tiles will be saved per grid
         /// </summary>
@@ -867,6 +877,27 @@ namespace sentience.core
                              int centre_x, int centre_y, 
                              int width_cells)
         {
+            // write the whole thing to disk in one go
+            binfile.Write(SaveTile(pose, centre_x, centre_y, width_cells));
+        }
+
+        /// <summary>
+        /// save the occupancy grid data to file as a tile
+        /// it is expected that multiple tiles will be saved per grid
+        /// This returns a byte array, which may subsequently be 
+        /// compressed as a zip file for extra storage efficiency
+        /// </summary>
+        /// <param name="pose">best available pose</param>
+        /// <param name="centre_x">centre of the tile in grid cells</param>
+        /// <param name="centre_y">centre of the tile in grid cells</param>
+        /// <param name="width_cells">width of the tile in grid cells</param>
+        /// <returns>byte array containing the data</returns>
+        public Byte[] SaveTile(particlePose pose,
+                               int centre_x, int centre_y,
+                               int width_cells)
+        {
+            ArrayList data = new ArrayList();
+
             int half_width_cells = width_cells / 2;
 
             int tx = centre_x + half_width_cells;
@@ -898,16 +929,24 @@ namespace sentience.core
             by++;
 
             // write the bounding box dimensions to file
-            binfile.Write(tx);
-            binfile.Write(ty);
-            binfile.Write(bx);
-            binfile.Write(by);
+            Byte[] intbytes = BitConverter.GetBytes(tx);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
+            intbytes = BitConverter.GetBytes(ty);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
+            intbytes = BitConverter.GetBytes(bx);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
+            intbytes = BitConverter.GetBytes(by);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
 
             // create a binary index
             int w1 = bx - tx;
             int w2 = by - ty;
             bool[] binary_index = new bool[w1 * w2];
-            
+
             int n = 0;
             int occupied_cells = 0;
             for (int y = ty; y < by; y++)
@@ -918,14 +957,16 @@ namespace sentience.core
                     {
                         occupied_cells++;
                         binary_index[n] = true;
-                    }                    
+                    }
                     n++;
                 }
             }
 
             // write the binary index in one go by converting it to a byte array
             // this is much faster than trying to write individual values one at a time
-            binfile.Write(util.ToByteArray(binary_index));
+            Byte[] indexBytes = util.ToByteArray(binary_index);
+            for (int i = 0; i < indexBytes.Length; i++)
+                data.Add(indexBytes[i]);            
 
             // dummy variables needed by GetProbability
             float[] colour = new float[3];
@@ -960,10 +1001,16 @@ namespace sentience.core
 
                 // write the occupancy data in one go by converting it to a byte array
                 // this is much faster than trying to write individual values one at a time
-                binfile.Write(util.ToByteArray(occupancy));
-                binfile.Write(colourData);
+                Byte[] occupancyBytes = util.ToByteArray(occupancy);
+                for (int i = 0; i < occupancyBytes.Length; i++)
+                    data.Add(occupancyBytes[i]);
+                for (int i = 0; i < colourData.Length; i++)
+                    data.Add(colourData[i]);            
             }
+            Byte[] result = (Byte[])data.ToArray(typeof(Byte));
+            return(result);
         }
+
 
         /// <summary>
         /// load an entire grid from a single file

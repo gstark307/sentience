@@ -93,10 +93,10 @@ namespace StereoMapping
             this.cmdReset = new System.Windows.Forms.Button();
             this.picGridMap = new System.Windows.Forms.PictureBox();
             this.cmdRunOneStep = new System.Windows.Forms.Button();
-            this.timSimulation = new System.Windows.Forms.Timer(this.components);
             this.tabPathTree = new System.Windows.Forms.TabPage();
             this.label19 = new System.Windows.Forms.Label();
             this.picPathTree = new System.Windows.Forms.PictureBox();
+            this.timSimulation = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -613,7 +613,7 @@ namespace StereoMapping
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(17, 253);
+            this.label13.Location = new System.Drawing.Point(17, 237);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(25, 13);
             this.label13.TabIndex = 33;
@@ -622,9 +622,9 @@ namespace StereoMapping
             // lstBenchmarks
             // 
             this.lstBenchmarks.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lstBenchmarks.Location = new System.Drawing.Point(20, 269);
+            this.lstBenchmarks.Location = new System.Drawing.Point(20, 253);
             this.lstBenchmarks.Name = "lstBenchmarks";
-            this.lstBenchmarks.Size = new System.Drawing.Size(222, 113);
+            this.lstBenchmarks.Size = new System.Drawing.Size(222, 129);
             this.lstBenchmarks.TabIndex = 32;
             this.lstBenchmarks.UseCompatibleStateImageBehavior = false;
             // 
@@ -640,7 +640,7 @@ namespace StereoMapping
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(17, 120);
+            this.label11.Location = new System.Drawing.Point(17, 113);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(83, 13);
             this.label11.TabIndex = 30;
@@ -648,7 +648,7 @@ namespace StereoMapping
             // 
             // picRightImage
             // 
-            this.picRightImage.Location = new System.Drawing.Point(134, 145);
+            this.picRightImage.Location = new System.Drawing.Point(134, 138);
             this.picRightImage.Name = "picRightImage";
             this.picRightImage.Size = new System.Drawing.Size(108, 96);
             this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -657,7 +657,7 @@ namespace StereoMapping
             // 
             // picLeftImage
             // 
-            this.picLeftImage.Location = new System.Drawing.Point(20, 145);
+            this.picLeftImage.Location = new System.Drawing.Point(20, 138);
             this.picLeftImage.Name = "picLeftImage";
             this.picLeftImage.Size = new System.Drawing.Size(108, 96);
             this.picLeftImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -693,11 +693,6 @@ namespace StereoMapping
             this.cmdRunOneStep.UseVisualStyleBackColor = true;
             this.cmdRunOneStep.Click += new System.EventHandler(this.cmdRunOneStep_Click);
             // 
-            // timSimulation
-            // 
-            this.timSimulation.Interval = 500;
-            this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
-            // 
             // tabPathTree
             // 
             this.tabPathTree.Controls.Add(this.label19);
@@ -726,6 +721,11 @@ namespace StereoMapping
             this.picPathTree.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picPathTree.TabIndex = 32;
             this.picPathTree.TabStop = false;
+            // 
+            // timSimulation
+            // 
+            this.timSimulation.Interval = 500;
+            this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
             // 
             // frmMapping
             // 

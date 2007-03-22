@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sentcore", "..\..\sentcore\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "selfopt", "..\..\selfopt\selfopt.csproj", "{AD77A121-1D6E-491B-9B7D-0AA77BE4A0A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemCompressor", "..\..\MemCompressor\MemCompressor.csproj", "{A9552C3C-7106-4000-8A3B-74C811D4E55F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{AD77A121-1D6E-491B-9B7D-0AA77BE4A0A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD77A121-1D6E-491B-9B7D-0AA77BE4A0A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD77A121-1D6E-491B-9B7D-0AA77BE4A0A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9552C3C-7106-4000-8A3B-74C811D4E55F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9552C3C-7106-4000-8A3B-74C811D4E55F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9552C3C-7106-4000-8A3B-74C811D4E55F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9552C3C-7106-4000-8A3B-74C811D4E55F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

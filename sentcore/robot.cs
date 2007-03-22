@@ -1183,6 +1183,16 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// returns the grid data as a byte array suitable for
+        /// subsequent zip compression
+        /// </summary>
+        /// <returns>occupancy grid data</returns>
+        public Byte[] SaveGrid()
+        {
+            return(LocalGrid.Save(motion.best_path.current_pose));
+        }
+
+        /// <summary>
         /// load the occupancy grid from file
         /// </summary>
         /// <param name="filename"></param>

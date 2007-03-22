@@ -27,8 +27,10 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+
 using sentience.core;
 using sentience.learn;
+using Aced.Compression;
 
 namespace StereoMapping
 {
@@ -514,7 +516,9 @@ namespace StereoMapping
                     simulation_running = false;
                     StopSimulation();
                     showSideViews();
-                    sim.rob.SaveGrid("testgrid.grd");
+
+                    // test storage of the grid data
+                    SaveGrid("testgrid.grd");
 
                     // reset the simulation
                     Simulation_Reset();
@@ -524,6 +528,41 @@ namespace StereoMapping
             }
 
             busy = false;
+        }
+
+        /// <summary>
+        /// save the occupancy grid to file and show some benchmarks
+        /// </summary>
+        /// <param name="filename"></param>
+        private void SaveGrid(String filename)
+        {
+            FileStream fp = new FileStream(filename, FileMode.Create);
+            BinaryWriter binfile = new BinaryWriter(fp);
+
+            lstBenchmarks.Items.Clear();
+
+            stopwatch grid_timer = new stopwatch();
+            grid_timer.Start();
+            Byte[] grid_data = sim.rob.SaveGrid();
+            grid_timer.Stop();
+            lstBenchmarks.Items.Add("Distillation time  " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+
+            grid_timer.Start();
+            Byte[] compressed_grid_data =
+                AcedDeflator.Instance.Compress(grid_data, 0, grid_data.Length,
+                                               AcedCompressionLevel.Fast, 0, 0);
+            grid_timer.Stop();
+
+            lstBenchmarks.Items.Add("Compression ratio " + Convert.ToString(100-(int)(compressed_grid_data.Length * 100 / grid_data.Length)) + " %");
+            lstBenchmarks.Items.Add("Compression time  " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+
+            grid_timer.Start();
+            binfile.Write(compressed_grid_data);
+            grid_timer.Stop();
+            lstBenchmarks.Items.Add("Disk write time  " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+
+            binfile.Close();
+            fp.Close();
         }
 
         private void cmdRunOneStep_Click(object sender, EventArgs e)
