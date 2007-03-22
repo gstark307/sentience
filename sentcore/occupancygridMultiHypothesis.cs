@@ -23,7 +23,6 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using System.Runtime.InteropServices;
 using CenterSpace.Free;
 
 namespace sentience.core
@@ -1003,22 +1002,23 @@ namespace sentience.core
             int bx = binfile.ReadInt32();
             int by = binfile.ReadInt32();
 
-            // create a binary index
+            // dimensions of the box
             int w1 = bx - tx;
             int w2 = by - ty;
-            bool[] binary_index = new bool[w1 * w2];
 
             //Read binary index as a byte array
-            //Byte[] buff = util.
-            //GCHandle handle = GCHandle.Alloc(buff, GCHandleType.Pinned);
-            //binary_index = (bool[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(bool[]));
-            //handle.Free();
+            int no_of_bits = w1 * w2;
+            int no_of_bytes = no_of_bits / 8;
+            if (no_of_bytes * 8 < no_of_bits) no_of_bytes++;
+            Byte[] indexData = new Byte[no_of_bytes];
+            binfile.Read(indexData, 0, no_of_bytes);
+            bool[] binary_index = util.ToBooleanArray(indexData);
 
             int n = 0;
             int occupied_cells = 0;
-            for (int y = ty; y <= by; y++)
+            for (int y = ty; y < by; y++)
             {
-                for (int x = tx; x <= bx; x++)
+                for (int x = tx; x < bx; x++)
                 {
                     if (binary_index[n])
                     {
@@ -1031,36 +1031,42 @@ namespace sentience.core
 
             if (occupied_cells > 0)
             {
-                float[] occupancy = new float[occupied_cells * dimension_cells_vertical];
-                Byte[] colourData = new Byte[occupied_cells * dimension_cells_vertical * 3];
-                Byte[] colour = new Byte[3];
+                const int float_bytes = 4;
 
-                //Read occupancy data as a byte array, then convert to floats
-                //Byte[] occupancyData = binfile.ReadBytes(Marshal.SizeOf(occupancy));
-                //handle = GCHandle.Alloc(occupancyData, GCHandleType.Pinned);
-                //occupancy = (float[])Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(float[]));
-                //handle.Free();
+                // read occupancy values
+                no_of_bytes = occupied_cells * dimension_cells_vertical * float_bytes;
+                Byte[] occupancyData = new Byte[no_of_bytes];
+                binfile.Read(occupancyData, 0, no_of_bytes);
+                float[] occupancy = util.ToFloatArray(occupancyData);
 
-                //Read colour data
-                binfile.Read(colourData, 0, occupied_cells * dimension_cells_vertical * 3);
-
+                // read colour values
+                no_of_bytes *= 3;
+                Byte[] colourData = new Byte[no_of_bytes];
+                binfile.Read(colourData, 0, no_of_bytes);
+                
                 // insert the data into the grid
                 n = 0;
-                for (int y = ty; y <= by; y++)
+                for (int y = ty; y < by; y++)
                 {
-                    for (int x = tx; x <= bx; x++)
+                    for (int x = tx; x < bx; x++)
                     {
                         if (cell[x, y] != null)
                         {
                             particleGridCellBase[] distilled = new particleGridCellBase[dimension_cells_vertical];
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
+                                // create a distilled grid particle
                                 distilled[z] = new particleGridCellBase();
                                 int index = (n * dimension_cells_vertical) + z;
+
+                                // set the probability value
                                 distilled[z].probabilityLogOdds = occupancy[index];
+
+                                // set the colour
                                 for (int col = 0; col < 3; col++)
                                     distilled[z].colour[col] = colourData[(index * 3) + col];
                             }
+                            // insert the distilled particles into the grid cell
                             cell[x, y].SetDistilledValues(distilled);
                             n++;
                         }
