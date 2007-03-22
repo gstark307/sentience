@@ -751,22 +751,29 @@ namespace sentience.core
                         else
                             prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
 
-
-                        for (int c = 0; c < 3; c++)
-                            if (prob > 0.5f)
-                            {
-                                if (prob > 0.7f)
-                                    img[n + c] = (Byte)0;  // occupied
+                        if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                        {
+                            for (int c = 0; c < 3; c++)
+                                if (prob > 0.5f)
+                                {
+                                    if (prob > 0.7f)
+                                        img[n + c] = (Byte)0;  // occupied
+                                    else
+                                        img[n + c] = (Byte)100;  // occupied
+                                }
                                 else
-                                    img[n + c] = (Byte)100;  // occupied
-                            }
-                            else
-                            {
-                                if (prob < 0.3f)
-                                    img[n + c] = (Byte)230;  // vacant
-                                else
-                                    img[n + c] = (Byte)200;  // vacant
-                            }
+                                {
+                                    if (prob < 0.3f)
+                                        img[n + c] = (Byte)230;  // vacant
+                                    else
+                                        img[n + c] = (Byte)200;  // vacant
+                                }
+                        }
+                        else
+                        {
+                            for (int c = 0; c < 3; c++)
+                                img[n + c] = (Byte)255; // terra incognita
+                        }
                     }
                 }
             }
@@ -800,25 +807,33 @@ namespace sentience.core
                         else
                             prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
 
-                        if ((mean_variance < 0.7f) || (prob < 0.5f))
+                        if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         {
-                            for (int c = 0; c < 3; c++)
-                                if (prob > 0.6f)
-                                {
-                                    img[n + 2 - c] = (Byte)mean_colour[c];  // occupied
-                                }
-                                else
-                                {
-                                    if (prob < 0.3f)
-                                        img[n + c] = (Byte)200;
+                            if ((mean_variance < 0.7f) || (prob < 0.5f))
+                            {
+                                for (int c = 0; c < 3; c++)
+                                    if (prob > 0.6f)
+                                    {
+                                        img[n + 2 - c] = (Byte)mean_colour[c];  // occupied
+                                    }
                                     else
-                                        img[n + c] = (Byte)255;
-                                }
+                                    {
+                                        if (prob < 0.3f)
+                                            img[n + c] = (Byte)200;
+                                        else
+                                            img[n + c] = (Byte)255;
+                                    }
+                            }
+                            else
+                            {
+                                for (int c = 0; c < 3; c++)
+                                    img[n + c] = (Byte)255;
+                            }
                         }
                         else
                         {
                             for (int c = 0; c < 3; c++)
-                                img[n + c] = (Byte)255;
+                                img[n + c] = (Byte)255; // terra incognita
                         }
                     }
                 }
@@ -988,11 +1003,12 @@ namespace sentience.core
 
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
-                                float prob = cell[x, y].GetProbabilityDistilled(z, false, colour);
+                                float prob = cell[x, y].GetProbabilityDistilled(z, true, colour);
                                 int index = (n * dimension_cells_vertical) + z;
                                 occupancy[index] = prob;
-                                for (int col = 0; col < 3; col++)
-                                    colourData[(index * 3) + col] = (Byte)colour[col];
+                                if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                    for (int col = 0; col < 3; col++)
+                                        colourData[(index * 3) + col] = (Byte)colour[col];
                             }
                             n++;
                         }
@@ -1127,17 +1143,22 @@ namespace sentience.core
                             particleGridCellBase[] distilled = new particleGridCellBase[dimension_cells_vertical];
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
-                                // create a distilled grid particle
-                                distilled[z] = new particleGridCellBase();
-                                int index = (n * dimension_cells_vertical) + z;
-
                                 // set the probability value
-                                distilled[z].probabilityLogOdds = occupancy[index];
+                                int index = (n * dimension_cells_vertical) + z;
+                                float probLogOdds = occupancy[index];
+                                if (probLogOdds != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                {
+                                    // create a distilled grid particle
+                                    distilled[z] = new particleGridCellBase();                                
 
-                                // set the colour
-                                distilled[z].colour = new Byte[3];
-                                for (int col = 0; col < 3; col++)
-                                    distilled[z].colour[col] = colourData[(index * 3) + col];
+                                    distilled[z].probabilityLogOdds = probLogOdds;
+
+                                    // set the colour
+                                    distilled[z].colour = new Byte[3];
+
+                                    for (int col = 0; col < 3; col++)
+                                        distilled[z].colour[col] = colourData[(index * 3) + col];
+                                }
                             }
                             // insert the distilled particles into the grid cell
                             cell[x, y].SetDistilledValues(distilled);

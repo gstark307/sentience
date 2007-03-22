@@ -521,6 +521,10 @@ namespace StereoMapping
                     SaveGrid("testgrid.grd");
                     LoadGrid("testgrid.grd");
 
+                    // show the grid
+                    showOccupancyGrid();
+                    showSideViews();
+
                     // reset the simulation
                     Simulation_Reset();
 

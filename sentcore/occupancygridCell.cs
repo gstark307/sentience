@@ -183,12 +183,20 @@ namespace sentience.core
 
             if (distilled !=null)
             {
-                prob = distilled[z].probabilityLogOdds;
-                if (!returnLogOdds)
-                    prob = util.LogOddsToProbability(prob);
-                
-                for (int col = 0; col < 3; col++)
-                    colour[col] = distilled[z].colour[col];
+                if (distilled[z] != null)
+                {
+                    prob = distilled[z].probabilityLogOdds;
+                    if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                    {
+                        if (!returnLogOdds)
+                            prob = util.LogOddsToProbability(prob);
+
+                        for (int col = 0; col < 3; col++)
+                            colour[col] = distilled[z].colour[col];
+                    }
+                }
+                else
+                    prob = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
             }
             else
                 prob = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
@@ -212,12 +220,15 @@ namespace sentience.core
             {
                 for (int z = 0; z < distilled.Length; z++)
                 {
-                    if (distilled[z].probabilityLogOdds != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                    if (distilled[z] != null)
                     {
-                        prob += distilled[z].probabilityLogOdds;
-                        for (int col = 0; col < 3; col++)
-                            colour[col] += distilled[z].colour[col];
-                        hits++;
+                        if (distilled[z].probabilityLogOdds != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                        {
+                            prob += distilled[z].probabilityLogOdds;
+                            for (int col = 0; col < 3; col++)
+                                colour[col] += distilled[z].colour[col];
+                            hits++;
+                        }
                     }
                 }
                 if (hits > 0)
@@ -315,7 +326,7 @@ namespace sentience.core
 
             if (hits > 0)
             {
-                // calculate mean colour variance                
+                // calculate mean colour variance
                 mean_variance = 0;
                 for (int col = 0; col < 3; col++)
                     mean_variance += max_level[col] - min_level[col];
@@ -355,17 +366,19 @@ namespace sentience.core
 
             distilled = new particleGridCellBase[Hypothesis.Length];
             for (int z = 0; z < Hypothesis.Length; z++)
-            {
-                distilled[z] = new particleGridCellBase();
-
+            {                
                 // get the distilled probability
-                distilled[z].probabilityLogOdds =
-                    GetProbability(pose, x, y, z, true, colour, ref mean_variance);
+                float probLogOdds = GetProbability(pose, x, y, z, true, colour, ref mean_variance);
+                if (probLogOdds != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                {
+                    distilled[z] = new particleGridCellBase();
+                    distilled[z].probabilityLogOdds = probLogOdds;
 
-                // and update the distilled colour value
-                distilled[z].colour = new Byte[3];
-                for (int col = 0; col < 3; col++)
-                    distilled[z].colour[col] = (Byte)colour[col];
+                    // and update the distilled colour value
+                    distilled[z].colour = new Byte[3];
+                    for (int col = 0; col < 3; col++)
+                        distilled[z].colour[col] = (Byte)colour[col];
+                }
             }
             isDistilled = true;
         }
