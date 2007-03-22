@@ -1189,7 +1189,13 @@ namespace sentience.core
         /// <returns>occupancy grid data</returns>
         public Byte[] SaveGrid()
         {
-            return(LocalGrid.Save(motion.best_path.current_pose));
+            return (LocalGrid.Save(motion.best_path.current_pose));
+        }
+
+        public void LoadGrid(Byte[] data)
+        {
+            createLocalGrid();
+            LocalGrid.Load(data);
         }
 
         /// <summary>
@@ -1198,6 +1204,7 @@ namespace sentience.core
         /// <param name="filename"></param>
         public void LoadGrid(String filename)
         {
+            createLocalGrid();
             LocalGrid.Load(filename);
         }
 

@@ -519,6 +519,7 @@ namespace StereoMapping
 
                     // test storage of the grid data
                     SaveGrid("testgrid.grd");
+                    LoadGrid("testgrid.grd");
 
                     // reset the simulation
                     Simulation_Reset();
@@ -553,17 +554,44 @@ namespace StereoMapping
                                                AcedCompressionLevel.Fast, 0, 0);
             grid_timer.Stop();
 
-            lstBenchmarks.Items.Add("Compression ratio " + Convert.ToString(100-(int)(compressed_grid_data.Length * 100 / grid_data.Length)) + " %");
-            lstBenchmarks.Items.Add("Compression time  " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+            lstBenchmarks.Items.Add("Compression ratio  " + Convert.ToString(100-(int)(compressed_grid_data.Length * 100 / grid_data.Length)) + " %");
+            lstBenchmarks.Items.Add("Compression time   " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
 
             grid_timer.Start();
             binfile.Write(compressed_grid_data);
             grid_timer.Stop();
-            lstBenchmarks.Items.Add("Disk write time  " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+            lstBenchmarks.Items.Add("Disk write time    " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
 
             binfile.Close();
             fp.Close();
         }
+
+        private void LoadGrid(String filename)
+        {
+            if (File.Exists(filename))
+            {
+                stopwatch grid_timer = new stopwatch();
+
+                // read the data into a byte array
+                grid_timer.Start();
+                Byte[] grid_data = File.ReadAllBytes(filename);
+                grid_timer.Stop();
+                lstBenchmarks.Items.Add("Disk read time     " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+
+                // decompress the data
+                grid_timer.Start();
+                Byte[] decompressed_grid_data =
+                    AcedInflator.Instance.Decompress(grid_data, 0, 0, 0);
+                grid_timer.Stop();
+                lstBenchmarks.Items.Add("Decompression time " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+
+                grid_timer.Start();
+                sim.rob.LoadGrid(decompressed_grid_data);
+                grid_timer.Stop();
+                lstBenchmarks.Items.Add("Creation time      " + Convert.ToString(grid_timer.time_elapsed_mS) + " mS");
+            }
+        }
+
 
         private void cmdRunOneStep_Click(object sender, EventArgs e)
         {

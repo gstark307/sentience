@@ -1035,19 +1035,38 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// load an entire grid from the given byte array
+        /// </summary>
+        /// <param name="data"></param>
+        public void Load(Byte[] data)
+        {
+            LoadTile(data);
+        }
+
+        /// <summary>
         /// load tile data from file
         /// </summary>
         /// <param name="binfile"></param>
         public void LoadTile(BinaryReader binfile)
         {
+            Byte[] data = new Byte[binfile.BaseStream.Length];
+            binfile.Read(data,0,data.Length);
+            LoadTile(data);
+        }
+
+        public void LoadTile(Byte[] data)
+        {
             // indicate that this grid contains distilled cell values
             isDistilled = true;
 
             // read the bounding box
-            int tx = binfile.ReadInt32();
-            int ty = binfile.ReadInt32();
-            int bx = binfile.ReadInt32();
-            int by = binfile.ReadInt32();
+            int array_index = 0;
+            const int int32_bytes = 4;
+            int tx = BitConverter.ToInt32(data, 0);
+            int ty = BitConverter.ToInt32(data, int32_bytes);
+            int bx = BitConverter.ToInt32(data, int32_bytes * 2);
+            int by = BitConverter.ToInt32(data, int32_bytes * 3);
+            array_index = int32_bytes * 4;
 
             // dimensions of the box
             int w1 = bx - tx;
@@ -1058,8 +1077,10 @@ namespace sentience.core
             int no_of_bytes = no_of_bits / 8;
             if (no_of_bytes * 8 < no_of_bits) no_of_bytes++;
             Byte[] indexData = new Byte[no_of_bytes];
-            binfile.Read(indexData, 0, no_of_bytes);
+            for (int i = 0; i < no_of_bytes; i++)
+                indexData[i] = data[array_index + i];
             bool[] binary_index = util.ToBooleanArray(indexData);
+            array_index += no_of_bytes;
 
             int n = 0;
             int occupied_cells = 0;
@@ -1083,14 +1104,18 @@ namespace sentience.core
                 // read occupancy values
                 no_of_bytes = occupied_cells * dimension_cells_vertical * float_bytes;
                 Byte[] occupancyData = new Byte[no_of_bytes];
-                binfile.Read(occupancyData, 0, no_of_bytes);
+                for (int i = 0; i < no_of_bytes; i++)
+                    occupancyData[i] = data[array_index + i];
+                array_index += no_of_bytes;
                 float[] occupancy = util.ToFloatArray(occupancyData);
 
                 // read colour values
-                no_of_bytes *= 3;
+                no_of_bytes = occupied_cells * dimension_cells_vertical * 3;
                 Byte[] colourData = new Byte[no_of_bytes];
-                binfile.Read(colourData, 0, no_of_bytes);
-                
+                for (int i = 0; i < no_of_bytes; i++)
+                    colourData[i] = data[array_index + i];
+                array_index += no_of_bytes;
+
                 // insert the data into the grid
                 n = 0;
                 for (int y = ty; y < by; y++)
@@ -1110,6 +1135,7 @@ namespace sentience.core
                                 distilled[z].probabilityLogOdds = occupancy[index];
 
                                 // set the colour
+                                distilled[z].colour = new Byte[3];
                                 for (int col = 0; col < 3; col++)
                                     distilled[z].colour[col] = colourData[(index * 3) + col];
                             }
@@ -1121,6 +1147,7 @@ namespace sentience.core
                 }
             }
         }
+
 
         #endregion
     }
