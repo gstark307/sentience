@@ -69,13 +69,16 @@ namespace sentience.core
         /// add a new grid hypothesis to this pose
         /// </summary>
         /// <param name="hypothesis">occupancy hypothesis for a grid cell</param>
-        public void AddHypothesis(particleGridCell hypothesis, int grid_dimension, int grid_dimension_vertical)
+        public bool AddHypothesis(particleGridCell hypothesis, int radius_cells, int grid_dimension, int grid_dimension_vertical)
         {
-            observed_grid_cells.Add(hypothesis);
+            bool added = false;
+
             if (path != null)
             {
-                path.Add(hypothesis, grid_dimension, grid_dimension_vertical);
+                added = path.Add(hypothesis, radius_cells, grid_dimension, grid_dimension_vertical);
+                if (added) observed_grid_cells.Add(hypothesis);
             }
+            return (added);
         }
 
         /// <summary>

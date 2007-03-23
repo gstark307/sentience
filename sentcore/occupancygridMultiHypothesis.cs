@@ -560,18 +560,20 @@ namespace sentience.core
                                         (isInsideMappingRayWidth) && 
                                         (withinMappingRange))
                                     {
-                                        // generate a grid cell if necessary
-                                        if (cell[x_cell2, y_cell2] == null)
-                                            cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
-
                                         // add a new hypothesis to this grid coordinate
                                         // note that this is also added to the original pose
                                         hypothesis = new particleGridCell(x_cell2, y_cell2, z_cell, 
                                                                           prob, origin,
                                                                           ray.colour);
-                                        cell[x_cell2, y_cell2].AddHypothesis(hypothesis);
-                                        origin.AddHypothesis(hypothesis, dimension_cells, dimension_cells_vertical);
-                                        total_valid_hypotheses++;
+                                        if (origin.AddHypothesis(hypothesis, max_mapping_range_cells, dimension_cells, dimension_cells_vertical))
+                                        {
+                                            // generate a grid cell if necessary
+                                            if (cell[x_cell2, y_cell2] == null)
+                                                cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
+
+                                            cell[x_cell2, y_cell2].AddHypothesis(hypothesis);                                            
+                                            total_valid_hypotheses++;
+                                        }
                                     }
                                 }
                             }
@@ -977,8 +979,7 @@ namespace sentience.core
                 }
             }
 
-            // write the binary index in one go by converting it to a byte array
-            // this is much faster than trying to write individual values one at a time
+            // convert the binary index to a byte array for later storage
             Byte[] indexBytes = util.ToByteArray(binary_index);
             for (int i = 0; i < indexBytes.Length; i++)
                 data.Add(indexBytes[i]);            
@@ -1015,8 +1016,7 @@ namespace sentience.core
                     }
                 }
 
-                // write the occupancy data in one go by converting it to a byte array
-                // this is much faster than trying to write individual values one at a time
+                // store the occupancy and colour data as byte arrays
                 Byte[] occupancyBytes = util.ToByteArray(occupancy);
                 for (int i = 0; i < occupancyBytes.Length; i++)
                     data.Add(occupancyBytes[i]);

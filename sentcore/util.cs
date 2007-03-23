@@ -96,6 +96,7 @@ namespace sentience.core
         /// <returns></returns>
         public static Byte[] ToByteArray(bool[] array)
         {
+            Byte[] powers_of_2 = { 1, 2, 4, 8, 16, 32, 64, 128 };
             int len = array.Length/8;
             if (len * 8 < array.Length) len++;
             Byte[] bytes = new Byte[len];
@@ -105,7 +106,7 @@ namespace sentience.core
             foreach (bool b in array)
             {
                 if (array[i])
-                    bytes[n] = (Byte)(bytes[n] | (Byte)Math.Pow(2,offset));
+                    bytes[n] = (Byte)(bytes[n] | powers_of_2[offset]);
 
                 i++;
                 offset++;
@@ -125,12 +126,13 @@ namespace sentience.core
         /// <returns></returns>
         public static bool[] ToBooleanArray(Byte[] array)
         {
+            int[] powers_of_2 = { 1, 2, 4, 8, 16, 32, 64, 128 };
             bool[] booleans = new bool[array.Length * 8];
             for (int i = 0; i < array.Length; i++)
             {
                 for (int offset = 0; offset < 8; offset++)
                 {
-                    int result = (int)array[i] & (int)Math.Pow(2, offset);
+                    int result = (int)array[i] & powers_of_2[offset];
                     if (result != 0)
                         booleans[(i * 8) + offset] = true;
                 }

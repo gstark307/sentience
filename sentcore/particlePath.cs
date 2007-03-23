@@ -101,7 +101,7 @@ namespace sentience.core
             Enabled = true;
 
             // map cache for this path
-            map_cache = new ArrayList[grid_dimension_cells][][];
+            //map_cache = new ArrayList[grid_dimension_cells][][];
         }
 
         public particlePath(float x, float y, float pan,
@@ -123,36 +123,74 @@ namespace sentience.core
 
         // grid map cache for quick lookup
         private ArrayList[][][] map_cache;
+        private int map_cache_tx, map_cache_ty, map_cache_width_cells;
+
+        /// <summary>
+        /// TODO: changes the size of the map cache
+        /// Note it may not be necessary to do this at all
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        private void resize_map_cache(int x, int y)
+        {
+            
+        }
 
         /// <summary>
         /// adds a new hypothesis to the map cache
         /// </summary>
         /// <param name="hypothesis"></param>
-        public void Add(particleGridCell hypothesis, int grid_dimension, int grid_dimension_vertical)
+        /// <param name="radius_cells"></param>
+        /// <param name="grid_dimension"></param>
+        /// <param name="grid_dimension_vertical"></param>
+        /// <returns></returns>
+        public bool Add(particleGridCell hypothesis, int radius_cells, int grid_dimension, int grid_dimension_vertical)
         {
-            int x = hypothesis.x;
-            int y = hypothesis.y;
-            int z = hypothesis.z;
+            bool added = true;
 
             // create a new list for this grid coordinate if necessary
             // allocating memory as its needed for each grid dimension
             // is far more efficient than just allocating a big three 
             // dimensional chunk in one go
             if (map_cache == null)
-                map_cache = new ArrayList[grid_dimension][][];
+            {
+                // store the top left position of the map cache
+                map_cache_tx = hypothesis.x - radius_cells;
+                map_cache_ty = hypothesis.y - radius_cells;
 
-            if (map_cache[x] == null)
-                map_cache[x] = new ArrayList[grid_dimension][];
+                // store the width of the map cache
+                map_cache_width_cells = radius_cells * 2;
+                map_cache = new ArrayList[map_cache_width_cells][][];
+            }
 
-            if (map_cache[x][y] == null)
-                map_cache[x][y] = new ArrayList[grid_dimension_vertical];
+            int x = hypothesis.x - map_cache_tx;
+            int y = hypothesis.y - map_cache_ty;
+            if (((x < 0) || (x >= map_cache_width_cells)) ||
+                ((y < 0) || (y >= map_cache_width_cells)))
+            {
+                added = false;
+                //resize_map_cache(x, y);
+            }
+            else
+            {
 
-            if (map_cache[x][y][z] == null)
-                map_cache[x][y][z] = new ArrayList();
+                int z = hypothesis.z;
 
-            // add to the list
-            map_cache[x][y][z].Add(hypothesis);
+                if (map_cache[x] == null)
+                    map_cache[x] = new ArrayList[map_cache_width_cells][];
+
+                if (map_cache[x][y] == null)
+                    map_cache[x][y] = new ArrayList[grid_dimension_vertical];
+
+                if (map_cache[x][y][z] == null)
+                    map_cache[x][y][z] = new ArrayList();
+
+                // add to the list
+                map_cache[x][y][z].Add(hypothesis);
+            }
+            return (added);
         }
+
 
         /// <summary>
         /// returns the list of hypotheses for the given grid cell location
@@ -162,27 +200,38 @@ namespace sentience.core
         /// <returns>Occupancy hypotheses</returns>
         public ArrayList GetHypotheses(int x, int y, int z)
         {
-            // most of time we will be returning nulls, so
-            // prioritise these conditions
-            if (map_cache == null)
-                return (null);
-            else
+            int xx = x - map_cache_tx;
+            if ((xx > -1) && (xx < map_cache_width_cells))
             {
-                if (map_cache[x] == null)
-                    return (null);
-                else
+                int yy = y - map_cache_ty;
+                if ((yy > -1) && (yy < map_cache_width_cells))
                 {
-                    if (map_cache[x][y] == null)
+
+                    // most of time we will be returning nulls, so
+                    // prioritise these conditions
+                    if (map_cache == null)
                         return (null);
                     else
                     {
-                        if (map_cache[x][y][z] == null)
+                        if (map_cache[xx] == null)
                             return (null);
                         else
-                            return (map_cache[x][y][z]);
+                        {
+                            if (map_cache[xx][yy] == null)
+                                return (null);
+                            else
+                            {
+                                if (map_cache[xx][yy][z] == null)
+                                    return (null);
+                                else
+                                    return (map_cache[xx][yy][z]);
+                            }
+                        }
                     }
                 }
+                else return (null);
             }
+            else return (null);
         }
 
         #endregion
