@@ -271,7 +271,7 @@ namespace sentience.core
                     for (int col = 0; col < 3; col++)
                         colour[col] = 0;
 
-                    // cycle through the path IDs for this pose            
+                    // cycle through the previous paths for this pose            
                     for (int p = 0; p < pose.previous_paths.Count; p++)
                     {
                         particlePath path = (particlePath)pose.previous_paths[p];
@@ -358,26 +358,45 @@ namespace sentience.core
         /// <summary>
         /// distill particles for this pose down into single values
         /// </summary>
-        /// <param name="pose"></param>
-        public void Distill(particlePose pose, int x, int y)
+        /// <param name="pose">the best pose from which to create the probability</param>
+        /// <param name="x">x coordinate in cells</param>
+        /// <param name="y">y coordinate in cells</param>
+        /// <param name="updateExistingValues">update existing distilled values or create new ones</param>
+        public void Distill(particlePose pose, int x, int y, 
+                            bool updateExistingValues)
         {
             float[] colour = new float[3];
             float mean_variance = 0;
 
-            distilled = new particleGridCellBase[Hypothesis.Length];
+            if ((distilled == null) || (!updateExistingValues))
+                distilled = new particleGridCellBase[Hypothesis.Length];
+
             for (int z = 0; z < Hypothesis.Length; z++)
             {                
                 // get the distilled probability
                 float probLogOdds = GetProbability(pose, x, y, z, true, colour, ref mean_variance);
                 if (probLogOdds != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                 {
-                    distilled[z] = new particleGridCellBase();
-                    distilled[z].probabilityLogOdds = probLogOdds;
+                    if (distilled[z] == null)
+                    {
+                        // create a new distilled value
+                        distilled[z] = new particleGridCellBase();
+                        distilled[z].probabilityLogOdds = probLogOdds;
 
-                    // and update the distilled colour value
-                    distilled[z].colour = new Byte[3];
-                    for (int col = 0; col < 3; col++)
-                        distilled[z].colour[col] = (Byte)colour[col];
+                        // and update the distilled colour value
+                        distilled[z].colour = new Byte[3];
+                        for (int col = 0; col < 3; col++)
+                            distilled[z].colour[col] = (Byte)colour[col];
+                    }
+                    else
+                    {
+                        // update an existing distilled value
+                        distilled[z].probabilityLogOdds += probLogOdds;
+
+                        // and update the distilled colour value
+                        for (int col = 0; col < 3; col++)
+                            distilled[z].colour[col] = (Byte)((colour[col] + distilled[z].colour[col]) / 2);
+                    }
                 }
             }
             isDistilled = true;

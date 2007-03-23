@@ -1000,7 +1000,7 @@ namespace sentience.core
                         if (cell[x, y] != null)
                         {
                             // distill particles down to single values
-                            cell[x, y].Distill(pose, x, y);
+                            cell[x, y].Distill(pose, x, y, false);
 
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {

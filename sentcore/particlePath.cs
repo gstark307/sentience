@@ -282,7 +282,10 @@ namespace sentience.core
 
             // ensure that the path does not exceed a maximum length
             if (path.Count > max_length)
+            {
+                // remove the oldest pose in the path
                 path.RemoveAt(0);
+            }
         }
 
 
@@ -434,7 +437,7 @@ namespace sentience.core
                             prev_y = y;
                         }
 
-                        // move along the list
+                        // move along, nothing to see...
                         pose = pose.parent;
                     }
                 }
