@@ -36,6 +36,9 @@ namespace sentience.core
         // if false, this path may be garbage collected
         public bool Enabled;
 
+        // this is set to true if the tree is totally collapsed at this point in the path
+        public bool Collapsed;
+
         // maximum history to store for path IDs within each particlePose 
         const int MAX_PATH_HISTORY = 500;
 
@@ -404,7 +407,7 @@ namespace sentience.core
                              int r, int g, int b, int line_thickness,
                              float min_x_mm, float min_y_mm,
                              float max_x_mm, float max_y_mm,
-                             bool clearBackground)
+                             bool clearBackground, UInt32 root_time_step)
         {
             if (clearBackground)
             {
@@ -412,6 +415,7 @@ namespace sentience.core
                     img[i] = 255;
             }
 
+            int rr, gg, bb;
             int x = -1, y = -1;
             int prev_x = -1, prev_y = -1;
             if ((max_x_mm > min_x_mm) && (max_y_mm > min_y_mm))
@@ -421,6 +425,20 @@ namespace sentience.core
                 {
                     while (pose.parent != null)
                     {
+                        if ((pose.time_step <= root_time_step) &&
+                            (root_time_step != UInt32.MaxValue))
+                        {
+                            rr = 0;
+                            gg = 255;
+                            bb = 0;
+                        }
+                        else
+                        {
+                            rr = r;
+                            gg = g;
+                            bb = b;
+                        }
+
                         x = (int)((pose.x - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
                         if ((x > 0) && (x < width))
                         {
@@ -431,7 +449,7 @@ namespace sentience.core
                         if ((x > -1) && (y > -1))
                         {
                             if (prev_x > -1)
-                                util.drawLine(img, width, height, x, y, prev_x, prev_y, r, g, b, line_thickness, false);
+                                util.drawLine(img, width, height, x, y, prev_x, prev_y, rr, gg, bb, line_thickness, false);
 
                             prev_x = x;
                             prev_y = y;

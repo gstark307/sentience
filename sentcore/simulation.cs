@@ -150,7 +150,7 @@ namespace sentience.core
 
             if (path != null)
                 path.Show(img, width, height,
-                      0, 0, 0, 1, min_xx-100, min_yy-100, max_xx+100, max_yy+100, true);
+                      0, 0, 0, 1, min_xx-100, min_yy-100, max_xx+100, max_yy+100, true, 0);
         }
 
         /// <summary>

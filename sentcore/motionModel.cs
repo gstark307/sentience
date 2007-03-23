@@ -50,6 +50,9 @@ namespace sentience.core
 
         private MersenneTwister rnd = new MersenneTwister(100);
 
+        // the time step at which all branches converge to a single path
+        private UInt32 root_time_step = UInt32.MaxValue;
+
         private robot rob;
 
         // have the pose scores been updated?
@@ -237,7 +240,7 @@ namespace sentience.core
             {
                 particlePath p1 = (particlePath)Poses[i];
 
-                // kkep track of the bounding region within which the path tree occurs
+                // keep track of the bounding region within which the path tree occurs
                 if (p1.current_pose.x < min_tree_x) min_tree_x = p1.current_pose.x;
                 if (p1.current_pose.x > max_tree_x) max_tree_x = p1.current_pose.x;
                 if (p1.current_pose.y < min_tree_y) min_tree_y = p1.current_pose.y;
@@ -274,7 +277,6 @@ namespace sentience.core
             for (int i = Poses.Count - 1; i > cull_index; i--)
             {
                 particlePath path = (particlePath)Poses[i];
-                float sc = path.total_score;
                 if (path.path.Count >= pose_maturation)
                 {                    
                     // remove mapping hypotheses for this path
@@ -286,14 +288,36 @@ namespace sentience.core
             }
 
             // garbage collect any dead paths (R.I.P.)
-            for (int i = 0; i < ActivePoses.Count; i++)
+            ArrayList possible_roots = new ArrayList();
+
+            for (int i = ActivePoses.Count - 1; i >= 0; i--)
             {
                 particlePath path = (particlePath)ActivePoses[i];
-                if (!path.Enabled)
+
+                if ((!path.Enabled) ||
+                    ((path.total_children == 0) && (path.branch_pose == null) && (path.current_pose.time_step < time_step - pose_maturation - 5)))
                 {
-                    ActivePoses.Remove(path);
+                    ActivePoses.RemoveAt(i);
                 }
-            }            
+                else
+                {
+                    if (!path.Collapsed)
+                        if (path.branch_pose == null)
+                            possible_roots.Add(path);
+                        else
+                        {
+                            if (path.branch_pose.path.Collapsed)
+                                possible_roots.Add(path);
+                        }
+                }
+            }
+
+            if (possible_roots.Count == 1)
+            {
+                particlePath path = (particlePath)possible_roots[0];
+                path.Collapsed = true;
+                root_time_step = path.current_pose.time_step;
+            }
 
             if (best_path != null)
             {
@@ -486,7 +510,7 @@ namespace sentience.core
             if (best_path != null)
                 best_path.Show(img, width, height, r, g, b, line_thickness,
                                min_x_mm, min_y_mm, max_x_mm, max_y_mm, 
-                               clearBackground);
+                               clearBackground, 0);
         }
 
         /// <summary>
@@ -509,7 +533,7 @@ namespace sentience.core
                 particlePath path = (particlePath)ActivePoses[i];
                 path.Show(img, width, height, r, g, b, line_thickness,
                           min_tree_x, min_tree_y, max_tree_x, max_tree_y,
-                          clearBackground);
+                          clearBackground, root_time_step);
             }
                 
         }
