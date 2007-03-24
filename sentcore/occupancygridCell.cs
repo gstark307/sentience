@@ -195,11 +195,10 @@ namespace sentience.core
             max_level = new float[3];
 
             // and now get the data for any additional non-distilled particles
-            if (Hypothesis[z] != null)
+            if ((Hypothesis[z] != null) && (pose != null))
             {
                 if (pose.previous_paths != null)
                 {
-
                     // cycle through the previous paths for this pose            
                     for (int p = pose.previous_paths.Count-1; p >= 0; p--)
                     {

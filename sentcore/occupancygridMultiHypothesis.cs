@@ -36,6 +36,7 @@ namespace sentience.core
         public const int VIEW_ABOVE = 0;
         public const int VIEW_LEFT_SIDE = 1;
         public const int VIEW_RIGHT_SIDE = 2;
+        public const int VIEW_NAVIGABLE_SPACE = 3;
 
         // random number generator
         private MersenneTwister rnd = new MersenneTwister(100);
@@ -77,6 +78,9 @@ namespace sentience.core
 
         // cells of the grid
         occupancygridCellMultiHypothesis[,] cell;
+
+        // indicates areas of the grid which are navigable
+        bool[,] navigable_space;
 
         #region "initialisation"
 
@@ -194,6 +198,32 @@ namespace sentience.core
 
 
         /// <summary>
+        /// updates the navigable space
+        /// </summary>
+        /// <param name="pose">best pose from which the occupancy value is calculated</param>
+        /// <param name="x">x coordinate in cells</param>
+        /// <param name="y">y coordinate in cells</param>
+        private void updateNavigableSpace(particlePose pose, int x, int y)
+        {
+            if (x < 1) x = 1;
+            if (y < 1) y = 1;
+
+            if (navigable_space == null)
+                navigable_space = new bool[dimension_cells, dimension_cells];
+
+            float[] mean_colour = new float[3];
+            float mean_variance = 0;
+            float prob = cell[x, y].GetProbability(pose, x, y,
+                                          mean_colour, ref mean_variance);
+            bool state = false;
+            if (prob < 0.5f) state = true;
+            navigable_space[x, y] = state;
+            navigable_space[x - 1, y] = state;
+            navigable_space[x - 1, y - 1] = state;
+            navigable_space[x, y - 1] = state;
+        }
+
+        /// <summary>
         /// distill this grid particle
         /// </summary>
         /// <param name="hypothesis"></param>
@@ -202,6 +232,10 @@ namespace sentience.core
             occupancygridCellMultiHypothesis c = cell[hypothesis.x, hypothesis.y];
             c.Distill(hypothesis);
             Remove(hypothesis);
+
+            // occasionally update the navigable space
+            if (rnd.Next(100) < 5)
+                updateNavigableSpace(hypothesis.pose, hypothesis.x, hypothesis.y);
         }
 
 
@@ -656,6 +690,11 @@ namespace sentience.core
                         ShowSide(img, width, height, pose, false);
                         break;
                     }
+                case VIEW_NAVIGABLE_SPACE:
+                    {
+                        ShowNavigable(img, width, height);
+                        break;
+                    }
             }
 
         }
@@ -785,6 +824,38 @@ namespace sentience.core
                 }
             }
         }
+
+        /// <summary>
+        /// show navigable area
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        private void ShowNavigable(Byte[] img, int width, int height)
+        {
+            // clear the image
+            for (int i = 0; i < img.Length; i++)
+                img[i] = 0;
+
+            if (navigable_space != null)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    int cell_y = y * (dimension_cells - 1) / height;
+                    for (int x = 0; x < width; x++)
+                    {
+                        int cell_x = x * (dimension_cells - 1) / width;
+
+                        int n = ((y * width) + x) * 3;
+
+                        if (navigable_space[cell_x, cell_y])
+                            for (int c = 0; c < 3; c++)
+                                img[n + c] = (Byte)255;
+                    }
+                }
+            }
+        }
+
 
         private void ShowColour(Byte[] img, int width, int height, particlePose pose)
         {
@@ -1047,6 +1118,8 @@ namespace sentience.core
         /// <param name="binfile"></param>
         public void Load(BinaryReader binfile)
         {
+            navigable_space = new bool[dimension_cells, dimension_cells];
+
             LoadTile(binfile);
         }
 
@@ -1056,6 +1129,8 @@ namespace sentience.core
         /// <param name="data"></param>
         public void Load(Byte[] data)
         {
+            navigable_space = new bool[dimension_cells, dimension_cells];
+
             LoadTile(data);
         }
 
@@ -1159,6 +1234,9 @@ namespace sentience.core
                             }
                             // insert the distilled particles into the grid cell
                             cell[x, y].SetDistilledValues(distilled);
+
+                            // update the navigable space
+                            updateNavigableSpace(null, x, y);
                             n++;
                         }
                     }
