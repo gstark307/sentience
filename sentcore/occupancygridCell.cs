@@ -42,9 +42,6 @@ namespace sentience.core
         // each hypothesis list corresponds to a particular vertical (z) cell index
         private ArrayList[] Hypothesis;
 
-        // whether this cell has been distilled or not
-        public bool isDistilled;
-
         #region "garbage collection"
 
         // the number of garbage hypotheses accumulated within this grid cell
@@ -144,20 +141,17 @@ namespace sentience.core
             for (int col = 0; col < 3; col++)
                 mean_colour[col] = 0;
 
-            for (int i = 0; i < Hypothesis.Length; i++)
+            for (int z = 0; z < Hypothesis.Length; z++)
             {
-                if (Hypothesis[i] != null)
+                float variance = 0;
+                float probLO = GetProbability(pose, x, y, z, true, colour, ref variance);
+                if (probLO != NO_OCCUPANCY_EVIDENCE)
                 {
-                    float variance = 0;
-                    float probLO = GetProbability(pose, x, y, i, true, colour, ref variance);
-                    if (probLO != NO_OCCUPANCY_EVIDENCE)
-                    {
-                        probabilityLogOdds += probLO;
-                        for (int col = 0; col < 3; col++)
-                            mean_colour[col] += colour[col];
-                        mean_variance += variance;
-                        hits++;
-                    }
+                    probabilityLogOdds += probLO;
+                    for (int col = 0; col < 3; col++)
+                        mean_colour[col] += colour[col];
+                    mean_variance += variance;
+                    hits++;
                 }
             }
             if (hits > 0)
@@ -176,6 +170,7 @@ namespace sentience.core
         /// <param name="returnLogOdds">whether to return log odds or probability</param>
         /// <param name="colour">returns the distilled colour of this cell</param>
         /// <returns></returns>
+        /*
         public float GetProbabilityDistilled(int z, bool returnLogOdds,
                                              float[] colour)
         {
@@ -203,12 +198,13 @@ namespace sentience.core
 
             return(prob);
         }
-
+        */
         /// <summary>
         /// returns the distilled probability for the entire column
         /// </summary>
         /// <param name="colour">mean colour</param>
         /// <returns></returns>
+        /*
         public float GetProbabilityDistilled(float[] colour)
         {
             float prob = 0;
@@ -245,7 +241,7 @@ namespace sentience.core
 
             return (prob);
         }
-
+        */
 
         /// <summary>
         /// returns the probability of occupancy at this grid cell at the given vertical (z) coordinate
@@ -262,60 +258,83 @@ namespace sentience.core
             float[] max_level = null;
             mean_variance = 1;
 
+            for (int col = 0; col < 3; col++)
+                colour[col] = 0;
+
+            // first retrieve any distilled occupancy value
+            if (distilled != null)
+                if (distilled[z] != null)
+                {
+                    probabilityLogOdds += distilled[z].probabilityLogOdds;
+                    for (int col = 0; col < 3; col++)
+                        colour[col] += distilled[z].colour[col];
+                    hits++;
+                }
+
+            min_level = new float[3];
+            max_level = new float[3];
+
+            // and now get the data for any additional non-distilled particles
             if (Hypothesis[z] != null)
             {
                 if (pose.previous_paths != null)
                 {
-                    min_level = new float[3];
-                    max_level = new float[3];
-                    for (int col = 0; col < 3; col++)
-                        colour[col] = 0;
 
                     // cycle through the previous paths for this pose            
-                    for (int p = 0; p < pose.previous_paths.Count; p++)
+                    for (int p = pose.previous_paths.Count-1; p >= 0; p--)
                     {
                         particlePath path = (particlePath)pose.previous_paths[p];
-
-                        // do any hypotheses for this path exist at this location ?
-                        ArrayList map_cache_observations = path.GetHypotheses(x, y, z);
-                        if (map_cache_observations != null)
+                        if (path != null)
                         {
-                            for (int i = 0; i < map_cache_observations.Count; i++)
+                            if (path.Enabled)
                             {
-                                particleGridCell h = (particleGridCell)map_cache_observations[i];
-                                if (h.Enabled)
+                                // do any hypotheses for this path exist at this location ?
+                                ArrayList map_cache_observations = path.GetHypotheses(x, y, z);
+                                if (map_cache_observations != null)
                                 {
-                                    // only use evidence older than the current time 
-                                    // step to avoid getting into a muddle
-                                    if (pose.time_step > h.pose.time_step)
+                                    for (int i = 0; i < map_cache_observations.Count; i++)
                                     {
-                                        probabilityLogOdds += h.probabilityLogOdds;
-
-                                        // update mean colour and variance
-                                        for (int col = 0; col < 3; col++)
+                                        particleGridCell h = (particleGridCell)map_cache_observations[i];
+                                        if (h.Enabled)
                                         {
-                                            Byte level = h.colour[col];
-                                            colour[col] += level;
-
-                                            // update colour variance
-                                            if (hits > 0)
+                                            // only use evidence older than the current time 
+                                            // step to avoid getting into a muddle
+                                            if (pose.time_step > h.pose.time_step)
                                             {
-                                                if (level < min_level[col])
-                                                    min_level[col] = level;
+                                                probabilityLogOdds += h.probabilityLogOdds;
 
-                                                if (level > max_level[col])
-                                                    max_level[col] = level;
-                                            }
-                                            else
-                                            {
-                                                min_level[col] = level;
-                                                max_level[col] = level;
+                                                // update mean colour and variance
+                                                for (int col = 0; col < 3; col++)
+                                                {
+                                                    Byte level = h.colour[col];
+                                                    colour[col] += level;
+
+                                                    // update colour variance
+                                                    if (hits > 0)
+                                                    {
+                                                        if (level < min_level[col])
+                                                            min_level[col] = level;
+
+                                                        if (level > max_level[col])
+                                                            max_level[col] = level;
+                                                    }
+                                                    else
+                                                    {
+                                                        min_level[col] = level;
+                                                        max_level[col] = level;
+                                                    }
+                                                }
+
+                                                hits++;
                                             }
                                         }
-
-                                        hits++;
                                     }
                                 }
+                            }
+                            else
+                            {
+                                // remove a dead path, because it has been distilled
+                                pose.previous_paths.RemoveAt(p);
                             }
                         }
                     }
@@ -356,12 +375,48 @@ namespace sentience.core
         private particleGridCellBase[] distilled;
 
         /// <summary>
+        /// distill an individual grid particle
+        /// </summary>
+        /// <param name="hypothesis">the grid particle to be distilled</param>
+        public void Distill(particleGridCell hypothesis)
+        {
+            int z = hypothesis.z;
+
+            // create the distilled array
+            if (distilled == null)
+                distilled = new particleGridCellBase[Hypothesis.Length];
+
+            bool initialised = false;
+            if (distilled[z] == null)
+            {
+                // create a new distilled particle
+                distilled[z] = new particleGridCellBase();
+                distilled[z].colour = new Byte[3];
+                initialised = true;
+            }
+
+            // update an existing distilled value
+            distilled[z].probabilityLogOdds += hypothesis.probabilityLogOdds;
+
+            // and update the distilled colour value
+            for (int col = 0; col < 3; col++)
+            {
+                if (initialised)
+                    distilled[z].colour[col] = hypothesis.colour[col];
+                else
+                    distilled[z].colour[col] = (Byte)((hypothesis.colour[col] +
+                                                   distilled[z].colour[col]) / 2);
+            }
+        }
+
+        /// <summary>
         /// distill particles for this pose down into single values
         /// </summary>
         /// <param name="pose">the best pose from which to create the probability</param>
         /// <param name="x">x coordinate in cells</param>
         /// <param name="y">y coordinate in cells</param>
         /// <param name="updateExistingValues">update existing distilled values or create new ones</param>
+        /*
         public void Distill(particlePose pose, int x, int y, 
                             bool updateExistingValues)
         {
@@ -401,6 +456,7 @@ namespace sentience.core
             }
             isDistilled = true;
         }
+        */
 
         /// <summary>
         /// sets distilled probability values
@@ -410,7 +466,6 @@ namespace sentience.core
         public void SetDistilledValues(particleGridCellBase[] distilled)
         {
             this.distilled = distilled;
-            isDistilled = true;
         }
 
         #endregion

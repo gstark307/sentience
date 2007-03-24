@@ -330,6 +330,22 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// distill all grid particles within this path
+        /// </summary>
+        /// <param name="grid"></param>
+        public void Distill(occupancygridMultiHypothesis grid)
+        {
+            particlePose pose = current_pose;
+            while (pose != null)
+            {
+                pose.Distill(grid);
+                pose = pose.parent;
+            }
+            map_cache = null;
+            Enabled = false;
+        }
+
+        /// <summary>
         /// remove all poses along the path until a branch point is located
         /// </summary>
         /// <param name="pose"></param>

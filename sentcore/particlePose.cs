@@ -284,10 +284,19 @@ namespace sentience.core
                 particleGridCell hypothesis = (particleGridCell)observed_grid_cells[i];
                 grid.Remove(hypothesis);
             }
+        }
 
-            // since the pose is going to be cleared anyway we may not need to do this
-            //observed_grid_cells.Clear();
-            //if (previous_paths != null) previous_paths.Clear();
+        /// <summary>
+        /// distills all grid particles associated with this pose
+        /// </summary>
+        /// <param name="grid"></param>
+        public void Distill(occupancygridMultiHypothesis grid)
+        {
+            for (int i = 0; i < observed_grid_cells.Count; i++)
+            {
+                particleGridCell hypothesis = (particleGridCell)observed_grid_cells[i];
+                grid.Distill(hypothesis);
+            }
         }
 
     }

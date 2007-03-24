@@ -195,6 +195,19 @@ namespace sentience.core
             total_valid_hypotheses--;
         }
 
+
+        /// <summary>
+        /// distill this grid particle
+        /// </summary>
+        /// <param name="hypothesis"></param>
+        public void Distill(particleGridCell hypothesis)
+        {
+            occupancygridCellMultiHypothesis c = cell[hypothesis.x, hypothesis.y];
+            c.Distill(hypothesis);
+            Remove(hypothesis);
+        }
+
+
         public void GarbageCollect(int percentage)
         {
             int max = garbage.Count-1;
@@ -232,16 +245,10 @@ namespace sentience.core
             // localise using this grid cell
             // first get the existing probability value at this cell
             float[] existing_colour = new float[3];
-            float existing_probability;
 
-            if (!isDistilled)
-                // use grid particles to calculate the probability
-                existing_probability =
+            float existing_probability =
                     cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell,
                                                         false, existing_colour, ref colour_variance);
-            else
-                // use distilled probability values
-                existing_probability = cell[x_cell, y_cell].GetProbabilityDistilled(existing_colour);
 
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
@@ -255,8 +262,8 @@ namespace sentience.core
                     colour_difference += Math.Abs(colour[col] - existing_colour[col]);
 
                 // turn the colour difference into a probability
-                float colour_probability = 1.0f - (colour_difference / (3 * 255.0f));
-                colour_probability *= colour_variance;
+                float colour_probability = 1.0f;// -(colour_difference / (3 * 255.0f));
+                //colour_probability *= colour_variance;
 
                 // localisation matching probability, expressed as log odds
                 value = util.LogOdds(occupancy_probability * colour_probability);
@@ -670,12 +677,8 @@ namespace sentience.core
                     {
                         // what's the probability of there being a vertical structure here?
                         float mean_variance = 0;
-                        float prob;
-                        if (!cell[cell_x, cell_y].isDistilled)
-                            prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
                                                                        mean_colour, ref mean_variance);
-                        else
-                            prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
 
                         if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         {
@@ -686,10 +689,7 @@ namespace sentience.core
                                 for (int cell_z = 0; cell_z < dimension_cells_vertical; cell_z++)
                                 {
                                     mean_variance = 0;
-                                    if (!c.isDistilled)
-                                        prob = c.GetProbability(pose, cell_x, cell_y, cell_z, false, mean_colour, ref mean_variance);
-                                    else
-                                        prob = c.GetProbabilityDistilled(cell_z, false, mean_colour);
+                                    prob = c.GetProbability(pose, cell_x, cell_y, cell_z, false, mean_colour, ref mean_variance);
 
                                     if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                                     {
@@ -746,12 +746,8 @@ namespace sentience.core
                     else
                     {
                         float mean_variance = 0;
-                        float prob;
-                        if (!cell[cell_x, cell_y].isDistilled)
-                            prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
                                                                        mean_colour, ref mean_variance);
-                        else
-                            prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
 
                         if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         {
@@ -802,12 +798,8 @@ namespace sentience.core
                     else
                     {
                         float mean_variance = 0;
-                        float prob;
-                        if (!cell[cell_x, cell_y].isDistilled)
-                            prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
                                                                        mean_colour, ref mean_variance);
-                        else
-                            prob = cell[cell_x, cell_y].GetProbabilityDistilled(mean_colour);
 
                         if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         {
@@ -991,6 +983,7 @@ namespace sentience.core
             {
                 float[] occupancy = new float[occupied_cells * dimension_cells_vertical];
                 Byte[] colourData = new Byte[occupied_cells * dimension_cells_vertical * 3];
+                float mean_variance = 0;
 
                 n = 0;
                 for (int y = ty; y < by; y++)
@@ -1000,11 +993,11 @@ namespace sentience.core
                         if (cell[x, y] != null)
                         {
                             // distill particles down to single values
-                            cell[x, y].Distill(pose, x, y, false);
+                            //cell[x, y].Distill(pose, x, y, false);
 
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
-                                float prob = cell[x, y].GetProbabilityDistilled(z, true, colour);
+                                float prob = cell[x, y].GetProbability(pose,x,y,z, true, colour, ref mean_variance);
                                 int index = (n * dimension_cells_vertical) + z;
                                 occupancy[index] = prob;
                                 if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)

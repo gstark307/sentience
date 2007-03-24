@@ -288,8 +288,7 @@ namespace sentience.core
             }
 
             // garbage collect any dead paths (R.I.P.)
-            ArrayList possible_roots = new ArrayList();
-
+            ArrayList possible_roots = new ArrayList(); // stores paths where all branches have coinverged to a single possibility
             for (int i = ActivePoses.Count - 1; i >= 0; i--)
             {
                 particlePath path = (particlePath)ActivePoses[i];
@@ -301,6 +300,7 @@ namespace sentience.core
                 }
                 else
                 {
+                    // record any fully collapsed paths
                     if (!path.Collapsed)
                         if (path.branch_pose == null)
                             possible_roots.Add(path);
@@ -314,8 +314,20 @@ namespace sentience.core
 
             if (possible_roots.Count == 1)
             {
+                // collapse tha psth
                 particlePath path = (particlePath)possible_roots[0];
+
+                if (path.branch_pose != null)
+                {
+                    particlePath previous_path = path.branch_pose.path;
+                    previous_path.Distill(rob.LocalGrid);
+                    path.branch_pose.parent = null;
+                    path.branch_pose = null;                    
+                }
+                
                 path.Collapsed = true;
+
+                // take note of the time step.  This is for use with the display functions only
                 root_time_step = path.current_pose.time_step;
             }
 
