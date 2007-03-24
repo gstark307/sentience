@@ -71,9 +71,6 @@ namespace sentience.core
         // carving out of space using the vacancy function works
         public float vacancy_weighting = 2.0f;
 
-        // whether this grid has been distilled or not
-        public bool isDistilled;
-
         // take some shortcuts to speed things up
         // this sacrifices some detail, but for most grid cell sizes is fine
         public bool TurboMode = true;
@@ -271,7 +268,9 @@ namespace sentience.core
                 if (b1 < 0) b1 = 0;
                 int b2 = (int)((existing_colour[2] * 2) - existing_colour[1] - existing_colour[0]);
                 if (b2 < 0) b2 = 0;
-                float colour_difference = ((r1 - r2) + (g1 - g2) + (b1 - b2)) / (6 * 255.0f);
+                float colour_difference = (Math.Abs(r1 - r2) + 
+                                           Math.Abs(g1 - g2) + 
+                                           Math.Abs(b1 - b2)) / (6 * 255.0f);
 
                 // turn the colour difference into a probability
                 float colour_probability = 1.0f  - colour_difference;
@@ -574,8 +573,7 @@ namespace sentience.core
                                         }
                                     }
 
-                                    if ((!isDistilled) && 
-                                        (isInsideMappingRayWidth) && 
+                                    if ((isInsideMappingRayWidth) && 
                                         (withinMappingRange))
                                     {
                                         // add a new hypothesis to this grid coordinate
@@ -1074,9 +1072,6 @@ namespace sentience.core
 
         public void LoadTile(Byte[] data)
         {
-            // indicate that this grid contains distilled cell values
-            isDistilled = true;
-
             // read the bounding box
             int array_index = 0;
             const int int32_bytes = 4;
