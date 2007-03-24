@@ -257,13 +257,24 @@ namespace sentience.core
                               ((1.0f - sensormodel_probability) * (1.0f - existing_probability)));
 
                 // get the colour difference between the map and the observation
-                float colour_difference = 0;
-                for (int col = 0; col < 3; col++)
-                    colour_difference += Math.Abs(colour[col] - existing_colour[col]);
+                // note that relative colour values are used, since comparing absolute RGB
+                // values is a road to nowhere
+                int r1 = (colour[0] * 2) - colour[1] - colour[2];
+                if (r1 < 0) r1 = 0;
+                int r2 = (int)((existing_colour[0] * 2) - existing_colour[1] - existing_colour[2]);
+                if (r2 < 0) r2 = 0;
+                int g1 = (colour[1] * 2) - colour[0] - colour[2];
+                if (g1 < 0) g1 = 0;
+                int g2 = (int)((existing_colour[1] * 2) - existing_colour[0] - existing_colour[2]);
+                if (g2 < 0) g2 = 0;
+                int b1 = (colour[2] * 2) - colour[1] - colour[0];
+                if (b1 < 0) b1 = 0;
+                int b2 = (int)((existing_colour[2] * 2) - existing_colour[1] - existing_colour[0]);
+                if (b2 < 0) b2 = 0;
+                float colour_difference = ((r1 - r2) + (g1 - g2) + (b1 - b2)) / (6 * 255.0f);
 
                 // turn the colour difference into a probability
-                float colour_probability = 1.0f;// -(colour_difference / (3 * 255.0f));
-                //colour_probability *= colour_variance;
+                float colour_probability = 1.0f  - colour_difference;
 
                 // localisation matching probability, expressed as log odds
                 value = util.LogOdds(occupancy_probability * colour_probability);
@@ -992,12 +1003,10 @@ namespace sentience.core
                     {
                         if (cell[x, y] != null)
                         {
-                            // distill particles down to single values
-                            //cell[x, y].Distill(pose, x, y, false);
-
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
-                                float prob = cell[x, y].GetProbability(pose,x,y,z, true, colour, ref mean_variance);
+                                float prob = cell[x, y].GetProbability(pose,x, y, z, 
+                                                                       true, colour, ref mean_variance);
                                 int index = (n * dimension_cells_vertical) + z;
                                 occupancy[index] = prob;
                                 if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
