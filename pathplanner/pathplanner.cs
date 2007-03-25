@@ -199,7 +199,7 @@ namespace sentience.pathplanner
                         Byte safety = 255;
                         int closest = closestObstacle(x, y, max_range_cells);
                         if (closest > -1)
-                            safety = (Byte)(closest * 255 / max_range_cells);
+                            safety = (Byte)(155 + (closest * 100 / max_range_cells));
 
                         navigable_safety[x + safety_offset, y + safety_offset] = safety;
                     }

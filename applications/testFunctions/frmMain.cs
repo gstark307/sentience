@@ -295,36 +295,51 @@ namespace WindowsApplication1
             int start_x=0, start_y=0, finish_x=0, finish_y=0;
             int i = 0;
             bool found = false;
-            while ((i < 1000) && (!found))
+            while ((i < 10000) && (!found))
             {
-                start_x = rnd.Next(grid_dimension - 1);
-                start_y = rnd.Next(grid_dimension - 1);
-                if (navigable_space[start_x, start_y])
+                start_x = 1 + rnd.Next(grid_dimension - 3);
+                start_y = 1 + rnd.Next(grid_dimension - 3);
+                if ((navigable_space[start_x, start_y]) && 
+                    (navigable_space[start_x-1, start_y-1]) &&
+                    (navigable_space[start_x - 1, start_y]))
                     found = true;
                 i++;
             }
             if (found)
             {
+                found = false;
                 i = 0;
-                while ((i < 1000) && (!found))
+                while ((i < 10000) && (!found))
                 {
-                    finish_x = rnd.Next(grid_dimension - 1);
-                    finish_y = rnd.Next(grid_dimension - 1);
-                    if (navigable_space[start_x, start_y])
+                    finish_x = 1 + rnd.Next(grid_dimension - 3);
+                    finish_y = 1 + rnd.Next(grid_dimension - 3);
+                    if ((navigable_space[finish_x, finish_y]) &&
+                        (navigable_space[finish_x-1, finish_y-1]) &&
+                        (navigable_space[finish_x - 1, finish_y]))
                         found = true;
                     i++;
                 }
                 if (found)
                 {
-                    start_x = ((start_x - (grid_dimension / 2)) * cellSize_mm) + grid_centre_x_mm;
-                    start_y = ((start_y - (grid_dimension / 2)) * cellSize_mm) + grid_centre_y_mm;
-                    finish_x = ((finish_x - (grid_dimension / 2)) * cellSize_mm) + grid_centre_x_mm;
-                    finish_y = ((finish_y - (grid_dimension / 2)) * cellSize_mm) + grid_centre_y_mm;
-                    plan = planner.CreatePlan(start_x, start_y, finish_x, finish_y);
+
+                    int start_xx = ((start_x - (grid_dimension / 2)) * cellSize_mm) + grid_centre_x_mm;
+                    int start_yy = ((start_y - (grid_dimension / 2)) * cellSize_mm) + grid_centre_y_mm;
+                    int finish_xx = ((finish_x - (grid_dimension / 2)) * cellSize_mm) + grid_centre_x_mm;
+                    int finish_yy = ((finish_y - (grid_dimension / 2)) * cellSize_mm) + grid_centre_y_mm;
+                    plan = planner.CreatePlan(start_xx, start_yy, finish_xx, finish_yy);
                 }
             }
 
             planner.Show(img_rays, standard_width, standard_height, plan);
+
+            util.drawCircle(img_rays, standard_width, standard_height,
+                            start_x * standard_width / grid_dimension,
+                            start_y * standard_height / grid_dimension,
+                            standard_width / 100, 255, 0, 0, 1);
+            util.drawCircle(img_rays, standard_width, standard_height,
+                            finish_x * standard_width / grid_dimension,
+                            finish_y * standard_height / grid_dimension,
+                            standard_width / 100, 255, 0, 255, 1);
         }
 
         private void test_motion_model(bool closed_loop)
