@@ -80,7 +80,7 @@ namespace sentience.core
         occupancygridCellMultiHypothesis[,] cell;
 
         // indicates areas of the grid which are navigable
-        bool[,] navigable_space;
+        public bool[,] navigable_space;
 
         #region "initialisation"
 
@@ -99,6 +99,7 @@ namespace sentience.core
             this.max_mapping_range_cells = maxMappingRange_mm / cellSize_mm;
             this.vacancy_weighting = vacancyWeighting;
             cell = new occupancygridCellMultiHypothesis[dimension_cells, dimension_cells];
+            navigable_space = new bool[dimension_cells, dimension_cells];
 
             // make a lookup table for gaussians - saves doing a lot of floating point maths
             gaussianLookup = stereoModel.createHalfGaussianLookup(10);
@@ -207,9 +208,6 @@ namespace sentience.core
         {
             if (x < 1) x = 1;
             if (y < 1) y = 1;
-
-            if (navigable_space == null)
-                navigable_space = new bool[dimension_cells, dimension_cells];
 
             float[] mean_colour = new float[3];
             float mean_variance = 0;
