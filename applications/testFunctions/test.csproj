@@ -74,6 +74,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\pathplanner\pathplanner.csproj">
+      <Project>{00157781-7254-481B-8229-58E18AEF65F9}</Project>
+      <Name>pathplanner</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\sentcore\sentcore.csproj">
       <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
       <Name>sentcore</Name>

@@ -27,6 +27,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using sentience.core;
+using sentience.pathplanner;
 
 namespace WindowsApplication1
 {
