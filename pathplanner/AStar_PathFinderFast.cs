@@ -255,14 +255,16 @@ namespace sentience.pathplanner
                         if (mCalcGrid[mNewLocation].Status == mCloseNodeValue && !mReopenCloseNodes)
                             continue;
 
+                        Byte gridValue = (Byte)(255 - mGrid[mNewLocationX, mNewLocationY]);
+
                         // Unbreakeable?
-                        if (mGrid[mNewLocationX, mNewLocationY] == 0)
+                        if (gridValue == 0)
                             continue;
 
                         if (mHeavyDiagonals && i > 3)
-                            mNewG = mCalcGrid[mLocation].G + (int)(mGrid[mNewLocationX, mNewLocationY] * 2.41);
+                            mNewG = mCalcGrid[mLocation].G + (int)(gridValue * 2.41);
                         else
-                            mNewG = mCalcGrid[mLocation].G + mGrid[mNewLocationX, mNewLocationY];
+                            mNewG = mCalcGrid[mLocation].G + gridValue;
 
                         if (mPunishChangeDirection)
                         {

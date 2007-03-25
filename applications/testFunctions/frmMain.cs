@@ -90,7 +90,9 @@ namespace WindowsApplication1
             rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             picRays.Image = rays;
 
-            test_motion_model(false);
+            //test_motion_model(false);
+
+            test_path_planner(200, 50);
 
             //stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false, true);
             //stereo_model.showDistribution(img_rays, standard_width, standard_height);
@@ -267,6 +269,63 @@ namespace WindowsApplication1
             rob.motion.PosesEvaluated = true;
         }
 
+
+        private void test_path_planner(int grid_dimension, int cellSize_mm)
+        {
+            int grid_centre_x_mm = 0;
+            int grid_centre_y_mm = 0;
+            bool[,] navigable_space = new bool[grid_dimension, grid_dimension];
+
+            pathplanner planner = new pathplanner(navigable_space, cellSize_mm, grid_centre_x_mm, grid_centre_y_mm);
+            
+            // create a test map
+            int w = grid_dimension / 20;
+            planner.AddNavigableSpace((grid_dimension / 2)-w, grid_dimension / 50, w + (grid_dimension / 2), grid_dimension - (grid_dimension / 50));
+            planner.AddNavigableSpace((grid_dimension / 2) - w, (grid_dimension * 70 / 100), grid_dimension - (grid_dimension / 50), (grid_dimension * 70 / 100) + (w * 2));
+            planner.AddNavigableSpace((grid_dimension / 5), (grid_dimension * 30 / 100), grid_dimension / 2, (grid_dimension * 30 / 100) + (w * 2));
+            planner.AddNavigableSpace((grid_dimension / 20), (grid_dimension / 10), grid_dimension * 44 / 100, (grid_dimension * 50 / 100));
+            planner.AddNavigableSpace((grid_dimension / 2), (grid_dimension * 20 / 100), grid_dimension - (grid_dimension / 50), (grid_dimension * 20 / 100) + (w * 2));
+            planner.AddNavigableSpace((grid_dimension * 80 / 100), (grid_dimension * 50 / 100), (grid_dimension * 80 / 100) + (w * 2), (grid_dimension * 70 / 100));
+            planner.AddNavigableSpace((grid_dimension * 57 / 100), (grid_dimension * 31 / 100), (grid_dimension * 95 / 100), (grid_dimension * 69 / 100));
+            planner.AddNavigableSpace((grid_dimension / 20), (grid_dimension * 52 / 100), grid_dimension * 44 / 100, (grid_dimension * 95 / 100));             
+            planner.AddNavigableSpace((grid_dimension * 20 / 100), (grid_dimension * 80 / 100), (grid_dimension * 50 / 100), (grid_dimension * 80 / 100) + (w * 2));
+            planner.Update(0, 0, grid_dimension - 1, grid_dimension - 1);
+
+            ArrayList plan = new ArrayList();
+            int start_x=0, start_y=0, finish_x=0, finish_y=0;
+            int i = 0;
+            bool found = false;
+            while ((i < 1000) && (!found))
+            {
+                start_x = rnd.Next(grid_dimension - 1);
+                start_y = rnd.Next(grid_dimension - 1);
+                if (navigable_space[start_x, start_y])
+                    found = true;
+                i++;
+            }
+            if (found)
+            {
+                i = 0;
+                while ((i < 1000) && (!found))
+                {
+                    finish_x = rnd.Next(grid_dimension - 1);
+                    finish_y = rnd.Next(grid_dimension - 1);
+                    if (navigable_space[start_x, start_y])
+                        found = true;
+                    i++;
+                }
+                if (found)
+                {
+                    start_x = ((start_x - (grid_dimension / 2)) * cellSize_mm) + grid_centre_x_mm;
+                    start_y = ((start_y - (grid_dimension / 2)) * cellSize_mm) + grid_centre_y_mm;
+                    finish_x = ((finish_x - (grid_dimension / 2)) * cellSize_mm) + grid_centre_x_mm;
+                    finish_y = ((finish_y - (grid_dimension / 2)) * cellSize_mm) + grid_centre_y_mm;
+                    plan = planner.CreatePlan(start_x, start_y, finish_x, finish_y);
+                }
+            }
+
+            planner.Show(img_rays, standard_width, standard_height, plan);
+        }
 
         private void test_motion_model(bool closed_loop)
         {
