@@ -586,11 +586,15 @@ namespace sentience.core
             storePreviousPosition();
         }
 
-        public void Reset()
+        /// <summary>
+        /// reset the pose list for the robot
+        /// </summary>
+        /// <param name="mode">a motionmodel MODE constant: egocentric or monte carlo</param>
+        public void Reset(int mode)
         {
             previousPosition.x = -1;
             previousPosition.y = -1;
-            motion.Reset();
+            motion.Reset(mode);
         }
 
         /// <summary>

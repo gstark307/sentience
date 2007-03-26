@@ -30,6 +30,10 @@ namespace sentience.core
 {
     public class motionModel
     {
+        // different modes used for creating pose lists
+        public const int MODE_EGOCENTRIC = 0;  // sets all poses to the current known robot location
+        public const int MODE_MONTE_CARLO = 1; // randomly distribute poses for monte carlo localisation
+
         // the maximum length of paths containing possible poses
         const int max_path_length = 500;
 
@@ -159,6 +163,27 @@ namespace sentience.core
         {
             for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
             {
+                particlePath path = new particlePath(x, y, pan, max_path_length, time_step, path_ID, rob.LocalGridDimension);
+                createNewPose(path);
+            }
+        }
+
+
+        /// <summary>
+        /// create poses distributed over an area, suitable for
+        /// monte carlo localisation
+        /// </summary>
+        /// <param name="tx">top left of the area in millimetres</param>
+        /// <param name="ty">top left of the area in millimetres</param>
+        /// <param name="bx">bottom right of the area in millimetres</param>
+        /// <param name="by">bottom right of the area in millimetres</param>
+        private void createNewPosesMonteCarlo(float tx, float ty, float bx, float by)
+        {
+            for (int sample = Poses.Count; sample < survey_trial_poses; sample++)
+            {
+                float x = tx + rnd.Next((int)(bx - tx));
+                float y = ty + rnd.Next((int)(by - ty));
+                float pan = 2 * (float)Math.PI * rnd.Next(100000) / 100000.0f;
                 particlePath path = new particlePath(x, y, pan, max_path_length, time_step, path_ID, rob.LocalGridDimension);
                 createNewPose(path);
             }
@@ -569,9 +594,30 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// reset the pose list
+        /// </summary>
+        /// <param name="mode"></param>
+        public void Reset(int mode)
+        {
+            switch (mode)
+            {
+                case MODE_EGOCENTRIC:
+                    {
+                        ResetEgocentric();
+                        break;
+                    }
+                case MODE_MONTE_CARLO:
+                    {
+                        ResetMonteCarlo();
+                        break;
+                    }
+            }
+        }
+
+        /// <summary>
         /// resets the pose list to the current known robot position
         /// </summary>
-        public void Reset()
+        private void ResetEgocentric()
         {
             // create some initial poses
             Poses.Clear();
@@ -580,13 +626,28 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// resets the pose list distributed randomly across the entire grid
+        /// </summary>
+        private void ResetMonteCarlo()
+        {
+            // create some initial monte carlo poses
+            Poses.Clear();
+            int half_width_mm = (int)(rob.LocalGridDimension * rob.LocalGridCellSize_mm) / 2;
+            half_width_mm = half_width_mm * 90 / 100; // not quite the whole iguana
+            createNewPosesMonteCarlo(rob.LocalGrid.x - half_width_mm, rob.LocalGrid.y - half_width_mm,
+                                     rob.LocalGrid.x + half_width_mm, rob.LocalGrid.y + half_width_mm);
+            initialised = true;
+        }
+
+
+        /// <summary>
         /// predict the next time step
         /// </summary>
         public void Predict(float time_elapsed_sec)
         {
             if (time_elapsed_sec > 0)
             {
-                if (!initialised) Reset();
+                if (!initialised) Reset(MODE_EGOCENTRIC);
 
                 // remove low probability poses
                 if (PosesEvaluated) Prune();
