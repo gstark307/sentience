@@ -38,6 +38,9 @@ namespace sentience.pathplanner
         // pointer to the navigable space map within an occupancy grid object
         private bool[,] navigable_space;
 
+        // whether to apply smoothing to the path or not
+        public bool pathSmoothing = true;
+
         // position of the occupancy grid
         public float OccupancyGridCentre_x_mm, OccupancyGridCentre_y_mm;
 
@@ -242,14 +245,96 @@ namespace sentience.pathplanner
                 for (int i = 0; i < path.Count; i++)
                 {
                     AStar_PathFinderNode node = path[i];
-                    int x = (int)((((node.X - safety_offset) - (dimension / 2)) * cellSize_mm) + OccupancyGridCentre_x_mm);
-                    int y = (int)((((node.Y - safety_offset) - (dimension / 2)) * cellSize_mm) + OccupancyGridCentre_y_mm);
-                    PathPoint pt = new PathPoint(x, y);
+                    float x = (float)((((node.X - safety_offset) - (dimension / 2)) * cellSize_mm) + OccupancyGridCentre_x_mm);
+                    float y = (float)((((node.Y - safety_offset) - (dimension / 2)) * cellSize_mm) + OccupancyGridCentre_y_mm);
+                    PathPointSingle pt = new PathPointSingle(x, y);
                     result.Add(pt);
+                }
+
+                if (pathSmoothing)
+                {
+                    ArrayList spline_x = new ArrayList();
+                    ArrayList spline_y = new ArrayList();
+                    PathPointSingle[] pts = new PathPointSingle[4];
+
+                    int interval = 8;
+                    for (int i = 0; i < result.Count; i += interval)
+                    {
+                        for (int j = 0; j < 4; j++)
+                        {
+                            int idx = i - (2 * interval) + (j * interval);
+                            if (idx < 0) idx = 0;
+                            if (idx >= result.Count) idx = result.Count - 1;
+                            pts[j] = (PathPointSingle)result[idx];
+                        }
+                        
+                        double temp = Math.Sqrt(Math.Pow(pts[2].X - pts[1].X, 2F) + Math.Pow(pts[2].Y - pts[1].Y, 2F));
+                        int interpol = System.Convert.ToInt32(temp);
+
+                        SplinePoint(pts, interpol, spline_x, spline_y);
+                    }
+
+                    if (spline_x.Count > 1)
+                    {
+                        ArrayList smoothed_result = new ArrayList();
+                        smoothed_result.Add((PathPointSingle)result[0]);
+                        for (int i = 1; i < spline_x.Count; i++)
+                        {
+                            float x = Convert.ToSingle((double)spline_x[i]);
+                            float y = Convert.ToSingle((double)spline_y[i]);
+                            PathPointSingle pt = new PathPointSingle(x, y);
+                            smoothed_result.Add(pt);
+                        }
+                        smoothed_result.Add((PathPointSingle)result[result.Count-1]);
+                        result = smoothed_result;
+                    }
                 }
             }
             return (result);
         }
+
+        #endregion
+
+        #region "curve smoothing"
+
+        /// <summary>
+        /// B spline curve calculation
+        /// </summary>
+        /// <param name="pts">contains 4 successive points to be smoothed</param>
+        /// <param name="divisions">interpolation</param>
+        /// <param name="spline_x">x coordinates returned</param>
+        /// <param name="spline_y">y coordinates returned</param>
+        private void SplinePoint(PathPointSingle[] pts, 
+                                int divisions, 
+                                ArrayList spline_x, ArrayList spline_y)
+        {
+            double[] a = new double[5];
+            double[] b = new double[5];
+            a[0] = (-pts[0].X + 3 * pts[1].X - 3 * pts[2].X + pts[3].X) / 6.0;
+            a[1] = (3 * pts[0].X - 6 * pts[1].X + 3 * pts[2].X) / 6.0;
+            a[2] = (-3 * pts[0].X + 3 * pts[2].X) / 6.0;
+            a[3] = (pts[0].X + 4 * pts[1].X + pts[2].X) / 6.0;
+            b[0] = (-pts[0].Y + 3 * pts[1].Y - 3 * pts[2].Y + pts[3].Y) / 6.0;
+            b[1] = (3 * pts[0].Y - 6 * pts[1].Y + 3 * pts[2].Y) / 6.0;
+            b[2] = (-3 * pts[0].Y + 3 * pts[2].Y) / 6.0;
+            b[3] = (pts[0].Y + 4 * pts[1].Y + pts[2].Y) / 6.0;
+
+            if (spline_x.Count == 0)
+            {
+                spline_x.Add((double)0.0);
+                spline_y.Add((double)0.0);
+            }
+
+            spline_x[0] = a[3];
+            spline_y[0] = b[3];
+
+            for (int i = 1; i < divisions; i++)
+            {
+                float t = Convert.ToSingle(i) / Convert.ToSingle(divisions);
+                spline_x.Add((double)((a[2] + t * (a[1] + t * a[0])) * t + a[3]));
+                spline_y.Add((double)((b[2] + t * (b[1] + t * b[0])) * t + b[3]));
+            }
+        } 
 
         #endregion
 
@@ -410,14 +495,14 @@ namespace sentience.pathplanner
             int prev_x = 0, prev_y = 0;
             for (int i = 0; i < plan.Count; i++)
             {
-                PathPoint p = (PathPoint)plan[i];
-                int cell_x = (int)((p.X - OccupancyGridCentre_x_mm) / cellSize_mm) + (dimension_cells / 2);
-                int cell_y = (int)((p.Y - OccupancyGridCentre_y_mm) / cellSize_mm) + (dimension_cells / 2);
-                int x = cell_x * width / dimension_cells;
-                int y = cell_y * height / dimension_cells;
+                PathPointSingle p = (PathPointSingle)plan[i];
+                float cell_x = (float)((p.X - OccupancyGridCentre_x_mm) / (float)cellSize_mm) + (dimension_cells / 2);
+                float cell_y = (float)((p.Y - OccupancyGridCentre_y_mm) / (float)cellSize_mm) + (dimension_cells / 2);
+                int x = (int)(cell_x * width / dimension_cells);
+                int y = (int)(cell_y * height / dimension_cells);
 
                 if (i > 0)
-                    drawLine(img, width, height, x, y, prev_x, prev_y, 0, 255, 0, 1, false);
+                    drawLine(img, width, height, x, y, prev_x, prev_y, 0, 255, 0, 0, false);
 
                 prev_x = x;
                 prev_y = y;
