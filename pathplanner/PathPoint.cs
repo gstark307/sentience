@@ -14,15 +14,4 @@ namespace sentience.pathplanner
             this.Y = Y;
         }
     }
-
-    public class PathPointSingle
-    {
-        public float X, Y;
-
-        public PathPointSingle(float X, float Y)
-        {
-            this.X = X;
-            this.Y = Y;
-        }
-    }
 }

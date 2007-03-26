@@ -511,7 +511,7 @@ namespace sentience.core
                 clock.Start();
 
                 // update all current poses with the observation
-                motion.AddObservation(stereo_rays);
+                motion.AddObservation(stereo_rays, false);
 
                 clock.Stop();
                 benchmark_observation_update = clock.time_elapsed_mS;

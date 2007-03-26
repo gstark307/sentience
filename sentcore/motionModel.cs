@@ -617,14 +617,15 @@ namespace sentience.core
         /// update all current poses with the current observation
         /// </summary>
         /// <param name="stereo_rays">list of evidence rays to be inserted into the grid</param>
-        public void AddObservation(ArrayList[] stereo_rays)
+        /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
+        public void AddObservation(ArrayList[] stereo_rays, bool localiseOnly)
         {
             for (int p = 0; p < Poses.Count; p++)
             {
                 particlePath path = (particlePath)Poses[p];
                 float logodds_localisation_score = 
                     path.current_pose.AddObservation(stereo_rays,
-                                                     rob);
+                                                     rob, localiseOnly);
 
                 if (logodds_localisation_score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                     updatePoseScore(path, logodds_localisation_score);

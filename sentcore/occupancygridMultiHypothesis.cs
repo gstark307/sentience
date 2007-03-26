@@ -326,9 +326,12 @@ namespace sentience.core
         /// <param name="leftcam_y">y position of the left camera in millimetres</param>
         /// <param name="rightcam_x">x position of the right camera in millimetres</param>
         /// <param name="rightcam_y">y position of the right camera in millimetres</param>
+        /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
+        /// <returns>matching probability, expressed as log odds</returns>
         public float Insert(evidenceRay ray, particlePose origin,
                             rayModelLookup sensormodel_lookup,
-                            pos3D left_camera_location, pos3D right_camera_location)
+                            pos3D left_camera_location, pos3D right_camera_location,
+                            bool localiseOnly)
         {
             // some constants to aid readability
             const int OCCUPIED_SENSORMODEL = 0;
@@ -606,7 +609,8 @@ namespace sentience.core
                                     }
 
                                     if ((isInsideMappingRayWidth) && 
-                                        (withinMappingRange))
+                                        (withinMappingRange) &&
+                                        (!localiseOnly))
                                     {
                                         // add a new hypothesis to this grid coordinate
                                         // note that this is also added to the original pose

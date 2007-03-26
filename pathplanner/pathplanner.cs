@@ -33,7 +33,7 @@ namespace sentience.pathplanner
         public int cellSize_mm;
 
         // the maximum search range when updating safe navigation data
-        public int max_search_range_mm = 600;
+        public int max_search_range_mm = 500;
 
         // pointer to the navigable space map within an occupancy grid object
         private bool[,] navigable_space;
@@ -247,28 +247,29 @@ namespace sentience.pathplanner
                     AStar_PathFinderNode node = path[i];
                     float x = (float)((((node.X - safety_offset) - (dimension / 2)) * cellSize_mm) + OccupancyGridCentre_x_mm);
                     float y = (float)((((node.Y - safety_offset) - (dimension / 2)) * cellSize_mm) + OccupancyGridCentre_y_mm);
-                    PathPointSingle pt = new PathPointSingle(x, y);
-                    result.Add(pt);
+                    result.Add(x);
+                    result.Add(y);
                 }
 
                 if (pathSmoothing)
                 {
                     ArrayList spline_x = new ArrayList();
                     ArrayList spline_y = new ArrayList();
-                    PathPointSingle[] pts = new PathPointSingle[4];
+                    float[] pts = new float[4*2];
 
                     int interval = 8;
-                    for (int i = 0; i < result.Count; i += interval)
+                    for (int i = 0; i < result.Count; i += interval*2)
                     {
                         for (int j = 0; j < 4; j++)
                         {
-                            int idx = i - (2 * interval) + (j * interval);
+                            int idx = i - (2 * interval * 2) + (j * interval * 2);
                             if (idx < 0) idx = 0;
-                            if (idx >= result.Count) idx = result.Count - 1;
-                            pts[j] = (PathPointSingle)result[idx];
+                            if (idx >= result.Count-1) idx = result.Count - 2;
+                            pts[j * 2] = (float)result[idx];
+                            pts[(j * 2) + 1] = (float)result[idx + 1];
                         }
                         
-                        double temp = Math.Sqrt(Math.Pow(pts[2].X - pts[1].X, 2F) + Math.Pow(pts[2].Y - pts[1].Y, 2F));
+                        double temp = Math.Sqrt(Math.Pow(pts[2*2] - pts[1*2], 2F) + Math.Pow(pts[(2*2)+1] - pts[(1*2)+1], 2F));
                         int interpol = System.Convert.ToInt32(temp);
 
                         SplinePoint(pts, interpol, spline_x, spline_y);
@@ -277,16 +278,18 @@ namespace sentience.pathplanner
                     if (spline_x.Count > 1)
                     {
                         ArrayList smoothed_result = new ArrayList();
-                        smoothed_result.Add((PathPointSingle)result[0]);
+                        smoothed_result.Add((float)result[0]);
+                        smoothed_result.Add((float)result[1]);
                         for (int i = 1; i < spline_x.Count; i++)
                         {
                             float x = Convert.ToSingle((double)spline_x[i]);
                             float y = Convert.ToSingle((double)spline_y[i]);
-                            PathPointSingle pt = new PathPointSingle(x, y);
-                            smoothed_result.Add(pt);
+                            smoothed_result.Add(x);
+                            smoothed_result.Add(y);
                         }
-                        smoothed_result.Add((PathPointSingle)result[result.Count-1]);
-                        result = smoothed_result;
+                        smoothed_result.Add((float)result[result.Count - 2]);
+                        smoothed_result.Add((float)result[result.Count - 1]);
+                        result = smoothed_result;                      
                     }
                 }
             }
@@ -304,20 +307,20 @@ namespace sentience.pathplanner
         /// <param name="divisions">interpolation</param>
         /// <param name="spline_x">x coordinates returned</param>
         /// <param name="spline_y">y coordinates returned</param>
-        private void SplinePoint(PathPointSingle[] pts, 
+        private void SplinePoint(float[] pts, 
                                 int divisions, 
                                 ArrayList spline_x, ArrayList spline_y)
         {
             double[] a = new double[5];
             double[] b = new double[5];
-            a[0] = (-pts[0].X + 3 * pts[1].X - 3 * pts[2].X + pts[3].X) / 6.0;
-            a[1] = (3 * pts[0].X - 6 * pts[1].X + 3 * pts[2].X) / 6.0;
-            a[2] = (-3 * pts[0].X + 3 * pts[2].X) / 6.0;
-            a[3] = (pts[0].X + 4 * pts[1].X + pts[2].X) / 6.0;
-            b[0] = (-pts[0].Y + 3 * pts[1].Y - 3 * pts[2].Y + pts[3].Y) / 6.0;
-            b[1] = (3 * pts[0].Y - 6 * pts[1].Y + 3 * pts[2].Y) / 6.0;
-            b[2] = (-3 * pts[0].Y + 3 * pts[2].Y) / 6.0;
-            b[3] = (pts[0].Y + 4 * pts[1].Y + pts[2].Y) / 6.0;
+            a[0] = (-pts[0*2] + 3 * pts[1*2] - 3 * pts[2*2] + pts[3*2]) / 6.0;
+            a[1] = (3 * pts[0*2] - 6 * pts[1*2] + 3 * pts[2*2]) / 6.0;
+            a[2] = (-3 * pts[0*2] + 3 * pts[2*2]) / 6.0;
+            a[3] = (pts[0*2] + 4 * pts[1*2] + pts[2*2]) / 6.0;
+            b[0] = (-pts[(0*2)+1] + 3 * pts[(1*2)+1] - 3 * pts[(2*2)+1] + pts[(3*2)+1]) / 6.0;
+            b[1] = (3 * pts[(0*2)+1] - 6 * pts[(1*2)+1] + 3 * pts[(2*2)+1]) / 6.0;
+            b[2] = (-3 * pts[(0*2)+1] + 3 * pts[(2*2)+1]) / 6.0;
+            b[3] = (pts[(0*2)+1] + 4 * pts[(1*2)+1] + pts[(2*2)+1]) / 6.0;
 
             if (spline_x.Count == 0)
             {
@@ -493,11 +496,12 @@ namespace sentience.pathplanner
             int dimension_cells = navigable_space.GetLength(0);
 
             int prev_x = 0, prev_y = 0;
-            for (int i = 0; i < plan.Count; i++)
+            for (int i = 0; i < plan.Count; i+=2)
             {
-                PathPointSingle p = (PathPointSingle)plan[i];
-                float cell_x = (float)((p.X - OccupancyGridCentre_x_mm) / (float)cellSize_mm) + (dimension_cells / 2);
-                float cell_y = (float)((p.Y - OccupancyGridCentre_y_mm) / (float)cellSize_mm) + (dimension_cells / 2);
+                float px = (float)plan[i];
+                float py = (float)plan[i+1];
+                float cell_x = (float)((px - OccupancyGridCentre_x_mm) / (float)cellSize_mm) + (dimension_cells / 2);
+                float cell_y = (float)((py - OccupancyGridCentre_y_mm) / (float)cellSize_mm) + (dimension_cells / 2);
                 int x = (int)(cell_x * width / dimension_cells);
                 int y = (int)(cell_y * height / dimension_cells);
 
