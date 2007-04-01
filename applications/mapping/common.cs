@@ -1,5 +1,5 @@
 /* 
-    WhaleSpotter
+    Sentience 3D Perception System: functions to permit direct access to pixels within bitmaps
     Copyright (C) 2007  Bob Mottram
     fuzzgun@gmail.com
 

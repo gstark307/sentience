@@ -23,6 +23,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using CenterSpace.Free;
 
 namespace sentience.core
@@ -236,6 +237,22 @@ namespace sentience.core
                 updateNavigableSpace(hypothesis.pose, hypothesis.x, hypothesis.y);
         }
 
+        /*
+        delegate void GarbageCollectionEventHandler(object sender, NumberReachedEventArgs e);
+        public event GarbageCollectionEventHandler GarbageCollect(int percentage);
+
+        /// <summary>
+        /// begin the garbage collection thread
+        /// </summary>
+        public static void StartGarbageCollection()
+        {
+            //if (garbageCollection == null)
+            {
+                Thread garbageCollection = new Thread(GarbageCollect(90));
+                garbageCollection.Start();
+            }
+        }
+         */
 
         public void GarbageCollect(int percentage)
         {
