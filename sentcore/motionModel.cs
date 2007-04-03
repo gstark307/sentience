@@ -390,7 +390,7 @@ namespace sentience.core
 
                 // if the robot has rotated through a large angle since
                 // the previous time step then reset the scan matching estimate
-                if (Math.Abs(best_path.current_pose.pan - rob.pan) > rob.ScanMatchingMaxPanAngleChange * Math.PI / 180)
+                //if (Math.Abs(best_path.current_pose.pan - rob.pan) > rob.ScanMatchingMaxPanAngleChange * Math.PI / 180)
                     rob.ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
             }
 

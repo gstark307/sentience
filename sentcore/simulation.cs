@@ -288,7 +288,7 @@ namespace sentience.core
             if (path != null)
             {
                 // position the grid so that the path fits inside it
-                rob.LocalGrid.x = (int)(min_x + ((max_x - min_x) / 2));
+                rob.LocalGrid.x = (int)(min_x - ((max_x - min_x) / 2));
                 rob.LocalGrid.y = (int)(min_y + ((max_y - min_y) / 2));
 
                 if (images.Count > 1)

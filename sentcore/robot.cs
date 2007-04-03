@@ -94,8 +94,8 @@ namespace sentience.core
         public float LocalGridInterval_mm = 100;      // The distance which the robot must travel before new data is inserted into the grid during mapping
         public float LocalGridMappingRange_mm = 2500; // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
         public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
-        public float LocalGridVacancyWeighting = 1.0f; // a weighting applied to the vacancy part of the sensor model
-        public occupancygridMultiHypothesis LocalGrid;  // grid containing the current local observations
+        public float LocalGridVacancyWeighting = 1.0f;      // a weighting applied to the vacancy part of the sensor model
+        public occupancygridMultiHypothesis LocalGrid;      // grid containing the current local observations
 
         // parameters discovered by auto tuning
         public String TuningParameters = "";
@@ -399,10 +399,10 @@ namespace sentience.core
                             {
                                 if (pan_angle == 0)
                                     // forward facing camera
-                                    ScanMatchingPanAngleEstimate += head.scanmatch[i].pan_angle_change;
+                                    ScanMatchingPanAngleEstimate -= head.scanmatch[i].pan_angle_change;
                                 else
                                     // rearward facing camera
-                                    ScanMatchingPanAngleEstimate -= head.scanmatch[i].pan_angle_change;
+                                    ScanMatchingPanAngleEstimate += head.scanmatch[i].pan_angle_change;
                             }
                         }
                     }
