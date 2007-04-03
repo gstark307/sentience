@@ -829,6 +829,11 @@ namespace WindowsApplication1
             txtCameraDeviceName.Text = (String)lstCameraDevices.Items[lstCameraDevices.SelectedIndex];
         }
 
+        /// <summary>
+        /// save images along a path
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void cmdSavePosition_Click(object sender, EventArgs e)
         {
             String left_filename = txtPathName.Text + "_left_" + Convert.ToString(viewpointNumber + ".bmp");
@@ -841,18 +846,21 @@ namespace WindowsApplication1
                 File.Delete(right_filename);
             right_image.Save(right_filename, ImageFormat.Bmp);                
 
-            stereo.saveViewpointToPath(txtPathName.Text, !chkLocalisation.Checked, Convert.ToInt32(txtForward.Text), Convert.ToInt32(txtRight.Text), Convert.ToInt32(txtHeight.Text), Convert.ToInt32(txtPanRight.Text), left_filename, right_filename);
             viewpointNumber++;
 
             MessageBox.Show("Path data saved");
-
-            // increment the forward value
-            txtForward.Text = Convert.ToString(Convert.ToInt32(txtForward.Text) + 100);
         }
 
+        /// <summary>
+        /// clear the images recorded for a path
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void cmdClear_Click(object sender, EventArgs e)
         {
-            stereo.clearPath(txtPathName.Text);
+            ///Directory.Delete(txtPathName.Text + "_left_*.bmp");
+            //Directory.Delete(txtPathName.Text + "_right_*.bmp");
+            viewpointNumber = 1;
             MessageBox.Show("Path data cleared");
         }
 

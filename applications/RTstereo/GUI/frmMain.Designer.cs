@@ -76,19 +76,10 @@ namespace WindowsApplication1
             this.label5 = new System.Windows.Forms.Label();
             this.txtBaseline = new System.Windows.Forms.TextBox();
             this.tabPageLocation = new System.Windows.Forms.TabPage();
-            this.chkLocalisation = new System.Windows.Forms.CheckBox();
             this.txtPathName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.cmdClear = new System.Windows.Forms.Button();
             this.cmdSavePosition = new System.Windows.Forms.Button();
-            this.txtPanRight = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.txtHeight = new System.Windows.Forms.TextBox();
-            this.label19 = new System.Windows.Forms.Label();
-            this.txtRight = new System.Windows.Forms.TextBox();
-            this.label18 = new System.Windows.Forms.Label();
-            this.txtForward = new System.Windows.Forms.TextBox();
-            this.label17 = new System.Windows.Forms.Label();
             this.picOutput = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
@@ -493,35 +484,16 @@ namespace WindowsApplication1
             // 
             // tabPageLocation
             // 
-            this.tabPageLocation.Controls.Add(this.chkLocalisation);
             this.tabPageLocation.Controls.Add(this.txtPathName);
             this.tabPageLocation.Controls.Add(this.label4);
             this.tabPageLocation.Controls.Add(this.cmdClear);
             this.tabPageLocation.Controls.Add(this.cmdSavePosition);
-            this.tabPageLocation.Controls.Add(this.txtPanRight);
-            this.tabPageLocation.Controls.Add(this.label20);
-            this.tabPageLocation.Controls.Add(this.txtHeight);
-            this.tabPageLocation.Controls.Add(this.label19);
-            this.tabPageLocation.Controls.Add(this.txtRight);
-            this.tabPageLocation.Controls.Add(this.label18);
-            this.tabPageLocation.Controls.Add(this.txtForward);
-            this.tabPageLocation.Controls.Add(this.label17);
             this.tabPageLocation.Location = new System.Drawing.Point(4, 22);
             this.tabPageLocation.Name = "tabPageLocation";
             this.tabPageLocation.Size = new System.Drawing.Size(357, 166);
             this.tabPageLocation.TabIndex = 2;
             this.tabPageLocation.Text = "Location";
             this.tabPageLocation.UseVisualStyleBackColor = true;
-            // 
-            // chkLocalisation
-            // 
-            this.chkLocalisation.AutoSize = true;
-            this.chkLocalisation.Location = new System.Drawing.Point(218, 131);
-            this.chkLocalisation.Name = "chkLocalisation";
-            this.chkLocalisation.Size = new System.Drawing.Size(119, 17);
-            this.chkLocalisation.TabIndex = 26;
-            this.chkLocalisation.Text = "Use for Localisation";
-            this.chkLocalisation.UseVisualStyleBackColor = true;
             // 
             // txtPathName
             // 
@@ -557,78 +529,6 @@ namespace WindowsApplication1
             this.cmdSavePosition.TabIndex = 22;
             this.cmdSavePosition.Text = "Save";
             this.cmdSavePosition.Click += new System.EventHandler(this.cmdSavePosition_Click);
-            // 
-            // txtPanRight
-            // 
-            this.txtPanRight.Location = new System.Drawing.Point(113, 131);
-            this.txtPanRight.Name = "txtPanRight";
-            this.txtPanRight.Size = new System.Drawing.Size(60, 20);
-            this.txtPanRight.TabIndex = 21;
-            this.txtPanRight.Text = "-45";
-            this.txtPanRight.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(13, 131);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(101, 13);
-            this.label20.TabIndex = 20;
-            this.label20.Text = "Pan Right (degrees)";
-            // 
-            // txtHeight
-            // 
-            this.txtHeight.Location = new System.Drawing.Point(113, 105);
-            this.txtHeight.Name = "txtHeight";
-            this.txtHeight.Size = new System.Drawing.Size(60, 20);
-            this.txtHeight.TabIndex = 19;
-            this.txtHeight.Text = "1000";
-            this.txtHeight.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(13, 105);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(63, 13);
-            this.label19.TabIndex = 18;
-            this.label19.Text = "Height (mm)";
-            // 
-            // txtRight
-            // 
-            this.txtRight.Location = new System.Drawing.Point(113, 79);
-            this.txtRight.Name = "txtRight";
-            this.txtRight.Size = new System.Drawing.Size(60, 20);
-            this.txtRight.TabIndex = 17;
-            this.txtRight.Text = "0";
-            this.txtRight.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(13, 79);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(57, 13);
-            this.label18.TabIndex = 16;
-            this.label18.Text = "Right (mm)";
-            // 
-            // txtForward
-            // 
-            this.txtForward.Location = new System.Drawing.Point(113, 53);
-            this.txtForward.Name = "txtForward";
-            this.txtForward.Size = new System.Drawing.Size(60, 20);
-            this.txtForward.TabIndex = 15;
-            this.txtForward.Text = "0";
-            this.txtForward.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(13, 53);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(70, 13);
-            this.label17.TabIndex = 14;
-            this.label17.Text = "Forward (mm)";
             // 
             // picOutput
             // 
@@ -699,14 +599,6 @@ namespace WindowsApplication1
         private System.Windows.Forms.TabPage tabPageCamera;
         private System.Windows.Forms.TabPage tabPagePerformance;
         private System.Windows.Forms.TabPage tabPageLocation;
-        private System.Windows.Forms.TextBox txtHeight;
-        private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.TextBox txtRight;
-        private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.TextBox txtForward;
-        private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.TextBox txtPanRight;
-        private System.Windows.Forms.Label label20;
         private System.Windows.Forms.TextBox txtCameraDeviceName;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.PictureBox picOutput;
@@ -714,7 +606,6 @@ namespace WindowsApplication1
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button cmdClear;
         private System.Windows.Forms.Button cmdSavePosition;
-        private System.Windows.Forms.CheckBox chkLocalisation;
         private System.Windows.Forms.TextBox txtPathName;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ToolStripMenuItem viewMenuItem;

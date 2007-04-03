@@ -110,7 +110,7 @@ namespace sentience.core
         // when scan matching is used this is the maximum change in
         // the robots pan angle which is detectable per time step
         // This should not be bigger than a third of the horizontal field of view
-        public int ScanMatchingMaxPanAngleChange = 20;
+        public int ScanMatchingMaxPanAngleChange = 10;
 
         // keeps an estimate of the robots pan angle based upon scan matching
         public float ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;

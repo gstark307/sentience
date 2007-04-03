@@ -148,9 +148,6 @@ namespace sentience.core
             Poses.Add(path);            
             ActivePoses.Add(path);
 
-            //if (path.branch_pose != null)
-            //    ActivePoses.Remove(path.branch_pose.path);
-
             // increment the path ID
             path_ID++;
             if (path_ID > UInt32.MaxValue - 3) path_ID = 0; // rollover
@@ -236,12 +233,11 @@ namespace sentience.core
             if (rob.ScanMatchingPanAngleEstimate != scanMatching.NOT_MATCHED)
                 current_pan = rob.ScanMatchingPanAngleEstimate;
 
-            float pan2 = current_pan + (ang_velocity * time_elapsed_sec);
+            float pan2 = current_pan - (ang_velocity * time_elapsed_sec);
 
-            // update the pose
-            float new_y = path.current_pose.y - (fraction * (float)Math.Sin(current_pan)) +
-                              (fraction * (float)Math.Sin(pan2));
-            float new_x = path.current_pose.x + (fraction * (float)Math.Cos(current_pan)) -
+            float new_y = path.current_pose.y + (fraction * (float)Math.Sin(current_pan)) -
+                  (fraction * (float)Math.Sin(pan2));
+            float new_x = path.current_pose.x - (fraction * (float)Math.Cos(current_pan)) +
                               (fraction * (float)Math.Cos(pan2));
             float new_pan = pan2 + (v * time_elapsed_sec);
 

@@ -101,49 +101,6 @@ namespace WindowsApplication1
 
 
 
-        // delete path data
-        public void clearPath(String PathName)
-        {
-            String filename = System.Windows.Forms.Application.StartupPath + "\\" + PathName + ".path";
-            if (File.Exists(filename)) File.Delete(filename);
-        }
-
-        // add path data
-        public void saveViewpointToPath(String PathName, bool mapping, 
-                                  int forward_mm, int right_mm, int height_mm, int pan_degrees,
-                                  String left_filename, String right_filename)
-        {
-            StreamWriter oWrite = null;
-            bool allowWrite = true;
-            String filename = System.Windows.Forms.Application.StartupPath + "\\" + PathName + ".path";
-
-            try
-            {
-                if (File.Exists(filename))
-                    oWrite = File.AppendText(filename);
-                else
-                    oWrite = File.CreateText(filename);
-            }
-            catch
-            {
-                allowWrite = false;
-            }
-
-            if (allowWrite)
-            {
-                oWrite.WriteLine(mapping);
-                oWrite.WriteLine(forward_mm);
-                oWrite.WriteLine(right_mm);
-                oWrite.WriteLine(height_mm);
-                oWrite.WriteLine(pan_degrees);
-                oWrite.WriteLine(left_filename);
-                oWrite.WriteLine(right_filename);
-                oWrite.Close();
-            }
-
-        }
-
-
         /// <summary>
         /// return the radar image
         /// </summary>

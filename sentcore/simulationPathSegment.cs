@@ -37,7 +37,7 @@ namespace sentience.core
             float xx = x;
             float yy = y;
             float curr_pan = pan;
-            for (int i = 0; i < no_of_steps-1; i++)
+            for (int i = 0; i < no_of_steps; i++)
             {
                 particlePose pose = new particlePose(xx, yy, curr_pan, null);
                 result.Add(pose);
