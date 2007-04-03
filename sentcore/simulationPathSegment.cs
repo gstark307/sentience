@@ -16,6 +16,15 @@ namespace sentience.core
         public float distance_per_step_mm; // distance per step in millimetres
         public float pan_per_step;         // change in pan angle per step in radians
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="pan"></param>
+        /// <param name="no_of_steps"></param>
+        /// <param name="distance_per_step_mm"></param>
+        /// <param name="pan_per_step"></param>
         public simulationPathSegment(float x, float y, float pan,
                                      int no_of_steps, float distance_per_step_mm, float pan_per_step)
         {

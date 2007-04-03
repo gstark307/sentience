@@ -220,6 +220,7 @@ namespace sentience.core
         /// </summary>
         private void updatePath()
         {
+            particlePose prev_pose=null;
             path = new particlePath(999999999);
 
             min_x = 9999;
@@ -230,8 +231,24 @@ namespace sentience.core
             {
                 simulationPathSegment segment = (simulationPathSegment)pathSegments[s];
 
+                // get the last pose
+                if (s > 0)
+                    prev_pose = (particlePose)path.path[path.path.Count - 1];
+
                 // update the list of poses
                 ArrayList poses = segment.getPoses();
+
+                if (prev_pose != null)
+                {
+                    // is the last pose position the same as the first in this segment?
+                    // if so, remove the last pose added to the path
+                    particlePose firstPose = (particlePose)poses[0];
+                    if (((int)firstPose.x == (int)prev_pose.x) &&
+                        ((int)firstPose.y == (int)prev_pose.y) &&
+                        (Math.Abs(firstPose.pan - prev_pose.pan) < 0.01f))
+                        path.path.RemoveAt(path.path.Count - 1);
+                }
+
                 for (int i = 0; i < poses.Count; i++)
                 {
                     particlePose pose = (particlePose)poses[i];
