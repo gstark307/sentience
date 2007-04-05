@@ -36,7 +36,7 @@ namespace sentience.core
 
         // name of the design file for the robot
         public String RobotDesignFile = "robotdesign.xml";
-        
+
         // path where images can be located
         public String ImagesPath = "";
 
@@ -64,6 +64,51 @@ namespace sentience.core
 
         public robot rob;
 
+
+        #region "updating optimisation performance graphs"
+        
+        private const float max_position_error_mm = 1000;
+        private const float max_colour_variance = 0.05f;
+
+        public graph_points graph_colour_variance;
+        public graph_points graph_no_of_particles;
+
+        public void updateGraphs()
+        {
+            if (graph_colour_variance == null)
+            {
+                graph_colour_variance = new graph_points(0, max_position_error_mm,
+                                                         0, max_colour_variance);
+                graph_no_of_particles = new graph_points(0, max_position_error_mm,
+                                                         0, 200);
+                LoadGraphs();
+            }
+
+            graph_colour_variance.Update(position_error_mm, GetMeanColourVariance());
+            graph_no_of_particles.Update(position_error_mm, rob.motion.survey_trial_poses);
+        }
+
+        /// <summary>
+        /// save graph data to file
+        /// </summary>
+        private void SaveGraphs()
+        {
+            if (graph_colour_variance != null)
+            {
+                graph_colour_variance.Save("colour_variance.csv");
+                graph_no_of_particles.Save("particles.csv");
+            }
+        }
+
+        private void LoadGraphs()
+        {
+            graph_colour_variance = new graph_points(0, max_position_error_mm, 
+                                                     0, max_colour_variance);
+            graph_colour_variance.Load("colour_variance.csv");
+            graph_no_of_particles.Load("particles.csv");
+        }
+
+        #endregion
 
         #region "results of the simulation"
 
@@ -447,6 +492,7 @@ namespace sentience.core
         {
             XmlDocument doc = getXmlDocument();
             doc.Save(filename);
+            SaveGraphs();
         }
 
         /// <summary>

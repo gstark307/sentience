@@ -96,7 +96,12 @@ namespace StereoMapping
             this.tabPathTree = new System.Windows.Forms.TabPage();
             this.label19 = new System.Windows.Forms.Label();
             this.picPathTree = new System.Windows.Forms.PictureBox();
+            this.tabOptimisation = new System.Windows.Forms.TabPage();
+            this.label21 = new System.Windows.Forms.Label();
+            this.picColourVariance = new System.Windows.Forms.PictureBox();
             this.timSimulation = new System.Windows.Forms.Timer(this.components);
+            this.label20 = new System.Windows.Forms.Label();
+            this.picNoOfParticles = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -111,6 +116,9 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picGridMap)).BeginInit();
             this.tabPathTree.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picPathTree)).BeginInit();
+            this.tabOptimisation.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picColourVariance)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picNoOfParticles)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -417,6 +425,7 @@ namespace StereoMapping
             this.tabControl1.Controls.Add(this.tabParameters);
             this.tabControl1.Controls.Add(this.tabSimulation);
             this.tabControl1.Controls.Add(this.tabPathTree);
+            this.tabControl1.Controls.Add(this.tabOptimisation);
             this.tabControl1.Location = new System.Drawing.Point(12, 27);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -722,10 +731,59 @@ namespace StereoMapping
             this.picPathTree.TabIndex = 32;
             this.picPathTree.TabStop = false;
             // 
+            // tabOptimisation
+            // 
+            this.tabOptimisation.Controls.Add(this.label20);
+            this.tabOptimisation.Controls.Add(this.picNoOfParticles);
+            this.tabOptimisation.Controls.Add(this.label21);
+            this.tabOptimisation.Controls.Add(this.picColourVariance);
+            this.tabOptimisation.Location = new System.Drawing.Point(4, 22);
+            this.tabOptimisation.Name = "tabOptimisation";
+            this.tabOptimisation.Size = new System.Drawing.Size(815, 633);
+            this.tabOptimisation.TabIndex = 3;
+            this.tabOptimisation.Text = "Optimisation";
+            this.tabOptimisation.UseVisualStyleBackColor = true;
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(18, 9);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(82, 13);
+            this.label21.TabIndex = 37;
+            this.label21.Text = "Colour Variance";
+            // 
+            // picColourVariance
+            // 
+            this.picColourVariance.Location = new System.Drawing.Point(19, 25);
+            this.picColourVariance.Name = "picColourVariance";
+            this.picColourVariance.Size = new System.Drawing.Size(777, 235);
+            this.picColourVariance.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picColourVariance.TabIndex = 36;
+            this.picColourVariance.TabStop = false;
+            // 
             // timSimulation
             // 
             this.timSimulation.Interval = 500;
             this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(18, 277);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(98, 13);
+            this.label20.TabIndex = 39;
+            this.label20.Text = "Number of particles";
+            // 
+            // picNoOfParticles
+            // 
+            this.picNoOfParticles.Location = new System.Drawing.Point(19, 293);
+            this.picNoOfParticles.Name = "picNoOfParticles";
+            this.picNoOfParticles.Size = new System.Drawing.Size(777, 235);
+            this.picNoOfParticles.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picNoOfParticles.TabIndex = 38;
+            this.picNoOfParticles.TabStop = false;
             // 
             // frmMapping
             // 
@@ -758,6 +816,10 @@ namespace StereoMapping
             this.tabPathTree.ResumeLayout(false);
             this.tabPathTree.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picPathTree)).EndInit();
+            this.tabOptimisation.ResumeLayout(false);
+            this.tabOptimisation.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picColourVariance)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picNoOfParticles)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -833,6 +895,11 @@ namespace StereoMapping
         private System.Windows.Forms.TabPage tabPathTree;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.PictureBox picPathTree;
+        private System.Windows.Forms.TabPage tabOptimisation;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.PictureBox picColourVariance;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.PictureBox picNoOfParticles;
     }
 }
 

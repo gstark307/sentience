@@ -476,6 +476,18 @@ namespace StereoMapping
                     // show the average colour variance
                     txtMeanColourVariance.Text = Convert.ToString((int)(sim.GetMeanColourVariance() * 1000000) / 1000000.0f);
 
+                    // update colour variance point graphs
+                    sim.updateGraphs();
+                    if (picColourVariance.Image == null)
+                    {
+                        picColourVariance.Image = new Bitmap(sim.graph_colour_variance.screen_width, sim.graph_colour_variance.screen_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        picNoOfParticles.Image = new Bitmap(sim.graph_no_of_particles.screen_width, sim.graph_colour_variance.screen_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    }
+                    updatebitmap_unsafe(sim.graph_colour_variance.image, (Bitmap)(picColourVariance.Image));
+                    updatebitmap_unsafe(sim.graph_no_of_particles.image, (Bitmap)(picNoOfParticles.Image));
+                    picColourVariance.Refresh();
+                    picNoOfParticles.Refresh();
+
                     // set the score for this run
                     autotuner.setScore(score);
 
