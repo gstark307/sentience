@@ -97,11 +97,17 @@ namespace StereoMapping
             this.label19 = new System.Windows.Forms.Label();
             this.picPathTree = new System.Windows.Forms.PictureBox();
             this.tabOptimisation = new System.Windows.Forms.TabPage();
+            this.label20 = new System.Windows.Forms.Label();
+            this.picNoOfParticles = new System.Windows.Forms.PictureBox();
             this.label21 = new System.Windows.Forms.Label();
             this.picColourVariance = new System.Windows.Forms.PictureBox();
             this.timSimulation = new System.Windows.Forms.Timer(this.components);
-            this.label20 = new System.Windows.Forms.Label();
-            this.picNoOfParticles = new System.Windows.Forms.PictureBox();
+            this.tabMCL = new System.Windows.Forms.TabPage();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.label22 = new System.Windows.Forms.Label();
+            this.button3 = new System.Windows.Forms.Button();
+            this.picMCL = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -117,8 +123,10 @@ namespace StereoMapping
             this.tabPathTree.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picPathTree)).BeginInit();
             this.tabOptimisation.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picColourVariance)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picNoOfParticles)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picColourVariance)).BeginInit();
+            this.tabMCL.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picMCL)).BeginInit();
             this.SuspendLayout();
             // 
             // picPath
@@ -426,6 +434,7 @@ namespace StereoMapping
             this.tabControl1.Controls.Add(this.tabSimulation);
             this.tabControl1.Controls.Add(this.tabPathTree);
             this.tabControl1.Controls.Add(this.tabOptimisation);
+            this.tabControl1.Controls.Add(this.tabMCL);
             this.tabControl1.Location = new System.Drawing.Point(12, 27);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -744,6 +753,24 @@ namespace StereoMapping
             this.tabOptimisation.Text = "Optimisation";
             this.tabOptimisation.UseVisualStyleBackColor = true;
             // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(18, 277);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(98, 13);
+            this.label20.TabIndex = 39;
+            this.label20.Text = "Number of particles";
+            // 
+            // picNoOfParticles
+            // 
+            this.picNoOfParticles.Location = new System.Drawing.Point(19, 293);
+            this.picNoOfParticles.Name = "picNoOfParticles";
+            this.picNoOfParticles.Size = new System.Drawing.Size(777, 235);
+            this.picNoOfParticles.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picNoOfParticles.TabIndex = 38;
+            this.picNoOfParticles.TabStop = false;
+            // 
             // label21
             // 
             this.label21.AutoSize = true;
@@ -767,23 +794,64 @@ namespace StereoMapping
             this.timSimulation.Interval = 500;
             this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
             // 
-            // label20
+            // tabMCL
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(18, 277);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(98, 13);
-            this.label20.TabIndex = 39;
-            this.label20.Text = "Number of particles";
+            this.tabMCL.Controls.Add(this.button1);
+            this.tabMCL.Controls.Add(this.button2);
+            this.tabMCL.Controls.Add(this.label22);
+            this.tabMCL.Controls.Add(this.button3);
+            this.tabMCL.Controls.Add(this.picMCL);
+            this.tabMCL.Location = new System.Drawing.Point(4, 22);
+            this.tabMCL.Name = "tabMCL";
+            this.tabMCL.Size = new System.Drawing.Size(815, 633);
+            this.tabMCL.TabIndex = 4;
+            this.tabMCL.Text = "MCL";
+            this.tabMCL.UseVisualStyleBackColor = true;
             // 
-            // picNoOfParticles
+            // button1
             // 
-            this.picNoOfParticles.Location = new System.Drawing.Point(19, 293);
-            this.picNoOfParticles.Name = "picNoOfParticles";
-            this.picNoOfParticles.Size = new System.Drawing.Size(777, 235);
-            this.picNoOfParticles.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picNoOfParticles.TabIndex = 38;
-            this.picNoOfParticles.TabStop = false;
+            this.button1.Location = new System.Drawing.Point(101, 69);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(76, 27);
+            this.button1.TabIndex = 40;
+            this.button1.Text = "Stop";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(16, 69);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(76, 27);
+            this.button2.TabIndex = 39;
+            this.button2.Text = "Run";
+            this.button2.UseVisualStyleBackColor = true;
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(253, 23);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(82, 13);
+            this.label22.TabIndex = 38;
+            this.label22.Text = "Occupancy grid";
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(16, 36);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(76, 27);
+            this.button3.TabIndex = 37;
+            this.button3.Text = "Reset";
+            this.button3.UseVisualStyleBackColor = true;
+            // 
+            // picMCL
+            // 
+            this.picMCL.Location = new System.Drawing.Point(254, 39);
+            this.picMCL.Name = "picMCL";
+            this.picMCL.Size = new System.Drawing.Size(538, 401);
+            this.picMCL.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picMCL.TabIndex = 36;
+            this.picMCL.TabStop = false;
             // 
             // frmMapping
             // 
@@ -818,8 +886,11 @@ namespace StereoMapping
             ((System.ComponentModel.ISupportInitialize)(this.picPathTree)).EndInit();
             this.tabOptimisation.ResumeLayout(false);
             this.tabOptimisation.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picColourVariance)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picNoOfParticles)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picColourVariance)).EndInit();
+            this.tabMCL.ResumeLayout(false);
+            this.tabMCL.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picMCL)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -900,6 +971,12 @@ namespace StereoMapping
         private System.Windows.Forms.PictureBox picColourVariance;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.PictureBox picNoOfParticles;
+        private System.Windows.Forms.TabPage tabMCL;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.PictureBox picMCL;
     }
 }
 

@@ -23,7 +23,7 @@ using System.Xml;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using sentience.pathplanner;
 
 namespace sentience.core
 {
@@ -45,7 +45,10 @@ namespace sentience.core
 
         // describes how the robot moves, used to predict the next step as a probabilistic distribution
         // of possible poses
-        public motionModel motion;         
+        public motionModel motion;
+
+        // object containing path planning functions
+        public sentience.pathplanner.pathplanner planner;
 
         // object used to construct rays and sensor models
         public stereoModel inverseSensorModel;

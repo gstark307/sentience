@@ -76,6 +76,12 @@
   <ItemGroup>
     <Content Include="LICENCE.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pathplanner\pathplanner.csproj">
+      <Project>{00157781-7254-481B-8229-58E18AEF65F9}</Project>
+      <Name>pathplanner</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

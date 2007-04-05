@@ -81,15 +81,15 @@ namespace StereoMapping
 
             autotuner.parameterName[3] = "Vacancy weighting";
             autotuner.setParameterRange(3, 0.8f, 5.0f);
-            autotuner.setParameterStepSize(3, 0.05f);
+            autotuner.setParameterStepSize(3, 0.0005f);
 
             autotuner.parameterName[4] = "Surround radius percent";
             autotuner.setParameterRange(4, 1.0f, 3.0f);
-            autotuner.setParameterStepSize(4, 0.05f);
+            autotuner.setParameterStepSize(4, 0.0005f);
 
             autotuner.parameterName[5] = "Matching threshold";
             autotuner.setParameterRange(5, 5.0f, 20.0f);
-            autotuner.setParameterStepSize(5, 0.1f);
+            autotuner.setParameterStepSize(5, 0.001f);
 
             autotuner.Randomize(false);
         }
@@ -668,7 +668,7 @@ namespace StereoMapping
 
             // if parameters exist seed the autotuner accordingly
             if (txtTuningParameters.Text != "")
-                autotuner.seed(txtTuningParameters.Text, 0.1f);
+                autotuner.seed(txtTuningParameters.Text, 0.4f);
 
             cmdReset.Enabled = false;
             cmdRunOneStep.Enabled = false;
