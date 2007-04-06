@@ -166,6 +166,9 @@ namespace sentience.core
         {
             // create the local grid
             LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm, LocalGridVacancyWeighting);
+
+            // create a path planning object linked to the grid
+            planner = new sentience.pathplanner.pathplanner(LocalGrid.navigable_space, (int)LocalGridCellSize_mm, LocalGrid.x, LocalGrid.y);
         }
 
         /// <summary>
@@ -470,8 +473,7 @@ namespace sentience.core
                 createLocalGrid();
 
                 // position the grid
-                LocalGrid.x = new_grid_centre.x;
-                LocalGrid.y = new_grid_centre.y;
+                LocalGrid.SetCentrePosition(new_grid_centre.x, new_grid_centre.x);
                 LocalGrid.z = new_grid_centre.z;
 
                 // file name of the grid to be loaded

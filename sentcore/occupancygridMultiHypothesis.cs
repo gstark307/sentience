@@ -122,6 +122,21 @@ namespace sentience.core
 
         #endregion
 
+        #region "miscellaneous"
+
+        /// <summary>
+        /// set the absolute position of the centre of the occupancy grid
+        /// </summary>
+        /// <param name="centre_x_mm"></param>
+        /// <param name="centre_y_mm"></param>
+        public void SetCentrePosition(float centre_x_mm, float centre_y_mm)
+        {
+            x = centre_x_mm;
+            y = centre_y_mm;
+        }
+
+        #endregion
+
         #region "sensor model"
 
         /// <summary>

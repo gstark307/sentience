@@ -55,6 +55,69 @@ namespace sentience.core
 
         #endregion
 
+        #region "colours"
+
+        /// <summary>
+        /// Gets the hexidecimal color code from the specified RGB
+        /// </summary>
+        /// <param name="R"> The value of R </param>
+        /// <param name="G"> The value of G </param>
+        /// <param name="B"> The value of B </param>
+        /// <returns></returns>
+        public static string GetHexFromRGB(int R, int G, int B)
+        {
+            string a, b, c, d, e, f, z;
+            a = GetHex(Math.Floor((double)R / 16));
+            b = GetHex(R % 16);
+            c = GetHex(Math.Floor((double)G / 16));
+            d = GetHex(G % 16);
+            e = GetHex(Math.Floor((double)B / 16));
+            f = GetHex(B % 16);
+            z = a + b + c + d + e + f;
+            return z;
+        }
+
+        /// <summary>
+        /// Returns the hexidecimal character for the specified value
+        /// </summary>
+        /// <param name="Dec"> The value to convert </param>
+        /// <returns>System.String</returns>
+        private static string GetHex(double Dec)
+        {
+            string Value = "";
+            if (Dec == 10)
+            {
+                Value = "A";
+            }
+            else if (Dec == 11)
+            {
+                Value = "B";
+            }
+            else if (Dec == 12)
+            {
+                Value = "C";
+            }
+            else if (Dec == 13)
+            {
+                Value = "D";
+            }
+            else if (Dec == 14)
+            {
+                Value = "E";
+            }
+            else if (Dec == 15)
+            {
+                Value = "F";
+            }
+            else
+            {
+                Value = "" + Dec;
+            }
+            return Value;
+        }
+
+        #endregion
+
         #region "array conversions"
 
         /// <summary>
