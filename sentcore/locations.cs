@@ -1,7 +1,27 @@
+/*
+    Classes for storing information about map locations
+    This is done in the same style as the Google maps XML format
+    Copyright (C) 2000-2007 Bob Mottram
+    fuzzgun@gmail.com
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
 namespace sentience.core
 {
@@ -153,6 +173,10 @@ namespace sentience.core
             return (inside);
         }
 
+        /// <summary>
+        /// returns an XML string representing the area, in a format similar to Google maps
+        /// </summary>
+        /// <returns></returns>
         public override String getXml()
         {
             String XmlStr = "  <marker lat=\"" + Convert.ToString(lattitide) +
@@ -184,5 +208,103 @@ namespace sentience.core
 
     public class locations
     {
+        public ArrayList areas;
+
+        public locations()
+        {
+            areas = new ArrayList();
+        }
+
+        /// <summary>
+        /// returns the object corresponding to the given location name
+        /// </summary>
+        /// <param name="location_name"></param>
+        /// <returns></returns>
+        public locationArea GetLocation(String location_name)
+        {
+            locationArea locn = null;
+            int i = 0;
+            while ((i < areas.Count) && (locn == null))
+            {
+                locationArea l = (locationArea)areas[i];
+                if (l.label == location_name) locn = l;
+                i++;
+            }
+            return (locn);
+        }
+
+        /// <summary>
+        /// remove a location from the list
+        /// </summary>
+        /// <param name="location_name"></param>
+        public void Remove(String location_name)
+        {
+            locationArea locn = GetLocation(location_name);
+            if (locn != null)
+                areas.Remove(locn);
+        }
+
+        /// <summary>
+        /// add a new location to the list
+        /// </summary>
+        /// <param name="location_name"></param>
+        public void Add(String location_name, float longitude, float lattitide)
+        {
+            locationArea locn = GetLocation(location_name);
+            if (locn == null)
+            {
+                locn = new locationArea();
+                areas.Add(locn);
+                locn.label = location_name;
+                locn.longitude = longitude;
+                locn.lattitide = lattitide;
+            }
+            else 
+                locn.Relocate(longitude, lattitide);
+        }
+
+        /// <summary>
+        /// adds some HTML to a location, which may contain a description or other links
+        /// </summary>
+        /// <param name="location_name"></param>
+        /// <param name="HTML"></param>
+        public void AddHTML(String location_name, String HTML)
+        {
+            locationArea locn = GetLocation(location_name);
+            if (locn != null)
+                locn.html = HTML;
+        }
+
+        /// <summary>
+        /// adds a point to a location
+        /// </summary>
+        /// <param name="location_name"></param>
+        /// <param name="point_longitude"></param>
+        /// <param name="point_lattitide"></param>
+        public void AddLocationPoint(String location_name, float point_longitude, float point_lattitide)
+        {
+            locationArea locn = GetLocation(location_name);
+            if (locn != null)
+                locn.Add(point_longitude, point_lattitide);
+        }
+
+        /// <summary>
+        /// returns a list of areas which the given point is inside
+        /// </summary>
+        /// <param name="point_longitude"></param>
+        /// <param name="point_lattitide"></param>
+        /// <returns></returns>
+        public ArrayList IsInside(float point_longitude, float point_lattitide)
+        {
+            ArrayList inside = new ArrayList();
+
+            for (int i = 0; i < areas.Count; i++)
+            {
+                locationArea area = (locationArea)areas[i];
+                if (area.isInside(point_longitude, point_lattitide))
+                    inside.Add(area.label);
+            }
+            return (inside);
+        }
     }
 }
