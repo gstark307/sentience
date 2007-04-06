@@ -58,6 +58,68 @@ namespace sentience.core
         #region "colours"
 
         /// <summary>
+        /// Gets the RGB value for the specified character
+        /// </summary>
+        /// <param name="InChar"> The character to convert </param>
+        /// <returns>System.Int32</returns>
+        private static int GetRGB(char InChar)
+        {
+            int Value = 0;
+            char Char = InChar.ToString().ToUpper().ToCharArray()[0];
+            if (Char == 'A')
+            {
+                Value = 10;
+            }
+            else if (Char == 'B')
+            {
+                Value = 11;
+            }
+            else if (Char == 'C')
+            {
+                Value = 12;
+            }
+            else if (Char == 'D')
+            {
+                Value = 13;
+            }
+            else if (Char == 'E')
+            {
+                Value = 14;
+            }
+            else if (Char == 'F')
+            {
+                Value = 15;
+            }
+            else
+            {
+                Value = int.Parse(Char.ToString());
+            }
+            return Value;
+        }
+
+        /// <summary>
+        /// returns RGB values for the specified hexidecimal code
+        /// </summary>
+        /// <param name="Hexidecimal"> The hexidecimal code to convert </param>
+        public static void GetRBGFromHex(string Hexidecimal,
+                                         ref int R, ref int G, ref int B)
+        {
+            char[] arChars = Hexidecimal.Replace("#", "").ToCharArray();
+            for (int i = 0; i < arChars.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0: { R = (GetRGB(arChars[i]) * 16) + GetRGB(arChars[i + 1]); } break;
+                    case 1: { } break;
+                    case 2: { G = (GetRGB(arChars[i]) * 16) + GetRGB(arChars[i + 1]); } break;
+                    case 3: { } break;
+                    case 4: { B = (GetRGB(arChars[i]) * 16) + GetRGB(arChars[i + 1]); } break;
+                    case 5: { } break;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the hexidecimal color code from the specified RGB
         /// </summary>
         /// <param name="R"> The value of R </param>

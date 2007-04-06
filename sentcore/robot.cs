@@ -50,6 +50,9 @@ namespace sentience.core
         // object containing path planning functions
         public sentience.pathplanner.pathplanner planner;
 
+        // sites to which the robot may move
+        public locations worksites;
+
         // object used to construct rays and sensor models
         public stereoModel inverseSensorModel;
 
@@ -197,6 +200,9 @@ namespace sentience.core
 
             // create a motion model
             motion = new motionModel(this);
+
+            // a list of places where the robot might work or make observations
+            worksites = new locations();
 
             // zero encoder positions
             prev_left_wheel_encoder = 0;
@@ -820,6 +826,13 @@ namespace sentience.core
                     nodeSensorPlatform.AppendChild(head.sensormodel[i].getXml(doc, nodeRobot));
             }
 
+            if (worksites.areas.Count > 0)
+            {
+                XmlElement nodeWorkSites = doc.CreateElement("WorkSites");
+                nodeRobot.AppendChild(nodeWorkSites);
+                //nodeWorkSites.AppendChild(worksites.getXml(doc, nodeRobot));
+            }
+
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
 
@@ -1161,6 +1174,11 @@ namespace sentience.core
             if (xnod.Name == "MotionModel")
             {
                 motion.LoadFromXml(xnod, level + 1);
+            }
+
+            if (xnod.Name == "WorkSites")
+            {
+                worksites.LoadFromXml(xnod, level + 1, "");
             }
 
             // call recursively on all children of the current node

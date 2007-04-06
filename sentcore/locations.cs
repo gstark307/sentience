@@ -20,6 +20,8 @@
 */
 
 using System;
+using System.IO;
+using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -375,6 +377,196 @@ namespace sentience.core
             }
             return (inside);
         }
+
+        #region "loading and saving"
+
+        /// <summary>
+        /// returns an xml string
+        /// </summary>
+        /// <returns></returns>
+        public String GetXml()
+        {
+            String XmlStr = "<markers>\r\n";
+            for (int i = 0; i < areas.Count; i++)
+            {
+                locationArea area = (locationArea)areas[i];
+                XmlStr += area.getXml() + "\r\n";
+            }
+            XmlStr += "</markers>";
+            return (XmlStr);
+        }
+
+        /// <summary>
+        /// load locations from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void Load(String filename)
+        {
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+                areas.Clear();
+                String current_label = "";
+                LoadFromXml(xnodDE, 0, current_label);
+
+                // close the reader
+                xtr.Close();
+            }
+        }
+
+
+        /// <summary>
+        /// save as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void Save(String filename)
+        {
+            StreamWriter oWrite = null;
+            bool allowWrite = true;
+
+            try
+            {
+                oWrite = File.CreateText(filename);
+            }
+            catch
+            {
+                allowWrite = false;
+            }
+
+            if (allowWrite)
+            {
+                oWrite.Write(GetXml());
+                oWrite.Close();
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(XmlNode xnod, int level, String current_label)
+        {
+            XmlNode xnodWorking;
+
+            if (xnod.Name == "marker")
+            {
+                float lattitude = 0;
+                float longitude = 0;
+                String label = "";
+                String html = "";
+
+                XmlNamedNodeMap mapAttributes = xnod.Attributes;
+                for (int i = 0; i < mapAttributes.Count; i++)
+                {
+                    String AttributeName = mapAttributes.Item(i).Name;
+                    String AttributeValue = mapAttributes.Item(i).Value;
+
+                    if (AttributeName == "label")
+                        label = AttributeValue;
+
+                    if (AttributeName == "html")
+                        html = AttributeValue;
+
+                    if (AttributeName == "lat")
+                        lattitude = Convert.ToSingle(AttributeValue);
+
+                    if (AttributeName == "lng")
+                        longitude = Convert.ToSingle(AttributeValue);
+                }
+                if (label != "")
+                {
+                    locationArea new_area = new locationArea();
+                    new_area.label = label;
+                    new_area.html = html;
+                    new_area.longitude = longitude;
+                    new_area.lattitide = lattitude;
+                    areas.Add(new_area);
+                    current_label = label;
+                }
+            }
+
+            if (xnod.Name == "line")
+            {
+                String line_colour = "";
+                int line_width = 0;
+
+                XmlNamedNodeMap mapAttributes = xnod.Attributes;
+                for (int i = 0; i < mapAttributes.Count; i++)
+                {
+                    String AttributeName = mapAttributes.Item(i).Name;
+                    String AttributeValue = mapAttributes.Item(i).Value;
+
+                    if (AttributeName == "colour")
+                        line_colour = AttributeValue;
+
+                    if (AttributeName == "width")
+                        line_width = Convert.ToInt32(AttributeValue);
+                }
+                if (line_colour != "")
+                {
+                    locationArea area = GetLocation(current_label);
+                    if (area != null)
+                    {
+                        int R = 0, G = 0, B = 0;
+                        util.GetRBGFromHex(line_colour, ref R, ref G, ref B);
+                        area.colour[0] = (Byte)R;
+                        area.colour[1] = (Byte)G;
+                        area.colour[2] = (Byte)B;
+                    }
+                }
+            }
+
+            if (xnod.Name == "point")
+            {
+                float point_lattitude = 9999;
+                float point_longitude = 0;
+
+                XmlNamedNodeMap mapAttributes = xnod.Attributes;
+                for (int i = 0; i < mapAttributes.Count; i++)
+                {
+                    String AttributeName = mapAttributes.Item(i).Name;
+                    String AttributeValue = mapAttributes.Item(i).Value;
+
+                    if (AttributeName == "lat")
+                        point_lattitude = Convert.ToSingle(AttributeValue);
+
+                    if (AttributeName == "lng")
+                        point_longitude = Convert.ToSingle(AttributeValue);
+                }
+                if (point_lattitude != 9999)
+                {
+                    locationArea area = GetLocation(current_label);
+                    if (area != null)
+                        area.Add(point_longitude, point_lattitude);
+                }
+            }
+
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1, current_label);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// returns the centre point of all areas
