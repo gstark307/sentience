@@ -208,6 +208,9 @@ namespace sentience.core
 
     public class locations
     {
+        const float earth_diameter_metres = 12756.32f * 1000;
+        const float earth_circumference = (float)Math.PI * earth_diameter_metres;
+
         public ArrayList areas;
 
         public locations()
@@ -244,6 +247,15 @@ namespace sentience.core
                 areas.Remove(locn);
         }
 
+
+        public void AddMillimetres(String location_name, float x_mm, float y_mm)
+        {
+            float lattitude = 0, longitude = 0;
+            MillimetresToDegrees(x_mm, y_mm, ref longitude, ref lattitude);
+            Add(location_name, longitude, lattitude);
+        }
+
+
         /// <summary>
         /// add a new location to the list
         /// </summary>
@@ -279,6 +291,20 @@ namespace sentience.core
         /// adds a point to a location
         /// </summary>
         /// <param name="location_name"></param>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        public void AddLocationPointMillimetres(String location_name, 
+                                                float x_mm, float y_mm)
+        {
+            float lattitude = 0, longitude = 0;
+            MillimetresToDegrees(x_mm, y_mm, ref longitude, ref lattitude);
+            AddLocationPoint(location_name, longitude, lattitude);
+        }
+
+        /// <summary>
+        /// adds a point to a location
+        /// </summary>
+        /// <param name="location_name"></param>
         /// <param name="point_longitude"></param>
         /// <param name="point_lattitide"></param>
         public void AddLocationPoint(String location_name, float point_longitude, float point_lattitide)
@@ -286,6 +312,49 @@ namespace sentience.core
             locationArea locn = GetLocation(location_name);
             if (locn != null)
                 locn.Add(point_longitude, point_lattitide);
+        }
+
+        /// <summary>
+        /// convert a 2D position in millimetres to degrees on the surface of the earth
+        /// this is a crude calculation, not intended to be highly accurate
+        /// </summary>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        /// <param name="longitude"></param>
+        /// <param name="lattitude"></param>
+        public static void MillimetresToDegrees(float x_mm, float y_mm,
+                                                ref float longitude, ref float lattitude)
+        {
+            longitude = x_mm * 180 / ((earth_circumference/2) * 1000);
+            lattitude = y_mm * 180 / ((earth_circumference/2) * 1000);
+        }
+
+        /// <summary>
+        /// convert lattitude and longitude to millimetres
+        /// this is a crude calculation, not intended to be highly accurate
+        /// </summary>
+        /// <param name="longitude"></param>
+        /// <param name="lattitude"></param>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        public static void DegreesToMillimetres(float longitude, float lattitude,
+                                                ref float x_mm, ref float y_mm)
+        {
+            x_mm = longitude * (earth_circumference / 2) * 1000 / 180.0f;
+            y_mm = lattitude * (earth_circumference / 2) * 1000 / 180.0f;
+        }
+
+        /// <summary>
+        /// returns a list of areas which the given point is inside
+        /// </summary>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        /// <returns></returns>
+        public ArrayList IsInsideMillimetres(float x_mm, float y_mm)
+        {
+            float lattitude = 0, longitude = 0;
+            MillimetresToDegrees(x_mm, y_mm, ref longitude, ref lattitude);
+            return (IsInside(longitude, lattitude));
         }
 
         /// <summary>
@@ -305,6 +374,61 @@ namespace sentience.core
                     inside.Add(area.label);
             }
             return (inside);
+        }
+
+        /// <summary>
+        /// returns the centre point of all areas
+        /// </summary>
+        /// <param name="longitude"></param>
+        /// <param name="lattitude"></param>
+        private void getCentrePoint(ref float longitude, ref float lattitude)
+        {
+            longitude = 9999;
+            lattitude = 0;
+
+            if (areas != null)
+            {
+                if (areas.Count > 0)
+                {
+                    float tot_x = 0;
+                    float tot_y = 0;
+                    for (int i = 0; i < areas.Count; i++)
+                    {
+                        locationArea area = (locationArea)areas[i];
+                        tot_x += area.longitude;
+                        tot_y += area.lattitide;
+                    }
+                    longitude = tot_x / areas.Count;
+                    lattitude = tot_y / areas.Count;
+                }
+            }
+        }
+
+
+        public void RelocateMillimetres(float x_mm, float y_mm)
+        {
+            float lattitude = 0, longitude = 0;
+            MillimetresToDegrees(x_mm, y_mm, ref longitude, ref lattitude);
+            Relocate(longitude, lattitude);
+        }
+
+
+        public void Relocate(float longitude, float lattitide)
+        {
+            // calculate the average position
+            float av_longitude = 0, av_lattitide = 0;
+            getCentrePoint(ref av_longitude, ref av_lattitide);
+
+            if (av_longitude != 9999)
+            {
+                // adjust the position of each area relative to the average
+                for (int i = 0; i < areas.Count; i++)
+                {
+                    locationArea area = (locationArea)areas[i];
+                    area.Relocate(area.longitude + longitude - av_longitude,
+                                  area.lattitide + lattitide - av_lattitide);
+                }
+            }
         }
     }
 }
