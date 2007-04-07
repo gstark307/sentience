@@ -139,6 +139,24 @@ namespace sentience.core
             Point.latitude = latitude;
         }
 
+        /// <summary>
+        /// returns the distance to the given coordinate in millimetres
+        /// </summary>
+        /// <param name="longitude"></param>
+        /// <param name="latitude"></param>
+        /// <returns></returns>
+        public float DistanceTo(float longitude, float latitude)
+        {
+            float x1_mm=0, y1_mm=0, x2_mm=0, y2_mm=0;
+
+            kmlPoint.DegreesToMillimetres(Point.longitude, Point.latitude, ref x1_mm, ref y1_mm);
+            kmlPoint.DegreesToMillimetres(longitude, latitude, ref x2_mm, ref y2_mm);
+            float dx = x2_mm - x1_mm;
+            float dy = y2_mm - y1_mm;
+            float dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
+            return (dist);
+        }
+
         #region "loading and saving"
 
         /// <summary>
@@ -878,6 +896,8 @@ namespace sentience.core
         public ArrayList Points = new ArrayList();
         public ArrayList Paths = new ArrayList();
 
+        #region "adding new objects"
+
         public void Add(kmlPlacemarkPolygon polygon)
         {
             Polygons.Add(polygon);
@@ -893,12 +913,65 @@ namespace sentience.core
             Paths.Add(path);
         }
 
+        #endregion
+
         public void Clear()
         {
             Polygons.Clear();
             Points.Clear();
             Paths.Clear();
         }
+
+        public bool isActive()
+        {
+            if ((Polygons.Count > 0) || (Points.Count > 0) || (Paths.Count > 0))
+                return (true);
+            else
+                return (false);
+        }
+
+
+        #region "finding objects"
+
+        /// <summary>
+        /// if the given point is inside any objects return a list of their names
+        /// </summary>
+        /// <param name="longitude"></param>
+        /// <param name="latitude"></param>
+        /// <returns></returns>
+        public ArrayList isInside(float longitude, float latitude)
+        {
+            ArrayList result = new ArrayList();
+
+            for (int i = 0; i < Polygons.Count; i++)
+            {
+                kmlPlacemarkPolygon poly = (kmlPlacemarkPolygon)Polygons[i];
+                if (poly.isInside(longitude, latitude))
+                    result.Add(poly.Name);
+            }
+            return (result);
+        }
+
+        /// <summary>
+        /// returns a list of nearby points
+        /// </summary>
+        /// <param name="longitude"></param>
+        /// <param name="latitude"></param>
+        /// <param name="radius_mm"></param>
+        /// <returns></returns>
+        public ArrayList isNear(float longitude, float latitude, float radius_mm)
+        {
+            ArrayList result = new ArrayList();
+
+            for (int i = 0; i < Points.Count; i++)
+            {
+                kmlPlacemarkPoint pt = (kmlPlacemarkPoint)Points[i];
+                if (pt.DistanceTo(longitude, latitude) < radius_mm)
+                    result.Add(pt.Name);
+            }
+            return (result);
+        }
+
 
         /// <summary>
         /// returns the polygon with the given location name
@@ -954,13 +1027,8 @@ namespace sentience.core
             return (path);
         }
 
-        public bool isActive()
-        {
-            if ((Polygons.Count > 0) || (Points.Count > 0) || (Paths.Count > 0))
-                return (true);
-            else
-                return (false);
-        }
+        #endregion
+
 
         #region "loading and saving"
 
