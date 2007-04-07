@@ -51,7 +51,7 @@ namespace sentience.core
         public sentience.pathplanner.pathplanner planner;
 
         // sites to which the robot may move
-        public locations worksites;
+        public kmlZone worksite;
 
         // object used to construct rays and sensor models
         public stereoModel inverseSensorModel;
@@ -202,7 +202,7 @@ namespace sentience.core
             motion = new motionModel(this);
 
             // a list of places where the robot might work or make observations
-            worksites = new locations();
+            worksite = new kmlZone();
 
             // zero encoder positions
             prev_left_wheel_encoder = 0;
@@ -826,13 +826,6 @@ namespace sentience.core
                     nodeSensorPlatform.AppendChild(head.sensormodel[i].getXml(doc, nodeRobot));
             }
 
-            if (worksites.areas.Count > 0)
-            {
-                XmlElement nodeWorkSites = doc.CreateElement("WorkSites");
-                nodeRobot.AppendChild(nodeWorkSites);
-                //nodeWorkSites.AppendChild(worksites.getXml(doc, nodeRobot));
-            }
-
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
 
@@ -919,6 +912,29 @@ namespace sentience.core
         {
             XmlDocument doc = getXmlDocument();
             doc.Save(filename);
+        }
+
+        /// <summary>
+        /// load worksite locations from a KML file
+        /// </summary>
+        /// <param name="Kml"></param>
+        /// <returns></returns>
+        public bool LoadWorkSite(String Kml)
+        {
+            bool loaded = false;
+
+            if (File.Exists(Kml))
+            {
+                worksite = new kmlZone();
+                worksite.Load(Kml);
+            }
+            return (loaded);
+        }
+
+        public void SaveWorkSite(String Kml)
+        {
+            if (worksite != null)
+                worksite.Save(Kml);
         }
 
         /// <summary>
@@ -1174,11 +1190,6 @@ namespace sentience.core
             if (xnod.Name == "MotionModel")
             {
                 motion.LoadFromXml(xnod, level + 1);
-            }
-
-            if (xnod.Name == "WorkSites")
-            {
-                worksites.LoadFromXml(xnod, level + 1, "");
             }
 
             // call recursively on all children of the current node
