@@ -140,6 +140,26 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// set the position of the point in millimetres
+        /// </summary>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        public void SetPositionMillimetres(float x_mm, float y_mm)
+        {
+            kmlPoint.MillimetresToDegrees(x_mm, y_mm, ref Point.longitude, ref Point.latitude);
+        }
+
+        /// <summary>
+        /// return the position in millimetres
+        /// </summary>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        public void GetPositionMillimetres(ref float x_mm, ref float y_mm)
+        {
+            kmlPoint.DegreesToMillimetres(Point.longitude, Point.latitude, ref x_mm, ref y_mm);
+        }
+
+        /// <summary>
         /// returns the distance to the given coordinate in millimetres
         /// </summary>
         /// <param name="longitude"></param>
@@ -217,10 +237,47 @@ namespace sentience.core
 
         public kmlLineString Path = new kmlLineString();
 
+        #region "relocation - moving all path points at the same time"
+
         public void Relocate(float longitude, float latitude)
         {
             Path.Relocate(longitude, latitude);
         }
+
+        public void RelocateMillimetres(float x_mm, float y_mm)
+        {
+            float longitude = 0, latitude = 0;
+            kmlPoint.MillimetresToDegrees(x_mm, y_mm, ref longitude, ref latitude);
+            Relocate(longitude, latitude);
+        }
+
+        #endregion
+
+        #region "adding points to the path"
+
+        public void Add(float longitude, float latitude)
+        {
+            Path.Add(longitude, latitude, 0);
+        }
+
+        public void AddMillimetres(float x_mm, float y_mm)
+        {
+            float longitude = 0, latitude = 0;
+            kmlPoint.MillimetresToDegrees(x_mm, y_mm, ref longitude, ref latitude);
+            Add(longitude, latitude);
+        }
+
+        #endregion
+
+        #region "removing the last point added"
+
+        public void Remove()
+        {
+            if (Path.Points.Count > 0)
+                Path.Points.RemoveAt(Path.Points.Count - 1);
+        }
+
+        #endregion
 
         #region "loading and saving"
 
@@ -282,10 +339,91 @@ namespace sentience.core
 
         public kmlPolygon Polygon = new kmlPolygon();
 
+        #region "relocation - when you want to move all vertices"
+
         public void Relocate(float longitude, float latitude)
         {
             Polygon.Relocate(longitude, latitude);
         }
+
+        public void RelocateMillimetres(float x_mm, float y_mm)
+        {
+            float longitude = 0, latitude = 0;
+            kmlPoint.MillimetresToDegrees(x_mm, y_mm, ref longitude, ref latitude);
+            Relocate(longitude, latitude);
+        }
+
+        #endregion
+
+        #region "adding vertices"
+
+        /// <summary>
+        /// add an outer vertex to the polygon
+        /// </summary>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        public void AddVertexMillimetres(float x_mm, float y_mm)
+        {
+            float longitude = 0, latitude = 0;
+            kmlPoint.MillimetresToDegrees(x_mm, y_mm, ref longitude, ref latitude);
+            Polygon.outerBoundaryIs.Add(longitude, latitude, 0);
+        }
+
+        /// <summary>
+        /// add an outer vertex
+        /// </summary>
+        /// <param name="longitude"></param>
+        /// <param name="latitude"></param>
+        public void AddVertex(float longitude, float latitude)
+        {
+            Polygon.outerBoundaryIs.Add(longitude, latitude, 0);
+        }
+
+        /// <summary>
+        /// add an inner vertex to the polygon
+        /// </summary>
+        /// <param name="x_mm"></param>
+        /// <param name="y_mm"></param>
+        public void AddInnerVertexMillimetres(float x_mm, float y_mm)
+        {
+            float longitude = 0, latitude = 0;
+            kmlPoint.MillimetresToDegrees(x_mm, y_mm, ref longitude, ref latitude);
+            Polygon.innerBoundaryIs.Add(longitude, latitude, 0);
+        }
+
+        /// <summary>
+        /// add an inner vertex
+        /// </summary>
+        /// <param name="longitude"></param>
+        /// <param name="latitude"></param>
+        public void AddInnerVertex(float longitude, float latitude)
+        {
+            Polygon.innerBoundaryIs.Add(longitude, latitude, 0);
+        }
+
+        #endregion
+
+        #region "removing vertices"
+
+        /// <summary>
+        /// remove the last outer vertex which was added
+        /// </summary>
+        public void Remove()
+        {
+            if (Polygon.outerBoundaryIs.Points.Count > 0)
+                Polygon.outerBoundaryIs.Points.RemoveAt(Polygon.outerBoundaryIs.Points.Count - 1);
+        }
+
+        /// <summary>
+        /// remove the last outer vertex which was added
+        /// </summary>
+        public void RemoveInner()
+        {
+            if (Polygon.innerBoundaryIs.Points.Count > 0)
+                Polygon.innerBoundaryIs.Points.RemoveAt(Polygon.innerBoundaryIs.Points.Count - 1);
+        }
+
+        #endregion
 
         /// <summary>
         /// returns true if the given location is inside the polygon
@@ -915,6 +1053,8 @@ namespace sentience.core
 
         #endregion
 
+        #region "miscellaneous"
+
         public void Clear()
         {
             Polygons.Clear();
@@ -930,6 +1070,7 @@ namespace sentience.core
                 return (false);
         }
 
+        #endregion
 
         #region "finding objects"
 
@@ -1028,7 +1169,6 @@ namespace sentience.core
         }
 
         #endregion
-
 
         #region "loading and saving"
 
