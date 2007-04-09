@@ -47,12 +47,6 @@ namespace sentience.core
         // of possible poses
         public motionModel motion;
 
-        // object containing path planning functions
-        public sentience.pathplanner.pathplanner planner;
-
-        // sites to which the robot may move
-        public kmlZone worksite;
-
         // object used to construct rays and sensor models
         public stereoModel inverseSensorModel;
 
@@ -120,6 +114,12 @@ namespace sentience.core
 
         // keeps an estimate of the robots pan angle based upon scan matching
         public float ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
+
+        // object containing path planning functions
+        private sentience.pathplanner.pathplanner planner;
+
+        // sites (waypoints) to which the robot may move
+        private kmlZone worksites;
 
         #region "constructors"
 
@@ -202,7 +202,7 @@ namespace sentience.core
             motion = new motionModel(this);
 
             // a list of places where the robot might work or make observations
-            worksite = new kmlZone();
+            worksites = new kmlZone();
 
             // zero encoder positions
             prev_left_wheel_encoder = 0;
@@ -688,6 +688,78 @@ namespace sentience.core
 
         #endregion
 
+        #region "planning"
+
+        // a planned path which the robot is following
+        particlePath planned_path;
+
+        /// <summary>
+        /// plan a route to a given location
+        /// </summary>
+        /// <param name="destination_waypoint"></param>
+        public void PlanRoute(String destination_waypoint)
+        {
+            // clear the planned path
+            planned_path = null;
+
+            // retrieve the waypoint from the list of work sites
+            kmlPlacemarkPoint waypoint = worksites.GetPoint(destination_waypoint);
+            if (waypoint != null)
+            {
+                // get the destination waypoint position in millimetres
+                // (the KML format stores positions in degrees)
+                float destination_x = 0, destination_y = 0;
+                waypoint.GetPositionMillimetres(ref destination_x, ref destination_y);
+
+                // create a planner
+                if (planner == null)
+                    planner = new sentience.pathplanner.pathplanner(LocalGrid.navigable_space, (int)LocalGridCellSize_mm, LocalGrid.x, LocalGrid.y);
+
+                // set variables, in the unlikely case that the centre position
+                // of the grid has been changed since the planner was initialised
+                planner.init(LocalGrid.navigable_space, LocalGrid.x, LocalGrid.y);
+
+                // update the planner, in order to assign safety scores to the
+                // navigable space.  The efficiency of this could be improved
+                // by updating only those areas of the map which have changed
+                planner.Update(0, 0, LocalGridDimension - 1, LocalGridDimension - 1);
+
+                // create the plan
+                ArrayList new_plan = planner.CreatePlan(x, y, destination_x, destination_y);
+                if (new_plan.Count > 0)
+                {
+                    // convert the plan into a set of poses
+                    planned_path = new particlePath(new_plan.Count / 2);
+                    float prev_xx = 0, prev_yy = 0;
+                    for (int i = 0; i < new_plan.Count; i += 2)
+                    {
+                        float xx = (float)new_plan[i];
+                        float yy = (float)new_plan[i + 1];
+                        if (i > 0)
+                        {
+                            float dx = xx - prev_xx;
+                            float dy = yy - prev_yy;
+                            float dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                            if (dist > 0)
+                            {
+                                // TODO: check this pan angle
+                                float pan = (float)Math.Sin(dx / dist);
+                                if (dy < 0) pan = (2 * (float)Math.PI) - pan;
+
+                                // create a pose and add it to the planned path
+                                particlePose new_pose = new particlePose(prev_xx, prev_yy, planned_path);
+                                planned_path.Add(new_pose);
+                            }
+                        }
+                        prev_xx = xx;
+                        prev_yy = yy;
+                    }
+                }
+            }
+        }
+
+        #endregion
+
         #region "display functions"
 
         /// <summary>
@@ -925,16 +997,16 @@ namespace sentience.core
 
             if (File.Exists(Kml))
             {
-                worksite = new kmlZone();
-                worksite.Load(Kml);
+                worksites = new kmlZone();
+                worksites.Load(Kml);
             }
             return (loaded);
         }
 
         public void SaveWorkSite(String Kml)
         {
-            if (worksite != null)
-                worksite.Save(Kml);
+            if (worksites != null)
+                worksites.Save(Kml);
         }
 
         /// <summary>

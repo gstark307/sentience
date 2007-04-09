@@ -65,9 +65,7 @@ namespace sentience.pathplanner
                            float OccupancyGridCentre_x_mm, float OccupancyGridCentre_y_mm)
         {
             this.cellSize_mm = cellSize_mm;
-            this.navigable_space = navigable_space;
-            this.OccupancyGridCentre_x_mm = OccupancyGridCentre_x_mm;
-            this.OccupancyGridCentre_y_mm = OccupancyGridCentre_y_mm;
+            init(navigable_space, OccupancyGridCentre_x_mm, OccupancyGridCentre_y_mm);
 
             // for efficiency reasons the dimension of the navigable 
             // safety grid must be a power of 2
@@ -91,6 +89,20 @@ namespace sentience.pathplanner
             navigable_safety = new Byte[safe_dimension, safe_dimension];
 
             pathfinder = new AStar_PathFinderFast(navigable_safety);
+        }
+
+        /// <summary>
+        /// set the navigable space and the centre position of the grid
+        /// </summary>
+        /// <param name="navigable_space"></param>
+        /// <param name="OccupancyGridCentre_x_mm"></param>
+        /// <param name="OccupancyGridCentre_y_mm"></param>
+        public void init(bool[,] navigable_space,
+                    float OccupancyGridCentre_x_mm, float OccupancyGridCentre_y_mm)
+        {
+            this.navigable_space = navigable_space;
+            this.OccupancyGridCentre_x_mm = OccupancyGridCentre_x_mm;
+            this.OccupancyGridCentre_y_mm = OccupancyGridCentre_y_mm;
         }
 
         #endregion
