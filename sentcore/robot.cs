@@ -694,6 +694,43 @@ namespace sentience.core
         particlePath planned_path;
 
         /// <summary>
+        /// remove the named waypoint
+        /// </summary>
+        /// <param name="name"></param>
+        public void RemoveWaypoint(String name)
+        {
+            kmlPlacemarkPoint waypoint = worksites.GetPoint(name);
+            if (waypoint != null)
+                worksites.Points.Remove(waypoint);
+        }
+
+        /// <summary>
+        /// adds a waypoint for the current robot position to the set of work sites
+        /// </summary>
+        /// <param name="name"></param>
+        public void AddWaypoint(String name)
+        {
+            kmlPlacemarkPoint waypoint = new kmlPlacemarkPoint();
+            waypoint.SetPositionMillimetres(x, y);
+            worksites.Add(waypoint);
+            SaveWorkSite("worksites.kml");
+        }
+
+        /// <summary>
+        /// add a waypoint at the specified position
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="position_x_mm"></param>
+        /// <param name="position_y_mm"></param>
+        public void AddWaypoint(String name, float position_x_mm, float position_y_mm)
+        {
+            kmlPlacemarkPoint waypoint = new kmlPlacemarkPoint();
+            waypoint.SetPositionMillimetres(position_x_mm, position_y_mm);
+            worksites.Add(waypoint);
+            SaveWorkSite("worksites.kml");
+        }
+
+        /// <summary>
         /// plan a route to a given location
         /// </summary>
         /// <param name="destination_waypoint"></param>
@@ -747,7 +784,7 @@ namespace sentience.core
                                 if (dy < 0) pan = (2 * (float)Math.PI) - pan;
 
                                 // create a pose and add it to the planned path
-                                particlePose new_pose = new particlePose(prev_xx, prev_yy, planned_path);
+                                particlePose new_pose = new particlePose(prev_xx, prev_yy, pan, planned_path);
                                 planned_path.Add(new_pose);
                             }
                         }

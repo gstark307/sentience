@@ -30,6 +30,27 @@ namespace sentience.core
     ///
     ///    This is used to calculate depth maps from stereo images, and returns
     ///    a set of point features.  All feature coordinates are from the left image.
+    /// 
+    ///    The algorithm works basically as follows:
+    /// 
+    /// 1.  Determine vertical edge intensities by comparing a few pixels to the
+    ///     left and right along each row.
+    ///
+    /// 2.  Perform non maximal suppression along each row to give the 5 strongest
+    ///     edges.
+    ///
+    /// 3.  Perform (1) and (2) on the left and right camera images.
+    ///
+    /// 4.  For each row compare the edge features in the left and right images.  A
+    ///     small neighbourhood is compared, on two or three different scales.  Store
+    ///     the comparison results.
+    ///
+    /// 5.  Sort the results from (4) to give typically the 100 best scoring
+    ///     matches.
+    ///
+    /// This method works reasonably well for low numbers of features.  If you
+    /// increase the number of features selected in (5) the results get worse
+    /// because lower quality matches are included.
     ///
     ///    version              : 6.04
     ///    begin                : Sun Sep 10 2000
