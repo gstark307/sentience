@@ -20,7 +20,7 @@
 
 using System;
 using System.IO;
-using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 
 namespace sentience.learn
@@ -29,6 +29,34 @@ namespace sentience.learn
     {
         public selfoptParameter[] parameter;
         public float score;
+
+        #region "conversions"
+
+        /// <summary>
+        /// save the parameters for this instance as a float array
+        /// </summary>
+        /// <returns></returns>
+        public float[] ToFloatArray()
+        {
+            float[] result = new float[parameter.Length];
+            for (int i = 0; i < parameter.Length; i++)
+                result[i] = parameter[i].value;
+            return (result);
+        }
+
+        /// <summary>
+        /// return the values as a string array
+        /// </summary>
+        /// <returns></returns>
+        public String[] AsString()
+        {
+            String[] result = new String[parameter.Length];
+            for (int i = 0; i < parameter.Length; i++)
+                result[i] = parameter[i].value.ToString();
+            return (result);
+        }
+
+        #endregion
 
         public selfoptInstance(int no_of_parameters)
         {
@@ -85,9 +113,9 @@ namespace sentience.learn
             Copy(parent1);
 
             //copy half the parameters randomly from second parent
-            for (int p = 0; p < parameter.Length/2; p++)
+            for (int p = 0; p < parameter.Length / 2; p++)
             {
-                int idx = rnd.Next(parameter.Length-1);
+                int idx = rnd.Next(parameter.Length - 1);
                 parameter[idx].Copy(parent2.parameter[idx]);
             }
             //mutate
@@ -97,7 +125,7 @@ namespace sentience.learn
         }
 
         public void save(BinaryWriter binfile)
-        {            
+        {
             for (int p = 0; p < parameter.Length; p++)
                 parameter[p].save(binfile);
             binfile.Write(score);

@@ -21,7 +21,7 @@
 
 using System;
 using System.IO;
-using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 
 namespace sentience.learn
@@ -33,8 +33,9 @@ namespace sentience.learn
         public int parameters_per_instance;
 
         //store the history of best scores
-        private int bestScoreHistoryIndex = 0;
+        private int scoreHistoryIndex = 0;
         private float[] bestScoreHistory;
+        private float[] scoreHistory;
 
         // population of instances to be evaluated
         private selfoptInstance[] instance;
@@ -66,6 +67,7 @@ namespace sentience.learn
         // whenever a new best score is produced automatically save the system
         public bool autoSave = false;
         public String autoSaveFilename = "autosave.dat";
+        public String allHistoryFilename = "optimiser_all.dat";
 
         #region "initialisation functions"
 
@@ -80,6 +82,7 @@ namespace sentience.learn
 
             // store a few best scores
             bestScoreHistory = new float[1000];
+            scoreHistory = new float[1000];
         }
 
         public selfopt(int no_of_instances, int parameters_per_instance)
@@ -133,13 +136,52 @@ namespace sentience.learn
             }
 
             //update the best score history
-            bestScoreHistoryIndex++;
-            if (bestScoreHistoryIndex >= bestScoreHistory.Length)
-                bestScoreHistoryIndex = 0;
-            bestScoreHistory[bestScoreHistoryIndex] = best_score;
+            scoreHistoryIndex++;
+            if (scoreHistoryIndex >= bestScoreHistory.Length)
+            {
+                shuffleScoreHistory();
+            }
+            bestScoreHistory[scoreHistoryIndex] = best_score;
+            scoreHistory[scoreHistoryIndex] = score;
 
             //go to the next instance whose score has not yet been calculated
             nextInstance();
+        }
+
+        /// <summary>
+        /// shuffles the score history along and archives old values
+        /// so that we can maintain a record of the complete history
+        /// </summary>
+        private void shuffleScoreHistory()
+        {
+            int index = scoreHistory.Length / 2;
+
+            // archive old values to file            
+            FileStream fp = null;
+            if (File.Exists(allHistoryFilename))
+                fp = new FileStream(allHistoryFilename, FileMode.Append);
+            else
+                fp = new FileStream(allHistoryFilename, FileMode.Create);
+
+            BinaryWriter binfile = new BinaryWriter(fp);
+
+            int i = 0;
+            for (i = 0; i < index; i++)
+                binfile.Write(scoreHistory[i]);
+
+            binfile.Close();
+            fp.Close();
+
+            // reorganise the history
+            while (i < scoreHistory.Length)
+            {
+                scoreHistory[i - index] = scoreHistory[i];
+                scoreHistory[i] = 0;
+                bestScoreHistory[i - index] = bestScoreHistory[i];
+                bestScoreHistory[i] = 0;
+                i++;
+            }
+            scoreHistoryIndex = index;
         }
 
         /// <summary>
@@ -164,7 +206,7 @@ namespace sentience.learn
             if (tries >= instance.Length) update();
 
             // if no improvement has been made for a long time
-            if (last_improved >= instance.Length*2)
+            if (last_improved >= instance.Length * 2)
             {
                 seedBest();
                 //Randomize(true);
@@ -187,6 +229,35 @@ namespace sentience.learn
         }
 
         /// <summary>
+        /// return parameters for the best instance
+        /// </summary>
+        /// <returns></returns>
+        public String[] getBestInstanceAsString()
+        {
+            String[] result = instance[best_index].AsString();
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = parameterName[i] + " = " + result[i];
+            }
+            return (result);
+        }
+
+
+        /// <summary>
+        /// return the current instance
+        /// </summary>
+        /// <returns></returns>
+        public selfoptInstance getCurrentInstance()
+        {
+            return (instance[current_instance_index]);
+        }
+
+        public selfoptInstance getBestInstance()
+        {
+            return (instance[best_index]);
+        }
+
+        /// <summary>
         /// retrieve the given parameter for the currently evaluated instance
         /// </summary>
         /// <param name="parameter_index"></param>
@@ -206,7 +277,7 @@ namespace sentience.learn
         private void Sort()
         {
             for (int i = 0; i < instance.Length - 1; i++)
-            {                
+            {
                 for (int j = i + 1; j < instance.Length; j++)
                 {
                     if (((smallerScoresAreBetter) && (instance[i].score > instance[j].score)) ||
@@ -285,7 +356,14 @@ namespace sentience.learn
             binfile.Write(instance.Length);
             binfile.Write(instance[0].parameter.Length);
 
-            binfile.Write(bestScoreHistoryIndex);
+            binfile.Write(scoreHistoryIndex);
+
+            for (int i = 0; i < scoreHistoryIndex; i++)
+            {
+                binfile.Write(bestScoreHistory[i]);
+                binfile.Write(scoreHistory[i]);
+            }
+
             binfile.Write(smallerScoresAreBetter);
             binfile.Write(generation);
             binfile.Write(best_score);
@@ -316,7 +394,13 @@ namespace sentience.learn
 
                 init(no_of_instances, no_of_parameters);
 
-                bestScoreHistoryIndex = binfile.ReadInt32();
+                scoreHistoryIndex = binfile.ReadInt32();
+                for (int i = 0; i < scoreHistoryIndex; i++)
+                {
+                    bestScoreHistory[i] = binfile.ReadSingle();
+                    scoreHistory[i] = binfile.ReadSingle();
+                }
+
                 smallerScoresAreBetter = binfile.ReadBoolean();
                 generation = binfile.ReadInt64();
                 best_score = binfile.ReadSingle();
@@ -335,12 +419,53 @@ namespace sentience.learn
             }
         }
 
+        /// <summary>
+        /// load the entire score history from file
+        /// </summary>
+        private ArrayList loadEntireHistory(String filename)
+        {
+            ArrayList all_scores = new ArrayList();
+
+            if (File.Exists(filename))
+            {
+                FileStream fp = new FileStream(filename, FileMode.Open);
+                BinaryReader binfile = new BinaryReader(fp);
+
+                bool file_finished = false;
+                while (!file_finished)
+                {
+                    try
+                    {
+                        float score = binfile.ReadSingle();
+                        all_scores.Add(score);
+                    }
+                    catch
+                    {
+                        file_finished = true;
+                    }
+                }
+
+                for (int i = scoreHistory.Length / 2; i < scoreHistoryIndex; i++)
+                    all_scores.Add((float)scoreHistory[i]);
+
+                binfile.Close();
+                fp.Close();
+            }
+            else
+            {
+                for (int i = 0; i < scoreHistoryIndex; i++)
+                    all_scores.Add((float)scoreHistory[i]);
+            }
+            return (all_scores);
+        }
+
+
         #endregion
 
         #region "drawing functions"
 
         /// <summary>
-        /// show the best score history within the given bitmap
+        /// show the score history within the given bitmap
         /// </summary>
         /// <param name="img"></param>
         /// <param name="img_width"></param>
@@ -350,26 +475,99 @@ namespace sentience.learn
             for (int i = 0; i < img.Length; i++) img[i] = 240;
 
             // get the maximum score
+            float max_score_best = 0.01f;
             float max_score = 0.01f;
             for (int i = 0; i < bestScoreHistory.Length; i++)
-                if (bestScoreHistory[i] > max_score) max_score = bestScoreHistory[i];
+            {
+                if (bestScoreHistory[i] > max_score_best) max_score_best = bestScoreHistory[i];
+                if (scoreHistory[i] > max_score) max_score = scoreHistory[i];
+            }
             max_score *= 1.1f;
+            max_score_best *= 1.1f;
 
             int x, y;
             int prev_x = 0;
             int prev_y = 0;
+            int x_best, y_best;
+            int prev_x_best = 0;
+            int prev_y_best = 0;
             for (int t = 0; t < bestScoreHistory.Length; t++)
             {
-                x = t * (img_width-1) / bestScoreHistory.Length;
-                y = img_height - 1 - (int)(bestScoreHistory[t] / max_score * img_height);
+                x = t * (img_width - 1) / bestScoreHistory.Length;
+                y = img_height - 1 - (int)(scoreHistory[t] / max_score * img_height);
+                x_best = t * (img_width - 1) / bestScoreHistory.Length;
+                y_best = img_height - 1 - (int)(bestScoreHistory[t] / max_score_best * img_height);
 
                 if (t > 0)
-                    drawLine(img, img_width, img_height, x, y, prev_x, prev_y, 0, 0, 0, 0);
+                {
+                    if ((y != 0) && (prev_y != 0)) drawLine(img, img_width, img_height, x, y, prev_x, prev_y, 255, 0, 255, 0);
+                    drawLine(img, img_width, img_height, x_best, y_best, prev_x_best, prev_y_best, 0, 0, 0, 0);
+                }
 
                 prev_x = x;
                 prev_y = y;
+                prev_x_best = x_best;
+                prev_y_best = y_best;
             }
         }
+
+        /// <summary>
+        /// show the full score history within the given bitmap
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        public void showEntireHistory(Byte[] img, int img_width, int img_height)
+        {
+            ArrayList scores = loadEntireHistory(allHistoryFilename);
+
+            for (int i = 0; i < img.Length; i++) img[i] = 240;
+
+            if (scores.Count > 0)
+            {
+                float max_score = 0.01f;
+                for (int i = 0; i < scores.Count; i++)
+                {
+                    float sc = (float)scores[i];
+                    if (sc > max_score) max_score = sc;
+                }
+                max_score *= 1.1f;
+
+                int x, y;
+                int prev_x = 0;
+                int prev_y = 0;
+                int x_best, y_best;
+                int prev_x_best = 0;
+                int prev_y_best = 0;
+                float best_sc = 0;
+                for (int t = 0; t < scores.Count; t++)
+                {
+                    float sc = (float)scores[t];
+                    if (((sc < best_sc) && (smallerScoresAreBetter)) ||
+                        ((sc > best_sc) && (!smallerScoresAreBetter)) ||
+                        (t == 0))
+                        best_sc = sc;
+
+                    x = t * (img_width - 1) / scores.Count;
+                    y = img_height - 1 - (int)(sc / max_score * img_height);
+                    x_best = t * (img_width - 1) / scores.Count;
+                    y_best = img_height - 1 - (int)(best_sc / max_score * img_height);
+
+                    if (t > 0)
+                    {
+                        if ((y != 0) && (prev_y != 0)) drawLine(img, img_width, img_height, x, y, prev_x, prev_y, 255, 0, 255, 0);
+                        drawLine(img, img_width, img_height, x_best, y_best, prev_x_best, prev_y_best, 0, 0, 0, 0);
+                    }
+
+                    prev_x = x;
+                    prev_y = y;
+                    prev_x_best = x_best;
+                    prev_y_best = y_best;
+                }
+            }
+
+        }
+
 
         public static void drawLine(Byte[] img, int img_width, int img_height,
                                     int x1, int y1, int x2, int y2, int r, int g, int b, int linewidth)
