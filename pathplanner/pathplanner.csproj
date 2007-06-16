@@ -41,6 +41,12 @@
     <Compile Include="AStar_PriorityQueueB.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\utilities\utilities.csproj">
+      <Project>{3028A130-2D88-4581-B9F9-D840FA39875D}</Project>
+      <Name>utilities</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -23,7 +23,7 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
+using sluggish.utilities.xml;
 
 namespace sentience.core
 {
@@ -82,7 +82,7 @@ namespace sentience.core
         {
             XmlElement elem = doc.CreateElement("Point");
             doc.DocumentElement.AppendChild(elem);
-            util.AddTextElement(doc, elem, "coordinates", Convert.ToString(longitude) + "," +
+            xml.AddTextElement(doc, elem, "coordinates", Convert.ToString(longitude) + "," +
                                                           Convert.ToString(latitude) + "," +
                                                           Convert.ToString(altitude));
             return (elem);
@@ -188,8 +188,8 @@ namespace sentience.core
         {
             XmlElement elem = doc.CreateElement("Placemark");
             doc.DocumentElement.AppendChild(elem);
-            util.AddTextElement(doc, elem, "name", Name);
-            util.AddTextElement(doc, elem, "description", Description);
+            xml.AddTextElement(doc, elem, "name", Name);
+            xml.AddTextElement(doc, elem, "description", Description);
             elem.AppendChild(Point.getXml(doc));
             return (elem);
         }
@@ -290,8 +290,8 @@ namespace sentience.core
         {
             XmlElement elem = doc.CreateElement("Placemark");
             doc.DocumentElement.AppendChild(elem);
-            util.AddTextElement(doc, elem, "name", Name);
-            util.AddTextElement(doc, elem, "description", Description);
+            xml.AddTextElement(doc, elem, "name", Name);
+            xml.AddTextElement(doc, elem, "description", Description);
             elem.AppendChild(Path.getXml(doc));
             return (elem);
         }
@@ -454,8 +454,8 @@ namespace sentience.core
         {
             XmlElement elem = doc.CreateElement("Placemark");
             doc.DocumentElement.AppendChild(elem);
-            util.AddTextElement(doc, elem, "name", Name);
-            util.AddTextElement(doc, elem, "description", Description);
+            xml.AddTextElement(doc, elem, "name", Name);
+            xml.AddTextElement(doc, elem, "description", Description);
             elem.AppendChild(Polygon.getXml(doc));
             return (elem);
         }
@@ -620,7 +620,7 @@ namespace sentience.core
 
             XmlElement elem = doc.CreateElement("LinearRing");
             doc.DocumentElement.AppendChild(elem);
-            util.AddTextElement(doc, elem, "coordinates", coords);
+            xml.AddTextElement(doc, elem, "coordinates", coords);
             return (elem);
         }
 
@@ -764,15 +764,15 @@ namespace sentience.core
             XmlElement elem = doc.CreateElement("LineString");
             doc.DocumentElement.AppendChild(elem);
             if (extrude)
-                util.AddTextElement(doc, elem, "extrude", "1");
+                xml.AddTextElement(doc, elem, "extrude", "1");
             else
-                util.AddTextElement(doc, elem, "extrude", "0");
+                xml.AddTextElement(doc, elem, "extrude", "0");
             if (tessellate)
-                util.AddTextElement(doc, elem, "tessellate", "1");
+                xml.AddTextElement(doc, elem, "tessellate", "1");
             else
-                util.AddTextElement(doc, elem, "tessellate", "0");
-            util.AddTextElement(doc, elem, "altitudeMode", altitudeMode);
-            util.AddTextElement(doc, elem, "coordinates", coords);
+                xml.AddTextElement(doc, elem, "tessellate", "0");
+            xml.AddTextElement(doc, elem, "altitudeMode", altitudeMode);
+            xml.AddTextElement(doc, elem, "coordinates", coords);
             return (elem);
         }
 
@@ -863,20 +863,20 @@ namespace sentience.core
         {
             XmlElement elem = doc.CreateElement("GroundOverlay");
             doc.DocumentElement.AppendChild(elem);
-            util.AddTextElement(doc, elem, "name", Name);
-            util.AddTextElement(doc, elem, "description", Description);
+            xml.AddTextElement(doc, elem, "name", Name);
+            xml.AddTextElement(doc, elem, "description", Description);
 
             XmlElement elemIcon = doc.CreateElement("Icon");
             elem.AppendChild(elemIcon);
-            util.AddTextElement(doc, elemIcon, "href", href);
+            xml.AddTextElement(doc, elemIcon, "href", href);
 
             XmlElement elemBox = doc.CreateElement("LatLonBox");
             elem.AppendChild(elemBox);
-            util.AddTextElement(doc, elemBox, "north", Convert.ToString(north));
-            util.AddTextElement(doc, elemBox, "south", Convert.ToString(south));
-            util.AddTextElement(doc, elemBox, "east", Convert.ToString(east));
-            util.AddTextElement(doc, elemBox, "west", Convert.ToString(west));
-            util.AddTextElement(doc, elemBox, "rotation", Convert.ToString(rotation));
+            xml.AddTextElement(doc, elemBox, "north", Convert.ToString(north));
+            xml.AddTextElement(doc, elemBox, "south", Convert.ToString(south));
+            xml.AddTextElement(doc, elemBox, "east", Convert.ToString(east));
+            xml.AddTextElement(doc, elemBox, "west", Convert.ToString(west));
+            xml.AddTextElement(doc, elemBox, "rotation", Convert.ToString(rotation));
             return (elem);
         }
 
@@ -954,10 +954,10 @@ namespace sentience.core
             XmlElement elem = doc.CreateElement("Polygon");
             doc.DocumentElement.AppendChild(elem);
             if (extrude)
-                util.AddTextElement(doc, elem, "extrude", "1");
+                xml.AddTextElement(doc, elem, "extrude", "1");
             else
-                util.AddTextElement(doc, elem, "extrude", "0");
-            util.AddTextElement(doc, elem, "altitudeMode", altitudeMode);
+                xml.AddTextElement(doc, elem, "extrude", "0");
+            xml.AddTextElement(doc, elem, "altitudeMode", altitudeMode);
             
             XmlElement elemOuter = doc.CreateElement("outerBoundaryIs");
             elem.AppendChild(elemOuter);
@@ -1245,8 +1245,8 @@ namespace sentience.core
         {
             XmlElement elem = doc.CreateElement("Document");
             doc.DocumentElement.AppendChild(elem);
-            util.AddTextElement(doc, elem, "name", Name);
-            util.AddTextElement(doc, elem, "description", Description);
+            xml.AddTextElement(doc, elem, "name", Name);
+            xml.AddTextElement(doc, elem, "description", Description);
 
             if (Polygons.Count > 0)
             {

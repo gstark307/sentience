@@ -21,11 +21,11 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+using sluggish.utilities;
 
 namespace sentience.core
 {
+/*    
     public class polyfit
     {
         private const int MaxO = 25; // max polynomial degree
@@ -302,12 +302,12 @@ namespace sentience.core
             if (min_x < 0)
             {
                 int xx = (int)((0 - min_x) * (width - 1) / (max_x - min_x));
-                util.drawLine(img, width, height, xx, 0, xx, height - 1, 200, 200, 200, 0, false);
+                drawing.drawLine(img, width, height, xx, 0, xx, height - 1, 200, 200, 200, 0, false);
             }
             if (min_y < 0)
             {
                 int yy = (int)((0 - min_y) * (height - 1) / (max_y - min_y));
-                util.drawLine(img, width, height, 0, yy, width-1, yy, 200, 200, 200, 0, false);
+                drawing.drawLine(img, width, height, 0, yy, width-1, yy, 200, 200, 200, 0, false);
             }
 
             for (i = 0; i < Xpoints.Count; i++)
@@ -334,10 +334,11 @@ namespace sentience.core
             {
                 int xx = (int)(x * (width - 1) / max_x);
                 int yy = height - 1 - (int)(RegVal(x) * (height-1) / max_y);
-                util.drawLine(img, width, height, prev_x, prev_y, xx, yy, 100, 100, 100, 0, false);
+                drawing.drawLine(img, width, height, prev_x, prev_y, xx, yy, 100, 100, 100, 0, false);
                 prev_x = xx;
                 prev_y = yy;
             }
         }
     }
+     */
 }

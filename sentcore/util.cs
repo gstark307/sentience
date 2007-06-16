@@ -26,6 +26,7 @@ using System.Text;
 
 namespace sentience.core
 {
+    /*
     public class util
     {
         #region "xml"
@@ -675,6 +676,8 @@ namespace sentience.core
             }
             return (mono_image);
         }
+     
 
     }
+     */
 }

@@ -23,9 +23,9 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 using sentience.core;
+using sluggish.utilities;
+using sluggish.utilities.xml;
 
 namespace sentience.calibration
 {
@@ -79,10 +79,10 @@ namespace sentience.calibration
         /// <param name="height"></param>
         public void Show(Byte[] img, int width, int height)
         {
-            util.drawLine(img, width, height, tx, ty, bx, ty, 0, 255, 0, 0, false);
-            util.drawLine(img, width, height, bx, ty, bx, by, 0, 255, 0, 0, false);
-            util.drawLine(img, width, height, bx, by, tx, by, 0, 255, 0, 0, false);
-            util.drawLine(img, width, height, tx, by, tx, ty, 0, 255, 0, 0, false);
+            drawing.drawLine(img, width, height, tx, ty, bx, ty, 0, 255, 0, 0, false);
+            drawing.drawLine(img, width, height, bx, ty, bx, by, 0, 255, 0, 0, false);
+            drawing.drawLine(img, width, height, bx, by, tx, by, 0, 255, 0, 0, false);
+            drawing.drawLine(img, width, height, tx, by, tx, ty, 0, 255, 0, 0, false);
         }
     }
 
@@ -258,7 +258,7 @@ namespace sentience.calibration
             {
                 calibration_point p1 = (calibration_point)points[i - 1];
                 calibration_point p2 = (calibration_point)points[i];
-                util.drawLine(img, width, height, (int)p1.x, (int)p1.y, (int)p2.x, (int)p2.y, r, g, b, 0, false);
+                drawing.drawLine(img, width, height, (int)p1.x, (int)p1.y, (int)p2.x, (int)p2.y, r, g, b, 0, false);
             }
         }
     }
@@ -334,7 +334,7 @@ namespace sentience.calibration
         public Byte[] lines_image;
         public Byte[] curve_fit;
 
-        polyfit fitter, best_curve;
+        polynomial fitter, best_curve;
         public float temp_scale, scale=1;
         public float rotation = 0;
 
@@ -539,7 +539,7 @@ namespace sentience.calibration
                 grid_y = coverage[cx, cy].grid_y;
                 int px = (int)(coverage[cx, cy].x / coverage[cx, cy].hits);
                 int py = (int)(coverage[cx, cy].y / coverage[cx, cy].hits);
-                util.drawBox(corners_image, width, height, px, py, 4, 255, 255, 255, 0);
+                drawing.drawBox(corners_image, width, height, px, py, 4, 255, 255, 255, 0);
             }
             else
             {
@@ -560,7 +560,7 @@ namespace sentience.calibration
                                 grid_y = coverage[xx, yy].grid_y;
                                 int px = (int)(coverage[xx, yy].x / coverage[xx, yy].hits);
                                 int py = (int)(coverage[xx, yy].y / coverage[xx, yy].hits);
-                                util.drawBox(corners_image, width, height, px, py, 4, 255, 255, 255, 0);
+                                drawing.drawBox(corners_image, width, height, px, py, 4, 255, 255, 255, 0);
                                 found = true;
                             }
                             yy++;
@@ -588,12 +588,12 @@ namespace sentience.calibration
                     {
                         if (grid[x, y] != null)
                         {
-                            util.drawCross(img, width, height, (int)grid[x, y].rectified_x, (int)grid[x, y].rectified_y, 2, 255, 255, 0, 0);
+                            drawing.drawCross(img, width, height, (int)grid[x, y].rectified_x, (int)grid[x, y].rectified_y, 2, 255, 255, 0, 0);
                             
                             if (rectifyPoint((int)grid[x, y].x, (int)grid[x, y].y, ref rectified_x, ref rectified_y))
                             {
                                 //util.drawCross(img, width, height, rectified_x, rectified_y, 2, 255, 255, 255, 0);
-                                util.drawLine(img, width, height, (int)grid[x, y].rectified_x, (int)grid[x, y].rectified_y, rectified_x, rectified_y, 255, 255, 255, 0, false);
+                                drawing.drawLine(img, width, height, (int)grid[x, y].rectified_x, (int)grid[x, y].rectified_y, rectified_x, rectified_y, 255, 255, 255, 0, false);
                             }                            
                         }
                     }
@@ -649,7 +649,7 @@ namespace sentience.calibration
                                 {
                                     float ix = 0;
                                     float iy = 0;
-                                    if (util.intersection((float)prev_pt.x, (float)prev_pt.y, (float)pt.x, (float)pt.y,
+                                    if (geometry.intersection((float)prev_pt.x, (float)prev_pt.y, (float)pt.x, (float)pt.y,
                                                           (float)prev_pt2.x, (float)prev_pt2.y, (float)pt2.x, (float)pt2.y,
                                                           ref ix, ref iy))
                                     {
@@ -772,7 +772,7 @@ namespace sentience.calibration
                     {
                         calibration_edge pt = (calibration_edge)grid[grid_x, grid_y];
                         if (pt != null)
-                            util.drawCross(corners_image, width, height, (int)pt.x, (int)pt.y, 3, 255, 0, 0, 0);
+                            drawing.drawCross(corners_image, width, height, (int)pt.x, (int)pt.y, 3, 255, 0, 0, 0);
                     }
                 }
             }
@@ -2169,7 +2169,7 @@ namespace sentience.calibration
         /// <param name="rectified_y"></param>
         /// <param name="polycurve"></param>
         private void addDataPoint(float x, float y, float rectified_x, float rectified_y,
-                                  polyfit polycurve)
+                                  polynomial polycurve)
         {
             float dx = rectified_x - centre_of_distortion.x;
             float dy = rectified_y - centre_of_distortion.y;
@@ -2290,7 +2290,7 @@ namespace sentience.calibration
                         {
                             for (int search_y = (int)centre_of_distortion.y - radius; search_y <= (int)centre_of_distortion.y + radius; search_y++)
                             {
-                                polyfit curvefit = new polyfit();
+                                polynomial curvefit = new polynomial();
                                 curvefit.SetDegree(2);
 
                                 for (int x = 0; x < grid.GetLength(0); x++)
@@ -2567,7 +2567,7 @@ namespace sentience.calibration
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        private void updateCalibrationMap(int width, int height, polyfit curve, float scale, float rotation)
+        private void updateCalibrationMap(int width, int height, polynomial curve, float scale, float rotation)
         {
             temp_calibration_map = new int[width * height];            
             temp_calibration_map_inverse = new int[width, height, 2];
@@ -2655,8 +2655,8 @@ namespace sentience.calibration
             int bx2 = width - 1;
             int by2 = height / 2;
 
-            util.drawLine(img, width, height, tx1, ty1, bx1, by1, 255, 255, 255, 0, false);
-            util.drawLine(img, width, height, tx2, ty2, bx2, by2, 255, 255, 255, 0, false);
+            drawing.drawLine(img, width, height, tx1, ty1, bx1, by1, 255, 255, 255, 0, false);
+            drawing.drawLine(img, width, height, tx2, ty2, bx2, by2, 255, 255, 255, 0, false);
         }
 
         /// <summary>
@@ -2732,7 +2732,7 @@ namespace sentience.calibration
                 showAlignmentLines(centrealign_image, width, height);
 
                 // create a mono image
-                calibration_image = util.monoImage(img, width, height);
+                calibration_image = image.monoImage(img, width, height);
 
                 if (!alignMode)
                 {
@@ -2891,7 +2891,7 @@ namespace sentience.calibration
             XmlElement nodeCalibration = doc.CreateElement("Sentience");
             doc.AppendChild(nodeCalibration);
 
-            util.AddComment(doc, nodeCalibration, "Camera calibration data");
+            xml.AddComment(doc, nodeCalibration, "Camera calibration data");
 
             XmlElement elem = getXml(doc);
             doc.DocumentElement.AppendChild(elem);
@@ -2961,23 +2961,23 @@ namespace sentience.calibration
 
             XmlElement elem = doc.CreateElement("Camera");
             doc.DocumentElement.AppendChild(elem);
-            util.AddComment(doc, elem, "Horizontal field of view of the camera in degrees");
-            util.AddTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(camera_FOV_degrees));
-            util.AddComment(doc, elem, "Image dimensions in pixels");
-            util.AddTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width) + "," + Convert.ToString(image_height));
+            xml.AddComment(doc, elem, "Horizontal field of view of the camera in degrees");
+            xml.AddTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(camera_FOV_degrees));
+            xml.AddComment(doc, elem, "Image dimensions in pixels");
+            xml.AddTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width) + "," + Convert.ToString(image_height));
             if (centre_of_distortion != null)
             {
-                util.AddComment(doc, elem, "The centre of distortion in pixels");
-                util.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion.x) + "," + Convert.ToString(centre_of_distortion.y));
+                xml.AddComment(doc, elem, "The centre of distortion in pixels");
+                xml.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion.x) + "," + Convert.ToString(centre_of_distortion.y));
             }
-            util.AddComment(doc, elem, "Polynomial coefficients used to describe the camera lens distortion");
-            util.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
-            util.AddComment(doc, elem, "Scaling factor");
-            util.AddTextElement(doc, elem, "Scale", Convert.ToString(scale));
-            util.AddComment(doc, elem, "Rotation of the image in degrees");
-            util.AddTextElement(doc, elem, "RotationDegrees", Convert.ToString(rotation / (float)Math.PI * 180.0f));
-            util.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
-            util.AddTextElement(doc, elem, "RMSerror", Convert.ToString(min_RMS_error));
+            xml.AddComment(doc, elem, "Polynomial coefficients used to describe the camera lens distortion");
+            xml.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
+            xml.AddComment(doc, elem, "Scaling factor");
+            xml.AddTextElement(doc, elem, "Scale", Convert.ToString(scale));
+            xml.AddComment(doc, elem, "Rotation of the image in degrees");
+            xml.AddTextElement(doc, elem, "RotationDegrees", Convert.ToString(rotation / (float)Math.PI * 180.0f));
+            xml.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
+            xml.AddTextElement(doc, elem, "RMSerror", Convert.ToString(min_RMS_error));
             return (elem);
         }
 
@@ -3013,7 +3013,7 @@ namespace sentience.calibration
                 if (xnod.InnerText != "")
                 {
                     String[] coeffStr = xnod.InnerText.Split(',');
-                    fitter = new polyfit();
+                    fitter = new polynomial();
                     fitter.SetDegree(coeffStr.Length - 1);
                     for (int i = 0; i < coeffStr.Length; i++)
                         fitter.SetCoeff(i, Convert.ToSingle(coeffStr[i]));

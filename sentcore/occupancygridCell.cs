@@ -20,9 +20,9 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 using CenterSpace.Free;
+using sluggish.utilities;
 
 namespace sentience.core
 {
@@ -160,7 +160,7 @@ namespace sentience.core
                 for (int col = 0; col < 3; col++)
                     mean_colour[col] /= hits;
             }
-            return (util.LogOddsToProbability(probabilityLogOdds));
+            return (probabilities.LogOddsToProbability(probabilityLogOdds));
         }
 
         /// <summary>
@@ -278,7 +278,7 @@ namespace sentience.core
                 if (returnLogOdds)
                     return (probabilityLogOdds);
                 else
-                    return (util.LogOddsToProbability(probabilityLogOdds));
+                    return (probabilities.LogOddsToProbability(probabilityLogOdds));
             }
             else
                 return (NO_OCCUPANCY_EVIDENCE);

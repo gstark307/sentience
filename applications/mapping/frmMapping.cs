@@ -30,6 +30,7 @@ using System.Windows.Forms;
 
 using sentience.core;
 using sentience.learn;
+using sluggish.utilities.timing;
 using Aced.Compression;
 
 namespace StereoMapping

@@ -22,9 +22,9 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 using CenterSpace.Free;
+using sluggish.utilities;
 
 namespace sentience.core
 {
@@ -463,19 +463,19 @@ namespace sentience.core
                 if (show_outline)
                 {
 
-                    util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                    drawing.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
                                  (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
                                  255, 0, 0, 0, false);
-                    util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                    drawing.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
                                  (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
                                  255, 0, 0, 0, false);
-                    util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                    drawing.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
                                  (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
                                  255, 0, 0, 0, false);
-                    util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                    drawing.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
                                  (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
                                  255, 0, 0, 0, false);
-                    util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                    drawing.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
                                  (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
                                  255, 0, 0, 0, false);
                 }
@@ -1131,7 +1131,7 @@ namespace sentience.core
                     x1 = ray1.vertices[1].x + xx;
                     y1 = ray1.vertices[1].y + yy;
 
-                    if (util.intersection(x0, y0, x1, y1, x2, y2, x3, y3, ref xi, ref yi))
+                    if (geometry.intersection(x0, y0, x1, y1, x2, y2, x3, y3, ref xi, ref yi))
                     {
                         //calculate vertical separation at the intersection point
                         y0 = ray1.vertices[0].z;
@@ -1145,8 +1145,8 @@ namespace sentience.core
                         y5 = 1000;
 
                         float xi2 = 0, zi1 = 0, zi2 = 0;
-                        util.intersection(x0, y0, x1, y1, x4, y4, x5, y5, ref xi2, ref zi1);
-                        util.intersection(x2, y2, x3, y3, x4, y4, x5, y5, ref xi2, ref zi2);
+                        geometry.intersection(x0, y0, x1, y1, x4, y4, x5, y5, ref xi2, ref zi1);
+                        geometry.intersection(x2, y2, x3, y3, x4, y4, x5, y5, ref xi2, ref zi2);
 
                         float vertical_separation = Math.Abs(zi2 - zi1);
                         if (vertical_separation <= w)
@@ -1488,17 +1488,17 @@ namespace sentience.core
                             //img.drawLine((int)(x_start * img.width / grid_dimension), img.height - 1 - (int)(y_start * img.height / grid_dimension),
                             //             (int)(x_end * img.width / grid_dimension), img.height - 1 - (int)(y_end * img.height / grid_dimension),
                             //             255, 0, 0, 0);
-                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension/divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                            drawing.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension/divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
                                          (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
-                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                            drawing.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
                                          (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
-                            util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                            drawing.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
                                          (int)(x_start * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_start * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
                             /*
-                            img.drawLine((int)(max_prob_x * img.width / grid_dimension), (int)(max_prob_y * img.height / grid_dimension),
+                            drawing.drawLine((int)(max_prob_x * img.width / grid_dimension), (int)(max_prob_y * img.height / grid_dimension),
                                          (int)((max_prob_x + 5) * img.width / grid_dimension), (int)(max_prob_y * img.height / grid_dimension),
                                          0, 255, 0, 0);
                             */ 
@@ -1512,10 +1512,10 @@ namespace sentience.core
                             if ((dir1 == dir2) && (y_end > y_left))
                             {
                              */
-                            util.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
+                            drawing.drawLine(img, img_width, img_height, (int)(x_left * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_left * img_height / grid_dimension),
                                          (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
-                            util.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
+                            drawing.drawLine(img, img_width, img_height, (int)(x_right * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_right * img_height / grid_dimension),
                                          (int)(x_end * img_width / (grid_dimension / divisor)), img_height - 1 - (int)(y_end * img_height / grid_dimension),
                                          255, 0, 0, 0, false);
                             //}                        
@@ -1587,7 +1587,7 @@ namespace sentience.core
                                 int prev_y = (int)(ray_model.probability[disparity_pixels, prev_i] * img_height / max_value);
                                 if (prev_y >= img_height) prev_y = img_height - 1;
                                 prev_y = img_height - 1 - prev_y;
-                                util.drawLine(img, img_width, img_height, prev_x, prev_y, x, y, 0, 0, 0, 0, false);
+                                drawing.drawLine(img, img_width, img_height, prev_x, prev_y, x, y, 0, 0, 0, 0, false);
                             }
                             prev_value = ray_model.probability[disparity_pixels, i];
                             prev_i = i;
@@ -1709,16 +1709,16 @@ namespace sentience.core
             if (ray_uncertainty < 0.5f) ray_uncertainty = 0.5f;
             float uncertainty = sigma * d * ray_uncertainty;
 
-            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
+            geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 - uncertainty, yy,
                          ref x_start, ref y_start);
-            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
+            geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 + uncertainty, yy,
                          ref x_end, ref y_end);
-            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
+            geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 - uncertainty, yy,
                          ref x_left, ref y_left);
-            util.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
+            geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 + uncertainty, yy,
                          ref x_right, ref y_right);
 

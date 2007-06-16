@@ -19,8 +19,8 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Collections;
+using sluggish.utilities;
 
 namespace sentience.core
 {
@@ -216,7 +216,7 @@ namespace sentience.core
                             if (display_type == 0)
                             {
                                 if (((int)ranges_horizontal[w] > 0) && ((int)ranges_horizontal[w] < img_height))
-                                    util.drawLine(img, img_width, img_height, w, img_height - 1 - (int)ranges_horizontal[w], prev_x, prev_y, 0, 255, 0, 1, false);
+                                    drawing.drawLine(img, img_width, img_height, w, img_height - 1 - (int)ranges_horizontal[w], prev_x, prev_y, 0, 255, 0, 1, false);
                             }
                         }
                         prev_x = w;
@@ -244,7 +244,7 @@ namespace sentience.core
                             if (display_type == 1)
                             {
                                 if (((int)ranges_vertical[h] > 0) && ((int)ranges_vertical[h] < img_width))
-                                    util.drawLine(img, img_width, img_height, (int)ranges_vertical[h], h, prev_x, prev_y, 0, 255, 0, 1, false);
+                                    drawing.drawLine(img, img_width, img_height, (int)ranges_vertical[h], h, prev_x, prev_y, 0, 255, 0, 1, false);
                             }
                         }
                         prev_x = (int)ranges_vertical[h];

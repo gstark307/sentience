@@ -39,9 +39,13 @@
     <Compile Include="drawing.cs" />
     <Compile Include="EventLog.cs" />
     <Compile Include="geometry.cs" />
+    <Compile Include="graph.cs" />
+    <Compile Include="graph_points.cs" />
     <Compile Include="image.cs" />
     <Compile Include="KeyValuePair.cs" />
+    <Compile Include="kml.cs" />
     <Compile Include="linefeature.cs" />
+    <Compile Include="graph_oscilloscope.cs" />
     <Compile Include="polygon.cs" />
     <Compile Include="polynomial.cs" />
     <Compile Include="probabilities.cs" />
@@ -51,6 +55,9 @@
     <Compile Include="snake.cs" />
     <Compile Include="stopwatch.cs" />
     <Compile Include="xml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENCE.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

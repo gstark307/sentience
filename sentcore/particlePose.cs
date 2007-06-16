@@ -20,9 +20,8 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 using sentience.calibration;
+using sluggish.utilities;
 
 namespace sentience.core
 {
@@ -123,13 +122,13 @@ namespace sentience.core
             int yy = (int)((y - min_y_mm) * height / h);
             int wdth = (int)(rob.BodyWidth_mm * width / w);
             int hght = (int)(rob.BodyLength_mm * height / h);
-            util.drawBox(img, width, height, xx, yy, wdth, hght, pan, 0, 255, 0, line_width);
+            drawing.drawBox(img, width, height, xx, yy, wdth, hght, pan, 0, 255, 0, line_width);
 
             // draw the head
             xx = (int)((head_location.x - min_x_mm) * width / w);
             yy = (int)((head_location.y - min_y_mm) * height / h);
             int radius = (int)(rob.HeadSize_mm * width / w);
-            util.drawBox(img, width, height, xx, yy, radius, radius, head_location.pan, 0, 255, 0, line_width);
+            drawing.drawBox(img, width, height, xx, yy, radius, radius, head_location.pan, 0, 255, 0, line_width);
 
             // draw the cameras
             for (int cam = 0; cam < rob.head.no_of_cameras; cam++)
@@ -140,28 +139,28 @@ namespace sentience.core
                 wdth = (int)((rob.head.calibration[cam].baseline / 4) * width / w);
                 hght = (int)((rob.head.calibration[cam].baseline / 12) * height / h);
                 if (hght < 1) hght = 1;
-                util.drawBox(img, width, height, xx1, yy1, wdth, hght, left_camera_location[cam].pan + (float)(Math.PI/2), 0, 255, 0, line_width);
+                drawing.drawBox(img, width, height, xx1, yy1, wdth, hght, left_camera_location[cam].pan + (float)(Math.PI / 2), 0, 255, 0, line_width);
 
                 // draw the right camera
                 int xx2 = (int)((right_camera_location[cam].x - min_x_mm) * width / w);
                 int yy2 = (int)((right_camera_location[cam].y - min_y_mm) * height / h);
-                util.drawBox(img, width, height, xx2, yy2, wdth, hght, right_camera_location[cam].pan + (float)(Math.PI / 2), 0, 255, 0, line_width);
+                drawing.drawBox(img, width, height, xx2, yy2, wdth, hght, right_camera_location[cam].pan + (float)(Math.PI / 2), 0, 255, 0, line_width);
 
                 if (showFieldOfView)
                 {
                     float half_FOV = rob.head.calibration[cam].leftcam.camera_FOV_degrees * (float)Math.PI / 360.0f;
                     int xx_ray = xx1 + (int)(width * Math.Sin(left_camera_location[cam].pan + half_FOV));
                     int yy_ray = yy1 + (int)(width * Math.Cos(left_camera_location[cam].pan + half_FOV));
-                    util.drawLine(img, width, height, xx1, yy1, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                    drawing.drawLine(img, width, height, xx1, yy1, xx_ray, yy_ray, 200, 200, 255, 0, false);
                     xx_ray = xx1 + (int)(width * Math.Sin(left_camera_location[cam].pan - half_FOV));
                     yy_ray = yy1 + (int)(width * Math.Cos(left_camera_location[cam].pan - half_FOV));
-                    util.drawLine(img, width, height, xx1, yy1, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                    drawing.drawLine(img, width, height, xx1, yy1, xx_ray, yy_ray, 200, 200, 255, 0, false);
                     xx_ray = xx2 + (int)(width * Math.Sin(right_camera_location[cam].pan + half_FOV));
                     yy_ray = yy2 + (int)(width * Math.Cos(right_camera_location[cam].pan + half_FOV));
-                    util.drawLine(img, width, height, xx2, yy2, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                    drawing.drawLine(img, width, height, xx2, yy2, xx_ray, yy_ray, 200, 200, 255, 0, false);
                     xx_ray = xx2 + (int)(width * Math.Sin(right_camera_location[cam].pan - half_FOV));
                     yy_ray = yy2 + (int)(width * Math.Cos(right_camera_location[cam].pan - half_FOV));
-                    util.drawLine(img, width, height, xx2, yy2, xx_ray, yy_ray, 200, 200, 255, 0, false);
+                    drawing.drawLine(img, width, height, xx2, yy2, xx_ray, yy_ray, 200, 200, 255, 0, false);
                 }
             }
         }

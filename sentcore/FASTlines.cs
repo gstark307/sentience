@@ -19,8 +19,9 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Collections;
+using sluggish.utilities;
+using sluggish.imageprocessing.FASTcorners;
 
 namespace sentience.core
 {
@@ -102,7 +103,7 @@ namespace sentience.core
 
         public void Update(Byte[] raw_image, int width, int height)
         {
-            mono_image = util.monoImage(raw_image, width, height);
+            mono_image = image.monoImage(raw_image, width, height);
 
             if (line_threshold == 0) line_threshold = 200;
             if (corner_threshold == 0) corner_threshold = 50;
@@ -150,7 +151,7 @@ namespace sentience.core
                                 int tx = (width / 2) + (int)((width / 4) * 1);
                                 int ty = vertical_position - (int)((width / 4) * gradient);
                                 //ty = ty * height / width;
-                                util.drawLine(raw_image, width, height, width / 2, vertical_position, tx, ty, 0, 255, 0, 1, false);
+                                drawing.drawLine(raw_image, width, height, width / 2, vertical_position, tx, ty, 0, 255, 0, 1, false);
                             }
                         }
 
@@ -164,13 +165,13 @@ namespace sentience.core
                                 {
                                     if (!line.onHorizon)
                                     {
-                                        util.drawLine(raw_image, width, height,
+                                        drawing.drawLine(raw_image, width, height,
                                                       line.point1.x, line.point1.y, line.point2.x, line.point2.y,
                                                       255, 0, 0, 0, false);
                                     }
                                     else
                                     {
-                                        util.drawLine(raw_image, width, height,
+                                        drawing.drawLine(raw_image, width, height,
                                                       line.point1.x, line.point1.y, line.point2.x, line.point2.y,
                                                       0, 255, 0, 0, false);
                                     }
@@ -195,7 +196,7 @@ namespace sentience.core
                                 int pendulum_length = width / 8;
                                 int px = (width / 2) + (int)(pendulum_length * Math.Sin(gravity_angle));
                                 int py = (height / 2) + (int)(pendulum_length * Math.Cos(gravity_angle) * height / width);
-                                util.drawLine(raw_image, width, height,
+                                drawing.drawLine(raw_image, width, height,
                                               width / 2, height / 2, px, py,
                                               0, 255, 0, 1, false);
 
@@ -203,14 +204,14 @@ namespace sentience.core
                                 float angle2 = gravity_angle + (float)(Math.PI * 0.8f);
                                 int px2 = px + (int)(arrow_length * Math.Sin(angle2));
                                 int py2 = py + (int)(arrow_length * Math.Cos(angle2) * height / width);
-                                util.drawLine(raw_image, width, height,
+                                drawing.drawLine(raw_image, width, height,
                                               px2, py2, px, py,
                                               0, 255, 0, 1, false);
 
                                 angle2 = gravity_angle - (float)(Math.PI * 0.8f);
                                 px2 = px + (int)(arrow_length * Math.Sin(angle2));
                                 py2 = py + (int)(arrow_length * Math.Cos(angle2) * height / width);
-                                util.drawLine(raw_image, width, height,
+                                drawing.drawLine(raw_image, width, height,
                                               px2, py2, px, py,
                                               0, 255, 0, 1, false);
                             }

@@ -21,9 +21,10 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 using sentience.core;
+using sluggish.utilities.xml;
 
 namespace sentience.calibration
 {
@@ -123,22 +124,22 @@ namespace sentience.calibration
                 nodeStereoCamera = doc.CreateElement("MonocularCamera");
             parent.AppendChild(nodeStereoCamera);
 
-            util.AddComment(doc, nodeStereoCamera, "Name of the WDM software driver for the cameras");
-            util.AddTextElement(doc, nodeStereoCamera, "DriverName", DriverName);
+            xml.AddComment(doc, nodeStereoCamera, "Name of the WDM software driver for the cameras");
+            xml.AddTextElement(doc, nodeStereoCamera, "DriverName", DriverName);
 
-            util.AddComment(doc, nodeStereoCamera, "Position and orientation of the camera relative to the robots head");
+            xml.AddComment(doc, nodeStereoCamera, "Position and orientation of the camera relative to the robots head");
             nodeStereoCamera.AppendChild(positionOrientation.getXml(doc));
 
-            util.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
-            util.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focalLength));
+            xml.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
+            xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focalLength));
 
             if (no_of_cameras > 1)
             {
-                util.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
-                util.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline));
+                xml.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
+                xml.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline));
             }
 
-            util.AddComment(doc, nodeStereoCamera, "Calibration Data");
+            xml.AddComment(doc, nodeStereoCamera, "Calibration Data");
 
             XmlElement nodeCalibration = doc.CreateElement("Calibration");
             nodeStereoCamera.AppendChild(nodeCalibration);
@@ -147,8 +148,8 @@ namespace sentience.calibration
             {
                 String offsets = Convert.ToString(offset_x) + "," +
                                  Convert.ToString(offset_y);
-                util.AddComment(doc, nodeCalibration, "Image offsets in pixels due to small missalignment from parallel");
-                util.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
+                xml.AddComment(doc, nodeCalibration, "Image offsets in pixels due to small missalignment from parallel");
+                xml.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
             }
 
             XmlElement elem = leftcam.getXml(doc);

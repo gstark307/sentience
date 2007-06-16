@@ -37,23 +37,15 @@
   <ItemGroup>
     <Compile Include="calibration.cs" />
     <Compile Include="calibrationStereo.cs" />
-    <Compile Include="FASTlines.cs" />
-    <Compile Include="graph.cs" />
-    <Compile Include="graph_points.cs" />
-    <Compile Include="Kml.cs" />
     <Compile Include="motionModel.cs" />
     <Compile Include="occupancygridCell.cs" />
     <Compile Include="occupancygridMultiHypothesis.cs" />
-    <Compile Include="graph_oscilloscope.cs" />
     <Compile Include="particleGridCell.cs" />
     <Compile Include="particlePath.cs" />
     <Compile Include="particlePose.cs" />
-    <Compile Include="polyfit.cs" />
     <Compile Include="rayModelLookup.cs" />
     <Compile Include="scanMatching.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
-    <Compile Include="FAST.cs" />
-    <Compile Include="sentience_stereo_shiftmax.cs" />
     <Compile Include="simulation.cs" />
     <Compile Include="simulationPathSegment.cs" />
     <Compile Include="specialMath.cs" />
@@ -66,8 +58,6 @@
     <Compile Include="MersenneTwister.cs" />
     <Compile Include="robot.cs" />
     <Compile Include="stereoCorrespondence.cs" />
-    <Compile Include="stopwatch.cs" />
-    <Compile Include="util.cs" />
     <Compile Include="evidenceRay.cs" />
     <Compile Include="pos3D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,9 +69,17 @@
     <Content Include="LICENCE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FASTcorners\FASTcorners.csproj">
+      <Project>{37F539C1-BAD3-4C42-A665-6CA932951A75}</Project>
+      <Name>FASTcorners</Name>
+    </ProjectReference>
     <ProjectReference Include="..\pathplanner\pathplanner.csproj">
       <Project>{00157781-7254-481B-8229-58E18AEF65F9}</Project>
       <Name>pathplanner</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\utilities\utilities.csproj">
+      <Project>{3028A130-2D88-4581-B9F9-D840FA39875D}</Project>
+      <Name>utilities</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

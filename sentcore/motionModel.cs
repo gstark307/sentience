@@ -22,8 +22,8 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
+using sluggish.utilities.xml;
 using CenterSpace.Free;
 
 namespace sentience.core
@@ -702,14 +702,14 @@ namespace sentience.core
             XmlElement nodeSensorModel = doc.CreateElement("MotionModel");
             parent.AppendChild(nodeSensorModel);
 
-            util.AddComment(doc, nodeSensorModel, "The number of possible poses to maintain at any point in time");
-            util.AddTextElement(doc, nodeSensorModel, "NoOfPoses", Convert.ToString(survey_trial_poses));
+            xml.AddComment(doc, nodeSensorModel, "The number of possible poses to maintain at any point in time");
+            xml.AddTextElement(doc, nodeSensorModel, "NoOfPoses", Convert.ToString(survey_trial_poses));
 
-            util.AddComment(doc, nodeSensorModel, "A culling threshold in the range 1-100 below which low probability poses are exterminated");
-            util.AddTextElement(doc, nodeSensorModel, "CullThreshold", Convert.ToString(cull_threshold));
+            xml.AddComment(doc, nodeSensorModel, "A culling threshold in the range 1-100 below which low probability poses are exterminated");
+            xml.AddTextElement(doc, nodeSensorModel, "CullThreshold", Convert.ToString(cull_threshold));
 
-            util.AddComment(doc, nodeSensorModel, "The number of time steps after which a pose is considered to be mature");
-            util.AddTextElement(doc, nodeSensorModel, "MaturationTimeSteps", Convert.ToString(pose_maturation));
+            xml.AddComment(doc, nodeSensorModel, "The number of time steps after which a pose is considered to be mature");
+            xml.AddTextElement(doc, nodeSensorModel, "MaturationTimeSteps", Convert.ToString(pose_maturation));
 
             String noise = "";
             for (int i = 0; i < motion_noise.Length; i++)
@@ -717,8 +717,8 @@ namespace sentience.core
                 noise += Convert.ToString(motion_noise[i]);
                 if (i < motion_noise.Length - 1) noise += ",";
             }
-            util.AddComment(doc, nodeSensorModel, "Motion noise (standard deviations)");
-            util.AddTextElement(doc, nodeSensorModel, "MotionNoise", noise);
+            xml.AddComment(doc, nodeSensorModel, "Motion noise (standard deviations)");
+            xml.AddTextElement(doc, nodeSensorModel, "MotionNoise", noise);
 
             return (nodeSensorModel);
         }

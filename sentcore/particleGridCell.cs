@@ -19,8 +19,9 @@
 */
 
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Text;
+using sluggish.utilities;
 
 namespace sentience.core
 {
@@ -63,7 +64,7 @@ namespace sentience.core
             this.x = (short)x;
             this.y = (short)y;
             this.z = (short)z;
-            this.probabilityLogOdds = util.LogOdds(probability); // store as log odds
+            this.probabilityLogOdds = probabilities.LogOdds(probability); // store as log odds
             this.pose = pose;
             this.colour = colour;
             Enabled = true;

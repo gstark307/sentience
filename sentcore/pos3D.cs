@@ -20,8 +20,9 @@
 
 using System;
 using System.Xml;
-using System.Collections.Generic;
+using System.Collections;
 using System.Text;
+using sluggish.utilities.xml;
 
 namespace sentience.core
 {
@@ -168,12 +169,12 @@ namespace sentience.core
         public XmlElement getXml(XmlDocument doc)
         {
             XmlElement elem = doc.CreateElement("PositionOrientation");
-            util.AddComment(doc, elem, "Position in millimetres");
-            util.AddTextElement(doc, elem, "PositionMillimetres", Convert.ToString(x) + "," +
+            xml.AddComment(doc, elem, "Position in millimetres");
+            xml.AddTextElement(doc, elem, "PositionMillimetres", Convert.ToString(x) + "," +
                                                        Convert.ToString(y) + "," +
                                                        Convert.ToString(z));
-            util.AddComment(doc, elem, "Orientation in degrees - pan, tilt and roll");
-            util.AddTextElement(doc, elem, "OrientationDegrees", Convert.ToString(pan / (float)Math.PI * 180.0f) + "," +
+            xml.AddComment(doc, elem, "Orientation in degrees - pan, tilt and roll");
+            xml.AddTextElement(doc, elem, "OrientationDegrees", Convert.ToString(pan / (float)Math.PI * 180.0f) + "," +
                                                                  Convert.ToString(tilt / (float)Math.PI * 180.0f) + "," +
                                                                  Convert.ToString(roll / (float)Math.PI * 180.0f));
             return (elem);

@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -28,6 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using sentience.core;
 using sentience.pathplanner;
+using sluggish.utilities;
 
 namespace WindowsApplication1
 {
@@ -332,11 +332,11 @@ namespace WindowsApplication1
 
             planner.Show(img_rays, standard_width, standard_height, plan);
 
-            util.drawCircle(img_rays, standard_width, standard_height,
+            drawing.drawCircle(img_rays, standard_width, standard_height,
                             start_x * standard_width / grid_dimension,
                             start_y * standard_height / grid_dimension,
                             standard_width / 100, 255, 0, 0, 1);
-            util.drawCircle(img_rays, standard_width, standard_height,
+            drawing.drawCircle(img_rays, standard_width, standard_height,
                             finish_x * standard_width / grid_dimension,
                             finish_y * standard_height / grid_dimension,
                             standard_width / 100, 255, 0, 255, 1);

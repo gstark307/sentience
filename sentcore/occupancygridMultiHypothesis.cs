@@ -21,9 +21,8 @@
 using System;
 using System.IO;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
+using sluggish.utilities;
 using CenterSpace.Free;
 
 namespace sentience.core
@@ -340,7 +339,7 @@ namespace sentience.core
                 float colour_probability = 1.0f  - colour_difference;
 
                 // localisation matching probability, expressed as log odds
-                value = util.LogOdds(occupancy_probability * colour_probability);
+                value = probabilities.LogOdds(occupancy_probability * colour_probability);
             }
             return (value);
         }
@@ -703,12 +702,12 @@ namespace sentience.core
                             for (float x = 0; x < dimension_mm; x += 1000)
                             {
                                 int xx = (int)(x * width / dimension_mm);
-                                util.drawLine(img, width, height, xx, 0, xx, height - 1, r, g, b, 0, false);
+                                drawing.drawLine(img, width, height, xx, 0, xx, height - 1, r, g, b, 0, false);
                             }
                             for (float y = 0; y < dimension_mm; y += 1000)
                             {
                                 int yy = (int)(y * height / dimension_mm);
-                                util.drawLine(img, width, height, 0, yy, width - 1, yy, r, g, b, 0, false);
+                                drawing.drawLine(img, width, height, 0, yy, width - 1, yy, r, g, b, 0, false);
                             }
                         }
 
@@ -1086,7 +1085,7 @@ namespace sentience.core
             }
 
             // convert the binary index to a byte array for later storage
-            Byte[] indexBytes = util.ToByteArray(binary_index);
+            Byte[] indexBytes = ArrayConversions.ToByteArray(binary_index);
             for (int i = 0; i < indexBytes.Length; i++)
                 data.Add(indexBytes[i]);            
 
@@ -1122,7 +1121,7 @@ namespace sentience.core
                 }
 
                 // store the occupancy and colour data as byte arrays
-                Byte[] occupancyBytes = util.ToByteArray(occupancy);
+                Byte[] occupancyBytes = ArrayConversions.ToByteArray(occupancy);
                 for (int i = 0; i < occupancyBytes.Length; i++)
                     data.Add(occupancyBytes[i]);
                 for (int i = 0; i < colourData.Length; i++)
@@ -1201,7 +1200,7 @@ namespace sentience.core
             Byte[] indexData = new Byte[no_of_bytes];
             for (int i = 0; i < no_of_bytes; i++)
                 indexData[i] = data[array_index + i];
-            bool[] binary_index = util.ToBooleanArray(indexData);
+            bool[] binary_index = ArrayConversions.ToBooleanArray(indexData);
             array_index += no_of_bytes;
 
             int n = 0;
@@ -1229,7 +1228,7 @@ namespace sentience.core
                 for (int i = 0; i < no_of_bytes; i++)
                     occupancyData[i] = data[array_index + i];
                 array_index += no_of_bytes;
-                float[] occupancy = util.ToFloatArray(occupancyData);
+                float[] occupancy = ArrayConversions.ToFloatArray(occupancyData);
 
                 // read colour values
                 no_of_bytes = occupied_cells * dimension_cells_vertical * 3;

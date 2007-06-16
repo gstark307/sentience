@@ -267,6 +267,21 @@ namespace sluggish.utilities
         #endregion
 
 
+        public static void drawBox(Byte[] img, int img_width, int img_height,
+                           int x, int y, int radius, int r, int g, int b, int line_width)
+        {
+            int radius_y = radius * img_width / img_height;
+            int tx = x - radius;
+            int ty = y - radius_y;
+            int bx = x + radius;
+            int by = y + radius_y;
+            drawLine(img, img_width, img_height, tx, ty, bx, ty, r, g, b, line_width, false);
+            drawLine(img, img_width, img_height, bx, ty, bx, by, r, g, b, line_width, false);
+            drawLine(img, img_width, img_height, tx, by, bx, by, r, g, b, line_width, false);
+            drawLine(img, img_width, img_height, tx, by, tx, ty, r, g, b, line_width, false);
+        }
+
+
         /// <summary>
         /// draw a rotated box
         /// </summary>

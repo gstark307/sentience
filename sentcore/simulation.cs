@@ -22,8 +22,9 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
+using sluggish.utilities.xml;
+using sluggish.utilities.graph;
 
 namespace sentience.core
 {
@@ -418,17 +419,17 @@ namespace sentience.core
             XmlElement nodeSimulation = doc.CreateElement("Simulation");
             parent.AppendChild(nodeSimulation);
 
-            util.AddComment(doc, nodeSimulation, "Name or title of the simulation");
-            util.AddTextElement(doc, nodeSimulation, "SimulationName", Name);
+            xml.AddComment(doc, nodeSimulation, "Name or title of the simulation");
+            xml.AddTextElement(doc, nodeSimulation, "SimulationName", Name);
 
-            util.AddComment(doc, nodeSimulation, "The path and filename for the xml file which contains the robot design definition");
-            util.AddTextElement(doc, nodeSimulation, "RobotDesignFile", RobotDesignFile);
+            xml.AddComment(doc, nodeSimulation, "The path and filename for the xml file which contains the robot design definition");
+            xml.AddTextElement(doc, nodeSimulation, "RobotDesignFile", RobotDesignFile);
 
-            util.AddComment(doc, nodeSimulation, "Path where the stereo images can be found");
-            util.AddTextElement(doc, nodeSimulation, "ImagesPath", ImagesPath);
+            xml.AddComment(doc, nodeSimulation, "Path where the stereo images can be found");
+            xml.AddTextElement(doc, nodeSimulation, "ImagesPath", ImagesPath);
 
-            util.AddComment(doc, nodeSimulation, "The time which elapses for each step along the path in seconds");
-            util.AddTextElement(doc, nodeSimulation, "SimulationTimeStepSeconds", Convert.ToString(time_per_index_sec));
+            xml.AddComment(doc, nodeSimulation, "The time which elapses for each step along the path in seconds");
+            xml.AddTextElement(doc, nodeSimulation, "SimulationTimeStepSeconds", Convert.ToString(time_per_index_sec));
 
             if (pathSegments != null)
             {
@@ -442,17 +443,17 @@ namespace sentience.core
                     XmlElement nodePathSegment = doc.CreateElement("PathSegment");
                     nodePath.AppendChild(nodePathSegment);
 
-                    util.AddComment(doc, nodePathSegment, "The initial pose of the robot at the beginning of this path segment");
-                    util.AddComment(doc, nodePathSegment, "X,Y position in millimetres, followed by heading in degrees");
-                    util.AddTextElement(doc, nodePathSegment, "InitialPose", Convert.ToString(segment.x) + "," +
+                    xml.AddComment(doc, nodePathSegment, "The initial pose of the robot at the beginning of this path segment");
+                    xml.AddComment(doc, nodePathSegment, "X,Y position in millimetres, followed by heading in degrees");
+                    xml.AddTextElement(doc, nodePathSegment, "InitialPose", Convert.ToString(segment.x) + "," +
                                                                Convert.ToString(segment.y) + "," +
                                                                Convert.ToString(segment.pan * 180.0f / Math.PI));
-                    util.AddComment(doc, nodePathSegment, "The number of steps which this segment consists of");
-                    util.AddTextElement(doc, nodePathSegment, "NumberOfSteps", Convert.ToString(segment.no_of_steps));
-                    util.AddComment(doc, nodePathSegment, "The distance of each step in millimetres");
-                    util.AddTextElement(doc, nodePathSegment, "StepSizeMillimetres", Convert.ToString(segment.distance_per_step_mm));
-                    util.AddComment(doc, nodePathSegment, "The change in heading per step in degrees");
-                    util.AddTextElement(doc, nodePathSegment, "HeadingChangePerStep", Convert.ToString(segment.pan_per_step * 180.0f / Math.PI));
+                    xml.AddComment(doc, nodePathSegment, "The number of steps which this segment consists of");
+                    xml.AddTextElement(doc, nodePathSegment, "NumberOfSteps", Convert.ToString(segment.no_of_steps));
+                    xml.AddComment(doc, nodePathSegment, "The distance of each step in millimetres");
+                    xml.AddTextElement(doc, nodePathSegment, "StepSizeMillimetres", Convert.ToString(segment.distance_per_step_mm));
+                    xml.AddComment(doc, nodePathSegment, "The change in heading per step in degrees");
+                    xml.AddTextElement(doc, nodePathSegment, "HeadingChangePerStep", Convert.ToString(segment.pan_per_step * 180.0f / Math.PI));
                 }
                 
             }

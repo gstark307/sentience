@@ -22,8 +22,9 @@ using System;
 using System.Xml;
 using System.IO;
 using System.Collections;
-using System.Collections.Generic;
 using sentience.pathplanner;
+using sluggish.utilities.xml;
+using sluggish.utilities.timing;
 
 namespace sentience.core
 {
@@ -847,85 +848,85 @@ namespace sentience.core
             XmlElement nodeRobot = doc.CreateElement("Robot");
             parent.AppendChild(nodeRobot);
 
-            util.AddComment(doc, nodeRobot, "Name");
-            util.AddTextElement(doc, nodeRobot, "Name", Name);
+            xml.AddComment(doc, nodeRobot, "Name");
+            xml.AddTextElement(doc, nodeRobot, "Name", Name);
 
-            util.AddComment(doc, nodeRobot, "Total mass in kilograms");
-            util.AddTextElement(doc, nodeRobot, "TotalMassKilograms", Convert.ToString(TotalMass_kg));
+            xml.AddComment(doc, nodeRobot, "Total mass in kilograms");
+            xml.AddTextElement(doc, nodeRobot, "TotalMassKilograms", Convert.ToString(TotalMass_kg));
 
             XmlElement nodeBody = doc.CreateElement("BodyDimensions");
             nodeRobot.AppendChild(nodeBody);
 
-            util.AddComment(doc, nodeBody, "Shape of the body");
-            util.AddComment(doc, nodeBody, "0 - square");
-            util.AddComment(doc, nodeBody, "1 - round");
-            util.AddTextElement(doc, nodeBody, "BodyShape", Convert.ToString(BodyShape));
+            xml.AddComment(doc, nodeBody, "Shape of the body");
+            xml.AddComment(doc, nodeBody, "0 - square");
+            xml.AddComment(doc, nodeBody, "1 - round");
+            xml.AddTextElement(doc, nodeBody, "BodyShape", Convert.ToString(BodyShape));
 
-            util.AddComment(doc, nodeBody, "Width of the body in millimetres");
-            util.AddTextElement(doc, nodeBody, "BodyWidthMillimetres", Convert.ToString(BodyWidth_mm));
+            xml.AddComment(doc, nodeBody, "Width of the body in millimetres");
+            xml.AddTextElement(doc, nodeBody, "BodyWidthMillimetres", Convert.ToString(BodyWidth_mm));
 
-            util.AddComment(doc, nodeBody, "Length of the body in millimetres");
-            util.AddTextElement(doc, nodeBody, "BodyLengthMillimetres", Convert.ToString(BodyLength_mm));
+            xml.AddComment(doc, nodeBody, "Length of the body in millimetres");
+            xml.AddTextElement(doc, nodeBody, "BodyLengthMillimetres", Convert.ToString(BodyLength_mm));
 
-            util.AddComment(doc, nodeBody, "Height of the body in millimetres");
-            util.AddTextElement(doc, nodeBody, "BodyHeightMillimetres", Convert.ToString(BodyHeight_mm));
+            xml.AddComment(doc, nodeBody, "Height of the body in millimetres");
+            xml.AddTextElement(doc, nodeBody, "BodyHeightMillimetres", Convert.ToString(BodyHeight_mm));
 
             XmlElement nodePropulsion = doc.CreateElement("PropulsionSystem");
             nodeRobot.AppendChild(nodePropulsion);
 
-            util.AddComment(doc, nodePropulsion, "Propulsion type");
-            util.AddTextElement(doc, nodePropulsion, "PropulsionType", Convert.ToString(propulsionType));
+            xml.AddComment(doc, nodePropulsion, "Propulsion type");
+            xml.AddTextElement(doc, nodePropulsion, "PropulsionType", Convert.ToString(propulsionType));
 
-            util.AddComment(doc, nodePropulsion, "Distance between the wheels in millimetres");
-            util.AddTextElement(doc, nodePropulsion, "WheelBaseMillimetres", Convert.ToString(WheelBase_mm));
+            xml.AddComment(doc, nodePropulsion, "Distance between the wheels in millimetres");
+            xml.AddTextElement(doc, nodePropulsion, "WheelBaseMillimetres", Convert.ToString(WheelBase_mm));
 
-            util.AddComment(doc, nodePropulsion, "How far from the front of the robot is the wheel base in millimetres");
-            util.AddTextElement(doc, nodePropulsion, "WheelBaseForwardMillimetres", Convert.ToString(WheelBaseForward_mm));
+            xml.AddComment(doc, nodePropulsion, "How far from the front of the robot is the wheel base in millimetres");
+            xml.AddTextElement(doc, nodePropulsion, "WheelBaseForwardMillimetres", Convert.ToString(WheelBaseForward_mm));
 
-            util.AddComment(doc, nodePropulsion, "Wheel diameter in millimetres");
-            util.AddTextElement(doc, nodePropulsion, "WheelDiameterMillimetres", Convert.ToString(WheelDiameter_mm));
+            xml.AddComment(doc, nodePropulsion, "Wheel diameter in millimetres");
+            xml.AddTextElement(doc, nodePropulsion, "WheelDiameterMillimetres", Convert.ToString(WheelDiameter_mm));
 
-            util.AddComment(doc, nodePropulsion, "Wheel Position feedback type");
-            util.AddTextElement(doc, nodePropulsion, "WheelPositionFeedbackType", Convert.ToString(WheelPositionFeedbackType));
+            xml.AddComment(doc, nodePropulsion, "Wheel Position feedback type");
+            xml.AddTextElement(doc, nodePropulsion, "WheelPositionFeedbackType", Convert.ToString(WheelPositionFeedbackType));
 
-            util.AddComment(doc, nodePropulsion, "Motor gear ratio");
-            util.AddTextElement(doc, nodePropulsion, "GearRatio", Convert.ToString(GearRatio));
+            xml.AddComment(doc, nodePropulsion, "Motor gear ratio");
+            xml.AddTextElement(doc, nodePropulsion, "GearRatio", Convert.ToString(GearRatio));
 
-            util.AddComment(doc, nodePropulsion, "Encoder counts per revolution");
-            util.AddTextElement(doc, nodePropulsion, "CountsPerRev", Convert.ToString(CountsPerRev));
+            xml.AddComment(doc, nodePropulsion, "Encoder counts per revolution");
+            xml.AddTextElement(doc, nodePropulsion, "CountsPerRev", Convert.ToString(CountsPerRev));
             
-            util.AddComment(doc, nodePropulsion, "Motor no load speed in RPM");
-            util.AddTextElement(doc, nodePropulsion, "MotorNoLoadSpeedRPM", Convert.ToString(MotorNoLoadSpeedRPM));
+            xml.AddComment(doc, nodePropulsion, "Motor no load speed in RPM");
+            xml.AddTextElement(doc, nodePropulsion, "MotorNoLoadSpeedRPM", Convert.ToString(MotorNoLoadSpeedRPM));
 
-            util.AddComment(doc, nodePropulsion, "Motor torque rating in Kg/mm");
-            util.AddTextElement(doc, nodePropulsion, "MotorTorqueKgMm", Convert.ToString(MotorTorqueKgMm));            
+            xml.AddComment(doc, nodePropulsion, "Motor torque rating in Kg/mm");
+            xml.AddTextElement(doc, nodePropulsion, "MotorTorqueKgMm", Convert.ToString(MotorTorqueKgMm));            
 
             XmlElement nodeSensorPlatform = doc.CreateElement("SensorPlatform");
             nodeRobot.AppendChild(nodeSensorPlatform);
 
-            util.AddComment(doc, nodeSensorPlatform, "Number of stereo cameras");
-            util.AddTextElement(doc, nodeSensorPlatform, "NoOfStereoCameras", Convert.ToString(head.no_of_cameras));
+            xml.AddComment(doc, nodeSensorPlatform, "Number of stereo cameras");
+            xml.AddTextElement(doc, nodeSensorPlatform, "NoOfStereoCameras", Convert.ToString(head.no_of_cameras));
 
-            util.AddComment(doc, nodeSensorPlatform, "The type of head");
-            util.AddTextElement(doc, nodeSensorPlatform, "HeadType", Convert.ToString(HeadType));
+            xml.AddComment(doc, nodeSensorPlatform, "The type of head");
+            xml.AddTextElement(doc, nodeSensorPlatform, "HeadType", Convert.ToString(HeadType));
 
-            util.AddComment(doc, nodeSensorPlatform, "Size of the head in millimetres");
-            util.AddTextElement(doc, nodeSensorPlatform, "HeadSizeMillimetres", Convert.ToString(HeadSize_mm));
+            xml.AddComment(doc, nodeSensorPlatform, "Size of the head in millimetres");
+            xml.AddTextElement(doc, nodeSensorPlatform, "HeadSizeMillimetres", Convert.ToString(HeadSize_mm));
 
-            util.AddComment(doc, nodeSensorPlatform, "Shape of the head");
-            util.AddTextElement(doc, nodeSensorPlatform, "HeadShape", Convert.ToString(HeadShape));
+            xml.AddComment(doc, nodeSensorPlatform, "Shape of the head");
+            xml.AddTextElement(doc, nodeSensorPlatform, "HeadShape", Convert.ToString(HeadShape));
 
-            util.AddComment(doc, nodeSensorPlatform, "Offset of the head from the leftmost side of the robot in millimetres");
-            util.AddTextElement(doc, nodeSensorPlatform, "HeadPositionLeftMillimetres", Convert.ToString(head.x));
+            xml.AddComment(doc, nodeSensorPlatform, "Offset of the head from the leftmost side of the robot in millimetres");
+            xml.AddTextElement(doc, nodeSensorPlatform, "HeadPositionLeftMillimetres", Convert.ToString(head.x));
 
-            util.AddComment(doc, nodeSensorPlatform, "Offset of the head from the front of the robot in millimetres");
-            util.AddTextElement(doc, nodeSensorPlatform, "HeadPositionForwardMillimetres", Convert.ToString(head.y));
+            xml.AddComment(doc, nodeSensorPlatform, "Offset of the head from the front of the robot in millimetres");
+            xml.AddTextElement(doc, nodeSensorPlatform, "HeadPositionForwardMillimetres", Convert.ToString(head.y));
 
-            util.AddComment(doc, nodeSensorPlatform, "Height of the head above the ground in millimetres");
-            util.AddTextElement(doc, nodeSensorPlatform, "HeadHeightMillimetres", Convert.ToString(head.z));
+            xml.AddComment(doc, nodeSensorPlatform, "Height of the head above the ground in millimetres");
+            xml.AddTextElement(doc, nodeSensorPlatform, "HeadHeightMillimetres", Convert.ToString(head.z));
 
-            util.AddComment(doc, nodeSensorPlatform, "Orientation of the cameras");
-            util.AddTextElement(doc, nodeSensorPlatform, "CameraOrientation", Convert.ToString(CameraOrientation));
+            xml.AddComment(doc, nodeSensorPlatform, "Orientation of the cameras");
+            xml.AddTextElement(doc, nodeSensorPlatform, "CameraOrientation", Convert.ToString(CameraOrientation));
 
             for (int i = 0; i < head.no_of_cameras; i++)
             {
@@ -938,49 +939,49 @@ namespace sentience.core
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
 
-            util.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLevels", Convert.ToString(LocalGridLevels));
+            xml.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLevels", Convert.ToString(LocalGridLevels));
 
-            util.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
-            util.AddTextElement(doc, nodeOccupancyGrid, "EnableScanMatching", Convert.ToString(EnableScanMatching));
+            xml.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "EnableScanMatching", Convert.ToString(EnableScanMatching));
 
-            util.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the XY plane in cells");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimension", Convert.ToString(LocalGridDimension));
+            xml.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the XY plane in cells");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimension", Convert.ToString(LocalGridDimension));
 
-            util.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the vertical (Z) plane in cells");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimensionVertical", Convert.ToString(LocalGridDimensionVertical));
+            xml.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the vertical (Z) plane in cells");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridDimensionVertical", Convert.ToString(LocalGridDimensionVertical));
 
-            util.AddComment(doc, nodeOccupancyGrid, "Size of each grid cell (voxel) in millimetres");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridCellSizeMillimetres", Convert.ToString(LocalGridCellSize_mm));
+            xml.AddComment(doc, nodeOccupancyGrid, "Size of each grid cell (voxel) in millimetres");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridCellSizeMillimetres", Convert.ToString(LocalGridCellSize_mm));
 
-            util.AddComment(doc, nodeOccupancyGrid, "The distance which the robot must travel before new data is inserted into the grid during mapping");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridIntervalMillimetres", Convert.ToString(LocalGridInterval_mm));
+            xml.AddComment(doc, nodeOccupancyGrid, "The distance which the robot must travel before new data is inserted into the grid during mapping");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridIntervalMillimetres", Convert.ToString(LocalGridInterval_mm));
 
-            util.AddComment(doc, nodeOccupancyGrid, "An extra radius applied when localising within the grid, to make localisation rays wider");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLocalisationRadiusMillimetres", Convert.ToString(LocalGridLocalisationRadius_mm));
+            xml.AddComment(doc, nodeOccupancyGrid, "An extra radius applied when localising within the grid, to make localisation rays wider");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLocalisationRadiusMillimetres", Convert.ToString(LocalGridLocalisationRadius_mm));
 
-            util.AddComment(doc, nodeOccupancyGrid, "When updating the grid map this is the maximum range within which cells will be updated");
-            util.AddComment(doc, nodeOccupancyGrid, "This prevents the system from being slowed down by the insertion of a lot of very long range rays");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridMappingRangeMillimetres", Convert.ToString(LocalGridMappingRange_mm));
+            xml.AddComment(doc, nodeOccupancyGrid, "When updating the grid map this is the maximum range within which cells will be updated");
+            xml.AddComment(doc, nodeOccupancyGrid, "This prevents the system from being slowed down by the insertion of a lot of very long range rays");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridMappingRangeMillimetres", Convert.ToString(LocalGridMappingRange_mm));
 
-            util.AddComment(doc, nodeOccupancyGrid, "A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space");
-            util.AddTextElement(doc, nodeOccupancyGrid, "LocalGridVacancyWeighting", Convert.ToString(LocalGridVacancyWeighting));
+            xml.AddComment(doc, nodeOccupancyGrid, "A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridVacancyWeighting", Convert.ToString(LocalGridVacancyWeighting));
 
             if (TuningParameters != "")
             {
-                util.AddComment(doc, nodeOccupancyGrid, "Parameters discovered by auto tuning");
-                util.AddTextElement(doc, nodeOccupancyGrid, "TuningParameters", TuningParameters);
+                xml.AddComment(doc, nodeOccupancyGrid, "Parameters discovered by auto tuning");
+                xml.AddTextElement(doc, nodeOccupancyGrid, "TuningParameters", TuningParameters);
 
                 if (MinimumColourVariance != float.MaxValue)
                 {
-                    util.AddComment(doc, nodeOccupancyGrid, "Minimum colour variance discovered by auto tuning");
-                    util.AddTextElement(doc, nodeOccupancyGrid, "MinimumColourVariance", Convert.ToString(MinimumColourVariance));
+                    xml.AddComment(doc, nodeOccupancyGrid, "Minimum colour variance discovered by auto tuning");
+                    xml.AddTextElement(doc, nodeOccupancyGrid, "MinimumColourVariance", Convert.ToString(MinimumColourVariance));
                 }
 
                 if (MinimumPositionError_mm != float.MaxValue)
                 {
-                    util.AddComment(doc, nodeOccupancyGrid, "Minimum position error found during auto tuning");
-                    util.AddTextElement(doc, nodeOccupancyGrid, "MinimumPositionErrorMillimetres", Convert.ToString(MinimumPositionError_mm));
+                    xml.AddComment(doc, nodeOccupancyGrid, "Minimum position error found during auto tuning");
+                    xml.AddTextElement(doc, nodeOccupancyGrid, "MinimumPositionErrorMillimetres", Convert.ToString(MinimumPositionError_mm));
                 }
             }
 

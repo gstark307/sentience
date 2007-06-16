@@ -22,8 +22,8 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
+using sluggish.utilities.xml;
 
 namespace sentience.core
 {
@@ -63,15 +63,15 @@ namespace sentience.core
 
         public XmlElement getXml(XmlDocument doc, XmlElement parent)
         {
-            util.AddComment(doc, parent, "Inverse sensor model data");
+            xml.AddComment(doc, parent, "Inverse sensor model data");
 
             XmlElement nodeSensorModels = doc.CreateElement("InverseSensorModels");
             parent.AppendChild(nodeSensorModels);
 
-            util.AddComment(doc, nodeSensorModels, "Interval between models in pixels");
-            util.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "0.5");
+            xml.AddComment(doc, nodeSensorModels, "Interval between models in pixels");
+            xml.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "0.5");
 
-            util.AddComment(doc, nodeSensorModels, "Model Data");
+            xml.AddComment(doc, nodeSensorModels, "Model Data");
             for (int d = 0; d < dimension_disparity; d++)
             {
                 String dataStr = "";
@@ -81,7 +81,7 @@ namespace sentience.core
                     if (i < length[d] - 1) dataStr += ",";
                 }
                 if (dataStr != "")
-                    util.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
+                    xml.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
             }
 
             return (nodeSensorModels);

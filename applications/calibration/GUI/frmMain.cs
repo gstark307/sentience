@@ -22,7 +22,6 @@
 using System;
 using System.Xml;
 using System.IO;
-using System.Collections.Generic;
 using System.Collections;
 using System.ComponentModel;
 using System.Data;
@@ -33,6 +32,7 @@ using System.Windows.Forms;
 using DirectX.Capture;
 using sentience.calibration;
 using sentience.core;
+using sluggish.utilities.xml;
 
 namespace WindowsApplication1
 {
@@ -254,39 +254,39 @@ namespace WindowsApplication1
             XmlElement nodeCalibration = doc.CreateElement("Sentience");
             doc.AppendChild(nodeCalibration);
 
-            util.AddComment(doc, nodeCalibration, "Calibration apparatus setup parameters");
+            xml.AddComment(doc, nodeCalibration, "Calibration apparatus setup parameters");
 
             XmlElement nodeCalibSetup = doc.CreateElement("CalibrationSetup");
             nodeCalibration.AppendChild(nodeCalibSetup);
 
-            util.AddComment(doc, nodeCalibSetup, "Horizontal field of view of the camera in degrees");
-            util.AddTextElement(doc, nodeCalibSetup, "FieldOfViewDegrees", txtFOV.Text);
-            util.AddComment(doc, nodeCalibSetup, "Position of the centre spot relative to the centre of the calibration pattern");
-            util.AddComment(doc, nodeCalibSetup, "0 - North West");
-            util.AddComment(doc, nodeCalibSetup, "1 - North East");
-            util.AddComment(doc, nodeCalibSetup, "2 - South East");
-            util.AddComment(doc, nodeCalibSetup, "3 - South West");
-            util.AddTextElement(doc, nodeCalibSetup, "CentreSpotPosition", Convert.ToString(cmbCentreSpotPosition.SelectedIndex));
-            util.AddComment(doc, nodeCalibSetup, "Distance from the camera to the centre of the calibration pattern along the ground in mm");
-            util.AddTextElement(doc, nodeCalibSetup, "DistToCentreMillimetres", txtDistToCentre.Text);
-            util.AddComment(doc, nodeCalibSetup, "height of the camera above the ground in mm");
-            util.AddTextElement(doc, nodeCalibSetup, "CameraHeightMillimetres", txtCameraHeight.Text);
-            util.AddComment(doc, nodeCalibSetup, "Calibration pattern spacing in mm");
-            util.AddTextElement(doc, nodeCalibSetup, "PatternSpacingMillimetres", txtPatternSpacing.Text);
-            util.AddComment(doc, nodeCalibSetup, "Baseline Distance mm");
-            util.AddTextElement(doc, nodeCalibSetup, "BaselineMillimetres", txtBaseline.Text);
+            xml.AddComment(doc, nodeCalibSetup, "Horizontal field of view of the camera in degrees");
+            xml.AddTextElement(doc, nodeCalibSetup, "FieldOfViewDegrees", txtFOV.Text);
+            xml.AddComment(doc, nodeCalibSetup, "Position of the centre spot relative to the centre of the calibration pattern");
+            xml.AddComment(doc, nodeCalibSetup, "0 - North West");
+            xml.AddComment(doc, nodeCalibSetup, "1 - North East");
+            xml.AddComment(doc, nodeCalibSetup, "2 - South East");
+            xml.AddComment(doc, nodeCalibSetup, "3 - South West");
+            xml.AddTextElement(doc, nodeCalibSetup, "CentreSpotPosition", Convert.ToString(cmbCentreSpotPosition.SelectedIndex));
+            xml.AddComment(doc, nodeCalibSetup, "Distance from the camera to the centre of the calibration pattern along the ground in mm");
+            xml.AddTextElement(doc, nodeCalibSetup, "DistToCentreMillimetres", txtDistToCentre.Text);
+            xml.AddComment(doc, nodeCalibSetup, "height of the camera above the ground in mm");
+            xml.AddTextElement(doc, nodeCalibSetup, "CameraHeightMillimetres", txtCameraHeight.Text);
+            xml.AddComment(doc, nodeCalibSetup, "Calibration pattern spacing in mm");
+            xml.AddTextElement(doc, nodeCalibSetup, "PatternSpacingMillimetres", txtPatternSpacing.Text);
+            xml.AddComment(doc, nodeCalibSetup, "Baseline Distance mm");
+            xml.AddTextElement(doc, nodeCalibSetup, "BaselineMillimetres", txtBaseline.Text);
             if (cam.leftcam.ROI != null)
             {
-                util.AddComment(doc, nodeCalibSetup, "Region of interest in the left image");
-                util.AddTextElement(doc, nodeCalibSetup, "LeftROI", Convert.ToString(cam.leftcam.ROI.tx) + "," +
+                xml.AddComment(doc, nodeCalibSetup, "Region of interest in the left image");
+                xml.AddTextElement(doc, nodeCalibSetup, "LeftROI", Convert.ToString(cam.leftcam.ROI.tx) + "," +
                                                                     Convert.ToString(cam.leftcam.ROI.ty) + "," +
                                                                     Convert.ToString(cam.leftcam.ROI.bx) + "," +
                                                                     Convert.ToString(cam.leftcam.ROI.by));
             }
             if (cam.rightcam.ROI != null)
             {
-                util.AddComment(doc, nodeCalibSetup, "Region of interest in the right image");
-                util.AddTextElement(doc, nodeCalibSetup, "RightROI", Convert.ToString(cam.rightcam.ROI.tx) + "," +
+                xml.AddComment(doc, nodeCalibSetup, "Region of interest in the right image");
+                xml.AddTextElement(doc, nodeCalibSetup, "RightROI", Convert.ToString(cam.rightcam.ROI.tx) + "," +
                                                                     Convert.ToString(cam.rightcam.ROI.ty) + "," +
                                                                     Convert.ToString(cam.rightcam.ROI.bx) + "," +
                                                                     Convert.ToString(cam.rightcam.ROI.by));

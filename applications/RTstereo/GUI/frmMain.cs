@@ -30,6 +30,7 @@ using System.Drawing.Imaging;
 using System.Text;
 using System.Windows.Forms;
 using DirectX.Capture;
+using sluggish.utilities.timing;
 using sentience.core;
 
 namespace WindowsApplication1

@@ -119,6 +119,10 @@
       <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
       <Name>sentcore</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\utilities\utilities.csproj">
+      <Project>{3028A130-2D88-4581-B9F9-D840FA39875D}</Project>
+      <Name>utilities</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">

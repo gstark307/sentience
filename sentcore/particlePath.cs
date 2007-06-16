@@ -22,8 +22,9 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
+using sluggish.utilities;
+using sluggish.utilities.xml;
 
 namespace sentience.core
 {
@@ -465,7 +466,7 @@ namespace sentience.core
                         if ((x > -1) && (y > -1))
                         {
                             if (prev_x > -1)
-                                util.drawLine(img, width, height, x, y, prev_x, prev_y, rr, gg, bb, line_thickness, false);
+                                drawing.drawLine(img, width, height, x, y, prev_x, prev_y, rr, gg, bb, line_thickness, false);
 
                             prev_x = x;
                             prev_y = y;
@@ -485,13 +486,13 @@ namespace sentience.core
             XmlElement nodePath = doc.CreateElement("RobotPath");
             parent.AppendChild(nodePath);
 
-            util.AddComment(doc, nodePath, "The path through which the robot has moved, as an X,Y coordinate");
-            util.AddComment(doc, nodePath, "in millimetres followed by the heading in degrees");
+            xml.AddComment(doc, nodePath, "The path through which the robot has moved, as an X,Y coordinate");
+            xml.AddComment(doc, nodePath, "in millimetres followed by the heading in degrees");
              
             for (int i = 0; i < path.Count; i++)
             {
                 particlePose pose = (particlePose)path[i];
-                util.AddTextElement(doc, nodePath, "Pose", Convert.ToString(pose.x) + "," +
+                xml.AddTextElement(doc, nodePath, "Pose", Convert.ToString(pose.x) + "," +
                                                            Convert.ToString(pose.y) + "," +
                                                            Convert.ToString(pose.pan * 180 / Math.PI));
             }

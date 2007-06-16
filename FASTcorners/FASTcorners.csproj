@@ -38,6 +38,7 @@
     <Compile Include="FAST.cs" />
     <Compile Include="FASTcorner.cs" />
     <Compile Include="FASTline.cs" />
+    <Compile Include="FASTlines.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
