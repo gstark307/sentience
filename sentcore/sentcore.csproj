@@ -53,6 +53,7 @@
     <Compile Include="scanMatching.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
     <Compile Include="FAST.cs" />
+    <Compile Include="sentience_stereo_shiftmax.cs" />
     <Compile Include="simulation.cs" />
     <Compile Include="simulationPathSegment.cs" />
     <Compile Include="specialMath.cs" />

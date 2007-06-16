@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<UserCombinePreferences filename="/home/motters/develop/FASTcorners/FASTcorners.mds">
+  <Files>
+    <File filename="Welcome" />
+    <File filename="./FAST.cs" />
+    <File filename="./FASTcorner.cs" />
+    <File filename="./FASTline.cs" />
+  </Files>
+  <Views>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
+      <TreeView>
+        <Node expanded="True">
+          <Node name="FASTcorners" expanded="True">
+            <Node name="FASTline.cs" expanded="False" selected="True" />
+          </Node>
+        </Node>
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ClassPad">
+      <TreeView>
+        <Node expanded="True" />
+      </TreeView>
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Properties>
+      <Property key="ActiveConfiguration" value="Debug" />
+      <Property key="ActiveWindow" value="/home/motters/develop/FASTcorners/FASTline.cs" />
+    </Properties>
+  </Properties>
+</UserCombinePreferences>
