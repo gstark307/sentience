@@ -1,0 +1,17 @@
+<Combine name="utilities" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="utilities" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="utilities" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <DeployTargets />
+  <StartMode startupentry="utilities" single="True">
+    <Execute type="None" entry="utilities" />
+  </StartMode>
+  <Entries>
+    <Entry filename="./utilities.mdp" />
+  </Entries>
+</Combine>

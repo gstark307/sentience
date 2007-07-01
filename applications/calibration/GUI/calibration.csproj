@@ -11,7 +11,7 @@
     <AssemblyName>fishfood</AssemblyName>
     <GenerateManifests>true</GenerateManifests>
     <SignManifests>true</SignManifests>
-    <ManifestCertificateThumbprint>64ADCDF1604D35DA2FC71E5FFC190F952AF81867</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>B95D489CF56EEF04F0215299083C227D7A08A133</ManifestCertificateThumbprint>
     <ManifestKeyFile>calibration_TemporaryKey.pfx</ManifestKeyFile>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>C:\temp\fishfood\</PublishUrl>
@@ -60,12 +60,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="cameraSettings.cs" />
-    <Compile Include="common.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="common.Designer.cs">
-      <DependentUpon>common.cs</DependentUpon>
-    </Compile>
     <Compile Include="AddCam.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -31,7 +31,7 @@ using sluggish.utilities;
 
 namespace WindowsApplication1
 {
-    public partial class frmMain : common
+    public partial class frmMain : Form
     {
         Random rnd = new Random();
 
@@ -112,7 +112,7 @@ namespace WindowsApplication1
             //test_survey(offset_x, offset_y);
             //test_survey_pan(50, 50);
 
-            updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
+            BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
             //picRays.Refresh();
         }
 

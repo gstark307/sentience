@@ -3,9 +3,9 @@
     Copyright (C) 2000-2007 Bob Mottram
     fuzzgun@gmail.com
 
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -13,9 +13,8 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
@@ -30,13 +29,14 @@ using System.Drawing.Imaging;
 using System.Text;
 using System.Windows.Forms;
 using DirectX.Capture;
+using sluggish.utilities;
 using sluggish.utilities.timing;
 using sentience.core;
 
 namespace WindowsApplication1
 {
 
-    public partial class frmMain : common
+    public partial class frmMain : Form
     {
         // object for doing stereo correspondence
         processstereo stereo = new processstereo();
@@ -95,7 +95,7 @@ namespace WindowsApplication1
                         global_variables.right_bmp = new Byte[input_img.Width * input_img.Height * 3];
 
                     right_image = (Bitmap)input_img.Clone();
-                    updatebitmap(right_image, global_variables.right_bmp);                    
+                    BitmapArrayConversions.updatebitmap(right_image, global_variables.right_bmp);                    
                     captureState[1] = 2;
                 }
                 right_camera_running = true;
@@ -116,7 +116,7 @@ namespace WindowsApplication1
                         global_variables.left_bmp = new Byte[input_img.Width * input_img.Height * 3];
 
                     left_image = (Bitmap)input_img.Clone();
-                    updatebitmap(left_image, global_variables.left_bmp);
+                    BitmapArrayConversions.updatebitmap(left_image, global_variables.left_bmp);
 
                     captureState[0] = 2;
                 }
@@ -430,7 +430,7 @@ namespace WindowsApplication1
                 left_image = (Bitmap)picLeftImage.Image.Clone();
                 if (global_variables.left_bmp == null)
                     global_variables.left_bmp = new Byte[left_image.Width * left_image.Height * 3];
-                updatebitmap(left_image, global_variables.left_bmp);
+                BitmapArrayConversions.updatebitmap(left_image, global_variables.left_bmp);
                 captureState[0] = 2;
 
                 picRightImage.Image = new Bitmap(right_filename);
@@ -438,7 +438,7 @@ namespace WindowsApplication1
                 right_image = (Bitmap)picRightImage.Image.Clone();
                 if (global_variables.right_bmp == null)
                     global_variables.right_bmp = new Byte[right_image.Width * right_image.Height * 3];
-                updatebitmap(right_image, global_variables.right_bmp);
+                BitmapArrayConversions.updatebitmap(right_image, global_variables.right_bmp);
                 captureState[1] = 2;
             }
 
@@ -513,7 +513,7 @@ namespace WindowsApplication1
             {
                 Bitmap background = new Bitmap(filename);
                 Byte[] back_bmp = new Byte[background.Width * background.Height * 3];
-                updatebitmapslow(background, back_bmp);
+                BitmapArrayConversions.updatebitmapslow(background, back_bmp);
                 background_bmp = new Byte[global_variables.standard_width * global_variables.standard_height * 3];
 
                 int n = 0;
@@ -573,8 +573,8 @@ namespace WindowsApplication1
                     right_image = (Bitmap)picRightImage.Image;
 
                     // copy bitmap data into byte arrays
-                    updatebitmap(left_image, global_variables.left_bmp);
-                    updatebitmap(right_image, global_variables.right_bmp);
+                    BitmapArrayConversions.updatebitmap(left_image, global_variables.left_bmp);
+                    BitmapArrayConversions.updatebitmap(right_image, global_variables.right_bmp);
 
                     readyToUpdate = true;
                 }
@@ -801,27 +801,27 @@ namespace WindowsApplication1
 
         private void showRadar()
         {
-            updatebitmap_unsafe(stereo.getRadarImage(), (Bitmap)picOutput.Image);
+            BitmapArrayConversions.updatebitmap_unsafe(stereo.getRadarImage(), (Bitmap)picOutput.Image);
             picOutput.Refresh();
         }
 
         private void showRays()
         {
-            updatebitmap_unsafe(stereo.getRaysImage(picOutput.Image.Width, picOutput.Image.Height), (Bitmap)picOutput.Image);
+            BitmapArrayConversions.updatebitmap_unsafe(stereo.getRaysImage(picOutput.Image.Width, picOutput.Image.Height), (Bitmap)picOutput.Image);
             picOutput.Refresh();
         }
 
         private void showDisparityMap()
         {
             stereo.getDisparityMap(disp_bmp_data, picOutput.Image.Width, picOutput.Image.Height, 0);
-            updatebitmap_unsafe(disp_bmp_data, (Bitmap)picOutput.Image);
+            BitmapArrayConversions.updatebitmap_unsafe(disp_bmp_data, (Bitmap)picOutput.Image);
             picOutput.Refresh();
         }
 
         private void showCloseObjects()
         {
             stereo.getCloseObjects(global_variables.left_bmp, disp_bmp_data, background_bmp,picOutput.Image.Width, picOutput.Image.Height, 130);
-            updatebitmap_unsafe(disp_bmp_data, (Bitmap)picOutput.Image);
+            BitmapArrayConversions.updatebitmap_unsafe(disp_bmp_data, (Bitmap)picOutput.Image);
             picOutput.Refresh();
         }
 

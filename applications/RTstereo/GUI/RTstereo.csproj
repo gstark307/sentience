@@ -58,12 +58,6 @@
   <ItemGroup>
     <Compile Include="cameraSettings.cs" />
     <Compile Include="processstereo.cs" />
-    <Compile Include="common.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="common.Designer.cs">
-      <DependentUpon>common.cs</DependentUpon>
-    </Compile>
     <Compile Include="AddCam.cs">
       <SubType>Form</SubType>
     </Compile>

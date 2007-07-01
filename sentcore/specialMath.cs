@@ -1,51 +1,38 @@
+/*
+    Class  SpecialFunction (C#)
+    This class is an extension of System.Math. It includes a number
+    of special functions not found in the Math class.
+    Copyright (C) 1984 Stephen L. Moshier (original C version - Cephes Math Library)
+    Copyright (C) 1996 Leigh Brookshaw	(Java version)
+    Copyright (C) 2005 Miroslav Stampar	(C# version [->this<-])
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+*/
+
 using System;
 
 namespace sentience.core
 {
-    /*
-        **************************************************************************
-        **
-        **    Class  SpecialFunction (C#)
-        **
-        **************************************************************************
-        **    Copyright (C) 1984 Stephen L. Moshier (original C version - Cephes Math Library)
-        **    Copyright (C) 1996 Leigh Brookshaw	(Java version)
-        **    Copyright (C) 2005 Miroslav Stampar	(C# version [->this<-])
-        **
-        **    This program is free software; you can redistribute it and/or modify
-        **    it under the terms of the GNU General Public License as published by
-        **    the Free Software Foundation; either version 2 of the License, or
-        **    (at your option) any later version.
-        **
-        **    This program is distributed in the hope that it will be useful,
-        **    but WITHOUT ANY WARRANTY; without even the implied warranty of
-        **    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        **    GNU General Public License for more details.
-        **
-        **    You should have received a copy of the GNU General Public License
-        **    along with this program; if not, write to the Free Software
-        **    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-        **************************************************************************
-        **
-        **    This class is an extension of System.Math. It includes a number
-        **    of special functions not found in the Math class.
-        **
-        *************************************************************************/
-
-
-    /**
-     * This class contains physical constants and special functions not found
-     * in the System.Math class.
-     * Like the System.Math class this class is final and cannot be
-     * subclassed.
-     * All physical constants are in cgs units.
-     * NOTE: These special functions do not necessarily use the fastest
-     * or most accurate algorithms.
-     *
-     * @version $Revision: 1.8 $, $Date: 2005/09/12 09:52:34 $
-     */
-
-
+    /// <summary>
+    /// This class contains physical constants and special functions not found 
+    /// in the System.Math class.  Like the System.Math class this class is final and cannot be
+    /// subclassed. 
+    /// All physical constants are in cgs units.
+    /// NOTE: These special functions do not necessarily use the fastest
+    /// or most accurate algorithms.
+    /// @version $Revision: 1.8 $, $Date: 2005/09/12 09:52:34 $
+    /// </summary>
     public class SpecialMath
     {
         // Machine constants

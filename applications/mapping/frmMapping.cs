@@ -3,9 +3,9 @@
     Copyright (C) 2000-2007 Bob Mottram
     fuzzgun@gmail.com
 
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -13,9 +13,8 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using System;
@@ -30,12 +29,13 @@ using System.Windows.Forms;
 
 using sentience.core;
 using sentience.learn;
+using sluggish.utilities;
 using sluggish.utilities.timing;
 using Aced.Compression;
 
 namespace StereoMapping
 {
-    public partial class frmMapping : common
+    public partial class frmMapping : Form
     {
         bool simulation_running = false;
         bool optimiser_running = false;
@@ -266,8 +266,7 @@ namespace StereoMapping
                                        System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] path_img = new Byte[sim.results_image_width * sim.results_image_height * 3];
             sim.ShowPath(path_img, sim.results_image_width, sim.results_image_height);
-            updatebitmap_unsafe(path_img, (Bitmap)(picPath.Image));
-
+            BitmapArrayConversions.updatebitmap_unsafe(path_img, (Bitmap)(picPath.Image));
         }
 
         /// <summary>
@@ -279,7 +278,7 @@ namespace StereoMapping
                                           System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
             sim.ShowGrid(occupancygridMultiHypothesis.VIEW_ABOVE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
-            updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
+            BitmapArrayConversions.updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
         }
 
         private void showPathTree()
@@ -288,7 +287,7 @@ namespace StereoMapping
                                           System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] tree_img = new Byte[640 * 480 * 3];
             sim.ShowPathTree(tree_img, 640, 480);
-            updatebitmap_unsafe(tree_img, (Bitmap)(picPathTree.Image));
+            BitmapArrayConversions.updatebitmap_unsafe(tree_img, (Bitmap)(picPathTree.Image));
         }
 
         private void showSideViews()
@@ -297,12 +296,12 @@ namespace StereoMapping
                                                System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
             sim.ShowGrid(occupancygridMultiHypothesis.VIEW_LEFT_SIDE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
-            updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewLeft.Image));
+            BitmapArrayConversions.updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewLeft.Image));
 
             picGridSideViewRight.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
                                                System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             sim.ShowGrid(occupancygridMultiHypothesis.VIEW_RIGHT_SIDE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
-            updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewRight.Image));
+            BitmapArrayConversions.updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewRight.Image));
         }
 
 
@@ -316,7 +315,7 @@ namespace StereoMapping
                                            System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] best_pose_img = new Byte[dimension_mm * dimension_mm * 3];
             sim.ShowBestPose(best_pose_img, dimension_mm, dimension_mm, true);
-            updatebitmap_unsafe(best_pose_img, (Bitmap)(picBestPose.Image));
+            BitmapArrayConversions.updatebitmap_unsafe(best_pose_img, (Bitmap)(picBestPose.Image));
         }
 
 
@@ -405,8 +404,8 @@ namespace StereoMapping
                 Bitmap right_image = new Bitmap(right_file[i]);
 
                 // extract the raw byte arrays
-                Byte[] left_bmp = updatebitmap_unsafe(left_image);
-                Byte[] right_bmp = updatebitmap_unsafe(right_image);
+                Byte[] left_bmp = BitmapArrayConversions.updatebitmap_unsafe(left_image);
+                Byte[] right_bmp = BitmapArrayConversions.updatebitmap_unsafe(right_image);
 
                 // put the byte arrays into the list of results
                 images.Add(left_bmp);
@@ -416,8 +415,8 @@ namespace StereoMapping
                 // this is a good way of checking that updatebitmap returned a valid byte array
                 picLeftImage.Image = new Bitmap(left_image.Width, left_image.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 picRightImage.Image = new Bitmap(right_image.Width, right_image.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                updatebitmap_unsafe(left_bmp, (Bitmap)(picLeftImage.Image));
-                updatebitmap_unsafe(right_bmp, (Bitmap)(picRightImage.Image));
+                BitmapArrayConversions.updatebitmap_unsafe(left_bmp, (Bitmap)(picLeftImage.Image));
+                BitmapArrayConversions.updatebitmap_unsafe(right_bmp, (Bitmap)(picRightImage.Image));
             }
 
             return (images);
@@ -484,8 +483,8 @@ namespace StereoMapping
                         picColourVariance.Image = new Bitmap(sim.graph_colour_variance.screen_width, sim.graph_colour_variance.screen_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                         picNoOfParticles.Image = new Bitmap(sim.graph_no_of_particles.screen_width, sim.graph_colour_variance.screen_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                     }
-                    updatebitmap_unsafe(sim.graph_colour_variance.image, (Bitmap)(picColourVariance.Image));
-                    updatebitmap_unsafe(sim.graph_no_of_particles.image, (Bitmap)(picNoOfParticles.Image));
+                    BitmapArrayConversions.updatebitmap_unsafe(sim.graph_colour_variance.image, (Bitmap)(picColourVariance.Image));
+                    BitmapArrayConversions.updatebitmap_unsafe(sim.graph_no_of_particles.image, (Bitmap)(picNoOfParticles.Image));
                     picColourVariance.Refresh();
                     picNoOfParticles.Refresh();
 
@@ -516,7 +515,7 @@ namespace StereoMapping
                     //picGridSideView.Image = new Bitmap(640, 200, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                     //Byte[] score_img = new Byte[640 * 200 * 3];
                     //autotuner.showHistory(score_img, 640, 200);
-                    //updatebitmap_unsafe(score_img, (Bitmap)(picGridSideView.Image));
+                    //BitmapArrayConversions.updatebitmap_unsafe(score_img, (Bitmap)(picGridSideView.Image));
 
                     // reset the simulation
                     Simulation_Reset();

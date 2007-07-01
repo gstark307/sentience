@@ -3,9 +3,9 @@
     Copyright (C) 2007  Bob Mottram
     fuzzgun@gmail.com
 
-    This program is free software; you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -13,9 +13,8 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. 
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -32,12 +31,13 @@ using System.Windows.Forms;
 using DirectX.Capture;
 using sentience.calibration;
 using sentience.core;
+using sluggish.utilities;
 using sluggish.utilities.xml;
 
 namespace WindowsApplication1
 {
 
-    public partial class frmMain : common
+    public partial class frmMain : Form
     {
         // this file stores the general setup parameters
         const String calibration_setup_filename = "calibration_setup.xml";
@@ -114,7 +114,7 @@ namespace WindowsApplication1
                     }
 
                     ary = disp_bmp_data;
-                    updatebitmap((Bitmap)(input_img.Clone()), ary);
+                    BitmapArrayConversions.updatebitmap((Bitmap)(input_img.Clone()), ary);
 
                     captureState[cameraIndex] = 2;
                 }
@@ -610,35 +610,35 @@ namespace WindowsApplication1
                         {
                             case DISPLAY_EDGES:
                                 {
-                                    updatebitmap(calib.edges_image, (Bitmap)pic.Image);
+                                    BitmapArrayConversions.updatebitmap_unsafe(calib.edges_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_CORNERS:
                                 {
-                                    updatebitmap(calib.corners_image, (Bitmap)pic.Image);
+                                    BitmapArrayConversions.updatebitmap_unsafe(calib.corners_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_LINES:
                                 {
-                                    updatebitmap(calib.lines_image, (Bitmap)pic.Image);
+                                    BitmapArrayConversions.updatebitmap_unsafe(calib.lines_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_CENTREALIGN:
                                 {
                                     if (calib.centrealign_image != null)
-                                        updatebitmap(calib.centrealign_image, (Bitmap)pic.Image);
+                                        BitmapArrayConversions.updatebitmap_unsafe(calib.centrealign_image, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_CURVE:
                                 {
                                     if (calib.curve_fit != null)
-                                        updatebitmap(calib.curve_fit, (Bitmap)pic.Image);
+                                        BitmapArrayConversions.updatebitmap_unsafe(calib.curve_fit, (Bitmap)pic.Image);
                                     break;
                                 }
                             case DISPLAY_RECTIFIED:
                                 {
                                     if (calib.rectified_image != null)
-                                        updatebitmap(calib.rectified_image, (Bitmap)pic.Image);
+                                        BitmapArrayConversions.updatebitmap_unsafe(calib.rectified_image, (Bitmap)pic.Image);
                                     break;
                                 }
                         }

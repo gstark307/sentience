@@ -1,0 +1,77 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3028A130-2D88-4581-B9F9-D840FA39875D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>utilities</RootNamespace>
+    <AssemblyName>utilities</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ArrayConversions.cs" />
+    <Compile Include="BitmapArrayConversions.cs" />
+    <Compile Include="blob.cs" />
+    <Compile Include="colours.cs" />
+    <Compile Include="drawing.cs" />
+    <Compile Include="EventLog.cs" />
+    <Compile Include="FTPclient.cs" />
+    <Compile Include="geometry.cs" />
+    <Compile Include="graph.cs" />
+    <Compile Include="graph_points.cs" />
+    <Compile Include="image.cs" />
+    <Compile Include="KeyValuePair.cs" />
+    <Compile Include="kml.cs" />
+    <Compile Include="linefeature.cs" />
+    <Compile Include="graph_oscilloscope.cs" />
+    <Compile Include="polygon.cs" />
+    <Compile Include="polynomial.cs" />
+    <Compile Include="probabilities.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="region.cs" />
+    <Compile Include="regionCollection.cs" />
+    <Compile Include="snake.cs" />
+    <Compile Include="stopwatch.cs" />
+    <Compile Include="ThreadRegionProcessing.cs" />
+    <Compile Include="ThreadRegionGrowing.cs" />
+    <Compile Include="xml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENCE.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

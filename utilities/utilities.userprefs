@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<UserCombinePreferences filename="/home/motters/develop/utilities/utilities.mds">
+  <Files>
+    <File filename="./stopwatch.cs" />
+    <File filename="./AssemblyInfo.cs" />
+  </Files>
+  <Views>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
+      <TreeView>
+        <Node expanded="True">
+          <Node name="utilities" expanded="True">
+            <Node name="stopwatch.cs" expanded="False" selected="True" />
+          </Node>
+        </Node>
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ClassPad">
+      <TreeView>
+        <Node expanded="True" />
+      </TreeView>
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Properties>
+      <Property key="ActiveConfiguration" value="Debug" />
+      <Property key="ActiveWindow" value="/home/motters/develop/utilities/stopwatch.cs" />
+    </Properties>
+  </Properties>
+</UserCombinePreferences>
