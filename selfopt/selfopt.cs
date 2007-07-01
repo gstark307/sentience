@@ -37,6 +37,9 @@ namespace sentience.learn
         private float[] bestScoreHistory;
         private float[] scoreHistory;
 
+        // phase space scores, only in 2D
+        private float[, ,] phase_space_scores;
+
         // population of instances to be evaluated
         private selfoptInstance[] instance;
 
@@ -83,6 +86,9 @@ namespace sentience.learn
             // store a few best scores
             bestScoreHistory = new float[1000];
             scoreHistory = new float[1000];
+
+            // create an array to keep track of phase space scores
+            phase_space_scores = new float[50, 50, 2];
         }
 
         public selfopt(int no_of_instances, int parameters_per_instance)
@@ -123,6 +129,14 @@ namespace sentience.learn
         {
             last_improved++;
             instance[current_instance_index].score = score;
+
+            // update the phase space scores
+            float phase_x = 0, phase_y = 0;
+            instance[current_instance_index].getPhaseSpacePosition(ref phase_x, ref phase_y);
+            int px = (int)Math.Round(phase_x * (phase_space_scores.GetLength(0) - 1));
+            int py = (int)Math.Round(phase_y * (phase_space_scores.GetLength(1) - 1));
+            phase_space_scores[px, py, 0] += score;
+            phase_space_scores[px, py, 1]++;
 
             //is this the best score?
             if (((smallerScoresAreBetter) && (score < instance[best_index].score)) ||
@@ -208,8 +222,12 @@ namespace sentience.learn
             // if no improvement has been made for a long time
             if (last_improved >= instance.Length * 2)
             {
+                // get the phase space position of the best individual
+                float phase_x = 0, phase_y = 0;
+                instance[best_index].getPhaseSpacePosition(ref phase_x, ref phase_y);
+
                 seedBest();
-                //Randomize(true);
+
                 last_improved = 0;
             }
         }
@@ -316,13 +334,31 @@ namespace sentience.learn
             generation++;
         }
 
+        /// <summary>
+        /// seed using the given values
+        /// </summary>
+        /// <param name="values">string containing comma separated values</param>
+        /// <param name="variance"></param>
         public void seed(String values, float variance)
         {
             for (int i = 0; i < instance.Length; i++)
             {
                 instance[i].seed(rnd, values, variance);
             }
+        }
 
+        /// <summary>
+        /// seed around the given phase space position
+        /// </summary>
+        /// <param name="phase_x">phase space x coordinate</param>
+        /// <param name="phase_y">phase space y coordinate</param>
+        /// <param name="variance"></param>
+        private void seed(float phase_x, float phase_y, float variance)
+        {
+            for (int i = 0; i < instance.Length; i++)
+            {
+                instance[i].seed(rnd, phase_x, phase_y, variance);
+            }
         }
 
         public void seedBest()
@@ -342,6 +378,28 @@ namespace sentience.learn
                     instance[i].seed(rnd, values, mutationRate);
             }
 
+        }
+
+        /// <summary>
+        /// returns the average phase space position for all individuals in the population
+        /// This can be used to relocate the population if it gets stuck in one area
+        /// </summary>
+        /// <param name="av_phase_x">average x coordinate within the phase space</param>
+        /// <param name="av_phase_y">average y coordinate within the phase space</param>
+        private void getAveragePhaseSpacePosition(ref float av_phase_x, ref float av_phase_y)
+        {
+            float phase_x = 0, phase_y = 0;
+            av_phase_x = 0;
+            av_phase_y = 0;
+
+            for (int i = 0; i < instance.Length; i++)
+            {
+                instance[i].getPhaseSpacePosition(ref phase_x, ref phase_y);
+                av_phase_x += phase_x;
+                av_phase_y += phase_y;
+            }
+            av_phase_x /= instance.Length;
+            av_phase_y /= instance.Length;
         }
 
         #endregion
@@ -376,6 +434,15 @@ namespace sentience.learn
 
             for (int i = 0; i < instance.Length; i++)
                 instance[i].save(binfile);
+
+            binfile.Write((int)phase_space_scores.GetLength(0));
+            binfile.Write((int)phase_space_scores.GetLength(1));
+            for (int phase_x = 0; phase_x < phase_space_scores.GetLength(0); phase_x++)
+                for (int phase_y = 0; phase_y < phase_space_scores.GetLength(1); phase_y++)
+                {
+                    binfile.Write(phase_space_scores[phase_x, phase_y, 0]);
+                    binfile.Write(phase_space_scores[phase_x, phase_y, 1]);
+                }
 
             binfile.Close();
             fp.Close();
@@ -413,6 +480,16 @@ namespace sentience.learn
 
                 for (int i = 0; i < instance.Length; i++)
                     instance[i].load(binfile);
+
+                int px = binfile.ReadInt32();
+                int py = binfile.ReadInt32();
+                phase_space_scores = new float[px, py, 2];
+                for (int phase_x = 0; phase_x < px; phase_x++)
+                    for (int phase_y = 0; phase_y < py; phase_y++)
+                    {
+                        phase_space_scores[phase_x, phase_y, 0] = binfile.ReadSingle();
+                        phase_space_scores[phase_x, phase_y, 1] = binfile.ReadSingle();
+                    }
 
                 binfile.Close();
                 fp.Close();
@@ -465,13 +542,105 @@ namespace sentience.learn
         #region "drawing functions"
 
         /// <summary>
+        /// displays the population distribution within a phase space diagram
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        /// <param name="point_radius">radius used to draw each individual</param>
+        public void showPhaseSpacePopulation(byte[] img,
+                                             int img_width, int img_height,
+                                             int point_radius)
+        {
+            float phase_x = 0, phase_y = 0;
+
+            // clear background
+            for (int i = 0; i < img.Length; i++) img[i] = 240;
+
+            for (int i = 0; i < instance.Length; i++)
+            {
+                instance[i].getPhaseSpacePosition(ref phase_x, ref phase_y);
+                int x = (int)(phase_x * img_width);
+                if (x >= img_width) x = img_width - 1;
+                int y = (int)(phase_y * img_height);
+                if (y >= img_height) y = img_height - 1;
+
+                for (int xx = x - point_radius; xx <= x + point_radius; xx++)
+                {
+                    int dx = xx - x;
+                    for (int yy = y - point_radius; yy <= y + point_radius; yy++)
+                    {
+                        int dy = yy - y;
+                        int dist = (int)Math.Sqrt((dx * dx) + (dy * dy));
+                        if (dist <= point_radius)
+                        {
+                            int n = ((yy * img_width) + xx) * 3;
+                            for (int col = 0; col < 3; col++)
+                                img[n + col] = (byte)100;
+                        }
+                    }
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// displays the scores obtained within different areas of the phase space
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        public void showPhaseSpaceScores(byte[] img,
+                                         int img_width, int img_height)
+        {
+            // get the maximum score
+            float max_score = 0;
+            for (int phase_x = 0; phase_x < phase_space_scores.GetLength(0); phase_x++)
+            {
+                for (int phase_y = 0; phase_y < phase_space_scores.GetLength(1); phase_y++)
+                {
+                    if (phase_space_scores[phase_x, phase_y, 1] > 0)
+                    {
+                        float score = phase_space_scores[phase_x, phase_y, 0] /
+                                      phase_space_scores[phase_x, phase_y, 1];
+                        if (score > max_score) max_score = score;
+                    }
+                }
+            }
+
+            if (max_score > 0)
+            {
+                for (int x = 0; x < img_width; x++)
+                {
+                    int px = x * (phase_space_scores.GetLength(0) - 1) / img_width;
+                    for (int y = 0; y < img_height; y++)
+                    {
+                        int py = y * (phase_space_scores.GetLength(1) - 1) / img_height;
+                        byte value = 0;
+                        if (phase_space_scores[px, py, 1] > 0)
+                        {
+                            value = (byte)((phase_space_scores[px, py, 0] / phase_space_scores[px, py, 1]) *
+                                            255 / max_score);
+                        }
+                        int n = ((y * img_width) + x) * 3;
+                        img[n] = value;
+                        img[n + 1] = value;
+                        img[n + 2] = 0;
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
         /// show the score history within the given bitmap
         /// </summary>
         /// <param name="img"></param>
         /// <param name="img_width"></param>
         /// <param name="img_height"></param>
-        public void showHistory(Byte[] img, int img_width, int img_height)
+        public void showHistory(byte[] img, int img_width, int img_height)
         {
+            // clear background
             for (int i = 0; i < img.Length; i++) img[i] = 240;
 
             // get the maximum score

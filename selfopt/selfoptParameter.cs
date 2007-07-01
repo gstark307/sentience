@@ -20,7 +20,7 @@
 
 using System;
 using System.IO;
-using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 
 namespace sentience.learn
@@ -44,7 +44,7 @@ namespace sentience.learn
             else
             {
                 // continuous value
-                value = min_value + (rnd.Next(100000) * (max_value-min_value) / 100000.0f);
+                value = min_value + (rnd.Next(100000) * (max_value - min_value) / 100000.0f);
             }
         }
 
