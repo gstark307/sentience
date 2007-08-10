@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<stetic-interface>
+  <configuration>
+    <images-root-path>../</images-root-path>
+  </configuration>
+  <widget class="Gtk.Window" id="MainWindow" design-size="622 485">
+    <action-group name="Default">
+      <action id="File">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">File</property>
+        <property name="ShortLabel" translatable="yes">File</property>
+      </action>
+      <action id="Exit">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Exit</property>
+        <property name="ShortLabel" translatable="yes">Exit</property>
+      </action>
+      <action id="Run">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Run</property>
+        <property name="ShortLabel" translatable="yes">Run</property>
+      </action>
+      <action id="MotionModel">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Motion Model</property>
+        <property name="ShortLabel" translatable="yes">Motion Model</property>
+        <signal name="Activated" handler="OnMotionModelActivated" />
+      </action>
+      <action id="SingleStereoRayModel">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Single Stereo Ray Model</property>
+        <property name="ShortLabel" translatable="yes">Single Stereo Ray Model</property>
+        <signal name="Activated" handler="OnSingleStereoRayModelActivated" />
+      </action>
+      <action id="StereoRaysAtVariousRanges">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Stereo Rays at various ranges</property>
+        <property name="ShortLabel" translatable="yes">Stereo Rays at various ranges</property>
+        <signal name="Activated" handler="OnStereoRaysAtVariousRangesActivated" />
+      </action>
+      <action id="GaussianFunction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Gaussian Function</property>
+        <property name="ShortLabel" translatable="yes">Gaussian Function</property>
+        <signal name="Activated" handler="OnGaussianFunctionActivated" />
+      </action>
+      <action id="SensorModelLookupGraphs">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Sensor Model lookup graphs</property>
+        <property name="ShortLabel" translatable="yes">Sensor Model lookup graphs</property>
+        <signal name="Activated" handler="OnSensorModelLookupGraphsActivated" />
+      </action>
+      <action id="PathPlanner">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Path Planner</property>
+        <property name="ShortLabel" translatable="yes">Path Planner</property>
+        <signal name="Activated" handler="OnPathPlannerActivated" />
+      </action>
+    </action-group>
+    <property name="MemberName" />
+    <property name="Title" translatable="yes">Sentience test programs</property>
+    <property name="WindowPosition">CenterOnParent</property>
+    <signal name="DeleteEvent" handler="OnDeleteEvent" />
+    <child>
+      <widget class="Gtk.VBox" id="vbox1">
+        <property name="MemberName" />
+        <property name="Spacing">6</property>
+        <child>
+          <widget class="Gtk.MenuBar" id="menubar1">
+            <property name="MemberName" />
+            <node name="menubar1" type="Menubar">
+              <node type="Menu" action="File">
+                <node type="Menuitem" action="Exit" />
+              </node>
+              <node type="Menu" action="Run">
+                <node type="Menuitem" action="MotionModel" />
+                <node type="Menuitem" action="SingleStereoRayModel" />
+                <node type="Menuitem" action="StereoRaysAtVariousRanges" />
+                <node type="Menuitem" action="GaussianFunction" />
+                <node type="Menuitem" action="SensorModelLookupGraphs" />
+                <node type="Menuitem" action="PathPlanner" />
+              </node>
+            </node>
+          </widget>
+          <packing>
+            <property name="Position">0</property>
+            <property name="AutoSize">True</property>
+            <property name="Expand">False</property>
+            <property name="Fill">False</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="Gtk.Image" id="imgOutput">
+            <property name="MemberName" />
+          </widget>
+          <packing>
+            <property name="Position">1</property>
+            <property name="AutoSize">True</property>
+            <property name="Expand">False</property>
+            <property name="Fill">False</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+</stetic-interface>
