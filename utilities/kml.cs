@@ -786,7 +786,7 @@ namespace sluggish.utilities.xml
 
             if (xnod.Name == "extrude")
             {
-                if (xnod.InnerText.Contains("1"))
+                if (xnod.InnerText.IndexOf("1") > -1)
                     extrude = true;
                 else
                     extrude = false;
@@ -794,7 +794,7 @@ namespace sluggish.utilities.xml
 
             if (xnod.Name == "tessellate")
             {
-                if (xnod.InnerText.Contains("1"))
+                if (xnod.InnerText.IndexOf("1") > -1)
                     tessellate = true;
                 else
                     tessellate = false;
@@ -982,7 +982,7 @@ namespace sluggish.utilities.xml
 
             if (xnod.Name == "extrude")
             {
-                if (xnod.InnerText.Contains("1"))
+                if (xnod.InnerText.IndexOf("1") > -1)
                     extrude = true;
                 else
                     extrude = false;

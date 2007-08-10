@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<UserCombinePreferences filename="/home/motters/develop/sentience/applications/testFunctions/test.sln">
+  <Files>
+    <File filename="Welcome" />
+    <File filename="./frmMain.cs" />
+    <File filename="./frmMain.Designer.cs" />
+  </Files>
+  <Views>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
+      <TreeView>
+        <Node expanded="True">
+          <Node name="test" expanded="True">
+            <Node name="frmMain.Designer.cs" expanded="False" selected="True" />
+          </Node>
+        </Node>
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ClassPad">
+      <TreeView>
+        <Node expanded="True" />
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoQuery.DatabasePad">
+      <TreeView>
+        <Node expanded="False" />
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoDevelop.NUnit.TestPad">
+      <TreeView>
+        <Node expanded="False" />
+      </TreeView>
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Properties>
+      <Property key="ActiveConfiguration" value="Debug|Any CPU" />
+      <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/testFunctions/frmMain.Designer.cs" />
+    </Properties>
+  </Properties>
+</UserCombinePreferences>

@@ -1,0 +1,16 @@
+<Combine name="memcompressor" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="memcompressor" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="memcompressor" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="memcompressor" single="True">
+    <Execute type="None" entry="memcompressor" />
+  </StartMode>
+  <Entries>
+    <Entry filename="./memcompressor.mdp" />
+  </Entries>
+</Combine>

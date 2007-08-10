@@ -1,0 +1,16 @@
+<Combine name="sentcore" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="sentcore" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="sentcore" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="sentcore" single="True">
+    <Execute type="None" entry="sentcore" />
+  </StartMode>
+  <Entries>
+    <Entry filename="./sentcore.mdp" />
+  </Entries>
+</Combine>

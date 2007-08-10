@@ -1,0 +1,57 @@
+<Project name="sentcore" fileversion="2.0" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="DotNetProjectConfiguration">
+      <Output directory="./bin/Debug" assembly="sentcore" />
+      <Build debugmode="True" target="Library" />
+      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" ctype="DotNetProjectConfiguration">
+      <Output directory="./bin/Release" assembly="sentcore" />
+      <Build debugmode="False" target="Library" />
+      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <Contents>
+    <File name="./AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
+    <File name="./calibration.cs" subtype="Code" buildaction="Compile" />
+    <File name="./calibrationStereo.cs" subtype="Code" buildaction="Compile" />
+    <File name="./classimage.cs" subtype="Code" buildaction="Compile" />
+    <File name="./evidenceRay.cs" subtype="Code" buildaction="Compile" />
+    <File name="./LICENCE.txt" subtype="Code" buildaction="Nothing" />
+    <File name="./MersenneTwister.cs" subtype="Code" buildaction="Compile" />
+    <File name="./motionModel.cs" subtype="Code" buildaction="Compile" />
+    <File name="./occupancygridCell.cs" subtype="Code" buildaction="Compile" />
+    <File name="./occupancygridMultiHypothesis.cs" subtype="Code" buildaction="Compile" />
+    <File name="./particleGridCell.cs" subtype="Code" buildaction="Compile" />
+    <File name="./particlePath.cs" subtype="Code" buildaction="Compile" />
+    <File name="./particlePose.cs" subtype="Code" buildaction="Compile" />
+    <File name="./pos3D.cs" subtype="Code" buildaction="Compile" />
+    <File name="./rayModelLookup.cs" subtype="Code" buildaction="Compile" />
+    <File name="./robot.cs" subtype="Code" buildaction="Compile" />
+    <File name="./scanMatching.cs" subtype="Code" buildaction="Compile" />
+    <File name="./sentienceRadar.cs" subtype="Code" buildaction="Compile" />
+    <File name="./sentience_stereo.cs" subtype="Code" buildaction="Compile" />
+    <File name="./sentience_stereo_contours.cs" subtype="Code" buildaction="Compile" />
+    <File name="./sentience_stereo_FAST.cs" subtype="Code" buildaction="Compile" />
+    <File name="./sentience_stereo_interface.cs" subtype="Code" buildaction="Compile" />
+    <File name="./sentienceTracking.cs" subtype="Code" buildaction="Compile" />
+    <File name="./simulation.cs" subtype="Code" buildaction="Compile" />
+    <File name="./simulationPathSegment.cs" subtype="Code" buildaction="Compile" />
+    <File name="./specialMath.cs" subtype="Code" buildaction="Compile" />
+    <File name="./stereoCorrespondence.cs" subtype="Code" buildaction="Compile" />
+    <File name="./stereoFeatures.cs" subtype="Code" buildaction="Compile" />
+    <File name="./stereoHead.cs" subtype="Code" buildaction="Compile" />
+    <File name="./stereoModel.cs" subtype="Code" buildaction="Compile" />
+    <File name="./FASTlines.cs" subtype="Code" buildaction="Compile" />
+  </Contents>
+  <References>
+    <ProjectReference type="Project" localcopy="True" refto="utilities" />
+    <ProjectReference type="Project" localcopy="True" refto="FASTcorners" />
+    <ProjectReference type="Project" localcopy="True" refto="memcompressor" />
+    <ProjectReference type="Project" localcopy="True" refto="pathplanner" />
+    <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  </References>
+</Project>
