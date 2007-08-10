@@ -1,23 +1,31 @@
 <?xml version="1.0"?>
-<UserCombinePreferences filename="/home/motters/develop/sentience/applications/testFunctions/test.sln">
+<UserCombinePreferences filename="/home/motters/develop/sentience/applications/testFunctions/test.mds">
   <Files>
     <File filename="Welcome" />
-    <File filename="./frmMain.cs" />
-    <File filename="./frmMain.Designer.cs" />
+    <File filename="./MainWindow.cs" />
+    <File filename="../../sentcore/robot.cs" />
+    <File filename="../../sentcore/simulation.cs" />
+    <File filename="../../../utilities/kml.cs" />
   </Files>
   <Views>
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
       <TreeView>
         <Node expanded="True">
-          <Node name="test" expanded="True">
-            <Node name="frmMain.Designer.cs" expanded="False" selected="True" />
-          </Node>
+          <Node name="test" expanded="True" />
+          <Node name="utilities" expanded="False" selected="True" />
         </Node>
       </TreeView>
     </ViewMemento>
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ClassPad">
       <TreeView>
-        <Node expanded="True" />
+        <Node expanded="True">
+          <Node name="FASTcorners" expanded="True" />
+          <Node name="memcompressor" expanded="True" />
+          <Node name="pathplanner" expanded="True" />
+          <Node name="selfopt" expanded="True" />
+          <Node name="sentcore" expanded="True" />
+          <Node name="utilities" expanded="True" />
+        </Node>
       </TreeView>
     </ViewMemento>
     <ViewMemento Id="MonoQuery.DatabasePad">
@@ -33,8 +41,8 @@
   </Views>
   <Properties>
     <Properties>
-      <Property key="ActiveConfiguration" value="Debug|Any CPU" />
-      <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/testFunctions/frmMain.Designer.cs" />
+      <Property key="ActiveConfiguration" value="Debug" />
+      <Property key="ActiveWindow" value="/home/motters/develop/utilities/kml.cs" />
     </Properties>
   </Properties>
 </UserCombinePreferences>
