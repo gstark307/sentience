@@ -37,6 +37,8 @@ namespace sentience.core
         public const int VIEW_RIGHT_SIDE = 2;
         public const int VIEW_NAVIGABLE_SPACE = 3;
 
+        #region "variables"
+
         // random number generator
         private MersenneTwister rnd = new MersenneTwister(100);
 
@@ -80,8 +82,10 @@ namespace sentience.core
 
         // indicates areas of the grid which are navigable
         public bool[,] navigable_space;
+        
+        #endregion
 
-        #region "initialisation"
+        #region "constructors/initialisation"
 
         /// <summary>
         /// initialise the grid

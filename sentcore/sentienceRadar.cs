@@ -23,6 +23,9 @@ using sluggish.utilities;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// a crude radar-like system obtained by collapsing the Z axis
+    /// </summary>
     public class sentienceRadar
     {
         public float scale = 2000;

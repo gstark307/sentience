@@ -19,7 +19,6 @@
 
 using System;
 using System.IO;
-using System.Text;
 using sentience.calibration;
 
 namespace sentience.core
@@ -32,12 +31,18 @@ namespace sentience.core
         // an interface to different stereo correspondence algorithms
         sentience_stereo_interface stereointerface = new sentience_stereo_interface();
 
+        #region "constructors"
+
         public stereoCorrespondence(int no_of_stereo_features)
         {
             stereointerface.setRequiredFeatures(no_of_stereo_features);
             stereointerface.setDifferenceThreshold(100);
             stereointerface.setMaxDisparity(5);
         }
+        
+        #endregion
+
+        #region "getting the rectified images"
 
         /// <summary>
         /// returns the left and right rectified images
@@ -62,6 +67,26 @@ namespace sentience.core
             else
                 return (stereointerface.right_image);
         }
+        
+        /// <summary>
+        /// load a pair of rectified images
+        /// </summary>
+        /// <param name="stereo_cam_index">index of the stereo camera</param>
+        /// <param name="fullres_left">left image</param>
+        /// <param name="fullres_right">right image</param>
+        /// <param name="head">stereo head geometry and features</param>
+        /// <param name="no_of_stereo_features"></param>
+        /// <param name="bytes_per_pixel"></param>
+        /// <param name="algorithm_type"></param>
+        /// <returns></returns>
+        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, stereoHead head, int no_of_stereo_features, int bytes_per_pixel,
+                                         int algorithm_type)
+        {
+            setCalibration(null);  // don't use any calibration data
+            return(loadImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, algorithm_type));
+        }
+
+        #endregion
 
         /// <summary>
         /// return a disparity map
@@ -74,6 +99,7 @@ namespace sentience.core
             stereointerface.getDisparityMap(img, width, height, threshold);
         }
 
+        #region "calibration data"
 
         /// <summary>
         /// set the calibration data
@@ -92,24 +118,18 @@ namespace sentience.core
         {
             stereointerface.loadCalibration(calibrationFilename);
         }
-
-        /// <summary>
-        /// load a pair of rectified images
-        /// </summary>
-        /// <param name="stereo_cam_index">index of the stereo camera</param>
-        /// <param name="fullres_left">left image</param>
-        /// <param name="fullres_right">right image</param>
-        /// <param name="head">stereo head geometry and features</param>
-        /// <param name="no_of_stereo_features"></param>
-        /// <param name="bytes_per_pixel"></param>
-        /// <param name="algorithm_type"></param>
-        /// <returns></returns>
-        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, stereoHead head, int no_of_stereo_features, int bytes_per_pixel,
-                                         int algorithm_type)
+        
+        public void stereoCalibrate(Byte[] bmp_left, Byte[] bmp_right,
+                               int bmp_width, int bmp_height, int bytesPerPixel,
+                               ref int offset_x, ref int offset_y)
         {
-            setCalibration(null);  // don't use any calibration data
-            return(loadImages(stereo_cam_index, fullres_left, fullres_right, head, no_of_stereo_features, bytes_per_pixel, algorithm_type));
+            stereointerface.stereoCalibrate(bmp_left, bmp_right, bmp_width, bmp_height, 
+                                            bytesPerPixel, ref offset_x, ref offset_y);
         }
+
+        #endregion
+
+        #region "load images ready for analysis"
 
         /// <summary>
         /// load a pair of raw (unrectified) images
@@ -176,6 +196,10 @@ namespace sentience.core
             else
                 return (-1);
         }
+        
+        #endregion
+        
+        #region "set parameter values"
 
         public void setRequiredFeatures(int no_of_features)
         {
@@ -207,17 +231,11 @@ namespace sentience.core
             stereointerface.setLocalAverageRadius(radius);
         }
 
-        public void stereoCalibrate(Byte[] bmp_left, Byte[] bmp_right,
-                               int bmp_width, int bmp_height, int bytesPerPixel,
-                               ref int offset_x, ref int offset_y)
-        {
-            stereointerface.stereoCalibrate(bmp_left, bmp_right, bmp_width, bmp_height, 
-                                            bytesPerPixel, ref offset_x, ref offset_y);
-        }
-
         public void setDifferenceThreshold(int diff)
         {
             stereointerface.setDifferenceThreshold(diff);
         }
+        
+        #endregion
     }
 }

@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections;
-using System.Text;
 using CenterSpace.Free;
 using sluggish.utilities;
 
@@ -388,7 +387,7 @@ namespace sentience.core
 
         #endregion
 
-        #region "initialisation"
+        #region "constructors/initialisation"
 
         public occupancygridCellMultiHypothesis(int vertical_dimension_cells)
         {

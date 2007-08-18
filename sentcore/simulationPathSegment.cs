@@ -28,14 +28,20 @@ namespace sentience.core
     /// </summary>
     public class simulationPathSegment
     {
+        #region "variables"
+        
         public float x, y;                 // initial x,y position of the robot in millimetres
         public float pan;                  // initial heading of the robot in radians
         public int no_of_steps;            // number of steps along the path segment
         public float distance_per_step_mm; // distance per step in millimetres
         public float pan_per_step;         // change in pan angle per step in radians
+        
+        #endregion
+
+        #region "constructors"
 
         /// <summary>
-        /// 
+        /// constructor
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -53,11 +59,15 @@ namespace sentience.core
             this.distance_per_step_mm = distance_per_step_mm;
             this.pan_per_step = pan_per_step;
         }
+        
+        #endregion
+
+        #region "getting poses along this path segment"
 
         /// <summary>
         /// return this path segment as a sequence of poses
         /// </summary>
-        /// <returns></returns>
+        /// <returns>list of poses of type particlePose</returns>
         public ArrayList getPoses()
         {
             ArrayList result = new ArrayList();
@@ -74,5 +84,7 @@ namespace sentience.core
             }
             return (result);
         }
+        
+        #endregion
     }
 }

@@ -19,12 +19,13 @@
 
 using System;
 using System.Collections;
-using System.Text;
 
 namespace sentience.core
 {
     public class sentienceTrackingFeature
     {
+        #region "variables"
+        
         public int ID;        // an ID number for the feature
         public float x, y;    // 2D position of the feature within the image
         public float vx, vy;  // the current 2D velocity of the feature
@@ -32,6 +33,10 @@ namespace sentience.core
         public float average_disparity;  // stereo disparity of the feature averaged over time
         public float total_disparity;    // an accumulated value for stereo disparity
         public int persistence = 0;      // the length of time that this feature has been observed (ticks)
+        
+        #endregion
+        
+        #region "constructors"
         
         public sentienceTrackingFeature(int ID, int x, int y, float disp)
         {
@@ -45,7 +50,11 @@ namespace sentience.core
             average_disparity = disp;
             total_disparity = 0;
         }
+        
+        #endregion
 
+        #region "update state"
+        
         /// <summary>
         /// update the position of the feature
         /// </summary>
@@ -69,8 +78,13 @@ namespace sentience.core
             predicted_x = x + vx;
             predicted_y = y + vy;
         }
+        
+        #endregion
     }
 
+    /// <summary>
+    /// class used to track stereo features over time
+    /// </summary>
     public class sentienceTracking
     {
         const int history_steps = 3;

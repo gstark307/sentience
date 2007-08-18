@@ -204,12 +204,29 @@ namespace sentience.core
         }
 
 
-
-        private int row_maxima(int y, Byte[] bmp,
+        /// <summary>
+        /// locate edge feature maxima along a single row
+        /// </summary>
+        /// <param name="y">y coordinate within the image (row number)</param>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="integral">array used to store sliding sums</param>
+        /// <param name="maxima">array storing maxima.  Each maxima consists of the x coordinate, magnitude and absolute magnitude value</param>
+        /// <param name="temp">temporary array</param>
+        /// <param name="radius">centre radius of centre/surround feature detector</param>
+        /// <param name="inhibit_radius">surround radius of centre/surround feature detector</param>
+        /// <param name="min_intensity">minimum intensity of the centre region of the centre/surround area</param>
+        /// <param name="max_intensity">maximum intensity of the centre region of the centre/surround area</param>
+        /// <param name="max_maxima">the maximum number of maxima per row</param>
+        /// <param name="image_threshold">minimum pixel intensity</param>
+        /// <return>number of maxima found</return>
+        private int row_maxima(int y, byte[] bmp,
                                int wdth, int hght, int bytes_per_pixel,
                                int[] integral, float[] maxima, float[] temp, int radius,
-                               int inhibit_radius, int min_intensity, int max_intensity, int max_maxima,
-                               int image_threshold)
+                               int inhibit_radius, int min_intensity, int max_intensity, 
+                               int max_maxima, int image_threshold)
         {
             int x, xx, v, i;
             int startpos = y * wdth * bytes_per_pixel;
@@ -330,8 +347,21 @@ namespace sentience.core
             return (no_of_maxima);
         }
 
+        /// <summary>
+        /// calculate some local properties for each maxima, to assist
+        /// with matching later on
+        /// </summary>
+        /// <param name="y">y coordinate within the image (row number)</param>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="no_of_maxima">the number of maxima in this row</param>
+        /// <param name="feature_properties">properties associated with each maxima</param>
+        /// <param name="disp_x"></param>
+        /// <param name="disp_y"></param>
         private void update_feature_properties(
-                                     int y, Byte[] bmp,
+                                     int y, byte[] bmp,
                                      int wdth, int hght, int bytes_per_pixel,
                                      int no_of_maxima, float[] maxima,
                                      bool[,] feature_properties,
@@ -376,14 +406,33 @@ namespace sentience.core
         }
 
 
-        private void match(int y, Byte[] left_bmp, Byte[] right_bmp,
-                                     int wdth, int hght, int bytes_per_pixel,
-                                     int no_of_left_maxima, float[] left_maxima,
-                                     int no_of_right_maxima, float[] right_maxima,
-                                     bool[,] left_feature_properties,
-                                     bool[,] right_feature_properties,
-                                     int max_disparity_pixels,
-                                     float calibration_offset_x, float calibration_offset_y)
+        /// <summary>
+        /// match maxima features in the left and right images using local
+        /// feature properties
+        /// </summary>
+        /// <param name="y">y coordinate within the image (row number)</param>
+        /// <param name="left_bmp">left image data</param>
+        /// <param name="right_bmp">right image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="no_of_left_maxima">number of maxima in the left image</param>
+        /// <param name="left_maxima">left maxima for this row</param>
+        /// <param name="no_of_right_maxima">number of maxima in the right image</param>
+        /// <param name="right_maxima">right maxima for this row</param>
+        /// <param name="left_feature_properties">properties for each of the maxima in the left image</param>
+        /// <param name="right_feature_properties">properties for each of the maxima in the right image</param>
+        /// <param name="max_disparity_pixels">maximum disparity in pixels</param>
+        /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
+        /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
+        private void match(int y, byte[] left_bmp, byte[] right_bmp,
+                           int wdth, int hght, int bytes_per_pixel,
+                           int no_of_left_maxima, float[] left_maxima,
+                           int no_of_right_maxima, float[] right_maxima,
+                           bool[,] left_feature_properties,
+                           bool[,] right_feature_properties,
+                           int max_disparity_pixels,
+                           float calibration_offset_x, float calibration_offset_y)
         {
             bool positive, positive2;
 
@@ -546,7 +595,19 @@ namespace sentience.core
 
 
 
-        public void update(Byte[] left_bmp, Byte[] right_bmp,
+        /// <summary>
+        /// update stereo correspondence
+        /// </summary>
+        /// <param name="left_bmp">left image data</param>
+        /// <param name="right_bmp">right_image_data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
+        /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
+        /// <param name="image_threshold"></param>
+        /// <param name="peaks_per_row">the number of maxima per row</param>
+        public void update(byte[] left_bmp, byte[] right_bmp,
                            int wdth, int hght, int bytes_per_pixel,
                            float calibration_offset_x, float calibration_offset_y,
                            int image_threshold, int peaks_per_row)

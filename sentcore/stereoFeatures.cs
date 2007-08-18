@@ -20,7 +20,6 @@
 using System;
 using System.IO;
 using System.Collections;
-using System.Text;
 
 namespace sentience.core
 {
@@ -34,6 +33,8 @@ namespace sentience.core
         public float[] uncertainties = null;
         public Byte[,] colour = null;
 
+        #region "constructors"
+
         public stereoFeatures(int no_of_features)
         {
             this.no_of_features = no_of_features;
@@ -42,6 +43,10 @@ namespace sentience.core
             for (int i = 0; i < no_of_features; i++) uncertainties[i] = 1;
             colour = new Byte[no_of_features, 3];
         }
+        
+        #endregion
+
+        #region "matching functions"
 
         /// <summary>
         /// match this feature set with another
@@ -116,6 +121,8 @@ namespace sentience.core
                 }
             }
         }
+        
+        #endregion
 
         /*
                 private void matchTemporal(int prev_no_of_disparities, float[] prev_disparities,
@@ -188,10 +195,13 @@ namespace sentience.core
                 }
         */
 
+
+        #region "saving and loading"
+        
         /// <summary>
         /// save stereo features to file
         /// </summary>
-        /// <param name="binfile"></param>
+        /// <param name="binfile">file to save to</param>
         public void save(BinaryWriter binfile)
         {
             binfile.Write(no_of_features);
@@ -206,7 +216,7 @@ namespace sentience.core
         /// <summary>
         /// load stereo features from file
         /// </summary>
-        /// <param name="binfile"></param>
+        /// <param name="binfile">file to load from</param>
         public void load(BinaryReader binfile)
         {
             try
@@ -225,6 +235,8 @@ namespace sentience.core
             {
             }
         }
+        
+        #endregion
 
     }
 }

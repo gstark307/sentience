@@ -25,6 +25,9 @@ using sluggish.utilities.xml;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// stores a three dimensional coordinate
+    /// </summary>
     public class pos3Dbase
     {
         public float x, y, z;
@@ -37,7 +40,9 @@ namespace sentience.core
         }
     }
 
-
+    /// <summary>
+    /// a more elaborate 3D object which includes position and orientation
+    /// </summary>
     public class pos3D : pos3Dbase
     {
         public float pan, tilt, roll;

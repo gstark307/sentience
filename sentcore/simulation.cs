@@ -29,9 +29,12 @@ namespace sentience.core
 {
     /// <summary>
     /// a class used for simulating a robot moving along a path
+    /// the simulation consists of a series of path segments
     /// </summary>
     public class simulation
     {
+        #region "variables"
+    
         public String Name = "Simulation of My Robot";
 
         // name of the design file for the robot
@@ -63,7 +66,20 @@ namespace sentience.core
         public ArrayList pathSegments = null;
 
         public robot rob;
+        
+        #endregion
 
+        #region "constructors"
+
+        public simulation(String RobotDesignFile, String ImagesPath)
+        {
+            this.RobotDesignFile = RobotDesignFile;
+            this.ImagesPath = ImagesPath;
+            pathSegments = new ArrayList();
+            Reset();
+        }
+        
+        #endregion
 
         #region "updating optimisation performance graphs"
         
@@ -125,7 +141,7 @@ namespace sentience.core
 
         #endregion
 
-
+        #region "tuning parameters used to optimise the simulation performance"
 
         /// <summary>
         /// set the tuning parameters from a comma separated string
@@ -144,6 +160,10 @@ namespace sentience.core
         {
             return (rob.TuningParameters);
         }
+        
+        #endregion
+
+        #region "reseting the simulation"
 
         /// <summary>
         /// reset the simulation
@@ -161,22 +181,18 @@ namespace sentience.core
             position_error_mm = 0;
             updatePath();
         }
+        
+        #endregion
 
-        public simulation(String RobotDesignFile, String ImagesPath)
-        {
-            this.RobotDesignFile = RobotDesignFile;
-            this.ImagesPath = ImagesPath;
-            pathSegments = new ArrayList();
-            Reset();
-        }
+        #region "display functions"
 
         /// <summary>
         /// show the path through which the robot moves
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        public void ShowPath(Byte[] img, int width, int height)
+        /// <param name="img">image data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        public void ShowPath(byte[] img, int width, int height)
         {
             float min_xx = min_x;
             float max_xx = max_x;
@@ -201,11 +217,11 @@ namespace sentience.core
         /// <summary>
         /// show the motion uncertainty
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
+        /// <param name="img">image data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
         /// <param name="clear_background"></param>
-        public void ShowMotionUncertainty(Byte[] img, int width, int height, 
+        public void ShowMotionUncertainty(byte[] img, int width, int height, 
                                           bool clear_background)
         {
             float min_xx = min_x;
@@ -237,13 +253,16 @@ namespace sentience.core
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <param name="clear_background"></param>
-        public void ShowBestPose(Byte[] img, int width, int height,
+        public void ShowBestPose(byte[] img, int width, int height,
                                  bool clear_background)
         {
             rob.motion.ShowBestPose(img, width, height,
                                     clear_background, true);
         }
+        
+        #endregion
 
+        #region "adding path segments to the simulation"
 
         /// <summary>
         /// add a path segment
@@ -259,6 +278,10 @@ namespace sentience.core
             pathSegments.Add(segment);
             updatePath();
         }
+        
+        #endregion
+
+        #region "create a list of poses from the path data"
 
         /// <summary>
         /// turns a list of path segments into a list of individual poses
@@ -308,6 +331,10 @@ namespace sentience.core
             // update the path velocities
             velocities = path.getVelocities(0, 0, time_per_index_sec);
         }
+        
+        #endregion
+
+        #region "removing a path segment"
 
         /// <summary>
         /// removes a path segment
@@ -322,7 +349,9 @@ namespace sentience.core
             }
         }
 
+        #endregion
 
+        #region "running the simulation"
 
         /// <summary>
         /// run the simulation, one step at a time
@@ -358,6 +387,8 @@ namespace sentience.core
                     current_time_step++;
             }
         }
+        
+        #endregion
 
         /// <summary>
         /// returns the average colour variance for the grid
@@ -371,7 +402,7 @@ namespace sentience.core
         /// <summary>
         /// returns a list of performance benchmarks
         /// </summary>
-        /// <returns></returns>
+        /// <returns>list of benchmark timings</returns>
         public ArrayList GetBenchmarks()
         {
             ArrayList benchmarks = new ArrayList();
@@ -389,22 +420,31 @@ namespace sentience.core
             return (benchmarks);
         }
 
+        #region "display functions"
 
         /// <summary>
         /// show the occupancy grid
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
+        /// <param name="img">image data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
         public void ShowGrid(int view_type, Byte[] img, int width, int height, bool show_robot)
         {
             rob.ShowGrid(view_type, img, width, height, show_robot, false, true);
         }
 
+        /// <summary>
+        /// show the path tree
+        /// </summary>
+        /// <param name="img">image data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
         public void ShowPathTree(Byte[] img, int width, int height)
         {
             rob.ShowPathTree(img, width, height);
         }
+        
+        #endregion
 
 
         #region "saving and loading"

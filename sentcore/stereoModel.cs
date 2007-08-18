@@ -49,18 +49,6 @@ namespace sentience.core
         private int ray_model_normal_length = 500;
         private int ray_model_max_length = 1500;
         public rayModelLookup ray_model = null;
-        //public float[,] ray_model = null;
-        //private int[] ray_model_length = null;
-        //private float ray_model_interval_pixels = 0.5f;
-
-        // variables used to show the survey scores
-        //private float max_trial_pose_score = 1;
-        //private float prev_max_trial_pose_score = 1;
-        //private float[] TrialPoseScore = new float[2000];
-        //private float[] prevTrialPoseScore = new float[2000];
-
-        // adjustment factor for peak probability density
-        //private float peak_density_adjust = 0;
 
         // number of features to use when updating or probing the grid
         public int no_of_stereo_features = 100;
@@ -484,537 +472,11 @@ namespace sentience.core
         }
 
 
-        #region "old stuff no longer used"
-
-        /*
-        /// <summary>
-        /// Returns a trial pose using a simplistic gaussian uncertainty
-        /// This is only used in situations where no motion model is available
-        /// </summary>
-        /// <param name="index"></param>
-        /// <param name="max_index"></param>
-        /// <param name="translation_x_tollerance"></param>
-        /// <param name="translation_y_tollerance"></param>
-        /// <param name="angular_offset"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        private void getTrialPose(int index, int max_index,
-                                  float translation_x_tollerance, float translation_y_tollerance,
-                                  float angular_offset, ref float x, ref float y)
-        {
-            int whorls = 10 + ((max_index - 200) / 70);
-            float max_angle = 2 * 3.1415927f * whorls;
-            const float offset = 1.5f;
-            float rand_angle = offset + (index * (max_angle - offset) / (float)max_index);
-            float ang = rand_angle * 0.85f / max_angle;
-            rand_angle = rand_angle * (1.0f + (((float)Math.PI - 1.0f) * 0.5f * (1.0f - ang) * (1.0f - ang)));
-            float rand_radius = rand_angle / max_angle;
-
-            rand_angle += angular_offset;
-            x = rand_radius * translation_x_tollerance / 2 * (float)Math.Sin(rand_angle);
-            y = rand_radius * translation_y_tollerance / 2 * (float)Math.Cos(rand_angle);
-        }
-
-        /// <summary>
-        /// surveys the given x,y location for optimum pan direction
-        /// </summary>
-        /// <param name="current_view"></param>
-        /// <param name="map_view"></param>
-        /// <param name="separation_tollerance">separation tollerance for limiting the search</param>
-        /// <param name="ray_thickness">ray thickness</param>
-        /// <param name="x">x location at which to perform the survey</param>
-        /// <param name="y">y location at which to perform the survey</param>
-        /// <returns></returns>
-        public float[] surveyPan(viewpoint current_view, occupancygridMultiResolution grid,
-                                 float ray_thickness,
-                                 float x, float y)
-        {
-            const int no_of_angles = 50;
-            float[] results = new float[no_of_angles];
-            float max = 0;
-            pos3D centre = new pos3D(0, 0, 0);
-
-            for (int ang = 0; ang < no_of_angles; ang++)
-            {
-                float pan = ang * ((float)Math.PI / 2.0f) / no_of_angles;
-                pan -= (float)Math.PI / 4.0f;
-
-                // generate the trial pose using this pan angle
-                viewpoint trialPose = current_view.createTrialPose(pan, x, y);
-
-                // what's the score at this angle ?
-                grid.insert(trialPose, false, centre);
-                float score = grid.matchedCells();
-                if (score > max) max = score;
-                results[ang] = score;
-            }
-            if (max > 0)
-            {
-                // normalise the results
-                for (int ang = 0; ang < no_of_angles; ang++)
-                    results[ang] /= max;
-            }
-            return (results);
-        }
-
-        /// <summary>
-        /// Monte Carlo Localisation:
-        /// Tries to match a viewpoint within a grid and returns a list of scores
-        /// for the tried poses
-        /// </summary>        
-        public ArrayList surveyXYP(viewpoint current_view, occupancygridMultiResolution grid,
-                                  float translation_x_tollerance, float translation_y_tollerance,
-                                  int no_of_trial_poses,
-                                  int ray_thickness, bool pruneSurvey, int randomSeed,
-                                  int pruneThreshold, float survey_angular_offset,
-                                  pos3D local_odometry_position, float momentum,
-                                  ref float max_score)
-        {
-            // let's twist again...
-            MersenneTwister randGen = new MersenneTwister(randomSeed);
-
-            int no_of_orientations = 1000;
-            int bucket = 0;
-            float score = 0;
-            float x = 0, y = 0;
-            viewpoint trialPose;
-            ArrayList survey_results = new ArrayList();
-            float[] orientation_bucket = new float[no_of_orientations];
-
-            float half_x = translation_x_tollerance / 2;
-            float half_y = translation_y_tollerance / 2;
-
-            float pan_tollerance = (float)Math.PI / 4.0f;
-
-            // swap arrays for trial pose scores
-            prev_max_trial_pose_score = max_trial_pose_score;
-            float[] tempScores = prevTrialPoseScore;
-            prevTrialPoseScore = TrialPoseScore;
-            TrialPoseScore = tempScores;
-
-            // examine the hood
-            max_score = 0;
-            for (int t = 0; t < no_of_trial_poses; t++)
-            {
-                // get some parameters which will be used to construct the trial pose
-                getTrialPose(t, no_of_trial_poses, translation_x_tollerance,
-                         translation_y_tollerance, survey_angular_offset, ref x, ref y);
-
-                // use a pseudorandomly generated pan angle.  
-                // The bucketing used here will permit more
-                // efficient pruning of results later
-                bucket = randGen.Next(no_of_orientations - 1);
-                //bucket = (t * ((no_of_orientations - 1) * 1000 * primes[randomSeed % (primes.Length-1)]) / no_of_trial_poses) % (no_of_orientations - 1);
-                //if (bucket < 0) bucket = -bucket;
-                float pan_angle = (bucket - (no_of_orientations / 2)) *
-                                  pan_tollerance / no_of_orientations;
-
-                // voila! the trial pose is generated
-                trialPose = current_view.createTrialPose(pan_angle, x, y);
-
-                // insert the trial pose into the grid and record the number
-                // of matched cells
-                grid.insert(trialPose, false, local_odometry_position);
-                score = grid.matchedCells();
-
-                // use history
-                score = (score * score * score * score * (1.0f - momentum)) + (prevTrialPoseScore[t] * momentum);
-
-                TrialPoseScore[t] = score;
-
-                // deal or no deal ?
-                if (score > 0)
-                {
-                    orientation_bucket[bucket] += score;
-
-                    // add the result to the survey
-                    survey_results.Add(new particlePose(t, x, y, bucket, score));
-
-                    // record the max score
-                    if (score > max_score) max_score = score;
-                }
-            }
-
-            if (pruneSurvey)
-            {
-                // which bucket has triumphed ?
-                int winner = 0;
-                float max = 0;
-                for (int b = 0; b < no_of_orientations; b++)
-                {
-                    if (orientation_bucket[b] > max)
-                    {
-                        max = orientation_bucket[b];
-                        winner = b;
-                    }
-                }
-
-                // banish results for unwanted pan orientations
-                int max_diff = (no_of_orientations - 1) * pruneThreshold / 100;
-                if (max_diff < 1) max_diff = 1;
-                for (int i = survey_results.Count - 1; i >= 0; i--)
-                {
-                    particlePose result = (particlePose)survey_results[i];
-                    if (Math.Abs(result.pan - winner) > max_diff)
-                    {
-                        TrialPoseScore[result.index] *= 0.8f;
-                        //survey_results.RemoveAt(i);                        
-                    }
-                }
-            }
-
-            //store the max score
-            max_trial_pose_score = max_score;
-
-            // return the results of the survey.  Make of them what you will!
-            return (survey_results);
-        }
-
-        /// <summary>
-        /// returns the peak of the pan graph
-        /// </summary>
-        /// <param name="peak"></param>
-        /// <returns></returns>
-        public float SurveyPeakPan(float[] peak)
-        {
-            float x = 0;
-            float tot_score = 0;
-            for (int ang = 0; ang < peak.Length; ang++)
-            {
-                tot_score += peak[ang];
-                x += ang * peak[ang];
-            }
-            if (tot_score > 0)
-            {
-                x /= tot_score;
-            }
-            float pan = (x * ((float)Math.PI / 2.0f) / peak.Length) - ((float)Math.PI / 4.0f);
-            return (pan);
-        }
-
-        /// <summary>
-        /// returns the peak position of the survey
-        /// </summary>
-        /// <param name="survey_results"></param>
-        /// <param name="peak_x"></param>
-        /// <param name="peak_y"></param>
-        public void SurveyPeak(ArrayList survey_results,
-                               ref float peak_x, ref float peak_y)
-        {
-            // get the max score
-            float max_score = 0;
-            for (int i = 0; i < survey_results.Count; i++)
-            {
-                particlePose result = (particlePose)survey_results[i];
-                if (result.score > max_score) max_score = result.score;
-            }
-            float min_score = 0;
-
-            float tot_score = 0;
-            float x = 0;
-            float y = 0;
-            float scoresqr;
-            for (int i = 0; i < survey_results.Count; i++)
-            {
-                particlePose result = (particlePose)survey_results[i];
-                if (result.score > min_score)
-                {
-                    scoresqr = result.score; // *result.score;  // it's hip to be square
-                    tot_score += scoresqr;
-                    x += (result.x * scoresqr);
-                    y += (result.y * scoresqr);
-                }
-            }
-            if (tot_score > 0)
-            {
-                // gravity always gets you in the end
-                x /= tot_score;
-                y /= tot_score;
-            }
-            peak_x = x;
-            peak_y = y / 10; //TODO:  doh! why do I have to divide this?
-        }
-
-        /// <summary>
-        /// used to check the survey distribution
-        /// </summary>
-        /// <param name="img"></param>
-        public void showSurveyDistribution(int no_of_trial_poses, Byte[] img, int img_width, int img_height)
-        {
-            int i;
-            float x = 0, y = 0;
-            int radius = img_width * 9 / no_of_trial_poses;
-            if (radius < 2) radius = 2;
-
-            for (i = 0; i < img.Length; i++) img[i] = 0;
-
-            int max = no_of_trial_poses;
-            for (i = 0; i < max; i++)
-            {
-                getTrialPose(i, max, (float)img_width, (float)img_height, 0, ref x, ref y);
-                x += (img_width / 2);
-                y += (img_height / 2);
-                if ((x > 0) && (x < img_width - 1) && (y > 0) && (y < img_height - 1))
-                {
-                    Byte col = (Byte)(50 + rnd.Next(205));
-                    for (int xx = (int)x - radius; xx <= x + radius; xx++)
-                    {
-                        int dx = xx - (int)x;
-                        for (int yy = (int)y - radius; yy <= y + radius; yy++)
-                        {
-                            int dy = yy - (int)y;
-                            int dist = (int)Math.Sqrt((dx * dx) + (dy * dy));
-                            if (dist <= radius)
-                            {
-                                if ((xx > 0) && (xx < img_width - 1) && (yy > 0) && (yy < img_height - 1))
-                                {
-                                    int n = ((img_width * (int)yy) + (int)xx) * 3;
-                                    for (int c = 0; c < 3; c++)
-                                        img[n + c] = col;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// used to check the survey distribution
-        /// </summary>
-        /// <param name="img"></param>        
-        public void showSurveyScores(Byte[] img, int img_width, int img_height)
-        {
-            int i;
-            float x = 0, y = 0;
-            int radius = img_width * 6 / survey_trial_poses;
-            if (radius < 2) radius = 2;
-
-            for (i = 0; i < img.Length; i++) img[i] = 0;
-
-            if (max_trial_pose_score > 0)
-            {
-                int max = survey_trial_poses;
-                for (i = 0; i < max; i++)
-                {
-                    getTrialPose(i, max, (float)img_width, (float)img_height, 0, ref x, ref y);
-                    x += (img_width / 2);
-                    y += (img_height / 2);
-                    if ((x > 0) && (x < img_width - 1) && (y > 0) && (y < img_height - 1))
-                    {
-                        float score = TrialPoseScore[i] / max_trial_pose_score;
-                        score *= 255;
-                        if (score > 255) score = 255;
-                        Byte col = (Byte)score;
-                        for (int xx = (int)x - radius; xx <= x + radius; xx++)
-                        {
-                            int dx = xx - (int)x;
-                            for (int yy = (int)y - radius; yy <= y + radius; yy++)
-                            {
-                                int dy = yy - (int)y;
-                                int dist = (int)Math.Sqrt((dx * dx) + (dy * dy));
-                                if (dist <= radius)
-                                {
-                                    if ((xx > 0) && (xx < img_width - 1) && (yy > 0) && (yy < img_height - 1))
-                                    {
-                                        int n = ((img_width * (int)yy) + (int)xx) * 3;
-                                        img[n] = col;
-                                        //for (int c = 0; c < 3; c++)
-                                        //  img[n + c] = col;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
-
-        /// <summary>
-        /// show the pan survey
-        /// </summary>
-        /// <param name="peak"></param>
-        /// <param name="img"></param>
-        public void showSurveyPan(float[] peak, Byte[] img, int img_width, int img_height, float actual_pan, float pan)
-        {
-            int x, y;
-            int prev_x = 0;
-            int prev_y = 0;
-
-            for (int i = 0; i < img.Length; i++) img[i] = 0;
-
-            for (int ang = 0; ang < peak.Length; ang++)
-            {
-                x = img_width * ang / peak.Length;
-                y = img_height - 1 - (int)(img_height * peak[ang]);
-                if (ang > 0)
-                {
-                    util.drawLine(img, img_width, img_height, x, y, prev_x, prev_y, 0, 255, 0, 0, false);
-                }
-                prev_x = x;
-                prev_y = y;
-            }
-
-            x = (img_width / 2) + (int)(img_width * actual_pan / ((float)Math.PI / 2.0f));
-            util.drawLine(img, img_width, img_height, x, 0, x, img_height - 1, 255, 255, 255, 0, false);
-
-            x = (img_width / 2) + (int)(img_width * pan / ((float)Math.PI / 2.0f));
-            util.drawLine(img, img_width, img_height, x, 0, x, img_height - 1, 255, 255, 0, 0, false);
-        }
-
-        /// <summary>
-        /// returns a histogram of scores for pan angle, typically forming
-        /// a peak around the best value
-        /// </summary>
-        /// <param name="survey_results"></param>
-        /// <param name="no_of_buckets"></param>
-        /// <param name="normalise"></param>
-        /// <returns></returns>
-        public float[] getSurveyPeak(ArrayList survey_results, int no_of_buckets, bool normalise)
-        {
-            int b, pose;
-            float[] peak = new float[no_of_buckets];
-            int[] hits = new int[no_of_buckets];
-            int half_buckets = no_of_buckets / 2;
-            float half_PI = (float)Math.PI / 2;
-
-            for (pose = 0; pose < survey_results.Count; pose++)
-            {
-                particlePose trialPose = (particlePose)survey_results[pose];
-                int bucket = half_buckets + (int)(trialPose.pan * half_buckets / half_PI);
-                if ((bucket > -1) && (bucket < no_of_buckets))
-                {
-                    peak[bucket] += trialPose.score;
-                    hits[bucket]++;
-                }
-            }
-
-            //average score per bucket
-            for (b = 0; b < no_of_buckets; b++)
-                if (hits[b] > 0) peak[b] /= hits[b];
-
-            //normalise the values if necessary
-            if (normalise)
-            {
-                float max = 0;
-                for (b = 0; b < no_of_buckets; b++)
-                    if (peak[b] > max) max = peak[b];
-                if (max > 0)
-                {
-                    for (b = 0; b < no_of_buckets; b++)
-                        peak[b] /= max;
-                }
-            }
-
-            return (peak);
-        }
-
-        /// <summary>
-        /// displays the scores for the given survey area
-        /// </summary>
-        /// <param name="img"></param>
-        /// <param name="survey_results"></param>
-        public void showSurveyArea(Byte[] img, int img_width, int img_height,
-                                   ArrayList survey_results,
-                                   float actual_x, float actual_y, float actual_pan, float pan)
-        {
-            int x, y;
-            float min_x, max_x, min_y, max_y, max_score;
-            float peak_x = 0;
-            float peak_y = 0;
-
-            // find the peak
-            SurveyPeak(survey_results, ref peak_x, ref peak_y);
-
-            min_x = 99999;
-            max_x = -99999;
-            min_y = 99999;
-            max_y = -99999;
-            max_score = 0;
-            for (int pose = 0; pose < survey_results.Count; pose++)
-            {
-                particlePose trialPose = (particlePose)survey_results[pose];
-                if (trialPose.x < min_x) min_x = trialPose.x;
-                if (trialPose.y < min_y) min_y = trialPose.y;
-                if (trialPose.x > max_x) max_x = trialPose.x;
-                if (trialPose.y > max_y) max_y = trialPose.y;
-                if (trialPose.score > max_score) max_score = trialPose.score;
-            }
-
-            for (int i = 0; i < img.Length; i++) img[i] = 0;
-
-            if (max_score > 0)
-            {
-                int half_width = img_width / 2;
-                int half_height = img_height / 2;
-                float scale_x = max_x - min_x;
-                float scale_y = max_y - min_y;
-                for (int pose = 0; pose < survey_results.Count; pose++)
-                {
-                    particlePose trialPose = (particlePose)survey_results[pose];
-                    x = (int)((trialPose.x - min_x) * (img_width - 1) / scale_x);
-                    y = (int)((trialPose.y - min_y) * (img_height - 1) / scale_y);
-                    if (x < 1) x = 1;
-                    if (y < 1) y = 1;
-                    int value = (int)(trialPose.score * 255 * 2 / max_score);
-                    if (value > 255) value = 255;
-                    Byte intensity = (Byte)value;
-                    for (int c = 0; c < 3; c++)
-                    {
-                        int n = ((img_width * y) + x) * 3;
-                        img[n + c] = intensity;
-                        n = ((img_width * (y - 1)) + x) * 3;
-                        img[n + c] = intensity;
-                        n = ((img_width * (y - 1)) + (x - 1)) * 3;
-                        img[n + c] = intensity;
-                        n = ((img_width * y) + (x - 1)) * 3;
-                        img[n + c] = intensity;
-                    }
-                }
-
-                // draw the peak position
-                x = (int)((peak_x - min_x) * (img_width - 1) / scale_x);
-                y = (int)((peak_y - min_y) * (img_height - 1) / scale_y);
-                int w = img_width / 60;
-                int h = img_height / 60;
-                int dx = (int)(w * Math.Sin(pan));
-                int dy = (int)(w * Math.Cos(pan));
-                util.drawLine(img, img_width, img_height, x - dx, y - dy, x + dx, y + dy, 0, 255, 255, 0, false);
-                util.drawLine(img, img_width, img_height, x - dy, y + dx, x + dy, y - dx, 0, 255, 255, 0, false);
-
-                // and also the actual position
-                x = (int)((actual_x - min_x) * (img_width - 1) / scale_x);
-                y = (int)((actual_y - min_y) * (img_height - 1) / scale_y);
-                dx = (int)(w * Math.Sin(actual_pan));
-                dy = (int)(w * Math.Cos(actual_pan));
-                util.drawLine(img, img_width, img_height, x - dx, y - dy, x + dx, y + dy, 0, 255, 0, 0, false);
-                util.drawLine(img, img_width, img_height, x - dy, y + dx, x + dy, y - dx, 0, 255, 0, 0, false);
-            }
-        }
-         
-        /// <summary>
-        /// clear any previous localisation momentum
-        /// </summary>
-
-        public void clearMomentum()
-        {
-            for (int i = 0; i < 2000; i++)
-            {
-                prevTrialPoseScore[i] = 0;
-            }
-        }
-         
-         */
-
-        #endregion
-
-
         /// <summary>
         /// create a list of rays to be stored within poses
         /// </summary>
         /// <param name="head">head configuration</param>
+        /// <param name="camera_index">index number for the stereo camera</param>
         /// <returns></returns>
         public ArrayList createObservation(stereoHead head, int camera_index)
         {
@@ -1075,9 +537,12 @@ namespace sentience.core
 
         /// <summary>
         /// shows the gaussian distribution thrown into the grid
+        /// this is only used for visualisation/debugging
         /// </summary>
-        /// <param name="img"></param>
-        public void showDistribution(Byte[] img, int img_width, int img_height)
+        /// <param name="img">image data</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        public void showDistribution(byte[] img, int img_width, int img_height)
         {
             for (int i = 0; i < img.Length; i++) img[i] = 0;
 
@@ -1098,9 +563,11 @@ namespace sentience.core
         /// do the two given rays intersect?  If so then return the intersection point
         /// this isn't really used anymore and should probably be removed
         /// </summary>
-        /// <param name="ray1"></param>
-        /// <param name="ray2"></param>
-        /// <returns></returns>
+        /// <param name="ray1">the first ray</param>
+        /// <param name="ray2">the second ray</param>
+        /// <param name="intersectPos">intersection point of the two rays</param>
+        /// <returns>true if the rays overlap</returns>
+        /*
         public static bool raysOverlap(evidenceRay ray1, evidenceRay ray2,
                                        pos3D intersectPos, float separation_tollerance,
                                        int ray_thickness, ref float separation)
@@ -1163,7 +630,7 @@ namespace sentience.core
             }
             return (intersect);
         }
-
+        */
 
 
 
@@ -1182,6 +649,11 @@ namespace sentience.core
             return (prob*2.5f);
         }
 
+        /// <summary>
+        /// creates a lookup table for the gaussian function
+        /// </summary>
+        /// <param name="levels">number of levels in the lookup table</param>
+        /// <returns>lookup table</returns>
         public static float[] createGaussianLookup(int levels)
         {
             float[] gaussLookup = new float[levels];
@@ -1194,6 +666,11 @@ namespace sentience.core
             return (gaussLookup);
         }
 
+        /// <summary>
+        /// creates a lookup table for half of the gaussian function
+        /// </summary>
+        /// <param name="levels">number of levels in the lookup table</param>
+        /// <returns>lookup table</returns>
         public static float[] createHalfGaussianLookup(int levels)
         {
             float[] gaussLookup = new float[levels];
@@ -1210,16 +687,19 @@ namespace sentience.core
         /// <summary>
         /// inserts a line with gaussian probability distribution into the grid
         /// </summary>
-        /// <param name="x1"></param>
-        /// <param name="y1"></param>
-        /// <param name="x2"></param>
-        /// <param name="y2"></param>
-        /// <param name="linewidth"></param>
+        /// <param name="x1">origin x coordinate</param>
+        /// <param name="y1">origin y coordinate</param>
+        /// <param name="x2">end point x coordinate</param>
+        /// <param name="y2">end point y coordinate</param>
+        /// <param name="linewidth">width of the line</param>
         /// <param name="additive"></param>
         /// <param name="grid_layer"></param>
         /// <param name="grid_dimension"></param>
         /// <param name="rayNumber"></param>
-        public void addGaussianLine(float x1, float y1, float x2, float y2, int linewidth, float additive, float[,,] grid_layer, int grid_dimension, int rayNumber)
+        public void addGaussianLine(float x1, float y1, float x2, float y2, 
+                                    int linewidth, float additive, 
+                                    float[,,] grid_layer, 
+                                    int grid_dimension, int rayNumber)
         {
             float w, h, x, y, step_x, step_y, dx, dy, xx2, yy2;
             float cx, cy;
@@ -1362,7 +842,7 @@ namespace sentience.core
         /// <returns>evidence ray object</returns>
         public evidenceRay createRay(float x, float y, float disparity, 
                                      float uncertainty, 
-                                     Byte r, Byte g, Byte b)
+                                     byte r, byte g, byte b)
         {
             evidenceRay ray = null;
             float x1 = x + disparity;
@@ -1419,9 +899,13 @@ namespace sentience.core
         /// </summary>
         /// <param name="grid_layer"></param>
         /// <param name="grid_dimension"></param>
-        /// <param name="img"></param>
+        /// <param name="img">image data</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="show_ray_outlines">show lines within which rays are projected</param>
+        /// <param name="show_ray_vacancy">show vacancy areas or only areas where rays intersect</param>
         public void showProbabilities(float[, ,] grid_layer, int grid_dimension, 
-                                      Byte[] img, int img_width, int img_height, 
+                                      byte[] img, int img_width, int img_height, 
                                       bool show_ray_outlines,
                                       bool show_vacancy)
         {
@@ -1538,9 +1022,9 @@ namespace sentience.core
         /// <summary>
         /// displays ray models for each disparity as a graph
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="img_width"></param>
-        /// <param name="img_height"></param>
+        /// <param name="img">image data</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
         public void ray_model_to_graph_image(Byte[] img, int img_width, int img_height)
         {
             float max_value = 0.0f;
@@ -1774,6 +1258,8 @@ namespace sentience.core
 
                 float ux0, uy0, ux1, uy1;
                 
+                // undistorting here means that features having constant
+                // disparity become a line in real world coordinates rather than an arc
                 if (undistort)
                 {
                     ux0 = xx - uncertainty;
