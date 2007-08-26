@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using System.Collections;
+using System.Globalization;
 using System.Threading;
 using sluggish.utilities;
 using CenterSpace.Free;
@@ -1277,6 +1278,144 @@ namespace sentience.core
                         }
                     }
                 }
+            }
+        }
+
+
+        #endregion
+
+        #region "exporting grid data to third party visualisation programs"
+
+        /// <summary>
+        /// export the occupancy grid data to IFrIT file format for visualisation
+        /// </summary>
+        /// <param name="filename">name of the file to save as</param>
+        /// <param name="pose"></param>
+        public void ExportToIFrIT(String filename, particlePose pose)
+        {
+            ExportToIFrIT(filename, pose, dimension_cells / 2, dimension_cells / 2, dimension_cells);
+        }
+
+        /// <summary>
+        /// export the occupancy grid data to IFrIT file format for visualisation
+        /// </summary>
+        /// <param name="filename">name of the file to save as</param>
+        /// <param name="pose">best available pose</param>
+        /// <param name="centre_x">centre of the tile in grid cells</param>
+        /// <param name="centre_y">centre of the tile in grid cells</param>
+        /// <param name="width_cells">width of the tile in grid cells</param>
+        public void ExportToIFrIT(String filename,
+                                  particlePose pose,
+                                  int centre_x, int centre_y,
+                                  int width_cells)
+        {
+            int half_width_cells = width_cells / 2;
+
+            int tx = centre_x + half_width_cells;
+            int ty = centre_y + half_width_cells;
+            int tz = 0;
+            int bx = centre_x - half_width_cells;
+            int by = centre_y - half_width_cells;
+            int bz = width_cells;
+
+            // get the bounding region within which there are actice grid cells
+            int occupied_cells = 0;
+            for (int x = centre_x - half_width_cells; x <= centre_x + half_width_cells; x++)
+            {
+                if ((x >= 0) && (x < dimension_cells))
+                {
+                    for (int y = centre_y - half_width_cells; y <= centre_y + half_width_cells; y++)
+                    {
+                        if ((y >= 0) && (y < dimension_cells))
+                        {
+                            if (cell[x, y] != null)
+                            {
+                                occupied_cells++;
+                                if (x < tx) tx = x;
+                                if (y < ty) ty = y;
+                                if (x > bx) bx = x;
+                                if (y > by) by = y;
+                            }
+                        }
+                    }
+                }
+            }
+            bx++;
+            by++;
+
+            // dummy variables needed by GetProbability
+            float[] colour = new float[3];
+
+            if (occupied_cells > 0)
+            {
+                // add bounding box information
+                String bounding_box = Convert.ToString(tx) + " " + 
+                                      Convert.ToString(ty) + " " +
+                                      Convert.ToString(tz) + " " +
+                                      Convert.ToString(bx) + " " + 
+                                      Convert.ToString(by) + " " +
+                                      Convert.ToString(bz) + " X Y Z";
+
+                // another dummy variable needed by GetProbability but otherwise not used
+                float mean_variance = 0;
+
+                ArrayList particles = new ArrayList();
+
+                for (int y = ty; y < by; y++)
+                {
+                    for (int x = tx; x < bx; x++)
+                    {
+                        if (cell[x, y] != null)
+                        {
+                            for (int z = 0; z < dimension_cells_vertical; z++)
+                            {
+                                float prob = cell[x, y].GetProbability(pose, x, y, z,
+                                                                       true, colour, ref mean_variance);
+
+                                if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                {
+                                    if (prob > 0.5f)  // probably occupied space
+                                    {
+                                        // get the colour of the grid cell as a floating point value
+                                        float colour_value = float.Parse(colours.GetHexFromRGB((int)colour[0], (int)colour[1], (int)colour[2]), NumberStyles.HexNumber);
+
+                                        String particleStr = Convert.ToString(x) + " " +
+                                                             Convert.ToString(y) + " " +
+                                                             Convert.ToString(z) + " " +
+                                                             Convert.ToString(colour_value);
+                                        particles.Add(particleStr);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // write the text file
+                if (particles.Count > 0)
+                {
+                    StreamWriter oWrite = null;
+                    bool allowWrite = true;
+
+                    try
+                    {
+                        oWrite = File.CreateText(filename);
+                    }
+                    catch
+                    {
+                        allowWrite = false;
+                    }
+
+                    if (allowWrite)
+                    {
+                        oWrite.WriteLine(Convert.ToString(particles.Count));
+                        oWrite.WriteLine(bounding_box);
+                        for (int p = 0; p < particles.Count; p++)
+                            oWrite.WriteLine((String)particles[p]);
+                        oWrite.Close();
+                    }
+                }
+
             }
         }
 
