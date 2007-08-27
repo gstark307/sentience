@@ -139,6 +139,36 @@ namespace sentience.core
         // occupancy grid map formed during the simulation
         public Byte[] grid_map;
 
+        /// <summary>
+        /// returns a list of performance benchmarks
+        /// </summary>
+        /// <returns>list of benchmark timings</returns>
+        public ArrayList GetBenchmarks()
+        {
+            ArrayList benchmarks = new ArrayList();
+            benchmarks.Add("Robot position " + Convert.ToString((int)rob.x) + ", " +
+                                               Convert.ToString((int)rob.y));
+
+            benchmarks.Add("Grid particles " + Convert.ToString(rob.LocalGrid.total_valid_hypotheses));
+            benchmarks.Add("Garbage        " + Convert.ToString(rob.LocalGrid.total_garbage_hypotheses));
+
+            benchmarks.Add("Stereo correspondence  " + Convert.ToString(rob.benchmark_stereo_correspondence) + " mS");
+            benchmarks.Add("Observation update     " + Convert.ToString(rob.benchmark_observation_update) + " mS");
+            benchmarks.Add("Prediction             " + Convert.ToString(rob.benchmark_prediction) + " mS");
+            benchmarks.Add("Garbage collection     " + Convert.ToString(rob.benchmark_garbage_collection) + " mS");
+
+            return (benchmarks);
+        }
+
+        /// <summary>
+        /// returns the average colour variance for the grid
+        /// </summary>
+        /// <returns></returns>
+        public float GetMeanColourVariance()
+        {
+            return (rob.GetMeanColourVariance());
+        }
+
         #endregion
 
         #region "tuning parameters used to optimise the simulation performance"
@@ -390,36 +420,6 @@ namespace sentience.core
         
         #endregion
 
-        /// <summary>
-        /// returns the average colour variance for the grid
-        /// </summary>
-        /// <returns></returns>
-        public float GetMeanColourVariance()
-        {
-            return (rob.GetMeanColourVariance());
-        }
-
-        /// <summary>
-        /// returns a list of performance benchmarks
-        /// </summary>
-        /// <returns>list of benchmark timings</returns>
-        public ArrayList GetBenchmarks()
-        {
-            ArrayList benchmarks = new ArrayList();
-            benchmarks.Add("Robot position " + Convert.ToString((int)rob.x) + ", " +
-                                               Convert.ToString((int)rob.y));
-
-            benchmarks.Add("Grid particles " + Convert.ToString(rob.LocalGrid.total_valid_hypotheses));
-            benchmarks.Add("Garbage        " + Convert.ToString(rob.LocalGrid.total_garbage_hypotheses));
-
-            benchmarks.Add("Stereo correspondence  " + Convert.ToString(rob.benchmark_stereo_correspondence) + " mS");
-            benchmarks.Add("Observation update     " + Convert.ToString(rob.benchmark_observation_update) + " mS");
-            benchmarks.Add("Prediction             " + Convert.ToString(rob.benchmark_prediction) + " mS");
-            benchmarks.Add("Garbage collection     " + Convert.ToString(rob.benchmark_garbage_collection) + " mS");
-
-            return (benchmarks);
-        }
-
         #region "display functions"
 
         /// <summary>
@@ -445,7 +445,6 @@ namespace sentience.core
         }
         
         #endregion
-
 
         #region "saving and loading"
 
@@ -633,6 +632,22 @@ namespace sentience.core
                     LoadFromXml(xnodWorking, level + 1);
                     xnodWorking = xnodWorking.NextSibling;
                 }
+            }
+        }
+
+        #endregion
+
+        #region "exporting data to third party visualisation tools"
+
+        /// <summary>
+        /// export occupancy grid data for visualisation within IFrIT
+        /// </summary>
+        /// <param name="filename">file name to export as</param>
+        public void ExportToIFrIT(String filename)
+        {
+            if (rob != null)
+            {
+                rob.ExportToIFrIT(filename);
             }
         }
 

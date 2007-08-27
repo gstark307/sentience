@@ -101,13 +101,13 @@ namespace StereoMapping
             this.picNoOfParticles = new System.Windows.Forms.PictureBox();
             this.label21 = new System.Windows.Forms.Label();
             this.picColourVariance = new System.Windows.Forms.PictureBox();
-            this.timSimulation = new System.Windows.Forms.Timer(this.components);
             this.tabMCL = new System.Windows.Forms.TabPage();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.label22 = new System.Windows.Forms.Label();
             this.button3 = new System.Windows.Forms.Button();
             this.picMCL = new System.Windows.Forms.PictureBox();
+            this.timSimulation = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.picPath)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.grpNewPathSegment.SuspendLayout();
@@ -789,11 +789,6 @@ namespace StereoMapping
             this.picColourVariance.TabIndex = 36;
             this.picColourVariance.TabStop = false;
             // 
-            // timSimulation
-            // 
-            this.timSimulation.Interval = 500;
-            this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
-            // 
             // tabMCL
             // 
             this.tabMCL.Controls.Add(this.button1);
@@ -852,6 +847,11 @@ namespace StereoMapping
             this.picMCL.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picMCL.TabIndex = 36;
             this.picMCL.TabStop = false;
+            // 
+            // timSimulation
+            // 
+            this.timSimulation.Interval = 500;
+            this.timSimulation.Tick += new System.EventHandler(this.timSimulation_Tick);
             // 
             // frmMapping
             // 

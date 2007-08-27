@@ -430,6 +430,20 @@ namespace StereoMapping
             sim.Reset();
         }
 
+        /// <summary>
+        /// export occupancy grid data to IFrIT
+        /// </summary>
+        private void Simulation_Export()
+        {
+            if (txtStereoImagesPath.Text != "")
+            {
+                String IFrIT_filename = txtStereoImagesPath.Text + "\\IFrIT_Grid.txt";
+
+                // export occupancy grid data to IFrIT
+                sim.ExportToIFrIT(IFrIT_filename);
+            }
+        }
+
         // run the simulation one step forwards
         private void Simulation_RunOneStep()
         {
@@ -437,16 +451,17 @@ namespace StereoMapping
 
             int prev_time_step = sim.current_time_step;
 
+            // update the simulation
             ArrayList images = getStereoImages(sim.current_time_step);
             sim.RunOneStep(images);
 
-            // show the grid
+            // show the occupancy grid, from the perspective of the best available pose
             showOccupancyGrid();
 
             // show the possible paths
             showPathTree();
 
-            // show the best pose
+            // show the best robot pose
             showBestPose();
 
             // show the benchmarks
@@ -536,6 +551,9 @@ namespace StereoMapping
                     // show the grid
                     showOccupancyGrid();
                     showSideViews();
+
+                    // export data in IFrIT format
+                    Simulation_Export();
 
                     // reset the simulation
                     Simulation_Reset();

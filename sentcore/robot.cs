@@ -28,8 +28,10 @@ using sluggish.utilities.timing;
 namespace sentience.core
 {
     public class robot : pos3D
-    {        
-        public int no_of_stereo_cameras;   // number of stereo cameras on the head
+    {
+        public String Name = "My Robot";          // name of the robot
+
+        #region "benchmark timings"
 
         // object used for taking benchmark timings
         private stopwatch clock = new stopwatch();
@@ -40,15 +42,28 @@ namespace sentience.core
         public long benchmark_garbage_collection;
         public long benchmark_prediction;
 
-        // head geometry, stereo features and calibration data
-        public stereoHead head;
+        #endregion
+
+        #region "various models"
+
+        #region "motion model"
 
         // describes how the robot moves, used to predict the next step as a probabilistic distribution
         // of possible poses
         public motionModel motion;
 
+        #endregion
+
+        #region "inverse sensor model"
+
         // object used to construct rays and sensor models
         public stereoModel inverseSensorModel;
+
+        #endregion
+
+        #endregion
+
+        #region "stereo correspondence"
 
         // routines for performing stereo correspondence
         public stereoCorrespondence correspondence;
@@ -56,7 +71,12 @@ namespace sentience.core
         //the type of stereo correspondance algorithm to be used
         int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_LINES; // .CORRESPONDENCE_CONTOURS;  
 
-        public String Name = "My Robot";          // name of the robot
+        #endregion
+
+        #region "parameters"
+
+        #region "body parameters"
+
         public float TotalMass_kg;                // total mass of the robot
 
         // dimensions of the body
@@ -64,6 +84,10 @@ namespace sentience.core
         public float BodyLength_mm;               // length of the body
         public float BodyHeight_mm;               // height of the body from the ground
         public int BodyShape = 0;                 // shape of the body of the robot
+
+        #endregion
+
+        #region "propulsion parameters"
 
         // the type of propulsion for the robot
         public int propulsionType = 0;            // the type of propulsion used
@@ -81,10 +105,24 @@ namespace sentience.core
         public float MotorNoLoadSpeedRPM = 175;   // max motor speed with no load
         public float MotorTorqueKgMm = 80;        // toque rating in Kg/mm
 
+        #endregion
+
+        #region "robot head parameters"
+
+        // number of stereo cameras on the head
+        public int no_of_stereo_cameras;
+
+        // head geometry, stereo features and calibration data
+        public stereoHead head;
+
         public int HeadType = 0;                  // type of head
         public float HeadSize_mm;                 // size of the head
         public int HeadShape = 0;                 // shape of the head
         public int CameraOrientation = 0;         // the general configuration of camera positions
+
+        #endregion
+
+        #region "occupancy grid parameters"
 
         // grid settings
         public int LocalGridLevels = 1;               // The number of scales used within the local grid
@@ -104,6 +142,10 @@ namespace sentience.core
         public float MinimumColourVariance = float.MaxValue;
         public float MinimumPositionError_mm = float.MaxValue;
 
+        #endregion
+
+        #region "scan matching parameters"
+
         // whether to enable scan matching for more accurate pose estimation
         public bool EnableScanMatching = true;
 
@@ -115,11 +157,19 @@ namespace sentience.core
         // keeps an estimate of the robots pan angle based upon scan matching
         public float ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
 
+        #endregion
+
+        #region "path planning parameters"
+
         // object containing path planning functions
         private sentience.pathplanner.pathplanner planner;
 
         // sites (waypoints) to which the robot may move
         private kmlZone worksites;
+
+        #endregion
+
+        #endregion
 
         #region "constructors"
 
@@ -1323,7 +1373,7 @@ namespace sentience.core
         /// <summary>
         /// save the occupancy grid to file
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="filename">name of the file to save as</param>
         public void SaveGrid(String filename)
         {
             LocalGrid.Save(filename, motion.best_path.current_pose);
@@ -1357,5 +1407,18 @@ namespace sentience.core
 
         #endregion
 
+        #region "exporting data to third part visualisation tools"
+
+        /// <summary>
+        /// export occupancy grid data so that it can be visualised within IFrIT
+        /// </summary>
+        /// <param name="filename">name of the file to export as</param>
+        public void ExportToIFrIT(String filename)
+        {
+            LocalGrid.ExportToIFrIT(filename, motion.best_path.current_pose);
+        }
+
+
+        #endregion
     }
 }

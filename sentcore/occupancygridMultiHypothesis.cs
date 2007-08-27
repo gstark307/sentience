@@ -1287,17 +1287,17 @@ namespace sentience.core
         #region "exporting grid data to third party visualisation programs"
 
         /// <summary>
-        /// export the occupancy grid data to IFrIT file format for visualisation
+        /// export the occupancy grid data to IFrIT basic particle file format for visualisation
         /// </summary>
         /// <param name="filename">name of the file to save as</param>
-        /// <param name="pose"></param>
+        /// <param name="pose">best available pose</param>
         public void ExportToIFrIT(String filename, particlePose pose)
         {
             ExportToIFrIT(filename, pose, dimension_cells / 2, dimension_cells / 2, dimension_cells);
         }
 
         /// <summary>
-        /// export the occupancy grid data to IFrIT file format for visualisation
+        /// export the occupancy grid data to IFrIT basic particle file format for visualisation
         /// </summary>
         /// <param name="filename">name of the file to save as</param>
         /// <param name="pose">best available pose</param>
@@ -1309,14 +1309,15 @@ namespace sentience.core
                                   int centre_x, int centre_y,
                                   int width_cells)
         {
+            float threshold = 0.0f;
             int half_width_cells = width_cells / 2;
 
             int tx = centre_x + half_width_cells;
             int ty = centre_y + half_width_cells;
-            int tz = 0;
+            int tz = centre_z + half_width_cells;
             int bx = centre_x - half_width_cells;
             int by = centre_y - half_width_cells;
-            int bz = width_cells;
+            int bz = centre_z - half_width_cells;
 
             // get the bounding region within which there are actice grid cells
             int occupied_cells = 0;
@@ -1330,11 +1331,22 @@ namespace sentience.core
                         {
                             if (cell[x, y] != null)
                             {
-                                occupied_cells++;
-                                if (x < tx) tx = x;
-                                if (y < ty) ty = y;
-                                if (x > bx) bx = x;
-                                if (y > by) by = y;
+                                for (int z = 0; z < dimension_cells_vertical; z++)
+                                {
+                                    float prob = cell[x, y].GetProbability(pose, x, y, z,
+                                                                           true, colour, ref mean_variance);
+
+                                    if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                    {
+                                        occupied_cells++;
+                                        if (x < tx) tx = x;
+                                        if (y < ty) ty = y;
+                                        if (z < tz) tz = z;
+                                        if (x > bx) bx = x;
+                                        if (y > by) by = y;
+                                        if (z > bz) bz = z;
+                                    }
+                                }
                             }
                         }
                     }
@@ -1374,10 +1386,10 @@ namespace sentience.core
 
                                 if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                                 {
-                                    if (prob > 0.5f)  // probably occupied space
+                                    if (prob > threshold)  // probably occupied space
                                     {
                                         // get the colour of the grid cell as a floating point value
-                                        float colour_value = float.Parse(colours.GetHexFromRGB((int)colour[0], (int)colour[1], (int)colour[2]), NumberStyles.HexNumber);
+                                        float colour_value = int.Parse(colours.GetHexFromRGB((int)colour[0], (int)colour[1], (int)colour[2]), NumberStyles.HexNumber);
 
                                         String particleStr = Convert.ToString(x) + " " +
                                                              Convert.ToString(y) + " " +
