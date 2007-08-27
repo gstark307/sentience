@@ -816,20 +816,25 @@ namespace sentience.core
 
             for (int y = 0; y < height; y++)
             {
+                // get the y cell coordinate within the grid
                 int cell_y = y * (dimension_cells-1) / height;
+
                 for (int x = 0; x < width; x++)
                 {
+                    // get the x cell coordinate within the grid
                     int cell_x = x * (dimension_cells - 1) / width;
 
                     int n = ((y * width) + x) * 3;
 
                     if (cell[cell_x, cell_y] == null)
                     {
+                        // terra incognita
                         for (int c = 0; c < 3; c++)
-                            img[n + c] = (Byte)255; // terra incognita
+                            img[n + c] = (Byte)255; 
                     }
                     else
                     {
+                        // get the probability for this vertical column
                         float mean_variance = 0;
                         float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
                                                                        mean_colour, ref mean_variance);
@@ -1309,15 +1314,21 @@ namespace sentience.core
                                   int centre_x, int centre_y,
                                   int width_cells)
         {
-            float threshold = 0.0f;
+            float threshold = 0.5f;
             int half_width_cells = width_cells / 2;
 
             int tx = centre_x + half_width_cells;
             int ty = centre_y + half_width_cells;
-            int tz = centre_z + half_width_cells;
+            int tz = width_cells;
             int bx = centre_x - half_width_cells;
             int by = centre_y - half_width_cells;
-            int bz = centre_z - half_width_cells;
+            int bz = 0;
+
+            // dummy variables needed by GetProbability
+            float[] colour = new float[3];
+
+            // another dummy variable needed by GetProbability but otherwise not used
+            float mean_variance = 0;
 
             // get the bounding region within which there are actice grid cells
             int occupied_cells = 0;
@@ -1333,8 +1344,8 @@ namespace sentience.core
                             {
                                 for (int z = 0; z < dimension_cells_vertical; z++)
                                 {
-                                    float prob = cell[x, y].GetProbability(pose, x, y, z,
-                                                                           true, colour, ref mean_variance);
+                                    float prob = cell[x, y].GetProbability(pose, x, y,
+                                                                           colour, ref mean_variance);
 
                                     if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                                     {
@@ -1355,9 +1366,6 @@ namespace sentience.core
             bx++;
             by++;
 
-            // dummy variables needed by GetProbability
-            float[] colour = new float[3];
-
             if (occupied_cells > 0)
             {
                 // add bounding box information
@@ -1368,9 +1376,6 @@ namespace sentience.core
                                       Convert.ToString(by) + " " +
                                       Convert.ToString(bz) + " X Y Z";
 
-                // another dummy variable needed by GetProbability but otherwise not used
-                float mean_variance = 0;
-
                 ArrayList particles = new ArrayList();
 
                 for (int y = ty; y < by; y++)
@@ -1379,23 +1384,30 @@ namespace sentience.core
                     {
                         if (cell[x, y] != null)
                         {
-                            for (int z = 0; z < dimension_cells_vertical; z++)
+                            float prob = cell[x, y].GetProbability(pose, x, y,
+                                                                   colour, ref mean_variance);
+
+                            if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                             {
-                                float prob = cell[x, y].GetProbability(pose, x, y, z,
-                                                                       true, colour, ref mean_variance);
-
-                                if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
+                                for (int z = 0; z < dimension_cells_vertical; z++)
                                 {
-                                    if (prob > threshold)  // probably occupied space
+                                    prob = cell[x, y].GetProbability(pose, x, y, z, false,
+                                                                     colour, ref mean_variance);
+                                    
+                                    if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                                     {
-                                        // get the colour of the grid cell as a floating point value
-                                        float colour_value = int.Parse(colours.GetHexFromRGB((int)colour[0], (int)colour[1], (int)colour[2]), NumberStyles.HexNumber);
+                                        if (prob > threshold)  // probably occupied space
+                                        {
+                                            // get the colour of the grid cell as a floating point value
+                                            float colour_value = int.Parse(colours.GetHexFromRGB((int)colour[0], (int)colour[1], (int)colour[2]), NumberStyles.HexNumber);
 
-                                        String particleStr = Convert.ToString(x) + " " +
-                                                             Convert.ToString(y) + " " +
-                                                             Convert.ToString(z) + " " +
-                                                             Convert.ToString(colour_value);
-                                        particles.Add(particleStr);
+                                            String particleStr = Convert.ToString(x) + " " +
+                                                                 Convert.ToString(y) + " " +
+                                                                 Convert.ToString(z) + " " +
+                                                                 Convert.ToString(prob) + " " +
+                                                                 Convert.ToString(colour_value);
+                                            particles.Add(particleStr);
+                                        }
                                     }
                                 }
                             }
