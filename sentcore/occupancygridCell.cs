@@ -165,7 +165,13 @@ namespace sentience.core
         /// returns the probability of occupancy at this grid cell at the given vertical (z) coordinate
         /// warning: this could potentially suffer from path ID or time step rollover problems
         /// </summary>
-        /// <param name="path_ID"></param>
+        /// <param name="pose">the robot pose from which this cell was observed</param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="returnLogOdds"></param>
+        /// <param name="colour"></param>
+        /// <param name="mean_variance"></param>
         /// <returns>probability value</returns>
         public float GetProbability(particlePose pose, int x, int y, int z, bool returnLogOdds,
                                     float[] colour, ref float mean_variance)

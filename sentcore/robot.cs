@@ -192,7 +192,7 @@ namespace sentience.core
         /// <summary>
         /// loads calibration data for the given camera
         /// </summary>
-        /// <param name="camera_index"></param>
+        /// <param name="camera_index">index of the stereo camera</param>
         /// <param name="calibrationFilename"></param>
         public void loadCalibrationData(int camera_index, String calibrationFilename)
         {
@@ -202,7 +202,7 @@ namespace sentience.core
         /// <summary>
         /// load calibration data for all cameras from the given directory
         /// </summary>
-        /// <param name="directory"></param>
+        /// <param name="directory">directory in which the calibration data resides</param>
         public void loadCalibrationData(String directory)
         {
             head.loadCalibrationData(directory);
@@ -227,7 +227,7 @@ namespace sentience.core
         /// <summary>
         /// initialise with the given number of stereo cameras
         /// </summary>
-        /// <param name="no_of_stereo_cameras"></param>
+        /// <param name="no_of_stereo_cameras">the number of stereo cameras on the robot (not the total number of cameras)</param>
         private void init(int no_of_stereo_cameras)
         {
             this.no_of_stereo_cameras = no_of_stereo_cameras;
@@ -319,14 +319,38 @@ namespace sentience.core
 
         #region "image loading"
 
-        public float loadRectifiedImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
+        /// <summary>
+        /// loads images which have already been rectified
+        /// </summary>
+        /// <param name="stereo_cam_index">index of the stereo camera</param>
+        /// <param name="fullres_left">left image data</param>
+        /// <param name="fullres_right">right image data</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <returns></returns>
+        public float loadRectifiedImages(int stereo_cam_index, 
+                                         Byte[] fullres_left, 
+                                         Byte[] fullres_right, 
+                                         int bytes_per_pixel)
         {
+            // set the required number of stereo features
             correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
+            // load the rectified images
             return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
-        public float loadRawImages(int stereo_cam_index, Byte[] fullres_left, Byte[] fullres_right, int bytes_per_pixel)
+        /// <summary>
+        /// load raw (unrectified) images
+        /// </summary>
+        /// <param name="stereo_cam_index">index of the stereo camera</param>
+        /// <param name="fullres_left">left image data</param>
+        /// <param name="fullres_right">right image data</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <returns></returns>
+        public float loadRawImages(int stereo_cam_index, 
+                                   Byte[] fullres_left, 
+                                   Byte[] fullres_right, 
+                                   int bytes_per_pixel)
         {
             correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
@@ -375,11 +399,24 @@ namespace sentience.core
             correspondence_algorithm_type = algorithm_type;
         }
 
+        /// <summary>
+        /// set parameters required for mapping
+        /// </summary>
+        /// <param name="sigma"></param>
         public void setMappingParameters(float sigma)
         {
             inverseSensorModel.sigma = sigma;
         }
 
+        /// <summary>
+        /// set parameters used for stereo correspondence
+        /// </summary>
+        /// <param name="max_disparity"></param>
+        /// <param name="difference_threshold"></param>
+        /// <param name="context_radius_1"></param>
+        /// <param name="context_radius_2"></param>
+        /// <param name="local_averaging_radius"></param>
+        /// <param name="required_features"></param>
         public void setStereoParameters(int max_disparity, int difference_threshold,
                                         int context_radius_1, int context_radius_2,
                                         int local_averaging_radius, int required_features)
@@ -391,6 +428,13 @@ namespace sentience.core
             correspondence.setContextRadii(context_radius_1, context_radius_2);
         }
 
+        /// <summary>
+        /// set parameters used for stereo correspondence
+        /// </summary>
+        /// <param name="max_disparity"></param>
+        /// <param name="required_features"></param>
+        /// <param name="surround_radius"></param>
+        /// <param name="matching_threshold"></param>
         public void setStereoParameters(int max_disparity, int required_features, 
                                         float surround_radius, float matching_threshold)
         {
@@ -419,6 +463,10 @@ namespace sentience.core
             previousPosition.tilt = tilt;
         }
 
+        /// <summary>
+        /// load stereo images from a list
+        /// </summary>
+        /// <param name="images">list of images (byte arrays) in left/right order</param>
         private void loadImages(ArrayList images)
         {            
             clock.Start();
@@ -545,7 +593,7 @@ namespace sentience.core
         /// <summary>
         /// returns the average colour variance for the entire occupancy grid
         /// </summary>
-        /// <returns></returns>
+        /// <returns>mean colour variance</returns>
         public float GetMeanColourVariance()
         {
             float mean_variance = 0;
@@ -557,6 +605,10 @@ namespace sentience.core
             return (mean_variance);
         }
 
+        /// <summary>
+        /// update the state of the robot using a list of images from its stereo camera/s
+        /// </summary>
+        /// <param name="images">list containing stereo images in left/right order</param>
         private void update(ArrayList images)
         {
             if (images != null)
@@ -583,10 +635,8 @@ namespace sentience.core
 
                 clock.Start();
 
-                // randomly garbage collect a percentage of the grid cells
-                // this removes dead hypotheses which would otherwise clogg
-                // up the system
-                LocalGrid.GarbageCollect(90);
+                // garbage collect dead occupancy hypotheses
+                LocalGrid.GarbageCollect();
 
                 clock.Stop();
                 benchmark_garbage_collection = clock.time_elapsed_mS;
@@ -852,9 +902,9 @@ namespace sentience.core
         /// <summary>
         /// show the occupancy grid
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
+        /// <param name="img">image within which to show the grid</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
         public void ShowGrid(int view_type, Byte[] img, int width, int height, bool show_robot, 
                              bool colour, bool scalegrid)
         {

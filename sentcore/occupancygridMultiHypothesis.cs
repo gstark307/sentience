@@ -164,7 +164,8 @@ namespace sentience.core
         /// <summary>
         /// returns the average colour variance for the entire grid
         /// </summary>
-        /// <returns></returns>
+        /// <param name="pose">best available robot pose hypothesis</param>
+        /// <returns>colour variance value for the occupancy grid</returns>
         public float GetMeanColourVariance(particlePose pose)
         {
             float[] mean_colour = new float[3];
@@ -196,7 +197,7 @@ namespace sentience.core
         /// <summary>
         /// removes an occupancy hypothesis from a grid cell
         /// </summary>
-        /// <param name="hypothesis"></param>
+        /// <param name="hypothesis">the hypothesis to be removed from the grid</param>
         public void Remove(particleGridCell hypothesis)
         {
             occupancygridCellMultiHypothesis c = cell[hypothesis.x, hypothesis.y];
@@ -272,7 +273,10 @@ namespace sentience.core
         }
          */
 
-        public void GarbageCollect(int percentage)
+        /// <summary>
+        /// collect occupancy hypotheses which are no longer active
+        /// </summary>
+        public void GarbageCollect()
         {
             int max = garbage.Count-1;
             for (int i = max; i >= 0; i--)
@@ -289,6 +293,36 @@ namespace sentience.core
             }
         }
 
+        /// <summary>
+        /// returns a measure of the difference between two colours
+        /// </summary>
+        /// <param name="colour1">the first colour</param>
+        /// <param name="colour2">the second colour</param>
+        /// <returns>difference between the two colours</returns>
+        private float getColourDifference(byte[] colour1, float[] colour2)
+        {
+            // note that relative colour values are used, since comparing absolute RGB
+            // values is a road to nowhere
+            float colour_difference = 0;
+            for (int col = 0; col < 3; col++)
+            {
+                int col2 = col + 1;
+                if (col2 > 2) col2 -= 3;
+                int col3 = col + 2;
+                if (col3 > 2) col3 -= 3;
+
+                float c1 = (colour1[col] * 2) - colour1[col2] - colour1[col3];
+                if (c1 < 0) c1 = 0;
+
+                float c2 = (int)((colour2[col] * 2) - colour2[col2] - colour2[col3]);
+                if (c2 < 0) c2 = 0;
+
+                colour_difference += Math.Abs(c1 - c2);
+            }
+            colour_difference /= (6 * 255.0f);
+
+            return (colour_difference);
+        }
 
         /// <summary>
         /// returns the localisation probability
@@ -297,6 +331,7 @@ namespace sentience.core
         /// <param name="y_cell">y grid coordinate</param>
         /// <param name="origin">pose of the robot</param>
         /// <param name="sensorModelProbability">probability value from a specific point in the ray, taken from the sensor model</param>
+        /// <param name="colour">colour of the localisation ray</param>
         /// <returns>log odds probability of there being a match between the ray and the grid</returns>
         private float matchingProbability(int x_cell, int y_cell, int z_cell,
                                           particlePose origin,
@@ -317,27 +352,12 @@ namespace sentience.core
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
             {
                 // combine the occupancy probabilities
-                float occupancy_probability = ((sensormodel_probability * existing_probability) +
-                              ((1.0f - sensormodel_probability) * (1.0f - existing_probability)));
+                float occupancy_probability = 
+                    ((sensormodel_probability * existing_probability) +
+                    ((1.0f - sensormodel_probability) * (1.0f - existing_probability)));
 
                 // get the colour difference between the map and the observation
-                // note that relative colour values are used, since comparing absolute RGB
-                // values is a road to nowhere
-                int r1 = (colour[0] * 2) - colour[1] - colour[2];
-                if (r1 < 0) r1 = 0;
-                int r2 = (int)((existing_colour[0] * 2) - existing_colour[1] - existing_colour[2]);
-                if (r2 < 0) r2 = 0;
-                int g1 = (colour[1] * 2) - colour[0] - colour[2];
-                if (g1 < 0) g1 = 0;
-                int g2 = (int)((existing_colour[1] * 2) - existing_colour[0] - existing_colour[2]);
-                if (g2 < 0) g2 = 0;
-                int b1 = (colour[2] * 2) - colour[1] - colour[0];
-                if (b1 < 0) b1 = 0;
-                int b2 = (int)((existing_colour[2] * 2) - existing_colour[1] - existing_colour[0]);
-                if (b2 < 0) b2 = 0;
-                float colour_difference = (Math.Abs(r1 - r2) + 
-                                           Math.Abs(g1 - g2) + 
-                                           Math.Abs(b1 - b2)) / (6 * 255.0f);
+                float colour_difference = getColourDifference(colour, existing_colour);
 
                 // turn the colour difference into a probability
                 float colour_probability = 1.0f  - colour_difference;
@@ -680,6 +700,16 @@ namespace sentience.core
 
         #region "display functions"
 
+        /// <summary>
+        /// display the occupancy grid
+        /// </summary>
+        /// <param name="view_type">the angle from which to view the grid</param>
+        /// <param name="img">image within which to insert data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="pose">the best available robot pose hypothesis</param>
+        /// <param name="colour">show grid cell colour, or just occupancy values</param>
+        /// <param name="scalegrid">show a grid overlay which gives some idea of scale</param>
         public void Show(int view_type, 
                          Byte[] img, int width, int height, particlePose pose, 
                          bool colour, bool scalegrid)
@@ -736,7 +766,14 @@ namespace sentience.core
 
         }
 
-
+        /// <summary>
+        /// show an occupancy grid from one side
+        /// </summary>
+        /// <param name="img">image in which to insert the data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="pose">best available robot pose hypothesis</param>
+        /// <param name="leftSide">view from the left side or the right</param>
         private void ShowSide(Byte[] img, int width, int height, particlePose pose, bool leftSide)
         {
             float[] mean_colour = new float[3];
@@ -809,7 +846,7 @@ namespace sentience.core
         /// <param name="img">bitmap image</param>
         /// <param name="width">width in pixels</param>
         /// <param name="height">height in pixels</param>
-        /// <param name="pose">pose from which the map is observed</param>
+        /// <param name="pose">best pose hypothesis from which the map is observed</param>
         private void Show(Byte[] img, int width, int height, particlePose pose)
         {
             float[] mean_colour = new float[3];
@@ -870,9 +907,9 @@ namespace sentience.core
         /// <summary>
         /// show navigable area
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
+        /// <param name="img">image in which to insert the data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
         private void ShowNavigable(Byte[] img, int width, int height)
         {
             // clear the image
@@ -899,6 +936,13 @@ namespace sentience.core
         }
 
 
+        /// <summary>
+        /// show a colour occupancy grid
+        /// </summary>
+        /// <param name="img">image in which to insert the data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="pose">best available robot pose hypothesis</param>
         private void ShowColour(Byte[] img, int width, int height, particlePose pose)
         {
             float[] mean_colour = new float[3];

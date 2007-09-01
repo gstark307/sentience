@@ -155,6 +155,10 @@ namespace StereoMapping
             showNextPose();
         }
 
+        /// <summary>
+        /// load a simulation setup from file
+        /// </summary>
+        /// <param name="filename"></param>
         private void LoadSimulation(String filename)
         {
             if (sim.Load(filename))
@@ -170,6 +174,9 @@ namespace StereoMapping
             }
         }
 
+        /// <summary>
+        /// update some simulation parameters from those entered on screen
+        /// </summary>
         private void update()
         {
             sim.Name = txtTitle.Text;
