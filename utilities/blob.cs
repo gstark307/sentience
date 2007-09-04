@@ -28,6 +28,9 @@ namespace sluggish.imageprocessing
         public bool selected;
         public bool touched;
 
+        // this is marked for garbage collection
+        public bool garbage_collect;
+
         // position of the blob within the image, only intended to be pixel accurate
         public float x, y;
 
@@ -42,7 +45,7 @@ namespace sluggish.imageprocessing
 
         // radial profile
         public float[] radial_profile;
-        
+
         // streuth, it's a list of neighbouring blobs mate!
         public ArrayList neighbours;
 
@@ -69,7 +72,7 @@ namespace sluggish.imageprocessing
             new_blob.average_radius = average_radius;
             new_blob.ovality = ovality;
             new_blob.average_intensity = average_intensity;
-            return(new_blob);
+            return (new_blob);
         }
 
         /// <summary>
@@ -99,7 +102,7 @@ namespace sluggish.imageprocessing
         /// <param name="y1">line second point y coordinate</param>
         /// <param name="max_distance">the maximum perpendicular distance below which the blob is considered to touch the line, in the range, typically in the range 0.0-1.0 as a fraction of the blob radius</param>
         /// <returns>true if the given line intersects with this blob</returns>
-        public bool intersectsWithLine(float x0, float y0, float x1, float y1, 
+        public bool intersectsWithLine(float x0, float y0, float x1, float y1,
                                        float max_distance,
                                        ref float perpendicular_distance)
         {
@@ -116,9 +119,10 @@ namespace sluggish.imageprocessing
         /// <param name="spot_map">map containing spot responses</param>
         /// <param name="max_radius">maximum radius</param>
         public void detectRadius(float[,] spot_map, int max_radius,
-                                 byte[] mono_image)
+                                 byte[] mono_image, float min_response)
         {
-            float min_spot_response = 0.1f;
+            float centre_response = spot_map[(int)x, (int)y];
+            float min_spot_response = 0.1f * centre_response;
 
             int xx = (int)x;
             int yy = (int)y;
@@ -131,8 +135,8 @@ namespace sluggish.imageprocessing
 
             // grow to the right
             float length_right = 0;
-            while ((xx - (int)x < max_radius) && 
-                   (xx < w-1) && 
+            while ((xx - (int)x < max_radius) &&
+                   (xx < w - 1) &&
                    (!finished_growing))
             {
                 float value = spot_map[xx, yy];
@@ -216,7 +220,7 @@ namespace sluggish.imageprocessing
             finished_growing = false;
             float length_below = 0;
             while ((yy - (int)y < max_radius) &&
-                   (yy < h-1) &&
+                   (yy < h - 1) &&
                    (!finished_growing))
             {
                 float value = spot_map[xx, yy];
@@ -251,6 +255,92 @@ namespace sluggish.imageprocessing
             if (hits > 0)
                 average_intensity /= hits;
         }
+
+        /// <summary>
+        /// detect the radius of the spot within the given map
+        /// </summary>
+        /// <param name="spot_map">map containing spot responses</param>
+        /// <param name="min_radius">minimum radius</param>
+        /// <param name="max_radius">maximum radius</param>
+        /// <param name="max_displacement">maximum displacement from the centre</param>
+        /// <param name="mono_image">mono image data used to calculate average intensity</param>
+        public void detectRadius(float[,] spot_map,
+                                 int min_radius, int max_radius,
+                                 int max_displacement,
+                                 byte[] mono_image)
+        {
+            // get the dimensions of the image
+            int image_width = spot_map.GetLength(0);
+            int image_height = spot_map.GetLength(1);
+
+            // get the spot response at the centre
+            float centre_response = spot_map[(int)x, (int)y];
+
+            // how many samples for each possible spot radius
+            int no_of_samples = 10;
+            float angle_increment = ((float)Math.PI * 2) / no_of_samples;
+
+            float max_response_change = 0;
+
+            float disp_x = 0;
+            float disp_y = 0;
+            for (int dx = -max_displacement; dx <= max_displacement; dx++)
+            {
+                for (int dy = -max_displacement; dy <= max_displacement; dy++)
+                {
+                    float total_radial_intensity = 0;
+                    float prev_radial_response = centre_response * no_of_samples;
+                    float prev_radial_response2 = prev_radial_response;
+                    float prev_radial_response3 = prev_radial_response;
+                    for (float r = min_radius; r <= max_radius; r++)
+                    {
+                        float radial_intensity = 0;
+                        float radial_response = 0;
+                        for (float angle = 0; angle < Math.PI * 2; angle += angle_increment)
+                        {
+                            int xx = (int)Math.Round(dx + interpolated_x + (r * (float)Math.Sin(angle)));
+                            int yy = (int)Math.Round(dy + interpolated_y + (r * (float)Math.Cos(angle)));
+                            if ((xx > -1) && (xx < image_width) &&
+                                (yy > -1) && (yy < image_height))
+                            {
+                                int n = (yy * image_width) + xx;
+
+                                radial_response += spot_map[xx, yy];
+
+                                radial_intensity += mono_image[n];
+                            }
+                        }
+
+                        float response_change = Math.Abs(radial_response - prev_radial_response3);
+                        response_change *= response_change;
+
+                        if (response_change > max_response_change)
+                        {
+                            max_response_change = response_change;
+                            float local_response = radial_response + prev_radial_response;
+                            average_radius = ((r * radial_response) + ((r - 1) * prev_radial_response)) / local_response;
+                            average_intensity = total_radial_intensity / (no_of_samples * ((r - min_radius) + 1));
+                            disp_x = dx;
+                            disp_y = dy;
+                        }
+                        prev_radial_response3 = prev_radial_response2;
+                        prev_radial_response2 = prev_radial_response;
+                        prev_radial_response = radial_response;
+                        total_radial_intensity += radial_intensity;
+                    }
+                }
+            }
+
+
+            x += disp_x;
+            interpolated_x += disp_x;
+            y += disp_y;
+            interpolated_y += disp_y;
+
+
+            ovality = 0;
+        }
+
 
         #region "adding neighbours"
 
@@ -311,14 +401,14 @@ namespace sluggish.imageprocessing
                 if (ang == float.NaN) ang = 0;
             }
             angle.Add(ang);
-            
+
             // populate the direction lookup table
             int ang_index = (int)Math.Round((ang * 180 / Math.PI) / direction_increment_degrees);
             if (ang_index >= neighbourDirections.Length)
                 ang_index = neighbourDirections.Length - 1;
             if (neighbourDirections[ang_index] == null)
                 neighbourDirections[ang_index] = new ArrayList();
-            neighbourDirections[ang_index].Add(neighbours.Count-1);
+            neighbourDirections[ang_index].Add(neighbours.Count - 1);
         }
 
         #endregion
@@ -339,7 +429,7 @@ namespace sluggish.imageprocessing
             {
                 float ang = (float)angle[i];
                 blob curr_end_point = null;
-                int length = getDirectionalLength(ang, false, true,0,1000, tollerance_degrees, ref curr_end_point);
+                int length = getDirectionalLength(ang, false, true, 0, 1000, tollerance_degrees, ref curr_end_point);
 
                 if (length > longest)
                 {
@@ -351,12 +441,12 @@ namespace sluggish.imageprocessing
             if ((longest > 0) && (mark_path))
             {
                 blob curr_end_point = null;
-                getDirectionalLength(best_ang, true, true,0,1000, tollerance_degrees, ref curr_end_point);
+                getDirectionalLength(best_ang, true, true, 0, 1000, tollerance_degrees, ref curr_end_point);
             }
             return (longest);
         }
 
-        public int getDirectionalLength(float direction_radians, 
+        public int getDirectionalLength(float direction_radians,
                                         bool mark_path,
                                         bool ignore_selected,
                                         int depth, int max_depth,

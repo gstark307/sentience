@@ -22,13 +22,13 @@ using System.Xml;
 
 namespace sluggish.utilities.xml
 {
-	public class xml
-	{
-		public xml()
-		{
-		}
-		
-		/// <summary>
+    public class xml
+    {
+        public xml()
+        {
+        }
+
+        /// <summary>
         /// This method adds a text element to the XML document as the last
         /// child of the current element.
         /// </summary>
@@ -56,12 +56,12 @@ namespace sluggish.utilities.xml
                 (str.StartsWith("4")) || (str.StartsWith("5")) || (str.StartsWith("6")) ||
                 (str.StartsWith("7")) || (str.StartsWith("8")) || (str.StartsWith("9"))
                )
-                return(true);
+                return (true);
             else
-                return(false);
+                return (false);
         }
 
-		/// <summary>
+        /// <summary>
         /// This method adds an image element to the XML document as the last
         /// child of the current element.  This is suitable for viewing the
         /// XML document directly within a W3C standards compliant browser
@@ -71,7 +71,7 @@ namespace sluggish.utilities.xml
         /// <param name="nodeParent">Parent of the node we are adding</param>
         /// <param name="strTag">The tag of the element to add</param>
         /// <param name="filename">The image filename or URL</param>
-        public static XmlElement AddImageElement(XmlDocument doc, XmlElement nodeParent, String strTag, 
+        public static XmlElement AddImageElement(XmlDocument doc, XmlElement nodeParent, String strTag,
                                                  String filename, int width, int height)
         {
             XmlElement nodeElem = doc.CreateElement(strTag);
@@ -86,14 +86,43 @@ namespace sluggish.utilities.xml
             XmlElement nodeImg = doc.CreateElement("img");
             nodeImg.SetAttribute("xmlns", "http://www.w3.org/1999/xhtml");
             nodeImg.SetAttribute("src", file_name);
-            nodeImg.SetAttribute("width", width.ToString());
-            nodeImg.SetAttribute("height", height.ToString());
+            if (width > 0)
+            {
+                nodeImg.SetAttribute("width", width.ToString());
+                nodeImg.SetAttribute("height", height.ToString());
+            }
             nodeElem.AppendChild(nodeImg);
-            
+
             return (nodeElem);
         }
 
-		/// <summary>
+        /// <summary>
+        /// This method adds an image element to the XML document in a manner
+        /// which is suitable for viewing with an xsl style sheet
+        /// </summary>
+        /// <param name="doc">The XML document</param>
+        /// <param name="nodeParent">Parent of the node we are adding</param>
+        /// <param name="strTag">The tag of the element to add</param>
+        /// <param name="filename">The image filename or URL</param>
+        public static XmlElement AddImageElementSimple(
+                XmlDocument doc, XmlElement nodeParent, String strTag,
+                String filename)
+        {
+            String file_name = filename;
+            /*
+            if (!isURL(filename))
+                if (!filename.StartsWith("file:"))
+                    file_name = "file://" + filename;
+            */
+            XmlElement nodeImg = doc.CreateElement(strTag);
+            nodeImg.SetAttribute("src", file_name);
+            nodeParent.AppendChild(nodeImg);
+
+            return (nodeImg);
+        }
+
+
+        /// <summary>
         /// This method adds an image element to the XML document in a manner
         /// which is suitable for viewing with an xsl style sheet
         /// </summary>
@@ -113,10 +142,13 @@ namespace sluggish.utilities.xml
             */
             XmlElement nodeImg = doc.CreateElement(strTag);
             nodeImg.SetAttribute("src", file_name);
-            nodeImg.SetAttribute("width", width.ToString());
-            nodeImg.SetAttribute("height", height.ToString());
+            if (width > 0)
+            {
+                nodeImg.SetAttribute("width", width.ToString());
+                nodeImg.SetAttribute("height", height.ToString());
+            }
             nodeParent.AppendChild(nodeImg);
-            
+
             return (nodeImg);
         }
 
@@ -127,5 +159,5 @@ namespace sluggish.utilities.xml
             nodeParent.AppendChild(commentnode);
         }
 
-	}
+    }
 }

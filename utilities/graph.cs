@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using System.Collections;
+using sluggish.utilities;
 
 namespace sluggish.utilities.graph
 {
@@ -153,6 +154,93 @@ namespace sluggish.utilities.graph
         /// <param name="measurement_y">measurement value on the y axis</param>
         public virtual void Update(float measurement_x, float measurement_y)
         {
+        }
+
+        #endregion
+
+        #region "drawing axes"
+
+        public void DrawAxes(float x_increment_minor, float y_increment_minor,
+                             float x_increment_major, float y_increment_major,
+                             int increment_marking_size,
+                             int r, int g, int b, int lineWidth)
+        {
+            // draw the horizontal axis
+            float y = (max_value_y / (max_value_y - min_value_y)) * screen_height;
+            drawing.drawLine(image, screen_width, screen_height,
+                             0, (int)y, screen_width - 1, (int)y,
+                             r, g, b, lineWidth, false);
+
+            float x = ((Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_height);
+
+            for (int i = 0; i < 2; i++)
+            {
+                float increment_size = x_increment_minor;
+                int marking_size = increment_marking_size;
+                if (i > 0)
+                {
+                    increment_size = x_increment_major;
+                    marking_size = (increment_marking_size * 2);
+                }
+
+                float xx = 0;
+                while (xx < max_value_x)
+                {
+                    int screen_x = (int)(x + (xx * screen_width / (max_value_x - min_value_x)));
+                    drawing.drawLine(image, screen_width, screen_height,
+                                     screen_x, (int)y, screen_x, (int)(y + marking_size),
+                                     r, g, b, lineWidth, false);
+                    xx += increment_size;
+                }
+                xx = 0;
+                while (xx > min_value_x)
+                {
+                    int screen_x = (int)(x + (xx * screen_width / (max_value_x - min_value_x)));
+                    drawing.drawLine(image, screen_width, screen_height,
+                                     screen_x, (int)y, screen_x, (int)(y + marking_size),
+                                     r, g, b, lineWidth, false);
+                    xx -= increment_size;
+                }
+            }
+
+            // draw the vertical axis
+            x = (Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width;
+            drawing.drawLine(image, screen_width, screen_height,
+                             (int)x, 0, (int)x, screen_height - 1,
+                             r, g, b, lineWidth, false);
+
+            y = (Math.Abs(min_value_y) / (max_value_y - min_value_y)) * screen_width;
+
+            for (int i = 0; i < 2; i++)
+            {
+                float increment_size = y_increment_minor;
+                int marking_size = (int)(increment_marking_size * screen_width / (float)screen_height);
+                if (i > 0)
+                {
+                    increment_size = y_increment_major;
+                    marking_size = (int)(increment_marking_size * 2 * screen_width / (float)screen_height);
+                }
+
+                float yy = 0;
+                while (yy < max_value_y)
+                {
+                    int screen_y = (int)(y + (yy * screen_height / (max_value_y - min_value_y)));
+                    drawing.drawLine(image, screen_width, screen_height,
+                                     (int)x, screen_y, (int)x - marking_size, screen_y,
+                                     r, g, b, lineWidth, false);
+                    yy += increment_size;
+                }
+                yy = 0;
+                while (yy > min_value_y)
+                {
+                    int screen_y = (int)(y + (yy * screen_height / (max_value_y - min_value_y)));
+                    drawing.drawLine(image, screen_width, screen_height,
+                                     (int)x, screen_y, (int)x - marking_size, screen_y,
+                                     r, g, b, lineWidth, false);
+                    yy -= increment_size;
+                }
+            }
+
         }
 
         #endregion

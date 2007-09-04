@@ -36,6 +36,8 @@ namespace sluggish.utilities.graph
         // previous measurement display coordinates
         private int prev_x, prev_y;
 
+        #region "constructors"
+
         /// <summary>
         /// constructor
         /// </summary>
@@ -54,6 +56,8 @@ namespace sluggish.utilities.graph
             history = new ArrayList();
             Reset();
         }
+
+        #endregion
 
         /// <summary>
         /// resets the display

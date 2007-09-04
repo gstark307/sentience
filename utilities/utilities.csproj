@@ -45,7 +45,10 @@
     <Compile Include="FTPclient.cs" />
     <Compile Include="geometry.cs" />
     <Compile Include="graph.cs" />
+    <Compile Include="graph_intensity_histogram.cs" />
+    <Compile Include="graph_lines.cs" />
     <Compile Include="graph_points.cs" />
+    <Compile Include="grid2D.cs" />
     <Compile Include="image.cs" />
     <Compile Include="KeyValuePair.cs" />
     <Compile Include="kml.cs" />

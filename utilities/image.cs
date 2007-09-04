@@ -20,27 +20,84 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Drawing;
 using sluggish.imageprocessing;
 
 namespace sluggish.utilities
 {
-	public class image
-	{
-		public image()
-		{
+    public class image
+    {
+        public image()
+        {
         }
+
+        #region "bit depth changes"
+
+        private static System.Drawing.Imaging.ColorPalette GetColourPalette(uint nColors)
+        {
+            // Assume monochrome image.
+            System.Drawing.Imaging.PixelFormat bitscolordepth = System.Drawing.Imaging.PixelFormat.Format1bppIndexed;
+            System.Drawing.Imaging.ColorPalette palette;    // The Palette we are stealing
+            Bitmap bitmap;     // The source of the stolen palette
+
+            // Determine number of colors.
+            if (nColors > 2)
+                bitscolordepth = System.Drawing.Imaging.PixelFormat.Format4bppIndexed;
+            if (nColors > 16)
+                bitscolordepth = System.Drawing.Imaging.PixelFormat.Format8bppIndexed;
+
+            // Make a new Bitmap object to get its Palette.
+            bitmap = new Bitmap(1, 1, bitscolordepth);
+
+            palette = bitmap.Palette;   // Grab the palette
+
+            bitmap.Dispose();           // cleanup the source Bitmap
+
+            return palette;             // Send the palette back
+        }
+
+        /// <summary>
+        /// set the pallette of the given bitmap to greyscale
+        /// </summary>
+        /// <param name="bmp">bitmap object</param>
+        public static void SetGreyScalePallette(Bitmap bmp)
+        {
+            bool fTransparent = false;
+            uint no_of_colours = 255;
+
+            System.Drawing.Imaging.ColorPalette pal = GetColourPalette(no_of_colours);
+
+            for (uint i = 0; i < no_of_colours; i++)
+            {
+                uint Alpha = 0xFF;  // Colours are opaque.
+                uint Intensity = i * 0xFF / (no_of_colours - 1);
+
+                if (i == 0 && fTransparent) // Make this color index...
+                    Alpha = 0;          // Transparent
+
+                pal.Entries[i] = Color.FromArgb((int)Alpha,
+                                                (int)Intensity,
+                                                (int)Intensity,
+                                                (int)Intensity);
+            }
+
+            // Set the palette into the new Bitmap object.
+            bmp.Palette = pal;
+        }
+
+        #endregion
 
         #region "multi-frame averaging"
 
         /// <summary>
-		/// returns an image averaged over several frames
-		/// </summary>
-		/// <param name="img"></param>
-		/// <param name="img_width"></param>
-		/// <param name="img_height"></param>
-		/// <param name="buffer"></param>
-		/// <param name="buffer_index"></param>
-		/// <param name="average_img"></param>
+        /// returns an image averaged over several frames
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        /// <param name="buffer"></param>
+        /// <param name="buffer_index"></param>
+        /// <param name="average_img"></param>
         public static void averageImage(
             byte[] img, int img_width, int img_height,
             byte[,] buffer, ref int buffer_index, ref int buffer_fill,
@@ -79,26 +136,26 @@ namespace sluggish.utilities
         #region "noise removal"
 
         /// <summary>
-		/// remove solitary pixels from a binary image
-		/// </summary>
-		/// <param name="binary_image">a binary image</param>
-		/// <param name="minimum_matches">the minimum number of pixels which have the same state as the centre pixel at each position</param>
-		public static bool[,] removeSolitaryPixels(bool[,] binary_image,
-		                                           int minimum_matches)
-		{		
-		    int width = binary_image.GetLength(0);
-		    int height = binary_image.GetLength(1);
-		    
-		    bool[,] result = new bool[width, height];
-		    
-		    for (int x = 1; x < width-1; x++)
-		    {
-		        for (int y = 1; y < height-1; y++)
-		        {
-		            bool state = binary_image[x, y];
-		            result[x, y] = state;
-		            
-		            int opposing_pixel_count = 0;
+        /// remove solitary pixels from a binary image
+        /// </summary>
+        /// <param name="binary_image">a binary image</param>
+        /// <param name="minimum_matches">the minimum number of pixels which have the same state as the centre pixel at each position</param>
+        public static bool[,] removeSolitaryPixels(bool[,] binary_image,
+                                                   int minimum_matches)
+        {
+            int width = binary_image.GetLength(0);
+            int height = binary_image.GetLength(1);
+
+            bool[,] result = new bool[width, height];
+
+            for (int x = 1; x < width - 1; x++)
+            {
+                for (int y = 1; y < height - 1; y++)
+                {
+                    bool state = binary_image[x, y];
+                    result[x, y] = state;
+
+                    int opposing_pixel_count = 0;
 
                     int xx = x - 1;
                     while ((xx <= x + 1) && (opposing_pixel_count < minimum_matches))
@@ -111,17 +168,17 @@ namespace sluggish.utilities
                         }
                         xx++;
                     }
-		                        
-		            if (opposing_pixel_count > minimum_matches)
-	    		        result[x, y] = !state;
-		        }
-		    }
-		    return(result);
-		}
-		
-		#endregion
-		
-		#region "edge detection/tracing within a line grid calibration pattern"
+
+                    if (opposing_pixel_count > minimum_matches)
+                        result[x, y] = !state;
+                }
+            }
+            return (result);
+        }
+
+        #endregion
+
+        #region "edge detection/tracing within a line grid calibration pattern"
 
         /// <summary>
         /// crops line features to the given perimeter shape
@@ -131,7 +188,7 @@ namespace sluggish.utilities
         public static ArrayList cropLines(ArrayList lines, polygon2D perimeter)
         {
             ArrayList cropped = new ArrayList();
-            
+
             for (int i = 0; i < lines.Count; i++)
             {
                 linefeature line1 = (linefeature)lines[i];
@@ -139,7 +196,7 @@ namespace sluggish.utilities
                     if (perimeter.isInside((int)line1.x1, (int)line1.y1))
                         cropped.Add(line1);
             }
-            return(cropped);
+            return (cropped);
         }
 
         /// <summary>
@@ -196,10 +253,10 @@ namespace sluggish.utilities
         /// returns the average orientation of all the given lines
         /// </summary>
         /// <param name="lines">list of line features</param>
-        public static float getDominantOrientation(ArrayList lines, 
+        public static float getDominantOrientation(ArrayList lines,
                                                    ref float score)
         {
-            return(getDominantOrientation(lines, 0, ref score));
+            return (getDominantOrientation(lines, 0, ref score));
         }
 
 
@@ -210,14 +267,14 @@ namespace sluggish.utilities
         /// <param name="orientation_type">0=any, 1=vertical, 2=horizontal</param>
         /// <param name="score">the maximum response score for the returned orientation</param>
         /// <returns>orientation in radians</return>
-        public static float getDominantOrientation(ArrayList lines, 
+        public static float getDominantOrientation(ArrayList lines,
                                                    int orientation_type,
                                                    ref float score)
         {
             float[] orientation_histogram = new float[360];
             float histogram_max = 0;
             float orientation = 0;
-            
+
             score = 0;
 
             // find the maximum line length
@@ -227,198 +284,45 @@ namespace sluggish.utilities
                 linefeature line1 = (linefeature)lines[i];
                 float length = line1.getLength();
                 if (length > max_length)
-                    max_length = length;                
+                    max_length = length;
             }
             if (max_length > 0)
             {
                 // only consider features with a significant length
                 // to avoid small "noisy" lines
-                float minimum_length = max_length*70/100;
-                
-	            for (int i = 0; i < lines.Count; i++)
-	            {
-	                linefeature line1 = (linefeature)lines[i];
-	                float length = line1.getLength();
-	                if (length > minimum_length)
-	                {
-	                    // get the orientation of the line in degrees
-	                    int orientation_degrees = (int)Math.Round(line1.getOrientation() * 180.0f / Math.PI);
-	                    if (orientation_degrees > 359) orientation_degrees = 359;
-	                    
-	                    bool update_histogram = true;
-	                    
-	                    if (orientation_type == 1)
-	                    {	                        
-	                        if (!((((orientation_degrees > 300) || (orientation_degrees < 50)) ||
-	                            ((orientation_degrees > 130) && (orientation_degrees < 230)))))
-	                            update_histogram = false;	                            
-	                    }
-	                    if (orientation_type == 2)
-	                    {
-	                        if (!((((orientation_degrees > 30) && (orientation_degrees < 140)) ||
-	                            ((orientation_degrees > 220) && (orientation_degrees < 320)))))
-	                            update_histogram = false;	                            
-	                    }
-	                    
-	                    if (update_histogram)
-	                    {
-	                        // update the orientation histogram
-	                        orientation_histogram[orientation_degrees] += (length*length);
-	                        if (orientation_histogram[orientation_degrees] > histogram_max)
-	                            histogram_max = orientation_histogram[orientation_degrees];
-	                    }
-	                }
-	            }
+                float minimum_length = max_length * 70 / 100;
 
-	            if (histogram_max > 0)
-	            {
-	                // look for maxima
-	                int search_angle = 2;
-	                float max_response = 0;
-	                int winner = -1;
-	                for (int i = 0; i < 180; i++)
-	                {
-	                    float tot = 0;
-	                    for (int j = i - search_angle; j <= i + search_angle; j++)
-	                    {	                    
-	                        int index = j;
-	                        if (index < 0) index += 360;
-	                        if (index >= 360) index -= 360;
-	                        tot += orientation_histogram[index];
-
-	                        index = j + 180;
-	                        if (index < 0) index += 360;
-	                        if (index >= 360) index -= 360;
-	                        tot += orientation_histogram[index];
-	                    }
-	                    if (tot > max_response)
-	                    {
-	                        max_response = tot;
-	                        winner = i;                        
-	                    }                    
-	                }
-	                
-	                score = max_response;
-	                
-	                float total = 0;
-	                for (int j = winner - search_angle; j <= winner + search_angle; j++)
-	                {
-	                    int index1 = j;
-	                    if (index1 < 0) index1 += 360;
-	                    if (index1 >= 360) index1 -= 360;
-	                    float v = orientation_histogram[index1];
-	                    orientation += (v * index1);
-	                    total += v;
-
-	                    int index2 = j + 180;
-	                    if (index2 < 0) index2 += 360;
-	                    if (index2 >= 360) index2 -= 360;
-	                    v = orientation_histogram[index2];
-	                    orientation += (v * index1);
-	                    total += v;
-	                }
-	                if (total > 0)
-	                {
-	                    orientation /= total;
-	                    orientation = orientation * (float)Math.PI / 180.0f;
-	                }
-	            }
-            }
-                            
-            return (orientation);
-        }
-
-/*
-        /// <summary>
-        /// returns the average orientation of all the given blob features
-        /// </summary>
-        /// <param name="blobs">list of blob features</param>
-        /// <param name="orientation_type">0=any, 1=vertical, 2=horizontal</param>
-        /// <param name="estimated_orientation_radians">estimated orientation in radians</param>
-        /// <param name="score">the maximum response score for the returned orientation</param>
-        /// <returns>orientation in radians</return>
-        public static float getDominantOrientationBlobs(ArrayList blobs,
-                                                        int orientation_type,
-                                                        float estimated_orientation_radians,
-                                                        ref float score)
-        {
-            float[] orientation_histogram = new float[360];
-            float histogram_max = 0;
-            float orientation = 0;
-            float tollerance_degrees = 5;
-
-            // initial estimate of the orientation
-            //int estimated_orientation_degrees = (int)(estimated_orientation_radians * 180 / (float)Math.PI);
-            //if (estimated_orientation_degrees < 0) estimated_orientation_degrees += 360;
-            //if (estimated_orientation_degrees >= 360) estimated_orientation_degrees -= 360;
-            //int search_tollerance_degrees = 20;
-
-            score = 0;
-
-            if (blobs != null)
-            {
-                for (int i = 0; i < blobs.Count; i++)
+                for (int i = 0; i < lines.Count; i++)
                 {
-                    blob b = (blob)blobs[i];
-
-                    for (int j = 0; j < b.neighbours.Count; j++)
+                    linefeature line1 = (linefeature)lines[i];
+                    float length = line1.getLength();
+                    if (length > minimum_length)
                     {
-                        // direction to the neighbouring blob
-                        float angle_radians = (float)b.angle[j];
-
-                        blob end_point = null;
-                        int max_depth = 50;
-                        int path_length = b.getDirectionalLength(angle_radians, false, true, 0, max_depth, tollerance_degrees, ref end_point);
-
-
-                        // get the orientation of the connection in degrees
-                        float orientation_degrees = (int)Math.Round(angle_radians * 180.0f / Math.PI);
+                        // get the orientation of the line in degrees
+                        int orientation_degrees = (int)Math.Round(line1.getOrientation() * 180.0f / Math.PI);
                         if (orientation_degrees > 359) orientation_degrees = 359;
 
                         bool update_histogram = true;
 
-                        //float diff = 0;
-
                         if (orientation_type == 1)
                         {
-                            //diff = orientation_degrees - estimated_orientation_degrees;
-
                             if (!((((orientation_degrees > 300) || (orientation_degrees < 50)) ||
                                 ((orientation_degrees > 130) && (orientation_degrees < 230)))))
                                 update_histogram = false;
                         }
                         if (orientation_type == 2)
                         {
-                            //int est = estimated_orientation_degrees + 90;
-                            //if (est >= 360) est -= 360;
-                            //diff = orientation_degrees - est;
-
                             if (!((((orientation_degrees > 30) && (orientation_degrees < 140)) ||
                                 ((orientation_degrees > 220) && (orientation_degrees < 320)))))
                                 update_histogram = false;
                         }
 
-                        //if (!((diff < search_tollerance_degrees) || 
-                        //    ((diff > 180 - search_tollerance_degrees))))
-                        //    update_histogram = false;
-
                         if (update_histogram)
                         {
                             // update the orientation histogram
-                            int idx1 = (int)Math.Round(orientation_degrees / (float)blob.direction_increment_degrees);
-                            if (idx1 >= b.neighbourDirections.Length) idx1 -= b.neighbourDirections.Length;
-                            int blob_score = 1;
-
-                            if (b.neighbourDirections[idx1] != null)
-                                blob_score += b.neighbourDirections[idx1].Count;
-                            int idx2 = idx1 + (b.neighbourDirections.Length / 2);
-                            if (idx2 >= b.neighbourDirections.Length) idx2 -= b.neighbourDirections.Length;
-                            if (b.neighbourDirections[idx2] != null)
-                                blob_score += b.neighbourDirections[idx2].Count;
-
-                            orientation_histogram[(int)orientation_degrees] += blob_score;
-                            if (orientation_histogram[(int)orientation_degrees] > histogram_max)
-                                histogram_max = orientation_histogram[(int)orientation_degrees];
+                            orientation_histogram[orientation_degrees] += (length * length);
+                            if (orientation_histogram[orientation_degrees] > histogram_max)
+                                histogram_max = orientation_histogram[orientation_degrees];
                         }
                     }
                 }
@@ -426,7 +330,7 @@ namespace sluggish.utilities
                 if (histogram_max > 0)
                 {
                     // look for maxima
-                    int search_angle = 3;
+                    int search_angle = 2;
                     float max_response = 0;
                     int winner = -1;
                     for (int i = 0; i < 180; i++)
@@ -434,17 +338,15 @@ namespace sluggish.utilities
                         float tot = 0;
                         for (int j = i - search_angle; j <= i + search_angle; j++)
                         {
-                            float dist = 1.0f;
-
                             int index = j;
                             if (index < 0) index += 360;
                             if (index >= 360) index -= 360;
-                            tot += (orientation_histogram[index] * dist);
+                            tot += orientation_histogram[index];
 
                             index = j + 180;
                             if (index < 0) index += 360;
                             if (index >= 360) index -= 360;
-                            tot += (orientation_histogram[index] * dist);
+                            tot += orientation_histogram[index];
                         }
                         if (tot > max_response)
                         {
@@ -458,19 +360,17 @@ namespace sluggish.utilities
                     float total = 0;
                     for (int j = winner - search_angle; j <= winner + search_angle; j++)
                     {
-                        float dist = 1.0f;
-
                         int index1 = j;
                         if (index1 < 0) index1 += 360;
                         if (index1 >= 360) index1 -= 360;
-                        float v = orientation_histogram[index1] * dist;
+                        float v = orientation_histogram[index1];
                         orientation += (v * index1);
                         total += v;
 
                         int index2 = j + 180;
                         if (index2 < 0) index2 += 360;
                         if (index2 >= 360) index2 -= 360;
-                        v = orientation_histogram[index2] * dist;
+                        v = orientation_histogram[index2];
                         orientation += (v * index1);
                         total += v;
                     }
@@ -484,14 +384,171 @@ namespace sluggish.utilities
 
             return (orientation);
         }
-*/
-        
+
+        /*
+                /// <summary>
+                /// returns the average orientation of all the given blob features
+                /// </summary>
+                /// <param name="blobs">list of blob features</param>
+                /// <param name="orientation_type">0=any, 1=vertical, 2=horizontal</param>
+                /// <param name="estimated_orientation_radians">estimated orientation in radians</param>
+                /// <param name="score">the maximum response score for the returned orientation</param>
+                /// <returns>orientation in radians</return>
+                public static float getDominantOrientationBlobs(ArrayList blobs,
+                                                                int orientation_type,
+                                                                float estimated_orientation_radians,
+                                                                ref float score)
+                {
+                    float[] orientation_histogram = new float[360];
+                    float histogram_max = 0;
+                    float orientation = 0;
+                    float tollerance_degrees = 5;
+
+                    // initial estimate of the orientation
+                    //int estimated_orientation_degrees = (int)(estimated_orientation_radians * 180 / (float)Math.PI);
+                    //if (estimated_orientation_degrees < 0) estimated_orientation_degrees += 360;
+                    //if (estimated_orientation_degrees >= 360) estimated_orientation_degrees -= 360;
+                    //int search_tollerance_degrees = 20;
+
+                    score = 0;
+
+                    if (blobs != null)
+                    {
+                        for (int i = 0; i < blobs.Count; i++)
+                        {
+                            blob b = (blob)blobs[i];
+
+                            for (int j = 0; j < b.neighbours.Count; j++)
+                            {
+                                // direction to the neighbouring blob
+                                float angle_radians = (float)b.angle[j];
+
+                                blob end_point = null;
+                                int max_depth = 50;
+                                int path_length = b.getDirectionalLength(angle_radians, false, true, 0, max_depth, tollerance_degrees, ref end_point);
+
+
+                                // get the orientation of the connection in degrees
+                                float orientation_degrees = (int)Math.Round(angle_radians * 180.0f / Math.PI);
+                                if (orientation_degrees > 359) orientation_degrees = 359;
+
+                                bool update_histogram = true;
+
+                                //float diff = 0;
+
+                                if (orientation_type == 1)
+                                {
+                                    //diff = orientation_degrees - estimated_orientation_degrees;
+
+                                    if (!((((orientation_degrees > 300) || (orientation_degrees < 50)) ||
+                                        ((orientation_degrees > 130) && (orientation_degrees < 230)))))
+                                        update_histogram = false;
+                                }
+                                if (orientation_type == 2)
+                                {
+                                    //int est = estimated_orientation_degrees + 90;
+                                    //if (est >= 360) est -= 360;
+                                    //diff = orientation_degrees - est;
+
+                                    if (!((((orientation_degrees > 30) && (orientation_degrees < 140)) ||
+                                        ((orientation_degrees > 220) && (orientation_degrees < 320)))))
+                                        update_histogram = false;
+                                }
+
+                                //if (!((diff < search_tollerance_degrees) || 
+                                //    ((diff > 180 - search_tollerance_degrees))))
+                                //    update_histogram = false;
+
+                                if (update_histogram)
+                                {
+                                    // update the orientation histogram
+                                    int idx1 = (int)Math.Round(orientation_degrees / (float)blob.direction_increment_degrees);
+                                    if (idx1 >= b.neighbourDirections.Length) idx1 -= b.neighbourDirections.Length;
+                                    int blob_score = 1;
+
+                                    if (b.neighbourDirections[idx1] != null)
+                                        blob_score += b.neighbourDirections[idx1].Count;
+                                    int idx2 = idx1 + (b.neighbourDirections.Length / 2);
+                                    if (idx2 >= b.neighbourDirections.Length) idx2 -= b.neighbourDirections.Length;
+                                    if (b.neighbourDirections[idx2] != null)
+                                        blob_score += b.neighbourDirections[idx2].Count;
+
+                                    orientation_histogram[(int)orientation_degrees] += blob_score;
+                                    if (orientation_histogram[(int)orientation_degrees] > histogram_max)
+                                        histogram_max = orientation_histogram[(int)orientation_degrees];
+                                }
+                            }
+                        }
+
+                        if (histogram_max > 0)
+                        {
+                            // look for maxima
+                            int search_angle = 3;
+                            float max_response = 0;
+                            int winner = -1;
+                            for (int i = 0; i < 180; i++)
+                            {
+                                float tot = 0;
+                                for (int j = i - search_angle; j <= i + search_angle; j++)
+                                {
+                                    float dist = 1.0f;
+
+                                    int index = j;
+                                    if (index < 0) index += 360;
+                                    if (index >= 360) index -= 360;
+                                    tot += (orientation_histogram[index] * dist);
+
+                                    index = j + 180;
+                                    if (index < 0) index += 360;
+                                    if (index >= 360) index -= 360;
+                                    tot += (orientation_histogram[index] * dist);
+                                }
+                                if (tot > max_response)
+                                {
+                                    max_response = tot;
+                                    winner = i;
+                                }
+                            }
+
+                            score = max_response;
+
+                            float total = 0;
+                            for (int j = winner - search_angle; j <= winner + search_angle; j++)
+                            {
+                                float dist = 1.0f;
+
+                                int index1 = j;
+                                if (index1 < 0) index1 += 360;
+                                if (index1 >= 360) index1 -= 360;
+                                float v = orientation_histogram[index1] * dist;
+                                orientation += (v * index1);
+                                total += v;
+
+                                int index2 = j + 180;
+                                if (index2 < 0) index2 += 360;
+                                if (index2 >= 360) index2 -= 360;
+                                v = orientation_histogram[index2] * dist;
+                                orientation += (v * index1);
+                                total += v;
+                            }
+                            if (total > 0)
+                            {
+                                orientation /= total;
+                                orientation = orientation * (float)Math.PI / 180.0f;
+                            }
+                        }
+                    }
+
+                    return (orientation);
+                }
+        */
+
         public static float getDominantGradient(ArrayList lines)
         {
             float max_length = 0;
             float av = 0;
             float hits = 0;
-            
+
             // find the maximum length
             for (int i = 0; i < lines.Count; i++)
             {
@@ -502,7 +559,7 @@ namespace sluggish.utilities
             }
             max_length *= max_length;
 
-            float length_threshold = max_length*30/100;
+            float length_threshold = max_length * 30 / 100;
             for (int i = 0; i < lines.Count; i++)
             {
                 linefeature line1 = (linefeature)lines[i];
@@ -515,9 +572,9 @@ namespace sluggish.utilities
                 }
             }
             if (hits > 0)
-                return(av / hits);
+                return (av / hits);
             else
-                return(0);            
+                return (0);
         }
 
         /// <summary>
@@ -526,19 +583,19 @@ namespace sluggish.utilities
         /// </summary>
         /// <param name="lines">list of line features to be joined</param>
         /// <param name="join_radius">the start or end points of the lines must be within this radius to be joined</param>
-        public static ArrayList joinLines(ArrayList lines,  float join_radius)
+        public static ArrayList joinLines(ArrayList lines, float join_radius)
         {
-            for (int i = 0; i < lines.Count-1; i++)
+            for (int i = 0; i < lines.Count - 1; i++)
             {
                 linefeature line1 = (linefeature)lines[i];
                 float min_start_start_separation = 9999;
                 float min_start_end_separation = 9999;
                 float min_end_start_separation = 9999;
                 float min_end_end_separation = 9999;
-                for (int j= i + 1; j < lines.Count; j++)
+                for (int j = i + 1; j < lines.Count; j++)
                 {
                     linefeature line2 = (linefeature)lines[j];
-                    
+
                     // start to start
                     float dx = line2.x0 - line1.x0;
                     if (dx < 0) dx = -dx;
@@ -557,7 +614,7 @@ namespace sluggish.utilities
                             }
                         }
                     }
-                    
+
                     // start to end
                     dx = line2.x1 - line1.x0;
                     if (dx < 0) dx = -dx;
@@ -576,7 +633,7 @@ namespace sluggish.utilities
                             }
                         }
                     }
-                    
+
                     // end to start
                     dx = line2.x0 - line1.x1;
                     if (dx < 0) dx = -dx;
@@ -595,7 +652,7 @@ namespace sluggish.utilities
                             }
                         }
                     }
-                    
+
                     // end to end
                     dx = line2.x1 - line1.x1;
                     if (dx < 0) dx = -dx;
@@ -616,58 +673,58 @@ namespace sluggish.utilities
                     }
                 }
             }
-            
+
             ArrayList joined_lines = new ArrayList();
             int max_joins = 10;
             for (int i = 0; i < lines.Count; i++)
             {
                 linefeature line1 = (linefeature)lines[i];
-                
+
                 if ((line1.join_start == null) && (line1.join_end == null))
                 {
                     linefeature new_line = new linefeature(line1.x0, line1.y0, line1.x1, line1.y1);
                     joined_lines.Add(new_line);
                 }
-                
+
                 // note that we limit the number of itterations
                 // to avoid getting trapped in circular joins
-                                
+
                 linefeature current_line = line1;
                 int l = 0;
                 if (line1.join_start == null)
                 {
-	                while ((l < max_joins) && (current_line.join_end != null))
-	                {
-	                    current_line = current_line.join_end;
-	                    l++;
-	                }
-	                if (current_line != line1)
-	                {
-	                    // make a new line which combines these
-	                    linefeature new_line = new linefeature(line1.x0, line1.y0, current_line.x1, current_line.y1);
-	                    joined_lines.Add(new_line);
-	                }
+                    while ((l < max_joins) && (current_line.join_end != null))
+                    {
+                        current_line = current_line.join_end;
+                        l++;
+                    }
+                    if (current_line != line1)
+                    {
+                        // make a new line which combines these
+                        linefeature new_line = new linefeature(line1.x0, line1.y0, current_line.x1, current_line.y1);
+                        joined_lines.Add(new_line);
+                    }
                 }
-                
+
                 current_line = line1;
                 l = 0;
                 if (line1.join_end == null)
                 {
-	                while ((l < max_joins) && (current_line.join_start != null))
-	                {
-	                    current_line = current_line.join_start;
-	                    l++;
-	                }
-	                if (current_line != line1)
-	                {
-	                    // make a new line which combines these
-	                    linefeature new_line = new linefeature(current_line.x0, current_line.y0, line1.x1, line1.y1);
-	                    joined_lines.Add(new_line);
-	                }
+                    while ((l < max_joins) && (current_line.join_start != null))
+                    {
+                        current_line = current_line.join_start;
+                        l++;
+                    }
+                    if (current_line != line1)
+                    {
+                        // make a new line which combines these
+                        linefeature new_line = new linefeature(current_line.x0, current_line.y0, line1.x1, line1.y1);
+                        joined_lines.Add(new_line);
+                    }
                 }
             }
-            
-            return(joined_lines);
+
+            return (joined_lines);
         }
 
         /// <summary>
@@ -678,13 +735,13 @@ namespace sluggish.utilities
         /// <param name="min_length">the minimum length of line features to be extracted</param>
         /// <param name="search_depth">depth of search used to join edges</param>
         /// <returns>a list of line features</returns>
-        public static ArrayList traceHorizontalLines(ArrayList[] horizontal_edges, 
+        public static ArrayList traceHorizontalLines(ArrayList[] horizontal_edges,
                                                      int image_height,
                                                      int min_length,
                                                      int search_depth)
         {
             ArrayList lines = new ArrayList();
-            
+
             // arrays to store edge positions
             bool[] previous_edges4 = new bool[image_height];
             bool[] previous_edges3 = new bool[image_height];
@@ -692,56 +749,56 @@ namespace sluggish.utilities
             bool[] previous_edges = new bool[image_height];
             bool[] current_edges = new bool[image_height];
             ArrayList[] current_lines = new ArrayList[image_height];
-            
+
             for (int x = 0; x < horizontal_edges.Length; x++)
             {
                 // clear the array of current edge positions
                 for (int y = 0; y < image_height; y++)
                     current_edges[y] = false;
-                    
-                
+
+
                 ArrayList edges = horizontal_edges[x];
                 for (int i = 0; i < edges.Count; i++)
                 {
                     int y = (int)edges[i];
 
                     int prev_y = -1;
-                    
+
                     if ((y > -1) && (y < image_height))
-                    {                    
-	                    if ((previous_edges[y]) || (previous_edges2[y]) || (previous_edges3[y]) || (previous_edges4[y])) 
-	                        prev_y = y;
-	                    else
-	                    {
-	                        if (y > 0)
-	                            if (previous_edges[y-1]) prev_y = y-1;
-	                        if (y < image_height-1)
-	                            if (previous_edges[y+1]) prev_y = y+1;
+                    {
+                        if ((previous_edges[y]) || (previous_edges2[y]) || (previous_edges3[y]) || (previous_edges4[y]))
+                            prev_y = y;
+                        else
+                        {
+                            if (y > 0)
+                                if (previous_edges[y - 1]) prev_y = y - 1;
+                            if (y < image_height - 1)
+                                if (previous_edges[y + 1]) prev_y = y + 1;
 
                             if (search_depth > 1)
-                            {                                
+                            {
                                 if (prev_y == -1)
                                 {
                                     if (y > 1)
-                                        if (previous_edges[y-2]) prev_y = y-2;
-                                    if (y < image_height-2)
-                                        if (previous_edges[y+2]) prev_y = y+2;
+                                        if (previous_edges[y - 2]) prev_y = y - 2;
+                                    if (y < image_height - 2)
+                                        if (previous_edges[y + 2]) prev_y = y + 2;
                                 }
-	                        
+
                                 if (prev_y == -1)
                                 {
                                     if (y > 0)
-                                        if (previous_edges2[y-1]) prev_y = y-1;
-                                    if (y < image_height-1)
-                                        if (previous_edges2[y+1]) prev_y = y+1;
+                                        if (previous_edges2[y - 1]) prev_y = y - 1;
+                                    if (y < image_height - 1)
+                                        if (previous_edges2[y + 1]) prev_y = y + 1;
                                 }
 
                                 if (prev_y == -1)
                                 {
                                     if (y > 1)
-                                        if (previous_edges2[y-2]) prev_y = y-2;
-                                    if (y < image_height-2)
-                                        if (previous_edges2[y+2]) prev_y = y+2;
+                                        if (previous_edges2[y - 2]) prev_y = y - 2;
+                                    if (y < image_height - 2)
+                                        if (previous_edges2[y + 2]) prev_y = y + 2;
                                 }
 
                                 if (search_depth > 2)
@@ -798,36 +855,36 @@ namespace sluggish.utilities
                                     }
                                 }
                             }
-	                    }
-	                    
-	                    
-	                    if (prev_y > -1)
-	                    {
-	                        if (current_lines[prev_y] == null)
-	                            current_lines[prev_y] = new ArrayList();
-	                            
-	                        current_lines[prev_y].Add(x);
-	                        current_lines[prev_y].Add(y);
-	                        
-	                        if (prev_y != y)
-	                        {
-	                            current_lines[y] = current_lines[prev_y];
-	                            current_lines[prev_y] = null;
-	                        }
-	                    }
-	                    
-	                    current_edges[y] = true;
-                    
+                        }
+
+
+                        if (prev_y > -1)
+                        {
+                            if (current_lines[prev_y] == null)
+                                current_lines[prev_y] = new ArrayList();
+
+                            current_lines[prev_y].Add(x);
+                            current_lines[prev_y].Add(y);
+
+                            if (prev_y != y)
+                            {
+                                current_lines[y] = current_lines[prev_y];
+                                current_lines[prev_y] = null;
+                            }
+                        }
+
+                        current_edges[y] = true;
+
                     }
                 }
-                
+
                 // which lines are broken?
-                for (int y = 1; y < image_height-1; y++)
+                for (int y = 1; y < image_height - 1; y++)
                 {
                     ArrayList line = current_lines[y];
-                    if ((line != null) && ((!current_edges[y]) || (x == horizontal_edges.Length-1)))
-                    {                        
-                        int line_length = line.Count/2;
+                    if ((line != null) && ((!current_edges[y]) || (x == horizontal_edges.Length - 1)))
+                    {
+                        int line_length = line.Count / 2;
                         if (line_length > min_length)
                         {
                             // calc centre of the line
@@ -864,33 +921,33 @@ namespace sluggish.utilities
                             av_start_y /= hits_start;
                             av_end_x /= hits_end;
                             av_end_y /= hits_end;
-                            
+
                             float dx = av_start_x - av_x;
                             float dy = av_start_y - av_y;
-                            av_start_x = av_x + (dx*2);
-                            av_start_y = av_y + (dy*2);
+                            av_start_x = av_x + (dx * 2);
+                            av_start_y = av_y + (dy * 2);
 
                             dx = av_end_x - av_x;
                             dy = av_end_y - av_y;
-                            av_end_x = av_x + (dx*2);
-                            av_end_y = av_y + (dy*2);
-                            
+                            av_end_x = av_x + (dx * 2);
+                            av_end_y = av_y + (dy * 2);
+
                             linefeature new_line = new linefeature(av_start_x, av_start_y, av_end_x, av_end_y);
                             lines.Add(new_line);
                         }
                         current_lines[y] = null;
                     }
                 }
-                
+
                 // swap arrays
                 bool[] temp = previous_edges4;
                 previous_edges4 = previous_edges3;
                 previous_edges3 = previous_edges2;
                 previous_edges2 = previous_edges;
                 previous_edges = current_edges;
-                current_edges = temp;      
+                current_edges = temp;
             }
-            return(lines);
+            return (lines);
         }
 
 
@@ -902,13 +959,13 @@ namespace sluggish.utilities
         /// <param name="min_length">the minimum length of line features to be extracted</param>
         /// <param name="search_depth">depth of search used to join edges</param>
         /// <returns>a list of line features</returns>
-        public static ArrayList traceVerticalLines(ArrayList[] vertical_edges, 
+        public static ArrayList traceVerticalLines(ArrayList[] vertical_edges,
                                                    int image_width,
                                                    int min_length,
                                                    int search_depth)
         {
             ArrayList lines = new ArrayList();
-            
+
             // arrays to store edge positions
             bool[] previous_edges4 = new bool[image_width];
             bool[] previous_edges3 = new bool[image_width];
@@ -916,31 +973,31 @@ namespace sluggish.utilities
             bool[] previous_edges = new bool[image_width];
             bool[] current_edges = new bool[image_width];
             ArrayList[] current_lines = new ArrayList[image_width];
-            
+
             for (int y = 0; y < vertical_edges.Length; y++)
             {
                 // clear the array of current edge positions
                 for (int x = 0; x < image_width; x++)
                     current_edges[x] = false;
-                    
-                
+
+
                 ArrayList edges = vertical_edges[y];
                 for (int i = 0; i < edges.Count; i++)
                 {
                     int x = (int)edges[i];
-                    
+
                     int prev_x = -1;
-                    
+
                     if ((x > -1) && (x < image_width))
-                    {                    
-	                    if ((previous_edges[x]) || (previous_edges2[x]) || (previous_edges3[x]) || (previous_edges4[x])) 
-	                        prev_x = x;
-	                    else
-	                    {
-	                        if (x > 0)
-	                            if (previous_edges[x-1]) prev_x = x-1;
-	                        if (x < image_width-1)
-	                            if (previous_edges[x+1]) prev_x = x+1;
+                    {
+                        if ((previous_edges[x]) || (previous_edges2[x]) || (previous_edges3[x]) || (previous_edges4[x]))
+                            prev_x = x;
+                        else
+                        {
+                            if (x > 0)
+                                if (previous_edges[x - 1]) prev_x = x - 1;
+                            if (x < image_width - 1)
+                                if (previous_edges[x + 1]) prev_x = x + 1;
 
                             if (search_depth > 1)
                             {
@@ -1023,33 +1080,33 @@ namespace sluggish.utilities
                                     }
                                 }
                             }
-	                    }
-	                    if (prev_x > -1)
-	                    {
-	                        if (current_lines[prev_x] == null)
-	                            current_lines[prev_x] = new ArrayList();
-	                            
-	                        current_lines[prev_x].Add(x);
-	                        current_lines[prev_x].Add(y);
-	                        
-	                        if (prev_x != x)
-	                        {
-	                            current_lines[x] = current_lines[prev_x];
-	                            current_lines[prev_x] = null;
-	                        }
-	                    }
-	                    
-	                    current_edges[x] = true;
+                        }
+                        if (prev_x > -1)
+                        {
+                            if (current_lines[prev_x] == null)
+                                current_lines[prev_x] = new ArrayList();
+
+                            current_lines[prev_x].Add(x);
+                            current_lines[prev_x].Add(y);
+
+                            if (prev_x != x)
+                            {
+                                current_lines[x] = current_lines[prev_x];
+                                current_lines[prev_x] = null;
+                            }
+                        }
+
+                        current_edges[x] = true;
                     }
                 }
-                
+
                 // which lines are broken?
-                for (int x = 1; x < image_width-1; x++)
+                for (int x = 1; x < image_width - 1; x++)
                 {
                     ArrayList line = current_lines[x];
-                    if ((line != null) && ((!current_edges[x]) || (y == vertical_edges.Length-1)))
-                    {                        
-                        int line_length = line.Count/2;
+                    if ((line != null) && ((!current_edges[x]) || (y == vertical_edges.Length - 1)))
+                    {
+                        int line_length = line.Count / 2;
                         if (line_length > min_length)
                         {
                             // calc centre of the line
@@ -1086,330 +1143,358 @@ namespace sluggish.utilities
                             av_start_y /= hits_start;
                             av_end_x /= hits_end;
                             av_end_y /= hits_end;
-                            
+
                             float dx = av_start_x - av_x;
                             float dy = av_start_y - av_y;
-                            av_start_x = av_x + (dx*2);
-                            av_start_y = av_y + (dy*2);
+                            av_start_x = av_x + (dx * 2);
+                            av_start_y = av_y + (dy * 2);
 
                             dx = av_end_x - av_x;
                             dy = av_end_y - av_y;
-                            av_end_x = av_x + (dx*2);
-                            av_end_y = av_y + (dy*2);
-                            
+                            av_end_x = av_x + (dx * 2);
+                            av_end_y = av_y + (dy * 2);
+
                             linefeature new_line = new linefeature(av_start_x, av_start_y, av_end_x, av_end_y);
                             lines.Add(new_line);
                         }
                         current_lines[x] = null;
                     }
                 }
-                
+
                 // swap arrays
                 bool[] temp = previous_edges4;
                 previous_edges4 = previous_edges3;
                 previous_edges3 = previous_edges2;
                 previous_edges2 = previous_edges;
                 previous_edges = current_edges;
-                current_edges = temp;      
+                current_edges = temp;
             }
-            return(lines);
+            return (lines);
         }
 
         /// <summary>
         /// detect vertical edges within a binary image
         /// </summary>
-		public static ArrayList[] detectVerticalEdges(bool[,] binary_image)
-		{
-		    ArrayList[] vertical_edges = new ArrayList[binary_image.GetLength(1)]; 
-		    
-		    for (int y = 0; y < binary_image.GetLength(1); y++)
-		    {		    
-		        ArrayList detections = new ArrayList();
-		        for (int x = 3; x < binary_image.GetLength(0)-3; x++)
-		        {
-		            if (binary_image[x-1, y] != binary_image[x, y])
-		                if (binary_image[x-3, y] == binary_image[x-1, y])
-		                    if (binary_image[x-2, y] == binary_image[x-1, y])
-		                        if (binary_image[x, y] == binary_image[x+1, y])
-		                            if (binary_image[x, y] == binary_image[x+2, y])
-		                                detections.Add(x);
-		        }
-		        vertical_edges[y] = detections;		        
-		    }
-		    return(vertical_edges);
-		}
+        public static ArrayList[] detectVerticalEdges(bool[,] binary_image)
+        {
+            ArrayList[] vertical_edges = new ArrayList[binary_image.GetLength(1)];
+
+            for (int y = 0; y < binary_image.GetLength(1); y++)
+            {
+                ArrayList detections = new ArrayList();
+                for (int x = 3; x < binary_image.GetLength(0) - 3; x++)
+                {
+                    if (binary_image[x - 1, y] != binary_image[x, y])
+                        if (binary_image[x - 3, y] == binary_image[x - 1, y])
+                            if (binary_image[x - 2, y] == binary_image[x - 1, y])
+                                if (binary_image[x, y] == binary_image[x + 1, y])
+                                    if (binary_image[x, y] == binary_image[x + 2, y])
+                                        detections.Add(x);
+                }
+                vertical_edges[y] = detections;
+            }
+            return (vertical_edges);
+        }
 
         /// <summary>
         /// detect vertical edges within a blob image
         /// </summary>
-		public static ArrayList[] detectVerticalEdges(float[,] blob_image, float threshold)
-		{
-		    ArrayList[] vertical_edges = new ArrayList[blob_image.GetLength(1)]; 
-		    
-		    for (int y = 0; y < blob_image.GetLength(1); y++)
-		    {		    
-		        ArrayList detections = new ArrayList();
-		        for (int x = 2; x < blob_image.GetLength(0)-2; x++)
-		        {		            
-		            if (blob_image[x-1, y] < threshold)
-		            {
-		                if (blob_image[x, y] >= threshold)
-		                    detections.Add(x);
-		            }
-		            else
-		            {
-		                if (blob_image[x, y] < threshold)
-		                    detections.Add(x);
-		            }
-		        }
-		        vertical_edges[y] = detections;		        
-		    }
-		    return(vertical_edges);
-		}
+        public static ArrayList[] detectVerticalEdges(float[,] blob_image, float threshold)
+        {
+            ArrayList[] vertical_edges = new ArrayList[blob_image.GetLength(1)];
+
+            for (int y = 0; y < blob_image.GetLength(1); y++)
+            {
+                ArrayList detections = new ArrayList();
+                for (int x = 2; x < blob_image.GetLength(0) - 2; x++)
+                {
+                    if (blob_image[x - 1, y] < threshold)
+                    {
+                        if (blob_image[x, y] >= threshold)
+                            detections.Add(x);
+                    }
+                    else
+                    {
+                        if (blob_image[x, y] < threshold)
+                            detections.Add(x);
+                    }
+                }
+                vertical_edges[y] = detections;
+            }
+            return (vertical_edges);
+        }
 
 
         /// <summary>
         /// detect horizontal edges within a binary image
         /// </summary>
-		public static ArrayList[] detectHorizontalEdges(bool[,] binary_image)
-		{
-		    ArrayList[] horizontal_edges = new ArrayList[binary_image.GetLength(0)];
-		    
-		    for (int x = 0; x < binary_image.GetLength(0); x++)		    
-		    {
-		        ArrayList detections = new ArrayList();
-                for (int y = 3; y < binary_image.GetLength(1)-3; y++)		        
-		        {
-		            if (binary_image[x, y-1] != binary_image[x, y])
-		                if (binary_image[x, y-3] == binary_image[x, y-1])
-		                    if (binary_image[x, y-2] == binary_image[x, y-1])
-		                        if (binary_image[x, y] == binary_image[x, y + 1])
-		                            if (binary_image[x, y] == binary_image[x, y + 2])
-		                                detections.Add(y);
-		        }
-		        horizontal_edges[x] = detections;
-		    }
-		    return(horizontal_edges);
-		}
+        public static ArrayList[] detectHorizontalEdges(bool[,] binary_image)
+        {
+            ArrayList[] horizontal_edges = new ArrayList[binary_image.GetLength(0)];
+
+            for (int x = 0; x < binary_image.GetLength(0); x++)
+            {
+                ArrayList detections = new ArrayList();
+                for (int y = 3; y < binary_image.GetLength(1) - 3; y++)
+                {
+                    if (binary_image[x, y - 1] != binary_image[x, y])
+                        if (binary_image[x, y - 3] == binary_image[x, y - 1])
+                            if (binary_image[x, y - 2] == binary_image[x, y - 1])
+                                if (binary_image[x, y] == binary_image[x, y + 1])
+                                    if (binary_image[x, y] == binary_image[x, y + 2])
+                                        detections.Add(y);
+                }
+                horizontal_edges[x] = detections;
+            }
+            return (horizontal_edges);
+        }
 
         /// <summary>
         /// detect horizontal edges within a blob image
         /// </summary>
-		public static ArrayList[] detectHorizontalEdges(float[,] blob_image, float threshold)
-		{
-		    ArrayList[] horizontal_edges = new ArrayList[blob_image.GetLength(0)];
-		    
-		    for (int x = 0; x < blob_image.GetLength(0); x++)		    
-		    {
-		        ArrayList detections = new ArrayList();
-                for (int y = 2; y < blob_image.GetLength(1)-2; y++)		        
-		        {
-		            if (blob_image[x, y-1] < threshold)
-		            {
-		                if (blob_image[x, y] >= threshold)
-		                    detections.Add(y);
-		            }
-		            else
-		            {
-		                if (blob_image[x, y] < threshold)
-		                    detections.Add(y);
-		            }
-		        }
-		        horizontal_edges[x] = detections;
-		    }
-		    return(horizontal_edges);
-		}
-		
+        public static ArrayList[] detectHorizontalEdges(float[,] blob_image, float threshold)
+        {
+            ArrayList[] horizontal_edges = new ArrayList[blob_image.GetLength(0)];
+
+            for (int x = 0; x < blob_image.GetLength(0); x++)
+            {
+                ArrayList detections = new ArrayList();
+                for (int y = 2; y < blob_image.GetLength(1) - 2; y++)
+                {
+                    if (blob_image[x, y - 1] < threshold)
+                    {
+                        if (blob_image[x, y] >= threshold)
+                            detections.Add(y);
+                    }
+                    else
+                    {
+                        if (blob_image[x, y] < threshold)
+                            detections.Add(y);
+                    }
+                }
+                horizontal_edges[x] = detections;
+            }
+            return (horizontal_edges);
+        }
+
         /// <summary>
         /// detect vertically oriented edge features within a line grid pattern
         /// </summary>
-		public static bool[,] detectVerticalEdges(byte[] mono_image, int width, int height,
-		                                          int horizontal_suppression_radius,
-		                                          int edge_patch_radius, int edge_threshold)
-		{
-		    // array which returns the results
-		    bool[,] vertical_edges = new bool[width, height];
-		
-		    // edge threshold should be proportional to the number of pixels being considered
-            edge_threshold *= edge_patch_radius;		    
-		
-		    // this array stores the absolute magnitude of edge responses
-		    int[] edge_response = new int[width];
-		    
-		    // this array stores sliding sums of pixel intensities for each row
-		    // of the image
-		    int[] sliding_sum = new int[width];
-		
-		    for (int y = 0; y < height; y++)
-		    {
-		        int x = 0;
-		        
-		        // calc sliding sum for this row
-		        sliding_sum[0] = mono_image[y * width];
-		        for (x = 1; x < width; x++)
-		            sliding_sum[x] = sliding_sum[x-1] + mono_image[(y*width)+x];  
-		            
-		        // calc edge responses
-		        for (x = edge_patch_radius; x < width - edge_patch_radius; x++)
-		        {
-		            // total pixel intensity to the left
-		            int left = sliding_sum[x] - sliding_sum[x - edge_patch_radius];
-		            
-		            // total pixel intensity to the right
-		            int right = sliding_sum[x + edge_patch_radius] - sliding_sum[x];
-		            
-		            // update response
-		            edge_response[x] = Math.Abs(left - right);
-		            
-		            // apply edge threshold
-		            if (edge_response[x] < edge_threshold)
-		                edge_response[x] = 0;
-		        }
-		        
-		        // perform non-maximal supression
-		        x = 0;		        
-		        while (x < width)
-		        {
-		            int response = edge_response[x];
-		            if (response > 0)
-		            {
-		                bool killed = false;
-			            int xx = x + 1; // - horizontal_suppression_radius;
-			            while ((xx < x + horizontal_suppression_radius) && (!killed))
-			            {
-			                if (xx < width)
-			                {
-	                            if (response >= edge_response[xx])
-			                    {
-			                        edge_response[xx] = 0;
-			                    }
-			                    else
-			                    {
-			                        edge_response[x] = 0;
-			                        killed = true;
-			                    }
-			                }
-			                xx++;
-			            }
-		            }
-		            x++;
-		        }
-		        
-		        // count the survivors and add them to the result
-		        for (x = 0; x < width; x++)
-		            if (edge_response[x] > 0)
-		                vertical_edges[x, y] = true;
-		    }
-		    return(vertical_edges);
-		}
+        public static bool[,] detectVerticalEdges(byte[] mono_image, int width, int height,
+                                                  int horizontal_suppression_radius,
+                                                  int edge_patch_radius, int edge_threshold)
+        {
+            // array which returns the results
+            bool[,] vertical_edges = new bool[width, height];
+
+            // edge threshold should be proportional to the number of pixels being considered
+            edge_threshold *= edge_patch_radius;
+
+            // this array stores the absolute magnitude of edge responses
+            int[] edge_response = new int[width];
+
+            // this array stores sliding sums of pixel intensities for each row
+            // of the image
+            int[] sliding_sum = new int[width];
+
+            for (int y = 0; y < height; y++)
+            {
+                int x = 0;
+
+                // calc sliding sum for this row
+                sliding_sum[0] = mono_image[y * width];
+                for (x = 1; x < width; x++)
+                    sliding_sum[x] = sliding_sum[x - 1] + mono_image[(y * width) + x];
+
+                // calc edge responses
+                for (x = edge_patch_radius; x < width - edge_patch_radius; x++)
+                {
+                    // total pixel intensity to the left
+                    int left = sliding_sum[x] - sliding_sum[x - edge_patch_radius];
+
+                    // total pixel intensity to the right
+                    int right = sliding_sum[x + edge_patch_radius] - sliding_sum[x];
+
+                    // update response
+                    edge_response[x] = Math.Abs(left - right);
+
+                    // apply edge threshold
+                    if (edge_response[x] < edge_threshold)
+                        edge_response[x] = 0;
+                }
+
+                // perform non-maximal supression
+                x = 0;
+                while (x < width)
+                {
+                    int response = edge_response[x];
+                    if (response > 0)
+                    {
+                        bool killed = false;
+                        int xx = x + 1; // - horizontal_suppression_radius;
+                        while ((xx < x + horizontal_suppression_radius) && (!killed))
+                        {
+                            if (xx < width)
+                            {
+                                if (response >= edge_response[xx])
+                                {
+                                    edge_response[xx] = 0;
+                                }
+                                else
+                                {
+                                    edge_response[x] = 0;
+                                    killed = true;
+                                }
+                            }
+                            xx++;
+                        }
+                    }
+                    x++;
+                }
+
+                // count the survivors and add them to the result
+                for (x = 0; x < width; x++)
+                    if (edge_response[x] > 0)
+                        vertical_edges[x, y] = true;
+            }
+            return (vertical_edges);
+        }
 
         /// <summary>
         /// detect horizontally oriented edge features within a line grid pattern
         /// </summary>
-		public static bool[,] detectHorizontalEdges(byte[] mono_image, int width, int height,
-		                                            int vertical_suppression_radius,
-		                                            int edge_patch_radius, int edge_threshold)
-		{
-		    // array which returns the results
-		    bool[,] horizontal_edges = new bool[width, height];
-		
-		    // edge threshold should be proportional to the number of pixels being considered
-            edge_threshold *= edge_patch_radius;		    
-		
-		    // this array stores the absolute magnitude of edge responses
-		    int[] edge_response = new int[height];
-		    
-		    // this array stores sliding sums of pixel intensities for each row
-		    // of the image
-		    int[] sliding_sum = new int[height];
-		
-		    for (int x = 0; x < width; x++)
-		    {
-		        int y = 0;
-		        
-		        // calc sliding sum for this row
-		        sliding_sum[0] = mono_image[x];
-		        for (y = 1; y < height; y++)
-		            sliding_sum[y] = sliding_sum[y-1] + mono_image[(y*width)+x];  
-		            
-		        // calc edge responses
-		        for (y = edge_patch_radius; y < height - edge_patch_radius; y++)
-		        {
-		            // total pixel intensity to the left
-		            int above = sliding_sum[y] - sliding_sum[y - edge_patch_radius];
-		            
-		            // total pixel intensity to the right
-		            int below = sliding_sum[y + edge_patch_radius] - sliding_sum[y];
-		            
-		            // update response
-		            edge_response[y] = Math.Abs(above - below);
-		            
-		            // apply edge threshold
-		            if (edge_response[y] < edge_threshold)
-		                edge_response[y] = 0;
-		        }
-		        
-		        // perform non-maximal supression
-		        y = 0;		        
-		        while (y < height)
-		        {
-		            int response = edge_response[y];
-		            if (response > 0)
-		            {
-		                bool killed = false;
-			            int yy = y + 1;
-			            while ((yy < y + vertical_suppression_radius) && (!killed))
-			            {
-			                if (yy < height)
-			                {
-		                        if (response >= edge_response[yy])
-				                {
-				                    edge_response[yy] = 0;
-				                }
-				                else
-				                {
-				                    edge_response[y] = 0;
-				                    killed = true;
-				                }
-			                }
-			                yy++;
-			            }
-		            }
-		            y++;
-		        }
-		        
-		        // count the survivors and add them to the result
-		        for (y = 0; y < height; y++)
-		            if (edge_response[y] > 0)
-		                horizontal_edges[x, y] = true;
-		    }
-		    return(horizontal_edges);
-		}
-		
-		#endregion
-				
-		#region "integral image"
-        
+        public static bool[,] detectHorizontalEdges(byte[] mono_image, int width, int height,
+                                                    int vertical_suppression_radius,
+                                                    int edge_patch_radius, int edge_threshold)
+        {
+            // array which returns the results
+            bool[,] horizontal_edges = new bool[width, height];
+
+            // edge threshold should be proportional to the number of pixels being considered
+            edge_threshold *= edge_patch_radius;
+
+            // this array stores the absolute magnitude of edge responses
+            int[] edge_response = new int[height];
+
+            // this array stores sliding sums of pixel intensities for each row
+            // of the image
+            int[] sliding_sum = new int[height];
+
+            for (int x = 0; x < width; x++)
+            {
+                int y = 0;
+
+                // calc sliding sum for this row
+                sliding_sum[0] = mono_image[x];
+                for (y = 1; y < height; y++)
+                    sliding_sum[y] = sliding_sum[y - 1] + mono_image[(y * width) + x];
+
+                // calc edge responses
+                for (y = edge_patch_radius; y < height - edge_patch_radius; y++)
+                {
+                    // total pixel intensity to the left
+                    int above = sliding_sum[y] - sliding_sum[y - edge_patch_radius];
+
+                    // total pixel intensity to the right
+                    int below = sliding_sum[y + edge_patch_radius] - sliding_sum[y];
+
+                    // update response
+                    edge_response[y] = Math.Abs(above - below);
+
+                    // apply edge threshold
+                    if (edge_response[y] < edge_threshold)
+                        edge_response[y] = 0;
+                }
+
+                // perform non-maximal supression
+                y = 0;
+                while (y < height)
+                {
+                    int response = edge_response[y];
+                    if (response > 0)
+                    {
+                        bool killed = false;
+                        int yy = y + 1;
+                        while ((yy < y + vertical_suppression_radius) && (!killed))
+                        {
+                            if (yy < height)
+                            {
+                                if (response >= edge_response[yy])
+                                {
+                                    edge_response[yy] = 0;
+                                }
+                                else
+                                {
+                                    edge_response[y] = 0;
+                                    killed = true;
+                                }
+                            }
+                            yy++;
+                        }
+                    }
+                    y++;
+                }
+
+                // count the survivors and add them to the result
+                for (y = 0; y < height; y++)
+                    if (edge_response[y] > 0)
+                        horizontal_edges[x, y] = true;
+            }
+            return (horizontal_edges);
+        }
+
+        #endregion
+
+        #region "integral image"
+
         /// <summary>
         /// update the integral image, using the given mono bitmap
         /// </summary>
         public static long[,] updateIntegralImage(byte[] bmp, int image_width, int image_height)
         {
-            int x, y, p, n = 0;
-            
+            int x, y, p, n = image_width;
+
             long[,] Integral = new long[image_width, image_height];
-                
+
             for (y = 1; y < image_height; y++)
             {
                 p = 0;
                 for (x = 0; x < image_width; x++)
                 {
                     p += bmp[n];
-                    Integral[x, y] = p + Integral[x, y-1];
+                    Integral[x, y] = p + Integral[x, y - 1];
                     n++;
                 }
             }
-            return(Integral);
+            return (Integral);
+        }
+
+        /// <summary>
+        /// update the integral image, using the given colour bitmap
+        /// </summary>
+        public static long[, ,] updateIntegralImageColour(byte[] bmp, int image_width, int image_height)
+        {
+            int x, y, n = image_width * 3;
+            int[] p = new int[3];
+
+            long[, ,] Integral = new long[image_width, image_height, 3];
+
+            for (y = 1; y < image_height; y++)
+            {
+                p[0] = 0;
+                p[1] = 0;
+                p[2] = 0;
+                for (x = 0; x < image_width; x++)
+                {
+                    for (int col = 0; col < 3; col++)
+                    {
+                        p[col] += bmp[n];
+                        Integral[x, y, col] = p[col] + Integral[x, y - 1, col];
+                        n++;
+                    }
+                }
+            }
+            return (Integral);
         }
 
         /// <summary>
@@ -1422,9 +1507,111 @@ namespace sluggish.utilities
         /// <returns></returns>
         public static long getIntegral(long[,] Integral, int tx, int ty, int bx, int by)
         {
-            return(Integral[bx,by] + Integral[tx,ty] - (Integral[tx,by] + Integral[bx,ty]));
+            return (Integral[bx, by] + Integral[tx, ty] - (Integral[tx, by] + Integral[bx, ty]));
         }
-        
+
+        /// <summary>
+        /// get the total pixel value for the given area
+        /// </summary>
+        /// <param name="tx"></param>
+        /// <param name="ty"></param>
+        /// <param name="bx"></param>
+        /// <param name="by"></param>
+        /// <returns></returns>
+        public static long getIntegral(long[, ,] Integral, int tx, int ty, int bx, int by, int col)
+        {
+            return (Integral[bx, by, col] + Integral[tx, ty, col] - (Integral[tx, by, col] + Integral[bx, ty, col]));
+        }
+
+        #endregion
+
+        #region "image smoothing"
+
+        /// <summary>
+        /// returns a smoothed version of the given image by local averaging of pixel values
+        /// </summary>
+        /// <param name="img">image (can be mono or colour)</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="smoothing_radius">patch radius to use for local averaging</param>
+        /// <returns>smoothed bitmap</returns>
+        public static byte[] smoothImageByAveraging(byte[] img, int img_width, int img_height,
+                                                    int smoothing_radius)
+        {
+            byte[] smoothed = img;
+
+            if (smoothing_radius > 0)
+            {
+                // number of pixels over which the smoothed result is averaged
+                int smoothing_diameter = smoothing_radius * 2;
+                int smoothing_pixels = smoothing_diameter * smoothing_diameter;
+
+                if (img.Length == img_width * img_height)
+                {
+                    // this is a mono image
+
+                    smoothed = new byte[img_width * img_height];
+                    long[,] integral_img = updateIntegralImage(img, img_width, img_height);
+
+                    int n = 0;
+                    for (int y = 0; y < img_height; y++)
+                    {
+                        int ty = y - smoothing_radius;
+                        int by = y + smoothing_radius;
+
+                        if (ty < 0) ty = 0;
+                        if (by >= img_height) by = img_height - 1;
+
+                        for (int x = 0; x < img_width; x++)
+                        {
+                            int tx = x - smoothing_radius;
+                            int bx = x + smoothing_radius;
+
+                            if (tx < 0) tx = 0;
+                            if (bx >= img_width) bx = img_width - 1;
+
+                            long local_magnitude = getIntegral(integral_img, tx, ty, bx, by);
+                            smoothed[n] = (byte)(local_magnitude / smoothing_pixels);
+                            n++;
+                        }
+                    }
+                }
+                else
+                {
+                    // this is a colour image
+                    smoothed = new byte[img_width * img_height * 3];
+                    long[, ,] integral_img = updateIntegralImageColour(img, img_width, img_height);
+
+                    int n = 0;
+                    for (int y = 0; y < img_height; y++)
+                    {
+                        int ty = y - smoothing_radius;
+                        int by = y + smoothing_radius;
+
+                        if (ty < 0) ty = 0;
+                        if (by >= img_height) by = img_height - 1;
+
+                        for (int x = 0; x < img_width; x++)
+                        {
+                            int tx = x - smoothing_radius;
+                            int bx = x + smoothing_radius;
+
+                            if (tx < 0) tx = 0;
+                            if (bx >= img_width) bx = img_width - 1;
+
+                            for (int col = 0; col < 3; col++)
+                            {
+                                long local_magnitude = getIntegral(integral_img, tx, ty, bx, by, col);
+                                smoothed[n] = (byte)(local_magnitude / smoothing_pixels);
+                                n++;
+                            }
+                        }
+                    }
+                }
+            }
+            return (smoothed);
+        }
+
         #endregion
 
         #region "conversions"
@@ -1436,10 +1623,10 @@ namespace sluggish.utilities
         /// <param name="img_width"></param>
         /// <param name="img_height"></param>
         /// <returns></returns>
-        public static byte[] monoImage(Byte[] img_colour, int img_width, int img_height)
+        public static byte[] monoImage(byte[] img_colour, int img_width, int img_height)
         {
             byte[] mono_image = new byte[img_width * img_height];
-            int n=0;
+            int n = 0;
 
             for (int i = 0; i < img_width * img_height * 3; i += 3)
             {
@@ -1468,20 +1655,25 @@ namespace sluggish.utilities
         public static byte[] downSample(byte[] img, int img_width, int img_height,
                                         int new_width, int new_height)
         {
-            byte[] new_img = new byte[new_width * new_height * 3];
-            int n = 0;
+            byte[] new_img = img;
 
-            for (int y = 0; y < new_height; y++)
+            if (!((new_width == img_width) && (new_height == img_height)))
             {
-                int yy = y * img_height / new_height;
-                for (int x = 0; x < new_width; x++)
+                new_img = new byte[new_width * new_height * 3];
+                int n = 0;
+
+                for (int y = 0; y < new_height; y++)
                 {
-                    int xx = x * img_width / new_width;
-                    int n2 = ((yy * img_width) + xx)*3;
-                    for (int col = 0; col < 3; col++)
-                    {                    
-                        new_img[n] = img[n2 + col];
-                        n++;
+                    int yy = y * img_height / new_height;
+                    for (int x = 0; x < new_width; x++)
+                    {
+                        int xx = x * img_width / new_width;
+                        int n2 = ((yy * img_width) + xx) * 3;
+                        for (int col = 0; col < 3; col++)
+                        {
+                            new_img[n] = img[n2 + col];
+                            n++;
+                        }
                     }
                 }
             }
@@ -1494,9 +1686,9 @@ namespace sluggish.utilities
         #region "loading from different formats"
 
         /// <summary>
-		/// load a bitmap file and return a byte array
-		/// </summary>
-		public static byte[] loadFromBitmap(String filename, int image_width, int image_height, int bytes_per_pixel)
+        /// load a bitmap file and return a byte array
+        /// </summary>
+        public static byte[] loadFromBitmap(String filename, int image_width, int image_height, int bytes_per_pixel)
         {
             byte[] bmp = new Byte[image_width * image_height * bytes_per_pixel];
 
@@ -1512,12 +1704,12 @@ namespace sluggish.utilities
                 {
                     for (int x = 0; x < image_width; x++)
                     {
-                        n2 = (((image_height-1-y) * image_width) + x) * 3;
+                        n2 = (((image_height - 1 - y) * image_width) + x) * 3;
                         for (int c = 0; c < bytes_per_pixel; c++)
                         {
-                            bmp[n2+c] = data[n];
+                            bmp[n2 + c] = data[n];
                             n++;
-                        }                        
+                        }
                     }
                 }
                 binfile.Close();
@@ -1525,7 +1717,7 @@ namespace sluggish.utilities
             }
             return (bmp);
         }
-        
+
 
         public static byte[] loadFromPGM(String filename, int image_width, int image_height, int bytes_per_pixel)
         {
@@ -1559,6 +1751,71 @@ namespace sluggish.utilities
 
         #endregion
 
+        #region "saving to different formats"
+
+        /// <summary>
+        /// save the given image data to a PGM file
+        /// </summary>
+        /// <param name="bmp">image data (can be colour or mono)</param>
+        /// <param name="image_width">width of the image</param>
+        /// <param name="image_height">height of the image</param>
+        /// <param name="filename">filename to save as</param>
+        public static void saveToPGM(byte[] bmp, int image_width, int image_height,
+                                     string filename)
+        {
+            byte[] img = bmp;
+
+            // convert to mono if necessary
+            if (bmp.Length != image_width * image_height)
+            {
+                img = new byte[image_width * image_height];
+                int n = 0;
+                for (int i = 0; i < bmp.Length; i += 3)
+                {
+                    int luma = (int)(bmp[i + 2] * 0.3 + bmp[i + 1] * 0.59 + bmp[i] * 0.11);
+                    img[n] = (byte)luma;
+                    n++;
+                }
+            }
+
+            byte EndLine = (byte)10;
+            FileStream OutFile = File.OpenWrite(filename);
+            BinaryWriter B_OutFile = new BinaryWriter(OutFile);
+
+            try
+            {
+                B_OutFile.Write(System.Text.Encoding.ASCII.GetBytes("P5"));
+                B_OutFile.Write(EndLine);
+
+                B_OutFile.Write(System.Text.Encoding.ASCII.GetBytes
+                    (image_width.ToString() + " " + image_height.ToString()));
+
+                B_OutFile.Write(EndLine);
+
+                B_OutFile.Write(System.Text.Encoding.ASCII.GetBytes("255"));
+                B_OutFile.Write(EndLine);
+
+                int n = 0;
+                for (int y = 0; y < image_height; y++)
+                {
+                    for (int x = 0; x < image_width; x++)
+                    {
+                        B_OutFile.Write(img[n]);
+                        n++;
+                    }
+                }
+
+            }
+            catch { throw; }
+            finally
+            {
+                B_OutFile.Flush();
+                B_OutFile.Close();
+            }
+        }
+
+        #endregion
+
         #region "line fitting"
 
         /// <summary>
@@ -1569,13 +1826,13 @@ namespace sluggish.utilities
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         public static void matchCorner(byte[] bmp_mono, int image_width, int image_height,
-                                       int x1, int y1, int x2, int y2, int x3, int y3, 
+                                       int x1, int y1, int x2, int y2, int x3, int y3,
                                        int corner_search_radius, int line_search_radius,
                                        ref int best_x2, ref int best_y2)
         {
-            if (line_search_radius < 1) 
+            if (line_search_radius < 1)
                 line_search_radius = 1;
-            
+
             best_x2 = x2;
             best_y2 = y2;
             float max_score = 0;
@@ -1626,12 +1883,12 @@ namespace sluggish.utilities
                 y1 = y2;
                 y2 = temp_y;
             }
-        
+
             int dx = x2 - x1;
             int dy = y2 - y1;
-            
-            float side1=0, side2=0;
-            int hits1=0, hits2=0;
+
+            float side1 = 0, side2 = 0;
+            int hits1 = 0, hits2 = 0;
             int step = dx / no_of_samples;
             if (step < 1) step = 1;
             if (dx > dy)
@@ -1639,7 +1896,7 @@ namespace sluggish.utilities
                 // horizontal orientation
                 for (int x = x1; x < x2; x += step)
                 {
-                    int y = y1 + ((x-x1)*dy/dx);
+                    int y = y1 + ((x - x1) * dy / dx);
                     for (int r = 1; r <= search_radius; r++)
                     {
                         if (y - r > 0)
@@ -1666,7 +1923,7 @@ namespace sluggish.utilities
                 {
                     if ((y > 0) && (y < image_height))
                     {
-                        int x = x1 + ((y-y1)*dx/dy);
+                        int x = x1 + ((y - y1) * dx / dy);
                         for (int r = 1; r <= search_radius; r++)
                         {
                             if (x - r > 0)
@@ -1685,11 +1942,1364 @@ namespace sluggish.utilities
                     }
                 }
             }
-            
+
             if (hits1 > 0) side1 /= hits1;
             if (hits2 > 0) side2 /= hits2;
-            return(Math.Abs(side1 - side2));
+            return (Math.Abs(side1 - side2));
         }
+
+        #endregion
+
+        #region "mean shift"
+
+        /// <summary>
+        /// returns a set of points where mean shifts above the given threshold occur
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        /// <param name="bytes_per_pixel"></param>
+        /// <param name="threshold"></param>
+        /// <param name="patch_size"></param>
+        /// <returns></returns>
+        public static ArrayList GetMeanShiftPoints(byte[] img,
+                                            int img_width, int img_height,
+                                            int bytes_per_pixel,
+                                            float threshold,
+                                            int patch_size,
+                                            int step_size)
+        {
+            ArrayList points = new ArrayList();
+            ArrayList[] horizontal = meanShiftHorizontal(img, img_width, img_height, bytes_per_pixel, threshold, patch_size, step_size);
+            ArrayList[] vertical = meanShiftVertical(img, img_width, img_height, bytes_per_pixel, threshold, patch_size, step_size);
+
+            for (int y = 0; y < img_height; y += step_size)
+            {
+                for (int i = 0; i < horizontal[y].Count; i += 3)
+                {
+                    int x = (int)horizontal[y][i];
+                    points.Add(x);
+                    points.Add(y);
+                }
+            }
+
+            for (int x = 0; x < img_width; x += step_size)
+            {
+                for (int i = 0; i < vertical[x].Count; i += 3)
+                {
+                    int y = (int)vertical[x][i];
+                    points.Add(x);
+                    points.Add(y);
+                }
+            }
+
+            return (points);
+        }
+
+        /// <summary>
+        /// horizontal mean shift
+        /// This returns a set of mean shift transition points for each row.
+        /// Each point gives the x position of the transition, the length of the segment in pixels
+        /// and the average pixel intensity
+        /// </summary>
+        /// <param name="img">image data</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="threshold">mean shift threshold</param>
+        /// <param name="patch_size">minimum number of pixels over which the mean is calculated</param>
+        /// <param name="step_size">used to sample rows</param>
+        /// <returns>a set of transition points for the horizontal mean shifts</returns>
+        public static ArrayList[] meanShiftHorizontal(byte[] img,
+                                                      int img_width, int img_height,
+                                                      int bytes_per_pixel,
+                                                      float threshold,
+                                                      int patch_size,
+                                                      int step_size)
+        {
+            ArrayList[] mean_transitions = new ArrayList[img_height];
+
+            // the minimum length of any segment
+            if (patch_size < 2) patch_size = 2;
+            int min_segment_length = patch_size;
+
+            for (int y = 0; y < img_height; y += step_size)
+            {
+                mean_transitions[y] = new ArrayList();
+                float prev_mean_value = -1; // previous mean value
+                int mean_hits = 0;          // number of pixels in the current mean
+                float mean_tot = 0;         // current mean total
+                for (int x = 0; x < img_width; x++)
+                {
+                    int n = ((y * img_width) + x) * bytes_per_pixel;
+                    for (int col = 0; col < bytes_per_pixel; col++)
+                    {
+                        mean_tot += 1 + img[n];
+                        n++;
+                    }
+                    mean_hits++;
+
+                    float mean_value = mean_tot / mean_hits;
+                    if ((prev_mean_value > 0) &&
+                        (mean_hits > min_segment_length))
+                    {
+                        float diff = Math.Abs(mean_value - prev_mean_value) / prev_mean_value;
+                        if ((diff > threshold) || (x == img_width - 1))
+                        {
+                            int pixval = (int)(mean_value / bytes_per_pixel);
+                            if (pixval > 255) pixval = 255;
+
+                            mean_transitions[y].Add(x - mean_hits);
+                            mean_transitions[y].Add(mean_hits);
+                            mean_transitions[y].Add(pixval);
+
+                            mean_tot = 0;
+                            mean_hits = 0;
+                            //prev_mean_value = -1;
+                        }
+                    }
+                    prev_mean_value = mean_value;
+                }
+            }
+
+            return (mean_transitions);
+        }
+
+
+        /// <summary>
+        /// vertical mean shift
+        /// This returns a set of mean shift transition points for each column.
+        /// Each point gives the x position of the transition, the length of the segment in pixels
+        /// and the average pixel intensity
+        /// </summary>
+        /// <param name="img">image data</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="threshold">mean shift threshold</param>
+        /// <param name="patch_size">minimum number of pixels over which the mean is calculated</param>
+        /// <param name="step_size">used to sample columns</param>
+        /// <returns>a set of transition points for the horizontal mean shifts</returns>
+        public static ArrayList[] meanShiftVertical(byte[] img,
+                                                    int img_width, int img_height,
+                                                    int bytes_per_pixel,
+                                                    float threshold,
+                                                    int patch_size,
+                                                    int step_size)
+        {
+            ArrayList[] mean_transitions = new ArrayList[img_width];
+
+            // the minimum length of any segment
+            if (patch_size < 2) patch_size = 2;
+            int min_segment_length = patch_size;
+
+            for (int x = 0; x < img_width; x += step_size)
+            {
+                mean_transitions[x] = new ArrayList();
+                float prev_mean_value = -1; // previous mean value
+                int mean_hits = 0;          // number of pixels in the current mean
+                float mean_tot = 0;         // current mean total
+                for (int y = 0; y < img_height; y++)
+                {
+                    int n = ((y * img_width) + x) * bytes_per_pixel;
+                    for (int col = 0; col < bytes_per_pixel; col++)
+                    {
+                        mean_tot += 1 + img[n];
+                        n++;
+                    }
+                    mean_hits++;
+
+                    float mean_value = mean_tot / mean_hits;
+                    if ((prev_mean_value > 0) &&
+                        (mean_hits > min_segment_length))
+                    {
+                        float diff = Math.Abs(mean_value - prev_mean_value) / prev_mean_value;
+                        if ((diff > threshold) || (y == img_height - 1))
+                        {
+                            int pixval = (int)(mean_value / bytes_per_pixel);
+                            if (pixval > 255) pixval = 255;
+
+                            mean_transitions[x].Add(y - mean_hits);
+                            mean_transitions[x].Add(mean_hits);
+                            mean_transitions[x].Add(pixval);
+
+                            mean_tot = 0;
+                            mean_hits = 0;
+                            prev_mean_value = -1;
+                        }
+                    }
+                    prev_mean_value = mean_value;
+                }
+            }
+
+            return (mean_transitions);
+        }
+
+        #endregion
+
+        #region "locating maxima"
+
+        /// <summary>
+        /// returns the horizontal maxima for the given image
+        /// </summary>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="max_features_per_row">maximum number of features per row</param>
+        /// <param name="radius">local edge radius</param>
+        /// <param name="inhibit_radius">inhibitory radius for non maximal suppression</param>
+        /// <param name="min_intensity">minimum edge intensity</param>
+        /// <param name="max_intensity">maximum edge_intensity</param>
+        /// <param name="image_threshold">minimum image pixel intensity</param>
+        /// <param name="localAverageRadius">local averaging radius</param>
+        /// <param name="difference_threshold">minimum difference</param>
+        /// <param name="step_size">step size for subsampling of rows</param>
+        /// <returns></returns>
+        public static ArrayList[] horizontal_maxima(byte[] bmp,
+                                                    int wdth, int hght, int bytes_per_pixel,
+                                                    int max_features_per_row,
+                                                    int radius, int inhibit_radius,
+                                                    int min_intensity, int max_intensity,
+                                                    int image_threshold,
+                                                    int localAverageRadius,
+                                                    int difference_threshold,
+                                                    int step_size,
+                                                    ref float average_magnitude)
+        {
+            // allocate arrays here to save time
+            ArrayList[] features = new ArrayList[hght];
+            int[] integral = new int[wdth];
+            float[] maxima = new float[wdth * 3];
+            float[] temp = new float[wdth * 3];
+
+            average_magnitude = 0;
+            int hits = 0;
+
+            // examine each row of the image
+            for (int y = 0; y < hght; y += step_size)
+            {
+                // create an empty list for this row
+                features[y] = new ArrayList();
+
+                // find maximal edge features
+                int no_of_features = row_maxima(y, bmp, wdth, hght, bytes_per_pixel,
+                                                integral, maxima, temp,
+                                                radius, inhibit_radius,
+                                                min_intensity, max_intensity,
+                                                max_features_per_row, image_threshold,
+                                                localAverageRadius, difference_threshold);
+
+                // update the list
+                for (int i = 0; i < no_of_features; i++)
+                {
+                    float x = maxima[i * 3];
+                    float magnitude = maxima[i * 3] + 2;
+                    average_magnitude += magnitude;
+                    hits++;
+                    features[y].Add(x);
+                    features[y].Add(magnitude);
+                }
+            }
+
+            if (hits > 0) average_magnitude /= hits;
+            return (features);
+        }
+
+        /// <summary>
+        /// returns the vertical maxima for the given image
+        /// </summary>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="max_features_per_column">maximum number of features per column</param>
+        /// <param name="radius">local edge radius</param>
+        /// <param name="inhibit_radius">inhibitory radius for non maximal suppression</param>
+        /// <param name="min_intensity">minimum edge intensity</param>
+        /// <param name="max_intensity">maximum edge_intensity</param>
+        /// <param name="image_threshold">minimum image pixel intensity</param>
+        /// <param name="localAverageRadius">local averaging radius</param>
+        /// <param name="difference_threshold">minimum difference</param>
+        /// <param name="step_size">step size for subsampling of rows</param>
+        /// <returns></returns>
+        public static ArrayList[] vertical_maxima(byte[] bmp,
+                                                  int wdth, int hght, int bytes_per_pixel,
+                                                  int max_features_per_column,
+                                                  int radius, int inhibit_radius,
+                                                  int min_intensity, int max_intensity,
+                                                  int image_threshold,
+                                                  int localAverageRadius,
+                                                  int difference_threshold,
+                                                  int step_size,
+                                                  ref float average_magnitude)
+        {
+            // allocate arrays here to save time
+            ArrayList[] features = new ArrayList[wdth];
+            int[] integral = new int[hght];
+            float[] maxima = new float[hght * 3];
+            float[] temp = new float[hght * 3];
+
+            average_magnitude = 0;
+            int hits = 0;
+
+            // examine each row of the image
+            for (int x = 0; x < wdth; x += step_size)
+            {
+                // create an empty list for this row
+                features[x] = new ArrayList();
+
+                // find maximal edge features
+                int no_of_features = column_maxima(x, bmp, wdth, hght, bytes_per_pixel,
+                                                   integral, maxima, temp,
+                                                   radius, inhibit_radius,
+                                                   min_intensity, max_intensity,
+                                                   max_features_per_column, image_threshold,
+                                                   localAverageRadius, difference_threshold);
+
+                // update the list
+                for (int i = 0; i < no_of_features; i++)
+                {
+                    float y = maxima[i * 3];
+                    float magnitude = maxima[i * 3] + 2;
+                    average_magnitude += magnitude;
+                    hits++;
+                    features[x].Add(y);
+                    features[x].Add(magnitude);
+                }
+            }
+
+            if (hits > 0) average_magnitude /= hits;
+            return (features);
+        }
+
+
+        /// <summary>
+        /// returns a sorted set of maxima
+        /// </summary>
+        /// <param name="y">the row which is to be analysed</param>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="integral">array used to store sliding sums</param>
+        /// <param name="maxima">array used to store maxima</param>
+        /// <param name="temp">temporary array</param>
+        /// <param name="radius">radius to use when calculating local magnitudes</param>
+        /// <param name="inhibit_radius">imhibitory radius</param>
+        /// <param name="min_intensity">minimum difference intensity</param>
+        /// <param name="max_intensity">maximum difference intensity</param>
+        /// <param name="max_maxima">maximum number of maxima to be returned</param>
+        /// <param name="image_threshold">minimum pixel intensity</param>
+        /// <param name="localAverageRadius">radius to use for local averaging of intensity values</param>
+        /// <param name="difference_threshold">minimum difference threshold</param>
+        /// <returns>the number of maxima detected</returns>
+        public static int row_maxima(int y, byte[] bmp,
+                                     int wdth, int hght, int bytes_per_pixel,
+                                     int[] integral, float[] maxima,
+                                     float[] temp,
+                                     int radius, int inhibit_radius,
+                                     int min_intensity, int max_intensity,
+                                     int max_maxima,
+                                     int image_threshold,
+                                     int localAverageRadius,
+                                     int difference_threshold)
+        {
+            int x, xx, v, i;
+            int startpos = y * wdth * bytes_per_pixel;
+            int no_of_maxima = 0;
+            int no_of_temp_maxima = 0;
+            float prev_mag, mag, prev_x, x_accurate, absdiff;
+
+            // update the integrals for the row
+            xx = startpos;
+            integral[0] = 0;
+            for (int b = 0; b < bytes_per_pixel; b++) integral[0] += bmp[xx + b];
+            xx += bytes_per_pixel;
+
+            for (x = 1; x < wdth; x++)
+            {
+                integral[x] = integral[x - 1];
+                if (bmp[xx] > image_threshold)
+                    for (int b = 0; b < bytes_per_pixel; b++) integral[x] += bmp[xx + b];
+
+                xx += bytes_per_pixel;
+            }
+
+            int radius2 = 3 * localAverageRadius / 100;
+            if (radius2 < radius + 1) radius2 = radius + 1;
+
+            // create edges
+            for (x = radius; x < wdth - radius - 1; x++)
+            {
+                v = integral[x];
+                float left = (v - integral[x - radius]) / radius;
+                float right = (integral[x + radius] - v) / radius;
+                float tot = left + right;
+
+                if ((tot > min_intensity) && (tot < max_intensity))
+                {
+                    int x_min = x - radius2;
+                    if (x_min < 0) x_min = 0;
+                    int x_max = x + radius2;
+                    if (x_max >= wdth) x_max = wdth - 1;
+                    float tot_wide = (integral[x_max] - integral[x_min]) / (float)(x_max - x_min);
+                    float diff = (left - right) * 140 / tot_wide;
+
+                    absdiff = diff;
+                    if (absdiff < 0) absdiff = -absdiff;
+
+                    if (absdiff > difference_threshold)
+                    {
+                        // a simple kind of sub-pixel interpolation
+                        x_accurate = (((x - radius) * left) + ((x + radius) * right)) / tot;
+
+                        temp[no_of_temp_maxima * 3] = x_accurate;
+                        temp[(no_of_temp_maxima * 3) + 1] = diff;
+                        temp[(no_of_temp_maxima * 3) + 2] = absdiff;
+                        no_of_temp_maxima++;
+                    }
+                }
+            }
+
+            // compete
+            prev_mag = temp[2];
+            prev_x = (int)temp[0];
+            for (i = 1; i < no_of_temp_maxima; i++)
+            {
+                mag = temp[(i * 3) + 2];
+                x = (int)temp[i * 3];
+                float x_diff = x - prev_x;
+                if (x_diff <= inhibit_radius)
+                {
+                    if (prev_mag <= mag) temp[(i - 1) * 3] = -1;
+                    if (mag < prev_mag) temp[i * 3] = -1;
+                }
+
+                prev_mag = mag;
+                prev_x = x;
+            }
+
+            // populate maxima array
+            for (i = 1; i < no_of_temp_maxima; i++)
+            {
+                if (temp[i * 3] > -1)
+                {
+                    for (int p = 0; p < 3; p++)
+                        maxima[(no_of_maxima * 3) + p] = temp[(i * 3) + p];
+
+                    no_of_maxima++;
+                }
+            }
+
+            // sort edges        
+            int search_max = no_of_maxima;
+            if (search_max > max_maxima) search_max = max_maxima;
+            int winner = -1;
+            for (i = 0; i < search_max - 1; i++)
+            {
+                mag = maxima[(i * 3) + 2];
+                winner = -1;
+                for (int j = i + 1; j < no_of_maxima; j++)
+                {
+                    if (maxima[(j * 3) + 2] > mag)
+                    {
+                        winner = j;
+                        mag = maxima[(j * 3) + 2];
+                    }
+                }
+                if (winner > -1)
+                {
+                    // swap
+                    for (int p = 0; p < 3; p++)
+                    {
+                        float temp2 = maxima[(i * 3) + p];
+                        maxima[(i * 3) + p] = maxima[(winner * 3) + p];
+                        maxima[(winner * 3) + p] = temp2;
+                    }
+                }
+            }
+            no_of_maxima = search_max;
+
+            return (no_of_maxima);
+        }
+
+        /// <summary>
+        /// returns a sorted set of maxima
+        /// </summary>
+        /// <param name="x">the column which is to be analysed</param>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="integral">array used to store sliding sums</param>
+        /// <param name="maxima">array used to store maxima</param>
+        /// <param name="temp">temporary array</param>
+        /// <param name="radius">radius to use when calculating local magnitudes</param>
+        /// <param name="inhibit_radius">imhibitory radius</param>
+        /// <param name="min_intensity">minimum difference intensity</param>
+        /// <param name="max_intensity">maximum difference intensity</param>
+        /// <param name="max_maxima">maximum number of maxima to be returned</param>
+        /// <param name="image_threshold">minimum pixel intensity</param>
+        /// <param name="localAverageRadius">radius to use for local averaging of intensity values</param>
+        /// <param name="difference_threshold">minimum difference threshold</param>
+        /// <returns>the number of maxima detected</returns>
+        public static int column_maxima(int x, byte[] bmp,
+                                        int wdth, int hght, int bytes_per_pixel,
+                                        int[] integral, float[] maxima,
+                                        float[] temp,
+                                        int radius, int inhibit_radius,
+                                        int min_intensity, int max_intensity,
+                                        int max_maxima,
+                                        int image_threshold,
+                                        int localAverageRadius,
+                                        int difference_threshold)
+        {
+            int stride = bytes_per_pixel * wdth;
+            int y, yy, v, i;
+            int startpos = x * bytes_per_pixel;
+            int no_of_maxima = 0;
+            int no_of_temp_maxima = 0;
+            float prev_mag, mag, prev_y, y_accurate, absdiff;
+
+            // update the integrals for the row
+            yy = startpos;
+            integral[0] = 0;
+            for (int b = 0; b < bytes_per_pixel; b++) integral[0] += bmp[yy + b];
+            yy += stride;
+
+            for (y = 1; y < hght; y++)
+            {
+                integral[y] = integral[y - 1];
+                if (bmp[yy] > image_threshold)
+                    for (int b = 0; b < bytes_per_pixel; b++) integral[y] += bmp[yy + b];
+
+                yy += stride;
+            }
+
+            int radius2 = 3 * localAverageRadius / 100;
+            if (radius2 < radius + 1) radius2 = radius + 1;
+
+            // create edges
+            for (y = radius; y < hght - radius - 1; y++)
+            {
+                v = integral[y];
+                float above = (v - integral[y - radius]) / radius;
+                float below = (integral[y + radius] - v) / radius;
+                float tot = above + below;
+
+                if ((tot > min_intensity) && (tot < max_intensity))
+                {
+                    int y_min = y - radius2;
+                    if (y_min < 0) y_min = 0;
+                    int y_max = y + radius2;
+                    if (y_max >= hght) y_max = hght - 1;
+                    float tot_wide = (integral[y_max] - integral[y_min]) / (float)(y_max - y_min);
+                    float diff = (above - below) * 140 / tot_wide;
+
+                    absdiff = diff;
+                    if (absdiff < 0) absdiff = -absdiff;
+
+                    if (absdiff > difference_threshold)
+                    {
+                        // a simple kind of sub-pixel interpolation
+                        y_accurate = (((y - radius) * above) + ((y + radius) * below)) / tot;
+
+                        temp[no_of_temp_maxima * 3] = y_accurate;
+                        temp[(no_of_temp_maxima * 3) + 1] = diff;
+                        temp[(no_of_temp_maxima * 3) + 2] = absdiff;
+                        no_of_temp_maxima++;
+                    }
+                }
+            }
+
+            // compete
+            prev_mag = temp[2];
+            prev_y = (int)temp[0];
+            for (i = 1; i < no_of_temp_maxima; i++)
+            {
+                mag = temp[(i * 3) + 2];
+                y = (int)temp[i * 3];
+                float y_diff = y - prev_y;
+                if (y_diff <= inhibit_radius)
+                {
+                    if (prev_mag <= mag) temp[(i - 1) * 3] = -1;
+                    if (mag < prev_mag) temp[i * 3] = -1;
+                }
+
+                prev_mag = mag;
+                prev_y = y;
+            }
+
+            // populate maxima array
+            for (i = 1; i < no_of_temp_maxima; i++)
+            {
+                if (temp[i * 3] > -1)
+                {
+                    for (int p = 0; p < 3; p++)
+                        maxima[(no_of_maxima * 3) + p] = temp[(i * 3) + p];
+
+                    no_of_maxima++;
+                }
+            }
+
+            // sort edges        
+            int search_max = no_of_maxima;
+            if (search_max > max_maxima) search_max = max_maxima;
+            int winner = -1;
+            for (i = 0; i < search_max - 1; i++)
+            {
+                mag = maxima[(i * 3) + 2];
+                winner = -1;
+                for (int j = i + 1; j < no_of_maxima; j++)
+                {
+                    if (maxima[(j * 3) + 2] > mag)
+                    {
+                        winner = j;
+                        mag = maxima[(j * 3) + 2];
+                    }
+                }
+                if (winner > -1)
+                {
+                    // swap
+                    for (int p = 0; p < 3; p++)
+                    {
+                        float temp2 = maxima[(i * 3) + p];
+                        maxima[(i * 3) + p] = maxima[(winner * 3) + p];
+                        maxima[(winner * 3) + p] = temp2;
+                    }
+                }
+            }
+            no_of_maxima = search_max;
+
+            return (no_of_maxima);
+        }
+
+        #endregion
+
+        #region "mirroring and flipping"
+
+        /// <summary>
+        /// mirror the given image
+        /// </summary>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <returns>mirrored varesion</returns>
+        public static byte[] Mirror(byte[] bmp,
+                                    int wdth, int hght,
+                                    int bytes_per_pixel)
+        {
+            byte[] mirrored = new byte[wdth * hght * bytes_per_pixel];
+
+            for (int y = 0; y < hght; y++)
+            {
+                for (int x = 0; x < wdth; x++)
+                {
+                    int n = (y * wdth) + x;
+                    int x2 = wdth - 1 - x;
+                    int n2 = (y * wdth) + x2;
+                    for (int col = 0; col < bytes_per_pixel; col++)
+                        mirrored[n2 + col] = bmp[n + col];
+                }
+            }
+            return (mirrored);
+        }
+
+        /// <summary>
+        /// flip the given image
+        /// </summary>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <returns>flipped varesion</returns>
+        public static byte[] Flip(byte[] bmp,
+                                  int wdth, int hght,
+                                  int bytes_per_pixel)
+        {
+            byte[] flipped = new byte[wdth * hght * bytes_per_pixel];
+
+            for (int y = 0; y < hght; y++)
+            {
+                for (int x = 0; x < wdth; x++)
+                {
+                    int n = (y * wdth) + x;
+                    int n2 = ((hght - 1 - y) * wdth) + x;
+                    for (int col = 0; col < bytes_per_pixel; col++)
+                        flipped[n2 + col] = bmp[n + col];
+                }
+            }
+            return (flipped);
+        }
+
+        #endregion
+
+        #region "histograms"
+
+        /// <summary>
+        /// returns a grey scale histogram for the given image
+        /// </summary>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="levels">histogram levels</param>
+        /// <returns></returns>
+        public static float[] GetGreyHistogram(byte[] bmp,
+                                        int wdth, int hght,
+                                        int bytes_per_pixel,
+                                        int levels)
+        {
+            float[] hist = new float[levels];
+            for (int i = 0; i < bmp.Length; i += bytes_per_pixel)
+            {
+                float intensity = 0;
+                for (int col = 0; col < bytes_per_pixel; col++)
+                    intensity += bmp[i + col];
+                intensity /= bytes_per_pixel;
+
+                int bucket = (int)Math.Round(intensity * levels / 255);
+                if (bucket >= levels) bucket = levels - 1;
+                hist[bucket]++;
+            }
+
+            // normalise the histogram
+            float max = 1;
+            for (int level = 0; level < levels; level++)
+                if (hist[level] > max) max = hist[level];
+
+            for (int level = 0; level < levels; level++)
+                hist[level] = hist[level] / max;
+
+            return (hist);
+        }
+
+        /// <summary>
+        /// returns a grey scale histogram for the given image within the given perimeter region
+        /// </summary>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="levels">histogram levels</param>
+        /// <param name="perimeter">perimeter region inside which to calculate the histogram</param>
+        /// <returns></returns>
+        public static float[] GetGreyHistogram(byte[] bmp,
+                                int wdth, int hght,
+                                int bytes_per_pixel,
+                                int levels,
+                                polygon2D perimeter)
+        {
+            float[] hist = new float[levels];
+
+            int tx = (int)perimeter.left();
+            int ty = (int)perimeter.top();
+            int bx = (int)perimeter.right();
+            int by = (int)perimeter.bottom();
+
+            for (int y = ty; y <= by; y++)
+            {
+                if ((y > -1) && (y < hght))
+                {
+                    for (int x = tx; x <= bx; x++)
+                    {
+                        if ((x > -1) && (x < wdth))
+                        {
+                            if (perimeter.isInside(x, y))
+                            {
+                                int n = ((y * wdth) + x) * bytes_per_pixel;
+                                float intensity = 0;
+                                for (int col = 0; col < bytes_per_pixel; col++)
+                                    intensity += bmp[n + col];
+                                intensity /= bytes_per_pixel;
+
+                                int bucket = (int)Math.Round(intensity * levels / 255);
+                                if (bucket >= levels) bucket = levels - 1;
+                                hist[bucket]++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // normalise the histogram
+            float max = 1;
+            for (int level = 0; level < levels; level++)
+                if (hist[level] > max) max = hist[level];
+
+            for (int level = 0; level < levels; level++)
+                hist[level] = hist[level] / max;
+
+            return (hist);
+        }
+
+
+        /// <summary>
+        /// returns a grey scale histogram for the given image
+        /// using a circular sample region
+        /// </summary>
+        /// <param name="bmp">image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="levels">histogram levels</param>
+        /// <param name="radius_fraction">fractional radius value in the range 0.0 - 1.0</param>
+        /// <returns></returns>
+        public static float[] GetGreyHistogramCircular(byte[] bmp,
+                                                int wdth, int hght,
+                                                int bytes_per_pixel,
+                                                int levels,
+                                                float radius_fraction)
+        {
+            int half_width = wdth / 2;
+            int radius = (int)((wdth / 2) * radius_fraction);
+            int radiusSquared = radius * radius;
+
+            float[] hist = new float[levels];
+            for (int y = 0; y < hght; y++)
+            {
+                int dy = half_width - (y * wdth / hght);
+                dy *= dy;
+                for (int x = 0; x < wdth; x++)
+                {
+                    int dx = half_width - x;
+                    dx *= dx;
+
+                    if (dx + dy < radiusSquared)
+                    {
+                        int n = ((y * wdth) + x) * bytes_per_pixel;
+                        float intensity = 0;
+                        for (int col = 0; col < bytes_per_pixel; col++)
+                            intensity += bmp[n + col];
+                        intensity /= bytes_per_pixel;
+                        int bucket = (int)Math.Round(intensity * levels / 255);
+                        if (bucket >= levels) bucket = levels - 1;
+                        hist[bucket]++;
+                    }
+                }
+            }
+
+            // normalise the histogram
+            float max = 1;
+            for (int level = 0; level < levels; level++)
+                if (hist[level] > max) max = hist[level];
+
+            for (int level = 0; level < levels; level++)
+                hist[level] = hist[level] / max;
+
+            return (hist);
+        }
+
+        #endregion
+
+        #region "erosion and dilation"
+
+        public static byte[] Erode(byte[] bmp,
+                             int wdth, int hght,
+                             int bytes_per_pixel,
+                             bool darkForeground,
+                             int levels)
+        {
+            float threshold = 0.13f;
+            float fovea_radius = 0.3f;
+
+            byte[] eroded =
+                ErodeDilate(bmp, wdth, hght, bytes_per_pixel,
+                            true, darkForeground, levels, threshold, fovea_radius);
+
+            return (eroded);
+        }
+
+        public static byte[] Dilate(byte[] bmp,
+                              int wdth, int hght,
+                              int bytes_per_pixel,
+                              bool darkForeground,
+                              int levels)
+        {
+            float threshold = 0.13f;
+            float fovea_radius = 0.3f;
+
+            byte[] dilated =
+                ErodeDilate(bmp, wdth, hght, bytes_per_pixel,
+                            false, darkForeground, levels, threshold, fovea_radius);
+
+            return (dilated);
+        }
+
+
+        private static byte[] ErodeDilate(
+                                   byte[] bmp,
+                                   int wdth, int hght,
+                                   int bytes_per_pixel,
+                                   bool erode,
+                                   bool darkForeground,
+                                   int levels,
+                                   float grey_level_threshold,
+                                   float fovea_radius)
+        {
+            const int min_neighbours = 0;
+            int dx = -1;
+            int dy = -1;
+
+            // create an image to store the output and copy the original image into it
+            byte[] eroded = new byte[wdth * hght * bytes_per_pixel];
+            for (int i = 0; i < eroded.Length; i++)
+                eroded[i] = bmp[i];
+
+            // create a greyscale histogram
+            int histogram_levels = 80;
+            float[] histogram = GetGreyHistogramCircular(bmp, wdth, hght, bytes_per_pixel, histogram_levels, fovea_radius);
+
+            // find the half way intensity within the histogram
+            float total_response = 0;
+            for (int i = 0; i < histogram.Length; i++)
+                total_response += histogram[i];
+
+            int j = 0;
+            float halfway = 0;
+            while (halfway < total_response * grey_level_threshold)
+            {
+                halfway += histogram[j];
+                j++;
+            }
+            halfway = (j - 0.5f) * 255 / histogram.Length;
+
+            // create a binary image
+            // true values are foreground, false are background
+            bool[,] binary_image = new bool[wdth, hght];
+            bool[,] updated_binary_image = new bool[wdth, hght];
+
+            for (int y = 0; y < hght; y++)
+            {
+                for (int x = 0; x < wdth; x++)
+                {
+                    int n1 = ((y * wdth) + x) * bytes_per_pixel;
+                    float pixel_intensity = 0;
+                    for (int col = 0; col < bytes_per_pixel; col++)
+                    {
+                        pixel_intensity += bmp[n1 + col];
+                    }
+                    pixel_intensity /= bytes_per_pixel;
+
+                    if ((pixel_intensity > halfway) && (!darkForeground))
+                        binary_image[x, y] = true;
+                    if ((pixel_intensity < halfway) && (darkForeground))
+                        binary_image[x, y] = true;
+                }
+            }
+
+            for (int level = 0; level < levels; level++)
+            {
+                // erode or dilate the binary image
+                ArrayList altered_pixels = new ArrayList();
+                for (int y = 0; y < hght; y++)
+                {
+                    for (int x = 0; x < wdth; x++)
+                    {
+                        updated_binary_image[x, y] = binary_image[x, y];
+
+                        // alter the binary image if necessary
+                        if (erode == binary_image[x, y])
+                        {
+                            // examine the neighbourhood and count the number of
+                            // high and low neighbours
+                            int foreground_neighbours = 0;
+                            int background_neighbours = 0;
+                            for (int yy = y - 1; yy <= y + 1; yy++)
+                            {
+                                if ((yy > -1) && (yy < hght))
+                                {
+                                    for (int xx = x - 1; xx <= x + 1; xx++)
+                                    {
+                                        if ((xx > -1) && (xx < wdth))
+                                        {
+                                            if (!((xx == x) && (yy == y)))
+                                            {
+                                                if (binary_image[xx, yy])
+                                                    foreground_neighbours++;
+                                                else
+                                                    background_neighbours++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // alter the state of this pixel
+                            if (erode)
+                            {
+                                if (background_neighbours > min_neighbours)
+                                {
+                                    altered_pixels.Add(x);
+                                    altered_pixels.Add(y);
+                                    updated_binary_image[x, y] = false;
+                                }
+                            }
+                            else
+                            {
+                                if (foreground_neighbours > min_neighbours)
+                                {
+                                    altered_pixels.Add(x);
+                                    altered_pixels.Add(y);
+                                    updated_binary_image[x, y] = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                int n5 = 0;
+                for (int y = 0; y < hght; y++)
+                    for (int x = 0; x < wdth; x++)
+                    {
+                        for (int col = 0; col < bytes_per_pixel; col++)
+                        {
+                            if (updated_binary_image[x, y])
+                                eroded[n5] = (byte)0;
+                            else
+                                eroded[n5] = (byte)255;
+                            n5++;
+                        }
+                    }
+
+
+                // change the intensity values for each of the altered pixels
+                /*
+                for (int i = 0; i < altered_pixels.Count; i += 2)
+                {
+                    int x = (int)altered_pixels[i];
+                    int y = (int)altered_pixels[i + 1];
+
+                    int xx = 0, yy = 0;
+                    bool replacement_pixel_found = false;
+                    while (!replacement_pixel_found)
+                    {
+                        xx = x + dx;
+                        yy = y + dy;
+
+                        if ((xx > -1) && (xx < wdth) &&
+                            (yy > -1) && (yy < hght))
+                        {
+                            if (!((xx == x) && (yy == y)))
+                            {
+                                if (erode)
+                                {
+                                    if (binary_image[xx, yy] == false)
+                                        replacement_pixel_found = true;
+                                }
+                                else
+                                {
+                                    if (binary_image[xx, yy] == true)
+                                        replacement_pixel_found = true;
+                                }
+                            }
+                        }
+                        dx += 1;
+                        if (dx > 1)
+                        {
+                            dx = -1;
+                            dy++;
+                            if (dy > 1) dy = -1;
+                        }
+                    }
+
+                    // copy the replacement pixel
+                    int n1 = ((y * wdth) + x) * bytes_per_pixel;
+                    int n2 = ((yy * wdth) + xx) * bytes_per_pixel;
+                    for (int col = 0; col < bytes_per_pixel; col++)
+                        eroded[n1 + col] = bmp[n2 + col];
+                }
+                */
+
+
+                for (int y = 0; y < hght; y++)
+                    for (int x = 0; x < wdth; x++)
+                        binary_image[x, y] = updated_binary_image[x, y];
+            }
+
+            return (eroded);
+        }
+
+        #endregion
+
+        #region "average intensity"
+
+        /// <summary>
+        /// returns the average pixel intensity for the given line
+        /// </summary>
+        /// <param name="img">image to be returned</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="x1">top x</param>
+        /// <param name="y1">top y</param>
+        /// <param name="x2">bottom x</param>
+        /// <param name="y2">bottom y</param>
+        /// <param name="linewidth">line width</param>
+        public static float averageLineIntensity(Byte[] img, int img_width, int img_height, int bytes_per_pixel,
+                                                int x1, int y1, int x2, int y2, int linewidth)
+        {
+            float av_intensity = 0;
+            int hits = 0;
+
+            if (img != null)
+            {
+                int w, h, x, y, step_x, step_y, dx, dy, xx2, yy2;
+                float m;
+
+                dx = x2 - x1;
+                dy = y2 - y1;
+                w = Math.Abs(dx);
+                h = Math.Abs(dy);
+                if (x2 >= x1) step_x = 1; else step_x = -1;
+                if (y2 >= y1) step_y = 1; else step_y = -1;
+
+                if ((w < img_width) && (h < img_height))
+                {
+                    if (w > h)
+                    {
+                        if (dx != 0)
+                        {
+                            m = dy / (float)dx;
+                            x = x1;
+                            int s = 0;
+                            while (s * Math.Abs(step_x) <= Math.Abs(dx))
+                            {
+                                y = (int)(m * (x - x1)) + y1;
+
+                                for (xx2 = x - linewidth; xx2 <= x + linewidth; xx2++)
+                                    for (yy2 = y - linewidth; yy2 <= y + linewidth; yy2++)
+                                    {
+                                        if ((xx2 >= 0) && (xx2 < img_width) && (yy2 >= 0) && (yy2 < img_height))
+                                        {
+                                            int n = ((img_width * yy2) + xx2) * bytes_per_pixel;
+                                            if ((n >= 0) && (n < img.Length - 3))
+                                            {
+                                                for (int col = 0; col < 3; col++)
+                                                    av_intensity += img[n + col];
+                                                hits += 3;
+                                            }
+                                        }
+                                    }
+
+                                x += step_x;
+                                s++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (dy != 0)
+                        {
+                            m = dx / (float)dy;
+                            y = y1;
+                            int s = 0;
+                            while (s * Math.Abs(step_y) <= Math.Abs(dy))
+                            {
+                                x = (int)(m * (y - y1)) + x1;
+                                for (xx2 = x - linewidth; xx2 <= x + linewidth; xx2++)
+                                    for (yy2 = y - linewidth; yy2 <= y + linewidth; yy2++)
+                                    {
+                                        if ((xx2 >= 0) && (xx2 < img_width) && (yy2 >= 0) && (yy2 < img_height))
+                                        {
+                                            int n = ((img_width * yy2) + xx2) * bytes_per_pixel;
+
+                                            for (int col = 0; col < 3; col++)
+                                                av_intensity += img[n + col];
+                                            hits += 3;
+                                        }
+                                    }
+
+                                y += step_y;
+                                s++;
+                            }
+                        }
+                    }
+                }
+            }
+            if (hits > 0) av_intensity /= hits;
+            return (av_intensity);
+        }
+
+        #endregion
+
+        #region "sub image of a larger image"
+
+        /// <summary>
+        /// returns a sub image from a larger image
+        /// </summary>
+        /// <param name="img">large image</param>
+        /// <param name="img_width">width of the large image</param>
+        /// <param name="img_height">height of the large image</param>
+        /// <param name="bytes_per_pixel">bytes per pixel</param>
+        /// <param name="tx">sub image top left x</param>
+        /// <param name="ty">sub image top left y</param>
+        /// <param name="bx">sub image bottom right x</param>
+        /// <param name="by">sub image bottom right y</param>
+        /// <returns></returns>
+        public static byte[] createSubImage(byte[] img, int img_width, int img_height, int bytes_per_pixel,
+                                            int tx, int ty, int bx, int by)
+        {
+            byte[] subimage = new byte[img_width * img_height * bytes_per_pixel];
+            int sub_width = bx - tx;
+            int sub_height = by - ty;
+            for (int y = 0; y < sub_height; y++)
+            {
+                for (int x = 0; x < sub_width; x++)
+                {
+                    int n1 = ((y * sub_width) + x) * bytes_per_pixel;
+                    int n2 = (((y + ty) * img_width) + (x + tx)) * bytes_per_pixel;
+
+                    if ((n2 > -1) && (n2 < img.Length - 3))
+                    {
+                        for (int col = 0; col < bytes_per_pixel; col++)
+                            subimage[n1 + col] = img[n2 + col];
+                    }
+                }
+            }
+            return (subimage);
+        }
+
+        #endregion
+
+        #region "non-maximal supression"
+
+        /// <summary>
+        /// perform non-maximal supression on the given data
+        /// </summary>
+        /// <param name="data">2D array containing data</param>
+        /// <param name="supression_radius">local suppression redius</param>
+        /// <param name="minimum_threshold">minimum value</param>
+        /// <returns>list of points having locally maximal responses</returns>
+        public static ArrayList NonMaximalSupression(float[,] data,
+                                                     int supression_radius,
+                                                     float minimum_threshold)
+        {
+            return (NonMaximalSupression(data, supression_radius, supression_radius, minimum_threshold));
+        }
+
+
+        /// <summary>
+        /// perform non-maximal supression on the given 2D data
+        /// </summary>
+        /// <param name="data">2D array containing data</param>
+        /// <param name="supression_radius_horizontal">horizontal suppression redius</param>
+        /// <param name="supression_radius_vertical">vertical suppression radius</param>
+        /// <param name="minimum_threshold">minimum value</param>
+        /// <returns>list of points having locally maximal responses</returns>
+        public static ArrayList NonMaximalSupression(float[,] data,
+                                                     int supression_radius_horizontal,
+                                                     int supression_radius_vertical,
+                                                     float minimum_threshold)
+        {
+            ArrayList results = new ArrayList();
+            int width = data.GetLength(0);
+            int height = data.GetLength(1);
+
+            // move through the data array using a horizontal and vertical window
+            for (int x = 0; x < width - supression_radius_horizontal; x += supression_radius_horizontal + 1)
+            {
+                for (int y = 0; y < height - supression_radius_vertical; y += supression_radius_vertical + 1)
+                {
+                    // locate the maximal response within the window
+                    int cx = x;
+                    int cy = y;
+                    for (int dx = 0; dx <= supression_radius_horizontal; dx++)
+                        for (int dy = 0; dy <= supression_radius_vertical; dy++)
+                            if (data[cx, cy] < data[x + dx, y + dy])
+                            {
+                                cx = x + dx;
+                                cy = y + dy;
+                            }
+
+                    // check that this is the best responder within the local area
+                    bool failed = false;
+                    int xx = cx - supression_radius_horizontal;
+                    if (xx > -1)
+                    {
+                        while ((xx <= cx + supression_radius_horizontal) && (!failed))
+                        {
+                            if (xx < width)
+                            {
+                                int yy = cy - supression_radius_vertical;
+                                if (yy > -1)
+                                {
+                                    while ((yy <= cy + supression_radius_vertical) && (!failed))
+                                    {
+                                        if (yy < height)
+                                        {
+                                            if (data[cx, cy] < data[xx, yy]) failed = true;
+                                        }
+                                        yy++;
+                                    }
+                                }
+                            }
+                            xx++;
+                        }
+                    }
+
+                    if (!failed)
+                    {
+                        // is this above the minimum response threshold ?
+                        if (data[cx, cy] > minimum_threshold)
+                        {
+                            // store the maxima position
+                            results.Add(cx);
+                            results.Add(cy);
+                        }
+                    }
+                }
+            }
+            return (results);
+        }
+
+
+        /// <summary>
+        /// perform non-maximal supression on the given 1D data
+        /// </summary>
+        /// <param name="data">2D array containing data</param>
+        /// <param name="supression_radius">suppression redius</param>
+        /// <param name="minimum_threshold">minimum value</param>
+        /// <returns>list of points having locally maximal responses</returns>
+        public static ArrayList NonMaximalSupression(float[] data,
+                                                     int supression_radius,
+                                                     float minimum_threshold)
+        {
+            ArrayList results = new ArrayList();
+            int width = data.GetLength(0);
+
+            // move through the data array using a horizontal and vertical window
+            for (int x = 0; x < width - supression_radius; x += supression_radius + 1)
+            {
+                // locate the maximal response within the window
+                int cx = x;
+                for (int dx = 0; dx <= supression_radius; dx++)
+                    if (data[cx] < data[x + dx])
+                        cx = x + dx;
+
+                // check that this is the best responder within the local area
+                bool failed = false;
+                int xx = cx - supression_radius;
+                if (xx > -1)
+                {
+                    while ((xx <= cx + supression_radius) && (!failed))
+                    {
+                        if (xx < width)
+                            if (data[cx] < data[xx]) failed = true;
+                        xx++;
+                    }
+                }
+                if (!failed)
+                {
+                    // is this above the minimum response threshold ?
+                    if (data[cx] > minimum_threshold)
+                        results.Add(cx);
+                }
+            }
+            return (results);
+        }
+
 
         #endregion
     }

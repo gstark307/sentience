@@ -21,10 +21,10 @@ using System;
 
 namespace sluggish.utilities
 {
-	public class drawing
-	{		
-		public drawing()
-		{
+    public class drawing
+    {
+        public drawing()
+        {
         }
 
         #region "flood fill algorithms"
@@ -53,7 +53,7 @@ namespace sluggish.utilities
             {
                 return false;
             }
-        }    
+        }
 
         /// <summary>
         /// pushes an x,y position onto the flood fill stack
@@ -65,18 +65,18 @@ namespace sluggish.utilities
         /// <param name="y"></param>
         /// <returns></returns>
         private static bool floodFillPush(int[] stack, ref int stackPointer,
-                                          int image_height, int x, int y) 
-        { 
-            if (stackPointer < stack.Length - 1) 
-            { 
+                                          int image_height, int x, int y)
+        {
+            if (stackPointer < stack.Length - 1)
+            {
                 stackPointer++;
-                stack[stackPointer] = image_height * x + y; 
-                return true; 
-            }     
-            else 
-            { 
-                return false; 
-            }    
+                stack[stackPointer] = image_height * x + y;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -98,16 +98,16 @@ namespace sluggish.utilities
         /// <param name="av_y">average y coordinate of the region</param>
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
-        public static void floodFillLinear(int x, int y, 
+        public static void floodFillLinear(int x, int y,
                               int threshold,
                               int[] stack,
-                              ref int tx, ref int ty, ref int bx, ref int by, 
-                              ref long pixels, 
-                              ref long av_intensity, 
+                              ref int tx, ref int ty, ref int bx, ref int by,
+                              ref long pixels,
+                              ref long av_intensity,
                               int[,] source,
                               bool[,] current,
                               bool[,] region,
-                              ref long av_x, ref long av_y, 
+                              ref long av_x, ref long av_y,
                               int image_width, int image_height)
         {
             if (current[x, y] == false)
@@ -133,7 +133,7 @@ namespace sluggish.utilities
                         y1++;
                         spanLeft = false;
                         spanRight = false;
-                        while (((current[x, y1] == false) && (source[x, y1] > threshold)) && (y1 < image_height-1))
+                        while (((current[x, y1] == false) && (source[x, y1] > threshold)) && (y1 < image_height - 1))
                         {
                             current[x, y1] = true;
                             region[x, y1] = true;
@@ -174,7 +174,7 @@ namespace sluggish.utilities
                 }
             }
         }
-        
+
 
         /// <summary>
         /// flood fill from the given point, updating a boolean array (region)
@@ -196,69 +196,69 @@ namespace sluggish.utilities
         /// <param name="av_y">average y coordinate of the region</param>
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
-        public static void floodFillRecursive(int x, int y, 
+        public static void floodFillRecursive(int x, int y,
                               int threshold,
                               int depth, int max_search_depth,
-                              ref int tx, ref int ty, ref int bx, ref int by, 
-                              ref long pixels, 
-                              ref long av_intensity, 
+                              ref int tx, ref int ty, ref int bx, ref int by,
+                              ref long pixels,
+                              ref long av_intensity,
                               int[,] source,
                               bool[,] current,
                               bool[,] region,
-                              ref long av_x, ref long av_y, 
+                              ref long av_x, ref long av_y,
                               int image_width, int image_height)
         {
-            if ((current[x,y] == false) && (source[x, y] > threshold) && (depth < max_search_depth))
+            if ((current[x, y] == false) && (source[x, y] > threshold) && (depth < max_search_depth))
             {
                 if (x < tx) tx = x;
-	            if (x > bx) bx = x;
-	            if (y < ty) ty = y;
-	            if (y > by) by = y;
+                if (x > bx) bx = x;
+                if (y < ty) ty = y;
+                if (y > by) by = y;
 
                 av_intensity += source[x, y];
 
-	            av_x += x;
-	            av_y += y;
+                av_x += x;
+                av_y += y;
 
-	            pixels++;
+                pixels++;
 
                 current[x, y] = true;
                 region[x, y] = true;
 
-	            if (x > 0)
-	            {
+                if (x > 0)
+                {
                     floodFillRecursive(x - 1, y, threshold, depth + 1, max_search_depth, ref tx, ref ty, ref bx, ref by, ref pixels, ref av_intensity, source, current, region, ref av_x, ref av_y, image_width, image_height);
 
-	                if (y > 0)
-	                {
+                    if (y > 0)
+                    {
                         floodFillRecursive(x - 1, y - 1, threshold, depth + 1, max_search_depth, ref tx, ref ty, ref bx, ref by, ref pixels, ref av_intensity, source, current, region, ref av_x, ref av_y, image_width, image_height);
 
-		                if (x < image_width-1)
-		                {
+                        if (x < image_width - 1)
+                        {
                             floodFillRecursive(x + 1, y - 1, threshold, depth + 1, max_search_depth, ref tx, ref ty, ref bx, ref by, ref pixels, ref av_intensity, source, current, region, ref av_x, ref av_y, image_width, image_height);
-		                }
-	                }
+                        }
+                    }
 
-	                if (x < image_width-1)
-	                {
+                    if (x < image_width - 1)
+                    {
                         floodFillRecursive(x + 1, y, threshold, depth + 1, max_search_depth, ref tx, ref ty, ref bx, ref by, ref pixels, ref av_intensity, source, current, region, ref av_x, ref av_y, image_width, image_height);
 
-		                if (y < image_height-1)
-		                {
+                        if (y < image_height - 1)
+                        {
                             floodFillRecursive(x + 1, y + 1, threshold, depth + 1, max_search_depth, ref tx, ref ty, ref bx, ref by, ref pixels, ref av_intensity, source, current, region, ref av_x, ref av_y, image_width, image_height);
-		                }
-	                }
-	            }
+                        }
+                    }
+                }
 
                 if (y > 0)
-	            {
+                {
                     floodFillRecursive(x, y - 1, threshold, depth + 1, max_search_depth, ref tx, ref ty, ref bx, ref by, ref pixels, ref av_intensity, source, current, region, ref av_x, ref av_y, image_width, image_height);
-	            }
+                }
 
-	            if (y < image_height-1)
-	            {
+                if (y < image_height - 1)
+                {
                     floodFillRecursive(x, y + 1, threshold, depth + 1, max_search_depth, ref tx, ref ty, ref bx, ref by, ref pixels, ref av_intensity, source, current, region, ref av_x, ref av_y, image_width, image_height);
-	            }
+                }
 
             }
         }
@@ -300,10 +300,10 @@ namespace sluggish.utilities
                                    int x, int y, int box_width, int box_height,
                                    float rotation, int r, int g, int b, int line_width)
         {
-            int tx = -box_width/2;
-            int ty = -box_height/2;
-            int bx = box_width/2;
-            int by = box_height/2;
+            int tx = -box_width / 2;
+            int ty = -box_height / 2;
+            int bx = box_width / 2;
+            int by = box_height / 2;
             int[] xx = new int[4];
             int[] yy = new int[4];
             xx[0] = tx;
@@ -348,13 +348,19 @@ namespace sluggish.utilities
         public static void drawCircle(Byte[] img, int img_width, int img_height,
                                       int x, int y, int radius, int r, int g, int b, int line_width)
         {
+            drawCircle(img, img_width, img_height, (float)x, (float)y, (float)radius, r, g, b, line_width);
+        }
+
+        public static void drawCircle(Byte[] img, int img_width, int img_height,
+                                      float x, float y, float radius, int r, int g, int b, int line_width)
+        {
             int points = 20;
             int prev_xx = 0, prev_yy = 0;
-            for (int i = 0; i < points+1; i++)
+            for (int i = 0; i < points + 1; i++)
             {
                 float angle = i * 2 * (float)Math.PI / points;
-                int xx = x + (int)(radius * Math.Sin(angle));
-                int yy = y + (int)(radius * Math.Cos(angle));
+                int xx = (int)Math.Round(x + (radius * Math.Sin(angle)));
+                int yy = (int)Math.Round(y + (radius * Math.Cos(angle)));
 
                 if (i > 0)
                     drawLine(img, img_width, img_height, prev_xx, prev_yy, xx, yy, r, g, b, line_width, false);
@@ -396,67 +402,67 @@ namespace sluggish.utilities
             // draw the columns
             for (int col = 0; col <= columns; col++)
             {
-                float grid_x = ((col * size_width) / (float)columns) - (size_width/2);
+                float grid_x = ((col * size_width) / (float)columns) - (size_width / 2);
                 int prev_x = 0;
                 int prev_y = 0;
                 for (int row = 0; row <= rows; row += rows)
                 {
-                    float grid_y = ((row * size_height) / (float)rows) - (size_height/2);
-                    float hyp = (float)Math.Sqrt((grid_x*grid_x) + (grid_y*grid_y));
+                    float grid_y = ((row * size_height) / (float)rows) - (size_height / 2);
+                    float hyp = (float)Math.Sqrt((grid_x * grid_x) + (grid_y * grid_y));
                     float angle = 0;
                     if (hyp > 0)
                     {
                         angle = (float)Math.Asin(grid_x / hyp);
-                        if (grid_y < 0) angle = (float)(Math.PI*2)-angle;
+                        if (grid_y < 0) angle = (float)(Math.PI * 2) - angle;
                     }
                     angle += rotation;
-                    
+
                     int x = (int)(centre_x + (hyp * Math.Sin(angle)));
                     int y = (int)(centre_y + (hyp * Math.Cos(angle)));
-                    
+
                     if (row > 0)
                     {
                         drawLine(img, img_width, img_height, prev_x, prev_y, x, y,
                                  r, g, b, linewidth, false);
                     }
-                    
+
                     prev_x = x;
                     prev_y = y;
                 }
             }
 
             // draw the rows
-            for (int row = 0; row <= rows; row ++)            
+            for (int row = 0; row <= rows; row++)
             {
-                float grid_y = ((row * size_height) / (float)rows) - (size_height/2);                
+                float grid_y = ((row * size_height) / (float)rows) - (size_height / 2);
                 int prev_x = 0;
                 int prev_y = 0;
-                for (int col = 0; col <= columns; col += columns)                
+                for (int col = 0; col <= columns; col += columns)
                 {
-                    float grid_x = ((col * size_width) / (float)columns) - (size_width/2);   
-                    float hyp = (float)Math.Sqrt((grid_x*grid_x) + (grid_y*grid_y));
+                    float grid_x = ((col * size_width) / (float)columns) - (size_width / 2);
+                    float hyp = (float)Math.Sqrt((grid_x * grid_x) + (grid_y * grid_y));
                     float angle = 0;
                     if (hyp > 0)
                     {
                         angle = (float)Math.Asin(grid_x / hyp);
-                        if (grid_y < 0) angle = (float)(Math.PI*2)-angle;
+                        if (grid_y < 0) angle = (float)(Math.PI * 2) - angle;
                     }
                     angle += rotation;
-                    
+
                     int x = (int)(centre_x + (hyp * Math.Sin(angle)));
                     int y = (int)(centre_y + (hyp * Math.Cos(angle)));
-                    
+
                     if (col > 0)
                     {
                         drawLine(img, img_width, img_height, prev_x, prev_y, x, y,
                                  r, g, b, linewidth, false);
                     }
-                    
+
                     prev_x = x;
                     prev_y = y;
                 }
             }
-        
+
         }
 
         /// <summary>
@@ -566,5 +572,5 @@ namespace sluggish.utilities
                 }
             }
         }
-	}
+    }
 }

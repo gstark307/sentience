@@ -27,24 +27,60 @@ namespace sluggish.utilities.graph
     /// </summary>
     public class graph_points : graph
     {
+        #region "constructors"
+
+        /// <summary>
+        /// initialise the graph screen image with the given dimensions
+        /// </summary>
+        /// <param name="screen_width">width of the screen in pixels</param>
+        /// <param name="screen_height">height of the screen in pixels</param>
+        protected void initialiseGraph(int screen_width, int screen_height)
+        {
+            this.screen_width = screen_width;
+            this.screen_height = screen_height;
+            image = new Byte[screen_width * screen_height * 3];
+            history = new ArrayList();
+            Reset();
+        }
+
         /// <summary>
         /// constructor
         /// </summary>
-        /// <param name="max_time">maximum time in ticks</param>
-        /// <param name="max_value_y">maximum value</param>
-        /// <param name="min_value_y">minimum value</param>
-        public graph_points(float min_value_x, float max_value_x, float min_value_y, float max_value_y)
+        /// <param name="min_value_x">minimum x value</param>
+        /// <param name="max_value_x">maximum x value</param>
+        /// <param name="min_value_y">minimum y value</param>
+        /// <param name="max_value_y">maximum y value</param>
+        public graph_points(float min_value_x, float max_value_x,
+                            float min_value_y, float max_value_y)
         {
             this.max_value_x = max_value_x;
             this.min_value_x = min_value_x;
             this.max_value_y = max_value_y;
             this.min_value_y = min_value_y;
-            screen_width = 640;
-            screen_height = 480;
-            image = new Byte[screen_width * screen_height * 3];
-            history = new ArrayList();
-            Reset();
+            initialiseGraph(640, 480);
         }
+
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="min_value_x">minimum x value</param>
+        /// <param name="max_value_x">maximum x value</param>
+        /// <param name="min_value_y">minimum y value</param>
+        /// <param name="max_value_y">maximum y value</param>
+        /// <param name="screen_width">width of the screen</param>
+        /// <param name="screen_height">height of the screen</param>
+        public graph_points(float min_value_x, float max_value_x,
+                            float min_value_y, float max_value_y,
+                            int screen_width, int screen_height)
+        {
+            this.max_value_x = max_value_x;
+            this.min_value_x = min_value_x;
+            this.max_value_y = max_value_y;
+            this.min_value_y = min_value_y;
+            initialiseGraph(screen_width, screen_height);
+        }
+
+        #endregion
 
         /// <summary>
         /// resets the display

@@ -21,12 +21,27 @@ using System;
 using System.Collections;
 
 namespace sluggish.imageprocessing
-{	
-	public class regionCollection : ArrayList
-	{
-		public regionCollection()
-		{
-		}
+{
+    public class regionCollection : ArrayList
+    {
+        public regionCollection()
+        {
+        }
+
+        /// <summary>
+        /// returns the regions as a set of polygons
+        /// </summary>
+        /// <returns></returns>
+        public ArrayList GetPolygons()
+        {
+            ArrayList polygons = new ArrayList();
+            for (int i = 0; i < Count; i++)
+            {
+                region r = (region)this[i];
+                polygons.Add(r.GetPolygon());
+            }
+            return (polygons);
+        }
 
         public void Merge(int minimum_separation)
         {
@@ -71,20 +86,29 @@ namespace sluggish.imageprocessing
                     // merge regions together
                     float average_width = r1.width;
                     float average_orientation = r1.orientation;
-                    int orientation_hits = 0;
+                    int orientation_hits = 1;
                     for (int j = 0; j < merge_regions.Count; j++)
                     {
                         region r3 = (region)merge_regions[j];
                         average_width += r3.width;
 
-                        float diff1 = Math.Abs(average_orientation - r3.orientation);
-                        float diff2 = Math.Abs(average_orientation - (r3.orientation + (float)Math.PI));
-                        float diff3 = Math.Abs(average_orientation - (r3.orientation - (float)Math.PI));
+                        //Console.WriteLine("orientation = " + ((int)(r3.orientation / Math.PI * 180)).ToString());
+
+                        float orient = r3.orientation;
+                        if (orient > Math.PI / 2) orient -= (float)Math.PI;
+
+                        //average_orientation += orient;
+                        //orientation_hits++;
+
+
+                        float diff1 = Math.Abs(average_orientation - orient);
+                        float diff2 = Math.Abs(average_orientation - (orient + (float)Math.PI));
+                        float diff3 = Math.Abs(average_orientation - (orient - (float)Math.PI));
                         if ((diff1 < diff2) && (diff1 < diff3))
                         {
                             if (diff1 < Math.PI / 4)
                             {
-                                average_orientation += r3.orientation;
+                                average_orientation += orient;
                                 orientation_hits++;
                             }
                         }
@@ -92,7 +116,7 @@ namespace sluggish.imageprocessing
                         {
                             if (diff2 < Math.PI / 4)
                             {
-                                average_orientation += (r3.orientation + (float)Math.PI);
+                                average_orientation += (orient + (float)Math.PI);
                                 orientation_hits++;
                             }
                         }
@@ -100,29 +124,33 @@ namespace sluggish.imageprocessing
                         {
                             if (diff3 < Math.PI / 4)
                             {
-                                average_orientation += (r3.orientation - (float)Math.PI);
+                                average_orientation += (orient - (float)Math.PI);
                                 orientation_hits++;
                             }
                         }
-                        
+
+
                     }
+
                     average_width /= (merge_regions.Count + 1);
-                    average_orientation /= (merge_regions.Count + 1);
+                    //average_orientation /= (merge_regions.Count + 1);
                     if (orientation_hits > 0)
                     {
                         average_orientation /= orientation_hits;
-                        //r1.polygon.rotate(average_orientation - r1.orientation, r1.centre_x, r1.centre_y);
+                        float orient = r1.orientation;
+                        if (orient > Math.PI / 2) orient -= (float)Math.PI;
+                        //r1.polygon.rotate(orient - average_orientation, r1.centre_x, r1.centre_y);
                     }
                     r1.polygon.Scale(average_width / r1.width);
                     r1.confidence = merge_regions.Count;
+                    //r1.orientation = average_orientation;
 
-                    
                     for (int j = 0; j < r1.polygon.x_points.Count; j++)
                     {
                         r1.corners[j * 2] = (float)r1.polygon.x_points[j];
                         r1.corners[(j * 2) + 1] = (float)r1.polygon.y_points[j];
                     }
-                     
+
                 }
                 if (r1 != null) new_regions.Add(r1);
             }
@@ -183,13 +211,13 @@ namespace sluggish.imageprocessing
         /// <param name="line_width">line width to use when drawing</param>
         /// <param name="style">display </param>
         public void Show(byte[] bmp, int image_width, int image_height,
-		                 int bytes_per_pixel, int line_width, int style)
-		{
-		    for (int i = 0; i < Count; i++)
-		    {
-		        region r = (region)this[i];
-		        r.Show(bmp, image_width, image_height, bytes_per_pixel, line_width, style);
-		    }
-		}		
-	}
+                         int bytes_per_pixel, int line_width, int style)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                region r = (region)this[i];
+                r.Show(bmp, image_width, image_height, bytes_per_pixel, line_width, style);
+            }
+        }
+    }
 }

@@ -21,11 +21,11 @@ using System;
 
 namespace sluggish.utilities
 {
-	public class geometry
-	{		
-		public geometry()
-		{
-		}
+    public class geometry
+    {
+        public geometry()
+        {
+        }
 
         /// <summary>
         /// returns the angle subtended by three points
@@ -46,12 +46,12 @@ namespace sluggish.utilities
             float pt3 = x2 - x1;
             float pt4 = y2 - y1;
 
-            float angle = ((pt1 * pt3) + (pt2 * pt4)) / 
-                           (((float)Math.Sqrt((pt1*pt1) + (pt2*pt2))) * 
-                            ((float)Math.Sqrt((pt3*pt3) + (pt4*pt4))));
+            float angle = ((pt1 * pt3) + (pt2 * pt4)) /
+                           (((float)Math.Sqrt((pt1 * pt1) + (pt2 * pt2))) *
+                            ((float)Math.Sqrt((pt3 * pt3) + (pt4 * pt4))));
 
             angle = (float)Math.Acos(angle);
-            return(angle);
+            return (angle);
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace sluggish.utilities
                     perpendicular_dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
                 }
             }
-            
+
             return (perpendicular_dist);
         }
 
@@ -137,7 +137,7 @@ namespace sluggish.utilities
                 m2 = (float)1e+10;   //close, but no cigar
 
             dm = (float)Math.Abs(m1 - m2);
-            if (dm > 0.01f)
+            if (dm > 0.000001f)
             {
                 //compute constants
                 a1 = m1;
@@ -178,5 +178,5 @@ namespace sluggish.utilities
             return (insideLine);
         }
 
-	}
+    }
 }
