@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using System.Collections;
+using sluggish.utilities;
 using CenterSpace.Free;
 
 namespace sentience.core
@@ -57,21 +58,29 @@ namespace sentience.core
 
         ///attention map
         public bool[,] attention_map;
+
         ///disparity map
         public float[,] disparity_map;
+
         //public float[,] confidence_map;
         public int[,] disparity_hits;
+
         //public int[,] confidence_hits;
         public int[,] scale_width;
 
         // step size used to speed up blob detection
         public int step_size = 1;
 
+        // the number of scales on which stereo matches will be searched for
         const int no_of_scales = 3;
 
+        // to speed things up the original images are sub-sampled, typically
+        // by removing alternate rows
         public int vertical_compression = 4;
         public int disparity_map_compression = 3;
 
+        // previous compression values.  We store these so that any changes
+        // at runtime can be detected
         private int prev_vertical_compression;
         private int prev_disparity_map_compression;
 
@@ -101,6 +110,12 @@ namespace sentience.core
 
         Byte[] left_image = null;
 
+        // gaussian function lookup table
+        const int gaussian_lookup_levels = 1000;
+        float[] gaussian_lookup;
+
+        #region "constructors"
+
         /// <summary>
         /// constructor
         /// This sets some initial default values.
@@ -117,11 +132,27 @@ namespace sentience.core
             max_disparity = 10;
         }
 
+        #endregion
+
+        #region "initialisation"
+
+        /// <summary>
+        /// clear the attention map
+        /// </summary>
+        /// <param name="wdth">width of the attention map</param>
+        /// <param name="hght">height of the attention map</param>
+        public void resetAttention(int wdth, int hght)
+        {
+            for (int xx = 0; xx < wdth; xx++)
+                for (int yy = 0; yy < hght; yy++)
+                    attention_map[xx, yy] = true;
+        }
+
         /// <summary>
         /// clear the disparity map
         /// </summary>
-        /// <param name="map_wdth"></param>
-        /// <param name="map_hght"></param>
+        /// <param name="map_wdth">width of the disparity map</param>
+        /// <param name="map_hght">height of the disparity map</param>
         public void clearDisparityMap(int map_wdth, int map_hght)
         {
             for (int x = 0; x < map_wdth; x++)
@@ -132,7 +163,16 @@ namespace sentience.core
                 }
         }
 
+        #endregion
 
+        #region "filtering/smoothing"
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="map_wdth">width of the disparity map</param>
+        /// <param name="map_hght">height of the disparity map</param>
+        /// <param name="threshold"></param>
         public void filterDisparityMap(int map_wdth, int map_hght, int threshold)
         {
             float diff1, diff2;
@@ -197,7 +237,15 @@ namespace sentience.core
             }
         }
 
-        public void smoothDisparityMapSlanted(int map_wdth, int map_hght, int slant_direction)
+        /// <summary>
+        /// perform smoothing on the disparity values when the stereo camera is rolled
+        /// at a 45 degree angle
+        /// </summary>
+        /// <param name="map_wdth">width of the disparity map</param>
+        /// <param name="map_hght">height of the disparity map</param>
+        /// <param name="slant_direction">is the camera rolled to the left or right</param>
+        public void smoothDisparityMapSlanted(int map_wdth, int map_hght, 
+                                              int slant_direction)
         {
             float tollerance = 1.0f * step_size;
             //int search_y = (int)(map_hght * (max_disparity - value) / (5 * max_disparity));
@@ -246,6 +294,11 @@ namespace sentience.core
         }
 
 
+        /// <summary>
+        /// smooths the disparity map when the stereo camera is at a normal zero degrees roll angle
+        /// </summary>
+        /// <param name="map_wdth">width of the disparity map</param>
+        /// <param name="map_hght">height of the disparity map</param>
         public void smoothDisparityMap(int map_wdth, int map_hght)
         {
             float tollerance = 1.0f * step_size;
@@ -290,29 +343,35 @@ namespace sentience.core
             disparity_map = new_disparity_map;
         }
 
+        #endregion
 
-        private float Gaussian(float fraction)
-        {
-            fraction *= 3.0f;
-            float prob = (float)((1.0f / Math.Sqrt(2.0 * Math.PI)) * Math.Exp(-0.5 * fraction * fraction));
-
-            return (prob * 2.5f);
-        }
+        #region "updating the disparity map"
 
         /// <summary>
         /// update the disparity map at the given point using the given scale
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="map_wdth"></param>
-        /// <param name="map_hght"></param>
-        /// <param name="scale"></param>
-        private void updateDisparityMap(int x, int y, int map_wdth, int map_hght, int scale, float disparity_value, float confidence)
+        /// <param name="x">x coordinate at which to insert the disparity data</param>
+        /// <param name="y">y coordinate at which to insert the disparity data</param>
+        /// <param name="map_wdth">width of the disparity map</param>
+        /// <param name="map_hght">height of the disparity map</param>
+        /// <param name="scale">an index number corresponding to the scale upon which data should be inserted into the disparity map</param>
+        /// <param name="disparity_value">the disparity value to be added to the map</param>
+        /// <param name="confidence">how confident are we about this disparity value?</param>
+        private void updateDisparityMap(int x, int y, 
+                                        int map_wdth, int map_hght, 
+                                        int scale, 
+                                        float disparity_value, 
+                                        float confidence)
         {
+            // determine the surround area within which disparity data will be inserted
             int surround_pixels_x = scale_width[scale, 0]/2;
             if (surround_pixels_x < 2) surround_pixels_x = 2;
             int surround_pixels_y = scale_width[scale, 1]/2;
             if (surround_pixels_y < 2) surround_pixels_y = 2;
+
+            // create a gaussian lookup table to improve speed if necessary
+            if (gaussian_lookup == null)
+                gaussian_lookup = probabilities.CreateHalfGaussianLookup(gaussian_lookup_levels);
 
             //for (int xx = x - surround_pixels_x; xx < x + surround_pixels_x; xx++)
             for (int xx = x; xx < x + surround_pixels_x; xx++)
@@ -329,10 +388,17 @@ namespace sentience.core
                             int dist = (int)Math.Sqrt((dx*dx)+(dy*dy));
                             if (dist < surround_pixels_x)
                             {
-                                float fraction = (surround_pixels_x - dist) / (float)surround_pixels_x;
-                                int hits = 10 + (int)(Gaussian(fraction) * 100 * confidence);
-                                disparity_map[xx, yy] += (disparity_value*hits);
+                                // get the index within the gaussian lookup table
+                                // based upon the fractional distance from the x,y centre point relative to the surround radius
+                                int gaussian_index = (int)Math.Round((surround_pixels_x - dist) * (gaussian_lookup_levels-1) / (float)surround_pixels_x);
+
+                                // number of hits, proportional to a gaussian probability distribution
+                                int hits = 10 + (int)(gaussian_lookup[gaussian_index] * 100 * confidence);
+
+                                // update the disparity map at this location
+                                disparity_map[xx, yy] += (disparity_value * hits);
                                 disparity_hits[xx, yy] += hits;
+
                                 //confidence_map[xx, yy] = confidence;
                                 //confidence_hits[xx, yy] += hits;
                             }
@@ -342,32 +408,38 @@ namespace sentience.core
             }
         }
 
+        #endregion
+
+        #region "main update routine"
 
         /// <summary>
-        /// clear the attention map
+        /// main update routine for contour based stereo correspondence
         /// </summary>
-        public void resetAttention(int wdth, int hght)
-        {
-            for (int xx = 0; xx < wdth; xx++)
-                for (int yy = 0; yy < hght; yy++)
-                    attention_map[xx, yy] = true;
-        }
-
-
+        /// <param name="left_bmp">left image data</param>
+        /// <param name="right_bmp">right image data</param>
+        /// <param name="wdth">width of the images</param>
+        /// <param name="hght">height of the images</param>
+        /// <param name="calibration_offset_x">calibration offset to counter for any small vergence angle between the cameras</param>
+        /// <param name="calibration_offset_y">calibration offset to counter for any small vergence angle between the cameras</param>
+        /// <param name="reset_attention">reset the attention map</param>
         public void update(Byte[] left_bmp, Byte[] right_bmp,
                            int wdth, int hght,
-                           float calibration_offset_x, float calibration_offset_y, bool reset_attention)
+                           float calibration_offset_x, float calibration_offset_y, 
+                           bool reset_attention)
         {
             int scale, idx;
             int x, y, x2;
 
-            if ((wavepoints_left == null) || (vertical_compression != prev_vertical_compression) ||
-                                             (disparity_map_compression != prev_disparity_map_compression))
+            if ((wavepoints_left == null) || 
+                (vertical_compression != prev_vertical_compression) ||
+                (disparity_map_compression != prev_disparity_map_compression))
             {
+                // create image objects to store the left and right camera data
                 img_left = new classimage();
                 img_left.createImage(wdth, hght / vertical_compression);
                 img_right = new classimage();
                 img_right.createImage(wdth, hght / vertical_compression);
+
                 wavepoints_left = new float[hght / vertical_compression, wdth / step_size];
                 wavepoints_left_scale = new int[hght / vertical_compression, wdth / step_size];
                 wavepoints_left_pattern = new int[hght / vertical_compression, wdth / step_size];
@@ -378,6 +450,7 @@ namespace sentience.core
                 scalepoints_right = new int[no_of_scales, wdth + 1];
                 scalepoints_lookup = new int[no_of_scales, wdth, wdth + 1];
 
+                // create an attention map
                 attention_map = new bool[wdth, hght];
                 resetAttention(wdth, hght);
 
@@ -400,6 +473,8 @@ namespace sentience.core
 
             if (reset_attention) resetAttention(wdth, hght);
 
+            // store compression values so that changes in these
+            // values can be detected
             prev_vertical_compression = vertical_compression;
             prev_disparity_map_compression = disparity_map_compression;
 
@@ -422,9 +497,11 @@ namespace sentience.core
             // update blobs on multiple scales
             for (scale = 0; scale < no_of_scales; scale++)
             {
+                // get x and y radius for this scale
                 int surround_pixels_x = scale_width[scale, 0];
                 int surround_pixels_y = scale_width[scale, 1];
 
+                // detect blobs at this scale
                 img_left.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_left, wavepoints_left_scale, wavepoints_left_pattern, blob_type);
                 img_right.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_right, wavepoints_right_scale, wavepoints_right_pattern, blob_type);
             }
@@ -438,6 +515,7 @@ namespace sentience.core
             int searchfactor = 4;
             int max_disp2 = max_disp / searchfactor;
 
+            // for each row of the image
             for (y = 0; y < hght / vertical_compression; y++)
             {
                 for (int sign = 0; sign < 4; sign++)
@@ -525,8 +603,11 @@ namespace sentience.core
                             {
                                 int disp = -1;
                                 //int winner = -1;
+
+                                // get the position and response magnitude of the left point
                                 int x_left = scalepoints_left[scale, i + 1];
                                 float diff_left = wavepoints_left[y, x_left];
+
                                 int x_left2 = x_left - 2;
                                 if (x_left2 < 0) x_left2 = 0;
                                 int x_left3 = x_left + 2;
@@ -630,9 +711,13 @@ namespace sentience.core
 
             //update the selected features
             getSelectedFeatures(wdth, hght);
-             
-            
+
+
         }
+
+        #endregion
+
+        #region "returning results"
 
         /// <summary>
         /// update the selected features array
@@ -786,6 +871,8 @@ namespace sentience.core
                 }
             }
         }
+
+        #endregion
 
 
     }

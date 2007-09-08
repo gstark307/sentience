@@ -18,9 +18,7 @@
 */
 
 using System;
-using System.IO;
-using System.Collections;
-using System.Text;
+using sluggish.utilities;
 
 namespace sentience.core
 {
@@ -31,8 +29,6 @@ namespace sentience.core
 
         public Byte[] image;
         long[,] Integral;
-
-        Random rnd = new Random();
 
         /// <summary>
         /// constructor
@@ -81,33 +77,8 @@ namespace sentience.core
         /// </summary>
         public void updateIntegralImage()
         {
-            int x, y, p, n = 0;
-
-            for (y = 1; y < height; y++)
-            {
-                p = 0;
-                for (x = 0; x < width; x++)
-                {
-                    p += image[n];
-                    Integral[x,y] = p + Integral[x,y-1];
-                    n++;
-                }
-            }            
+            sluggish.utilities.image.updateIntegralImage(image, width, height, Integral);
         }
-
-        /// <summary>
-        /// get the total pixel value for the given area
-        /// </summary>
-        /// <param name="tx"></param>
-        /// <param name="ty"></param>
-        /// <param name="bx"></param>
-        /// <param name="by"></param>
-        /// <returns></returns>
-        public long getIntegral(int tx, int ty, int bx, int by)
-        {
-            return(Integral[bx,by] + Integral[tx,ty] - (Integral[tx,by] + Integral[bx,ty]));
-        }
-
 
         /// <summary>
         /// get image from a bitmap
@@ -228,18 +199,18 @@ namespace sentience.core
             ty1 = y - blobradius_y;
             bx1 = tx1 + diameter_x;
             by1 = ty1 + diameter_y;
-            outer = getIntegral(tx1, ty1, bx1, by1);
+            outer = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, bx1, by1);
             tx2 = x - half_radius_x;
             ty2 = y - half_radius_y;
             bx2 = tx2 + blobradius_x;
             by2 = ty2 + blobradius_y;
-            inner = getIntegral(tx2, ty2, bx2, by2);
+            inner = sluggish.utilities.image.getIntegral(Integral, tx2, ty2, bx2, by2);
             float outer_average = (outer - inner) / outer_pixels;
             float inner_average = inner / inner_pixels;
             diff = outer_average - inner_average;
 
             // left/right
-            long leftside = getIntegral(tx1, ty1, tx1 + blobradius_x, by1);
+            long leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1);
             float left_average = leftside * 2 / outer_pixels;
             float right_average = (outer - leftside) * 2 / outer_pixels;
             diff2 = left_average - right_average;
