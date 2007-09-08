@@ -24,7 +24,7 @@ using System.Text;
 
 namespace sentience.core
 {
-    public class evidenceRay
+    public sealed class evidenceRay
     {
         public const int pan_steps = 25;
 

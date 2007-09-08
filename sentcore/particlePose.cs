@@ -24,7 +24,7 @@ using sluggish.utilities;
 
 namespace sentience.core
 {
-    public class particlePose
+    public sealed class particlePose
     {
         // position of the pose in millimetres
         public float x, y;

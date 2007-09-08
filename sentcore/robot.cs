@@ -29,7 +29,11 @@ namespace sentience.core
 {
     public class robot : pos3D
     {
-        public String Name = "My Robot";          // name of the robot
+        // name of the robot
+        public String Name = "My Robot";          
+
+        // the number of rays per stereo camera to be thrown at each time step
+        private const int rays_per_stereo_camera = 50;
 
         #region "benchmark timings"
 
@@ -180,8 +184,8 @@ namespace sentience.core
 
         public robot(int no_of_stereo_cameras)
             : base(0, 0, 0)
-        {
-            init(no_of_stereo_cameras);
+        {            
+            init(no_of_stereo_cameras, rays_per_stereo_camera);
             //initDualCam();
         }
 
@@ -228,7 +232,9 @@ namespace sentience.core
         /// initialise with the given number of stereo cameras
         /// </summary>
         /// <param name="no_of_stereo_cameras">the number of stereo cameras on the robot (not the total number of cameras)</param>
-        private void init(int no_of_stereo_cameras)
+        /// <param name="rays_per_stereo_camera">the number of rays which will be thrown from each stereo camera per time step</param>
+        private void init(int no_of_stereo_cameras, 
+                          int rays_per_stereo_camera)
         {
             this.no_of_stereo_cameras = no_of_stereo_cameras;
 
@@ -242,7 +248,7 @@ namespace sentience.core
             // on each time step.  This figure should be large enough to get reasonable
             // detail, but not so large that the mapping consumes a huge amount of 
             // processing resource
-            inverseSensorModel.no_of_stereo_features = 100;
+            inverseSensorModel.no_of_stereo_features = rays_per_stereo_camera;
             correspondence = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
 
             // add a local occupancy grid
@@ -1307,7 +1313,7 @@ namespace sentience.core
             if (xnod.Name == "NoOfStereoCameras")
             {
                 int no_of_cameras = Convert.ToInt32(xnod.InnerText);
-                init(no_of_cameras);
+                init(no_of_cameras, rays_per_stereo_camera);
             }
 
             if (xnod.Name == "EnableScanMatching")

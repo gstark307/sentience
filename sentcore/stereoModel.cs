@@ -27,7 +27,7 @@ using sluggish.utilities;
 
 namespace sentience.core
 {
-    public class stereoModel
+    public sealed class stereoModel
     {
         MersenneTwister rnd = new MersenneTwister(100);
 

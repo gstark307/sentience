@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using sluggish.utilities;
@@ -30,7 +31,7 @@ namespace sentience.core
     /// <summary>
     /// two dimensional grid storing multiple occupancy hypotheses
     /// </summary>
-    public class occupancygridMultiHypothesis : pos3D
+    public sealed class occupancygridMultiHypothesis : pos3D
     {
         // types of view of the occupancy grid returned by the Show method
         public const int VIEW_ABOVE = 0;
@@ -44,7 +45,7 @@ namespace sentience.core
         private MersenneTwister rnd = new MersenneTwister(100);
 
         // list grid cells which need to be cleared of garbage
-        private ArrayList garbage;
+        private List<occupancygridCellMultiHypothesis> garbage;
 
         // a quick lookup table for gaussian values
         private float[] gaussianLookup;
@@ -108,7 +109,7 @@ namespace sentience.core
             // make a lookup table for gaussians - saves doing a lot of floating point maths
             gaussianLookup = stereoModel.createHalfGaussianLookup(10);
 
-            garbage = new ArrayList();
+            garbage = new List<occupancygridCellMultiHypothesis>();
         }
 
         /// <summary>
@@ -283,7 +284,7 @@ namespace sentience.core
             {
                 int index = i;
 
-                occupancygridCellMultiHypothesis c = (occupancygridCellMultiHypothesis)garbage[index];
+                occupancygridCellMultiHypothesis c = garbage[index];
                 if (c.garbage_entries > 0)
                     total_garbage_hypotheses -= c.GarbageCollect();
 

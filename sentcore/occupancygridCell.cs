@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using CenterSpace.Free;
 using sluggish.utilities;
 
@@ -30,7 +31,7 @@ namespace sentience.core
     /// The grid cell object stores the vertical positions of particles so
     /// that no 3D information is lost
     /// </summary>
-    public class occupancygridCellMultiHypothesis
+    public sealed class occupancygridCellMultiHypothesis
     {
         // a value which is returned by the probability method 
         // if no occupancy evidence was discovered
@@ -38,7 +39,7 @@ namespace sentience.core
 
         // list of occupancy hypotheses, of type particleGridCell
         // each hypothesis list corresponds to a particular vertical (z) cell index
-        private ArrayList[] Hypothesis;
+        private List<particleGridCell>[] Hypothesis;
 
         #region "garbage collection"
 
@@ -62,8 +63,8 @@ namespace sentience.core
             {
                 int i = Hypothesis[vertical_index].Count - 1;
                 while ((i >= 0) && (garbage_entries > 0))
-                {
-                    particleGridCell h = (particleGridCell)Hypothesis[vertical_index][i];
+                {                    
+                    particleGridCell h = Hypothesis[vertical_index][i];
                     if (!h.Enabled) // has this hypothesis been marked for deletion?
                     {
                         Hypothesis[vertical_index].RemoveAt(i);
@@ -115,7 +116,7 @@ namespace sentience.core
         {
             int vertical_index = h.z;
             if (Hypothesis[vertical_index] == null)
-                Hypothesis[vertical_index] = new ArrayList();
+                Hypothesis[vertical_index] = new List<particleGridCell>();
             Hypothesis[vertical_index].Add(h);
         }
 
@@ -212,12 +213,12 @@ namespace sentience.core
                             if (path.Enabled)
                             {
                                 // do any hypotheses for this path exist at this location ?
-                                ArrayList map_cache_observations = path.GetHypotheses(x, y, z);
+                                List<particleGridCell> map_cache_observations = path.GetHypotheses(x, y, z);
                                 if (map_cache_observations != null)
                                 {
                                     for (int i = 0; i < map_cache_observations.Count; i++)
                                     {
-                                        particleGridCell h = (particleGridCell)map_cache_observations[i];
+                                        particleGridCell h = map_cache_observations[i];
                                         if (h.Enabled)
                                         {
                                             // only use evidence older than the current time 
@@ -398,7 +399,7 @@ namespace sentience.core
         public occupancygridCellMultiHypothesis(int vertical_dimension_cells)
         {
             //occupied = false;
-            Hypothesis = new ArrayList[vertical_dimension_cells];
+            Hypothesis = new List<particleGridCell>[vertical_dimension_cells];
             garbage = new bool[vertical_dimension_cells];
         }
 

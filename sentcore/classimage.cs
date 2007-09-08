@@ -28,7 +28,7 @@ namespace sentience.core
         public int width, height;
 
         public Byte[] image;
-        long[,] Integral;
+        int[,] Integral;
 
         /// <summary>
         /// constructor
@@ -58,7 +58,7 @@ namespace sentience.core
             height = hght;
 
             image = new Byte [width * height];
-            Integral = new long [width, height];
+            Integral = new int [width, height];
         }
 
 

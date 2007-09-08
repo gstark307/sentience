@@ -47,7 +47,7 @@ namespace sentience.core
     /// <summary>
     /// grid particle used to store a single hypothesis about occupancy
     /// </summary>
-    public class particleGridCell : particleGridCellBase
+    public sealed class particleGridCell : particleGridCellBase
     {
         // whether this particle is enabled or dead
         // this flag allows the system to go around collecting garbage

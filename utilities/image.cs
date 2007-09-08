@@ -1454,7 +1454,32 @@ namespace sluggish.utilities
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         /// <param name="Integral">integral image</param>
-        public static void updateIntegralImage(byte[] bmp, 
+        public static void updateIntegralImage(byte[] bmp,
+                                               int image_width, int image_height,
+                                               int[,] Integral)
+        {
+            int x, y, p, n = image_width;
+
+            for (y = 1; y < image_height; y++)
+            {
+                p = 0;
+                for (x = 0; x < image_width; x++)
+                {
+                    p += bmp[n];
+                    Integral[x, y] = p + Integral[x, y - 1];
+                    n++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// update the integral image, using the given mono bitmap
+        /// </summary>
+        /// <param name="bmp">mono image data</param>
+        /// <param name="image_width">width of the image</param>
+        /// <param name="image_height">height of the image</param>
+        /// <param name="Integral">integral image</param>
+        public static void updateIntegralImage(byte[] bmp,
                                                int image_width, int image_height,
                                                long[,] Integral)
         {
@@ -1539,6 +1564,19 @@ namespace sluggish.utilities
         /// <param name="by">bottom right y coordinate</param>
         /// <returns>summed pixel value for the area</returns>
         public static long getIntegral(long[,] Integral, int tx, int ty, int bx, int by)
+        {
+            return (Integral[bx, by] + Integral[tx, ty] - (Integral[tx, by] + Integral[bx, ty]));
+        }
+
+        /// <summary>
+        /// get the total pixel value for the given area
+        /// </summary>
+        /// <param name="tx">top left x coordinate</param>
+        /// <param name="ty">top left y coordinate</param>
+        /// <param name="bx">bottom right x coordinate</param>
+        /// <param name="by">bottom right y coordinate</param>
+        /// <returns>summed pixel value for the area</returns>
+        public static long getIntegral(int[,] Integral, int tx, int ty, int bx, int by)
         {
             return (Integral[bx, by] + Integral[tx, ty] - (Integral[tx, by] + Integral[bx, ty]));
         }

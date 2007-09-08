@@ -28,6 +28,11 @@ namespace sentience.core
 {
     public class motionModel
     {
+        // default noise parameters for the motion model
+        const float default_motion_noise_1 = 0.08f;
+        const float default_motion_noise_2 = 0.00025f;
+        const float default_motion_noise_3 = 0.00005f;
+
         // different modes used for creating pose lists
         public const int MODE_EGOCENTRIC = 0;  // sets all poses to the current known robot location
         public const int MODE_MONTE_CARLO = 1; // randomly distribute poses for monte carlo localisation
@@ -50,6 +55,7 @@ namespace sentience.core
         // the most probable path taken by the robot
         public particlePath best_path = null;
 
+        // random number generator
         private MersenneTwister rnd = new MersenneTwister(100);
 
         // the time step at which all branches converge to a single path
@@ -115,17 +121,17 @@ namespace sentience.core
             int i = 0;
             while (i < 2)
             {
-                motion_noise[i] = 0.08f;
+                motion_noise[i] = default_motion_noise_1;
                 i++;
             }
             while (i < 4)
             {
-                motion_noise[i] = 0.00025f;
+                motion_noise[i] = default_motion_noise_2;
                 i++;
             }
             while (i < motion_noise.Length)
             {
-                motion_noise[i] = 0.00005f;
+                motion_noise[i] = default_motion_noise_3;
                 i++;
             }
 

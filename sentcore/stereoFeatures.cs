@@ -26,7 +26,7 @@ namespace sentience.core
     /// <summary>
     /// stores a list of stereo features
     /// </summary>
-    public class stereoFeatures
+    public sealed class stereoFeatures
     {
         public int no_of_features;
         public float[] features = null;

@@ -33,7 +33,7 @@ namespace sentience.core
     /// Normally the lookup is quantised such that each array element corresponds
     /// to a single occupancy grid cell
     /// </summary>
-    public class rayModelLookup
+    public sealed class rayModelLookup
     {
         // stores the sensor models
         public float[,] probability = null;

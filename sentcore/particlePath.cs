@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using sluggish.utilities;
 using sluggish.utilities.xml;
@@ -30,7 +31,7 @@ namespace sentience.core
     /// <summary>
     /// stores a series of robot poses
     /// </summary>
-    public class particlePath
+    public sealed class particlePath
     {
         // used to indicate whether this path is currently active
         // if false, this path may be garbage collected
@@ -125,7 +126,7 @@ namespace sentience.core
         #region "map cache"
 
         // grid map cache for quick lookup
-        private ArrayList[][][] map_cache;
+        private List<particleGridCell>[][][] map_cache;
         private int map_cache_tx, map_cache_ty, map_cache_width_cells;
 
         /// <summary>
@@ -163,7 +164,7 @@ namespace sentience.core
 
                 // store the width of the map cache
                 map_cache_width_cells = radius_cells * 2;
-                map_cache = new ArrayList[map_cache_width_cells][][];
+                map_cache = new List<particleGridCell>[map_cache_width_cells][][];
             }
 
             int x = hypothesis.x - map_cache_tx;
@@ -180,13 +181,13 @@ namespace sentience.core
                 int z = hypothesis.z;
 
                 if (map_cache[x] == null)
-                    map_cache[x] = new ArrayList[map_cache_width_cells][];
+                    map_cache[x] = new List<particleGridCell>[map_cache_width_cells][];
 
                 if (map_cache[x][y] == null)
-                    map_cache[x][y] = new ArrayList[grid_dimension_vertical];
+                    map_cache[x][y] = new List<particleGridCell>[grid_dimension_vertical];
 
                 if (map_cache[x][y][z] == null)
-                    map_cache[x][y][z] = new ArrayList();
+                    map_cache[x][y][z] = new List<particleGridCell>();
 
                 // add to the list
                 map_cache[x][y][z].Add(hypothesis);
@@ -201,7 +202,7 @@ namespace sentience.core
         /// <param name="x">x coordinate of the grid cell</param>
         /// <param name="y">y coordinate of the grid cell</param>
         /// <returns>Occupancy hypotheses</returns>
-        public ArrayList GetHypotheses(int x, int y, int z)
+        public List<particleGridCell> GetHypotheses(int x, int y, int z)
         {
             int xx = x - map_cache_tx;
             if ((xx > -1) && (xx < map_cache_width_cells))
