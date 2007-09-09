@@ -22,7 +22,6 @@ using System.IO;
 using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using sluggish.utilities;
 using sluggish.utilities.xml;
 
@@ -66,6 +65,10 @@ namespace sentience.core
 
         #region "constructors"
 
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="max_length">the maximum number of poses which may be stored within this path</param>
         public particlePath(int max_length)
         {
             this.max_length = max_length;
@@ -108,6 +111,16 @@ namespace sentience.core
             //map_cache = new ArrayList[grid_dimension_cells][][];
         }
 
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="x">x position in millimetres</param>
+        /// <param name="y">y position in millimetres</param>
+        /// <param name="pan">pan angle in radians</param>
+        /// <param name="max_length">the maximum number of poses which may be stored within this path</param>
+        /// <param name="time_step">time step</param>
+        /// <param name="path_ID">ID number for the path</param>
+        /// <param name="grid_dimension_cells">occupancy grid dimension</param>
         public particlePath(float x, float y, float pan,
                             int max_length, UInt32 time_step, UInt32 path_ID,
                             int grid_dimension_cells)
@@ -143,12 +156,15 @@ namespace sentience.core
         /// <summary>
         /// adds a new hypothesis to the map cache
         /// </summary>
-        /// <param name="hypothesis"></param>
-        /// <param name="radius_cells"></param>
-        /// <param name="grid_dimension"></param>
-        /// <param name="grid_dimension_vertical"></param>
-        /// <returns></returns>
-        public bool Add(particleGridCell hypothesis, int radius_cells, int grid_dimension, int grid_dimension_vertical)
+        /// <param name="hypothesis">grid hypothesis to be added</param>
+        /// <param name="radius_cells">radius of the local map cache</param>
+        /// <param name="grid_dimension">dimension of the occupancy grid</param>
+        /// <param name="grid_dimension_vertical">height of the occupancy grid (z axis) in cells</param>
+        /// <returns>true if the hypothesis was added</returns>
+        public bool Add(particleGridCell hypothesis, 
+                        int radius_cells, 
+                        int grid_dimension, 
+                        int grid_dimension_vertical)
         {
             bool added = true;
 
@@ -167,19 +183,23 @@ namespace sentience.core
                 map_cache = new List<particleGridCell>[map_cache_width_cells][][];
             }
 
+            // get the x,y coordinate within the map cache
             int x = hypothesis.x - map_cache_tx;
             int y = hypothesis.y - map_cache_ty;
+
             if (((x < 0) || (x >= map_cache_width_cells)) ||
                 ((y < 0) || (y >= map_cache_width_cells)))
             {
+                // we're outside of the cache
                 added = false;
                 //resize_map_cache(x, y);
             }
             else
             {
-
+                // add the hypothesis to the cache map
                 int z = hypothesis.z;
 
+                // create new lists as they are needed
                 if (map_cache[x] == null)
                     map_cache[x] = new List<particleGridCell>[map_cache_width_cells][];
 
@@ -210,7 +230,6 @@ namespace sentience.core
                 int yy = y - map_cache_ty;
                 if ((yy > -1) && (yy < map_cache_width_cells))
                 {
-
                     // most of time we will be returning nulls, so
                     // prioritise these conditions
                     if (map_cache == null)
@@ -240,6 +259,8 @@ namespace sentience.core
 
         #endregion
 
+        #region "adding new poses"
+
         /// <summary>
         /// add a new pose to the path
         /// </summary>
@@ -256,11 +277,11 @@ namespace sentience.core
             {
                 if (current_pose == branch_pose)
                 {
-                    pose.previous_paths = new ArrayList();
+                    pose.previous_paths = new List<particlePath>();
                     int min = branch_pose.previous_paths.Count - MAX_PATH_HISTORY;
                     if (min < 0) min = 0;
                     for (int i = min; i < branch_pose.previous_paths.Count; i++)
-                        pose.previous_paths.Add((particlePath)branch_pose.previous_paths[i]);
+                        pose.previous_paths.Add(branch_pose.previous_paths[i]);
                     pose.previous_paths.Add(this);
                 }
                 else pose.previous_paths = pose.parent.previous_paths;
@@ -269,7 +290,7 @@ namespace sentience.core
             {
                 if (pose.parent == null)
                 {
-                    pose.previous_paths = new ArrayList();
+                    pose.previous_paths = new List<particlePath>();
                     pose.previous_paths.Add(this);
                 }
                 else pose.previous_paths = pose.parent.previous_paths;
@@ -292,6 +313,9 @@ namespace sentience.core
             }
         }
 
+        #endregion
+
+        #region "returning velocity data"
 
         /// <summary>
         /// returns a list containing the robots velocity at each point in the path
@@ -330,6 +354,10 @@ namespace sentience.core
             return (result);
         }
 
+        #endregion
+
+        #region "distillation"
+
         /// <summary>
         /// distill all grid particles within this path
         /// </summary>
@@ -345,6 +373,10 @@ namespace sentience.core
             map_cache = null;
             Enabled = false;
         }
+
+        #endregion
+
+        #region "removing branches"
 
         /// <summary>
         /// remove all poses along the path until a branch point is located
@@ -405,6 +437,10 @@ namespace sentience.core
 
             return (!Enabled);
         }
+
+        #endregion
+
+        #region "display functions"
 
         /// <summary>
         /// show the path
@@ -478,6 +514,8 @@ namespace sentience.core
                 }
             }
         }
+
+        #endregion
 
         #region "saving and loading"
 

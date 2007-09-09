@@ -127,7 +127,7 @@ namespace sentience.core
         /// <summary>
         /// return the probability of occupancy for the entire cell
         /// </summary>
-        /// <param name="pose"></param>
+        /// <param name="pose">pose from which the observation was made</param>
         /// <returns>probability as log odds</returns>
         public float GetProbability(particlePose pose, int x, int y,
                                     float[] mean_colour, ref float mean_variance)
@@ -167,15 +167,18 @@ namespace sentience.core
         /// warning: this could potentially suffer from path ID or time step rollover problems
         /// </summary>
         /// <param name="pose">the robot pose from which this cell was observed</param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="z"></param>
-        /// <param name="returnLogOdds"></param>
-        /// <param name="colour"></param>
-        /// <param name="mean_variance"></param>
+        /// <param name="x">x grid coordinate</param>
+        /// <param name="y">y grid coordinate</param>
+        /// <param name="z">z grid coordinate</param>
+        /// <param name="returnLogOdds">return the probability value expressed as log odds</param>
+        /// <param name="colour">average colour of this grid cell</param>
+        /// <param name="mean_variance">average colour variance of this grid cell</param>
         /// <returns>probability value</returns>
-        public float GetProbability(particlePose pose, int x, int y, int z, bool returnLogOdds,
-                                    float[] colour, ref float mean_variance)
+        public float GetProbability(particlePose pose, 
+                                    int x, int y, int z, 
+                                    bool returnLogOdds,
+                                    float[] colour, 
+                                    ref float mean_variance)
         {
             int hits = 0;
             float probabilityLogOdds = 0;

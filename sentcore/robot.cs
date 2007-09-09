@@ -73,7 +73,9 @@ namespace sentience.core
         public stereoCorrespondence correspondence;
 
         //the type of stereo correspondance algorithm to be used
-        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_LINES; // .CORRESPONDENCE_CONTOURS;  
+        //int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_LINES;
+        int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;
+        //int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_SIMPLE;
 
         #endregion
 
@@ -1047,7 +1049,7 @@ namespace sentience.core
             xml.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
             xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLevels", Convert.ToString(LocalGridLevels));
 
-            xml.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
+            xml.AddComment(doc, nodeOccupancyGrid, "Whether to use scan matching");
             xml.AddTextElement(doc, nodeOccupancyGrid, "EnableScanMatching", Convert.ToString(EnableScanMatching));
 
             xml.AddComment(doc, nodeOccupancyGrid, "Dimension of the local grid in the XY plane in cells");

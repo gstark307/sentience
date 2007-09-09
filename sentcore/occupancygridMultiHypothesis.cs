@@ -33,12 +33,6 @@ namespace sentience.core
     /// </summary>
     public sealed class occupancygridMultiHypothesis : pos3D
     {
-        // types of view of the occupancy grid returned by the Show method
-        public const int VIEW_ABOVE = 0;
-        public const int VIEW_LEFT_SIDE = 1;
-        public const int VIEW_RIGHT_SIDE = 2;
-        public const int VIEW_NAVIGABLE_SPACE = 3;
-
         #region "variables"
 
         // random number generator
@@ -126,13 +120,13 @@ namespace sentience.core
 
         #endregion
 
-        #region "miscellaneous"
+        #region "setting the position of the grid"
 
         /// <summary>
         /// set the absolute position of the centre of the occupancy grid
         /// </summary>
-        /// <param name="centre_x_mm"></param>
-        /// <param name="centre_y_mm"></param>
+        /// <param name="centre_x_mm">centre x position in millimetres</param>
+        /// <param name="centre_y_mm">centre y position in millimetres</param>
         public void SetCentrePosition(float centre_x_mm, float centre_y_mm)
         {
             x = centre_x_mm;
@@ -160,7 +154,7 @@ namespace sentience.core
 
         #endregion
 
-        #region "grid update"
+        #region "grid colour variance"
 
         /// <summary>
         /// returns the average colour variance for the entire grid
@@ -181,7 +175,8 @@ namespace sentience.core
                     {
                         float mean_variance = 0;
                         float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
-                                                                         mean_colour, ref mean_variance);
+                                                                         mean_colour, 
+                                                                         ref mean_variance);
                         if (prob > 0.5)
                         {
                             total_variance += mean_variance;
@@ -194,6 +189,9 @@ namespace sentience.core
             return (total_variance);
         }
 
+        #endregion
+
+        #region "removing hypotheses from the grid"
 
         /// <summary>
         /// removes an occupancy hypothesis from a grid cell
@@ -218,6 +216,9 @@ namespace sentience.core
             total_valid_hypotheses--;
         }
 
+        #endregion
+
+        #region "updating the navigable space within the grid"
 
         /// <summary>
         /// updates the navigable space
@@ -243,6 +244,10 @@ namespace sentience.core
             navigable_space[x, y - 1] = state;
         }
 
+        #endregion
+
+        #region "distillation"
+
         /// <summary>
         /// distill this grid particle
         /// </summary>
@@ -258,22 +263,9 @@ namespace sentience.core
                 updateNavigableSpace(hypothesis.pose, hypothesis.x, hypothesis.y);
         }
 
-        /*
-        delegate void GarbageCollectionEventHandler(object sender, NumberReachedEventArgs e);
-        public event GarbageCollectionEventHandler GarbageCollect(int percentage);
+        #endregion
 
-        /// <summary>
-        /// begin the garbage collection thread
-        /// </summary>
-        public static void StartGarbageCollection()
-        {
-            //if (garbageCollection == null)
-            {
-                Thread garbageCollection = new Thread(GarbageCollect(90));
-                garbageCollection.Start();
-            }
-        }
-         */
+        #region "garbage collection"
 
         /// <summary>
         /// collect occupancy hypotheses which are no longer active
@@ -294,6 +286,10 @@ namespace sentience.core
                     garbage.RemoveAt(index);
             }
         }
+
+        #endregion
+
+        #region "calculating the matching probability"
 
         /// <summary>
         /// returns a measure of the difference between two colours
@@ -369,6 +365,10 @@ namespace sentience.core
             }
             return (value);
         }
+
+        #endregion
+
+        #region "throwing rays into the grid"
 
         /// <summary>
         /// inserts the given ray into the grid
@@ -701,6 +701,12 @@ namespace sentience.core
         #endregion
 
         #region "display functions"
+
+        // types of view of the occupancy grid returned by the Show method
+        public const int VIEW_ABOVE = 0;
+        public const int VIEW_LEFT_SIDE = 1;
+        public const int VIEW_RIGHT_SIDE = 2;
+        public const int VIEW_NAVIGABLE_SPACE = 3;
 
         /// <summary>
         /// display the occupancy grid

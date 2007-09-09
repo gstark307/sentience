@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using sentience.calibration;
 using sluggish.utilities;
 
@@ -32,42 +33,58 @@ namespace sentience.core
         // pan angle in radians
         public float pan;
 
-        // grid cells (particlePoseObservedGridCell) which were observed from this pose
-        public ArrayList observed_grid_cells;
+        // grid cells which were observed from this pose
+        private List<particleGridCell> observed_grid_cells;
 
         // the path with which this pose is associated
         public particlePath path;
-        public ArrayList previous_paths;
+        public List<particlePath> previous_paths;
 
         // the time step on which this particle was created
         public UInt32 time_step;
 
+        // the parent of this pose
         public particlePose parent = null;
+
+        // the number of child poses derived from this one
         public int no_of_children = 0;
 
-        public particlePose(float x, float y, float pan, particlePath path)
+        #region "constructors"
+
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="x">x position in millimetres</param>
+        /// <param name="y">y position in millimetres</param>
+        /// <param name="pan">pan angle in radians</param>
+        /// <param name="path">the path which this pose belongs to</param>
+        public particlePose(float x, float y, 
+                            float pan, 
+                            particlePath path)
         {
             this.x = x;
             this.y = y;
             this.pan = pan;
             this.path = path;
-            observed_grid_cells = new ArrayList();
+            observed_grid_cells = new List<particleGridCell>();
         }
 
-        public pos3D subtract(pos3D pos)
-        {
-            pos3D sum = new pos3D(x, y, 0);
-            sum.x = x - pos.x;
-            sum.y = y - pos.y;
-            sum.pan = pan - pos.pan;
-            return (sum);
-        }
+        #endregion
+
+        #region "adding new occupancy hypotheses"
 
         /// <summary>
         /// add a new grid hypothesis to this pose
         /// </summary>
         /// <param name="hypothesis">occupancy hypothesis for a grid cell</param>
-        public bool AddHypothesis(particleGridCell hypothesis, int radius_cells, int grid_dimension, int grid_dimension_vertical)
+        /// <param name="radius_cells">local map cache radius in cells</param>
+        /// <param name="grid_dimension">dimension of the occupancy grid in cells</param>
+        /// <param name="grid_dimension_vertical">height of the occupancy grid (z axis) in cells</param>
+        /// <returns>true if the hypothesis was added</returns>
+        public bool AddHypothesis(particleGridCell hypothesis, 
+                                  int radius_cells, 
+                                  int grid_dimension, 
+                                  int grid_dimension_vertical)
         {
             bool added = false;
 
@@ -79,6 +96,10 @@ namespace sentience.core
             return (added);
         }
 
+        #endregion
+
+        #region "display functions"
+
         /// <summary>
         /// Show a diagram of the robot in this pose
         /// This is useful for checking that the positions of cameras have 
@@ -89,10 +110,11 @@ namespace sentience.core
         /// <param name="width">width of the image</param>
         /// <param name="height">height of the image</param>
         /// <param name="clearBackground">clear the background before drawing</param>
-        /// <param name="min_x_mm"></param>
-        /// <param name="min_y_mm"></param>
-        /// <param name="max_x_mm"></param>
-        /// <param name="max_y_mm"></param>
+        /// <param name="min_x_mm">top left x coordinate</param>
+        /// <param name="min_y_mm">top left y coordinate</param>
+        /// <param name="max_x_mm">bottom right x coordinate</param>
+        /// <param name="max_y_mm">bottom right y coordinate</param>
+        /// <param name="showFieldOfView">whether to show the field of view of each camera</param>
         public void Show(robot rob, 
                          Byte[] img, int width, int height, bool clearBackground,
                          int min_x_mm, int min_y_mm,
@@ -212,6 +234,10 @@ namespace sentience.core
             }
         }
 
+        #endregion
+
+        #region "adding a new observation as a set of stereo rays"
+
         /// <summary>
         /// add an observation taken from this pose
         /// </summary>
@@ -220,7 +246,8 @@ namespace sentience.core
         /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
         /// <returns>localisation matching score</returns>
         public float AddObservation(ArrayList[] stereo_rays,
-                                    robot rob, bool localiseOnly)
+                                    robot rob, 
+                                    bool localiseOnly)
         {
             // clear the localisation score
             float localisation_score = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
@@ -273,17 +300,26 @@ namespace sentience.core
             return (localisation_score);
         }
 
+        #endregion
+
+        #region "removing this pose"
+
         /// <summary>
-        /// remove the mapping particles associated with this pose
+        /// remove the mapping particles associated with this pose from the given grid
         /// </summary>
+        /// <param name="grid">grid from which this pose is to be removed</param>
         public void Remove(occupancygridMultiHypothesis grid)
         {
             for (int i = 0; i < observed_grid_cells.Count; i++)
             {
-                particleGridCell hypothesis = (particleGridCell)observed_grid_cells[i];
+                particleGridCell hypothesis = observed_grid_cells[i];
                 grid.Remove(hypothesis);
             }
         }
+
+        #endregion
+
+        #region "distillation"
 
         /// <summary>
         /// distills all grid particles associated with this pose
@@ -293,10 +329,12 @@ namespace sentience.core
         {
             for (int i = 0; i < observed_grid_cells.Count; i++)
             {
-                particleGridCell hypothesis = (particleGridCell)observed_grid_cells[i];
+                particleGridCell hypothesis = observed_grid_cells[i];
                 grid.Distill(hypothesis);
             }
         }
+
+        #endregion
 
     }
 }
