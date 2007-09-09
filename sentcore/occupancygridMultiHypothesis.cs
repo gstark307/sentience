@@ -146,7 +146,7 @@ namespace sentience.core
         /// <summary>
         /// function for vacancy within the sensor model
         /// </summary>
-        /// <param name="fraction"></param>
+        /// <param name="fraction">fractional distance along the vacancy part of the ray model</param>
         /// <param name="steps"></param>
         /// <returns></returns>
         private float vacancyFunction(float fraction, int steps)
@@ -233,7 +233,8 @@ namespace sentience.core
             float[] mean_colour = new float[3];
             float mean_variance = 0;
             float prob = cell[x, y].GetProbability(pose, x, y,
-                                          mean_colour, ref mean_variance);
+                                                   mean_colour, 
+                                                   ref mean_variance);
             bool state = false;
             if (prob < 0.5f) state = true;
             navigable_space[x, y] = state;

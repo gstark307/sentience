@@ -56,7 +56,7 @@ namespace sentience.core
         public int max_length;
 
         // list of poses within the path
-        public ArrayList path;
+        public List<particlePose> path;
 
         // total score for all poses within the path
         public float total_score = 0;
@@ -69,7 +69,7 @@ namespace sentience.core
         public particlePath(int max_length)
         {
             this.max_length = max_length;
-            path = new ArrayList();
+            path = new List<particlePose>();
             Enabled = true;
         }
 
@@ -98,8 +98,8 @@ namespace sentience.core
 
             incrementPathChildren(parent, 1);
 
-            this.max_length = parent.max_length;            
-            path = new ArrayList();
+            this.max_length = parent.max_length;
+            path = new List<particlePose>();
             total_score = parent.total_score;
             total_poses = parent.total_poses;
             Enabled = true;
@@ -114,7 +114,7 @@ namespace sentience.core
         {
             ID = path_ID;
             this.max_length = max_length;
-            path = new ArrayList();
+            path = new List<particlePose>();
             particlePose pose = new particlePose(x, y, pan, this);
             pose.time_step = time_step;
             Enabled = true;
@@ -310,8 +310,8 @@ namespace sentience.core
             float angular_velocity = starting_angular_velocity;
             for (int i = 1; i < path.Count; i++)
             {
-                particlePose prev_pose = (particlePose)path[i-1];
-                particlePose pose = (particlePose)path[i];
+                particlePose prev_pose = path[i-1];
+                particlePose pose = path[i];
 
                 float dx = pose.x - prev_pose.x;
                 float dy = pose.y - prev_pose.y;
@@ -491,7 +491,7 @@ namespace sentience.core
              
             for (int i = 0; i < path.Count; i++)
             {
-                particlePose pose = (particlePose)path[i];
+                particlePose pose = path[i];
                 xml.AddTextElement(doc, nodePath, "Pose", Convert.ToString(pose.x) + "," +
                                                            Convert.ToString(pose.y) + "," +
                                                            Convert.ToString(pose.pan * 180 / Math.PI));
