@@ -192,7 +192,7 @@ namespace sentience.core
 
             int tx1, ty1, bx1, by1;
             int tx2, ty2, bx2, by2;
-            long outer, inner;
+            int outer, inner;
             float diff;
 
             tx1 = x - blobradius_x;
@@ -210,7 +210,7 @@ namespace sentience.core
             diff = outer_average - inner_average;
 
             // left/right
-            long leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1);
+            int leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1);
             float left_average = leftside * 2 / outer_pixels;
             float right_average = (outer - leftside) * 2 / outer_pixels;
             diff2 = left_average - right_average;

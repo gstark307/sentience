@@ -29,15 +29,18 @@
     <File filename="../../sentcore/occupancygridCell.cs" />
     <File filename="../../sentcore/occupancygridMultiHypothesis.cs" />
     <File filename="../../sentcore/motionModel.cs" />
+    <File filename="../../utilities/image.cs" />
+    <File filename="../../utilities/ArrayConversions.cs" />
+    <File filename="../../sentcore/classimage.cs" />
   </Files>
   <Views>
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
       <TreeView>
         <Node expanded="True">
-          <Node name="mapping" expanded="True" />
           <Node name="sentcore" expanded="True">
-            <Node name="motionModel.cs" expanded="False" selected="True" />
+            <Node name="classimage.cs" expanded="False" selected="True" />
           </Node>
+          <Node name="utilities" expanded="True" />
         </Node>
       </TreeView>
     </ViewMemento>
@@ -59,8 +62,8 @@
   </Views>
   <Properties>
     <Properties>
+      <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/classimage.cs" />
       <Property key="ActiveConfiguration" value="Debug" />
-      <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/motionModel.cs" />
     </Properties>
   </Properties>
 </UserCombinePreferences>

@@ -41,6 +41,9 @@
     <File name="./graph.cs" subtype="Code" buildaction="Compile" />
     <File name="./graph_oscilloscope.cs" subtype="Code" buildaction="Compile" />
     <File name="./graph_points.cs" subtype="Code" buildaction="Compile" />
+    <File name="./graph_intensity_histogram.cs" subtype="Code" buildaction="Compile" />
+    <File name="./graph_lines.cs" subtype="Code" buildaction="Compile" />
+    <File name="./grid2D.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="gdk-sharp, Version=2.10.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />

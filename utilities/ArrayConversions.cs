@@ -28,6 +28,30 @@ namespace sluggish.utilities
 		{
 		}
 
+        #region "bytes to words and dwords"
+        
+        public static int ToWord(byte low_byte, byte high_byte)
+        {
+            if (high_byte < 0x80)
+                return( high_byte * 0x100 | low_byte);
+            else
+                return((high_byte |0xFF00) * 0x100 | low_byte);            
+        }
+
+        public static int ToDWord(int low_word, int high_word)
+        {
+            return(high_word * 0x10000 | (low_word & 0xFFFF));
+        }
+
+        public static int ToDWord(byte[] bytes)
+        {
+            int low_word = ToWord(bytes[0], bytes[1]);
+            int high_word = ToWord(bytes[2], bytes[3]);
+            return(ToDWord(low_word, high_word));
+        }
+        
+        #endregion
+
         /// <summary>
         /// convert a float array to a byte array
         /// </summary>

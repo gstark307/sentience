@@ -2,17 +2,19 @@
 <UserCombinePreferences filename="/home/motters/develop/sentience/applications/testFunctions/test.mds">
   <Files>
     <File filename="Welcome" />
-    <File filename="./MainWindow.cs" />
-    <File filename="../../sentcore/robot.cs" />
-    <File filename="../../sentcore/simulation.cs" />
-    <File filename="../../../utilities/kml.cs" />
+    <File filename="../mapping/frmMapping.cs" />
+    <File filename="../mapping/frmMapping.Designer.cs" />
+    <File filename="../mapping/Program.cs" />
   </Files>
   <Views>
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
       <TreeView>
         <Node expanded="True">
+          <Node name="sentcore" expanded="True" />
           <Node name="test" expanded="True" />
-          <Node name="utilities" expanded="False" selected="True" />
+          <Node name="utilities" expanded="True">
+            <Node name="EventLog.cs" expanded="False" selected="True" />
+          </Node>
         </Node>
       </TreeView>
     </ViewMemento>
@@ -41,8 +43,8 @@
   </Views>
   <Properties>
     <Properties>
+      <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/mapping/Program.cs" />
       <Property key="ActiveConfiguration" value="Debug" />
-      <Property key="ActiveWindow" value="/home/motters/develop/utilities/kml.cs" />
     </Properties>
   </Properties>
 </UserCombinePreferences>
