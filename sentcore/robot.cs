@@ -24,6 +24,7 @@ using System.Collections;
 using sentience.pathplanner;
 using sluggish.utilities.xml;
 using sluggish.utilities.timing;
+using System.Threading;
 
 namespace sentience.core
 {
@@ -471,6 +472,10 @@ namespace sentience.core
             previousPosition.tilt = tilt;
         }
 
+        public void updatePose(float x, float y, float pan)
+        {
+        }
+
         /// <summary>
         /// load stereo images from a list
         /// </summary>
@@ -615,8 +620,46 @@ namespace sentience.core
 
         /// <summary>
         /// update the state of the robot using a list of images from its stereo camera/s
+        /// TODO: allow this to be multithreaded
+        /// </summary>
+        /// <param name="stereo_rays">stereo rays to be throw into the grid</param>
+        /// <param name="motion_model">the motion model to be used</param>
+        /// <param name="grid">the occupancy grid to be updated</param>
+        public void updateBase(ArrayList[] stereo_rays,
+                               motionModel motion_model,
+                               occupancygridMultiHypothesis grid)
+        {
+            clock.Start();
+
+            // update all current poses with the observation
+            motion_model.AddObservation(stereo_rays, false);
+
+            clock.Stop();
+            benchmark_observation_update = clock.time_elapsed_mS;
+
+            // what's the relative position of the robot inside the grid ?
+            pos3D relative_position = new pos3D(x - grid.x, y - grid.y, 0);
+            relative_position.pan = pan - grid.pan;
+
+            clock.Start();
+
+            // garbage collect dead occupancy hypotheses
+            grid.GarbageCollect();
+
+            clock.Stop();
+            benchmark_garbage_collection = clock.time_elapsed_mS;
+
+            // have we moved off the current grid ?
+            //checkOutOfBounds();            
+        }
+
+
+        /// <summary>
+        /// update the state of the robot using a list of images from its stereo camera/s
         /// </summary>
         /// <param name="images">list containing stereo images in left/right order</param>
+        /// <param name="motion_model">the motion model to be used</param>
+        /// <param name="grid">the ocupancy grid to be updated</param>
         private void update(ArrayList images)
         {
             if (images != null)
@@ -629,28 +672,8 @@ namespace sentience.core
                 for (int cam = 0; cam < head.no_of_cameras; cam++)
                     stereo_rays[cam] = inverseSensorModel.createObservation(head, cam);
 
-                clock.Start();
-
-                // update all current poses with the observation
-                motion.AddObservation(stereo_rays, false);
-
-                clock.Stop();
-                benchmark_observation_update = clock.time_elapsed_mS;
-               
-                // what's the relative position of the robot inside the grid ?
-                pos3D relative_position = new pos3D(x - LocalGrid.x, y - LocalGrid.y, 0);
-                relative_position.pan = pan - LocalGrid.pan;
-
-                clock.Start();
-
-                // garbage collect dead occupancy hypotheses
-                LocalGrid.GarbageCollect();
-
-                clock.Stop();
-                benchmark_garbage_collection = clock.time_elapsed_mS;
-
-                // have we moved off the current grid ?
-                //checkOutOfBounds(); 
+                // update the motion model and occupancy grid
+                updateBase(stereo_rays, motion, LocalGrid);
             }
         }
 
