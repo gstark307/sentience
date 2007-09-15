@@ -63,6 +63,12 @@ namespace sentience.core
 
         private robot rob;
         public occupancygridMultiHypothesis LocalGrid;
+        
+        // the estimated current robot pose
+        public pos3D current_robot_pose;
+
+        // the best current path score
+        public float current_robot_path_score;
 
         // have the pose scores been updated?
         public bool PosesEvaluated;
@@ -360,10 +366,13 @@ namespace sentience.core
 
             if (best_path != null)
             {
-                // update the robot position with the best available pose
-                rob.x = best_path.current_pose.x;
-                rob.y = best_path.current_pose.y;
-                rob.pan = best_path.current_pose.pan;
+                // update the current robot position with the best available pose
+                if (current_robot_pose == null) current_robot_pose = 
+                    new pos3D(best_path.current_pose.x,
+                              best_path.current_pose.y,
+                              0);
+                current_robot_pose.pan = best_path.current_pose.pan;
+                current_robot_path_score = best_path.total_score;
 
                 // generate new poses from the ones which have survived culling
                 int new_poses_required = survey_trial_poses; // -Poses.Count;

@@ -416,6 +416,8 @@ namespace sentience.core
 
         #region "parameter setting"
 
+        #region "setting motion model parameters"
+
         /// <summary>
         /// set the number of trial poses within the motion model
         /// </summary>
@@ -436,6 +438,10 @@ namespace sentience.core
                 motion[i].cull_threshold = culling_threshold;
         }
 
+        #endregion
+
+        #region "setting grid parameters"
+
         /// <summary>
         /// sets the position of the local grid
         /// </summary>
@@ -451,6 +457,10 @@ namespace sentience.core
                 LocalGrid[i].z = z;
             }
         }
+
+        #endregion
+
+        #region "setting optimisation parameters"
 
         /// <summary>
         /// set the tuning parameters from a comma separated string
@@ -478,6 +488,10 @@ namespace sentience.core
             setStereoParameters(10, 100, tuningParameters[4], tuningParameters[5]);
         }
 
+        #endregion
+
+        #region "setting stereo correspondence parameters"
+
         /// <summary>
         /// set the type of stereo correspondence algorithm
         /// </summary>
@@ -485,15 +499,6 @@ namespace sentience.core
         public void setCorrespondenceAlgorithmType(int algorithm_type)
         {
             correspondence_algorithm_type = algorithm_type;
-        }
-
-        /// <summary>
-        /// set parameters required for mapping
-        /// </summary>
-        /// <param name="sigma"></param>
-        public void setMappingParameters(float sigma)
-        {
-            inverseSensorModel.sigma = sigma;
         }
 
         /// <summary>
@@ -530,6 +535,17 @@ namespace sentience.core
             correspondence.setRequiredFeatures(required_features);
             correspondence.setSurroundRadius(surround_radius);
             correspondence.setMatchingThreshold(matching_threshold);
+        }
+
+        #endregion
+
+        /// <summary>
+        /// set parameters required for mapping
+        /// </summary>
+        /// <param name="sigma"></param>
+        public void setMappingParameters(float sigma)
+        {
+            inverseSensorModel.sigma = sigma;
         }
 
         #endregion
@@ -621,14 +637,32 @@ namespace sentience.core
             benchmark_garbage_collection /= mapping_threads;
 
             // compare the results and see which is the best looking map
+            pos3D best_pose = null;
+            float max_path_score = -1;
             for (int th = 0; th < processedThreads.Count; th++)
             {
                 ThreadMappingState state = (ThreadMappingState)processedThreads[th];
+                if (motion[th].current_robot_path_score > max_path_score)
+                {
+                    max_path_score = motion[th].current_robot_path_score;
+                    best_pose = motion[th].current_robot_pose;
+                }
+            }
+
+            // update the robots position and orientation
+            // with the pose from the highest scoring path
+            // across all maps
+            if (best_pose != null)
+            {
+                x = best_pose.x;
+                y = best_pose.y;
+                z = best_pose.z;
+                pan = best_pose.pan;
             }
 
         }
 
-        public void updatePose(float x, float y, float pan)
+        public void updatePose(float x, float y, float pan, float score)
         {
         }
 
