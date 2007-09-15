@@ -417,7 +417,27 @@ namespace sentience.core
         #region "parameter setting"
 
         /// <summary>
-        /// sets teh position of the local grid
+        /// set the number of trial poses within the motion model
+        /// </summary>
+        /// <param name="no_of_poses"></param>
+        public void SetMotionModelTrialPoses(int no_of_poses)
+        {
+            for (int i = 0; i < mapping_threads; i++)
+                motion[i].survey_trial_poses = no_of_poses;
+        }
+
+        /// <summary>
+        /// set the culling threshold for the motion model
+        /// </summary>
+        /// <param name="culling_threshold"></param>
+        public void SetMotionModelCullingThreshold(int culling_threshold)
+        {
+            for (int i = 0; i < mapping_threads; i++)
+                motion[i].cull_threshold = culling_threshold;
+        }
+
+        /// <summary>
+        /// sets the position of the local grid
         /// </summary>
         /// <param name="x">x position in millimetres</param>
         /// <param name="y">y position in millimetres</param>

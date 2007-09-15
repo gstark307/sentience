@@ -250,10 +250,12 @@ namespace WindowsApplication1
         /// <param name="rob"></param>        
         private void surveyPosesDummy(robot rob)
         {
+            motionModel motion_model = rob.GetBestMotionModel();
+
             // examine the pose list
-            for (int sample = 0; sample < rob.motion.survey_trial_poses; sample++)
+            for (int sample = 0; sample < motion_model.survey_trial_poses; sample++)
             {
-                particlePath path = (particlePath)rob.motion.Poses[sample];
+                particlePath path = (particlePath)motion_model.Poses[sample];
                 particlePose pose = path.current_pose;
 
                 float dx = rob.x - pose.x;
@@ -262,11 +264,11 @@ namespace WindowsApplication1
                 float score = 1.0f / (1 + dist);
 
                 // update the score for this pose
-                rob.motion.updatePoseScore(path, score);
+                motion_model.updatePoseScore(path, score);
             }
 
             // indicate that the pose scores have been updated
-            rob.motion.PosesEvaluated = true;
+            motion_model.PosesEvaluated = true;
         }
 
 
@@ -359,9 +361,9 @@ namespace WindowsApplication1
                 if (closed_loop) surveyPosesDummy(rob);
                 rob.updateFromKnownPosition(null, x, y, pan);
                 
-                rob.motion.Show(img_rays, standard_width, standard_height, 
-                                min_x_mm, min_y_mm, max_x_mm, max_y_mm,
-                                initial);
+                rob.GetBestMotionModel().Show(img_rays, standard_width, standard_height, 
+                                              min_x_mm, min_y_mm, max_x_mm, max_y_mm,
+                                              initial);
                 initial = false;
             }
         }

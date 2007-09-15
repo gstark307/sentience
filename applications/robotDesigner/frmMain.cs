@@ -73,6 +73,8 @@ namespace robotDesigner
         {            
             if (rob.Load(filename))
             {
+                motionModel motion_model = rob.GetBestMotionModel();
+
                 txtName.Text = rob.Name;
                 txtTotalMass.Text = Convert.ToString(rob.TotalMass_kg);
                 txtBodyWidth.Text = Convert.ToString(rob.BodyWidth_mm);
@@ -107,8 +109,8 @@ namespace robotDesigner
                 txtGridInterval.Text = Convert.ToString(rob.LocalGridInterval_mm);
                 txtMappingRange.Text = Convert.ToString(rob.LocalGridMappingRange_mm);
                 txtLocalGridLocalisationRadius.Text = Convert.ToString(rob.LocalGridLocalisationRadius_mm);
-                txtTrialPoses.Text = Convert.ToString(rob.motion.survey_trial_poses);
-                txtCullingThreshold.Text = Convert.ToString(rob.motion.cull_threshold);
+                txtTrialPoses.Text = Convert.ToString(motion_model.survey_trial_poses);
+                txtCullingThreshold.Text = Convert.ToString(motion_model.cull_threshold);
                 chkEnableScanMatching.Checked = rob.EnableScanMatching;
 
                 updateSensorModelStatus();
@@ -165,8 +167,8 @@ namespace robotDesigner
             rob.LocalGridInterval_mm = Convert.ToSingle(txtGridInterval.Text);
             rob.LocalGridMappingRange_mm = Convert.ToSingle(txtMappingRange.Text);
             rob.LocalGridLocalisationRadius_mm = Convert.ToSingle(txtLocalGridLocalisationRadius.Text);
-            rob.motion.survey_trial_poses = Convert.ToInt32(txtTrialPoses.Text);
-            rob.motion.cull_threshold = Convert.ToInt32(txtCullingThreshold.Text);
+            rob.SetMotionModelTrialPoses(Convert.ToInt32(txtTrialPoses.Text));
+            rob.SetMotionModelCullingThreshold(Convert.ToInt32(txtCullingThreshold.Text));
             rob.EnableScanMatching = chkEnableScanMatching.Checked;
         }
 
