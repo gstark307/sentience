@@ -41,5 +41,9 @@ namespace sentience.core
 
         // the motion model for the robot
         public motionModel motion;
+
+        // benchmark timings
+        public long benchmark_observation_update;
+        public long benchmark_garbage_collection;
     }
 }

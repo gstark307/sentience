@@ -35,7 +35,7 @@ namespace sentience.pathplanner
         public int max_search_range_mm = 500;
 
         // pointer to the navigable space map within an occupancy grid object
-        private bool[,] navigable_space;
+        public bool[,] navigable_space;
 
         // whether to apply smoothing to the path or not
         public bool pathSmoothing = true;

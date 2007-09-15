@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Threading;
+using sluggish.utilities.timing;
 
 namespace sentience.core
 {
@@ -59,15 +60,29 @@ namespace sentience.core
         /// <param name="state">robot state</param>
         private static void Update(ThreadMappingState state)
         {
+            // object used for taking benchmark timings
+            stopwatch clock = new stopwatch();
+
+            clock.Start();
+
             // update all current poses with the observed rays
             state.motion.AddObservation(state.stereo_rays, false);
+            state.motion.LocalGrid = state.grid;
+
+            clock.Stop();
+            state.benchmark_observation_update = clock.time_elapsed_mS;
 
             // what's the relative position of the robot inside the grid ?
             pos3D relative_position = new pos3D(state.pose.x - state.grid.x, state.pose.y - state.grid.y, 0);
             relative_position.pan = state.pose.pan - state.grid.pan;
 
+            clock.Start();
+
             // garbage collect dead occupancy hypotheses
             state.grid.GarbageCollect();
+
+            clock.Stop();
+            state.benchmark_garbage_collection = clock.time_elapsed_mS;
         }
     }
 }

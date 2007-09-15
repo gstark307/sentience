@@ -101,7 +101,7 @@ namespace sentience.core
             }
 
             graph_colour_variance.Update(position_error_mm, GetMeanColourVariance());
-            graph_no_of_particles.Update(position_error_mm, rob.motion.survey_trial_poses);
+            graph_no_of_particles.Update(position_error_mm, rob.GetBestMotionModel().survey_trial_poses);
         }
 
         /// <summary>
@@ -149,13 +149,14 @@ namespace sentience.core
             benchmarks.Add("Robot position " + Convert.ToString((int)rob.x) + ", " +
                                                Convert.ToString((int)rob.y));
 
-            benchmarks.Add("Grid particles " + Convert.ToString(rob.LocalGrid.total_valid_hypotheses));
-            benchmarks.Add("Garbage        " + Convert.ToString(rob.LocalGrid.total_garbage_hypotheses));
+            benchmarks.Add("Grid particles " + Convert.ToString(rob.GetBestGrid().total_valid_hypotheses));
+            benchmarks.Add("Garbage        " + Convert.ToString(rob.GetBestGrid().total_garbage_hypotheses));
 
             benchmarks.Add("Stereo correspondence  " + Convert.ToString(rob.benchmark_stereo_correspondence) + " mS");
             benchmarks.Add("Observation update     " + Convert.ToString(rob.benchmark_observation_update) + " mS");
             benchmarks.Add("Prediction             " + Convert.ToString(rob.benchmark_prediction) + " mS");
             benchmarks.Add("Garbage collection     " + Convert.ToString(rob.benchmark_garbage_collection) + " mS");
+            benchmarks.Add("Concurrency            " + Convert.ToString(rob.benchmark_concurrency) + " mS");
 
             return (benchmarks);
         }
@@ -270,9 +271,9 @@ namespace sentience.core
             }
 
             if (clear_background)
-                rob.motion.Show(img, width, height,
-                                min_xx-100, min_yy-100, max_xx+100, max_yy+100,
-                                clear_background);
+                rob.GetBestMotionModel().Show(img, width, height,
+                                              min_xx-100, min_yy-100, max_xx+100, max_yy+100,
+                                              clear_background);
         }
 
 
@@ -286,8 +287,8 @@ namespace sentience.core
         public void ShowBestPose(byte[] img, int width, int height,
                                  bool clear_background)
         {
-            rob.motion.ShowBestPose(img, width, height,
-                                    clear_background, true);
+            rob.GetBestMotionModel().ShowBestPose(img, width, height,
+                                                  clear_background, true);
         }
         
         #endregion
@@ -392,8 +393,9 @@ namespace sentience.core
             if (path != null)
             {
                 // position the grid so that the path fits inside it
-                rob.LocalGrid.x = (int)(min_x - ((max_x - min_x) / 2));
-                rob.LocalGrid.y = (int)(min_y + ((max_y - min_y) / 2));
+                rob.SetLocalGridPosition(min_x - ((max_x - min_x) / 2),
+                                         min_y + ((max_y - min_y) / 2),
+                                         0);
 
                 if (images.Count > 1)
                 {

@@ -243,10 +243,12 @@ namespace sentience.core
         /// </summary>
         /// <param name="stereo_rays">list of ray objects in this observation</param>
         /// <param name="rob">robot object</param>
+        /// <param name="LocalGrid">occupancy grid into which to insert the observation</param>
         /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
         /// <returns>localisation matching score</returns>
         public float AddObservation(ArrayList[] stereo_rays,
                                     robot rob, 
+                                    occupancygridMultiHypothesis LocalGrid,
                                     bool localiseOnly)
         {
             // clear the localisation score
@@ -282,11 +284,11 @@ namespace sentience.core
                     // update the grid cells for this ray and update the
                     // localisation score accordingly
                     float score =
-                        rob.LocalGrid.Insert(trial_ray, this, 
-                                             rob.head.sensormodel[cam],
-                                             left_camera_location[cam], 
-                                             right_camera_location[cam],
-                                             localiseOnly);
+                        rob.LocalGrid[0].Insert(trial_ray, this, 
+                                         rob.head.sensormodel[cam],
+                                         left_camera_location[cam], 
+                                         right_camera_location[cam],
+                                         localiseOnly);
                     if (score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         if (localisation_score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                             localisation_score += score;

@@ -281,10 +281,11 @@ namespace StereoMapping
         /// </summary>
         private void showOccupancyGrid()
         {
-            picGridMap.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
+            occupancygridMultiHypothesis grid = sim.rob.GetBestGrid();
+            picGridMap.Image = new Bitmap(grid.dimension_cells, grid.dimension_cells,
                                           System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
-            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_ABOVE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
+            Byte[] grid_img = new Byte[grid.dimension_cells * grid.dimension_cells * 3];
+            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_ABOVE, grid_img, grid.dimension_cells, grid.dimension_cells, true);
             BitmapArrayConversions.updatebitmap_unsafe(grid_img, (Bitmap)(picGridMap.Image));
         }
 
@@ -299,15 +300,16 @@ namespace StereoMapping
 
         private void showSideViews()
         {
-            picGridSideViewLeft.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
+            occupancygridMultiHypothesis grid = sim.rob.GetBestGrid();
+            picGridSideViewLeft.Image = new Bitmap(grid.dimension_cells, grid.dimension_cells,
                                                System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            Byte[] grid_img = new Byte[sim.rob.LocalGrid.dimension_cells * sim.rob.LocalGrid.dimension_cells * 3];
-            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_LEFT_SIDE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
+            Byte[] grid_img = new Byte[grid.dimension_cells * grid.dimension_cells * 3];
+            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_LEFT_SIDE, grid_img, grid.dimension_cells, grid.dimension_cells, true);
             BitmapArrayConversions.updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewLeft.Image));
 
-            picGridSideViewRight.Image = new Bitmap(sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells,
+            picGridSideViewRight.Image = new Bitmap(grid.dimension_cells, grid.dimension_cells,
                                                System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_RIGHT_SIDE, grid_img, sim.rob.LocalGrid.dimension_cells, sim.rob.LocalGrid.dimension_cells, true);
+            sim.ShowGrid(occupancygridMultiHypothesis.VIEW_RIGHT_SIDE, grid_img, grid.dimension_cells, grid.dimension_cells, true);
             BitmapArrayConversions.updatebitmap_unsafe(grid_img, (Bitmap)(picGridSideViewRight.Image));
         }
 
@@ -317,7 +319,7 @@ namespace StereoMapping
         /// </summary>
         private void showBestPose()
         {
-            int dimension_mm = sim.rob.LocalGrid.dimension_cells;
+            int dimension_mm = sim.rob.GetBestGrid().dimension_cells;
             picBestPose.Image = new Bitmap(dimension_mm, dimension_mm,
                                            System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Byte[] best_pose_img = new Byte[dimension_mm * dimension_mm * 3];

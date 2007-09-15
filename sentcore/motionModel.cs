@@ -62,6 +62,7 @@ namespace sentience.core
         private UInt32 root_time_step = UInt32.MaxValue;
 
         private robot rob;
+        public occupancygridMultiHypothesis LocalGrid;
 
         // have the pose scores been updated?
         public bool PosesEvaluated;
@@ -110,9 +111,10 @@ namespace sentience.core
 
         #region "initialisation"
 
-        public motionModel(robot rob)
+        public motionModel(robot rob, occupancygridMultiHypothesis LocalGrid)
         {
             this.rob = rob;
+            this.LocalGrid = LocalGrid;
             Poses = new ArrayList();
             ActivePoses = new ArrayList();
             motion_noise = new float[6];
@@ -305,7 +307,7 @@ namespace sentience.core
                 if (path.path.Count >= pose_maturation)
                 {                    
                     // remove mapping hypotheses for this path
-                    path.Remove(rob.LocalGrid);
+                    path.Remove(LocalGrid);
 
                     // now remove the path itself
                     Poses.RemoveAt(i);                    
@@ -345,7 +347,7 @@ namespace sentience.core
                 if (path.branch_pose != null)
                 {
                     particlePath previous_path = path.branch_pose.path;
-                    previous_path.Distill(rob.LocalGrid);
+                    previous_path.Distill(LocalGrid);
                     path.branch_pose.parent = null;
                     path.branch_pose = null;                    
                 }
@@ -634,8 +636,8 @@ namespace sentience.core
             Poses.Clear();
             int half_width_mm = (int)(rob.LocalGridDimension * rob.LocalGridCellSize_mm) / 2;
             half_width_mm = half_width_mm * 90 / 100; // not quite the whole iguana
-            createNewPosesMonteCarlo(rob.LocalGrid.x - half_width_mm, rob.LocalGrid.y - half_width_mm,
-                                     rob.LocalGrid.x + half_width_mm, rob.LocalGrid.y + half_width_mm);
+            createNewPosesMonteCarlo(LocalGrid.x - half_width_mm, LocalGrid.y - half_width_mm,
+                                     LocalGrid.x + half_width_mm, LocalGrid.y + half_width_mm);
             initialised = true;
         }
 
@@ -686,7 +688,8 @@ namespace sentience.core
                 particlePath path = (particlePath)Poses[p];
                 float logodds_localisation_score = 
                     path.current_pose.AddObservation(stereo_rays,
-                                                     rob, localiseOnly);
+                                                     rob, LocalGrid, 
+                                                     localiseOnly);
 
                 if (logodds_localisation_score != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                     updatePoseScore(path, logodds_localisation_score);

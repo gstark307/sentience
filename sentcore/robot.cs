@@ -31,8 +31,11 @@ namespace sentience.core
     public class robot : pos3D
     {
         // name of the robot
-        public String Name = "My Robot";          
+        public String Name = "My Robot";  
 
+        // the number of threads to use for mapping
+        const int mapping_threads = 1;
+        
         // the number of rays per stereo camera to be thrown at each time step
         private const int rays_per_stereo_camera = 50;
 
@@ -46,6 +49,29 @@ namespace sentience.core
         public long benchmark_observation_update;
         public long benchmark_garbage_collection;
         public long benchmark_prediction;
+        public long benchmark_concurrency;
+
+        #endregion
+
+        #region "getting the best results"
+
+        /// <summary>
+        /// returns the best available motion model
+        /// </summary>
+        /// <returns></returns>
+        public motionModel GetBestMotionModel()
+        {
+            return(motion[best_grid_index]);
+        }
+
+        /// <summary>
+        /// returns the best performing (most probable) occupancy grid
+        /// </summary>
+        /// <returns></returns>
+        public occupancygridMultiHypothesis GetBestGrid()
+        {
+            return (LocalGrid[best_grid_index]);
+        }
 
         #endregion
 
@@ -55,7 +81,7 @@ namespace sentience.core
 
         // describes how the robot moves, used to predict the next step as a probabilistic distribution
         // of possible poses
-        public motionModel motion;
+        public motionModel[] motion;
 
         #endregion
 
@@ -140,7 +166,9 @@ namespace sentience.core
         public float LocalGridMappingRange_mm = 2500; // the maximum range of features used to update the grid map.  Otherwise very long range features end up hogging processor resource
         public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public float LocalGridVacancyWeighting = 1.0f;      // a weighting applied to the vacancy part of the sensor model
-        public occupancygridMultiHypothesis LocalGrid;      // grid containing the current local observations
+
+        public int best_grid_index = 0;                     // array index of the best performing occupancy grid
+        public occupancygridMultiHypothesis[] LocalGrid;    // grid containing the current local observations
 
         // parameters discovered by auto tuning
         public String TuningParameters = "";
@@ -188,7 +216,8 @@ namespace sentience.core
         public robot(int no_of_stereo_cameras)
             : base(0, 0, 0)
         {            
-            init(no_of_stereo_cameras, rays_per_stereo_camera);
+            init(no_of_stereo_cameras, 
+                 rays_per_stereo_camera);
             //initDualCam();
         }
 
@@ -222,13 +251,25 @@ namespace sentience.core
         /// <summary>
         /// recreate the local grid
         /// </summary>
-        private void createLocalGrid()
+        /// <param name="index">index number of the occupancy grid being considered</param>
+        private void createLocalGrid(int index)
         {
             // create the local grid
-            LocalGrid = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm, LocalGridVacancyWeighting);
+            LocalGrid[index] = new occupancygridMultiHypothesis(LocalGridDimension, LocalGridDimensionVertical, (int)LocalGridCellSize_mm, (int)LocalGridLocalisationRadius_mm, (int)LocalGridMappingRange_mm, LocalGridVacancyWeighting);
 
-            // create a path planning object linked to the grid
-            planner = new sentience.pathplanner.pathplanner(LocalGrid.navigable_space, (int)LocalGridCellSize_mm, LocalGrid.x, LocalGrid.y);
+            //createPlanner(LocalGrid[index]);
+        }
+
+        /// <summary>
+        /// create a path planner for the given grid
+        /// </summary>
+        /// <param name="grid">occupancy grid</param>
+        private void createPlanner(occupancygridMultiHypothesis grid)
+        {
+            if (planner == null)
+                planner = new sentience.pathplanner.pathplanner(grid.navigable_space, (int)LocalGridCellSize_mm, grid.x, grid.y);
+            else
+                planner.navigable_space = grid.navigable_space;
         }
 
         /// <summary>
@@ -254,11 +295,13 @@ namespace sentience.core
             inverseSensorModel.no_of_stereo_features = rays_per_stereo_camera;
             correspondence = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
 
-            // add a local occupancy grid
-            createLocalGrid();
+            // add local occupancy grids
+            LocalGrid = new occupancygridMultiHypothesis[mapping_threads];
+            for (int i = 0; i < mapping_threads; i++) createLocalGrid(i);
 
-            // create a motion model
-            motion = new motionModel(this);
+            // create a motion model for each possible grid
+            motion = new motionModel[mapping_threads];
+            for (int i = 0; i < mapping_threads; i++) motion[i] = new motionModel(this, LocalGrid[i]);
 
             // a list of places where the robot might work or make observations
             worksites = new kmlZone();
@@ -374,6 +417,22 @@ namespace sentience.core
         #region "parameter setting"
 
         /// <summary>
+        /// sets teh position of the local grid
+        /// </summary>
+        /// <param name="x">x position in millimetres</param>
+        /// <param name="y">y position in millimetres</param>
+        /// <param name="z">z position in millimetres</param>
+        public void SetLocalGridPosition(float x, float y, float z)
+        {
+            for (int i = 0; i < mapping_threads; i++)
+            {
+                LocalGrid[i].x = x;
+                LocalGrid[i].y = y;
+                LocalGrid[i].z = z;
+            }
+        }
+
+        /// <summary>
         /// set the tuning parameters from a comma separated string
         /// </summary>
         /// <param name="parameters">comma separated tuning parameters</param>
@@ -387,14 +446,14 @@ namespace sentience.core
                 tuningParameters[i] = Convert.ToSingle(tuningParams[i]);
 
             // Motion model culling threshold
-            motion.cull_threshold = (int)tuningParameters[0];
+            for (int i = 0; i < mapping_threads; i++) motion[i].cull_threshold = (int)tuningParameters[0];
             // Localisation radius
             LocalGridLocalisationRadius_mm = tuningParameters[1];
             // Number of position uncertainty particles
-            motion.survey_trial_poses = (int)tuningParameters[2];
+            for (int i = 0; i < mapping_threads; i++) motion[i].survey_trial_poses = (int)tuningParameters[2];
             // A weighting factor which determines how aggressively the vacancy part of the sensor model carves out space
             LocalGridVacancyWeighting = tuningParameters[3];
-            LocalGrid.vacancy_weighting = tuningParameters[3];
+            for (int i = 0; i < mapping_threads; i++) LocalGrid[i].vacancy_weighting = tuningParameters[3];
             // surround radius percent (for contour stereo) and matching threshold
             setStereoParameters(10, 100, tuningParameters[4], tuningParameters[5]);
         }
@@ -455,6 +514,106 @@ namespace sentience.core
 
         #endregion
 
+        #region "mapping update"
+
+        /// <summary>
+        /// the mapping thread has called back
+        /// </summary>
+        /// <param name="state"></param>
+        private static void MappingUpdateCallback(object state)
+        {
+            // get the returned state
+            ThreadMappingState mstate = (ThreadMappingState)state;
+        }
+
+        /// <summary>
+        /// mapping update, which can consist of multiple threads running concurrently
+        /// </summary>
+        /// <param name="stereo_rays">rays to be thrown into the grid map</param>
+        private void MappingUpdate(ArrayList[] stereo_rays)
+        {
+            // list of currently active threads
+            ArrayList activeThreads = new ArrayList();
+            ArrayList processedThreads = new ArrayList();
+
+            // create a set of threads
+            Thread[] mapping_thread = new Thread[mapping_threads];
+            
+            for (int th = 0; th < mapping_threads; th++)
+            {
+                // create a state for the thread
+                ThreadMappingState state = new ThreadMappingState();
+                state.active = true;
+                state.pose = new pos3D(x, y, z);
+                state.pose.pan = pan;
+                state.motion = motion[th];
+                state.grid = LocalGrid[th];
+                state.stereo_rays = stereo_rays;
+
+                // add this state to the threads to be processed
+                ThreadMappingUpdate mapupdate = new ThreadMappingUpdate(new WaitCallback(MappingUpdateCallback), state);
+                mapping_thread[th] = new Thread(new ThreadStart(mapupdate.Execute));
+                mapping_thread[th].Name = "occupancy grid map " + th.ToString();
+                mapping_thread[th].Priority = ThreadPriority.AboveNormal;
+                activeThreads.Add(state);
+            }
+
+            // clear benchmarks
+            benchmark_observation_update = 0;
+            benchmark_garbage_collection = 0;
+
+            clock.Start();
+
+            // start all threads
+            for (int th = 0; th < mapping_threads; th++)
+                mapping_thread[th].Start();
+
+            // now sit back and wait for all threads to complete
+            while (activeThreads.Count > 0)
+            {
+                for (int th = activeThreads.Count - 1; th >= 0; th--)
+                {
+                    // is this thread still active?
+                    ThreadMappingState state = (ThreadMappingState)activeThreads[th];
+                    if (!state.active)
+                    {
+                        // remove from the list of active threads
+                        activeThreads.RemoveAt(th);
+                        processedThreads.Add(state);
+
+                        // update benchmark timings
+                        benchmark_observation_update += state.benchmark_observation_update;
+                        benchmark_garbage_collection += state.benchmark_garbage_collection;
+                    }
+                }
+            }
+
+            clock.Stop();
+            long parallel_processing_time = clock.time_elapsed_mS;
+
+            // how much time have we gained from multithreading ?
+            long serial_processing_time = benchmark_observation_update + benchmark_garbage_collection;
+            long average_update_time = serial_processing_time / mapping_threads;
+            benchmark_concurrency = serial_processing_time - parallel_processing_time;
+
+            // average benchmarks
+            benchmark_observation_update /= mapping_threads;
+            benchmark_garbage_collection /= mapping_threads;
+
+            // compare the results and see which is the best looking map
+            for (int th = 0; th < processedThreads.Count; th++)
+            {
+                ThreadMappingState state = (ThreadMappingState)processedThreads[th];
+            }
+
+        }
+
+        public void updatePose(float x, float y, float pan)
+        {
+        }
+
+        #endregion
+
         #region "update routines"
 
         // the previous position and orientation of the robot
@@ -470,10 +629,6 @@ namespace sentience.core
             previousPosition.z = z;
             previousPosition.pan = pan;
             previousPosition.tilt = tilt;
-        }
-
-        public void updatePose(float x, float y, float pan)
-        {
         }
 
         /// <summary>
@@ -544,39 +699,40 @@ namespace sentience.core
         /// check if the robot has moved out of bounds of the current local grid
         /// if so, create a new grid for it to move into and centre it appropriately
         /// </summary>
-        private void checkOutOfBounds()
+        /// <param name="index">index number of the occupancy grid being considered</param>
+        private void checkOutOfBounds(int index)
         {
             bool out_of_bounds = false;
-            pos3D new_grid_centre = new pos3D(LocalGrid.x, LocalGrid.y, LocalGrid.z);
+            pos3D new_grid_centre = new pos3D(LocalGrid[index].x, LocalGrid[index].y, LocalGrid[index].z);
 
-            float innermost_gridSize_mm = LocalGrid.cellSize_mm; // .getCellSize(LocalGrid.levels - 1);
+            float innermost_gridSize_mm = LocalGrid[index].cellSize_mm; // .getCellSize(LocalGrid.levels - 1);
             float border = innermost_gridSize_mm / 4.0f;
-            if (x < LocalGrid.x - border)
+            if (x < LocalGrid[index].x - border)
             {
-                new_grid_centre.x = LocalGrid.x - border;
+                new_grid_centre.x = LocalGrid[index].x - border;
                 out_of_bounds = true;
             }
-            if (x > LocalGrid.x + border)
+            if (x > LocalGrid[index].x + border)
             {
-                new_grid_centre.x = LocalGrid.x + border;
+                new_grid_centre.x = LocalGrid[index].x + border;
                 out_of_bounds = true;
             }
-            if (y < LocalGrid.y - border)
+            if (y < LocalGrid[index].y - border)
             {
-                new_grid_centre.y = LocalGrid.y - border;
+                new_grid_centre.y = LocalGrid[index].y - border;
                 out_of_bounds = true;
             }
-            if (y > LocalGrid.y + border)
+            if (y > LocalGrid[index].y + border)
             {
-                new_grid_centre.y = LocalGrid.y + border;
+                new_grid_centre.y = LocalGrid[index].y + border;
                 out_of_bounds = true;
             }
 
             if (out_of_bounds)
             {
                 // file name for this grid, based upon its position
-                String grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid.x / border)) + "_" +
-                                                Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
+                String grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid[index].x / border)) + "_" +
+                                                Convert.ToString((int)Math.Round(LocalGrid[index].y / border)) + ".grd";
 
                 // store the path which was used to create the previous grid
                 // this is far more efficient in terms of memory and disk storage
@@ -587,70 +743,44 @@ namespace sentience.core
                 //LocalGridPath.Clear();
 
                 // make a new grid
-                createLocalGrid();
+                createLocalGrid(index);
 
                 // position the grid
-                LocalGrid.SetCentrePosition(new_grid_centre.x, new_grid_centre.x);
-                LocalGrid.z = new_grid_centre.z;
+                LocalGrid[index].SetCentrePosition(new_grid_centre.x, new_grid_centre.x);
+                LocalGrid[index].z = new_grid_centre.z;
 
                 // file name of the grid to be loaded
-                grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid.x / border)) + "_" +
-                                         Convert.ToString((int)Math.Round(LocalGrid.y / border)) + ".grd";
+                grid_filename = "grid" + Convert.ToString((int)Math.Round(LocalGrid[index].x / border)) + "_" +
+                                         Convert.ToString((int)Math.Round(LocalGrid[index].y / border)) + ".grd";
                 //LocalGridPath.Load(grid_filename);
                     
                 // TODO: update the local grid using the loaded path
-                //LocalGrid.insert(LocalGridPath, false);
+                //LocalGrid[index].insert(LocalGridPath, false);
             }
         }
 
         /// <summary>
         /// returns the average colour variance for the entire occupancy grid
         /// </summary>
-        /// <returns>mean colour variance</returns>
         public float GetMeanColourVariance()
         {
-            float mean_variance = 0;
-
-            if (motion.best_path != null)
-                if (motion.best_path.current_pose != null)
-                    mean_variance = LocalGrid.GetMeanColourVariance(motion.best_path.current_pose);
-
-            return (mean_variance);
+            return (GetMeanColourVariance(best_grid_index));
         }
 
         /// <summary>
-        /// update the state of the robot using a list of images from its stereo camera/s
-        /// TODO: allow this to be multithreaded
+        /// returns the average colour variance for the entire occupancy grid
         /// </summary>
-        /// <param name="stereo_rays">stereo rays to be throw into the grid</param>
-        /// <param name="motion_model">the motion model to be used</param>
-        /// <param name="grid">the occupancy grid to be updated</param>
-        public void updateBase(ArrayList[] stereo_rays,
-                               motionModel motion_model,
-                               occupancygridMultiHypothesis grid)
+        /// <param name="index">index number of the occupancy grid being considered</param>
+        /// <returns>mean colour variance</returns>
+        public float GetMeanColourVariance(int index)
         {
-            clock.Start();
+            float mean_variance = 0;
 
-            // update all current poses with the observation
-            motion_model.AddObservation(stereo_rays, false);
+            if (motion[index].best_path != null)
+                if (motion[index].best_path.current_pose != null)
+                    mean_variance = LocalGrid[index].GetMeanColourVariance(motion[index].best_path.current_pose);
 
-            clock.Stop();
-            benchmark_observation_update = clock.time_elapsed_mS;
-
-            // what's the relative position of the robot inside the grid ?
-            pos3D relative_position = new pos3D(x - grid.x, y - grid.y, 0);
-            relative_position.pan = pan - grid.pan;
-
-            clock.Start();
-
-            // garbage collect dead occupancy hypotheses
-            grid.GarbageCollect();
-
-            clock.Stop();
-            benchmark_garbage_collection = clock.time_elapsed_mS;
-
-            // have we moved off the current grid ?
-            //checkOutOfBounds();            
+            return (mean_variance);
         }
 
 
@@ -673,7 +803,7 @@ namespace sentience.core
                     stereo_rays[cam] = inverseSensorModel.createObservation(head, cam);
 
                 // update the motion model and occupancy grid
-                updateBase(stereo_rays, motion, LocalGrid);
+                MappingUpdate(stereo_rays);
             }
         }
 
@@ -697,7 +827,8 @@ namespace sentience.core
             this.pan = pan;
 
             // update the motion model
-            motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
+            motionModel motion_model = motion[best_grid_index];
+            motion_model.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
             if (!((previousPosition.x == -1) && (previousPosition.y == -1)))
             {
                 float time_per_index_sec = 1;
@@ -705,21 +836,28 @@ namespace sentience.core
                 float dx = x - previousPosition.x;
                 float dy = y - previousPosition.y;
                 float distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
-                float acceleration = (2 * (distance - (motion.forward_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                float acceleration = (2 * (distance - (motion_model.forward_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
                 acceleration /= time_per_index_sec;
-                float forward_velocity = motion.forward_velocity + (acceleration * time_per_index_sec);
-                motion.forward_acceleration = acceleration; // forward_velocity - motion.forward_velocity;
-                motion.forward_velocity = forward_velocity;
+                float forward_velocity = motion_model.forward_velocity + (acceleration * time_per_index_sec);
+
+                for (int i = 0; i < mapping_threads; i++)
+                {
+                    motion[i].forward_acceleration = acceleration;
+                    motion[i].forward_velocity = forward_velocity;
+                }
 
                 distance = pan - previousPosition.pan;
-                acceleration = (2 * (distance - (motion.angular_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
+                acceleration = (2 * (distance - (motion_model.angular_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
                 acceleration /= time_per_index_sec;
-                float angular_velocity = motion.angular_velocity + (acceleration * time_per_index_sec);
-                motion.angular_velocity = angular_velocity;
+                float angular_velocity = motion_model.angular_velocity + (acceleration * time_per_index_sec);
+
+                for (int i = 0; i < mapping_threads; i++)
+                    motion[i].angular_velocity = angular_velocity;
 
                 clock.Start();
 
-                motion.Predict(time_per_index_sec);
+                for (int i = 0; i < mapping_threads; i++)
+                    motion[i].Predict(time_per_index_sec);
 
                 clock.Stop();
                 benchmark_prediction = clock.time_elapsed_mS;
@@ -736,7 +874,7 @@ namespace sentience.core
         {
             previousPosition.x = -1;
             previousPosition.y = -1;
-            motion.Reset(mode);
+            for (int i = 0; i < mapping_threads; i++) motion[i].Reset(mode);
         }
 
         /// <summary>
@@ -763,18 +901,23 @@ namespace sentience.core
             {
                 // calculate angular velocity of the left wheel in radians/sec
                 float angle_traversed_radians = (float)(left_wheel_encoder - prev_left_wheel_encoder) * 2 * (float)Math.PI / countsPerWheelRev;
-                motion.LeftWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;                
+                for (int i = 0; i < mapping_threads; i++)
+                    motion[i].LeftWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;                
 
                 // calculate angular velocity of the right wheel in radians/sec
                 angle_traversed_radians = (float)(right_wheel_encoder - prev_right_wheel_encoder) * 2 * (float)Math.PI / countsPerWheelRev;
-                motion.RightWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;
+                for (int i = 0; i < mapping_threads; i++)
+                    motion[i].RightWheelAngularVelocity = angle_traversed_radians / time_elapsed_sec;
             }
 
             clock.Start();
 
             // update the motion model
-            motion.InputType = motionModel.INPUTTYPE_WHEEL_ANGULAR_VELOCITY;
-            motion.Predict(time_elapsed_sec);
+            for (int i = 0; i < mapping_threads; i++)
+            {
+                motion[i].InputType = motionModel.INPUTTYPE_WHEEL_ANGULAR_VELOCITY;
+                motion[i].Predict(time_elapsed_sec);
+            }
 
             clock.Stop();
             benchmark_prediction = clock.time_elapsed_mS;
@@ -801,15 +944,19 @@ namespace sentience.core
             update(images);
 
             // update the motion model
-            motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
-            motion.forward_acceleration = forward_velocity - motion.forward_velocity;
-            motion.forward_velocity = forward_velocity;
-            motion.angular_acceleration = angular_velocity - motion.angular_velocity;
-            motion.angular_velocity = angular_velocity;
+            for (int i = 0; i < mapping_threads; i++)
+            {
+                motion[i].InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
+                motion[i].forward_acceleration = forward_velocity - motion[i].forward_velocity;
+                motion[i].forward_velocity = forward_velocity;
+                motion[i].angular_acceleration = angular_velocity - motion[i].angular_velocity;
+                motion[i].angular_velocity = angular_velocity;
+            }
 
             clock.Start();
 
-            motion.Predict(time_elapsed_sec);
+            for (int i = 0; i < mapping_threads; i++)
+                motion[i].Predict(time_elapsed_sec);
 
             clock.Stop();
             benchmark_prediction = clock.time_elapsed_mS;
@@ -879,13 +1026,15 @@ namespace sentience.core
                 float destination_x = 0, destination_y = 0;
                 waypoint.GetPositionMillimetres(ref destination_x, ref destination_y);
 
+                // the best performing local grid
+                occupancygridMultiHypothesis grid = LocalGrid[best_grid_index];
+
                 // create a planner
-                if (planner == null)
-                    planner = new sentience.pathplanner.pathplanner(LocalGrid.navigable_space, (int)LocalGridCellSize_mm, LocalGrid.x, LocalGrid.y);
+                createPlanner(grid);
 
                 // set variables, in the unlikely case that the centre position
                 // of the grid has been changed since the planner was initialised
-                planner.init(LocalGrid.navigable_space, LocalGrid.x, LocalGrid.y);
+                planner.init(grid.navigable_space, grid.x, grid.y);
 
                 // update the planner, in order to assign safety scores to the
                 // navigable space.  The efficiency of this could be improved
@@ -939,20 +1088,23 @@ namespace sentience.core
         public void ShowGrid(int view_type, Byte[] img, int width, int height, bool show_robot, 
                              bool colour, bool scalegrid)
         {
-            if (motion.best_path != null)
-                if (motion.best_path.current_pose != null)
+            occupancygridMultiHypothesis grid = LocalGrid[best_grid_index];
+            motionModel motion_model = motion[best_grid_index];
+
+            if (motion_model.best_path != null)
+                if (motion_model.best_path.current_pose != null)
                 {
-                    LocalGrid.Show(view_type, img, width, height, motion.best_path.current_pose, colour, scalegrid);
+                    grid.Show(view_type, img, width, height, motion_model.best_path.current_pose, colour, scalegrid);
                     if (show_robot)
                     {
                         if (view_type == occupancygridMultiHypothesis.VIEW_ABOVE)
                         {
-                            int half_grid_dimension_mm = (LocalGrid.dimension_cells * LocalGrid.cellSize_mm) / 2;
-                            int min_x = (int)(LocalGrid.x - half_grid_dimension_mm);
-                            int min_y = (int)(LocalGrid.y - half_grid_dimension_mm);
-                            int max_x = (int)(LocalGrid.x + half_grid_dimension_mm);
-                            int max_y = (int)(LocalGrid.y + half_grid_dimension_mm);
-                            motion.ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, false, false);
+                            int half_grid_dimension_mm = (grid.dimension_cells * grid.cellSize_mm) / 2;
+                            int min_x = (int)(grid.x - half_grid_dimension_mm);
+                            int min_y = (int)(grid.y - half_grid_dimension_mm);
+                            int max_x = (int)(grid.x + half_grid_dimension_mm);
+                            int max_y = (int)(grid.y + half_grid_dimension_mm);
+                            motion_model.ShowBestPose(img, width, height, min_x, min_y, max_x, max_y, false, false);
                         }
                     }
                 }
@@ -966,7 +1118,7 @@ namespace sentience.core
         /// <param name="height"></param>
         public void ShowPathTree(Byte[] img, int width, int height)
         {
-            motion.ShowTree(img, width, height, 0, 0, 0, 0);
+            motion[best_grid_index].ShowTree(img, width, height, 0, 0, 0, 0);
         }
 
         #endregion
@@ -1115,7 +1267,7 @@ namespace sentience.core
                 }
             }
 
-            nodeRobot.AppendChild(motion.getXml(doc, nodeRobot));
+            nodeRobot.AppendChild(motion[best_grid_index].getXml(doc, nodeRobot));
 
             return (nodeRobot);
         }
@@ -1203,7 +1355,8 @@ namespace sentience.core
                 int cameraIndex = 0;
                 LoadFromXml(xnodDE, 0, ref cameraIndex);
 
-                createLocalGrid();
+                for (int i = 0; i < mapping_threads; i++)
+                    createLocalGrid(i);
 
                 if (TuningParameters != "") 
                     SetTuningParameters(TuningParameters);
@@ -1429,7 +1582,8 @@ namespace sentience.core
 
             if (xnod.Name == "MotionModel")
             {
-                motion.LoadFromXml(xnod, level + 1);
+                for (int i = 0; i < mapping_threads; i++)
+                    motion[i].LoadFromXml(xnod, level + 1);
             }
 
             // call recursively on all children of the current node
@@ -1457,7 +1611,7 @@ namespace sentience.core
         /// <param name="filename">name of the file to save as</param>
         public void SaveGrid(String filename)
         {
-            LocalGrid.Save(filename, motion.best_path.current_pose);
+            LocalGrid[best_grid_index].Save(filename, motion[best_grid_index].best_path.current_pose);
         }
 
         /// <summary>
@@ -1467,13 +1621,13 @@ namespace sentience.core
         /// <returns>occupancy grid data</returns>
         public Byte[] SaveGrid()
         {
-            return (LocalGrid.Save(motion.best_path.current_pose));
+            return (LocalGrid[best_grid_index].Save(motion[best_grid_index].best_path.current_pose));
         }
 
         public void LoadGrid(Byte[] data)
         {
-            createLocalGrid();
-            LocalGrid.Load(data);
+            createLocalGrid(best_grid_index);
+            LocalGrid[best_grid_index].Load(data);
         }
 
         /// <summary>
@@ -1482,8 +1636,8 @@ namespace sentience.core
         /// <param name="filename"></param>
         public void LoadGrid(String filename)
         {
-            createLocalGrid();
-            LocalGrid.Load(filename);
+            createLocalGrid(best_grid_index);
+            LocalGrid[best_grid_index].Load(filename);
         }
 
         #endregion
@@ -1496,7 +1650,7 @@ namespace sentience.core
         /// <param name="filename">name of the file to export as</param>
         public void ExportToIFrIT(String filename)
         {
-            LocalGrid.ExportToIFrIT(filename, motion.best_path.current_pose);
+            LocalGrid[best_grid_index].ExportToIFrIT(filename, motion[best_grid_index].best_path.current_pose);
         }
 
 
