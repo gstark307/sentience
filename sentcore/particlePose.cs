@@ -284,7 +284,7 @@ namespace sentience.core
                     // update the grid cells for this ray and update the
                     // localisation score accordingly
                     float score =
-                        rob.LocalGrid[0].Insert(trial_ray, this, 
+                        LocalGrid.Insert(trial_ray, this, 
                                          rob.head.sensormodel[cam],
                                          left_camera_location[cam], 
                                          right_camera_location[cam],

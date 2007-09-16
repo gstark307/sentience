@@ -77,6 +77,7 @@ namespace robotDesigner
 
                 txtName.Text = rob.Name;
                 txtTotalMass.Text = Convert.ToString(rob.TotalMass_kg);
+                txtNoOfThreads.Text = Convert.ToString(rob.GetMappingThreads());
                 txtBodyWidth.Text = Convert.ToString(rob.BodyWidth_mm);
                 txtBodyLength.Text = Convert.ToString(rob.BodyLength_mm);
                 txtBodyHeight.Text = Convert.ToString(rob.BodyHeight_mm);
@@ -131,6 +132,7 @@ namespace robotDesigner
 
             rob.Name = txtName.Text;
             rob.TotalMass_kg = Convert.ToSingle(txtTotalMass.Text);
+            rob.SetMappingThreads(Convert.ToInt32(txtNoOfThreads.Text));
             rob.BodyWidth_mm = Convert.ToSingle(txtBodyWidth.Text);
             rob.BodyLength_mm = Convert.ToSingle(txtBodyLength.Text);
             rob.BodyHeight_mm = Convert.ToSingle(txtBodyHeight.Text);

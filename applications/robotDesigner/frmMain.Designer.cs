@@ -101,6 +101,8 @@ namespace robotDesigner
             this.tabGeometry = new System.Windows.Forms.TabPage();
             this.tabPerception = new System.Windows.Forms.TabPage();
             this.grpLocalisation = new System.Windows.Forms.GroupBox();
+            this.chkEnableScanMatching = new System.Windows.Forms.CheckBox();
+            this.label37 = new System.Windows.Forms.Label();
             this.txtCullingThreshold = new System.Windows.Forms.TextBox();
             this.label35 = new System.Windows.Forms.Label();
             this.txtTrialPoses = new System.Windows.Forms.TextBox();
@@ -123,8 +125,8 @@ namespace robotDesigner
             this.label28 = new System.Windows.Forms.Label();
             this.txtGridCellDimension = new System.Windows.Forms.TextBox();
             this.label29 = new System.Windows.Forms.Label();
-            this.label37 = new System.Windows.Forms.Label();
-            this.chkEnableScanMatching = new System.Windows.Forms.CheckBox();
+            this.txtNoOfThreads = new System.Windows.Forms.TextBox();
+            this.label38 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.grpBody.SuspendLayout();
             this.grpPropulsion.SuspendLayout();
@@ -696,6 +698,8 @@ namespace robotDesigner
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.txtNoOfThreads);
+            this.groupBox2.Controls.Add(this.label38);
             this.groupBox2.Controls.Add(this.txtTotalMass);
             this.groupBox2.Controls.Add(this.label17);
             this.groupBox2.Controls.Add(this.txtName);
@@ -869,6 +873,24 @@ namespace robotDesigner
             this.grpLocalisation.TabIndex = 4;
             this.grpLocalisation.TabStop = false;
             this.grpLocalisation.Text = "Localisation";
+            // 
+            // chkEnableScanMatching
+            // 
+            this.chkEnableScanMatching.AutoSize = true;
+            this.chkEnableScanMatching.Location = new System.Drawing.Point(154, 110);
+            this.chkEnableScanMatching.Name = "chkEnableScanMatching";
+            this.chkEnableScanMatching.Size = new System.Drawing.Size(15, 14);
+            this.chkEnableScanMatching.TabIndex = 5;
+            this.chkEnableScanMatching.UseVisualStyleBackColor = true;
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(17, 110);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(115, 13);
+            this.label37.TabIndex = 14;
+            this.label37.Text = "Enable Scan Matching";
             // 
             // txtCullingThreshold
             // 
@@ -1095,23 +1117,23 @@ namespace robotDesigner
             this.label29.TabIndex = 0;
             this.label29.Text = "Cell Dimension mm";
             // 
-            // label37
+            // txtNoOfThreads
             // 
-            this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point(17, 110);
-            this.label37.Name = "label37";
-            this.label37.Size = new System.Drawing.Size(115, 13);
-            this.label37.TabIndex = 14;
-            this.label37.Text = "Enable Scan Matching";
+            this.txtNoOfThreads.Location = new System.Drawing.Point(291, 45);
+            this.txtNoOfThreads.Name = "txtNoOfThreads";
+            this.txtNoOfThreads.Size = new System.Drawing.Size(59, 20);
+            this.txtNoOfThreads.TabIndex = 7;
+            this.txtNoOfThreads.Text = "1";
+            this.txtNoOfThreads.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // chkEnableScanMatching
+            // label38
             // 
-            this.chkEnableScanMatching.AutoSize = true;
-            this.chkEnableScanMatching.Location = new System.Drawing.Point(154, 110);
-            this.chkEnableScanMatching.Name = "chkEnableScanMatching";
-            this.chkEnableScanMatching.Size = new System.Drawing.Size(15, 14);
-            this.chkEnableScanMatching.TabIndex = 5;
-            this.chkEnableScanMatching.UseVisualStyleBackColor = true;
+            this.label38.AutoSize = true;
+            this.label38.Location = new System.Drawing.Point(166, 48);
+            this.label38.Name = "label38";
+            this.label38.Size = new System.Drawing.Size(119, 13);
+            this.label38.TabIndex = 6;
+            this.label38.Text = "Number of CPU threads";
             // 
             // frmMain
             // 
@@ -1249,6 +1271,8 @@ namespace robotDesigner
         private System.Windows.Forms.Label label36;
         private System.Windows.Forms.CheckBox chkEnableScanMatching;
         private System.Windows.Forms.Label label37;
+        private System.Windows.Forms.TextBox txtNoOfThreads;
+        private System.Windows.Forms.Label label38;
     }
 }
 

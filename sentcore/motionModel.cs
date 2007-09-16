@@ -117,8 +117,13 @@ namespace sentience.core
 
         #region "initialisation"
 
-        public motionModel(robot rob, occupancygridMultiHypothesis LocalGrid)
+        public motionModel(robot rob, 
+                           occupancygridMultiHypothesis LocalGrid,
+                           int random_seed)
         {
+            // seed the random number generator
+            rnd = new MersenneTwister(random_seed);
+
             this.rob = rob;
             this.LocalGrid = LocalGrid;
             Poses = new ArrayList();

@@ -66,8 +66,8 @@ namespace sentience.core
             clock.Start();
 
             // update all current poses with the observed rays
-            state.motion.AddObservation(state.stereo_rays, false);
             state.motion.LocalGrid = state.grid;
+            state.motion.AddObservation(state.stereo_rays, false);            
 
             clock.Stop();
             state.benchmark_observation_update = clock.time_elapsed_mS;

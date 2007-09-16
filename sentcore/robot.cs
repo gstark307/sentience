@@ -34,7 +34,7 @@ namespace sentience.core
         public String Name = "My Robot";  
 
         // the number of threads to use for mapping
-        const int mapping_threads = 1;
+        private int mapping_threads = 1;
         
         // the number of rays per stereo camera to be thrown at each time step
         private const int rays_per_stereo_camera = 50;
@@ -301,7 +301,7 @@ namespace sentience.core
 
             // create a motion model for each possible grid
             motion = new motionModel[mapping_threads];
-            for (int i = 0; i < mapping_threads; i++) motion[i] = new motionModel(this, LocalGrid[i]);
+            for (int i = 0; i < mapping_threads; i++) motion[i] = new motionModel(this, LocalGrid[i], 100 * (i+1));
 
             // a list of places where the robot might work or make observations
             worksites = new kmlZone();
@@ -415,6 +415,36 @@ namespace sentience.core
         #endregion
 
         #region "parameter setting"
+
+        #region "setting the number of threads"
+
+        /// <summary>
+        /// return the number of mapping threads in use
+        /// </summary>
+        /// <returns></returns>
+        public int GetMappingThreads()
+        {
+            return (mapping_threads);
+        }
+
+        /// <summary>
+        /// set the number of mapping threads to be used
+        /// </summary>
+        /// <param name="no_of_threads"></param>
+        public void SetMappingThreads(int no_of_threads)
+        {
+            mapping_threads = no_of_threads;
+
+            // add local occupancy grids
+            LocalGrid = new occupancygridMultiHypothesis[mapping_threads];
+            for (int i = 0; i < mapping_threads; i++) createLocalGrid(i);
+
+            // create a motion model for each possible grid
+            motion = new motionModel[mapping_threads];
+            for (int i = 0; i < mapping_threads; i++) motion[i] = new motionModel(this, LocalGrid[i], 100 * (i + 1));
+        }
+
+        #endregion
 
         #region "setting motion model parameters"
 
@@ -570,7 +600,6 @@ namespace sentience.core
         {
             // list of currently active threads
             ArrayList activeThreads = new ArrayList();
-            ArrayList processedThreads = new ArrayList();
 
             // create a set of threads
             Thread[] mapping_thread = new Thread[mapping_threads];
@@ -615,7 +644,6 @@ namespace sentience.core
                     {
                         // remove from the list of active threads
                         activeThreads.RemoveAt(th);
-                        processedThreads.Add(state);
 
                         // update benchmark timings
                         benchmark_observation_update += state.benchmark_observation_update;
@@ -638,14 +666,15 @@ namespace sentience.core
 
             // compare the results and see which is the best looking map
             pos3D best_pose = null;
-            float max_path_score = -1;
-            for (int th = 0; th < processedThreads.Count; th++)
+            float max_path_score = 0;
+            for (int th = 0; th < mapping_threads; th++)
             {
-                ThreadMappingState state = (ThreadMappingState)processedThreads[th];
-                if (motion[th].current_robot_path_score > max_path_score)
+                if ((motion[th].current_robot_path_score > max_path_score) ||
+                    (th == 0))
                 {
                     max_path_score = motion[th].current_robot_path_score;
                     best_pose = motion[th].current_robot_pose;
+                    best_grid_index = th;
                 }
             }
 
@@ -660,10 +689,6 @@ namespace sentience.core
                 pan = best_pose.pan;
             }
 
-        }
-
-        public void updatePose(float x, float y, float pan, float score)
-        {
         }
 
         #endregion
@@ -1190,6 +1215,11 @@ namespace sentience.core
             xml.AddComment(doc, nodeRobot, "Total mass in kilograms");
             xml.AddTextElement(doc, nodeRobot, "TotalMassKilograms", Convert.ToString(TotalMass_kg));
 
+            XmlElement nodeComputation = doc.CreateElement("ComputingEnvironment");
+            nodeRobot.AppendChild(nodeComputation);
+            xml.AddComment(doc, nodeComputation, "The number of threads to run concurrently");
+            xml.AddTextElement(doc, nodeComputation, "NoOfThreads", Convert.ToString(mapping_threads));
+
             XmlElement nodeBody = doc.CreateElement("BodyDimensions");
             nodeRobot.AppendChild(nodeBody);
 
@@ -1437,6 +1467,11 @@ namespace sentience.core
                 Name = xnod.InnerText;
             }
 
+            if (xnod.Name == "NoOfThreads")
+            {
+                mapping_threads = Convert.ToInt32(xnod.InnerText);
+            }
+
             if (xnod.Name == "TotalMassKilograms")
             {
                 TotalMass_kg = Convert.ToSingle(xnod.InnerText);
@@ -1647,7 +1682,8 @@ namespace sentience.core
                  (xnod.Name == "BodyDimensions") ||
                  (xnod.Name == "PropulsionSystem") ||
                  (xnod.Name == "SensorPlatform") ||
-                 (xnod.Name == "OccupancyGrid")
+                 (xnod.Name == "OccupancyGrid") ||
+                 (xnod.Name == "ComputingEnvironment")
                  ))
             {
                 xnodWorking = xnod.FirstChild;
