@@ -5,16 +5,20 @@
     <File filename="../mapping/frmMapping.cs" />
     <File filename="../mapping/frmMapping.Designer.cs" />
     <File filename="../mapping/Program.cs" />
+    <File filename="../../sentcore/robot.cs" />
+    <File filename="../../../selfopt/selfopt.cs" />
+    <File filename="./MainWindow.cs" />
   </Files>
   <Views>
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
       <TreeView>
         <Node expanded="True">
+          <Node name="selfopt" expanded="True" />
           <Node name="sentcore" expanded="True" />
-          <Node name="test" expanded="True" />
-          <Node name="utilities" expanded="True">
-            <Node name="EventLog.cs" expanded="False" selected="True" />
+          <Node name="test" expanded="True">
+            <Node name="MainWindow.cs" expanded="False" selected="True" />
           </Node>
+          <Node name="utilities" expanded="True" />
         </Node>
       </TreeView>
     </ViewMemento>
@@ -43,7 +47,7 @@
   </Views>
   <Properties>
     <Properties>
-      <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/mapping/Program.cs" />
+      <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/testFunctions/MainWindow.cs" />
       <Property key="ActiveConfiguration" value="Debug" />
     </Properties>
   </Properties>
