@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using CenterSpace.Free;
 using sluggish.utilities;
 
@@ -124,6 +125,11 @@ namespace sentience.core
 
         #region "probability calculations"
 
+        // arrays used to calculuate the colour variance
+        private float[] min_level = new float[3];
+        private float[] max_level = new float[3];
+        private float[] temp_colour = new float[3];
+
         /// <summary>
         /// return the probability of occupancy for the entire cell
         /// </summary>
@@ -133,7 +139,6 @@ namespace sentience.core
                                     float[] mean_colour, ref float mean_variance)
         {
             float probabilityLogOdds = 0;
-            float[] colour = new float[3];
             int hits = 0;
             mean_variance = 0;
 
@@ -143,12 +148,12 @@ namespace sentience.core
             for (int z = 0; z < Hypothesis.Length; z++)
             {
                 float variance = 0;
-                float probLO = GetProbability(pose, x, y, z, true, colour, ref variance);
+                float probLO = GetProbability(pose, x, y, z, true, temp_colour, ref variance);
                 if (probLO != NO_OCCUPANCY_EVIDENCE)
                 {
                     probabilityLogOdds += probLO;
                     for (int col = 0; col < 3; col++)
-                        mean_colour[col] += colour[col];
+                        mean_colour[col] += temp_colour[col];
                     mean_variance += variance;
                     hits++;
                 }
@@ -182,8 +187,6 @@ namespace sentience.core
         {
             int hits = 0;
             float probabilityLogOdds = 0;
-            float[] min_level = null;
-            float[] max_level = null;
             mean_variance = 1;
 
             for (int col = 0; col < 3; col++)
@@ -198,9 +201,6 @@ namespace sentience.core
                         colour[col] += distilled[z].colour[col];
                     hits++;
                 }
-
-            min_level = new float[3];
-            max_level = new float[3];
 
             // and now get the data for any additional non-distilled particles
             if ((Hypothesis[z] != null) && (pose != null))
@@ -226,7 +226,7 @@ namespace sentience.core
                                         {
                                             // only use evidence older than the current time 
                                             // step to avoid getting into a muddle
-                                            if (pose.time_step > h.pose.time_step)
+                                            if (pose.time_step != h.pose.time_step)
                                             {
                                                 probabilityLogOdds += h.probabilityLogOdds;
 

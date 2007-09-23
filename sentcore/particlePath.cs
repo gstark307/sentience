@@ -138,6 +138,11 @@ namespace sentience.core
 
         #region "map cache"
 
+        // The map cache stores any grid cell hypotheses which have been observed
+        // along this part of the path within a convenient lookup table.
+        // It is used to answer the question "was this grid cell observed by this path?"
+        // when retrieving occupancy probability for a given pose
+
         // grid map cache for quick lookup
         private List<particleGridCell>[][][] map_cache;
         private int map_cache_tx, map_cache_ty, map_cache_width_cells;
@@ -218,6 +223,7 @@ namespace sentience.core
 
         /// <summary>
         /// returns the list of hypotheses for the given grid cell location
+        /// This is used when calculating occupancy probability for a given pose
         /// </summary>
         /// <param name="x">x coordinate of the grid cell</param>
         /// <param name="y">y coordinate of the grid cell</param>

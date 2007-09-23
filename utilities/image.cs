@@ -1449,7 +1449,7 @@ namespace sluggish.utilities
 		
 		#endregion
 
-       #region "integral image"
+        #region "integral image"
 
         /// <summary>
         /// update the integral image, using the given mono bitmap
@@ -1458,6 +1458,7 @@ namespace sluggish.utilities
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         /// <param name="Integral">integral image</param>
+        /*
         public static void updateIntegralImage(byte[] bmp,
                                                int image_width, int image_height,
                                                int[,] Integral)
@@ -1475,6 +1476,7 @@ namespace sluggish.utilities
                 }
             }
         }
+         */
 
         /// <summary>
         /// update the integral image, using the given mono bitmap
@@ -1483,6 +1485,32 @@ namespace sluggish.utilities
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         /// <param name="Integral">integral image</param>
+        public static void updateIntegralImage(byte[] bmp,
+                                               int image_width, int image_height,
+                                               int[] Integral)
+        {
+            int x, y, p, n = image_width;
+
+            for (y = 1; y < image_height; y++)
+            {
+                p = 0;
+                for (x = 0; x < image_width; x++)
+                {
+                    p += bmp[n];
+                    Integral[n] = p + Integral[n - image_width];
+                    n++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// update the integral image, using the given mono bitmap
+        /// </summary>
+        /// <param name="bmp">mono image data</param>
+        /// <param name="image_width">width of the image</param>
+        /// <param name="image_height">height of the image</param>
+        /// <param name="Integral">integral image</param>
+        /*
         public static void updateIntegralImage(byte[] bmp,
                                                int image_width, int image_height,
                                                long[,] Integral)
@@ -1500,6 +1528,7 @@ namespace sluggish.utilities
                 }
             }
         }
+         */
 
         /// <summary>
         /// update the integral image, using the given mono bitmap
@@ -1507,10 +1536,51 @@ namespace sluggish.utilities
         /// <param name="bmp">mono image data</param>
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
-        public static long[,] updateIntegralImage(byte[] bmp, 
+        /// <param name="Integral">integral image</param>
+        public static void updateIntegralImage(byte[] bmp,
+                                               int image_width, int image_height,
+                                               long[] Integral)
+        {
+            int x, y, p, n = image_width;
+
+            for (y = 1; y < image_height; y++)
+            {
+                p = 0;
+                for (x = 0; x < image_width; x++)
+                {
+                    p += bmp[n];
+                    Integral[n] = p + Integral[n - image_width];
+                    n++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// update the integral image, using the given mono bitmap
+        /// </summary>
+        /// <param name="bmp">mono image data</param>
+        /// <param name="image_width">width of the image</param>
+        /// <param name="image_height">height of the image</param>
+        /*
+        public static long[,] updateIntegralImage(byte[] bmp,
                                                   int image_width, int image_height)
         {
             long[,] Integral = new long[image_width, image_height];
+            updateIntegralImage(bmp, image_width, image_height, Integral);
+            return (Integral);
+        }
+         */
+
+        /// <summary>
+        /// update the integral image, using the given mono bitmap
+        /// </summary>
+        /// <param name="bmp">mono image data</param>
+        /// <param name="image_width">width of the image</param>
+        /// <param name="image_height">height of the image</param>       
+        public static long[] updateIntegralImage(byte[] bmp,
+                                                 int image_width, int image_height)
+        {
+            long[] Integral = new long[image_width * image_height];
             updateIntegralImage(bmp, image_width, image_height, Integral);
             return (Integral);
         }
@@ -1579,10 +1649,41 @@ namespace sluggish.utilities
         /// <param name="ty">top left y coordinate</param>
         /// <param name="bx">bottom right x coordinate</param>
         /// <param name="by">bottom right y coordinate</param>
+        /// <param name="image_width">width of the integral image</param>
+        /// <returns>summed pixel value for the area</returns>
+        public static long getIntegral(long[] Integral, int tx, int ty, int bx, int by, int image_width)
+        {
+            int n1 = ty * image_width;
+            int n2 = by * image_width;
+            return (Integral[n2 + bx] + Integral[n1 + tx] - (Integral[n2 + tx] + Integral[n1 + bx]));
+        }
+
+        /// <summary>
+        /// get the total pixel value for the given area
+        /// </summary>
+        /// <param name="tx">top left x coordinate</param>
+        /// <param name="ty">top left y coordinate</param>
+        /// <param name="bx">bottom right x coordinate</param>
+        /// <param name="by">bottom right y coordinate</param>
         /// <returns>summed pixel value for the area</returns>
         public static int getIntegral(int[,] Integral, int tx, int ty, int bx, int by)
         {
             return (Integral[bx, by] + Integral[tx, ty] - (Integral[tx, by] + Integral[bx, ty]));
+        }
+
+        /// <summary>
+        /// get the total pixel value for the given area
+        /// </summary>
+        /// <param name="tx">top left x coordinate</param>
+        /// <param name="ty">top left y coordinate</param>
+        /// <param name="bx">bottom right x coordinate</param>
+        /// <param name="by">bottom right y coordinate</param>
+        /// <returns>summed pixel value for the area</returns>
+        public static int getIntegral(int[] Integral, int tx, int ty, int bx, int by, int image_width)
+        {
+            int n1 = ty * image_width;
+            int n2 = by * image_width;
+            return (Integral[n2 + bx] + Integral[n1 + tx] - (Integral[n2 + tx] + Integral[n1 + bx]));
         }
 
         /// <summary>
@@ -1626,7 +1727,7 @@ namespace sluggish.utilities
                     // this is a mono image
                     
 		            smoothed = new byte[img_width * img_height];
-		            long[,] integral_img = updateIntegralImage(img, img_width, img_height);
+		            long[] integral_img = updateIntegralImage(img, img_width, img_height);
 		            		            
 		            int n = 0;
 		            for (int y = 0; y < img_height; y++)
@@ -1645,7 +1746,7 @@ namespace sluggish.utilities
 		                    if (tx < 0) tx = 0;
 		                    if (bx >= img_width) bx = img_width - 1;
 		                    
-		                    long local_magnitude = getIntegral(integral_img, tx, ty, bx, by);
+		                    long local_magnitude = getIntegral(integral_img, tx, ty, bx, by, img_width);
 		                    smoothed[n] = (byte)(local_magnitude / smoothing_pixels);
 		                    n++;
 		                }

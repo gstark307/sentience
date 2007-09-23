@@ -536,7 +536,7 @@ namespace sluggish.imageprocessing
 
         // integral image, which may be useful for subsequent processing
         // of the region
-        public long[,] integral_image;
+        public long[] integral_image;
 
         /// <summary>
         /// update the integral image

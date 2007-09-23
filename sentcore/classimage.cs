@@ -22,13 +22,13 @@ using sluggish.utilities;
 
 namespace sentience.core
 {
-    public class classimage
+    public sealed class classimage
     {
         //dimensions of the image
         public int width, height;
 
         public Byte[] image;
-        int[,] Integral;
+        int[] Integral;
 
         /// <summary>
         /// constructor
@@ -58,7 +58,7 @@ namespace sentience.core
             height = hght;
 
             image = new Byte [width * height];
-            Integral = new int [width, height];
+            Integral = new int [width * height];
         }
 
 
@@ -199,18 +199,18 @@ namespace sentience.core
             ty1 = y - blobradius_y;
             bx1 = tx1 + diameter_x;
             by1 = ty1 + diameter_y;
-            outer = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, bx1, by1);
+            outer = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, bx1, by1, width);
             tx2 = x - half_radius_x;
             ty2 = y - half_radius_y;
             bx2 = tx2 + blobradius_x;
             by2 = ty2 + blobradius_y;
-            inner = sluggish.utilities.image.getIntegral(Integral, tx2, ty2, bx2, by2);
+            inner = sluggish.utilities.image.getIntegral(Integral, tx2, ty2, bx2, by2, width);
             float outer_average = (outer - inner) / outer_pixels;
             float inner_average = inner / inner_pixels;
             diff = outer_average - inner_average;
 
             // left/right
-            int leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1);
+            int leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1, width);
             float left_average = leftside * 2 / outer_pixels;
             float right_average = (outer - leftside) * 2 / outer_pixels;
             diff2 = left_average - right_average;
