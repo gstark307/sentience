@@ -8,11 +8,18 @@ using System.Text;
 using System.Windows.Forms;
 using sentience.core;
 using sluggish.utilities;
+using sluggish.utilities.timing;
 
 namespace stereocorrespondence
 {
     public partial class frmMain : Form
     {
+        // timer for benchmarking the stereo algorithm
+        stopwatch clock = new stopwatch();
+
+        int horizontal_compression = 1;
+        int vertical_compression = 3;
+
         // an interface to different stereo correspondence algorithms
         sentience_stereo_interface stereointerface = new sentience_stereo_interface();
         
@@ -177,10 +184,16 @@ namespace stereocorrespondence
             stereointerface.loadImage(fullres_left, image_width, image_height, true, bytes_per_pixel);
             stereointerface.loadImage(fullres_right, image_width, image_height, false, bytes_per_pixel);
 
-            stereointerface.setDisparityMapCompression(1, 3);
+            // set the quality of the disparity map
+            stereointerface.setDisparityMapCompression(horizontal_compression, vertical_compression);
+
+            clock.Start();
 
             // perform stereo matching
             stereointerface.stereoMatchRun(0, 8, correspondence_algorithm_type);
+
+            long correspondence_time_mS = clock.Stop();
+            txtStereoCorrespondenceTime.Text = correspondence_time_mS.ToString();
 
             // make a bitmap
             Bitmap depthmap_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -191,6 +204,37 @@ namespace stereocorrespondence
 
             BitmapArrayConversions.updatebitmap_unsafe(depthmap, depthmap_bmp);
             picDepthMap.Refresh();
+        }
+
+        #endregion
+
+        #region "set the quality of the depth map"
+
+        private void lowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            horizontal_compression = 3;
+            vertical_compression = 4;
+            lowToolStripMenuItem.Checked = true;
+            mediumToolStripMenuItem.Checked = false;
+            highToolStripMenuItem.Checked = false;
+        }
+
+        private void mediumToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            horizontal_compression = 2;
+            vertical_compression = 3;
+            lowToolStripMenuItem.Checked = false;
+            mediumToolStripMenuItem.Checked = true;
+            highToolStripMenuItem.Checked = false;
+        }
+
+        private void highToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            horizontal_compression = 1;
+            vertical_compression = 1;
+            lowToolStripMenuItem.Checked = false;
+            mediumToolStripMenuItem.Checked = false;
+            highToolStripMenuItem.Checked = true;
         }
 
         #endregion
