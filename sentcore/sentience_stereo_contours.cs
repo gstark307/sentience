@@ -782,6 +782,9 @@ namespace sentience.core
         {
             if (disparity_map != null)
             {
+                int disparity_map_width = disparity_map.GetLength(0);
+                int disparity_map_height = disparity_map.GetLength(1);
+
                 int max_disp = max_disparity * (wdth / step_size) / 100;
                 int n = 0;
                 for (int y = 0; y < hght; y++)
@@ -790,7 +793,12 @@ namespace sentience.core
                     for (int x = 0; x < wdth; x++)
                     {
                         int xx = x / (step_size * disparity_map_compression);
-                        float disp = disparity_map[xx, yy];
+                        float disp = 0;
+
+                        if ((xx < disparity_map_width) &&
+                            (yy < disparity_map_height))
+                            disp = disparity_map[xx, yy];
+
                         if (disp < 0)
                             disp = 0;
                         else

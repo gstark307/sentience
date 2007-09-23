@@ -383,6 +383,21 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// set disparity map compression parameters
+        /// </summary>
+        /// <param name="disparity_map_compression">factor by which the horizontal resolution compressed</param>
+        /// <param name="vertical_compression">factor by which the vertical resolution compressed</param>
+        public void setDisparityMapCompression(int horizontal_compression,
+                                               int vertical_compression)
+        {
+            if (stereovision_contours != null)
+            {
+                stereovision_contours.vertical_compression = vertical_compression;
+                stereovision_contours.disparity_map_compression = horizontal_compression;
+            }
+        }
+
+        /// <summary>
         /// set the number of features required
         /// </summary>
         public void setRequiredFeatures(int no_of_features)
