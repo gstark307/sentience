@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<UserCombinePreferences filename="/home/motters/develop/sentience/applications/stereocorrespondence/stereocorrespondence.mds">
+  <Files>
+    <File filename="Welcome" />
+    <File filename="../mapping/frmMapping.cs" />
+    <File filename="../mapping/Program.cs" />
+    <File filename="./Main.cs" />
+    <File filename="./MainWindow.cs" />
+  </Files>
+  <Views>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
+      <TreeView>
+        <Node expanded="True">
+          <Node name="FASTcorners" expanded="True" />
+          <Node name="stereocorrespondence" expanded="True">
+            <Node name="MainWindow.cs" expanded="False" selected="True" />
+          </Node>
+          <Node name="utilities" expanded="True" />
+        </Node>
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ClassPad">
+      <TreeView>
+        <Node expanded="True">
+          <Node name="FASTcorners" expanded="True" />
+          <Node name="memcompressor" expanded="True" />
+          <Node name="utilities" expanded="True" />
+        </Node>
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoQuery.DatabasePad">
+      <TreeView>
+        <Node expanded="False" />
+      </TreeView>
+    </ViewMemento>
+    <ViewMemento Id="MonoDevelop.NUnit.TestPad">
+      <TreeView>
+        <Node expanded="False" />
+      </TreeView>
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Properties>
+      <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/stereocorrespondence/MainWindow.cs" />
+      <Property key="ActiveConfiguration" value="Debug" />
+    </Properties>
+  </Properties>
+</UserCombinePreferences>
