@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("stereocorrespondence")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Stereo Correspondence")]
+[assembly: AssemblyDescription("A program for testing stereo correspondence algorithms")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("stereocorrespondence")]
-[assembly: AssemblyCopyright("Copyright ©  2007")]
+[assembly: AssemblyCompany("Sluggish Software")]
+[assembly: AssemblyProduct("Stereo Correspondence")]
+[assembly: AssemblyCopyright("Copyright © Sluggish Software 2007")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

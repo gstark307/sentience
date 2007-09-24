@@ -27,13 +27,13 @@
     <ProjectReference type="Gac" localcopy="True" refto="glib-sharp, Version=2.4.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
     <ProjectReference type="Gac" localcopy="True" refto="glade-sharp, Version=2.4.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
     <ProjectReference type="Gac" localcopy="True" refto="pango-sharp, Version=2.4.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <ProjectReference type="Project" localcopy="True" refto="utilities" />
     <ProjectReference type="Project" localcopy="True" refto="selfopt" />
     <ProjectReference type="Project" localcopy="True" refto="FASTcorners" />
     <ProjectReference type="Project" localcopy="True" refto="pathplanner" />
     <ProjectReference type="Project" localcopy="True" refto="sentcore" />
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Gac" localcopy="True" refto="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756" />
+    <ProjectReference type="Project" localcopy="True" refto="utilities" />
   </References>
   <GtkDesignInfo partialTypes="True" />
 </Project>
