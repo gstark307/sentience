@@ -1,8 +1,22 @@
-// MainWindow.cs created with MonoDevelop
-// User: motters at 8:12 AM 9/24/2007
-//
-// To change standard headers go to Edit->Preferences->Coding->Standard Headers
-//
+/*
+    Stereo correspondence test program
+    Copyright (C) 2000-2007 Bob Mottram
+    fuzzgun@gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 using System;
 using System.IO;
 using Gtk;
@@ -195,7 +209,7 @@ public partial class MainWindow: Gtk.Window
         txtStereoCorrespondenceTime.Buffer.Text = correspondence_time_mS.ToString();
 
         // make a bitmap            
-        byte[] depthmap = new byte[image_width * image_height * 3];
+        byte[] depthmap = new byte[image_width * image_height * 3];        
         stereointerface.getDisparityMap(depthmap, image_width, image_height, 0);
 
         picDepthMap.Pixbuf = GtkBitmap.createPixbuf(image_width, image_height);
@@ -232,6 +246,20 @@ public partial class MainWindow: Gtk.Window
         Low.IsImportant = false;
         Medium.IsImportant = false;
         High.IsImportant = true;
+    }
+    
+    #endregion
+
+    #region "choosing different types of correspondence algorithm"
+    
+    protected virtual void OnDepthMapActivated (object sender, System.EventArgs e)
+    {
+        correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;
+    }
+
+    protected virtual void OnSimpleStereoActivated (object sender, System.EventArgs e)
+    {
+        correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_SIMPLE;
     }
     
     #endregion

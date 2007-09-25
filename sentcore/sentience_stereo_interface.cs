@@ -56,12 +56,18 @@ namespace sentience.core
         // calibration parameters for this stereo camera
         private calibrationStereo calibration = null;
 
+        #region "constructors"
+
         public sentience_stereo_interface()
         {
             stereovision = new sentience_stereo();
             stereovision_contours = new sentience_stereo_contours();
             stereovision_FAST = new sentience_stereo_FAST();
         }
+        
+        #endregion
+        
+        #region "loading calibration settings"
 
         /// <summary>
         /// load stereo calibration parameters from file
@@ -88,6 +94,51 @@ namespace sentience.core
             calibration = calib;
             stereovision_contours.roll = calibration.positionOrientation.roll;
         }
+
+        public void stereoCalibrate(Byte[] bmp_left, Byte[] bmp_right,
+                               int bmp_width, int bmp_height, int bytesPerPixel,
+                               ref int offset_x, ref int offset_y)
+        {
+            int search_radius_x = bmp_width / 6;
+            int search_radius_y = bmp_height / 20;
+            int compare_width = bmp_width - (search_radius_x * 2);
+            int compare_height = bmp_height - (search_radius_y * 2);
+
+            offset_x = 0;
+            offset_y = 0;
+
+            int min_diff = -1;
+            for (int x = -search_radius_x; x < search_radius_x; x++)
+            {
+                for (int y = -search_radius_y; y < search_radius_y; y++)
+                {
+                    // get the pixel difference at this position
+                    int diff = 0;
+                    for (int cx = 0; cx < compare_width; cx++)
+                    {
+                        for (int cy = 0; cy < compare_height; cy++)
+                        {
+                            int p1 = ((cy + search_radius_y) * bmp_width) + (cx + search_radius_x);
+                            int p2 = ((cy + search_radius_y + y) * bmp_width) + (cx + search_radius_x + x);
+                            int dp = (int)(bmp_left[p1 * bytesPerPixel]) - (int)(bmp_right[p2 * bytesPerPixel]);
+                            if (dp < 0) dp = -dp;
+                            diff += dp;
+                        }
+                    }
+
+                    if ((min_diff == -1) || (diff < min_diff))
+                    {
+                        min_diff = diff;
+                        offset_x = x;
+                        offset_y = y;
+                    }
+                }
+            }
+        }
+        
+        #endregion
+
+        #region "update disparities from FAST lines"
 
         /// <summary>
         /// update the disparity values for FAST corners
@@ -159,6 +210,10 @@ namespace sentience.core
                 }
             }
         }
+        
+        #endregion
+        
+        #region "load either a left or right image"
 
         /// <summary>
         /// loads a colour image with the given number of bytes per pixel
@@ -216,6 +271,10 @@ namespace sentience.core
             }
 
         }
+        
+        #endregion
+        
+        #region "stereo matching"
 
         /// <summary>
         /// run the stereo algorithm
@@ -264,6 +323,8 @@ namespace sentience.core
                     }
             }
         }
+        
+        #endregion
 
         /// <summary>
         /// show nearby objects
@@ -279,6 +340,7 @@ namespace sentience.core
                 stereovision_contours.getCloseObjects(raw_image, output_img, background_img, wdth, hght, threshold);
         }
 
+        #region "getting the images used to display the output"
 
         /// <summary>
         /// returns a disparity map
@@ -291,7 +353,14 @@ namespace sentience.core
             if ((currentAlgorithmType == CORRESPONDENCE_CONTOURS) ||
                 (currentAlgorithmType == CORRESPONDENCE_LINES))
                 stereovision_contours.getDisparityMap(img, width, height, threshold);
+
+            if (currentAlgorithmType == CORRESPONDENCE_SIMPLE)
+                stereovision.Show(left_image, width, height, 1, img);
         }
+        
+        #endregion
+
+        #region "getting point features"
 
         /// <summary>
         /// get the point features returned from stereo matching
@@ -362,8 +431,10 @@ namespace sentience.core
             no_of_features = max / 3;
             return (no_of_features);
         }
+        
+        #endregion
 
-
+        #region "settings and getting various parameters"
 
         /// <summary>
         /// Set the difference threshold
@@ -447,48 +518,10 @@ namespace sentience.core
             stereovision_contours.max_disparity = max_disparity;
             stereovision_FAST.max_disparity = max_disparity;
         }
+        
+        #endregion
 
 
-        public void stereoCalibrate(Byte[] bmp_left, Byte[] bmp_right,
-                               int bmp_width, int bmp_height, int bytesPerPixel,
-                               ref int offset_x, ref int offset_y)
-        {
-            int search_radius_x = bmp_width / 6;
-            int search_radius_y = bmp_height / 20;
-            int compare_width = bmp_width - (search_radius_x * 2);
-            int compare_height = bmp_height - (search_radius_y * 2);
-
-            offset_x = 0;
-            offset_y = 0;
-
-            int min_diff = -1;
-            for (int x = -search_radius_x; x < search_radius_x; x++)
-            {
-                for (int y = -search_radius_y; y < search_radius_y; y++)
-                {
-                    // get the pixel difference at this position
-                    int diff = 0;
-                    for (int cx = 0; cx < compare_width; cx++)
-                    {
-                        for (int cy = 0; cy < compare_height; cy++)
-                        {
-                            int p1 = ((cy + search_radius_y) * bmp_width) + (cx + search_radius_x);
-                            int p2 = ((cy + search_radius_y + y) * bmp_width) + (cx + search_radius_x + x);
-                            int dp = (int)(bmp_left[p1 * bytesPerPixel]) - (int)(bmp_right[p2 * bytesPerPixel]);
-                            if (dp < 0) dp = -dp;
-                            diff += dp;
-                        }
-                    }
-
-                    if ((min_diff == -1) || (diff < min_diff))
-                    {
-                        min_diff = diff;
-                        offset_x = x;
-                        offset_y = y;
-                    }
-                }
-            }
-        }
     }
 
 }

@@ -26,6 +26,10 @@ public partial class MainWindow {
     
     private Gtk.Action High;
     
+    private Gtk.Action DepthMap;
+    
+    private Gtk.Action SimpleStereo;
+    
     private Gtk.VBox vbox1;
     
     private Gtk.MenuBar menubar1;
@@ -96,6 +100,12 @@ public partial class MainWindow {
         this.High = new Gtk.Action("High", Mono.Unix.Catalog.GetString("High"), null, null);
         this.High.ShortLabel = Mono.Unix.Catalog.GetString("High");
         w2.Add(this.High, null);
+        this.DepthMap = new Gtk.Action("DepthMap", Mono.Unix.Catalog.GetString("Depth Map"), null, null);
+        this.DepthMap.ShortLabel = Mono.Unix.Catalog.GetString("Depth Map");
+        w2.Add(this.DepthMap, null);
+        this.SimpleStereo = new Gtk.Action("SimpleStereo", Mono.Unix.Catalog.GetString("Simple Stereo"), null, null);
+        this.SimpleStereo.ShortLabel = Mono.Unix.Catalog.GetString("Simple Stereo");
+        w2.Add(this.SimpleStereo, null);
         w1.InsertActionGroup(w2, 0);
         this.AddAccelGroup(w1.AccelGroup);
         this.Name = "MainWindow";
@@ -106,7 +116,7 @@ public partial class MainWindow {
         this.vbox1.Name = "vbox1";
         this.vbox1.Spacing = 6;
         // Container child vbox1.Gtk.Box+BoxChild
-        w1.AddUiFromString("<ui><menubar name='menubar1'><menu action='File'><menuitem action='Exit'/></menu><menu action='View'/><menu action='Quality'><menuitem action='Low'/><menuitem action='Medium'/><menuitem action='High'/></menu></menubar></ui>");
+        w1.AddUiFromString("<ui><menubar name='menubar1'><menu action='File'><menuitem action='Exit'/></menu><menu action='View'><menuitem action='DepthMap'/><menuitem action='SimpleStereo'/></menu><menu action='Quality'><menuitem action='Low'/><menuitem action='Medium'/><menuitem action='High'/></menu></menubar></ui>");
         this.menubar1 = ((Gtk.MenuBar)(w1.GetWidget("/menubar1")));
         this.menubar1.Name = "menubar1";
         this.vbox1.Add(this.menubar1);
@@ -303,6 +313,8 @@ public partial class MainWindow {
         this.Low.Activated += new System.EventHandler(this.OnLowActivated);
         this.Medium.Activated += new System.EventHandler(this.OnMediumActivated);
         this.High.Activated += new System.EventHandler(this.OnHighActivated);
+        this.DepthMap.Activated += new System.EventHandler(this.OnDepthMapActivated);
+        this.SimpleStereo.Activated += new System.EventHandler(this.OnSimpleStereoActivated);
         this.cmdImagesDirectory.Clicked += new System.EventHandler(this.OnCmdImagesDirectoryClicked);
         this.cmdCalibrationFilename.Clicked += new System.EventHandler(this.OnCmdCalibrationFilenameClicked);
         this.cmdPrevious.Clicked += new System.EventHandler(this.OnCmdPreviousClicked);

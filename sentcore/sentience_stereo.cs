@@ -19,6 +19,7 @@
 
 using System;
 using System.Text;
+using sluggish.utilities;
 using CenterSpace.Free;
 
 namespace sentience.core
@@ -175,6 +176,8 @@ namespace sentience.core
         private bool[,] left_feature_properties;
         private bool[,] right_feature_properties;
 
+        #region "constructors"
+
         /// <summary>
         /// constructor
         /// This sets some initial default values.
@@ -203,6 +206,9 @@ namespace sentience.core
             localAverageRadius = 236;
         }
 
+        #endregion
+        
+        #region "get contrast maxima for each row"
 
         /// <summary>
         /// locate edge feature maxima along a single row
@@ -346,6 +352,10 @@ namespace sentience.core
 
             return (no_of_maxima);
         }
+        
+        #endregion
+        
+        #region "get local feature properties to assist with matching"
 
         /// <summary>
         /// calculate some local properties for each maxima, to assist
@@ -404,7 +414,10 @@ namespace sentience.core
             }
 
         }
+        
+        #endregion
 
+        #region "correspondence function"
 
         /// <summary>
         /// match maxima features in the left and right images using local
@@ -494,6 +507,10 @@ namespace sentience.core
                 }
             }
         }
+        
+        #endregion
+        
+        #region "selecting features"
 
         public void getSelectedFeatures(MersenneTwister rnd)
         {
@@ -592,8 +609,41 @@ namespace sentience.core
                 }
             }
         }
+        
+        #endregion
+        
+        #region "display the selected features"
+        
+        /// <summary>
+        /// update stereo correspondence
+        /// </summary>
+        /// <param name="left_bmp">left image data</param>
+        /// <param name="wdth">width of the image</param>
+        /// <param name="hght">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="output_bmp">image to be displayed</param>
+        public void Show(byte[] left_bmp, int wdth, int hght, int bytes_per_pixel,
+                         byte[] output_bmp)
+        {
+            if (bytes_per_pixel == 3)
+                for (int i = 0; i < output_bmp.Length; i++) output_bmp[i] = left_bmp[i];
+            else
+                for (int i = 0; i < output_bmp.Length; i++) output_bmp[i] = left_bmp[i/3];
+                
+            int n, x, y, disp;
+            for (int f = 0; f < no_of_selected_features; f++)
+            {
+                n = f * 3;
+                x = (int)selected_features[n];
+                y = (int)selected_features[n + 1];
+                disp = (int)Math.Round(selected_features[n + 2] / 2.0f);
+                drawing.drawSpot(output_bmp, wdth, hght, x, y, disp, 0, 255, 0);
+            }
+        }
+        
+        #endregion
 
-
+        #region "main update routine"
 
         /// <summary>
         /// update stereo correspondence
@@ -713,6 +763,8 @@ namespace sentience.core
             //getSelectedFeatures();        
             getBestFeatures(max_disparity_pixels);
         }
+        
+        #endregion
 
 
     }

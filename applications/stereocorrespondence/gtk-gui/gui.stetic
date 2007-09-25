@@ -45,6 +45,18 @@
         <property name="ShortLabel" translatable="yes">High</property>
         <signal name="Activated" handler="OnHighActivated" />
       </action>
+      <action id="DepthMap">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Depth Map</property>
+        <property name="ShortLabel" translatable="yes">Depth Map</property>
+        <signal name="Activated" handler="OnDepthMapActivated" />
+      </action>
+      <action id="SimpleStereo">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Simple Stereo</property>
+        <property name="ShortLabel" translatable="yes">Simple Stereo</property>
+        <signal name="Activated" handler="OnSimpleStereoActivated" />
+      </action>
     </action-group>
     <property name="MemberName" />
     <property name="Title" translatable="yes">Stereo Correspondence</property>
@@ -61,7 +73,10 @@
               <node type="Menu" action="File">
                 <node type="Menuitem" action="Exit" />
               </node>
-              <node type="Menu" action="View" />
+              <node type="Menu" action="View">
+                <node type="Menuitem" action="DepthMap" />
+                <node type="Menuitem" action="SimpleStereo" />
+              </node>
               <node type="Menu" action="Quality">
                 <node type="Menuitem" action="Low" />
                 <node type="Menuitem" action="Medium" />
