@@ -29,7 +29,7 @@ namespace sentience.core
     {
         MersenneTwister rnd = new MersenneTwister(100);
 
-        public bool useSmoothing = true;
+        public bool useSmoothing = false;
 
         // roll angle of the camera in radians
         public float roll = 0;
@@ -432,6 +432,9 @@ namespace sentience.core
 
         #region "updating the disparity map"
 
+        // distance lokup table used to avoid doing square roots
+        float[,] distance_lookup;
+
         /// <summary>
         /// update the disparity map at the given point using the given scale
         /// </summary>
@@ -448,6 +451,26 @@ namespace sentience.core
                                         float disparity_value, 
                                         float confidence)
         {
+            const int lookup_table_size = 50;
+            const int half_lookup_table_size = lookup_table_size / 2;
+            
+            // create a lookup table for distances, which
+            // will help us to avoid having to do a lot of
+            // square root calculations
+            if (distance_lookup == null)
+            {                
+                distance_lookup = new float[lookup_table_size, lookup_table_size];                
+                for (int x1 = 0; x1 < distance_lookup.GetLength(0); x1++)
+                {
+                    int dx = x1 - half_lookup_table_size;
+                    for (int y1 = 0; y1 < distance_lookup.GetLength(1); y1++)
+                    {
+                        int dy = y1 - half_lookup_table_size;
+                        distance_lookup[x1, y1] = (float)Math.Sqrt((dx*dx)+(dy*dy));
+                    }
+                }
+            }
+        
             // determine the surround area within which disparity data will be inserted
             int surround_pixels_x = scale_width[scale, 0]/2;
             if (surround_pixels_x < 2) surround_pixels_x = 2;
@@ -458,19 +481,20 @@ namespace sentience.core
             if (gaussian_lookup == null)
                 gaussian_lookup = probabilities.CreateHalfGaussianLookup(gaussian_lookup_levels);
 
-            //for (int xx = x - surround_pixels_x; xx < x + surround_pixels_x; xx++)
+            int half_surround_pixels_x = surround_pixels_x / 2;
+            int half_surround_pixels_y = surround_pixels_y / 2;
+
             for (int xx = x; xx < x + surround_pixels_x; xx++)
             {
                 if ((xx > -1) && (xx < map_wdth))
                 {
-                    int dx = x - xx + (surround_pixels_x/2);
-                    //for (int yy = y - surround_pixels_y; yy < y + surround_pixels_y; yy++)
+                    int dx = x - xx + half_surround_pixels_x;
                     for (int yy = y; yy < y + surround_pixels_y; yy++)
                     {
                         if ((yy > -1) && (yy < map_hght))
                         {
-                            int dy = y - yy + (surround_pixels_y/2);
-                            int dist = (int)Math.Sqrt((dx*dx)+(dy*dy));
+                            int dy = y - yy + half_surround_pixels_y;
+                            float dist = distance_lookup[half_lookup_table_size + dx, half_lookup_table_size + dy];
                             if (dist < surround_pixels_x)
                             {
                                 // get the index within the gaussian lookup table
@@ -483,9 +507,6 @@ namespace sentience.core
                                 // update the disparity map at this location
                                 disparity_map[xx, yy] += (disparity_value * hits);
                                 disparity_hits[xx, yy] += hits;
-
-                                //confidence_map[xx, yy] = confidence;
-                                //confidence_hits[xx, yy] += hits;
                             }
                         }
                     }
@@ -570,9 +591,7 @@ namespace sentience.core
 
             // update integrals
             img_left.updateIntegralImage();
-            img_right.updateIntegralImage();
-
-            
+            img_right.updateIntegralImage();            
 
             // clear the disparity map
             clearDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));

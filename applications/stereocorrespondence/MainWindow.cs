@@ -40,10 +40,11 @@ public partial class MainWindow: Gtk.Window
     int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;
 
     // default path where stereo images are located
-    string images_directory = "/home/motters/develop/sentience/testdata/seq2";
+    string images_directory = "/home/motters/develop/sentience/testdata/seq1";
+    string prev_images_directory = "/home/motters/develop/sentience/testdata/seq1";
 
     // stereo calibration or robot design file
-    string calibration_filename = "/home/motters/develop/sentience/testdata/seq2/calibration.xml";
+    string calibration_filename = "/home/motters/develop/sentience/testdata/seq1/calibration.xml";
 
     // undex number of the currently displayed set of stereo images
     int stereo_image_index = 0;
@@ -117,6 +118,15 @@ public partial class MainWindow: Gtk.Window
 
 	protected virtual void OnCmdPreviousClicked (object sender, System.EventArgs e)
 	{
+	    images_directory = txtImagesDirectory.Buffer.Text;
+	    calibration_filename = txtCalibrationFilename.Buffer.Text;
+	    
+	    if (prev_images_directory != images_directory)
+	    {
+	        stereo_image_index = 0;
+	        prev_images_directory = images_directory;
+	    }
+	
         stereo_image_index--;
         if (stereo_image_index < 1) stereo_image_index = 1;
         bool loaded = LoadStereoImages();
@@ -132,6 +142,15 @@ public partial class MainWindow: Gtk.Window
 
 	protected virtual void OnCmdNextClicked (object sender, System.EventArgs e)
 	{
+	    images_directory = txtImagesDirectory.Buffer.Text;
+	    calibration_filename = txtCalibrationFilename.Buffer.Text;
+
+	    if (prev_images_directory != images_directory)
+	    {
+	        stereo_image_index = 0;
+	        prev_images_directory = images_directory;
+	    }
+
         stereo_image_index++;
         bool loaded = LoadStereoImages();
         if (loaded)
