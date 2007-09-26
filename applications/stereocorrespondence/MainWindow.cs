@@ -40,10 +40,10 @@ public partial class MainWindow: Gtk.Window
     int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_CONTOURS;
 
     // default path where stereo images are located
-    string images_directory = "/home/motters/develop/sentience/testdata/seq1";
+    string images_directory = "/home/motters/develop/sentience/testdata/seq2";
 
     // stereo calibration or robot design file
-    string calibration_filename = "/home/motters/develop/sentience/testdata/seq1/calibration.xml";
+    string calibration_filename = "/home/motters/develop/sentience/testdata/seq2/calibration.xml";
 
     // undex number of the currently displayed set of stereo images
     int stereo_image_index = 0;

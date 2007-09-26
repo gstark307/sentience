@@ -63,7 +63,7 @@ namespace sentience.core
         public float[,] disparity_map;
 
         //public float[,] confidence_map;
-        public int[,] disparity_hits;
+        public float[,] disparity_hits;
 
         //public int[,] confidence_hits;
         public int[,] scale_width;
@@ -168,12 +168,97 @@ namespace sentience.core
         #region "filtering/smoothing"
 
         /// <summary>
+        /// elmimnate unlikely disparity values
+        /// </summary>
+        /// <param name="histogram_levels">number of disparity histogram levels</param>
+        /// <param name="threshold">threshold in the range 0-100</param>
+        private void filterDisparityHistogram(int histogram_levels,
+                                              int threshold)
+        {
+            // get the dimensions of the depth map
+            int map_wdth = disparity_map.GetLength(0);
+            int map_hght = disparity_map.GetLength(1);
+
+            float[] histogram = new float[histogram_levels];
+
+            int half_levels = histogram_levels / 2;
+        
+            // filter horizontally
+            int[] bucket = new int[map_wdth];
+            for (int y = 2; y < map_hght-2; y++)
+            {
+                // clear histogram values
+                float max_response = 0;
+                for (int h = 0; h < histogram_levels; h++) histogram[h] = 0;
+                
+                // for all disparities on this row
+                for (int x = 0; x < map_wdth; x++)
+                {
+                    // which histogram bucket should this go into
+                    int b = half_levels + (int)(disparity_map[x, y] * half_levels / max_disparity);
+                    if (b >= histogram_levels) b = histogram_levels - 1;
+                    if (b < 0) b = 0;                    
+                    
+                    // update histogram
+                    histogram[b]++;
+                    if (histogram[b] > max_response) max_response = histogram[b];
+                    
+                    bucket[x] = b;
+                }
+                
+                // calculate minimum threshold
+                float minimum_response = max_response * threshold / 100;
+                
+                // eliminate disparities below the minimum
+                for (int x = 0; x < map_wdth; x++)
+                {
+                    if (histogram[bucket[x]] < minimum_response)
+                        disparity_map[x, y] = 0;
+                }
+            }
+
+            // filter vertically
+            bucket = new int[map_hght];
+            for (int x = 2; x < map_wdth-2; x++)
+            {
+                // clear histogram values
+                float max_response = 0;
+                for (int h = 0; h < histogram_levels; h++) histogram[h] = 0;
+                
+                // for all disparities on this column
+                for (int y = 0; y < map_hght; y++)
+                {
+                    // which histogram bucket should this go into
+                    int b = half_levels + (int)(disparity_map[x, y] * half_levels / max_disparity);
+                    if (b >= histogram_levels) b = histogram_levels - 1;
+                    if (b < 0) b = 0;                    
+                    
+                    // update histogram
+                    histogram[b]++;
+                    if (histogram[b] > max_response) max_response = histogram[b];
+                    
+                    bucket[y] = b;
+                }
+                
+                // calculate minimum threshold
+                float minimum_response = max_response * threshold / 100;
+                
+                // eliminate disparities below the minimum
+                for (int y = 0; y < map_hght; y++)
+                {
+                    if (histogram[bucket[y]] < minimum_response)
+                        disparity_map[x, y] = 0;
+                }
+            }
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="map_wdth">width of the disparity map</param>
         /// <param name="map_hght">height of the disparity map</param>
         /// <param name="threshold"></param>
-        public void filterDisparityMap(int map_wdth, int map_hght, int threshold)
+        private void filterDisparityMap(int map_wdth, int map_hght, int threshold)
         {
             float diff1, diff2;
 
@@ -393,7 +478,7 @@ namespace sentience.core
                                 int gaussian_index = (int)Math.Round((surround_pixels_x - dist) * (gaussian_lookup_levels-1) / (float)surround_pixels_x);
 
                                 // number of hits, proportional to a gaussian probability distribution
-                                int hits = 10 + (int)(gaussian_lookup[gaussian_index] * 100 * confidence);
+                                float hits = 10 + (gaussian_lookup[gaussian_index] * 100 * confidence);
 
                                 // update the disparity map at this location
                                 disparity_map[xx, yy] += (disparity_value * hits);
@@ -457,7 +542,7 @@ namespace sentience.core
                 int w = (wdth / (step_size * disparity_map_compression)) + 1;
                 int h = (hght / (vertical_compression * disparity_map_compression)) + 1;
                 disparity_map = new float[w, h];
-                disparity_hits = new int[w, h];
+                disparity_hits = new float[w, h];
                 scale_width = new int[no_of_scales, 2];
 
                 int sc = 2;
@@ -654,6 +739,7 @@ namespace sentience.core
                                 {
                                     float confidence = 1.0f - (min_response_difference / match_threshold);
                                     confidence /= (no_of_scales - scale);
+                                    confidence *= confidence;
                                     int mx = (x_left + disp) / disparity_map_compression;
                                     int my = y / disparity_map_compression;
                                     updateDisparityMap(mx, my,
@@ -690,7 +776,8 @@ namespace sentience.core
 
             
             // remove snow            
-            filterDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 10);
+            //filterDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 10);
+            //filterDisparityHistogram(20, 10);
             
             // smooth the disparity map
             if (useSmoothing)
