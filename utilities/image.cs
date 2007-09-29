@@ -25,7 +25,7 @@ using sluggish.imageprocessing;
 
 namespace sluggish.utilities
 {
-	public class image
+	public sealed class image
     {
         #region "constructors"
 

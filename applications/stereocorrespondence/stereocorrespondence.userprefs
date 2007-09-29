@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
 <UserCombinePreferences filename="/home/motters/develop/sentience/applications/stereocorrespondence/stereocorrespondence.mds">
   <Files>
+    <File filename="Welcome" />
     <File filename="../mapping/frmMapping.cs" />
     <File filename="../mapping/Program.cs" />
     <File filename="./MainWindow.cs" />
     <File filename="../../sentcore/sentience_stereo_contours.cs" />
     <File filename="../../sentcore/classimage.cs" />
+    <File filename="../../sentcore/sentience_stereo_interface.cs" />
   </Files>
   <Views>
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
@@ -13,7 +15,7 @@
         <Node expanded="True">
           <Node name="FASTcorners" expanded="True" />
           <Node name="sentcore" expanded="True">
-            <Node name="classimage.cs" expanded="False" selected="True" />
+            <Node name="sentience_stereo_contours.cs" expanded="False" selected="True" />
           </Node>
           <Node name="stereocorrespondence" expanded="True" />
           <Node name="utilities" expanded="True" />
@@ -42,7 +44,7 @@
   </Views>
   <Properties>
     <Properties>
-      <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/classimage.cs" />
+      <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/sentience_stereo_contours.cs" />
       <Property key="ActiveConfiguration" value="Debug" />
     </Properties>
   </Properties>

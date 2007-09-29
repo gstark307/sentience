@@ -36,6 +36,10 @@ namespace sentience.core
 
         // max number of features per row
         private const int MAX_POINT_FEATURES = 6000;
+        
+        // types of pattern
+        public const int PATTERN_CENTRE_SURROUND = 0;
+        public const int PATTERN_LEFT_RIGHT = 1;
 
         /// <remarks> 
         /// The number of features required
@@ -62,17 +66,15 @@ namespace sentience.core
         ///disparity map
         public float[,] disparity_map;
 
-        //public float[,] confidence_map;
         public float[,] disparity_hits;
 
-        //public int[,] confidence_hits;
         public int[,] scale_width;
 
         // step size used to speed up blob detection
         public int step_size = 1;
 
         // the number of scales on which stereo matches will be searched for
-        const int no_of_scales = 3;
+        const int no_of_scales = 2;
 
         // to speed things up the original images are sub-sampled, typically
         // by removing alternate rows
@@ -626,7 +628,7 @@ namespace sentience.core
                 {
                     // go through each detection pattern
                     // at present there are only two patterns: centre/surround and left/right                    
-                    for (int currPattern = 0; currPattern < 2; currPattern++)
+                    for (int currPattern = PATTERN_CENTRE_SURROUND; currPattern <= PATTERN_LEFT_RIGHT; currPattern++)
                     {
                         // clear the number of points
                         for (scale = 0; scale < no_of_scales; scale++)

@@ -148,39 +148,6 @@ namespace sentience.core
             return (average_diff);
         }
 
-        /// <summary>
-        /// detect a blob at the given location
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="blobradius_x"></param>
-        /// <param name="blobradius_y"></param>
-        /// <param name="diameter_x"></param>
-        /// <param name="diameter_y"></param>
-        /// <param name="half_radius_x"></param>
-        /// <param name="half_radius_y"></param>
-        /// <param name="outer_pixels"></param>
-        /// <param name="inner_pixels"></param>
-        /// <returns></returns>
-        private float detectBlobPoint(int x, int y, int blobradius_x, int blobradius_y, 
-                                      int diameter_x, int diameter_y, int half_radius_x, int half_radius_y, 
-                                      float outer_pixels, float inner_pixels, int blob_type,
-                                      ref float diff2)
-        {
-            float diff = 0;
-
-            switch (blob_type)
-            {
-                case 0: // centre/surround arrangement
-                {
-                    diff = detectBlob_centreSurround(x, y, blobradius_x, blobradius_y, diameter_x, diameter_y,
-                                              half_radius_x, half_radius_y, outer_pixels, inner_pixels, ref diff2);
-                    break; 
-                }
-            }
-
-            return (diff);
-        }
 
 
         private float detectBlob_centreSurround(int x, int y, int blobradius_x, int blobradius_y,
@@ -188,32 +155,39 @@ namespace sentience.core
                                                 float outer_pixels, float inner_pixels,
                                                 ref float diff2)
         {
-            // centre/surround
-
             int tx1, ty1, bx1, by1;
             int tx2, ty2, bx2, by2;
             int outer, inner;
             float diff;
 
+            // get the total pixel intensity for the surround region
             tx1 = x - blobradius_x;
             ty1 = y - blobradius_y;
             bx1 = tx1 + diameter_x;
             by1 = ty1 + diameter_y;
             outer = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, bx1, by1, width);
+            
+            // get the total pixel intensity for the centre region
             tx2 = x - half_radius_x;
             ty2 = y - half_radius_y;
             bx2 = tx2 + blobradius_x;
             by2 = ty2 + blobradius_y;
             inner = sluggish.utilities.image.getIntegral(Integral, tx2, ty2, bx2, by2, width);
+            
+            // average pixel intensity for the surround region
             float outer_average = (outer - inner) / outer_pixels;
+            
+            // average pixel intensity for the centre region
             float inner_average = inner / inner_pixels;
+            
+            // difference between the centre and surround
             diff = outer_average - inner_average;
 
-            // left/right
+            // total pixel intensity to the left
             int leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1, width);
-            float left_average = leftside * 2 / outer_pixels;
-            float right_average = (outer - leftside) * 2 / outer_pixels;
-            diff2 = left_average - right_average;
+                        
+            // difference between left and right 
+            diff2 = ((leftside*2) - outer) * 2 / outer_pixels;
 
             //note: don't bother trying above/below comparisons, it only degrades the results
 
@@ -232,15 +206,17 @@ namespace sentience.core
         /// <param name="by"></param>
         /// <param name="step_size"></param>
         /// <param name="points"></param>
-        /// <returns></returns>
+        /// <returns>average blob response (centre/surround magnitude)</returns>
         public int detectBlobs(int scale, int blobradius_x, int blobradius_y,
                                int tx, int ty, int bx, int by,
                                int step_size, float[,] points, int[,] scales, int[,] pattern,
                                int blob_type)
         {
-            int i, x, y, hits = 0, average_diff = 0;
+            int i, x, y, hits = 0;
+            float average_diff = 0;
             float outer_pixels, inner_pixels;
-            float diff = 0;
+            float centre_surround_diff = 0;
+            float left_right_diff = 0;
             int diameter_x = blobradius_x * 2;
             int diameter_y = blobradius_y * 2;
             int half_radius_x = blobradius_x / 2;
@@ -248,61 +224,81 @@ namespace sentience.core
             int half_radius_y = blobradius_y / 2;
             if (half_radius_y < 1) half_radius_y = 1;
 
-            //mono images only use the first channel
+            // number of pixels in the surround region
             outer_pixels = (diameter_x * diameter_y) - (blobradius_x * blobradius_y);
+            
+            // number of pixels in the centre region
             inner_pixels = blobradius_x * blobradius_y;
 
+            // ensure that the region of interest is sensible
             if (tx < blobradius_x) tx = blobradius_x;
             if (ty < blobradius_y) ty = blobradius_y;
             if (bx > width - blobradius_x - 1) ty = width - blobradius_x - 1;
             if (by > height - blobradius_y - 1) by = height - blobradius_y - 1;
 
-            float diff2 = 0;
             for (y = ty; y <= by; y++)
             {
                 i = 0;
                 for (x = tx; x <= bx; x += step_size)
                 {
-                    diff = detectBlobPoint(x, y, blobradius_x, blobradius_y, diameter_x, diameter_y, half_radius_x, half_radius_y, outer_pixels, inner_pixels, blob_type, ref diff2);
-                    float absdiff = diff;
-                    if (absdiff < 0) absdiff = -absdiff;
-                    float absdiff2 = diff2;
-                    if (absdiff2 < 0) absdiff2 = -absdiff2;
-                    
-                    float absdiff4 = points[y, i];
-                    if (absdiff4 < 0) absdiff4 = -absdiff4;
+                    // get the centre/surrounf and left/right responses at this location
+                    centre_surround_diff = 
+                        detectBlob_centreSurround(x, y, blobradius_x, blobradius_y, diameter_x, diameter_y,
+                                                  half_radius_x, half_radius_y, outer_pixels, inner_pixels, ref left_right_diff);
 
-                    if (absdiff > absdiff2)
+                    // magnitude of the local centre/surround difference
+                    float abs_centre_surround_diff = centre_surround_diff;
+                    if (abs_centre_surround_diff < 0) abs_centre_surround_diff = -abs_centre_surround_diff;
+                    
+                    // magnitude of the local left/right difference
+                    float abs_left_right_diff = left_right_diff;
+                    if (abs_left_right_diff < 0) abs_left_right_diff = -abs_left_right_diff;
+                    
+                    // get the current highest magnitude response at this location
+                    float abs_best_response = points[y, i];
+                    if (abs_best_response < 0) abs_best_response = -abs_best_response;
+
+                    // which is magnitude is largest ?
+                    // we want to base our stereo correspondences upon the biggest
+                    // magnitudes which are likely to be the most confident
+                    if (abs_centre_surround_diff > abs_left_right_diff)
                     {
-                        if ((scale == 0) || (absdiff > absdiff4))
+                        // centre/surround measurement gives us the highest magnitude response
+                        if ((scale == 0) || 
+                            (abs_centre_surround_diff > abs_best_response))
                         {
-                            points[y, i] = diff; //add the point to the list
+                            // record the difference value, scale and the type of pattern (centre/surround comparisson)
+                            points[y, i] = centre_surround_diff;
                             scales[y, i] = scale;
-                            pattern[y, i] = 0;
+                            pattern[y, i] = sentience_stereo_contours.PATTERN_CENTRE_SURROUND;
                         }
                     }
                     else
                     {
-                        if ((scale == 0) || (absdiff2 > absdiff4))
+                        // left/right measurement gives us the highest magnitude response
+                        if ((scale == 0) || 
+                            (abs_left_right_diff > abs_best_response))
                         {
-                            points[y, i] = diff2; //add the point to the list
+                            // record the difference value, scale and the type of pattern (left/right comparisson)
+                            points[y, i] = left_right_diff; 
                             scales[y, i] = scale;
-                            pattern[y, i] = 1;
+                            pattern[y, i] = sentience_stereo_contours.PATTERN_LEFT_RIGHT;
                         }
                     }
                     i++;
 
                     //update average centre-surround difference value
-                    if (diff >= 0)
-                        average_diff += (int)diff;
+                    if (centre_surround_diff >= 0)
+                        average_diff += centre_surround_diff;
                     else
-                        average_diff -= (int)diff;
+                        average_diff -= centre_surround_diff;
                     hits++;
                 }
             }
 
+            // return the average centre/surround response, which can be used to adjust gain/exposure
             if (hits > 0) average_diff /= hits;
-            return (average_diff);
+            return ((int)average_diff);
         }
 
     }
