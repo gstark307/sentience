@@ -7,7 +7,8 @@
     <File filename="./MainWindow.cs" />
     <File filename="../../sentcore/sentience_stereo_contours.cs" />
     <File filename="../../sentcore/classimage.cs" />
-    <File filename="../../sentcore/sentience_stereo_interface.cs" />
+    <File filename="../../sentcore/occupancygridMultiHypothesis.cs" />
+    <File filename="../../utilities/image.cs" />
   </Files>
   <Views>
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
@@ -18,7 +19,6 @@
             <Node name="sentience_stereo_contours.cs" expanded="False" selected="True" />
           </Node>
           <Node name="stereocorrespondence" expanded="True" />
-          <Node name="utilities" expanded="True" />
         </Node>
       </TreeView>
     </ViewMemento>

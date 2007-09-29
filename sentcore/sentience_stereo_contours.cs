@@ -99,12 +99,12 @@ namespace sentience.core
         private float[,] wavepoints_right = null;
 
         // blob feature scales
-        private int[,] wavepoints_left_scale = null;
-        private int[,] wavepoints_right_scale = null;
+        private byte[,] wavepoints_left_scale = null;
+        private byte[,] wavepoints_right_scale = null;
 
         // blob feature patterns
-        private int[,] wavepoints_left_pattern = null;
-        private int[,] wavepoints_right_pattern = null;
+        private byte[,] wavepoints_left_pattern = null;
+        private byte[,] wavepoints_right_pattern = null;
 
         int[,] scalepoints_left;
         int[,] scalepoints_right;
@@ -549,11 +549,11 @@ namespace sentience.core
                 img_right.createImage(wdth, hght / vertical_compression);
 
                 wavepoints_left = new float[hght / vertical_compression, wdth / step_size];
-                wavepoints_left_scale = new int[hght / vertical_compression, wdth / step_size];
-                wavepoints_left_pattern = new int[hght / vertical_compression, wdth / step_size];
+                wavepoints_left_scale = new byte[hght / vertical_compression, wdth / step_size];
+                wavepoints_left_pattern = new byte[hght / vertical_compression, wdth / step_size];
                 wavepoints_right = new float[hght / vertical_compression, wdth / step_size];
-                wavepoints_right_scale = new int[hght / vertical_compression, wdth / step_size];
-                wavepoints_right_pattern = new int[hght / vertical_compression, wdth / step_size];
+                wavepoints_right_scale = new byte[hght / vertical_compression, wdth / step_size];
+                wavepoints_right_pattern = new byte[hght / vertical_compression, wdth / step_size];
                 scalepoints_left = new int[no_of_scales, wdth + 1];
                 scalepoints_right = new int[no_of_scales, wdth + 1];
                 scalepoints_lookup = new int[no_of_scales, wdth, wdth + 1];
@@ -598,8 +598,6 @@ namespace sentience.core
             // clear the disparity map
             clearDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
 
-            int blob_type = 0;
-
             // update blobs on multiple scales
             for (scale = 0; scale < no_of_scales; scale++)
             {
@@ -608,15 +606,17 @@ namespace sentience.core
                 int surround_pixels_y = scale_width[scale, 1];
 
                 // detect blobs at this scale
-                img_left.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_left, wavepoints_left_scale, wavepoints_left_pattern, blob_type);
-                img_right.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_right, wavepoints_right_scale, wavepoints_right_pattern, blob_type);
+                img_left.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_left, wavepoints_left_scale, wavepoints_left_pattern);
+                img_right.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_right, wavepoints_right_scale, wavepoints_right_pattern);
             }
 
             // update the scale points for fast searching
             float min_thresh = 5.0f;
             float min_grad = 0.5f;
-            float left_diff, right_diff, prev_left_diff = 0, prev_right_diff = 0;
-            float left_grad, right_grad;
+            float left_diff, right_diff;
+            float prev_left_diff = 0, prev_right_diff = 0;
+            float prev_left_grad = 0, prev_right_grad = 0;
+            float left_grad = 0, right_grad = 0;
             int max_disp = max_disparity * (wdth / step_size) / 100;
             int searchfactor = 4;
             int max_disp2 = max_disp / searchfactor;
@@ -624,7 +624,7 @@ namespace sentience.core
             // for each row of the image
             for (y = 0; y < hght / vertical_compression; y++)
             {
-                for (int sign = 0; sign < 4; sign++)
+                for (int sign = 0; sign < 8; sign++)
                 {
                     // go through each detection pattern
                     // at present there are only two patterns: centre/surround and left/right                    
@@ -638,46 +638,74 @@ namespace sentience.core
                             for (x = 0; x < wdth / searchfactor; x++)
                                 scalepoints_lookup[scale, x, 0] = 0;
                         }
-
+                        
                         int ww = wdth / step_size;
                         for (x = 0; x < ww; x++)
                         {
                             int pattern = wavepoints_left_pattern[y, x];
                             if (pattern == currPattern)
                             {
+                                // response value
                                 left_diff = wavepoints_left[y, x];
                                 right_diff = wavepoints_right[y, x];
                                 if ((x > 0) && ((left_diff != 0) || (right_diff != 0)))
                                 {
+                                    // gradient - change in response along the row
                                     left_grad = left_diff - prev_left_diff;
                                     right_grad = right_diff - prev_right_diff;
+                                    
+                                    float left_grad_change = left_grad - prev_left_grad;
+                                    float right_grad_change = right_grad - prev_right_grad;
 
                                     if ((left_diff != 0) && ((left_grad < -min_grad) || (left_grad > min_grad)))
-                                    {
-                                        if (((sign == 0) && (left_diff > min_thresh) && (left_grad > 0)) ||
-                                            ((sign == 1) && (left_diff < -min_thresh) && (left_grad > 0)) ||
-                                            ((sign == 2) && (left_diff > min_thresh) && (left_grad <= 0)) ||
-                                            ((sign == 3) && (left_diff < -min_thresh) && (left_grad <= 0))
+                                    {                                        
+                                        // combiantions of response and gradient directions
+                                        if (((sign == 0) && (left_diff > min_thresh) && (left_grad > 0) && (left_grad_change > 0)) ||
+                                            ((sign == 1) && (left_diff < -min_thresh) && (left_grad > 0) && (left_grad_change > 0)) ||
+                                            ((sign == 2) && (left_diff > min_thresh) && (left_grad <= 0) && (left_grad_change > 0)) ||
+                                            ((sign == 3) && (left_diff < -min_thresh) && (left_grad <= 0) && (left_grad_change > 0)) ||
+                                            ((sign == 4) && (left_diff > min_thresh) && (left_grad > 0) && (left_grad_change <= 0)) ||
+                                            ((sign == 5) && (left_diff < -min_thresh) && (left_grad > 0) && (left_grad_change <= 0)) ||
+                                            ((sign == 6) && (left_diff > min_thresh) && (left_grad <= 0) && (left_grad_change <= 0)) ||
+                                            ((sign == 7) && (left_diff < -min_thresh) && (left_grad <= 0) && (left_grad_change <= 0))                                            
                                             )
                                         {
+                                            // what is the best responding scale ?
                                             scale = wavepoints_left_scale[y, x];
+                                            
+                                            // get the current index
                                             idx = scalepoints_left[scale, 0] + 1;
+                                            
+                                            // set the x position
                                             scalepoints_left[scale, idx] = x;
+                                            
+                                            // increment the index
                                             scalepoints_left[scale, 0]++;
                                         }
                                     }
 
                                     if ((right_diff != 0) && ((right_grad < -min_grad) || (right_grad > min_grad)))
                                     {
-                                        if (((sign == 0) && (right_diff > min_thresh) && (right_grad > 0)) ||
-                                            ((sign == 1) && (right_diff < -min_thresh) && (right_grad > 0)) ||
-                                            ((sign == 2) && (right_diff > min_thresh) && (right_grad <= 0)) ||
-                                            ((sign == 3) && (right_diff < -min_thresh) && (right_grad <= 0))
+                                        // combiantions of response and gradient directions
+                                        if (((sign == 0) && (right_diff > min_thresh) && (right_grad > 0) && (right_grad_change > 0)) ||
+                                            ((sign == 1) && (right_diff < -min_thresh) && (right_grad > 0) && (right_grad_change > 0)) ||
+                                            ((sign == 2) && (right_diff > min_thresh) && (right_grad <= 0) && (right_grad_change > 0)) ||
+                                            ((sign == 3) && (right_diff < -min_thresh) && (right_grad <= 0) && (right_grad_change > 0)) ||
+                                            ((sign == 4) && (right_diff > min_thresh) && (right_grad > 0) && (right_grad_change <= 0)) ||
+                                            ((sign == 5) && (right_diff < -min_thresh) && (right_grad > 0) && (right_grad_change <= 0)) ||
+                                            ((sign == 6) && (right_diff > min_thresh) && (right_grad <= 0) && (right_grad_change <= 0)) ||
+                                            ((sign == 7) && (right_diff < -min_thresh) && (right_grad <= 0) && (right_grad_change <= 0))                                            
                                             )
                                         {
                                             scale = wavepoints_right_scale[y, x];
+                                            
+                                            // get the current index
                                             idx = scalepoints_right[scale, 0] + 1;
+                                            
+                                            // set the x position
                                             scalepoints_right[scale, idx] = x;
+                                            
+                                            // increment the index
                                             scalepoints_right[scale, 0]++;
 
                                             x2 = x / searchfactor;
@@ -694,6 +722,10 @@ namespace sentience.core
                                         }
                                     }
                                 }
+                                
+                                // record previous responses
+                                prev_left_grad = left_grad;
+                                prev_right_grad = right_grad;
                                 prev_left_diff = left_diff;
                                 prev_right_diff = right_diff;
                             }
@@ -702,13 +734,11 @@ namespace sentience.core
                         // stereo match
                         for (scale = 0; scale < no_of_scales; scale++)
                         {
-                            //float average_right = 0;
                             int no_of_points_left = scalepoints_left[scale, 0];
                             int no_of_points_right = scalepoints_right[scale, 0];
                             for (int i = 0; i < no_of_points_left; i++)
                             {
                                 int disp = -1;
-                                //int winner = -1;
 
                                 // get the position and response magnitude of the left point
                                 int x_left = scalepoints_left[scale, i + 1];
@@ -729,7 +759,7 @@ namespace sentience.core
                                     int idx2 = scalepoints_lookup[scale, x2, j + 1];
 
                                     int x_right = scalepoints_right[scale, idx2];
-                                    int dx = x_left - x_right;
+                                    int dx = x_left - x_right;                                    
                                     if ((dx > -1) && (dx < max_disp))
                                     {
                                         int x_right2 = x_right - 2;
@@ -751,8 +781,9 @@ namespace sentience.core
                                                     min_response_difference = response_difference;
                                                 }
                                             }
-                                        }
+                                        }                                        
                                     }
+                                    if (dx > max_disp) j = no_of_candidates;
                                 }
 
 

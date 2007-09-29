@@ -28,7 +28,15 @@ namespace sentience.core
         public int width, height;
 
         public Byte[] image;
-        int[] Integral;
+        private int[] Integral;
+
+        // variables used by the blob detector
+        private int tx1, ty1, bx1, by1;
+        private int tx2, ty2, bx2, by2;
+        private int outer, inner;
+        private float centre_surround_diff;
+        private float outer_average, inner_average;
+        private int leftside;
 
         /// <summary>
         /// constructor
@@ -141,10 +149,9 @@ namespace sentience.core
         /// <param name="points">array to be populated with responses</param>
         /// <returns></returns>
         public int detectBlobs(int scale, int blobradius_x, int blobradius_y,
-                               int step_size, float[,] points, int[,] scales, int[,] pattern,
-                               int blob_type)
+                               int step_size, float[,] points, byte[,] scales, byte[,] pattern)
         {
-            int average_diff = detectBlobs(scale, blobradius_x, blobradius_y, blobradius_x, blobradius_y, width - blobradius_x - 1 - step_size, height - blobradius_y - 1 - step_size, step_size, points, scales, pattern, blob_type);
+            int average_diff = detectBlobs(scale, blobradius_x, blobradius_y, blobradius_x, blobradius_y, width - blobradius_x - 1 - step_size, height - blobradius_y - 1 - step_size, step_size, points, scales, pattern);
             return (average_diff);
         }
 
@@ -155,11 +162,6 @@ namespace sentience.core
                                                 float outer_pixels, float inner_pixels,
                                                 ref float diff2)
         {
-            int tx1, ty1, bx1, by1;
-            int tx2, ty2, bx2, by2;
-            int outer, inner;
-            float diff;
-
             // get the total pixel intensity for the surround region
             tx1 = x - blobradius_x;
             ty1 = y - blobradius_y;
@@ -173,25 +175,25 @@ namespace sentience.core
             bx2 = tx2 + blobradius_x;
             by2 = ty2 + blobradius_y;
             inner = sluggish.utilities.image.getIntegral(Integral, tx2, ty2, bx2, by2, width);
-            
+                        
             // average pixel intensity for the surround region
-            float outer_average = (outer - inner) / outer_pixels;
+            outer_average = (outer - inner) / outer_pixels;
             
             // average pixel intensity for the centre region
-            float inner_average = inner / inner_pixels;
+            inner_average = inner / inner_pixels;
             
             // difference between the centre and surround
-            diff = outer_average - inner_average;
+            centre_surround_diff = outer_average - inner_average;
 
             // total pixel intensity to the left
-            int leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1, width);
+            leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1, width);
                         
             // difference between left and right 
             diff2 = ((leftside*2) - outer) * 2 / outer_pixels;
 
             //note: don't bother trying above/below comparisons, it only degrades the results
 
-            return (diff);
+            return (centre_surround_diff);
         }
 
 
@@ -206,11 +208,12 @@ namespace sentience.core
         /// <param name="by"></param>
         /// <param name="step_size"></param>
         /// <param name="points"></param>
+        /// <param name="scales"></param>
+        /// <param name="pattern"></param>
         /// <returns>average blob response (centre/surround magnitude)</returns>
         public int detectBlobs(int scale, int blobradius_x, int blobradius_y,
                                int tx, int ty, int bx, int by,
-                               int step_size, float[,] points, int[,] scales, int[,] pattern,
-                               int blob_type)
+                               int step_size, float[,] points, byte[,] scales, byte[,] pattern)
         {
             int i, x, y, hits = 0;
             float average_diff = 0;
@@ -269,7 +272,7 @@ namespace sentience.core
                         {
                             // record the difference value, scale and the type of pattern (centre/surround comparisson)
                             points[y, i] = centre_surround_diff;
-                            scales[y, i] = scale;
+                            scales[y, i] = (byte)scale;
                             pattern[y, i] = sentience_stereo_contours.PATTERN_CENTRE_SURROUND;
                         }
                     }
@@ -281,7 +284,7 @@ namespace sentience.core
                         {
                             // record the difference value, scale and the type of pattern (left/right comparisson)
                             points[y, i] = left_right_diff; 
-                            scales[y, i] = scale;
+                            scales[y, i] = (byte)scale;
                             pattern[y, i] = sentience_stereo_contours.PATTERN_LEFT_RIGHT;
                         }
                     }
