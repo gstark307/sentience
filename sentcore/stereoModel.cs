@@ -21,7 +21,6 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
-using System.Text;
 using CenterSpace.Free;
 using sluggish.utilities;
 
@@ -29,22 +28,26 @@ namespace sentience.core
 {
     public sealed class stereoModel
     {
+        // random number generator
         MersenneTwister rnd = new MersenneTwister(100);
 
         public bool mapping = true;
 
         // field of vision
-        public float FOV_horizontal = 78 * (float)Math.PI / 180.0f;
-        public float FOV_vertical = 78/2 * (float)Math.PI / 180.0f;
-        public int image_width = 320;
-        public int image_height = 240;
-        public float focal_length = 5; // mm
-        public float baseline = 100; // mm
-        public float sigma = 0.04f; //0.005f;  //angular uncertainty magnitude (standard deviation) pixels per mm of range
+        public float FOV_horizontal = 78 * (float)Math.PI / 180.0f;  // horizontal field of vision
+        public float FOV_vertical = 78/2 * (float)Math.PI / 180.0f;  // vertical field of vision
+        public int image_width = 320;   // horizontal image size
+        public int image_height = 240;  // vertical image size
+        public float focal_length = 5;  // focal length in millimetres
+        public float baseline = 100;    // distance between the centres of the two cameras in millimetres
+        public float sigma = 0.04f;     //0.005f;  //angular uncertainty magnitude (standard deviation) pixels per mm of range
         private float max_prob = 0.0f;
         private int max_prob_x, max_prob_y;
         private int starting_y;
         public bool undistort = true;
+        
+        // vergence angle between the two cameras
+        public float vergence_radians = 0.0f * (float)Math.PI / 180.0f;
 
         private int ray_model_normal_length = 500;
         private int ray_model_max_length = 1500;
@@ -154,12 +157,13 @@ namespace sentience.core
         /// <param name="height"></param>
         public void createLookupTable(int gridCellSize_mm, Byte[] img_result, int width, int height)
         {
+            bool mirror = false;
             int divisor = 40;
             int grid_dimension = 20000;
             float[,,] grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
             updateRayModel(grid_layer, grid_dimension, 
                            img_result, width, height,
-                           divisor, false, gridCellSize_mm);
+                           divisor, false, gridCellSize_mm, mirror);
             ray_model.Save("InverseSensorModels.xml");
         }
 
@@ -219,10 +223,11 @@ namespace sentience.core
         /// <param name="divisor">a dividing factor used to make the width of the grid smaller than its length</param>
         /// <param name="apply_smoothing">try to smooth the data to remove pixelation effects</param>
         /// <param name="gridCellSize_mm">Size of each occupancy grid cell in millimetres</param>
+        /// <param name="mirror">apply mirroring</param>
         private void updateRayModel(float[, ,] grid_layer, int grid_dimension, 
                                     Byte[] img, int img_width, int img_height, 
                                     int divisor, bool apply_smoothing,
-                                    int gridCellSize_mm)
+                                    int gridCellSize_mm, bool mirror)
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.0f / (image_width * 1) * FOV_horizontal;
@@ -274,8 +279,8 @@ namespace sentience.core
                     if ((y_end > 0) && (y_end < grid_dimension))
                         max_dist = (int)y_end;
 
-                    throwRay(-baseline / 2, xx, min_dist, max_dist, grid_layer, grid_dimension, 1);
-                    throwRay(baseline / 2, x, min_dist, max_dist, grid_layer, grid_dimension, 2);
+                    throwRay(-baseline / 2, xx, vergence_radians, min_dist, max_dist, grid_layer, grid_dimension, 1, mirror);
+                    throwRay(baseline / 2, x, -vergence_radians, min_dist, max_dist, grid_layer, grid_dimension, 2, mirror);
 
                     int start = -1;
 
@@ -392,9 +397,10 @@ namespace sentience.core
         /// <param name="img_height">height of the image</param>
         /// <param name="divisor">a dividing factor used to make the width of the grid smaller than its length</param>
         /// <param name="show_outline">draw a border around the probably occupied area</param>
+        /// <param name="mirror">apply mirroring</param>
         public void showSingleRay(float[, ,] grid_layer, int grid_dimension, 
-                                  Byte[] img, int img_width, int img_height, 
-                                  int divisor, bool show_outline)
+                                  byte[] img, int img_width, int img_height, 
+                                  int divisor, bool show_outline, bool mirror)
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.8f / (image_width * 2) * FOV_horizontal;
@@ -404,6 +410,8 @@ namespace sentience.core
             int min_dist = (int)baseline;
             int max_dist = grid_dimension;
             int x = (image_width) * 499 / 1000;
+            
+            //x = (image_width) * 550 / 1000;
 
             float disparity_pixels = 3;
 
@@ -425,8 +433,8 @@ namespace sentience.core
             float x_right = 0, y_right = 0;
             float confidence = 1;
             raysIntersection(xx, x, grid_dimension, confidence,
-                                 ref x_start, ref y_start, ref x_end, ref y_end,
-                                 ref x_left, ref y_left, ref x_right, ref y_right);
+                             ref x_start, ref y_start, ref x_end, ref y_end,
+                             ref x_left, ref y_left, ref x_right, ref y_right);
             if (x_right > x_left)
             {
                 if (y_start < -1) y_start = -y_start;
@@ -443,8 +451,8 @@ namespace sentience.core
 
                 min_dist = 0;
 
-                throwRay(-baseline / 2, xx, min_dist, max_dist, grid_layer, grid_dimension, 1);
-                throwRay(baseline / 2, x, min_dist, max_dist, grid_layer, grid_dimension, 2);
+                throwRay(-baseline / 2, xx, vergence_radians, min_dist, max_dist, grid_layer, grid_dimension, 1,mirror);
+                throwRay(baseline / 2, x, -vergence_radians, min_dist, max_dist, grid_layer, grid_dimension, 2,mirror);
                 grid_layer_to_image(grid_layer, grid_dimension, img, img_width, img_height, true);
 
                 if (show_outline)
@@ -469,6 +477,7 @@ namespace sentience.core
 
             }
             this.divisor = 1;
+            
         }
 
 
@@ -515,9 +524,9 @@ namespace sentience.core
 
                     // create a ray
                     evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2],
-                                                    head.features[camera_index].colour[f2, 0],
-                                                    head.features[camera_index].colour[f2, 1],
-                                                    head.features[camera_index].colour[f2, 2]);
+                                                head.features[camera_index].colour[f2, 0],
+                                                head.features[camera_index].colour[f2, 1],
+                                                head.features[camera_index].colour[f2, 2]);
 
                     if (ray != null)
                     {
@@ -696,14 +705,17 @@ namespace sentience.core
         /// <param name="grid_layer"></param>
         /// <param name="grid_dimension"></param>
         /// <param name="rayNumber"></param>
+        /// <param name="mirror"></param>
         public void addGaussianLine(float x1, float y1, float x2, float y2, 
                                     int linewidth, float additive, 
                                     float[,,] grid_layer, 
-                                    int grid_dimension, int rayNumber)
+                                    int grid_dimension, int rayNumber,
+                                    bool mirror)
         {
             float w, h, x, y, step_x, step_y, dx, dy, xx2, yy2;
             float cx, cy;
             float m, dist, max_dist, dxx, dyy, incr;
+            int symmetry_x = grid_layer.GetLength(0)/2;
 
             dx = x2 - x1;
             dy = y2 - y1;
@@ -735,7 +747,10 @@ namespace sentience.core
                                 {
                                     int xx3 = (int)xx2;
                                     int yy3 = (int)yy2;
-
+                                    
+                                    if ((mirror) && (xx3 > symmetry_x))
+                                        xx3 = symmetry_x - (xx3 - symmetry_x);
+                                        
                                     if (grid_layer[xx3, yy3, 2] < rayNumber)
                                     {
                                         dxx = xx2 - cx;
@@ -745,7 +760,7 @@ namespace sentience.core
                                         else
                                             dist = 0;
                                         incr = Gaussian(dist) * additive;
-
+                                        
                                         grid_layer[xx3, yy3, 0]++;
                                         if (grid_layer[xx3, yy3, 1] == 0)
                                             grid_layer[xx3, yy3, 1] += incr;
@@ -790,6 +805,9 @@ namespace sentience.core
                                     int xx3 = (int)xx2;
                                     int yy3 = (int)yy2;
 
+                                    if ((mirror) && (xx3 > symmetry_x))
+                                        xx3 = symmetry_x - (xx3 - symmetry_x);
+                                            
                                     if (grid_layer[xx3, yy3, 2] < rayNumber)
                                     {
                                         dxx = xx2 - cx;
@@ -904,10 +922,12 @@ namespace sentience.core
         /// <param name="img_height">height of the image</param>
         /// <param name="show_ray_outlines">show lines within which rays are projected</param>
         /// <param name="show_ray_vacancy">show vacancy areas or only areas where rays intersect</param>
+        /// <param name="mirror">apply mirroring</param>
         public void showProbabilities(float[, ,] grid_layer, int grid_dimension, 
                                       byte[] img, int img_width, int img_height, 
                                       bool show_ray_outlines,
-                                      bool show_vacancy)
+                                      bool show_vacancy,
+                                      bool mirror)
         {
             int min_dist = (int)baseline;
             int max_dist = grid_dimension;
@@ -961,8 +981,8 @@ namespace sentience.core
 
                         if (show_vacancy) min_dist = 0;
 
-                        throwRay(-baseline / 2, xx+offset, min_dist, max_dist, grid_layer, grid_dimension,1);
-                        throwRay(baseline / 2, x+offset, min_dist, max_dist, grid_layer, grid_dimension,2);
+                        throwRay(-baseline / 2, xx+offset, vergence_radians, min_dist, max_dist, grid_layer, grid_dimension,1, mirror);
+                        throwRay(baseline / 2, x+offset, -vergence_radians, min_dist, max_dist, grid_layer, grid_dimension,2, mirror);
                         
 
                         if (show_ray_outlines)
@@ -1157,13 +1177,13 @@ namespace sentience.core
         /// <param name="x2">feature position in the right image (in pixels)</param>
         /// <param name="grid_dimension"></param>
         /// <param name="x_start">bottom intersection (closest to cameras)</param>
-        /// <param name="y_start"></param>
+        /// <param name="y_start">bottom intersection (closest to cameras)</param>
         /// <param name="x_end">top intersection (farthest from cameras)</param>
-        /// <param name="y_end"></param>
-        /// <param name="x_left"></param>
-        /// <param name="y_left"></param>
-        /// <param name="x_right"></param>
-        /// <param name="y_right"></param>
+        /// <param name="y_end">top intersection (farthest from cameras)</param>
+        /// <param name="x_left">left intersection</param>
+        /// <param name="y_left">left intersection</param>
+        /// <param name="x_right">right intersection</param>
+        /// <param name="y_right">right intersection</param>
         private void raysIntersection(float x1, float x2, int grid_dimension, float ray_uncertainty,
                                       ref float x_start, ref float y_start,
                                       ref float x_end, ref float y_end,
@@ -1175,36 +1195,52 @@ namespace sentience.core
 
             // convert x positions to angles
             int half_width = image_width / 2;
-            //float left_angle = ((float)Math.PI / 2) + ((left_x - half_width) * FOV / image_width);
-            //float right_angle = ((float)Math.PI / 2) + ((right_x - half_width) * FOV / image_width);
-            float angle1 = ((x1 - half_width) * FOV_horizontal / image_width);
-            float angle2 = ((x2 - half_width) * FOV_horizontal / image_width);
 
+            // convert the horizontal locations of features in image coordinates
+            // into angles
+            float angle1_radians = ((x1 - half_width) * FOV_horizontal / image_width);
+            float angle2_radians = ((x2 - half_width) * FOV_horizontal / image_width);
+            
+            // apply vergence
+            angle1_radians += vergence_radians;
+            angle2_radians -= vergence_radians;
+
+            // offsets of the cameras relative to the centre of the baseline
             float offset_x1 = (grid_dimension / (2*divisor)) - (baseline / 2);
             float offset_x2 = (grid_dimension / (2*divisor)) + (baseline / 2);
             
-            int d = 100;
+            const int d = 100;  // some arbitrary number
 
-            float xx1 = (d * (float)Math.Sin(angle1));
-            float xx2 = (d * (float)Math.Sin(angle2));
+            float xx1 = (d * (float)Math.Sin(angle1_radians));
+            float xx2 = (d * (float)Math.Sin(angle2_radians));
             float yy = d;
 
             if (ray_uncertainty < 0.5f) ray_uncertainty = 0.5f;
             float uncertainty = sigma * d * ray_uncertainty;
+            
+            // locate the vertices of the diamond shape formed by
+            // the intersection of two rays
 
+            // find the starting point at which the rays first intersect
             geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 - uncertainty, yy,
                          ref x_start, ref y_start);
+                         
+            // find the end point at which the rays stop intersecting
             geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 + uncertainty, yy,
                          ref x_end, ref y_end);
+                         
+            // find the leftmost intersection point
             geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 - uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 - uncertainty, yy,
                          ref x_left, ref y_left);
+                         
+            // find the rightmost intersection point
             geometry.intersection(offset_x1, 0.0f, offset_x1 + xx1 + uncertainty, yy,
                          offset_x2, 0.0f, offset_x2 + xx2 + uncertainty, yy,
                          ref x_right, ref y_right);
-
+                         
             //do some checking
             if (x_right > x_left)
             {
@@ -1229,12 +1265,17 @@ namespace sentience.core
         /// </summary>
         /// <param name="offset">typically +/- half the camera baseline</param>
         /// <param name="x">x position of the feature in the image (in pixels)</param>
+        /// <param name="vergence_angle">additional vergence angle in radians</param>
         /// <param name="min_dist">distance to begin throwing at</param>
         /// <param name="max_dist">distance to end throwing at</param>
         /// <param name="grid_layer"></param>
         /// <param name="grid_dimension"></param>
         /// <param name="rayNumber">used to avoid updating grid cells more than needed</param>
-        public void throwRay(float offset, float x, int min_dist, int max_dist, float[, ,] grid_layer, int grid_dimension, int rayNumber)
+        /// <param name="mirror">apply mirroring</param>
+        public void throwRay(float offset, float x, float vergence_angle, 
+                             int min_dist, int max_dist, 
+                             float[, ,] grid_layer, int grid_dimension, int rayNumber,
+                             bool mirror)
         {
             // calc uncertainty in angle (+/- half a pixel)
             float angular_uncertainty = FOV_horizontal / (image_width * 2);
@@ -1242,6 +1283,7 @@ namespace sentience.core
             // convert x positions an angle
             int half_width = image_width / 2;
             float angle = ((x - half_width) * FOV_horizontal / (float)image_width);
+            angle += vergence_angle;
 
             int offset_x = (grid_dimension / (2*divisor)) + (int)(offset);
 
@@ -1283,7 +1325,7 @@ namespace sentience.core
                 //check this value, which should be the height of the gaussian
                 float magnitude = 1.0f / uncertainty;
 
-                addGaussianLine(tx, ty, bx, by, 2, magnitude, grid_layer, grid_dimension, rayNumber);
+                addGaussianLine(tx, ty, bx, by, 2, magnitude, grid_layer, grid_dimension, rayNumber, mirror);
             }
         }
 

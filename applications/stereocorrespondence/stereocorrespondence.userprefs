@@ -14,10 +14,7 @@
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
       <TreeView>
         <Node expanded="True">
-          <Node name="FASTcorners" expanded="True" />
-          <Node name="sentcore" expanded="True">
-            <Node name="sentience_stereo_contours.cs" expanded="False" selected="True" />
-          </Node>
+          <Node name="sentcore" expanded="True" />
           <Node name="stereocorrespondence" expanded="True" />
         </Node>
       </TreeView>
@@ -25,8 +22,6 @@
     <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ClassPad">
       <TreeView>
         <Node expanded="True">
-          <Node name="FASTcorners" expanded="True" />
-          <Node name="memcompressor" expanded="True" />
           <Node name="utilities" expanded="True" />
         </Node>
       </TreeView>

@@ -99,10 +99,11 @@ public partial class MainWindow: Gtk.Window
             }
             case 1:  // stereo ray models
             {
+                bool mirror = false;
                 stereo_model.showProbabilities(grid_layer, 
                                                grid_dimension, 
                                                img_rays, standard_width, standard_height, 
-                                               false, true);
+                                               false, true, mirror);
                 break;
             }
             case 2:  // gaussian distribution function
@@ -112,7 +113,7 @@ public partial class MainWindow: Gtk.Window
             }
             case 3:  // a single stereo ray model
             {
-                createSingleRayModel();
+                createSingleRayModel(false);
                 break;
             }
             case 4:  // sensor model lookups
@@ -192,12 +193,12 @@ public partial class MainWindow: Gtk.Window
         }
     }
 
-    private void createSingleRayModel()
-    {
+    private void createSingleRayModel(bool mirror)
+    {      
         int divisor = 6;
         grid_dimension = 10000;
         grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
-        stereo_model.showSingleRay(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, false);
+        stereo_model.showSingleRay(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, false, mirror);
     }
 
     private void createSensorModelLookup()
