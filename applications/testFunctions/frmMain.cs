@@ -75,53 +75,15 @@ namespace WindowsApplication1
         public frmMain()
         {
             InitializeComponent();
-
-            grid_layer = new float[grid_dimension, grid_dimension, 3];
-
-            pos3D_x = new float[4];
-            pos3D_y = new float[4];
-
-            stereo_model = new stereoModel();
-            robot_head = new stereoHead(4);            
-            stereo_features = new float[900];
-            stereo_uncertainties = new float[900];
-
-            img_rays = new Byte[standard_width * standard_height * 3];
-            rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            picRays.Image = rays;
-
-            //test_motion_model(false);
-
-            test_path_planner(200, 50);
-
-            //stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false, true);
-            //stereo_model.showDistribution(img_rays, standard_width, standard_height);
-            //stereo_model.showSurveyDistribution(500, img_rays, standard_width, standard_height);
-
-            //createSensorModelLookup();
-
-            //createSingleRayModel();
-
-            //test_head();
-            //test_head2();
-            //test_grid();
-            //test_trial_poses();
-
-            //int offset_x = rnd.Next(1000) - 500;
-            //int offset_y = rnd.Next(1000) - 500;
-            //test_survey(offset_x, offset_y);
-            //test_survey_pan(50, 50);
-
-            BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
-            //picRays.Refresh();
         }
 
         private void createSingleRayModel()
         {
+            bool mirror = false;
             int divisor = 6;
             grid_dimension = 10000;
             grid_layer = new float[grid_dimension / divisor, grid_dimension, 3];
-            stereo_model.showSingleRay(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, false);
+            stereo_model.showSingleRay(grid_layer, grid_dimension, img_rays, standard_width, standard_height, divisor, false, mirror);
         }
 
         private void createSensorModelLookup()
@@ -366,6 +328,112 @@ namespace WindowsApplication1
                                               initial);
                 initial = false;
             }
+        }
+
+        private void pathPlanningToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            grid_layer = new float[grid_dimension, grid_dimension, 3];
+
+            pos3D_x = new float[4];
+            pos3D_y = new float[4];
+
+            stereo_model = new stereoModel();
+            robot_head = new stereoHead(4);
+            stereo_features = new float[900];
+            stereo_uncertainties = new float[900];
+
+            img_rays = new Byte[standard_width * standard_height * 3];
+            rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            picRays.Image = rays;
+
+            test_path_planner(200, 50);
+
+            BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
+        }
+
+        private void singleRayModelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            grid_layer = new float[grid_dimension, grid_dimension, 3];
+
+            pos3D_x = new float[4];
+            pos3D_y = new float[4];
+
+            stereo_model = new stereoModel();
+            robot_head = new stereoHead(4);
+            stereo_features = new float[900];
+            stereo_uncertainties = new float[900];
+
+            img_rays = new Byte[standard_width * standard_height * 3];
+            rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            picRays.Image = rays;
+
+            createSingleRayModel();
+
+            BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
+        }
+
+        private void multipleStereoRaysToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            grid_layer = new float[grid_dimension, grid_dimension, 3];
+
+            pos3D_x = new float[4];
+            pos3D_y = new float[4];
+
+            stereo_model = new stereoModel();
+            robot_head = new stereoHead(4);
+            stereo_features = new float[900];
+            stereo_uncertainties = new float[900];
+
+            img_rays = new Byte[standard_width * standard_height * 3];
+            rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            picRays.Image = rays;
+
+            bool mirror = false;
+            stereo_model.showProbabilities(grid_layer, grid_dimension, img_rays, standard_width, standard_height, false, true, mirror);
+            BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
+
+        }
+
+        private void motionModelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            grid_layer = new float[grid_dimension, grid_dimension, 3];
+
+            pos3D_x = new float[4];
+            pos3D_y = new float[4];
+
+            stereo_model = new stereoModel();
+            robot_head = new stereoHead(4);
+            stereo_features = new float[900];
+            stereo_uncertainties = new float[900];
+
+            img_rays = new Byte[standard_width * standard_height * 3];
+            rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            picRays.Image = rays;
+
+            test_motion_model(false);
+
+            BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
+        }
+
+        private void gaussianFunctionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            grid_layer = new float[grid_dimension, grid_dimension, 3];
+
+            pos3D_x = new float[4];
+            pos3D_y = new float[4];
+
+            stereo_model = new stereoModel();
+            robot_head = new stereoHead(4);
+            stereo_features = new float[900];
+            stereo_uncertainties = new float[900];
+
+            img_rays = new Byte[standard_width * standard_height * 3];
+            rays = new Bitmap(standard_width, standard_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            picRays.Image = rays;
+            
+            stereo_model.showDistribution(img_rays, standard_width, standard_height);
+
+            BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
         }
 
         /*
