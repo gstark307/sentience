@@ -1,27 +1,6 @@
-/*
-    Stuff for dealing with 2D grids, such as calibration charts.  
-    Note that this has nothing to do with occupancy grids.
-    Copyright (C) 2000-2007 Bob Mottram
-    fuzzgun@gmail.com
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-
 using System;
 using System.Collections;
-
+using System.Text;
 
 namespace sluggish.utilities.grids
 {
@@ -56,9 +35,6 @@ namespace sluggish.utilities.grids
         }
     }
 
-    /// <summary>
-    /// class which handles creating, detecting and drawing 2D grids
-    /// </summary>
     public class grid2D
     {
         // perimeter of the grid
@@ -369,6 +345,22 @@ namespace sluggish.utilities.grids
         private const float quantisation = 2.0f;
 
         /// <summary>
+        /// defines thew function which is matched against the grid spacing data
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="x_radians"></param>
+        /// <param name="spacing"></param>
+        /// <returns></returns>
+        private static float GridFittingFunction(float offset,
+                                                 float x_radians,
+                                                 float spacing)
+        {
+            float y = (float)Math.Sin(offset + x_radians);
+
+            return (y);
+        }
+
+        /// <summary>
         /// detect the wavelength and phase offset for the given responses
         /// </summary>
         /// <param name="response">array containing responses, which we assume contains some frequency</param>
@@ -466,7 +458,8 @@ namespace sluggish.utilities.grids
                     {
                         float idx = start_index + ((end_index - start_index) * (float)rnd.NextDouble());
                         float x = idx;
-                        float y = (float)Math.Sin(offset + ((x / f) * Math.PI * 2));
+                        //float y = (float)Math.Sin(offset + ((x / f) * Math.PI * 2));
+                        float y = GridFittingFunction(offset, (x / f) * (float)Math.PI * 2, 0.1f);
                         y = (y * amplitude) + average_response;
 
                         int response_index = (int)Math.Round(idx);
@@ -521,11 +514,20 @@ namespace sluggish.utilities.grids
                                        float grid_horizontal, float grid_vertical,
                                        int minimum_dimension_horizontal, int maximum_dimension_horizontal,
                                        int minimum_dimension_vertical, int maximum_dimension_vertical,
+                                       String horizontal_scale_spacings, String vertical_scale_spacings,
                                        ref float average_grid_spacing_horizontal, ref float average_grid_spacing_vertical,
                                        ref float horizontal_phase_offset, ref float vertical_phase_offset,
                                        ref int cells_horizontal, ref int cells_vertical,
                                        ref byte[] output_img, int output_img_width, int output_img_height, int output_img_type)
         {
+            // colours used to draw the reponses
+            int ideal_r = 0;
+            int ideal_g = 255;
+            int ideal_b = 0;
+            int detected_r = 255;
+            int detected_g = 0;
+            int detected_b = 0;
+
             int max_features_per_row = 10;
             int edge_detection_radius = 2;
             int inhibitory_radius = img_width / 50;
@@ -636,14 +638,128 @@ namespace sluggish.utilities.grids
                 case 2: // grid spacing responses
                     {
                         ShowGridAxisResponsesPoints(
+                            true,
                             horizontal_buckets, vertical_buckets,
                             average_grid_spacing_horizontal, horizontal_phase_offset,
                             average_grid_spacing_vertical, vertical_phase_offset,
+                            ideal_r, ideal_g, ideal_b, detected_r, detected_g, detected_b,
+                            horizontal_scale_spacings, vertical_scale_spacings,
                             ref output_img, output_img_width, output_img_height);
                         break;
                     }
             }
         }
+
+        /// <summary>
+        /// detect a grid within the given image using the given orientation
+        /// based upon previously detected spot centre points
+        /// </summary>
+        /// <param name="spot_centres">list containing spot centre positions</param>
+        /// <param name="img">image containing only the grid</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="bytes_per_pixel">number of bytes per pixel</param>
+        /// <param name="dominant_orientation">orientation of the grid</param>
+        /// <param name="known_grid_spacing">known grid spacing (cell diameter) in pixels</param>
+        /// <param name="grid_horizontal">estimated horizontal width of the grid in pixels</param>
+        /// <param name="grid_vertical">estimated vertical height of the grid in pixels</param>
+        /// <param name="minimum_dimension_horizontal">minimum number of cells across</param>
+        /// <param name="maximum_dimension_vertical">maximum number of cells across</param>
+        /// <param name="minimum_dimension_vertical">minimum number of cells down</param>
+        /// <param name="maximum_dimension_vertical">maximum number of cells down</param>
+        /// <param name="average_grid_spacing_horizontal">average cell diameter in pixels in the horizontal dimension</param>
+        /// <param name="average_grid_spacing_vertical">average cell diameter in pixels in the vertical dimension</param>
+        /// <param name="cells_horizontal">number of cells in the horizontal dimension</param>
+        /// <param name="cells_vertical">number of cells in the vertical dimension</param>
+        /// <param name="output_img">output image</param>
+        /// <param name="output_img_width">width of the output image</param>
+        /// <param name="output_img_height">height of the output image</param>
+        /// <param name="output_img_type">the type of output image</param>
+        private static void DetectGrid(ArrayList spot_centres,
+                                       byte[] img, int img_width, int img_height, int bytes_per_pixel,
+                                       float dominant_orientation, float known_grid_spacing,
+                                       float grid_horizontal, float grid_vertical,
+                                       int minimum_dimension_horizontal, int maximum_dimension_horizontal,
+                                       int minimum_dimension_vertical, int maximum_dimension_vertical,
+                                       String horizontal_scale_spacings, String vertical_scale_spacings,
+                                       ref float average_grid_spacing_horizontal, ref float average_grid_spacing_vertical,
+                                       ref float horizontal_phase_offset, ref float vertical_phase_offset,
+                                       ref int cells_horizontal, ref int cells_vertical,
+                                       ref byte[] output_img, int output_img_width, int output_img_height, int output_img_type)
+        {
+            // colours used to draw the reponses
+            int ideal_r = 0;
+            int ideal_g = 255;
+            int ideal_b = 0;
+            int detected_r = 255;
+            int detected_g = 0;
+            int detected_b = 0;
+
+            // centre point from which spacing measurements are taken
+            float centre_x = img_width / 2;
+            float centre_y = img_height / 2;
+
+            float distortion_angle = 0;
+            int[] horizontal_buckets = null;
+            int[] vertical_buckets = null;
+
+            horizontal_phase_offset = 0;
+            vertical_phase_offset = 0;
+
+            // minimum and maximum grid spacing in pixels
+            // this assists the frequency detection to search within this range
+            float min_grid_spacing_horizontal = grid_horizontal / maximum_dimension_horizontal;
+            float max_grid_spacing_horizontal = grid_horizontal / minimum_dimension_horizontal;
+            float min_grid_spacing_vertical = grid_vertical / maximum_dimension_vertical;
+            float max_grid_spacing_vertical = grid_vertical / minimum_dimension_vertical;
+
+            // feed the image feature points into the grid detector
+            DetectGrid(spot_centres, dominant_orientation, centre_x, centre_y, img_width / 2,
+                       distortion_angle, known_grid_spacing,
+                       min_grid_spacing_horizontal, max_grid_spacing_horizontal,
+                       min_grid_spacing_vertical, max_grid_spacing_vertical,
+                       ref horizontal_buckets, ref vertical_buckets,
+                       ref average_grid_spacing_horizontal,
+                       ref average_grid_spacing_vertical,
+                       ref horizontal_phase_offset,
+                       ref vertical_phase_offset);
+
+            // because this is based upon spot centres
+            // rather than square edges we need to offset the
+            // phase by 180 degrees
+            horizontal_phase_offset -= (float)Math.PI;
+            vertical_phase_offset -= (float)Math.PI;
+
+            // estimate the number of cells in the horizontal and vertical axes
+            cells_horizontal = (int)Math.Round(grid_horizontal / average_grid_spacing_horizontal);
+            cells_vertical = (int)Math.Round(grid_vertical / average_grid_spacing_vertical);
+
+            // show some output mainly for debugging purposes
+            switch (output_img_type)
+            {
+                case 1: // feature points
+                    {
+                        ShowGridPoints(
+                            img, img_width, img_height, bytes_per_pixel,
+                            spot_centres,
+                            ref output_img, output_img_width, output_img_height);
+                        break;
+                    }
+                case 2: // grid spacing responses
+                    {
+                        ShowGridAxisResponsesPoints(
+                            false,
+                            horizontal_buckets, vertical_buckets,
+                            average_grid_spacing_horizontal, horizontal_phase_offset,
+                            average_grid_spacing_vertical, vertical_phase_offset,
+                            ideal_r, ideal_g, ideal_b, detected_r, detected_g, detected_b,
+                            horizontal_scale_spacings, vertical_scale_spacings,
+                            ref output_img, output_img_width, output_img_height);
+                        break;
+                    }
+            }
+        }
+
 
         /// <summary>
         /// detect a grid within the given image using the given perimeter polygon
@@ -653,6 +769,7 @@ namespace sluggish.utilities.grids
         /// <param name="img_height">height of the image</param>
         /// <param name="bytes_per_pixel">number of bytes per pixel</param>
         /// <param name="perimeter">bounding perimeter within which the grid exists</param>
+        /// <param name="spot_centres">previously detected spot centres</param>
         /// <param name="minimum_dimension_horizontal">minimum number of cells across</param>
         /// <param name="maximum_dimension_horizontal">maximum number of cells across</param>
         /// <param name="minimum_dimension_vertical">minimum number of cells down</param>
@@ -660,13 +777,16 @@ namespace sluggish.utilities.grids
         /// <param name="known_grid_spacing">known grid spacing (cell diameter) value in pixels</param>
         /// <param name="known_even_dimension">set to true if it is known that the number of cells in horizontal and vertical axes is even</param>
         /// <param name="border_cells">extra cells to add as a buffer zone around the grid</param>
+        /// <param name="horizontal_scale_spacings">description used on the spacings diagram</param>
+        /// <param name="vertical_scale_spacings">description used on the spacings diagram</param>
         /// <returns>2D grid</returns>
         public static grid2D DetectGrid(byte[] img, int img_width, int img_height, int bytes_per_pixel,
-                                        polygon2D perimeter,
+                                        polygon2D perimeter, ArrayList spot_centres,
                                         int minimum_dimension_horizontal, int maximum_dimension_horizontal,
                                         int minimum_dimension_vertical, int maximum_dimension_vertical,
                                         float known_grid_spacing, bool known_even_dimension,
                                         int border_cells,
+                                        String horizontal_scale_spacings, String vertical_scale_spacings,
                                         ref float average_spacing_horizontal, ref float average_spacing_vertical,
                                         ref byte[] output_img, int output_img_type)
         {
@@ -674,6 +794,17 @@ namespace sluggish.utilities.grids
             int ty = (int)perimeter.top();
             int bx = (int)perimeter.right();
             int by = (int)perimeter.bottom();
+
+            // adjust spot centre positions so that they're relative to the perimeter
+            // top left position
+            if (spot_centres != null)
+            {
+                for (int i = 0; i < spot_centres.Count; i += 2)
+                {
+                    spot_centres[i] = (float)spot_centres[i] - tx;
+                    spot_centres[i + 1] = (float)spot_centres[i + 1] - ty;
+                }
+            }
 
             int wdth = bx - tx;
             int hght = by - ty;
@@ -693,31 +824,77 @@ namespace sluggish.utilities.grids
             int cells_horizontal = 0, cells_vertical = 0;
             float horizontal_phase_offset = 0;
             float vertical_phase_offset = 0;
-            DetectGrid(grid_img, wdth, hght, bytes_per_pixel, dominant_orientation, known_grid_spacing,
-                       grid_horizontal, grid_vertical,
-                       minimum_dimension_horizontal, maximum_dimension_horizontal,
-                       minimum_dimension_vertical, maximum_dimension_vertical,
-                       ref average_spacing_horizontal, ref average_spacing_vertical,
-                       ref horizontal_phase_offset, ref vertical_phase_offset,
-                       ref cells_horizontal, ref cells_vertical,
-                       ref output_img, img_width, img_height, output_img_type);
 
-            //if we know the number of cells should be even correct any inaccuracies
+            if (spot_centres == null)
+                DetectGrid(grid_img, wdth, hght, bytes_per_pixel,
+                           dominant_orientation, known_grid_spacing,
+                           grid_horizontal, grid_vertical,
+                           minimum_dimension_horizontal, maximum_dimension_horizontal,
+                           minimum_dimension_vertical, maximum_dimension_vertical,
+                           horizontal_scale_spacings, vertical_scale_spacings,
+                           ref average_spacing_horizontal, ref average_spacing_vertical,
+                           ref horizontal_phase_offset, ref vertical_phase_offset,
+                           ref cells_horizontal, ref cells_vertical,
+                           ref output_img, img_width, img_height, output_img_type);
+            else
+                DetectGrid(spot_centres, grid_img, wdth, hght, bytes_per_pixel,
+                           dominant_orientation, known_grid_spacing,
+                           grid_horizontal, grid_vertical,
+                           minimum_dimension_horizontal, maximum_dimension_horizontal,
+                           minimum_dimension_vertical, maximum_dimension_vertical,
+                           horizontal_scale_spacings, vertical_scale_spacings,
+                           ref average_spacing_horizontal, ref average_spacing_vertical,
+                           ref horizontal_phase_offset, ref vertical_phase_offset,
+                           ref cells_horizontal, ref cells_vertical,
+                           ref output_img, img_width, img_height, output_img_type);
+
+
+            grid2D detectedGrid = null;
+
+            // apply some range limits
+            bool range_limited = false;
+            if (cells_horizontal < 3)
+            {
+                cells_horizontal = 3;
+                range_limited = true;
+            }
+            if (cells_vertical < 3)
+            {
+                cells_vertical = 3;
+                range_limited = true;
+            }
+            if (cells_horizontal > maximum_dimension_horizontal)
+            {
+                cells_horizontal = maximum_dimension_horizontal;
+                range_limited = true;
+            }
+            if (cells_vertical > maximum_dimension_vertical)
+            {
+                cells_vertical = maximum_dimension_vertical;
+                range_limited = true;
+            }
+            if (range_limited)
+            {
+                Console.WriteLine("WARNING: When detecting the grid the matrix dimension had to be artificially restricted.");
+                Console.WriteLine("         This probably means that there is a problem with the original image");
+            }
+
+            // if we know the number of cells should be even correct any inaccuracies
             if (known_even_dimension)
             {
                 cells_horizontal = (int)(cells_horizontal / 2) * 2;
                 cells_vertical = (int)(cells_vertical / 2) * 2;
             }
 
-            //get the centre of the region
+            // get the centre of the region
             float cx = tx + ((bx - tx) / 2);
             float cy = ty + ((by - ty) / 2);
 
-            grid2D detectedGrid = new grid2D(cells_horizontal, cells_vertical,
-                                             cx, cy, dominant_orientation,
-                                             average_spacing_horizontal, average_spacing_vertical,
-                                             horizontal_phase_offset, vertical_phase_offset,
-                                             border_cells);
+            detectedGrid = new grid2D(cells_horizontal, cells_vertical,
+                                      cx, cy, dominant_orientation,
+                                      average_spacing_horizontal, average_spacing_vertical,
+                                      horizontal_phase_offset, vertical_phase_offset,
+                                      border_cells);
 
             return (detectedGrid);
         }
@@ -792,6 +969,245 @@ namespace sluggish.utilities.grids
                                 min_grid_spacing_vertical, max_grid_spacing_vertical);
             vertical_grid_spacing = vertical_frequency * quantisation;
         }
+
+        /// <summary>
+        /// turn maxima into an ideal grid with perfectly regular spacing
+        /// </summary>
+        /// <param name="maxima">positions of maxima which correspond to grid lines</param>
+        /// <returns>ideal maxima</returns>
+        private static ArrayList idealGrid(ArrayList maxima)
+        {
+            ArrayList equalised = new ArrayList();
+
+            if (maxima.Count > 1)
+            {
+                // get the average spacing
+                float average_spacing = 0;
+                for (int i = 1; i < maxima.Count; i++)
+                {
+                    average_spacing += (float)maxima[i] - (float)maxima[i - 1];
+                }
+                average_spacing /= (maxima.Count - 1);
+
+                // get the average offset
+                float average_offset = 0;
+                float initial_position = (float)maxima[0];
+                for (int i = 0; i < maxima.Count; i++)
+                {
+                    average_offset += (float)maxima[i] - (initial_position + (average_spacing * i));
+                }
+                average_offset /= maxima.Count;
+
+
+                for (int i = 0; i < maxima.Count; i++)
+                {
+                    float equalised_position = initial_position + (average_spacing * i) - (average_offset / 2.0f);
+                    equalised.Add(equalised_position);
+                }
+            }
+
+            return (equalised);
+        }
+
+
+        /// <summary>
+        /// fills in any missing data in a list which contains a series
+        /// of positions representing the detected lines within a grid pattern
+        /// </summary>
+        /// <param name="maxima">positions of each line</param>
+        /// <param name="grid_spacing">estimated grid spacing value</param>
+        /// <param name="buffer_cells">add this number of buffer cells to the start and end of the data</param>
+        /// <returns></returns>
+        /*
+        private static ArrayList FillGrid(ArrayList maxima,
+                                          float grid_spacing,
+                                          int buffer_cells)
+        {
+            ArrayList filled = new ArrayList();
+
+            // add an initial buffer
+            for (int i = 0; i < buffer_cells; i++)
+            {
+                float dist = (float)maxima[0] - ((buffer_cells - i) * grid_spacing);
+                filled.Add(dist);
+            }
+
+            // compare each spacing to the average
+            float prev_dist = 0;
+            float max_width = grid_spacing * 1.3f;
+            for (int i = 0; i < maxima.Count; i++)
+            {
+                float dist = (float)maxima[i];
+                if (i > 0)
+                {
+                    float width = Math.Abs(dist - prev_dist);
+                    if (width > max_width)
+                    {
+                        // the width is bigger than the usual range
+                        // fill in the intermediate spacings
+                        for (int j = 1; j <= (int)(width / grid_spacing); j++)
+                        {
+                            float intermediate_dist = prev_dist + (j * grid_spacing);
+                            if (Math.Abs(dist - intermediate_dist) > grid_spacing * 0.5f)
+                                filled.Add(intermediate_dist);
+                        }
+                    }
+
+                    filled.Add(dist);
+                }
+                else
+                {
+                    filled.Add(dist);
+                }
+                prev_dist = dist;
+            }
+
+            // add a trailing buffer
+            for (int i = 1; i <= buffer_cells; i++)
+            {
+                float dist = (float)maxima[maxima.Count - 1] + (i * grid_spacing);
+                filled.Add(dist);
+            }
+
+            return (filled);
+        }
+         */
+
+        /// <summary>
+        /// equalise the spacing between grid lines
+        /// </summary>
+        /// <param name="maxima">positions of maxima which correspond to grid lines</param>
+        /// <returns>equalised maxima</returns>
+        /*
+        private static ArrayList EqualiseGrid(ArrayList maxima)
+        {
+            ArrayList equalised = new ArrayList();
+
+            for (int i = 0; i < maxima.Count; i++)
+            {
+                if ((i > 0) && (i < maxima.Count - 1))
+                {
+                    float prev_dist = (float)maxima[i - 1];
+                    float equalised_dist = prev_dist +
+                                           (((float)maxima[i + 1] - prev_dist) / 2.0f);
+                    equalised.Add(equalised_dist);
+                }
+                else
+                {
+                    float dist = (float)maxima[i];
+                    equalised.Add(dist);
+                }
+            }
+
+            return (equalised);
+        }
+        */
+
+
+
+        /// <summary>
+        /// detects peak positions within an array of samples
+        /// </summary>
+        /// <param name="samples"></param>
+        /// <param name="quantisation"></param>
+        /// <param name="minimum_grid_width"></param>
+        /// <returns></returns>
+        private static ArrayList DetectPeaks(int[] samples, float quantisation,
+                                             float minimum_grid_width,
+                                             ref float average_peak_separation,
+                                             ref bool[] peak)
+        {
+            // this list will contain the positions of peaks along the axis
+            ArrayList peaks = new ArrayList();
+
+            // find the average value of the samples
+            int no_of_samples = samples.Length;
+            float average = 0;
+            int hits = 0;
+            for (int i = 0; i < no_of_samples; i++)
+            {
+                if (samples[i] > 0)
+                {
+                    average += samples[i];
+                    hits++;
+                }
+            }
+            if (hits > 0) average /= hits;
+
+            // perform non-maximal supression
+            peak = new bool[no_of_samples];
+            for (int i = 0; i < no_of_samples; i++)
+                if (samples[i] > 0) peak[i] = true;
+
+            int r = (int)(minimum_grid_width / quantisation);
+            if (r < 1) r = 1;
+            for (int i = 0; i < no_of_samples; i++)
+            {
+                float value = samples[i];
+                if (peak[i])
+                {
+                    int j = i + 1;
+                    while ((j <= i + r) &&
+                           (j < no_of_samples) &&
+                           (peak[i]))
+                    {
+                        if (peak[j])
+                        {
+                            if (samples[j] <= value)
+                            {
+                                peak[j] = false;
+                            }
+                            else
+                            {
+                                peak[i] = false;
+                            }
+                        }
+                        j++;
+                    }
+                }
+            }
+
+            // extract peak values and put them into a list
+            float prev_peak_position = 9999;
+            average_peak_separation = 0;
+            int average_peak_separation_hits = 0;
+            for (int i = 0; i < no_of_samples; i++)
+            {
+                if (peak[i])
+                {
+                    // try to make the peak position more accurate
+                    int local_radius = 2;
+                    float tot = 0;
+                    float peak_position = 0;
+                    for (int j = i - local_radius; j <= i + local_radius; j++)
+                    {
+                        if ((j > -1) && (j < no_of_samples))
+                        {
+                            tot += samples[j];
+                            peak_position += (samples[j] * j);
+                        }
+                        if (tot > 0) peak_position /= tot;
+                    }
+                    peak_position *= quantisation;
+
+                    if (prev_peak_position != 9999)
+                    {
+                        average_peak_separation += Math.Abs(peak_position - prev_peak_position);
+                        average_peak_separation_hits++;
+                    }
+
+                    peaks.Add(peak_position);
+                    prev_peak_position = peak_position;
+                }
+            }
+
+            // calculate average peak separation
+            if (average_peak_separation_hits > 0)
+                average_peak_separation /= average_peak_separation_hits;
+
+            return (peaks);
+        }
+
 
         /// <summary>
         /// returns a quantised set of values for horizontal and vertical grid spacings
@@ -997,17 +1413,46 @@ namespace sluggish.utilities.grids
         /// <summary>
         /// show grid spacing responses
         /// </summary>
+        /// <param name="has_square_cells">whether the pattern has square cells</param>
         /// <param name="horizontal_response"></param>
         /// <param name="vertical_response"></param>
-        /// <param name="output_img"></param>
-        /// <param name="output_img_width"></param>
-        /// <param name="output_img_height"></param>
-        private static void ShowGridAxisResponsesPoints(int[] horizontal_response, int[] vertical_response,
+        /// <param name="horizontal_grid_spacing"></param>
+        /// <param name="horizontal_phase_offset"></param>
+        /// <param name="vertical_grid_spacing"></param>
+        /// <param name="vertical_phase_offset"></param>
+        /// <param name="ideal_r">ideal spacing colour</param>
+        /// <param name="ideal_g">ideal spacing colour</param>
+        /// <param name="ideal_b">ideal spacing colour</param>
+        /// <param name="detected_r">detected spacing colour</param>
+        /// <param name="detected_g">detected spacing colour</param>
+        /// <param name="detected_b">detected spacing colour</param>
+        /// <param name="horizontal_scale_spacings">description for the horizontal spacings</param>
+        /// <param name="vertical_scale_spacings">description for the vertical spacings</param>
+        /// <param name="output_img">image to save the result to</param>
+        /// <param name="output_img_width">width of the image</param>
+        /// <param name="output_img_height">height of the image</param>
+        private static void ShowGridAxisResponsesPoints(bool has_square_cells, int[] horizontal_response, int[] vertical_response,
                                                         float horizontal_grid_spacing, float horizontal_phase_offset,
                                                         float vertical_grid_spacing, float vertical_phase_offset,
+                                                        int ideal_r, int ideal_g, int ideal_b,
+                                                        int detected_r, int detected_g, int detected_b,
+                                                        String horizontal_scale_spacings, String vertical_scale_spacings,
                                                         ref byte[] output_img, int output_img_width, int output_img_height)
         {
+            const String font = "Arial";
+            const int font_size = 10;
+            int line_width = 0;
+
+            // if the detection was based upon a spot pattern
+            // we need to offset by 180 degrees to get the correct grid
+            if (!has_square_cells)
+            {
+                horizontal_phase_offset += (float)Math.PI;
+                vertical_phase_offset += (float)Math.PI;
+            }
+
             output_img = new byte[output_img_width * output_img_height * 3];
+            for (int i = 0; i < output_img.Length; i++) output_img[i] = 255;
 
             for (int i = 0; i < 2; i++)
             {
@@ -1041,48 +1486,71 @@ namespace sluggish.utilities.grids
                 }
                 if (average_response_hits > 0) average_variance /= average_response_hits;
 
+                // show the response data
+                int prev_x = 0, prev_y = 0;
                 float amplitude = average_variance;                // show the responses
                 int max_response_height = (output_img_height / 3);
-                int prev_x = 0, prev_y = 0;
-                for (int j = 0; j < response.Length; j++)
+                if ((start_index > -1) && (end_index > -1))
                 {
-                    int x = (j - start_index) * output_img_width / (end_index - start_index);
-                    int y = max_response_height - 1 - (response[j] * max_response_height / max_response);
-                    if (i > 0) y += (output_img_height / 2);
-                    if (j > 0)
+                    for (int j = 0; j < response.Length; j++)
                     {
-                        drawing.drawLine(output_img, output_img_width, output_img_height,
-                                         prev_x, prev_y, x, y, 0, 255, 0, 1, false);
+                        int x = (j - start_index) * output_img_width / (end_index - start_index);
+                        int y = max_response_height - 1 - (response[j] * max_response_height / max_response) + (font_size * 3);
+                        if (i > 0) y += (output_img_height / 2);
+                        if (j > 0)
+                        {
+                            drawing.drawLine(output_img, output_img_width, output_img_height,
+                                             prev_x, prev_y, x, y, detected_r, detected_g, detected_b, line_width, false);
+                        }
+                        prev_x = x;
+                        prev_y = y;
                     }
-                    prev_x = x;
-                    prev_y = y;
                 }
 
-                // show the frequency match
+                // show the best frequency match
                 prev_x = 0;
                 prev_y = 0;
                 float v = 0;
-                for (int j = start_index; j < end_index; j++)
+                for (float j = start_index; j < end_index; j += 0.1f)
                 {
                     if (i == 0)
-                        v = horizontal_phase_offset + ((j / (horizontal_grid_spacing / quantisation)) * (float)Math.PI * 2);
+                        v = GridFittingFunction(horizontal_phase_offset, (j / (horizontal_grid_spacing / quantisation)) * (float)Math.PI * 2, 0.1f);
                     else
-                        v = vertical_phase_offset + ((j / (vertical_grid_spacing / quantisation)) * (float)Math.PI * 2);
+                        v = GridFittingFunction(vertical_phase_offset, (j / (vertical_grid_spacing / quantisation)) * (float)Math.PI * 2, 0.1f);
 
-                    v = (float)Math.Sin(v) * amplitude;
+                    v *= amplitude;
+
                     v += average_response;
 
-                    int x = (j - start_index) * output_img_width / (end_index - start_index);
-                    int y = max_response_height - 1 - (int)(v * max_response_height / max_response);
+                    int x = (int)((j - start_index) * output_img_width / (end_index - start_index));
+                    int y = max_response_height - 1 - (int)(v * max_response_height / max_response) + (font_size * 3);
                     if (i > 0) y += (output_img_height / 2);
-                    if (j > 0)
+                    if (j > start_index)
                     {
                         drawing.drawLine(output_img, output_img_width, output_img_height,
-                                         prev_x, prev_y, x, y, 255, 255, 0, 1, false);
+                                         prev_x, prev_y, x, y, ideal_r, ideal_g, ideal_b, line_width, false);
                     }
                     prev_x = x;
                     prev_y = y;
                 }
+            }
+
+            // show some text: "horizontal spacings" and "vertical spacings"
+            if (horizontal_scale_spacings != "")
+            {
+                sluggish.utilities.drawing.AddText(output_img, output_img_width, output_img_height,
+                                                   horizontal_scale_spacings,
+                                                   font, font_size,
+                                                   0, 0, 0,
+                                                   output_img_width / 50, (font_size / 2));
+            }
+            if (vertical_scale_spacings != "")
+            {
+                sluggish.utilities.drawing.AddText(output_img, output_img_width, output_img_height,
+                                                   vertical_scale_spacings,
+                                                   font, font_size,
+                                                   0, 0, 0,
+                                                   output_img_width / 50, (output_img_height / 2) + (font_size / 2));
             }
         }
 

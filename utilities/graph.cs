@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Collections;
 using sluggish.utilities;
+using System.Drawing;
 
 namespace sluggish.utilities.graph
 {
@@ -49,6 +50,8 @@ namespace sluggish.utilities.graph
         public float min_value_x;
         public float max_value_y;
         public float min_value_y;
+
+        public byte[] colour = new byte[3];
 
         /// <summary>
         /// resets the display
@@ -158,20 +161,85 @@ namespace sluggish.utilities.graph
 
         #endregion
 
+        #region "drawing lines/markers on the graph"
+
+        /// <summary>
+        /// draws a horizontal line on the graph
+        /// </summary>
+        /// <param name="y">y coordinate of the line</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="line_width">width of the line</param>
+        public void DrawHorizontalLine(float y,
+                                       int r, int g, int b, int line_width)
+        {
+            float offset_y = (max_value_y / (max_value_y - min_value_y)) * screen_height;
+            int screen_y = (int)(offset_y + (y * screen_height / (max_value_y - min_value_y)));
+
+            drawing.drawLine(image, screen_width, screen_height,
+                             0, screen_y, screen_width - 1, screen_y,
+                             r, g, b, line_width, false);
+        }
+
+        /// <summary>
+        /// draws a vertical line on the graph
+        /// </summary>
+        /// <param name="x">x coordinate of the line</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="line_width">width of the line</param>
+        public void DrawVerticalLine(float x,
+                                     int r, int g, int b, int line_width)
+        {
+            float offset_x = (Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width;
+            int screen_x = (int)(offset_x + (x * screen_width / (max_value_x - min_value_x)));
+
+            drawing.drawLine(image, screen_width, screen_height,
+                             screen_x, 0, screen_x, screen_height - 1,
+                             r, g, b, line_width, false);
+        }
+
+        #endregion
+
         #region "drawing axes"
 
+        /// <summary>
+        /// draws axes on the graph
+        /// </summary>
+        /// <param name="x_increment_minor">minor incremnent along the x axis</param>
+        /// <param name="y_increment_minor">minor increment along the y axis</param>
+        /// <param name="x_increment_major">major increment along the x axis</param>
+        /// <param name="y_increment_major">major increment along the y axis</param>
+        /// <param name="increment_marking_size">size of the increment markings</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="lineWidth">line width</param>
+        /// <param name="horizontal_scale">name of the horizontal scale</param>
+        /// <param name="vertical_scale">name of the vertical scale</param>
         public void DrawAxes(float x_increment_minor, float y_increment_minor,
                              float x_increment_major, float y_increment_major,
                              int increment_marking_size,
-                             int r, int g, int b, int lineWidth)
+                             int r, int g, int b, int lineWidth,
+                             bool show_numbers,
+                             String horizontal_scale, String vertical_scale)
         {
             // draw the horizontal axis
-            float y = (max_value_y / (max_value_y - min_value_y)) * screen_height;
+            float y = screen_height - 1 - (((0 - min_value_y) / (max_value_y - min_value_y)) * screen_height);
             drawing.drawLine(image, screen_width, screen_height,
                              0, (int)y, screen_width - 1, (int)y,
                              r, g, b, lineWidth, false);
 
-            float x = ((Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_height);
+            //float x = ((Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width);
+            float x = ((0 - min_value_x) / (max_value_x - min_value_x)) * screen_width;
+
+            // show the name of the horizontal axis
+            if (horizontal_scale != "")
+                AddText(horizontal_scale, "Arial", 10, r, g, b,
+                        min_value_x + ((max_value_x - min_value_x) * 0.45f),
+                        -(max_value_y - min_value_y) / 20);
 
             for (int i = 0; i < 2; i++)
             {
@@ -190,8 +258,17 @@ namespace sluggish.utilities.graph
                     drawing.drawLine(image, screen_width, screen_height,
                                      screen_x, (int)y, screen_x, (int)(y + marking_size),
                                      r, g, b, lineWidth, false);
+                    if ((show_numbers) && (i > 0) && (xx != 0))
+                    {
+                        String number_str = ((int)(xx * 100) / 100.0f).ToString();
+                        float xx2 = xx - ((max_value_x - min_value_x) / 100);
+                        float yy2 = -(max_value_y - min_value_y) / 40;
+                        AddText(number_str, "Arial", 8, r, g, b, xx2, yy2);
+                    }
                     xx += increment_size;
                 }
+
+
                 xx = 0;
                 while (xx > min_value_x)
                 {
@@ -199,17 +276,33 @@ namespace sluggish.utilities.graph
                     drawing.drawLine(image, screen_width, screen_height,
                                      screen_x, (int)y, screen_x, (int)(y + marking_size),
                                      r, g, b, lineWidth, false);
+                    if ((show_numbers) && (i > 0) && (xx != 0))
+                    {
+                        String number_str = ((int)(xx * 100) / 100.0f).ToString();
+                        float xx2 = xx - ((max_value_x - min_value_x) / 100);
+                        float yy2 = -(max_value_y - min_value_y) / 40;
+                        AddText(number_str, "Arial", 8, r, g, b, xx2, yy2);
+                    }
                     xx -= increment_size;
                 }
+
             }
 
             // draw the vertical axis
-            x = (Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width;
+            x = ((0 - min_value_x) / (max_value_x - min_value_x)) * screen_width;
+
+            //x = (Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width;
             drawing.drawLine(image, screen_width, screen_height,
                              (int)x, 0, (int)x, screen_height - 1,
                              r, g, b, lineWidth, false);
 
-            y = (Math.Abs(min_value_y) / (max_value_y - min_value_y)) * screen_width;
+            y = screen_height - 1 - (((0 - min_value_y) / (max_value_y - min_value_y)) * screen_height);
+
+            // show the name of the vertical axis
+            if (horizontal_scale != "")
+                AddText(vertical_scale, "Arial", 10, r, g, b,
+                        (max_value_x - min_value_x) / 150,
+                        min_value_y + ((max_value_y - min_value_y) * 0.98f));
 
             for (int i = 0; i < 2; i++)
             {
@@ -224,16 +317,23 @@ namespace sluggish.utilities.graph
                 float yy = 0;
                 while (yy < max_value_y)
                 {
-                    int screen_y = (int)(y + (yy * screen_height / (max_value_y - min_value_y)));
+                    int screen_y = (int)(screen_height - 1 - (((yy - min_value_y) / (max_value_y - min_value_y)) * screen_height));
                     drawing.drawLine(image, screen_width, screen_height,
                                      (int)x, screen_y, (int)x - marking_size, screen_y,
                                      r, g, b, lineWidth, false);
+                    if ((show_numbers) && (i > 0) && (yy != 0))
+                    {
+                        String number_str = ((int)(yy * 100) / 100.0f).ToString();
+                        float yy2 = yy - ((max_value_y - min_value_y) / 200);
+                        float xx2 = -(max_value_x - min_value_x) / 20;
+                        AddText(number_str, "Arial", 8, r, g, b, xx2, yy2);
+                    }
                     yy += increment_size;
                 }
                 yy = 0;
                 while (yy > min_value_y)
                 {
-                    int screen_y = (int)(y + (yy * screen_height / (max_value_y - min_value_y)));
+                    int screen_y = (int)(screen_height - 1 - (((yy - min_value_y) / (max_value_y - min_value_y)) * screen_height));
                     drawing.drawLine(image, screen_width, screen_height,
                                      (int)x, screen_y, (int)x - marking_size, screen_y,
                                      r, g, b, lineWidth, false);
@@ -241,6 +341,36 @@ namespace sluggish.utilities.graph
                 }
             }
 
+        }
+
+        #endregion
+
+        #region "drawing text"
+
+        /// <summary>
+        /// add some text to the graph at the given position
+        /// </summary>
+        /// <param name="text">text to be added</param>
+        /// <param name="font">font style</param>
+        /// <param name="font_size">font size</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="position_x">x coordinate at which to insert the text</param>
+        /// <param name="position_y">y coordinate at which to insert the text</param>
+        public void AddText(String text,
+                            String font, int font_size,
+                            int r, int g, int b,
+                            float position_x, float position_y)
+        {
+            // convert from graph coordinates into screen coordinates
+            float x = (position_x - min_value_x) * screen_width / (max_value_x - min_value_x);
+            float y = screen_height - 1 - ((position_y - min_value_y) * screen_height / (max_value_y - min_value_y));
+
+            sluggish.utilities.drawing.AddText(image, screen_width, screen_height,
+                                               text, font, font_size,
+                                               r, g, b,
+                                               x, y);
         }
 
         #endregion

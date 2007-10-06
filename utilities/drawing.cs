@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Drawing;
 
 namespace sluggish.utilities
 {
@@ -265,6 +266,7 @@ namespace sluggish.utilities
 
         #endregion
 
+        #region "boxes"
 
         public static void drawBox(Byte[] img, int img_width, int img_height,
                            int x, int y, int radius, int r, int g, int b, int line_width)
@@ -333,6 +335,10 @@ namespace sluggish.utilities
             }
         }
 
+        #endregion
+
+        #region "crosses"
+
         public static void drawCross(Byte[] img, int img_width, int img_height,
                                      int x, int y, int radius, int r, int g, int b, int line_width)
         {
@@ -344,6 +350,10 @@ namespace sluggish.utilities
             drawLine(img, img_width, img_height, x, ty, x, by, r, g, b, line_width, false);
             drawLine(img, img_width, img_height, tx, y, bx, y, r, g, b, line_width, false);
         }
+
+        #endregion
+
+        #region "circles/spots"
 
         public static void drawCircle(Byte[] img, int img_width, int img_height,
                                       int x, int y, int radius, int r, int g, int b, int line_width)
@@ -377,6 +387,9 @@ namespace sluggish.utilities
                 drawCircle(img, img_width, img_height, x, y, rr, r, g, b, 1);
         }
 
+        #endregion
+
+        #region "grids"
 
         /// <summary>
         /// draw a grid within the given image
@@ -465,6 +478,10 @@ namespace sluggish.utilities
 
         }
 
+        #endregion
+
+        #region "lines"
+
         /// <summary>
         /// draw a line within the given image
         /// </summary>
@@ -494,7 +511,7 @@ namespace sluggish.utilities
                 if (x2 >= x1) step_x = 1; else step_x = -1;
                 if (y2 >= y1) step_y = 1; else step_y = -1;
 
-                if ((w < img_width) && (h < img_height))
+                if ((w < img_width + 50) && (h < img_height + 50))
                 {
                     if (w > h)
                     {
@@ -572,5 +589,48 @@ namespace sluggish.utilities
                 }
             }
         }
+
+        #endregion
+
+        #region "text"
+
+        /// <summary>
+        /// add some text to the given image
+        /// </summary>
+        /// <param name="img">colour image into which to insert th text</param>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="text">text to be added</param>
+        /// <param name="font">font style</param>
+        /// <param name="font_size">font size</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="position_x">x coordinate at which to insert the text</param>
+        /// <param name="position_y">y coordinate at which to insert the text</param>
+        public static void AddText(byte[] img, int img_width, int img_height,
+                                   String text,
+                                   String font, int font_size,
+                                   int r, int g, int b,
+                                   float position_x, float position_y)
+        {
+            Bitmap screen_bmp = new Bitmap(img_width, img_height,
+                                           System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            // insert the existing image into the bitmap
+            BitmapArrayConversions.updatebitmap_unsafe(img, screen_bmp);
+
+            Font drawFont = new Font(font, font_size);
+            SolidBrush drawBrush = new SolidBrush(Color.FromArgb(r, g, b));
+
+            Graphics grph = Graphics.FromImage(screen_bmp);
+            grph.DrawString(text, drawFont, drawBrush, position_x, position_y);
+            grph.Dispose();
+
+            // extract the bitmap data
+            BitmapArrayConversions.updatebitmap(screen_bmp, img);
+        }
+
+        #endregion
     }
 }

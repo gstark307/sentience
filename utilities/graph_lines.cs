@@ -92,7 +92,7 @@ namespace sluggish.utilities.graph
                 // draw a line from the previous measurement to the current one
                 drawing.drawLine(image, screen_width, screen_height,
                                  prev_x, prev_y, x, y,
-                                 0, 0, 0, 0, false);
+                                 colour[0], colour[1], colour[2], 0, false);
             }
 
             // record previous measurements
