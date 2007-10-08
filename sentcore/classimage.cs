@@ -34,6 +34,7 @@ namespace sentience.core
         private int tx1, ty1, bx1, by1;
         private int tx2, ty2, bx2, by2;
         private int outer, inner;
+        private float outer_pixels, inner_pixels;
         private float centre_surround_diff;
         private float outer_average, inner_average;
         private int leftside;
@@ -157,23 +158,13 @@ namespace sentience.core
 
 
 
-        private float detectBlob_centreSurround(int x, int y, int blobradius_x, int blobradius_y,
-                                                int diameter_x, int diameter_y, int half_radius_x, int half_radius_y,
-                                                float outer_pixels, float inner_pixels,
+        private float detectBlob_centreSurround(int x, int y, int blobradius_x,
                                                 ref float diff2)
         {
             // get the total pixel intensity for the surround region
-            tx1 = x - blobradius_x;
-            ty1 = y - blobradius_y;
-            bx1 = tx1 + diameter_x;
-            by1 = ty1 + diameter_y;
             outer = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, bx1, by1, width);
             
             // get the total pixel intensity for the centre region
-            tx2 = x - half_radius_x;
-            ty2 = y - half_radius_y;
-            bx2 = tx2 + blobradius_x;
-            by2 = ty2 + blobradius_y;
             inner = sluggish.utilities.image.getIntegral(Integral, tx2, ty2, bx2, by2, width);
                         
             // average pixel intensity for the surround region
@@ -217,7 +208,6 @@ namespace sentience.core
         {
             int i, x, y, hits = 0;
             float average_diff = 0;
-            float outer_pixels, inner_pixels;
             float centre_surround_diff = 0;
             float left_right_diff = 0;
             int diameter_x = blobradius_x * 2;
@@ -241,13 +231,24 @@ namespace sentience.core
 
             for (y = ty; y <= by; y++)
             {
+                ty1 = y - blobradius_y;
+                by1 = ty1 + diameter_y;
+                ty2 = y - half_radius_y;
+                by2 = ty2 + blobradius_y;
+
                 i = 0;
                 for (x = tx; x <= bx; x += step_size)
                 {
+                    // get the total pixel intensity for the surround region
+                    tx1 = x - blobradius_x;
+                    bx1 = tx1 + diameter_x;
+                    tx2 = x - half_radius_x;
+                    bx2 = tx2 + blobradius_x;
+
                     // get the centre/surrounf and left/right responses at this location
                     centre_surround_diff = 
-                        detectBlob_centreSurround(x, y, blobradius_x, blobradius_y, diameter_x, diameter_y,
-                                                  half_radius_x, half_radius_y, outer_pixels, inner_pixels, ref left_right_diff);
+                        detectBlob_centreSurround(x, y, blobradius_x, 
+                                                  ref left_right_diff);
 
                     // magnitude of the local centre/surround difference
                     float abs_centre_surround_diff = centre_surround_diff;

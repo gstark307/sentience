@@ -486,7 +486,7 @@ namespace sentience.core
         /// </summary>
         /// <param name="head">head configuration</param>
         /// <param name="camera_index">index number for the stereo camera</param>
-        /// <returns></returns>
+        /// <returns>list of evidence rays</returns>
         public ArrayList createObservation(stereoHead head, int camera_index)
         {
             ArrayList result = new ArrayList();
@@ -501,7 +501,6 @@ namespace sentience.core
             // calculate observational uncertainty as a standard deviation
             // of half a pixel
             sigma = 1.0f / (image_width * 1) * FOV_horizontal;
-            //sigma *= image_width / 320; // makes the uncertainty invariant of resolution
 
             // some head geometry
             pos3D headOrientation = head.cameraPosition[camera_index];
