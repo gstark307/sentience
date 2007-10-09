@@ -276,7 +276,8 @@ namespace sentience.core
                 mean_variance = 0;
                 for (int col = 0; col < 3; col++)
                     mean_variance += max_level[col] - min_level[col];
-                mean_variance /= (3 * 255.0f);
+                //mean_variance /= (3 * 255.0f);
+                mean_variance *= 0.001307189542483660130718954248366f;
 
                 // calculate the average colour
                 for (int col = 0; col < 3; col++)
@@ -335,55 +336,6 @@ namespace sentience.core
                                                    distilled[z].colour[col]) / 2);
             }
         }
-
-        /// <summary>
-        /// distill particles for this pose down into single values
-        /// </summary>
-        /// <param name="pose">the best pose from which to create the probability</param>
-        /// <param name="x">x coordinate in cells</param>
-        /// <param name="y">y coordinate in cells</param>
-        /// <param name="updateExistingValues">update existing distilled values or create new ones</param>
-        /*
-        public void Distill(particlePose pose, int x, int y, 
-                            bool updateExistingValues)
-        {
-            float[] colour = new float[3];
-            float mean_variance = 0;
-
-            if ((distilled == null) || (!updateExistingValues))
-                distilled = new particleGridCellBase[Hypothesis.Length];
-
-            for (int z = 0; z < Hypothesis.Length; z++)
-            {                
-                // get the distilled probability
-                float probLogOdds = GetProbability(pose, x, y, z, true, colour, ref mean_variance);
-                if (probLogOdds != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
-                {
-                    if (distilled[z] == null)
-                    {
-                        // create a new distilled value
-                        distilled[z] = new particleGridCellBase();
-                        distilled[z].probabilityLogOdds = probLogOdds;
-
-                        // and update the distilled colour value
-                        distilled[z].colour = new Byte[3];
-                        for (int col = 0; col < 3; col++)
-                            distilled[z].colour[col] = (Byte)colour[col];
-                    }
-                    else
-                    {
-                        // update an existing distilled value
-                        distilled[z].probabilityLogOdds += probLogOdds;
-
-                        // and update the distilled colour value
-                        for (int col = 0; col < 3; col++)
-                            distilled[z].colour[col] = (Byte)((colour[col] + distilled[z].colour[col]) / 2);
-                    }
-                }
-            }
-            isDistilled = true;
-        }
-        */
 
         /// <summary>
         /// sets distilled probability values

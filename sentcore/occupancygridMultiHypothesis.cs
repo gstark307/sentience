@@ -35,6 +35,10 @@ namespace sentience.core
     {
         #region "variables"
 
+        // lookup table for log odds calculations
+        private const int LOG_ODDS_LOOKUP_LEVELS = 1000;
+        private float[] LogOdds;
+
         // random number generator
         private MersenneTwister rnd = new MersenneTwister(100);
 
@@ -104,6 +108,10 @@ namespace sentience.core
             gaussianLookup = stereoModel.createHalfGaussianLookup(10);
 
             garbage = new List<occupancygridCellMultiHypothesis>();
+
+            // create a lookup table for log odds calculations, to avoid having
+            // to run slow Log calculations at runtime
+            LogOdds = probabilities.CreateLogOddsLookup(LOG_ODDS_LOOKUP_LEVELS);
         }
 
         /// <summary>
@@ -137,18 +145,59 @@ namespace sentience.core
 
         #region "sensor model"
 
+        private float[] vacancy_model_lookup;
+
+        /// <summary>
+        /// creates a loouk table for the cacancy part of the ray model
+        /// This avoids having to run slow Exp functions
+        /// </summary>
+        /// <param name="min_vacancy_probability"></param>
+        /// <param name="max_vacancy_probability"></param>
+        /// <param name="levels"></param>
+        private void CreateVacancyModelLookup(float min_vacancy_probability, 
+                                              float max_vacancy_probability,
+                                              int levels)
+        {
+            vacancy_model_lookup = new float[levels];
+            for (int i = 0; i < levels; i++)
+            {
+                float fraction = i / (float)levels;
+                vacancy_model_lookup[i] = 
+                    vacancyFunction(fraction, levels, 
+                                    min_vacancy_probability, max_vacancy_probability);
+            }
+        }
+
         /// <summary>
         /// function for vacancy within the sensor model
         /// </summary>
         /// <param name="fraction">fractional distance along the vacancy part of the ray model</param>
         /// <param name="steps"></param>
         /// <returns></returns>
-        private float vacancyFunction(float fraction, int steps)
+        private float vacancyFunction(float fraction, int steps,
+                                      float min_vacancy_probability, 
+                                      float max_vacancy_probability)
         {
-            float min_vacancy_probability = 0.1f;
-            float max_vacancy_probability = vacancy_weighting;
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
+            return (prob);
+        }
+
+        /// <summary>
+        /// vacancy part of the ray model
+        /// </summary>
+        /// <param name="fraction"></param>
+        /// <param name="steps"></param>
+        /// <returns></returns>
+        private float vacancyFunction(float fraction, int steps)
+        {
+            if (vacancy_model_lookup == null)
+            {
+                float min_vacancy_probability = 0.1f;
+                float max_vacancy_probability = vacancy_weighting;
+                CreateVacancyModelLookup(min_vacancy_probability, max_vacancy_probability, 1000);
+            }
+            float prob = vacancy_model_lookup[(int)(fraction * (vacancy_model_lookup.Length-1))];
             return (0.5f - (prob / steps));
         }
 
@@ -317,7 +366,8 @@ namespace sentience.core
 
                 colour_difference += Math.Abs(c1 - c2);
             }
-            colour_difference /= (6 * 255.0f);
+            //colour_difference /= (6 * 255.0f);
+            colour_difference *= 0.0006535947712418f;
 
             return (colour_difference);
         }
@@ -361,7 +411,7 @@ namespace sentience.core
                 float colour_probability = 1.0f  - colour_difference;
 
                 // localisation matching probability, expressed as log odds
-                value = probabilities.LogOdds(occupancy_probability * colour_probability);
+                value = LogOdds[(int)(occupancy_probability * colour_probability * LOG_ODDS_LOOKUP_LEVELS)];
             }
             return (value);
         }

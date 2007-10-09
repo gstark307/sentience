@@ -42,6 +42,22 @@ namespace sluggish.utilities
         }
 
         /// <summary>
+        /// creates a lookup table for log odds, to avoid having to do slow Log calculations
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
+        public static float[] CreateLogOddsLookup(int levels)
+        {
+            float[] lookup = new float[levels + 1];
+            for (int i = 0; i < levels; i++)
+            {
+                float probability = i / levels;
+                lookup[i] = LogOdds(probability);
+            }
+            return (lookup);
+        }
+
+        /// <summary>
         /// convert a log odds value back into a probability value
         /// </summary>
         /// <param name="logodds"></param>

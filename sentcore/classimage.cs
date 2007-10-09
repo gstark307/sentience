@@ -35,6 +35,7 @@ namespace sentience.core
         private int tx2, ty2, bx2, by2;
         private int outer, inner;
         private float outer_pixels, inner_pixels;
+        private float inv_inner_pixels, inv_outer_pixels;
         private float centre_surround_diff;
         private float outer_average, inner_average;
         private int leftside;
@@ -168,10 +169,10 @@ namespace sentience.core
             inner = sluggish.utilities.image.getIntegral(Integral, tx2, ty2, bx2, by2, width);
                         
             // average pixel intensity for the surround region
-            outer_average = (outer - inner) / outer_pixels;
+            outer_average = (outer - inner) * inv_outer_pixels;
             
             // average pixel intensity for the centre region
-            inner_average = inner / inner_pixels;
+            inner_average = inner * inv_inner_pixels;
             
             // difference between the centre and surround
             centre_surround_diff = outer_average - inner_average;
@@ -180,7 +181,7 @@ namespace sentience.core
             leftside = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, tx1 + blobradius_x, by1, width);
                         
             // difference between left and right 
-            diff2 = ((leftside*2) - outer) * 2 / outer_pixels;
+            diff2 = ((leftside*2) - outer) * 2 * inv_outer_pixels;
 
             //note: don't bother trying above/below comparisons, it only degrades the results
 
@@ -219,9 +220,11 @@ namespace sentience.core
 
             // number of pixels in the surround region
             outer_pixels = (diameter_x * diameter_y) - (blobradius_x * blobradius_y);
-            
+            inv_outer_pixels = 1.0f / outer_pixels;
+
             // number of pixels in the centre region
             inner_pixels = blobradius_x * blobradius_y;
+            inv_inner_pixels = 1.0f / inner_pixels;
 
             // ensure that the region of interest is sensible
             if (tx < blobradius_x) tx = blobradius_x;

@@ -620,6 +620,7 @@ namespace sentience.core
             int max_disp = max_disparity * (wdth / step_size) / 100;
             int searchfactor = 4;
             int max_disp2 = max_disp / searchfactor;
+            int max_wdth = wdth / searchfactor;
 
             // for each row of the image
             for (y = 0; y < hght / vertical_compression; y++)
@@ -635,7 +636,7 @@ namespace sentience.core
                         {
                             scalepoints_left[scale, 0] = 0;
                             scalepoints_right[scale, 0] = 0;
-                            for (x = 0; x < wdth / searchfactor; x++)
+                            for (x = 0; x < max_wdth; x++)
                                 scalepoints_lookup[scale, x, 0] = 0;
                         }
                         
@@ -709,10 +710,10 @@ namespace sentience.core
                                             scalepoints_right[scale, 0]++;
 
                                             x2 = x / searchfactor;
-                                            //for (int xx = x2 - max_disp2; xx < x2 + max_disp2; xx++)
+                                            //for (int xx = x2 - max_disp2; xx < x2 + max_disp2; xx++)                                            
                                             for (int xx = x2; xx < x2 + max_disp2; xx++)
                                             {
-                                                if ((xx > -1) && (xx < wdth / searchfactor))
+                                                if ((xx > -1) && (xx < max_wdth))
                                                 {
                                                     int idx2 = scalepoints_lookup[scale, xx, 0] + 1;
                                                     scalepoints_lookup[scale, xx, idx2] = idx;
@@ -809,9 +810,11 @@ namespace sentience.core
             }
 
             // update disparity map
-            for (y = 0; y < hght / (vertical_compression * disparity_map_compression); y++)
-            {
-                for (x = 0; x < wdth / (step_size * disparity_map_compression); x++)
+            int max_w = wdth / (step_size * disparity_map_compression);
+            int max_h = hght / (vertical_compression * disparity_map_compression);
+            for (y = 0; y < max_h; y++)
+            {                
+                for (x = 0; x < max_w; x++)
                 {
                     float disp = disparity_map[x, y];
                     if (disp < 0)
