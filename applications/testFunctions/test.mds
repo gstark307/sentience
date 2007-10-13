@@ -2,41 +2,42 @@
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="CombineConfiguration">
       <Entry build="True" name="test" configuration="Debug" />
-      <Entry build="True" name="selfopt" configuration="Debug" />
-      <Entry build="True" name="FASTcorners" configuration="Debug" />
       <Entry build="True" name="memcompressor" configuration="Debug" />
       <Entry build="True" name="pathplanner" configuration="Debug" />
       <Entry build="True" name="sentcore" configuration="Debug" />
       <Entry build="True" name="utilities" configuration="Debug" />
+      <Entry build="True" name="selfopt" configuration="Debug" />
+      <Entry build="True" name="FASTcorners" configuration="Debug" />
     </Configuration>
     <Configuration name="Release" ctype="CombineConfiguration">
       <Entry build="True" name="test" configuration="Release" />
-      <Entry build="True" name="selfopt" configuration="Release" />
-      <Entry build="True" name="FASTcorners" configuration="Release" />
       <Entry build="True" name="memcompressor" configuration="Release" />
       <Entry build="True" name="pathplanner" configuration="Release" />
       <Entry build="True" name="sentcore" configuration="Release" />
       <Entry build="True" name="utilities" configuration="Release" />
+      <Entry build="True" name="selfopt" configuration="Release" />
+      <Entry build="True" name="FASTcorners" configuration="Release" />
     </Configuration>
   </Configurations>
   <StartMode startupentry="test" single="True">
     <Execute type="None" entry="test" />
     <Execute type="None" entry="utilities" />
     <Execute type="None" entry="selfopt" />
-    <Execute type="None" entry="FASTcorners" />
     <Execute type="None" entry="memcompressor" />
     <Execute type="None" entry="memcompressor" />
     <Execute type="None" entry="pathplanner" />
     <Execute type="None" entry="sentcore" />
     <Execute type="None" entry="utilities" />
+    <Execute type="None" entry="selfopt" />
+    <Execute type="None" entry="FASTcorners" />
   </StartMode>
   <Entries>
     <Entry filename="./test.mdp" />
-    <Entry filename="../../../selfopt/selfopt.mdp" />
-    <Entry filename="../../../FASTcorners/FASTcorners.mdp" />
     <Entry filename="../../MemCompressor/memcompressor.mdp" />
     <Entry filename="../../pathplanner/pathplanner.mdp" />
     <Entry filename="../../sentcore/sentcore.mdp" />
     <Entry filename="../../utilities/utilities.mdp" />
+    <Entry filename="../../selfopt/selfopt.mdp" />
+    <Entry filename="../../FASTcorners/FASTcorners.mdp" />
   </Entries>
 </Combine>
