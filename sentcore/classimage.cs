@@ -17,8 +17,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define VISUALISATION
+
 using System;
 using sluggish.utilities;
+
 
 namespace sentience.core
 {
@@ -29,6 +32,10 @@ namespace sentience.core
 
         public Byte[] image;
         private int[] Integral;
+
+#if VISUALISATION
+        public float[,] blobs;
+#endif
 
         // variables used by the blob detector
         private int tx1, ty1, bx1, by1;
@@ -69,6 +76,9 @@ namespace sentience.core
 
             image = new Byte [width * height];
             Integral = new int [width * height];
+#if VISUALISATION
+            blobs = new float[width, height];
+#endif
         }
 
 
@@ -232,6 +242,12 @@ namespace sentience.core
             if (bx > width - blobradius_x - 1) ty = width - blobradius_x - 1;
             if (by > height - blobradius_y - 1) by = height - blobradius_y - 1;
 
+#if VISUALISATION
+            for (y = ty; y <= by; y++)
+                for (x = tx; x <= bx; x += step_size)
+                    blobs[x, y] = 0;
+#endif
+
             for (y = ty; y <= by; y++)
             {
                 ty1 = y - blobradius_y;
@@ -248,10 +264,14 @@ namespace sentience.core
                     tx2 = x - half_radius_x;
                     bx2 = tx2 + blobradius_x;
 
-                    // get the centre/surrounf and left/right responses at this location
+                    // get the centre/surround and left/right responses at this location
                     centre_surround_diff = 
                         detectBlob_centreSurround(x, y, blobradius_x, 
                                                   ref left_right_diff);
+
+#if VISUALISATION
+                    blobs[x, y] += centre_surround_diff;
+#endif
 
                     // magnitude of the local centre/surround difference
                     float abs_centre_surround_diff = centre_surround_diff;

@@ -436,6 +436,11 @@ namespace WindowsApplication1
             BitmapArrayConversions.updatebitmap_unsafe(img_rays, (Bitmap)picRays.Image);
         }
 
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
         /*
         private void test_trial_poses()
         {

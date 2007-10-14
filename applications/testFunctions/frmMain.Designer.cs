@@ -43,6 +43,7 @@ namespace WindowsApplication1
             this.multipleStereoRaysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pathPlanningToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.motionModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.picRays)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -117,6 +118,8 @@ namespace WindowsApplication1
             // 
             // fileToolStripMenuItem
             // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -168,6 +171,13 @@ namespace WindowsApplication1
             this.motionModelToolStripMenuItem.Text = "Motion Model";
             this.motionModelToolStripMenuItem.Click += new System.EventHandler(this.motionModelToolStripMenuItem_Click);
             // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -209,6 +219,7 @@ namespace WindowsApplication1
         private System.Windows.Forms.ToolStripMenuItem multipleStereoRaysToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pathPlanningToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem motionModelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
     }
 }
 
