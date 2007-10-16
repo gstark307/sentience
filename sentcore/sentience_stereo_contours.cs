@@ -339,7 +339,7 @@ namespace sentience.core
             int search_y = map_hght / 5;
             if (search_y < 1) search_y = 1;
 
-            float[,] new_disparity_map = new float[map_wdth, map_hght];
+            float[,] new_disparity_map = new float[disparity_map.GetLength(0), disparity_map.GetLength(1)];
             for (int x = 2; x < map_wdth - 2; x++)
                 for (int y = 0; y < map_hght; y++)
                 {
@@ -393,7 +393,7 @@ namespace sentience.core
             int search_y = map_hght / 5;
             if (search_y < 1) search_y = 1;
 
-            float[,] new_disparity_map = new float[map_wdth, map_hght];
+            float[,] new_disparity_map = new float[disparity_map.GetLength(0), disparity_map.GetLength(1)];
             for (int x = 2; x < map_wdth-2; x++)
                 for (int y = 0; y < map_hght; y++)
                 {
@@ -810,11 +810,11 @@ namespace sentience.core
             }
 
             // update disparity map
-            int max_w = wdth / (step_size * disparity_map_compression);
-            int max_h = hght / (vertical_compression * disparity_map_compression);
-            for (y = 0; y < max_h; y++)
+            int compressed_wdth = wdth / (step_size * disparity_map_compression);
+            int compressed_hght = hght / (vertical_compression * disparity_map_compression);
+            for (y = 0; y < compressed_hght; y++)
             {                
-                for (x = 0; x < max_w; x++)
+                for (x = 0; x < compressed_wdth; x++)
                 {
                     float disp = disparity_map[x, y];
                     if (disp < 0)
@@ -839,16 +839,16 @@ namespace sentience.core
             {
                 if ((roll > -Math.PI/8) && (roll < Math.PI/8))
                     // conventional horizontal stereo camera mounting
-                    smoothDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
+                    smoothDisparityMap(compressed_wdth, compressed_hght);
                 else
                 {
                     // rolled camera mounting
                     if (roll < 0)
-                        smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 1);
+                        smoothDisparityMapSlanted(compressed_wdth, compressed_hght, 1);
                     else
-                        smoothDisparityMapSlanted(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 0);
+                        smoothDisparityMapSlanted(compressed_wdth, compressed_hght, 0);
                 }
-            }            
+            }
             
 
             //update the selected features
