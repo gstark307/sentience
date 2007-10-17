@@ -71,12 +71,13 @@ namespace sentience.core
             xml.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "0.5");
 
             xml.AddComment(doc, nodeSensorModels, "Model Data");
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
             for (int d = 0; d < dimension_disparity; d++)
             {
                 String dataStr = "";
                 for (int i = 0; i < length[d]; i++)
                 {
-                    dataStr += Convert.ToString(probability[d, i]);
+                    dataStr += Convert.ToString(probability[d, i], format);
                     if (i < length[d] - 1) dataStr += ",";
                 }
                 if (dataStr != "")
@@ -138,6 +139,7 @@ namespace sentience.core
             init((rayModelsData.Count / 2) + 1, ray_model_normal_length);
 
             // insert the data into the array
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
             for (int i = 0; i < rayModelsData.Count; i++)
             {
                 int d = i + 2; // we add 2 here because the first two slots
@@ -147,7 +149,7 @@ namespace sentience.core
                     String[] dataStr = ((String)rayModelsData[i]).Split(',');
                     length[d] = dataStr.Length;
                     for (int j = 0; j < dataStr.Length; j++)
-                        probability[d, j] = Convert.ToSingle(dataStr[j]);
+                        probability[d, j] = Convert.ToSingle(dataStr[j], format);
                 }
             }
         }

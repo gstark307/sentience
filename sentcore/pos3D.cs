@@ -172,15 +172,16 @@ namespace sentience.core
         /// <returns>an xml element</returns>
         public XmlElement getXml(XmlDocument doc)
         {
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
             XmlElement elem = doc.CreateElement("PositionOrientation");
             xml.AddComment(doc, elem, "Position in millimetres");
-            xml.AddTextElement(doc, elem, "PositionMillimetres", Convert.ToString(x) + "," +
-                                                       Convert.ToString(y) + "," +
-                                                       Convert.ToString(z));
+            xml.AddTextElement(doc, elem, "PositionMillimetres", Convert.ToString(x, format) + "," +
+                                                                 Convert.ToString(y, format) + "," +
+                                                                 Convert.ToString(z, format));
             xml.AddComment(doc, elem, "Orientation in degrees - pan, tilt and roll");
-            xml.AddTextElement(doc, elem, "OrientationDegrees", Convert.ToString(pan / (float)Math.PI * 180.0f) + "," +
-                                                                 Convert.ToString(tilt / (float)Math.PI * 180.0f) + "," +
-                                                                 Convert.ToString(roll / (float)Math.PI * 180.0f));
+            xml.AddTextElement(doc, elem, "OrientationDegrees", Convert.ToString(pan / (float)Math.PI * 180.0f, format) + "," +
+                                                                Convert.ToString(tilt / (float)Math.PI * 180.0f, format) + "," +
+                                                                Convert.ToString(roll / (float)Math.PI * 180.0f, format));
             return (elem);
         }
 
@@ -195,18 +196,20 @@ namespace sentience.core
 
             if (xnod.Name == "PositionMillimetres")
             {
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                 String[] dimStr = xnod.InnerText.Split(',');
-                x = Convert.ToSingle(dimStr[0]);
-                y = Convert.ToSingle(dimStr[1]);
-                z = Convert.ToSingle(dimStr[2]);
+                x = Convert.ToSingle(dimStr[0], format);
+                y = Convert.ToSingle(dimStr[1], format);
+                z = Convert.ToSingle(dimStr[2], format);
             }
 
             if (xnod.Name == "OrientationDegrees")
             {
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                 String[] dimStr = xnod.InnerText.Split(',');
-                pan = Convert.ToSingle(dimStr[0]) / 180.0f * (float)Math.PI;
-                tilt = Convert.ToSingle(dimStr[1]) / 180.0f * (float)Math.PI;
-                roll = Convert.ToSingle(dimStr[2]) / 180.0f * (float)Math.PI;
+                pan = Convert.ToSingle(dimStr[0], format) / 180.0f * (float)Math.PI;
+                tilt = Convert.ToSingle(dimStr[1], format) / 180.0f * (float)Math.PI;
+                roll = Convert.ToSingle(dimStr[2], format) / 180.0f * (float)Math.PI;
             }
 
             // call recursively on all children of the current node

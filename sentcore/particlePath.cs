@@ -532,13 +532,14 @@ namespace sentience.core
 
             xml.AddComment(doc, nodePath, "The path through which the robot has moved, as an X,Y coordinate");
             xml.AddComment(doc, nodePath, "in millimetres followed by the heading in degrees");
-             
+
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
             for (int i = 0; i < path.Count; i++)
             {
                 particlePose pose = path[i];
-                xml.AddTextElement(doc, nodePath, "Pose", Convert.ToString(pose.x) + "," +
-                                                           Convert.ToString(pose.y) + "," +
-                                                           Convert.ToString(pose.pan * 180 / Math.PI));
+                xml.AddTextElement(doc, nodePath, "Pose", Convert.ToString(pose.x, format) + "," +
+                                                           Convert.ToString(pose.y, format) + "," +
+                                                           Convert.ToString(pose.pan * 180 / Math.PI, format));
             }
 
             return (nodePath);
@@ -622,10 +623,11 @@ namespace sentience.core
 
             if (xnod.Name == "Pose")
             {
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                 String[] poseStr = xnod.InnerText.Split(',');
-                particlePose new_pose = new particlePose(Convert.ToSingle(poseStr[0]),
-                                                         Convert.ToSingle(poseStr[1]),
-                                                         Convert.ToSingle(poseStr[2])*(float)Math.PI/180.0f, null);
+                particlePose new_pose = new particlePose(Convert.ToSingle(poseStr[0], format),
+                                                         Convert.ToSingle(poseStr[1], format),
+                                                         Convert.ToSingle(poseStr[2], format)*(float)Math.PI/180.0f, null);
                 Add(new_pose);
             }
 

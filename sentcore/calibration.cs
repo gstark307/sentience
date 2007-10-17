@@ -2946,13 +2946,14 @@ namespace sentience.calibration
         /// <returns>an xml element</returns>
         public XmlElement getXml(XmlDocument doc)
         {
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
             String coefficients = "";
             if (fitter != null)
-            {
+            {                
                 int degree = fitter.GetDegree();
                 for (int i = 0; i <= degree; i++)
                 {
-                    coefficients += Convert.ToString(fitter.Coeff(i));
+                    coefficients += Convert.ToString(fitter.Coeff(i), format);
                     if (i < degree) coefficients += ",";
                 }
             }
@@ -2963,11 +2964,11 @@ namespace sentience.calibration
             xml.AddComment(doc, elem, "Horizontal field of view of the camera in degrees");
             xml.AddTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(camera_FOV_degrees));
             xml.AddComment(doc, elem, "Image dimensions in pixels");
-            xml.AddTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width) + "," + Convert.ToString(image_height));
+            xml.AddTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width, format) + "," + Convert.ToString(image_height, format));
             if (centre_of_distortion != null)
             {
                 xml.AddComment(doc, elem, "The centre of distortion in pixels");
-                xml.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion.x) + "," + Convert.ToString(centre_of_distortion.y));
+                xml.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion.x, format) + "," + Convert.ToString(centre_of_distortion.y, format));
             }
             xml.AddComment(doc, elem, "Polynomial coefficients used to describe the camera lens distortion");
             xml.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
@@ -2994,28 +2995,31 @@ namespace sentience.calibration
 
             if (xnod.Name == "ImageDimensions")
             {
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                 String[] dimStr = xnod.InnerText.Split(',');
-                image_width = Convert.ToInt32(dimStr[0]);
-                image_height = Convert.ToInt32(dimStr[1]);
+                image_width = Convert.ToInt32(dimStr[0], format);
+                image_height = Convert.ToInt32(dimStr[1], format);
             }
 
             if (xnod.Name == "CentreOfDistortion")
             {
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                 String[] centreStr = xnod.InnerText.Split(',');
                 centre_of_distortion = new calibration_point(
-                    Convert.ToSingle(centreStr[0]),
-                    Convert.ToSingle(centreStr[1]));
+                    Convert.ToSingle(centreStr[0], format),
+                    Convert.ToSingle(centreStr[1], format));
             }
 
             if (xnod.Name == "DistortionCoefficients")
             {
                 if (xnod.InnerText != "")
                 {
+                    IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                     String[] coeffStr = xnod.InnerText.Split(',');
                     fitter = new polynomial();
                     fitter.SetDegree(coeffStr.Length - 1);
                     for (int i = 0; i < coeffStr.Length; i++)
-                        fitter.SetCoeff(i, Convert.ToSingle(coeffStr[i]));
+                        fitter.SetCoeff(i, Convert.ToSingle(coeffStr[i], format));
                 }
             }
 

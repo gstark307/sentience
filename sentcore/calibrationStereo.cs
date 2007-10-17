@@ -145,8 +145,9 @@ namespace sentience.calibration
 
             if (no_of_cameras > 1)
             {
-                String offsets = Convert.ToString(offset_x) + "," +
-                                 Convert.ToString(offset_y);
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
+                String offsets = Convert.ToString(offset_x, format) + "," +
+                                 Convert.ToString(offset_y, format);
                 xml.AddComment(doc, nodeCalibration, "Image offsets in pixels due to small missalignment from parallel");
                 xml.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
             }
@@ -256,9 +257,10 @@ namespace sentience.calibration
 
                 if (xnod.Name == "Offsets")
                 {
+                    IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                     String[] offsets = xnod.InnerText.Split(',');
-                    offset_x = Convert.ToSingle(offsets[0]);
-                    offset_y = Convert.ToSingle(offsets[1]);
+                    offset_x = Convert.ToSingle(offsets[0], format);
+                    offset_y = Convert.ToSingle(offsets[1], format);
                 }
 
                 if (xnod.Name == "FocalLengthMillimetres")

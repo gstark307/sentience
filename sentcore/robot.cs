@@ -500,10 +500,11 @@ namespace sentience.core
         {
             this.TuningParameters = parameters;
 
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
             String[] tuningParams = parameters.Split(',');
             float[] tuningParameters = new float[tuningParams.Length];
             for (int i = 0; i < tuningParams.Length; i++)
-                tuningParameters[i] = Convert.ToSingle(tuningParams[i]);
+                tuningParameters[i] = Convert.ToSingle(tuningParams[i], format);
 
             // Motion model culling threshold
             for (int i = 0; i < mapping_threads; i++) motion[i].cull_threshold = (int)tuningParameters[0];

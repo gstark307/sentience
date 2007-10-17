@@ -732,10 +732,11 @@ namespace sentience.core
             xml.AddComment(doc, nodeSensorModel, "The number of time steps after which a pose is considered to be mature");
             xml.AddTextElement(doc, nodeSensorModel, "MaturationTimeSteps", Convert.ToString(pose_maturation));
 
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
             String noise = "";
             for (int i = 0; i < motion_noise.Length; i++)
             {
-                noise += Convert.ToString(motion_noise[i]);
+                noise += Convert.ToString(motion_noise[i], format);
                 if (i < motion_noise.Length - 1) noise += ",";
             }
             xml.AddComment(doc, nodeSensorModel, "Motion noise (standard deviations)");
@@ -835,10 +836,11 @@ namespace sentience.core
 
             if (xnod.Name == "MotionNoise")
             {
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                 String[] noise = xnod.InnerText.Split(',');
                 motion_noise = new float[noise.Length];
                 for (int i = 0; i < noise.Length; i++)
-                    motion_noise[i] = Convert.ToSingle(noise[i]);
+                    motion_noise[i] = Convert.ToSingle(noise[i], format);
             }
         
             // call recursively on all children of the current node

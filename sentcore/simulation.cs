@@ -456,6 +456,8 @@ namespace sentience.core
 
         public XmlElement getXml(XmlDocument doc, XmlElement parent)
         {
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
+
             XmlElement nodeSimulation = doc.CreateElement("Simulation");
             parent.AppendChild(nodeSimulation);
 
@@ -485,9 +487,9 @@ namespace sentience.core
 
                     xml.AddComment(doc, nodePathSegment, "The initial pose of the robot at the beginning of this path segment");
                     xml.AddComment(doc, nodePathSegment, "X,Y position in millimetres, followed by heading in degrees");
-                    xml.AddTextElement(doc, nodePathSegment, "InitialPose", Convert.ToString(segment.x) + "," +
-                                                               Convert.ToString(segment.y) + "," +
-                                                               Convert.ToString(segment.pan * 180.0f / Math.PI));
+                    xml.AddTextElement(doc, nodePathSegment, "InitialPose", Convert.ToString(segment.x, format) + "," +
+                                                               Convert.ToString(segment.y, format) + "," +
+                                                               Convert.ToString(segment.pan * 180.0f / Math.PI, format));
                     xml.AddComment(doc, nodePathSegment, "The number of steps which this segment consists of");
                     xml.AddTextElement(doc, nodePathSegment, "NumberOfSteps", Convert.ToString(segment.no_of_steps));
                     xml.AddComment(doc, nodePathSegment, "The distance of each step in millimetres");
@@ -614,8 +616,9 @@ namespace sentience.core
             }
             if (xnod.Name == "HeadingChangePerStep")
             {
+                IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
                 float temp_pan_per_step = Convert.ToSingle(xnod.InnerText) * (float)Math.PI / 180.0f;
-                Add(Convert.ToSingle(temp_poseStr[0]), Convert.ToSingle(temp_poseStr[1]), Convert.ToSingle(temp_poseStr[2])*(float)Math.PI/180.0f,
+                Add(Convert.ToSingle(temp_poseStr[0], format), Convert.ToSingle(temp_poseStr[1], format), Convert.ToSingle(temp_poseStr[2], format)*(float)Math.PI/180.0f,
                     temp_no_of_steps, temp_dist_per_step, temp_pan_per_step);
             }
             
