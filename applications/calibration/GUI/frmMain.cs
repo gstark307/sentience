@@ -28,6 +28,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
 using DirectX.Capture;
 using sentience.calibration;
 using sentience.core;
@@ -923,6 +924,7 @@ namespace WindowsApplication1
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveCalibrationSetup(calibration_setup_filename);
+            Process.GetCurrentProcess().Kill();
         }
 
         private void picOutput1_MouseMove(object sender, MouseEventArgs e)

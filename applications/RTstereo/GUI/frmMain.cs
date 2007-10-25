@@ -28,6 +28,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
 using DirectX.Capture;
 using sluggish.utilities;
 using sluggish.utilities.timing;
@@ -958,6 +959,11 @@ namespace WindowsApplication1
         private void loadCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenCalibrationFile();
+        }
+
+        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Process.GetCurrentProcess().Kill();
         }
 
     }

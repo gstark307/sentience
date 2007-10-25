@@ -113,7 +113,7 @@ namespace WindowsApplication1
             this.loadCalibrationToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // openBackgroundToolStripMenuItem
@@ -147,7 +147,7 @@ namespace WindowsApplication1
             this.raysToolStripMenuItem,
             this.linesToolStripMenuItem});
             this.viewMenuItem.Name = "viewMenuItem";
-            this.viewMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.viewMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewMenuItem.Text = "View";
             // 
             // stereoFeaturesToolStripMenuItem
@@ -155,42 +155,42 @@ namespace WindowsApplication1
             this.stereoFeaturesToolStripMenuItem.Checked = true;
             this.stereoFeaturesToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.stereoFeaturesToolStripMenuItem.Name = "stereoFeaturesToolStripMenuItem";
-            this.stereoFeaturesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.stereoFeaturesToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.stereoFeaturesToolStripMenuItem.Text = "Stereo Features";
             this.stereoFeaturesToolStripMenuItem.Click += new System.EventHandler(this.stereoFeaturesToolStripMenuItem_Click);
             // 
             // roboRadarToolStripMenuItem
             // 
             this.roboRadarToolStripMenuItem.Name = "roboRadarToolStripMenuItem";
-            this.roboRadarToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.roboRadarToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.roboRadarToolStripMenuItem.Text = "Robo Radar";
             this.roboRadarToolStripMenuItem.Click += new System.EventHandler(this.roboRadarToolStripMenuItem_Click);
             // 
             // disparityMapToolStripMenuItem
             // 
             this.disparityMapToolStripMenuItem.Name = "disparityMapToolStripMenuItem";
-            this.disparityMapToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.disparityMapToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.disparityMapToolStripMenuItem.Text = "Disparity Map";
             this.disparityMapToolStripMenuItem.Click += new System.EventHandler(this.disparityMapToolStripMenuItem_Click);
             // 
             // nearbyObjectsToolStripMenuItem
             // 
             this.nearbyObjectsToolStripMenuItem.Name = "nearbyObjectsToolStripMenuItem";
-            this.nearbyObjectsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.nearbyObjectsToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.nearbyObjectsToolStripMenuItem.Text = "Nearby Objects";
             this.nearbyObjectsToolStripMenuItem.Click += new System.EventHandler(this.nearbyObjectsToolStripMenuItem_Click);
             // 
             // raysToolStripMenuItem
             // 
             this.raysToolStripMenuItem.Name = "raysToolStripMenuItem";
-            this.raysToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.raysToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.raysToolStripMenuItem.Text = "Rays";
             this.raysToolStripMenuItem.Click += new System.EventHandler(this.raysToolStripMenuItem_Click);
             // 
             // linesToolStripMenuItem
             // 
             this.linesToolStripMenuItem.Name = "linesToolStripMenuItem";
-            this.linesToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.linesToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.linesToolStripMenuItem.Text = "Lines";
             this.linesToolStripMenuItem.Click += new System.EventHandler(this.linesToolStripMenuItem_Click);
             // 
@@ -200,20 +200,20 @@ namespace WindowsApplication1
             this.startSentienceToolStripMenuItem,
             this.startSimulationToolStripMenuItem});
             this.videoToolStripMenuItem.Name = "videoToolStripMenuItem";
-            this.videoToolStripMenuItem.Size = new System.Drawing.Size(45, 20);
+            this.videoToolStripMenuItem.Size = new System.Drawing.Size(49, 20);
             this.videoToolStripMenuItem.Text = "Video";
             // 
             // startSentienceToolStripMenuItem
             // 
             this.startSentienceToolStripMenuItem.Name = "startSentienceToolStripMenuItem";
-            this.startSentienceToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.startSentienceToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.startSentienceToolStripMenuItem.Text = "Start Sentience";
             this.startSentienceToolStripMenuItem.Click += new System.EventHandler(this.startSentienceToolStripMenuItem_Click);
             // 
             // startSimulationToolStripMenuItem
             // 
             this.startSimulationToolStripMenuItem.Name = "startSimulationToolStripMenuItem";
-            this.startSimulationToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.startSimulationToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.startSimulationToolStripMenuItem.Text = "Start Simulation";
             this.startSimulationToolStripMenuItem.Click += new System.EventHandler(this.startSimulationToolStripMenuItem_Click);
             // 
@@ -222,13 +222,13 @@ namespace WindowsApplication1
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.recordImagesToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // recordImagesToolStripMenuItem
             // 
             this.recordImagesToolStripMenuItem.Name = "recordImagesToolStripMenuItem";
-            this.recordImagesToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.recordImagesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.recordImagesToolStripMenuItem.Text = "Record Images";
             this.recordImagesToolStripMenuItem.Click += new System.EventHandler(this.recordImagesToolStripMenuItem_Click);
             // 
@@ -552,6 +552,7 @@ namespace WindowsApplication1
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmMain";
             this.Text = "Sentience Demo:  Real time stereo correspondence using webcams";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
