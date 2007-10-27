@@ -33,6 +33,9 @@ namespace sentience.core
         public Byte[] image;
         private int[] Integral;
 
+        private float[] row_average;
+        private float[] column_average;
+
 #if VISUALISATION
         public float[,] blobs;
 #endif
@@ -76,6 +79,10 @@ namespace sentience.core
 
             image = new Byte [width * height];
             Integral = new int [width * height];
+            
+            row_average = new float[height];
+            column_average = new float[width];
+
 #if VISUALISATION
             blobs = new float[width, height];
 #endif
@@ -98,6 +105,14 @@ namespace sentience.core
         public void updateIntegralImage()
         {
             sluggish.utilities.image.updateIntegralImage(image, width, height, Integral);
+
+            // calculate the average pixel intensity for each row
+            for (int y = 1; y < height; y++)
+                row_average[y] = sluggish.utilities.image.getIntegral(Integral, 0, y-1, width - 1, y, width) / width;
+
+            // calculate the average intensity for each column
+            for (int x = 1; x < width; x++)
+                column_average[x] = sluggish.utilities.image.getIntegral(Integral, x-1, 0, x, height - 1, width) / height;
         }
 
         /// <summary>
@@ -161,7 +176,7 @@ namespace sentience.core
         /// <param name="points">array to be populated with responses</param>
         /// <returns></returns>
         public int detectBlobs(int scale, int blobradius_x, int blobradius_y,
-                               int step_size, float[,] points, byte[,] scales, byte[,] pattern)
+                               int step_size, float[,,] points, byte[,] scales, byte[,] pattern)
         {
             int average_diff = detectBlobs(scale, blobradius_x, blobradius_y, blobradius_x, blobradius_y, width - blobradius_x - 1 - step_size, height - blobradius_y - 1 - step_size, step_size, points, scales, pattern);
             return (average_diff);
@@ -170,7 +185,9 @@ namespace sentience.core
 
 
         private float detectBlob_centreSurround(int x, int y, int blobradius_x,
-                                                ref float diff2)
+                                                ref float diff2, 
+                                                ref float diff_row, 
+                                                ref float diff_column)
         {
             // get the total pixel intensity for the surround region
             outer = sluggish.utilities.image.getIntegral(Integral, tx1, ty1, bx1, by1, width);
@@ -195,6 +212,12 @@ namespace sentience.core
 
             //note: don't bother trying above/below comparisons, it only degrades the results
 
+            // difference from the average row intensity
+            diff_row = inner_average - row_average[y];
+
+            // difference from teh average column intensity
+            diff_column = inner_average - column_average[x];
+
             return (centre_surround_diff);
         }
 
@@ -215,12 +238,14 @@ namespace sentience.core
         /// <returns>average blob response (centre/surround magnitude)</returns>
         public int detectBlobs(int scale, int blobradius_x, int blobradius_y,
                                int tx, int ty, int bx, int by,
-                               int step_size, float[,] points, byte[,] scales, byte[,] pattern)
+                               int step_size, float[,,] points, byte[,] scales, byte[,] pattern)
         {
             int i, x, y, hits = 0;
             float average_diff = 0;
             float centre_surround_diff = 0;
             float left_right_diff = 0;
+            float row_diff = 0;
+            float column_diff = 0;
             int diameter_x = blobradius_x * 2;
             int diameter_y = blobradius_y * 2;
             int half_radius_x = blobradius_x / 2;
@@ -267,7 +292,9 @@ namespace sentience.core
                     // get the centre/surround and left/right responses at this location
                     centre_surround_diff = 
                         detectBlob_centreSurround(x, y, blobradius_x, 
-                                                  ref left_right_diff);
+                                                  ref left_right_diff,
+                                                  ref row_diff,
+                                                  ref column_diff);
 
 #if VISUALISATION
                     blobs[x, y] += centre_surround_diff;
@@ -282,7 +309,7 @@ namespace sentience.core
                     if (abs_left_right_diff < 0) abs_left_right_diff = -abs_left_right_diff;
                     
                     // get the current highest magnitude response at this location
-                    float abs_best_response = points[y, i];
+                    float abs_best_response = points[y, i, 0];
                     if (abs_best_response < 0) abs_best_response = -abs_best_response;
 
                     // which is magnitude is largest ?
@@ -295,7 +322,9 @@ namespace sentience.core
                             (abs_centre_surround_diff > abs_best_response))
                         {
                             // record the difference value, scale and the type of pattern (centre/surround comparisson)
-                            points[y, i] = centre_surround_diff;
+                            points[y, i, 0] = centre_surround_diff;
+                            points[y, i, 1] = row_diff;
+                            points[y, i, 2] = column_diff;
                             scales[y, i] = (byte)scale;
                             pattern[y, i] = sentience_stereo_contours.PATTERN_CENTRE_SURROUND;
                         }
@@ -307,7 +336,9 @@ namespace sentience.core
                             (abs_left_right_diff > abs_best_response))
                         {
                             // record the difference value, scale and the type of pattern (left/right comparisson)
-                            points[y, i] = left_right_diff; 
+                            points[y, i, 0] = left_right_diff;
+                            points[y, i, 1] = row_diff;
+                            points[y, i, 2] = column_diff;
                             scales[y, i] = (byte)scale;
                             pattern[y, i] = sentience_stereo_contours.PATTERN_LEFT_RIGHT;
                         }
