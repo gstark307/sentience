@@ -621,7 +621,8 @@ namespace sentience.core
             int searchfactor = 4;
             int max_disp2 = max_disp / searchfactor;
             int max_wdth = wdth / searchfactor;
-
+            
+            
             // for each row of the image
             for (y = 0; y < hght / vertical_compression; y++)
             {
@@ -631,14 +632,14 @@ namespace sentience.core
                     // at present there are only two patterns: centre/surround and left/right                    
                     for (int currPattern = PATTERN_CENTRE_SURROUND; currPattern <= PATTERN_LEFT_RIGHT; currPattern++)
                     {
-                        // clear the number of points
+                        // clear the number of points                        
                         for (scale = 0; scale < no_of_scales; scale++)
                         {
                             scalepoints_left[scale, 0] = 0;
                             scalepoints_right[scale, 0] = 0;
                             for (x = 0; x < max_wdth; x++)
                                 scalepoints_lookup[scale, x, 0] = 0;
-                        }
+                        } 
                         
                         int ww = wdth / step_size;
                         for (x = 0; x < ww; x++)
@@ -721,7 +722,6 @@ namespace sentience.core
                                                     scalepoints_right[scale, 0]++;
 
                                                     x2 = x / searchfactor;
-                                                    //for (int xx = x2 - max_disp2; xx < x2 + max_disp2; xx++)                                            
                                                     for (int xx = x2; xx < x2 + max_disp2; xx++)
                                                     {
                                                         if ((xx > -1) && (xx < max_wdth))
@@ -747,7 +747,7 @@ namespace sentience.core
                             }
                         }
 
-                        // stereo match
+                        // stereo match                        
                         for (scale = 0; scale < no_of_scales; scale++)
                         {
                             int no_of_points_left = scalepoints_left[scale, 0];
@@ -810,15 +810,17 @@ namespace sentience.core
                                     confidence /= (no_of_scales - scale);
                                     confidence *= confidence;
                                     int mx = (x_left + disp) / disparity_map_compression;
-                                    int my = y / disparity_map_compression;
+                                    int my = y / disparity_map_compression;                                    
                                     updateDisparityMap(mx, my,
                                                        wdth / (step_size * disparity_map_compression),
                                                        hght / (vertical_compression * disparity_map_compression),
-                                                       scale, disp * step_size, confidence);
+                                                       scale, disp * step_size, confidence);                                    
                                 }
                             }
 
                         }
+                         
+                        
                     }
 
                 }
@@ -865,12 +867,9 @@ namespace sentience.core
                         smoothDisparityMapSlanted(compressed_wdth, compressed_hght, 0);
                 }
             }
-            
-
+                        
             //update the selected features
-            getSelectedFeatures(wdth, hght);
-
-
+            getSelectedFeatures(wdth, hght);            
         }
 
         #endregion
