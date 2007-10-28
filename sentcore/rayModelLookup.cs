@@ -36,7 +36,7 @@ namespace sentience.core
     public sealed class rayModelLookup
     {
         // stores the sensor models
-        public float[,] probability = null;
+        public float[][] probability = null;
 
         // the length of each sensor model, given as an array index
         public int[] length = null;
@@ -48,7 +48,9 @@ namespace sentience.core
         {
             dimension_disparity = max_disparity_pixels * 2;
             dimension_probability = max_sensor_model_length;
-            probability = new float[dimension_disparity, dimension_probability];
+            probability = new float[dimension_disparity][];
+            for (int i = 0; i < probability.Length; i++)
+                probability[i] = new float[dimension_probability];
             length = new int[dimension_disparity];
         }
 
@@ -77,7 +79,7 @@ namespace sentience.core
                 String dataStr = "";
                 for (int i = 0; i < length[d]; i++)
                 {
-                    dataStr += Convert.ToString(probability[d, i], format);
+                    dataStr += Convert.ToString(probability[d][i], format);
                     if (i < length[d] - 1) dataStr += ",";
                 }
                 if (dataStr != "")
@@ -149,7 +151,7 @@ namespace sentience.core
                     String[] dataStr = ((String)rayModelsData[i]).Split(',');
                     length[d] = dataStr.Length;
                     for (int j = 0; j < dataStr.Length; j++)
-                        probability[d, j] = Convert.ToSingle(dataStr[j], format);
+                        probability[d][j] = Convert.ToSingle(dataStr[j], format);
                 }
             }
         }

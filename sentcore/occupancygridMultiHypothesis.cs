@@ -78,10 +78,10 @@ namespace sentience.core
         public bool TurboMode = true;
 
         // cells of the grid
-        occupancygridCellMultiHypothesis[,] cell;
+        occupancygridCellMultiHypothesis[][] cell;
 
         // indicates areas of the grid which are navigable
-        public bool[,] navigable_space;
+        public bool[][] navigable_space;
         
         #endregion
 
@@ -101,8 +101,13 @@ namespace sentience.core
             this.localisation_search_cells = localisationRadius_mm / cellSize_mm;
             this.max_mapping_range_cells = maxMappingRange_mm / cellSize_mm;
             this.vacancy_weighting = vacancyWeighting;
-            cell = new occupancygridCellMultiHypothesis[dimension_cells, dimension_cells];
-            navigable_space = new bool[dimension_cells, dimension_cells];
+            cell = new occupancygridCellMultiHypothesis[dimension_cells][];
+            navigable_space = new bool[dimension_cells][];
+            for (int i = 0; i < cell.Length; i++)
+            {
+                cell[i] = new occupancygridCellMultiHypothesis[dimension_cells];
+                navigable_space[i] = new bool[dimension_cells];
+            }
 
             // make a lookup table for gaussians - saves doing a lot of floating point maths
             gaussianLookup = stereoModel.createHalfGaussianLookup(10);
@@ -220,10 +225,10 @@ namespace sentience.core
             {
                 for (int cell_x = 0; cell_x < dimension_cells; cell_x++)
                 {
-                    if (cell[cell_x, cell_y] != null)
+                    if (cell[cell_x][cell_y] != null)
                     {
                         float mean_variance = 0;
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                        float prob = cell[cell_x][cell_y].GetProbability(pose, cell_x, cell_y,
                                                                          mean_colour, 
                                                                          ref mean_variance);
                         if (prob > 0.5)
@@ -248,7 +253,7 @@ namespace sentience.core
         /// <param name="hypothesis">the hypothesis to be removed from the grid</param>
         public void Remove(particleGridCell hypothesis)
         {
-            occupancygridCellMultiHypothesis c = cell[hypothesis.x, hypothesis.y];
+            occupancygridCellMultiHypothesis c = cell[hypothesis.x][hypothesis.y];
 
             // add this to the list of garbage to be collected
             if (c.garbage_entries == 0)                             
@@ -282,15 +287,15 @@ namespace sentience.core
 
             float[] mean_colour = new float[3];
             float mean_variance = 0;
-            float prob = cell[x, y].GetProbability(pose, x, y,
+            float prob = cell[x][y].GetProbability(pose, x, y,
                                                    mean_colour, 
                                                    ref mean_variance);
             bool state = false;
             if (prob < 0.5f) state = true;
-            navigable_space[x, y] = state;
-            navigable_space[x - 1, y] = state;
-            navigable_space[x - 1, y - 1] = state;
-            navigable_space[x, y - 1] = state;
+            navigable_space[x][y] = state;
+            navigable_space[x - 1][y] = state;
+            navigable_space[x - 1][y - 1] = state;
+            navigable_space[x][y - 1] = state;
         }
 
         #endregion
@@ -303,7 +308,7 @@ namespace sentience.core
         /// <param name="hypothesis"></param>
         public void Distill(particleGridCell hypothesis)
         {
-            occupancygridCellMultiHypothesis c = cell[hypothesis.x, hypothesis.y];
+            occupancygridCellMultiHypothesis c = cell[hypothesis.x][hypothesis.y];
             c.Distill(hypothesis);
             Remove(hypothesis);
 
@@ -394,7 +399,7 @@ namespace sentience.core
             float[] existing_colour = new float[3];
 
             float existing_probability =
-                    cell[x_cell, y_cell].GetProbability(origin, x_cell, y_cell, z_cell,
+                    cell[x_cell][y_cell].GetProbability(origin, x_cell, y_cell, z_cell,
                                                         false, existing_colour, ref colour_variance);
 
             if (existing_probability != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
@@ -654,7 +659,7 @@ namespace sentience.core
                                 // get the probability at this point 
                                 // for the central axis of the ray using the inverse sensor model
                                 if (modelcomponent == OCCUPIED_SENSORMODEL)
-                                    centre_prob = 0.5f + (sensormodel_lookup.probability[sensormodel_index, grid_step] / 2.0f);
+                                    centre_prob = 0.5f + (sensormodel_lookup.probability[sensormodel_index][grid_step] / 2.0f);
                                 else
                                     // calculate the probability from the vacancy model
                                     centre_prob = vacancyFunction(grid_step / (float)steps, steps);
@@ -691,7 +696,7 @@ namespace sentience.core
                                             prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
                                     }
 
-                                    if ((cell[x_cell2, y_cell2] != null) && (withinMappingRange))
+                                    if ((cell[x_cell2][y_cell2] != null) && (withinMappingRange))
                                     {
                                         // only localise using occupancy, not vacancy
                                         if (modelcomponent == OCCUPIED_SENSORMODEL)
@@ -727,10 +732,10 @@ namespace sentience.core
                                         if (origin.AddHypothesis(hypothesis, max_mapping_range_cells, dimension_cells, dimension_cells_vertical))
                                         {
                                             // generate a grid cell if necessary
-                                            if (cell[x_cell2, y_cell2] == null)
-                                                cell[x_cell2, y_cell2] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
+                                            if (cell[x_cell2][y_cell2] == null)
+                                                cell[x_cell2][y_cell2] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
 
-                                            cell[x_cell2, y_cell2].AddHypothesis(hypothesis);                                            
+                                            cell[x_cell2][y_cell2].AddHypothesis(hypothesis);                                            
                                             total_valid_hypotheses++;
                                         }
                                     }
@@ -853,11 +858,11 @@ namespace sentience.core
             {
                 for (int cell_y = 0; cell_y < dimension_cells; cell_y++)
                 {
-                    if (cell[cell_x, cell_y] != null)
+                    if (cell[cell_x][cell_y] != null)
                     {
                         // what's the probability of there being a vertical structure here?
                         float mean_variance = 0;
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
+                        float prob = cell[cell_x][cell_y].GetProbability(pose, cell_x, cell_y,
                                                                        mean_colour, ref mean_variance);
 
                         if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
@@ -865,7 +870,7 @@ namespace sentience.core
                             if (prob > 0.45f)
                             {
                                 // show this vertical grid section
-                                occupancygridCellMultiHypothesis c = cell[cell_x, cell_y];
+                                occupancygridCellMultiHypothesis c = cell[cell_x][cell_y];
                                 for (int cell_z = 0; cell_z < dimension_cells_vertical; cell_z++)
                                 {
                                     mean_variance = 0;
@@ -921,7 +926,7 @@ namespace sentience.core
 
                     int n = ((y * width) + x) * 3;
 
-                    if (cell[cell_x, cell_y] == null)
+                    if (cell[cell_x][cell_y] == null)
                     {
                         // terra incognita
                         for (int c = 0; c < 3; c++)
@@ -931,8 +936,8 @@ namespace sentience.core
                     {
                         // get the probability for this vertical column
                         float mean_variance = 0;
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
-                                                                       mean_colour, ref mean_variance);
+                        float prob = cell[cell_x][cell_y].GetProbability(pose, cell_x, cell_y,
+                                                                         mean_colour, ref mean_variance);
 
                         if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         {
@@ -985,7 +990,7 @@ namespace sentience.core
 
                         int n = ((y * width) + x) * 3;
 
-                        if (navigable_space[cell_x, cell_y])
+                        if (navigable_space[cell_x][cell_y])
                             for (int c = 0; c < 3; c++)
                                 img[n + c] = (Byte)255;
                     }
@@ -1014,7 +1019,7 @@ namespace sentience.core
 
                     int n = ((y * width) + x) * 3;
 
-                    if (cell[cell_x, cell_y] == null)
+                    if (cell[cell_x][cell_y] == null)
                     {
                         for (int c = 0; c < 3; c++)
                             img[n + c] = (Byte)255; // terra incognita
@@ -1022,8 +1027,8 @@ namespace sentience.core
                     else
                     {
                         float mean_variance = 0;
-                        float prob = cell[cell_x, cell_y].GetProbability(pose, cell_x, cell_y,
-                                                                       mean_colour, ref mean_variance);
+                        float prob = cell[cell_x][cell_y].GetProbability(pose, cell_x, cell_y,
+                                                                         mean_colour, ref mean_variance);
 
                         if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                         {
@@ -1147,7 +1152,7 @@ namespace sentience.core
                     {
                         if ((y >= 0) && (y < dimension_cells))
                         {
-                            if (cell[x, y] != null)
+                            if (cell[x][y] != null)
                             {
                                 if (x < tx) tx = x;
                                 if (y < ty) ty = y;
@@ -1186,7 +1191,7 @@ namespace sentience.core
             {
                 for (int x = tx; x < bx; x++)
                 {
-                    if (cell[x, y] != null)
+                    if (cell[x][y] != null)
                     {
                         occupied_cells++;
                         binary_index[n] = true;
@@ -1214,11 +1219,11 @@ namespace sentience.core
                 {
                     for (int x = tx; x < bx; x++)
                     {
-                        if (cell[x, y] != null)
+                        if (cell[x][y] != null)
                         {
                             for (int z = 0; z < dimension_cells_vertical; z++)
                             {
-                                float prob = cell[x, y].GetProbability(pose,x, y, z, 
+                                float prob = cell[x][y].GetProbability(pose,x, y, z, 
                                                                        true, colour, ref mean_variance);
                                 int index = (n * dimension_cells_vertical) + z;
                                 occupancy[index] = prob;
@@ -1262,7 +1267,9 @@ namespace sentience.core
         /// <param name="binfile"></param>
         public void Load(BinaryReader binfile)
         {
-            navigable_space = new bool[dimension_cells, dimension_cells];
+            navigable_space = new bool[dimension_cells][];
+            for (int i = 0; i < dimension_cells; i++)
+                navigable_space[i] = new bool[dimension_cells];
 
             LoadTile(binfile);
         }
@@ -1273,7 +1280,9 @@ namespace sentience.core
         /// <param name="data"></param>
         public void Load(Byte[] data)
         {
-            navigable_space = new bool[dimension_cells, dimension_cells];
+            navigable_space = new bool[dimension_cells][];
+            for (int i = 0; i < dimension_cells; i++)
+                navigable_space[i] = new bool[dimension_cells];
 
             LoadTile(data);
         }
@@ -1322,7 +1331,7 @@ namespace sentience.core
                 {
                     if (binary_index[n])
                     {
-                        cell[x, y] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
+                        cell[x][y] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
                         occupied_cells++;
                     }
                     n++;
@@ -1354,7 +1363,7 @@ namespace sentience.core
                 {
                     for (int x = tx; x < bx; x++)
                     {
-                        if (cell[x, y] != null)
+                        if (cell[x][y] != null)
                         {
                             particleGridCellBase[] distilled = new particleGridCellBase[dimension_cells_vertical];
                             for (int z = 0; z < dimension_cells_vertical; z++)
@@ -1377,7 +1386,7 @@ namespace sentience.core
                                 }
                             }
                             // insert the distilled particles into the grid cell
-                            cell[x, y].SetDistilledValues(distilled);
+                            cell[x][y].SetDistilledValues(distilled);
 
                             // update the navigable space
                             updateNavigableSpace(null, x, y);
@@ -1442,11 +1451,11 @@ namespace sentience.core
                     {
                         if ((y >= 0) && (y < dimension_cells))
                         {
-                            if (cell[x, y] != null)
+                            if (cell[x][y] != null)
                             {
                                 for (int z = 0; z < dimension_cells_vertical; z++)
                                 {
-                                    float prob = cell[x, y].GetProbability(pose, x, y,
+                                    float prob = cell[x][y].GetProbability(pose, x, y,
                                                                            colour, ref mean_variance);
 
                                     if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
@@ -1484,16 +1493,16 @@ namespace sentience.core
                 {
                     for (int x = tx; x < bx; x++)
                     {
-                        if (cell[x, y] != null)
+                        if (cell[x][y] != null)
                         {
-                            float prob = cell[x, y].GetProbability(pose, x, y,
+                            float prob = cell[x][y].GetProbability(pose, x, y,
                                                                    colour, ref mean_variance);
 
                             if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                             {
                                 for (int z = 0; z < dimension_cells_vertical; z++)
                                 {
-                                    prob = cell[x, y].GetProbability(pose, x, y, z, false,
+                                    prob = cell[x][y].GetProbability(pose, x, y, z, false,
                                                                      colour, ref mean_variance);
                                     
                                     if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)

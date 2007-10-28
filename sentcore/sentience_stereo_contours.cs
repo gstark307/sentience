@@ -64,11 +64,11 @@ namespace sentience.core
         public bool[,] attention_map;
 
         ///disparity map
-        public float[,] disparity_map;
+        public float[][] disparity_map;
 
-        public float[,] disparity_hits;
+        public float[][] disparity_hits;
 
-        public int[,] scale_width;
+        public int[][] scale_width;
 
         // step size used to speed up blob detection
         public int step_size = 1;
@@ -95,20 +95,20 @@ namespace sentience.core
         private classimage img_left, img_right;
 
         // blob feature responses
-        private float[,,] wavepoints_left = null;
-        private float[,,] wavepoints_right = null;
+        private float[][][] wavepoints_left = null;
+        private float[][][] wavepoints_right = null;
 
         // blob feature scales
-        private byte[,] wavepoints_left_scale = null;
-        private byte[,] wavepoints_right_scale = null;
+        private byte[][] wavepoints_left_scale = null;
+        private byte[][] wavepoints_right_scale = null;
 
         // blob feature patterns
-        private byte[,] wavepoints_left_pattern = null;
-        private byte[,] wavepoints_right_pattern = null;
+        private byte[][] wavepoints_left_pattern = null;
+        private byte[][] wavepoints_right_pattern = null;
 
-        int[,] scalepoints_left;
-        int[,] scalepoints_right;
-        int[,,] scalepoints_lookup;
+        int[][] scalepoints_left;
+        int[][] scalepoints_right;
+        int[][][] scalepoints_lookup;
 
         Byte[] left_image = null;
 
@@ -147,7 +147,7 @@ namespace sentience.core
         {
             for (int xx = 0; xx < wdth; xx++)
                 for (int yy = 0; yy < hght; yy++)
-                    attention_map[xx, yy] = true;
+                    attention_map[xx,yy] = true;
         }
 
         /// <summary>
@@ -160,8 +160,8 @@ namespace sentience.core
             for (int x = 0; x < map_wdth; x++)
                 for (int y = 0; y < map_hght; y++)
                 {
-                    disparity_map[x, y] = -1;
-                    disparity_hits[x, y] = 0;
+                    disparity_map[x][y] = -1;
+                    disparity_hits[x][y] = 0;
                 }
         }
 
@@ -197,7 +197,7 @@ namespace sentience.core
                 for (int x = 0; x < map_wdth; x++)
                 {
                     // which histogram bucket should this go into
-                    int b = half_levels + (int)(disparity_map[x, y] * half_levels / max_disparity);
+                    int b = half_levels + (int)(disparity_map[x][y] * half_levels / max_disparity);
                     if (b >= histogram_levels) b = histogram_levels - 1;
                     if (b < 0) b = 0;                    
                     
@@ -215,7 +215,7 @@ namespace sentience.core
                 for (int x = 0; x < map_wdth; x++)
                 {
                     if (histogram[bucket[x]] < minimum_response)
-                        disparity_map[x, y] = 0;
+                        disparity_map[x][y] = 0;
                 }
             }
 
@@ -231,7 +231,7 @@ namespace sentience.core
                 for (int y = 0; y < map_hght; y++)
                 {
                     // which histogram bucket should this go into
-                    int b = half_levels + (int)(disparity_map[x, y] * half_levels / max_disparity);
+                    int b = half_levels + (int)(disparity_map[x][y] * half_levels / max_disparity);
                     if (b >= histogram_levels) b = histogram_levels - 1;
                     if (b < 0) b = 0;                    
                     
@@ -249,7 +249,7 @@ namespace sentience.core
                 for (int y = 0; y < map_hght; y++)
                 {
                     if (histogram[bucket[y]] < minimum_response)
-                        disparity_map[x, y] = 0;
+                        disparity_map[x][y] = 0;
                 }
             }
         }
@@ -267,10 +267,10 @@ namespace sentience.core
             for (int y = 2; y < map_hght-1; y++)
             {
                 float prev_value = 0;
-                float value = disparity_map[0, y] * 255 / max_disparity;
+                float value = disparity_map[0][y] * 255 / max_disparity;
                 for (int x = 0; x < map_wdth - 1; x++)
                 {
-                    float next_value = disparity_map[x + 1, y] * 255 / max_disparity;
+                    float next_value = disparity_map[x + 1][y] * 255 / max_disparity;
                     if ((value > 200) && (x > 0))
                     {
                         diff1 = value - prev_value;
@@ -280,40 +280,40 @@ namespace sentience.core
                             if (diff2 > threshold)
                             {
                                 if ((next_value > 0) && (prev_value > 0))
-                                    disparity_map[x, y] = (disparity_map[x + 1, y] + disparity_map[x - 1, y]) / 2;
+                                    disparity_map[x][y] = (disparity_map[x + 1][y] + disparity_map[x - 1][y]) / 2;
                                 else
                                 {
                                     if (next_value > 0)
-                                        disparity_map[x, y] = disparity_map[x + 1, y];
+                                        disparity_map[x][y] = disparity_map[x + 1][y];
                                     else
                                         if (prev_value > 0)
-                                            disparity_map[x, y] = disparity_map[x - 1, y];
+                                            disparity_map[x][y] = disparity_map[x - 1][y];
                                         else
-                                            disparity_map[x, y] = 0;
+                                            disparity_map[x][y] = 0;
                                 }
                             }
                         }
 
-                        float above_value = disparity_map[x, y - 2] * 255 / max_disparity;
-                        float curr_value = disparity_map[x, y - 1] * 255 / max_disparity;
+                        float above_value = disparity_map[x][y - 2] * 255 / max_disparity;
+                        float curr_value = disparity_map[x][y - 1] * 255 / max_disparity;
                         diff1 = curr_value - above_value;
                         if (diff1 > threshold)
                         {
-                            float below_value = disparity_map[x, y] * 255 / max_disparity;
+                            float below_value = disparity_map[x][y] * 255 / max_disparity;
                             diff2 = curr_value - below_value;
                             if (diff2 > threshold)
                             {
                                 if ((above_value > 0) && (below_value > 0))
-                                    disparity_map[x, y - 1] = (disparity_map[x, y - 2] + disparity_map[x, y]) / 2;
+                                    disparity_map[x][y - 1] = (disparity_map[x][y - 2] + disparity_map[x][y]) / 2;
                                 else
                                 {
                                     if (above_value > 0)
-                                        disparity_map[x, y - 1] = disparity_map[x, y - 2];
+                                        disparity_map[x][y - 1] = disparity_map[x][y - 2];
                                     else
                                         if (below_value > 0)
-                                            disparity_map[x, y - 1] = disparity_map[x, y];
+                                            disparity_map[x][y - 1] = disparity_map[x][y];
                                         else
-                                            disparity_map[x, y - 1] = 0;
+                                            disparity_map[x][y - 1] = 0;
                                 }
                             }
                         }
@@ -339,11 +339,13 @@ namespace sentience.core
             int search_y = map_hght / 5;
             if (search_y < 1) search_y = 1;
 
-            float[,] new_disparity_map = new float[disparity_map.GetLength(0), disparity_map.GetLength(1)];
+            float[][] new_disparity_map = new float[disparity_map.Length][];
+            for (int i = 0; i < new_disparity_map.Length; i++) new_disparity_map[i] = new float[disparity_map[0].Length];
+
             for (int x = 2; x < map_wdth - 2; x++)
                 for (int y = 0; y < map_hght; y++)
                 {
-                    float value = disparity_map[x, y];
+                    float value = disparity_map[x][y];
                     if ((value > 0))
                     //&& (value * 255 / max_disparity < 150))
                     {
@@ -358,7 +360,7 @@ namespace sentience.core
                                     int xxx = xx + (slant_direction * (yy - y));
                                     if ((xxx > -1) && (xxx < map_wdth))
                                     {
-                                        float value2 = disparity_map[xxx, yy];
+                                        float value2 = disparity_map[xxx][yy];
                                         if (value2 > 0)
                                         {
                                             float diff = value2 - value;
@@ -373,9 +375,9 @@ namespace sentience.core
                                 }
                             }
                         }
-                        new_disparity_map[x, y] = tot / hits;
+                        new_disparity_map[x][y] = tot / hits;
                     }
-                    else new_disparity_map[x, y] = disparity_map[x, y];
+                    else new_disparity_map[x][y] = disparity_map[x][y];
                 }
             disparity_map = new_disparity_map;
         }
@@ -393,11 +395,13 @@ namespace sentience.core
             int search_y = map_hght / 5;
             if (search_y < 1) search_y = 1;
 
-            float[,] new_disparity_map = new float[disparity_map.GetLength(0), disparity_map.GetLength(1)];
+            float[][] new_disparity_map = new float[disparity_map.Length][];
+            for (int i = 0; i < new_disparity_map.Length; i++) new_disparity_map[i] = new float[disparity_map[0].Length];
+
             for (int x = 2; x < map_wdth-2; x++)
                 for (int y = 0; y < map_hght; y++)
                 {
-                    float value = disparity_map[x, y];
+                    float value = disparity_map[x][y];
                     if ((value > 0))                        
                         //&& (value * 255 / max_disparity < 150))
                     {
@@ -409,7 +413,7 @@ namespace sentience.core
                             {
                                 if ((yy > -1) && (yy < map_hght))
                                 {
-                                    float value2 = disparity_map[xx, yy];
+                                    float value2 = disparity_map[xx][yy];
                                     if (value2 > 0)
                                     {
                                         float diff = value2 - value;
@@ -423,9 +427,9 @@ namespace sentience.core
                                 }
                             }
                         }
-                        new_disparity_map[x, y] = tot / hits;
+                        new_disparity_map[x][y] = tot / hits;
                     }
-                    else new_disparity_map[x, y] = disparity_map[x, y];
+                    else new_disparity_map[x][y] = disparity_map[x][y];
                 }
             disparity_map = new_disparity_map;
         }
@@ -474,9 +478,9 @@ namespace sentience.core
             }
         
             // determine the surround area within which disparity data will be inserted
-            int surround_pixels_x = scale_width[scale, 0]/2;
+            int surround_pixels_x = scale_width[scale][0]/2;
             if (surround_pixels_x < 2) surround_pixels_x = 2;
-            int surround_pixels_y = scale_width[scale, 1]/2;
+            int surround_pixels_y = scale_width[scale][1]/2;
             if (surround_pixels_y < 2) surround_pixels_y = 2;
 
             // create a gaussian lookup table to improve speed if necessary
@@ -507,8 +511,8 @@ namespace sentience.core
                                 float hits = 10 + (gaussian_lookup[gaussian_index] * 100 * confidence);
 
                                 // update the disparity map at this location
-                                disparity_map[xx, yy] += (disparity_value * hits);
-                                disparity_hits[xx, yy] += hits;
+                                disparity_map[xx][yy] += (disparity_value * hits);
+                                disparity_hits[xx][yy] += hits;
                             }
                         }
                     }
@@ -548,15 +552,40 @@ namespace sentience.core
                 img_right = new classimage();
                 img_right.createImage(wdth, hght / vertical_compression);
 
-                wavepoints_left = new float[hght / vertical_compression, wdth / step_size, 3];
-                wavepoints_left_scale = new byte[hght / vertical_compression, wdth / step_size];
-                wavepoints_left_pattern = new byte[hght / vertical_compression, wdth / step_size];
-                wavepoints_right = new float[hght / vertical_compression, wdth / step_size, 3];
-                wavepoints_right_scale = new byte[hght / vertical_compression, wdth / step_size];
-                wavepoints_right_pattern = new byte[hght / vertical_compression, wdth / step_size];
-                scalepoints_left = new int[no_of_scales, wdth + 1];
-                scalepoints_right = new int[no_of_scales, wdth + 1];
-                scalepoints_lookup = new int[no_of_scales, wdth, wdth + 1];
+                wavepoints_left = new float[hght / vertical_compression][][];
+                wavepoints_right = new float[hght / vertical_compression][][];
+                wavepoints_left_scale = new byte[hght / vertical_compression][];
+                wavepoints_left_pattern = new byte[hght / vertical_compression][];
+                wavepoints_right_scale = new byte[hght / vertical_compression][];
+                wavepoints_right_pattern = new byte[hght / vertical_compression][];
+                for (int i = 0; i < wavepoints_left.Length; i++)
+                {
+                    wavepoints_left[i] = new float[wdth / step_size][];
+                    wavepoints_right[i] = new float[wdth / step_size][];
+                    wavepoints_left_scale[i] = new byte[wdth / step_size];
+                    wavepoints_left_pattern[i] = new byte[wdth / step_size];
+                    wavepoints_right_scale[i] = new byte[wdth / step_size];
+                    wavepoints_right_pattern[i] = new byte[wdth / step_size];
+                    for (int j = 0; j < wavepoints_left[i].Length; j++)
+                    {
+                        wavepoints_left[i][j] = new float[3];
+                        wavepoints_right[i][j] = new float[3];
+                    }
+                }
+
+                scalepoints_left = new int[no_of_scales][];
+                scalepoints_right = new int[no_of_scales][];
+                scalepoints_lookup = new int[no_of_scales][][];
+                for (int i = 0; i < no_of_scales; i++)
+                {
+                    scalepoints_left[i] = new int[wdth + 1];
+                    scalepoints_right[i] = new int[wdth + 1];
+                    scalepoints_lookup[i] = new int[wdth][];
+                    for (int j = 0; j < scalepoints_lookup[i].Length; j++)
+                    {
+                        scalepoints_lookup[i][j] = new int[wdth + 1];
+                    }
+                }
 
                 // create an attention map
                 attention_map = new bool[wdth, hght];
@@ -564,17 +593,23 @@ namespace sentience.core
 
                 int w = (wdth / (step_size * disparity_map_compression)) + 1;
                 int h = (hght / (vertical_compression * disparity_map_compression)) + 1;
-                disparity_map = new float[w, h];
-                disparity_hits = new float[w, h];
-                scale_width = new int[no_of_scales, 2];
+                disparity_map = new float[w][];
+                disparity_hits = new float[w][];
+                for (int i = 0; i < w; i++)
+                {
+                    disparity_map[i] = new float[h];
+                    disparity_hits[i] = new float[h];
+                }
+                scale_width = new int[no_of_scales][];
 
                 int sc = 2;
                 for (int s = 0; s < no_of_scales; s++)
                 {
-                    scale_width[s, 0] = (int)(wdth * surround_radius_percent * sc / 100);
-                    if (scale_width[s, 0] < 2) scale_width[s, 0] = 2;
-                    scale_width[s, 1] = (int)((hght / vertical_compression) * surround_radius_percent * sc / 100);
-                    if (scale_width[s, 1] < 2) scale_width[s, 1] = 2;
+                    scale_width[s] = new int[2];
+                    scale_width[s][0] = (int)(wdth * surround_radius_percent * sc / 100);
+                    if (scale_width[s][0] < 2) scale_width[s][0] = 2;
+                    scale_width[s][1] = (int)((hght / vertical_compression) * surround_radius_percent * sc / 100);
+                    if (scale_width[s][1] < 2) scale_width[s][1] = 2;
                     sc++;
                 }
             }
@@ -593,17 +628,21 @@ namespace sentience.core
 
             // update integrals
             img_left.updateIntegralImage();
-            img_right.updateIntegralImage();            
+            img_right.updateIntegralImage();
+
+            // disparity map dimensions
+            int compressed_wdth = wdth / (step_size * disparity_map_compression);
+            int compressed_hght = hght / (vertical_compression * disparity_map_compression);
 
             // clear the disparity map
-            clearDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression));
+            clearDisparityMap(compressed_wdth, compressed_hght);
 
             // update blobs on multiple scales
             for (scale = 0; scale < no_of_scales; scale++)
             {
                 // get x and y radius for this scale
-                int surround_pixels_x = scale_width[scale, 0];
-                int surround_pixels_y = scale_width[scale, 1];
+                int surround_pixels_x = scale_width[scale][0];
+                int surround_pixels_y = scale_width[scale][1];
 
                 // detect blobs at this scale
                 img_left.detectBlobs(scale, surround_pixels_x, surround_pixels_y, step_size, wavepoints_left, wavepoints_left_scale, wavepoints_left_pattern);
@@ -621,8 +660,15 @@ namespace sentience.core
             int searchfactor = 4;
             int max_disp2 = max_disp / searchfactor;
             int max_wdth = wdth / searchfactor;
-            
-            
+
+            // assorted variables
+            int no_of_points_left, no_of_points_right;
+            int disp, x_left, x_left2, x_left3, no_of_candidates;
+            int prev_pattern_left, next_pattern_left, idx2;
+            int x_right, x_right2, x_right3, dx, prev_pattern_right, next_pattern_right;
+            float diff_left, diff_row_left, diff_col_left, min_response_difference;
+            float confidence, diff_right, response_difference;
+                        
             // for each row of the image
             for (y = 0; y < hght / vertical_compression; y++)
             {
@@ -635,25 +681,25 @@ namespace sentience.core
                         // clear the number of points                        
                         for (scale = 0; scale < no_of_scales; scale++)
                         {
-                            scalepoints_left[scale, 0] = 0;
-                            scalepoints_right[scale, 0] = 0;
+                            scalepoints_left[scale][0] = 0;
+                            scalepoints_right[scale][0] = 0;
                             for (x = 0; x < max_wdth; x++)
-                                scalepoints_lookup[scale, x, 0] = 0;
+                                scalepoints_lookup[scale][x][0] = 0;
                         } 
                         
                         int ww = wdth / step_size;
                         for (x = 0; x < ww; x++)
                         {
-                            int pattern = wavepoints_left_pattern[y, x];
+                            int pattern = wavepoints_left_pattern[y][x];
                             if (pattern == currPattern)
                             {
                                 // response value
-                                left_diff = wavepoints_left[y, x, 0];
-                                right_diff = wavepoints_right[y, x, 0];
+                                left_diff = wavepoints_left[y][x][0];
+                                right_diff = wavepoints_right[y][x][0];
                                 if ((x > 0) && ((left_diff != 0) || (right_diff != 0)))
                                 {
-                                    float left_row_diff = wavepoints_left[y, x, 1];
-                                    float right_row_diff = wavepoints_right[y, x, 1];
+                                    float left_row_diff = wavepoints_left[y][x][1];
+                                    float right_row_diff = wavepoints_right[y][x][1];
 
                                     // gradient - change in response along the row
                                     left_grad = left_diff - prev_left_diff;
@@ -662,8 +708,8 @@ namespace sentience.core
                                     if (((left_row_diff > 0) && (right_row_diff > 0)) ||
                                         ((left_row_diff < 0) && (right_row_diff < 0)))
                                     {
-                                        float left_col_diff = wavepoints_left[y, x, 2];
-                                        float right_col_diff = wavepoints_right[y, x, 2];
+                                        float left_col_diff = wavepoints_left[y][x][2];
+                                        float right_col_diff = wavepoints_right[y][x][2];
                                         if (((left_col_diff >= 0) && (right_col_diff >= 0)) ||
                                             ((left_col_diff < 0) && (right_col_diff < 0)))
                                         {
@@ -684,16 +730,16 @@ namespace sentience.core
                                                     )
                                                 {
                                                     // what is the best responding scale ?
-                                                    scale = wavepoints_left_scale[y, x];
+                                                    scale = wavepoints_left_scale[y][x];
 
                                                     // get the current index
-                                                    idx = scalepoints_left[scale, 0] + 1;
+                                                    idx = scalepoints_left[scale][0] + 1;
 
                                                     // set the x position
-                                                    scalepoints_left[scale, idx] = x;
+                                                    scalepoints_left[scale][idx] = x;
 
                                                     // increment the index
-                                                    scalepoints_left[scale, 0]++;
+                                                    scalepoints_left[scale][0]++;
                                                 }
                                             }
 
@@ -710,25 +756,25 @@ namespace sentience.core
                                                     ((sign == 7) && (right_diff < -min_thresh) && (right_grad <= 0) && (right_horizontal_grad_change <= 0))
                                                     )
                                                 {
-                                                    scale = wavepoints_right_scale[y, x];
+                                                    scale = wavepoints_right_scale[y][x];
 
                                                     // get the current index
-                                                    idx = scalepoints_right[scale, 0] + 1;
+                                                    idx = scalepoints_right[scale][0] + 1;
 
                                                     // set the x position
-                                                    scalepoints_right[scale, idx] = x;
+                                                    scalepoints_right[scale][idx] = x;
 
                                                     // increment the index
-                                                    scalepoints_right[scale, 0]++;
+                                                    scalepoints_right[scale][0]++;
 
                                                     x2 = x / searchfactor;
                                                     for (int xx = x2; xx < x2 + max_disp2; xx++)
                                                     {
                                                         if ((xx > -1) && (xx < max_wdth))
                                                         {
-                                                            int idx2 = scalepoints_lookup[scale, xx, 0] + 1;
-                                                            scalepoints_lookup[scale, xx, idx2] = idx;
-                                                            scalepoints_lookup[scale, xx, 0]++;
+                                                            idx2 = scalepoints_lookup[scale][xx][0] + 1;
+                                                            scalepoints_lookup[scale][xx][idx2] = idx;
+                                                            scalepoints_lookup[scale][xx][0]++;
                                                         }
                                                     }
                                                 }
@@ -747,52 +793,53 @@ namespace sentience.core
                             }
                         }
 
-                        // stereo match                        
+                        // stereo match
                         for (scale = 0; scale < no_of_scales; scale++)
                         {
-                            int no_of_points_left = scalepoints_left[scale, 0];
-                            int no_of_points_right = scalepoints_right[scale, 0];
+                            no_of_points_left = scalepoints_left[scale][0];
+                            no_of_points_right = scalepoints_right[scale][0];
                             for (int i = 0; i < no_of_points_left; i++)
                             {
-                                int disp = -1;
+                                disp = -1;
 
                                 // get the position and response magnitude of the left point
-                                int x_left = scalepoints_left[scale, i + 1];
-                                float diff_left = wavepoints_left[y, x_left, 0];
-                                float diff_row_left = wavepoints_left[y, x_left, 1];
-                                float diff_col_left = wavepoints_left[y, x_left, 2];
+                                x_left = scalepoints_left[scale][i + 1];
+                                diff_left = wavepoints_left[y][x_left][0];
+                                diff_row_left = wavepoints_left[y][x_left][1];
+                                diff_col_left = wavepoints_left[y][x_left][2];
 
-                                int x_left2 = x_left - 2;
+                                x_left2 = x_left - 2;
                                 if (x_left2 < 0) x_left2 = 0;
-                                int x_left3 = x_left + 2;
+                                x_left3 = x_left + 2;
                                 if (x_left3 >= ww) x_left3 = ww-1;
-                                int prev_pattern_left = wavepoints_left_pattern[y, x_left2];
-                                int next_pattern_left = wavepoints_left_pattern[y, x_left3];
-                                float min_response_difference = match_threshold;
+                                prev_pattern_left = wavepoints_left_pattern[y][x_left2];
+                                next_pattern_left = wavepoints_left_pattern[y][x_left3];
+                                min_response_difference = match_threshold;
 
                                 x2 = x_left / searchfactor;
-                                int no_of_candidates = scalepoints_lookup[scale, x2, 0];
+                                no_of_candidates = scalepoints_lookup[scale][x2][0];
 
                                 for (int j = 0; j < no_of_candidates; j++)
                                 {
-                                    int idx2 = scalepoints_lookup[scale, x2, j + 1];
+                                    idx2 = scalepoints_lookup[scale][x2][j + 1];
 
-                                    int x_right = scalepoints_right[scale, idx2];
-                                    int dx = x_left - x_right;                                    
+                                    x_right = scalepoints_right[scale][idx2];
+                                    dx = x_left - x_right;                                    
                                     if ((dx > -1) && (dx < max_disp))
                                     {
-                                        int x_right2 = x_right - 2;
+                                        x_right2 = x_right - 2;
                                         if (x_right2 < 0) x_right2 = 0;
-                                        int prev_pattern_right = wavepoints_right_pattern[y, x_right2];
+                                        prev_pattern_right = wavepoints_right_pattern[y][x_right2];
                                         if (prev_pattern_left == prev_pattern_right)
                                         {
-                                            int x_right3 = x_right + 2;
+                                            x_right3 = x_right + 2;
                                             if (x_right3 >= ww) x_right3 = ww - 1;
-                                            int next_pattern_right = wavepoints_right_pattern[y, x_right3];
+                                            next_pattern_right = wavepoints_right_pattern[y][x_right3];
                                             if (next_pattern_left == next_pattern_right)
                                             {
-                                                float diff_right = wavepoints_right[y, x_right, 0];
-                                                float response_difference = Math.Abs(diff_right - diff_left);
+                                                diff_right = wavepoints_right[y][x_right][0];
+                                                response_difference = diff_right - diff_left;
+                                                if (response_difference < 0) response_difference = -response_difference;
                                                 if (response_difference < min_response_difference)
                                                 {
                                                     disp = dx;
@@ -806,14 +853,13 @@ namespace sentience.core
 
                                 if (disp > -1)
                                 {
-                                    float confidence = 1.0f - (min_response_difference / match_threshold);
+                                    confidence = 1.0f - (min_response_difference / match_threshold);
                                     confidence /= (no_of_scales - scale);
                                     confidence *= confidence;
                                     int mx = (x_left + disp) / disparity_map_compression;
                                     int my = y / disparity_map_compression;                                    
                                     updateDisparityMap(mx, my,
-                                                       wdth / (step_size * disparity_map_compression),
-                                                       hght / (vertical_compression * disparity_map_compression),
+                                                       compressed_wdth, compressed_hght,
                                                        scale, disp * step_size, confidence);                                    
                                 }
                             }
@@ -827,26 +873,24 @@ namespace sentience.core
 
             }
 
-            // update disparity map
-            int compressed_wdth = wdth / (step_size * disparity_map_compression);
-            int compressed_hght = hght / (vertical_compression * disparity_map_compression);
+            // update disparity map            
+            float disparity_value;
             for (y = 0; y < compressed_hght; y++)
             {                
                 for (x = 0; x < compressed_wdth; x++)
                 {
-                    float disp = disparity_map[x, y];
-                    if (disp < 0)
+                    disparity_value = disparity_map[x][y];
+                    if (disparity_value < 0)
                     {
-                        disp = 0;
+                        disparity_value = 0;
                     }
                     else
                     {
-                        disp = disp / disparity_hits[x, y];
-                        disparity_map[x, y] = disp;
+                        disparity_value /= disparity_hits[x][y];
+                        disparity_map[x][y] = disparity_value;
                     }
                 }
-            }
-
+            }            
             
             // remove snow            
             //filterDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 10);
@@ -896,7 +940,7 @@ namespace sentience.core
             {
                 int x = rnd.Next(max_x - 1);
                 int y = rnd.Next(max_y - 1);
-                float disp = disparity_map[x, y];
+                float disp = disparity_map[x][y];
                 if (disp > 0)
                 {
                     if (!touched[x, y])
@@ -923,7 +967,7 @@ namespace sentience.core
             // convert to disparity map coordinates
             int xx = x / (step_size * disparity_map_compression);
             int yy = y / (vertical_compression * disparity_map_compression);
-            float pointValue = disparity_map[xx, yy];
+            float pointValue = disparity_map[xx][yy];
             if (pointValue < 0) pointValue = 0;
 
             return (pointValue);
@@ -939,8 +983,8 @@ namespace sentience.core
         {
             if (disparity_map != null)
             {
-                int disparity_map_width = disparity_map.GetLength(0);
-                int disparity_map_height = disparity_map.GetLength(1);
+                int disparity_map_width = disparity_map.Length;
+                int disparity_map_height = disparity_map[0].Length;
 
                 int max_disp = max_disparity * (wdth / step_size) / 100;
                 int n = 0;
@@ -954,7 +998,7 @@ namespace sentience.core
 
                         if ((xx < disparity_map_width) &&
                             (yy < disparity_map_height))
-                            disp = disparity_map[xx, yy];
+                            disp = disparity_map[xx][yy];
 
                         if (disp < 0)
                             disp = 0;
@@ -996,7 +1040,7 @@ namespace sentience.core
                     for (int x = 0; x < wdth; x++)
                     {
                         int xx = x / (step_size * disparity_map_compression);
-                        float disp = disparity_map[xx, yy];
+                        float disp = disparity_map[xx][yy];
                         if (disp < 0)
                             disp = 0;
                         else

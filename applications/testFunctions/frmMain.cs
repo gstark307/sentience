@@ -238,7 +238,9 @@ namespace WindowsApplication1
         {
             int grid_centre_x_mm = 0;
             int grid_centre_y_mm = 0;
-            bool[,] navigable_space = new bool[grid_dimension, grid_dimension];
+            bool[][] navigable_space = new bool[grid_dimension][];
+            for (int j = 0; j < navigable_space.Length; j++)
+                navigable_space[j] = new bool[grid_dimension];
 
             pathplanner planner = new pathplanner(navigable_space, cellSize_mm, grid_centre_x_mm, grid_centre_y_mm);
             
@@ -263,9 +265,9 @@ namespace WindowsApplication1
             {
                 start_x = 1 + rnd.Next(grid_dimension - 3);
                 start_y = 1 + rnd.Next(grid_dimension - 3);
-                if ((navigable_space[start_x, start_y]) && 
-                    (navigable_space[start_x-1, start_y-1]) &&
-                    (navigable_space[start_x - 1, start_y]))
+                if ((navigable_space[start_x][start_y]) && 
+                    (navigable_space[start_x-1][start_y-1]) &&
+                    (navigable_space[start_x - 1][start_y]))
                     found = true;
                 i++;
             }
@@ -277,9 +279,9 @@ namespace WindowsApplication1
                 {
                     finish_x = 1 + rnd.Next(grid_dimension - 3);
                     finish_y = 1 + rnd.Next(grid_dimension - 3);
-                    if ((navigable_space[finish_x, finish_y]) &&
-                        (navigable_space[finish_x-1, finish_y-1]) &&
-                        (navigable_space[finish_x - 1, finish_y]))
+                    if ((navigable_space[finish_x][finish_y]) &&
+                        (navigable_space[finish_x-1][finish_y-1]) &&
+                        (navigable_space[finish_x - 1][finish_y]))
                         found = true;
                     i++;
                 }

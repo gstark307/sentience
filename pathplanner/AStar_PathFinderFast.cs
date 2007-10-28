@@ -38,7 +38,7 @@ namespace sentience.pathplanner
 
         #region Variables Declaration
         // Heap variables are initializated to default, but I like to do it anyway
-        private byte[,] mGrid = null;
+        private byte[][] mGrid = null;
         private AStar_PriorityQueueB<int> mOpen = null;
         private List<AStar_PathFinderNode> mClose = new List<AStar_PathFinderNode>();
         private bool mStop = false;
@@ -79,14 +79,14 @@ namespace sentience.pathplanner
         #endregion
 
         #region Constructors
-        public AStar_PathFinderFast(byte[,] grid)
+        public AStar_PathFinderFast(byte[][] grid)
         {
             if (grid == null)
                 throw new Exception("Grid cannot be null");
 
             mGrid = grid;
-            mGridX = (ushort)(mGrid.GetUpperBound(0) + 1);
-            mGridY = (ushort)(mGrid.GetUpperBound(1) + 1);
+            mGridX = (ushort)(mGrid.Length);
+            mGridY = (ushort)(mGrid[0].Length);
             mGridXMinus1 = (ushort)(mGridX - 1);
             mGridYLog2 = (ushort)Math.Log(mGridY, 2);
 
@@ -255,7 +255,7 @@ namespace sentience.pathplanner
                         if (mCalcGrid[mNewLocation].Status == mCloseNodeValue && !mReopenCloseNodes)
                             continue;
 
-                        Byte gridValue = (Byte)(255 - mGrid[mNewLocationX, mNewLocationY]);
+                        Byte gridValue = (Byte)(255 - mGrid[mNewLocationX][mNewLocationY]);
                         if (gridValue < 1) gridValue = 1;
 
                         // Unbreakeable?

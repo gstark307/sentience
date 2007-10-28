@@ -35,7 +35,7 @@ namespace sentience.pathplanner
         public int max_search_range_mm = 500;
 
         // pointer to the navigable space map within an occupancy grid object
-        public bool[,] navigable_space;
+        public bool[][] navigable_space;
 
         // whether to apply smoothing to the path or not
         public bool pathSmoothing = true;
@@ -45,7 +45,7 @@ namespace sentience.pathplanner
 
         // an array which indicates how safe the available navigable space is
         // safe areas are as far as possible from areas of high occupancy probability
-        private Byte[,] navigable_safety;
+        private Byte[][] navigable_safety;
         private int safety_offset = 0;
 
         // A* path finder object
@@ -60,7 +60,7 @@ namespace sentience.pathplanner
         /// <param name="cellSize_mm">size of each occupancy grid cell in millimetres</param>
         /// <param name="OccupancyGridCentre_x_mm">location of the centre of the occupancy grid in millimetres</param>
         /// <param name="OccupancyGridCentre_y_mm">location of the centre of the occupancy grid in millimetres</param>
-        public pathplanner(bool[,] navigable_space, int cellSize_mm,
+        public pathplanner(bool[][] navigable_space, int cellSize_mm,
                            float OccupancyGridCentre_x_mm, float OccupancyGridCentre_y_mm)
         {
             this.cellSize_mm = cellSize_mm;
@@ -85,7 +85,9 @@ namespace sentience.pathplanner
             }
 
             // create a safety array, to remain friendly            
-            navigable_safety = new Byte[safe_dimension, safe_dimension];
+            navigable_safety = new Byte[safe_dimension][];
+            for (int j = 0; j < navigable_safety.Length; j++)
+                navigable_safety[j] = new Byte[safe_dimension];
 
             pathfinder = new AStar_PathFinderFast(navigable_safety);
         }
@@ -96,7 +98,7 @@ namespace sentience.pathplanner
         /// <param name="navigable_space"></param>
         /// <param name="OccupancyGridCentre_x_mm"></param>
         /// <param name="OccupancyGridCentre_y_mm"></param>
-        public void init(bool[,] navigable_space,
+        public void init(bool[][] navigable_space,
                     float OccupancyGridCentre_x_mm, float OccupancyGridCentre_y_mm)
         {
             this.navigable_space = navigable_space;
@@ -121,7 +123,7 @@ namespace sentience.pathplanner
         {
             for (int x = tx; x <= bx; x++)
                 for (int y = ty; y <= by; y++)
-                    navigable_space[x, y] = true;
+                    navigable_space[x][y] = true;
         }
 
         #endregion
@@ -151,13 +153,13 @@ namespace sentience.pathplanner
                     if ((yy > -1) && (yy < dimension))
                     {
                         if (xx > -1)
-                            if (!navigable_space[xx, yy])
+                            if (!navigable_space[xx][yy])
                                 found = true;
                         if (!found)
                         {
                             xx = x + radius;
                             if (xx < dimension)
-                                if (!navigable_space[xx, yy])
+                                if (!navigable_space[xx][yy])
                                     found = true;
                         }
                     }
@@ -172,13 +174,13 @@ namespace sentience.pathplanner
                     if ((xx > -1) && (xx < dimension))
                     {
                         if (yy > -1)
-                            if (!navigable_space[xx, yy])
+                            if (!navigable_space[xx][yy])
                                 found = true;
                         if (!found)
                         {
                             yy = y + radius;
                             if (yy < dimension)
-                                if (!navigable_space[xx, yy])
+                                if (!navigable_space[xx][yy])
                                     found = true;
                         }
                     }
@@ -208,14 +210,14 @@ namespace sentience.pathplanner
             {
                 for (int y = ty; y <= by; y++)
                 {
-                    if (navigable_space[x, y])
+                    if (navigable_space[x][y])
                     {
                         Byte safety = 255;
                         int closest = closestObstacle(x, y, max_range_cells);
                         if (closest > -1)
                             safety = (Byte)(155 + (closest * 100 / max_range_cells));
 
-                        navigable_safety[x + safety_offset, y + safety_offset] = safety;
+                        navigable_safety[x + safety_offset][y + safety_offset] = safety;
                     }
                 }
             }
@@ -377,9 +379,9 @@ namespace sentience.pathplanner
 
                     int n = ((y * width) + x) * 3;
 
-                    if (navigable_space[cell_x, cell_y])
+                    if (navigable_space[cell_x][cell_y])
                     {
-                        Byte safety = navigable_safety[cell_x + safety_offset, cell_y + safety_offset];
+                        Byte safety = navigable_safety[cell_x + safety_offset][cell_y + safety_offset];
                         for (int c = 0; c < 3; c++)
                             img[n + c] = safety;
                     }

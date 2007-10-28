@@ -193,17 +193,17 @@ namespace sentience.core
                         for (int j = prev_index; j < next_index; j++)
                         {
                             // is there a DJ in the house ?
-                            total_probability += ray_model.probability[d, j];
+                            total_probability += ray_model.probability[d][j];
                         }
                         if (total_probability > 0)
-                            new_ray_model.probability[d, i] = total_probability;
+                            new_ray_model.probability[d][i] = total_probability;
                         prev_index = next_index;
                     }
                     new_ray_model.length[d] = ray_model.length[d] * new_ray_model.dimension_probability / ray_model.dimension_probability;
 
                     // if there's only one grid cell give it the full probability
                     // (it's gotta be in there somewhere!)
-                    if (new_ray_model.length[d] == 1) new_ray_model.probability[d, 0] = 1.0f;
+                    if (new_ray_model.length[d] == 1) new_ray_model.probability[d][0] = 1.0f;
                 }
 
                 // finally swap the arrays
@@ -334,7 +334,7 @@ namespace sentience.core
                                     if (cellval > min_prob)
                                     {
                                         if (start == -1) start = l;
-                                        ray_model.probability[(int)(disparity_pixels * 2), l - start] = cellval;
+                                        ray_model.probability[(int)(disparity_pixels * 2)][l - start] = cellval;
                                         if (cellval > max)
                                         {
                                             max = cellval;
@@ -360,7 +360,7 @@ namespace sentience.core
                                     {
                                         if ((j >= 0) && (j < ray_model_max_length))
                                         {
-                                            value += ((j - (i - radius)) * ray_model.probability[(int)(disparity_pixels * 2), j]);
+                                            value += ((j - (i - radius)) * ray_model.probability[(int)(disparity_pixels * 2)][j]);
                                             hits++;
                                         }
                                     }
@@ -368,8 +368,8 @@ namespace sentience.core
                                     probvalues[i] = value;
                                 }
                                 for (int i = 0; i < ray_model_max_length; i++)
-                                    if (ray_model.probability[(int)(disparity_pixels * 2), i] > max / 200.0f)
-                                        ray_model.probability[(int)(disparity_pixels * 2), i] = probvalues[i];
+                                    if (ray_model.probability[(int)(disparity_pixels * 2)][i] > max / 200.0f)
+                                        ray_model.probability[(int)(disparity_pixels * 2)][i] = probvalues[i];
                             }
                         }
                     }
@@ -1057,12 +1057,12 @@ namespace sentience.core
             {
                 for (int i = 0; i < ray_model.length[disparity_pixels]; i++)
                 {
-                    if (ray_model.probability[disparity_pixels, i] > 0)
+                    if (ray_model.probability[disparity_pixels][i] > 0)
                     {
                         if (i > max_length) max_length = i;
 
-                        if (ray_model.probability[disparity_pixels, i] > max_value)
-                            max_value = ray_model.probability[disparity_pixels, i];
+                        if (ray_model.probability[disparity_pixels][i] > max_value)
+                            max_value = ray_model.probability[disparity_pixels][i];
                     }
                 }
             }
@@ -1077,21 +1077,21 @@ namespace sentience.core
                     float prev_value = -1;
                     for (int i = 0; i < ray_model.length[disparity_pixels]; i++)
                     {
-                        if (ray_model.probability[disparity_pixels, i] != prev_value)
+                        if (ray_model.probability[disparity_pixels][i] != prev_value)
                         {
                             if (i > 0)
                             {
                                 int x = i * img_width / max_length;
-                                int y = (int)(ray_model.probability[disparity_pixels, i] * img_height / max_value);
+                                int y = (int)(ray_model.probability[disparity_pixels][i] * img_height / max_value);
                                 if (y >= img_height) y = img_height - 1;
                                 y = img_height - 1 - y;
                                 int prev_x = prev_i * img_width / max_length;
-                                int prev_y = (int)(ray_model.probability[disparity_pixels, prev_i] * img_height / max_value);
+                                int prev_y = (int)(ray_model.probability[disparity_pixels][prev_i] * img_height / max_value);
                                 if (prev_y >= img_height) prev_y = img_height - 1;
                                 prev_y = img_height - 1 - prev_y;
                                 drawing.drawLine(img, img_width, img_height, prev_x, prev_y, x, y, 0, 0, 0, 0, false);
                             }
-                            prev_value = ray_model.probability[disparity_pixels, i];
+                            prev_value = ray_model.probability[disparity_pixels][i];
                             prev_i = i;
                         }
                     }
