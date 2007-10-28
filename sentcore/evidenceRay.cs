@@ -231,18 +231,18 @@ namespace sentience.core
             rotated_ray.vertices[0].z = vertices[0].z;
 
             rotated_ray.vertices[1] = new pos3D(0, 0, 0);
-            rotated_ray.vertices[1].x = translation_x + ((start_dist+length) * (float)Math.Sin(new_pan_angle));
-            rotated_ray.vertices[1].y = translation_y + ((start_dist+length) * (float)Math.Cos(new_pan_angle));
+            rotated_ray.vertices[1].x = translation_x + ((start_dist + length) * (float)Math.Sin(new_pan_angle));
+            rotated_ray.vertices[1].y = translation_y + ((start_dist + length) * (float)Math.Cos(new_pan_angle));
             rotated_ray.vertices[1].z = vertices[1].z;
 
             rotated_ray.pan_angle = new_pan_angle;
-            rotated_ray.pan_index = (int)(new_pan_angle * pan_steps / (2 * 3.1415927f));
+            rotated_ray.pan_index = (int)(new_pan_angle * pan_steps / 6.2831854f);
             rotated_ray.length = length;
             rotated_ray.width = width;
             rotated_ray.start_dist = start_dist;
             rotated_ray.disparity = disparity;
 
-            for (int col = 0; col < 3; col++)
+            for (int col = 2; col >= 0; col--)
                 rotated_ray.colour[col] = colour[col];
 
             return (rotated_ray);

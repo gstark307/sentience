@@ -265,12 +265,12 @@ namespace sentience.core
                                      ref right_camera_location);
             
             // itterate for each stereo camera
-            int cam = 0;
-            while (cam < stereo_rays.Length)
+            int cam = stereo_rays.Length - 1;
+            while (cam >= 0)
             {
                 // itterate through each ray
-                int r = 0;
-                while (r < stereo_rays[cam].Count)
+                int r = stereo_rays[cam].Count - 1;
+                while (r >= 0)
                 {
                     // observed ray.  Note that this is in an egocentric
                     // coordinate frame relative to the head of the robot
@@ -294,9 +294,9 @@ namespace sentience.core
                             localisation_score += score;
                         else
                             localisation_score = score;
-                    r++;
+                    r--;
                 }
-                cam++;
+                cam--;
             }
 
             return (localisation_score);
@@ -312,7 +312,7 @@ namespace sentience.core
         /// <param name="grid">grid from which this pose is to be removed</param>
         public void Remove(occupancygridMultiHypothesis grid)
         {
-            for (int i = 0; i < observed_grid_cells.Count; i++)
+            for (int i = observed_grid_cells.Count-1; i >= 0; i--)
             {
                 particleGridCell hypothesis = observed_grid_cells[i];
                 grid.Remove(hypothesis);
@@ -329,7 +329,7 @@ namespace sentience.core
         /// <param name="grid"></param>
         public void Distill(occupancygridMultiHypothesis grid)
         {
-            for (int i = 0; i < observed_grid_cells.Count; i++)
+            for (int i = observed_grid_cells.Count-1; i >= 0; i--)
             {
                 particleGridCell hypothesis = observed_grid_cells[i];
                 grid.Distill(hypothesis);

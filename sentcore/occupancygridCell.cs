@@ -145,14 +145,14 @@ namespace sentience.core
             for (int col = 0; col < 3; col++)
                 mean_colour[col] = 0;
 
-            for (int z = 0; z < Hypothesis.Length; z++)
+            for (int z = Hypothesis.Length - 1; z >= 0; z--)
             {
                 float variance = 0;
                 float probLO = GetProbability(pose, x, y, z, true, temp_colour, ref variance);
                 if (probLO != NO_OCCUPANCY_EVIDENCE)
                 {
                     probabilityLogOdds += probLO;
-                    for (int col = 0; col < 3; col++)
+                    for (int col = 2; col >= 0; col--)
                         mean_colour[col] += temp_colour[col];
                     mean_variance += variance;
                     hits++;
@@ -161,7 +161,7 @@ namespace sentience.core
             if (hits > 0)
             {
                 mean_variance /= hits;
-                for (int col = 0; col < 3; col++)
+                for (int col = 2; col >= 0; col--)
                     mean_colour[col] /= hits;
             }
             return (probabilities.LogOddsToProbability(probabilityLogOdds));
@@ -219,7 +219,7 @@ namespace sentience.core
                                 List<particleGridCell> map_cache_observations = path.GetHypotheses(x, y, z);
                                 if (map_cache_observations != null)
                                 {
-                                    for (int i = 0; i < map_cache_observations.Count; i++)
+                                    for (int i = map_cache_observations.Count - 1; i >= 0; i--)
                                     {
                                         particleGridCell h = map_cache_observations[i];
                                         if (h.Enabled)
@@ -280,7 +280,7 @@ namespace sentience.core
                 mean_variance *= 0.001307189542483660130718954248366f;
 
                 // calculate the average colour
-                for (int col = 0; col < 3; col++)
+                for (int col = 2; col >= 0; col--)
                     colour[col] /= hits;
 
                 // at the end we convert the total log odds value into a probability

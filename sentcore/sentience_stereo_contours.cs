@@ -439,7 +439,7 @@ namespace sentience.core
         #region "updating the disparity map"
 
         // distance lokup table used to avoid doing square roots
-        float[,] distance_lookup;
+        float[][] distance_lookup;
 
         /// <summary>
         /// update the disparity map at the given point using the given scale
@@ -464,15 +464,18 @@ namespace sentience.core
             // will help us to avoid having to do a lot of
             // square root calculations
             if (distance_lookup == null)
-            {                
-                distance_lookup = new float[lookup_table_size, lookup_table_size];                
-                for (int x1 = 0; x1 < distance_lookup.GetLength(0); x1++)
+            {
+                distance_lookup = new float[lookup_table_size][];
+                for (int i = 0; i < distance_lookup.Length; i++)
+                    distance_lookup[i] = new float[lookup_table_size];
+
+                for (int x1 = 0; x1 < lookup_table_size; x1++)
                 {
                     int dx = x1 - half_lookup_table_size;
-                    for (int y1 = 0; y1 < distance_lookup.GetLength(1); y1++)
+                    for (int y1 = 0; y1 < lookup_table_size; y1++)
                     {
                         int dy = y1 - half_lookup_table_size;
-                        distance_lookup[x1, y1] = (float)Math.Sqrt((dx*dx)+(dy*dy));
+                        distance_lookup[x1][y1] = (float)Math.Sqrt((dx*dx)+(dy*dy));
                     }
                 }
             }
@@ -500,12 +503,12 @@ namespace sentience.core
                         if ((yy > -1) && (yy < map_hght))
                         {
                             int dy = y - yy + half_surround_pixels_y;
-                            float dist = distance_lookup[half_lookup_table_size + dx, half_lookup_table_size + dy];
+                            float dist = distance_lookup[half_lookup_table_size + dx][half_lookup_table_size + dy];
                             if (dist < surround_pixels_x)
                             {
                                 // get the index within the gaussian lookup table
                                 // based upon the fractional distance from the x,y centre point relative to the surround radius
-                                int gaussian_index = (int)Math.Round((surround_pixels_x - dist) * (gaussian_lookup_levels-1) / (float)surround_pixels_x);
+                                int gaussian_index = (int)((surround_pixels_x - dist) * (gaussian_lookup_levels-1) / (float)surround_pixels_x);
 
                                 // number of hits, proportional to a gaussian probability distribution
                                 float hits = 10 + (gaussian_lookup[gaussian_index] * 100 * confidence);
@@ -794,11 +797,11 @@ namespace sentience.core
                         }
 
                         // stereo match
-                        for (scale = 0; scale < no_of_scales; scale++)
+                        for (scale = no_of_scales - 1; scale >= 0; scale--)
                         {
                             no_of_points_left = scalepoints_left[scale][0];
                             no_of_points_right = scalepoints_right[scale][0];
-                            for (int i = 0; i < no_of_points_left; i++)
+                            for (int i = no_of_points_left - 1; i >= 0; i--)
                             {
                                 disp = -1;
 
@@ -811,7 +814,7 @@ namespace sentience.core
                                 x_left2 = x_left - 2;
                                 if (x_left2 < 0) x_left2 = 0;
                                 x_left3 = x_left + 2;
-                                if (x_left3 >= ww) x_left3 = ww-1;
+                                if (x_left3 >= ww) x_left3 = ww - 1;
                                 prev_pattern_left = wavepoints_left_pattern[y][x_left2];
                                 next_pattern_left = wavepoints_left_pattern[y][x_left3];
                                 min_response_difference = match_threshold;
@@ -819,12 +822,12 @@ namespace sentience.core
                                 x2 = x_left / searchfactor;
                                 no_of_candidates = scalepoints_lookup[scale][x2][0];
 
-                                for (int j = 0; j < no_of_candidates; j++)
+                                for (int j = no_of_candidates - 1; j >= 0; j--)
                                 {
                                     idx2 = scalepoints_lookup[scale][x2][j + 1];
 
                                     x_right = scalepoints_right[scale][idx2];
-                                    dx = x_left - x_right;                                    
+                                    dx = x_left - x_right;
                                     if ((dx > -1) && (dx < max_disp))
                                     {
                                         x_right2 = x_right - 2;
@@ -846,7 +849,7 @@ namespace sentience.core
                                                     min_response_difference = response_difference;
                                                 }
                                             }
-                                        }                                        
+                                        }
                                     }
                                     if (dx > max_disp) j = no_of_candidates;
                                 }
@@ -857,10 +860,10 @@ namespace sentience.core
                                     confidence /= (no_of_scales - scale);
                                     confidence *= confidence;
                                     int mx = (x_left + disp) / disparity_map_compression;
-                                    int my = y / disparity_map_compression;                                    
+                                    int my = y / disparity_map_compression;
                                     updateDisparityMap(mx, my,
                                                        compressed_wdth, compressed_hght,
-                                                       scale, disp * step_size, confidence);                                    
+                                                       scale, disp * step_size, confidence);
                                 }
                             }
 
@@ -875,9 +878,9 @@ namespace sentience.core
 
             // update disparity map            
             float disparity_value;
-            for (y = 0; y < compressed_hght; y++)
-            {                
-                for (x = 0; x < compressed_wdth; x++)
+            for (y = compressed_hght; y >= 0; y--)
+            {
+                for (x = compressed_wdth - 1; x >= 0; x--)
                 {
                     disparity_value = disparity_map[x][y];
                     if (disparity_value < 0)
