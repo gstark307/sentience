@@ -1,10 +1,16 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/stereocorrespondence/stereocorrespondence.mds">
   <Files>
     <File name="Welcome" />
+    <File name="../../utilities/GtkImage.cs" line="169" column="5" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
-      <Node expanded="True" />
+      <Node expanded="True">
+        <Node name="stereocorrespondence" expanded="True" />
+        <Node name="utilities" expanded="True">
+          <Node name="GtkImage.cs" selected="True" />
+        </Node>
+      </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
       <Node expanded="True" />
@@ -17,7 +23,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="Welcome" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/utilities/GtkImage.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

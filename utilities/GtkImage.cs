@@ -158,7 +158,13 @@ namespace sluggish.utilities.gtk
 						pos += to_copy;
 					}
 
-					loader.Close ();
+					try
+					{
+					    loader.Close ();
+					}
+					catch
+					{
+					}
 				}
 			}
 		}

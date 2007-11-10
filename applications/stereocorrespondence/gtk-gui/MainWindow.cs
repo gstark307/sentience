@@ -75,7 +75,7 @@ public partial class MainWindow {
     private Gtk.Image picDepthMap;
     
     protected virtual void Build() {
-        Stetic.Gui.Initialize();
+        Stetic.Gui.Initialize(this);
         // Widget MainWindow
         Gtk.UIManager w1 = new Gtk.UIManager();
         Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");

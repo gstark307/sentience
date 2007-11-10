@@ -1,15 +1,18 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/testFunctions/test.mds">
   <Files>
     <File name="Welcome" />
+    <File name="MainWindow.cs" line="1" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
-      <Node expanded="True" />
+      <Node expanded="True">
+        <Node name="test" expanded="True">
+          <Node name="MainWindow.cs" selected="True" />
+        </Node>
+      </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
-      <Node expanded="True">
-        <Node name="selfopt" expanded="True" />
-      </Node>
+      <Node expanded="True" />
     </ViewMemento>
     <ViewMemento id="ConnectionManagerPad">
       <Node />
@@ -19,7 +22,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="Welcome" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/testFunctions/MainWindow.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>
