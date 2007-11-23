@@ -35,6 +35,7 @@ namespace sentience.core
 
         private float[] row_average;
         private float[] column_average;
+        public int[] column_maximal_edge;
 
 #if VISUALISATION
         public float[,] blobs;
@@ -82,6 +83,7 @@ namespace sentience.core
             
             row_average = new float[height];
             column_average = new float[width];
+			column_maximal_edge = new int[width];
 
 #if VISUALISATION
             blobs = new float[width, height];
@@ -105,7 +107,10 @@ namespace sentience.core
         public void updateIntegralImage()
         {
             sluggish.utilities.image.updateIntegralImage(image, width, height, Integral);
-
+		}
+		
+		public void updateAverages()
+		{
             // calculate the average pixel intensity for each row
             for (int y = 1; y < height; y++)
                 row_average[y] = sluggish.utilities.image.getIntegral(Integral, 0, y-1, width - 1, y, width) / width;
@@ -113,6 +118,31 @@ namespace sentience.core
             // calculate the average intensity for each column
             for (int x = 1; x < width; x++)
                 column_average[x] = sluggish.utilities.image.getIntegral(Integral, x-1, 0, x, height - 1, width) / height;
+			
+			// find the vertical position of the highest responding edge for each column
+			// this is useful when disambiguating horizontal matches
+			int edge_radius = 3;
+			for (int x = 1; x < width-1; x++)
+			{
+    			float response = 0;
+	    		float max_response = 0;
+				int above, below, max_y = 0;
+				for (int y = edge_radius; y < height - edge_radius; y++)
+				{
+					above = sluggish.utilities.image.getIntegral(Integral, x, y - edge_radius, x+1, y, width); 
+					below = sluggish.utilities.image.getIntegral(Integral, x, y, x+1, y + edge_radius, width);
+					response = above - below;
+					response *= response;
+					if (response > max_response)
+					{
+						max_response = response;
+						max_y = y;
+					}
+				}
+				column_maximal_edge[x] = max_y;
+				//Console.Write(max_y.ToString()+",");
+			}
+			//Console.WriteLine("");
         }
 
         /// <summary>

@@ -1,15 +1,19 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/stereocorrespondence/stereocorrespondence.mds">
   <Files>
     <File name="Welcome" />
-    <File name="../../utilities/GtkImage.cs" line="169" column="5" />
+    <File name="../../utilities/GtkImage.cs" line="165" column="4" />
+    <File name="MainWindow.cs" line="237" column="1" />
+    <File name="../../sentcore/sentience_stereo_contours.cs" line="670" column="47" />
+    <File name="../../sentcore/classimage.cs" line="34" column="32" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="stereocorrespondence" expanded="True" />
-        <Node name="utilities" expanded="True">
-          <Node name="GtkImage.cs" selected="True" />
+        <Node name="sentcore" expanded="True">
+          <Node name="sentience_stereo_contours.cs" selected="True" />
         </Node>
+        <Node name="stereocorrespondence" expanded="True" />
+        <Node name="utilities" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -23,7 +27,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/utilities/GtkImage.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/sentience_stereo_contours.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

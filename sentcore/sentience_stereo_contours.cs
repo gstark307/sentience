@@ -87,7 +87,7 @@ namespace sentience.core
         private int prev_disparity_map_compression;
 
         // maximum difference below which matching is possible
-        public float match_threshold = 30;
+        public float match_threshold = 50;
 
         // radius of the surround for blob detection
         public float surround_radius_percent = 1.8f;
@@ -633,6 +633,10 @@ namespace sentience.core
             img_left.updateIntegralImage();
             img_right.updateIntegralImage();
 
+			// update average intensities for each row and column
+			img_left.updateAverages();
+			img_right.updateAverages();
+
             // disparity map dimensions
             int compressed_wdth = wdth / (step_size * disparity_map_compression);
             int compressed_hght = hght / (vertical_compression * disparity_map_compression);
@@ -663,12 +667,13 @@ namespace sentience.core
             int searchfactor = 4;
             int max_disp2 = max_disp / searchfactor;
             int max_wdth = wdth / searchfactor;
+			int max_vertical_edge_difference = hght / 4;
 
             // assorted variables
             int no_of_points_left, no_of_points_right;
-            int disp, x_left, x_left2, x_left3, no_of_candidates;
+            int disp, x_left, vertical_left, x_left2, x_left3, no_of_candidates;
             int prev_pattern_left, next_pattern_left, idx2;
-            int x_right, x_right2, x_right3, dx, prev_pattern_right, next_pattern_right;
+            int x_right, vertical_right, x_right2, x_right3, dx, prev_pattern_right, next_pattern_right;
             float diff_left, diff_row_left, diff_col_left, min_response_difference;
             float confidence, diff_right, response_difference;
                         
@@ -807,6 +812,7 @@ namespace sentience.core
 
                                 // get the position and response magnitude of the left point
                                 x_left = scalepoints_left[scale][i + 1];
+								vertical_left = img_left.column_maximal_edge[x_left];
                                 diff_left = wavepoints_left[y][x_left][0];
                                 diff_row_left = wavepoints_left[y][x_left][1];
                                 diff_col_left = wavepoints_left[y][x_left][2];
@@ -830,6 +836,12 @@ namespace sentience.core
                                     dx = x_left - x_right;
                                     if ((dx > -1) && (dx < max_disp))
                                     {
+										vertical_right = img_left.column_maximal_edge[x_right];
+                                        int dv = vertical_left - vertical_right;
+										if (dv < 0) dv = -dv;
+										if (dv < max_vertical_edge_difference)
+										{
+										
                                         x_right2 = x_right - 2;
                                         if (x_right2 < 0) x_right2 = 0;
                                         prev_pattern_right = wavepoints_right_pattern[y][x_right2];
@@ -843,13 +855,15 @@ namespace sentience.core
                                                 diff_right = wavepoints_right[y][x_right][0];
                                                 response_difference = diff_right - diff_left;
                                                 if (response_difference < 0) response_difference = -response_difference;
-                                                if (response_difference < min_response_difference)
+                                                response_difference *= dv;
+												if (response_difference < min_response_difference)
                                                 {
                                                     disp = dx;
                                                     min_response_difference = response_difference;
                                                 }
                                             }
                                         }
+										}
                                     }
                                     if (dx > max_disp) j = no_of_candidates;
                                 }
