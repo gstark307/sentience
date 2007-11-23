@@ -32,7 +32,13 @@ namespace stereocorrespondence
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.qualityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mediumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.highToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpControls = new System.Windows.Forms.GroupBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.txtStereoCorrespondenceTime = new System.Windows.Forms.TextBox();
             this.txtCalibrationFilename = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.cmdRobotDefinitionBrowse = new System.Windows.Forms.Button();
@@ -46,12 +52,6 @@ namespace stereocorrespondence
             this.picRightImage = new System.Windows.Forms.PictureBox();
             this.picDepthMap = new System.Windows.Forms.PictureBox();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.txtStereoCorrespondenceTime = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.qualityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.lowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.mediumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.highToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.grpControls.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
@@ -67,7 +67,7 @@ namespace stereocorrespondence
             this.qualityToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(876, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(826, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -76,21 +76,52 @@ namespace stereocorrespondence
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
-            this.viewToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
+            // 
+            // qualityToolStripMenuItem
+            // 
+            this.qualityToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lowToolStripMenuItem,
+            this.mediumToolStripMenuItem,
+            this.highToolStripMenuItem});
+            this.qualityToolStripMenuItem.Name = "qualityToolStripMenuItem";
+            this.qualityToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
+            this.qualityToolStripMenuItem.Text = "Quality";
+            // 
+            // lowToolStripMenuItem
+            // 
+            this.lowToolStripMenuItem.Name = "lowToolStripMenuItem";
+            this.lowToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.lowToolStripMenuItem.Text = "Low";
+            this.lowToolStripMenuItem.Click += new System.EventHandler(this.lowToolStripMenuItem_Click);
+            // 
+            // mediumToolStripMenuItem
+            // 
+            this.mediumToolStripMenuItem.Name = "mediumToolStripMenuItem";
+            this.mediumToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.mediumToolStripMenuItem.Text = "Medium";
+            this.mediumToolStripMenuItem.Click += new System.EventHandler(this.mediumToolStripMenuItem_Click);
+            // 
+            // highToolStripMenuItem
+            // 
+            this.highToolStripMenuItem.Name = "highToolStripMenuItem";
+            this.highToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.highToolStripMenuItem.Text = "High";
+            this.highToolStripMenuItem.Click += new System.EventHandler(this.highToolStripMenuItem_Click);
             // 
             // grpControls
             // 
@@ -106,15 +137,31 @@ namespace stereocorrespondence
             this.grpControls.Controls.Add(this.txtImagesDirectory);
             this.grpControls.Location = new System.Drawing.Point(12, 36);
             this.grpControls.Name = "grpControls";
-            this.grpControls.Size = new System.Drawing.Size(852, 92);
+            this.grpControls.Size = new System.Drawing.Size(807, 92);
             this.grpControls.TabIndex = 1;
             this.grpControls.TabStop = false;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(632, 56);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(97, 13);
+            this.label3.TabIndex = 12;
+            this.label3.Text = "Matching time (mS)";
+            // 
+            // txtStereoCorrespondenceTime
+            // 
+            this.txtStereoCorrespondenceTime.Location = new System.Drawing.Point(731, 53);
+            this.txtStereoCorrespondenceTime.Name = "txtStereoCorrespondenceTime";
+            this.txtStereoCorrespondenceTime.Size = new System.Drawing.Size(67, 20);
+            this.txtStereoCorrespondenceTime.TabIndex = 11;
             // 
             // txtCalibrationFilename
             // 
             this.txtCalibrationFilename.Location = new System.Drawing.Point(156, 49);
             this.txtCalibrationFilename.Name = "txtCalibrationFilename";
-            this.txtCalibrationFilename.Size = new System.Drawing.Size(447, 20);
+            this.txtCalibrationFilename.Size = new System.Drawing.Size(398, 20);
             this.txtCalibrationFilename.TabIndex = 8;
             // 
             // label2
@@ -128,7 +175,7 @@ namespace stereocorrespondence
             // 
             // cmdRobotDefinitionBrowse
             // 
-            this.cmdRobotDefinitionBrowse.Location = new System.Drawing.Point(609, 48);
+            this.cmdRobotDefinitionBrowse.Location = new System.Drawing.Point(561, 49);
             this.cmdRobotDefinitionBrowse.Name = "cmdRobotDefinitionBrowse";
             this.cmdRobotDefinitionBrowse.Size = new System.Drawing.Size(61, 21);
             this.cmdRobotDefinitionBrowse.TabIndex = 10;
@@ -138,7 +185,7 @@ namespace stereocorrespondence
             // 
             // cmdNext
             // 
-            this.cmdNext.Location = new System.Drawing.Point(779, 18);
+            this.cmdNext.Location = new System.Drawing.Point(731, 19);
             this.cmdNext.Name = "cmdNext";
             this.cmdNext.Size = new System.Drawing.Size(67, 24);
             this.cmdNext.TabIndex = 4;
@@ -148,7 +195,7 @@ namespace stereocorrespondence
             // 
             // cmdPrevious
             // 
-            this.cmdPrevious.Location = new System.Drawing.Point(710, 18);
+            this.cmdPrevious.Location = new System.Drawing.Point(662, 19);
             this.cmdPrevious.Name = "cmdPrevious";
             this.cmdPrevious.Size = new System.Drawing.Size(67, 24);
             this.cmdPrevious.TabIndex = 3;
@@ -158,7 +205,7 @@ namespace stereocorrespondence
             // 
             // cmdBrowse
             // 
-            this.cmdBrowse.Location = new System.Drawing.Point(609, 19);
+            this.cmdBrowse.Location = new System.Drawing.Point(561, 20);
             this.cmdBrowse.Name = "cmdBrowse";
             this.cmdBrowse.Size = new System.Drawing.Size(61, 24);
             this.cmdBrowse.TabIndex = 2;
@@ -179,7 +226,7 @@ namespace stereocorrespondence
             // 
             this.txtImagesDirectory.Location = new System.Drawing.Point(156, 22);
             this.txtImagesDirectory.Name = "txtImagesDirectory";
-            this.txtImagesDirectory.Size = new System.Drawing.Size(447, 20);
+            this.txtImagesDirectory.Size = new System.Drawing.Size(398, 20);
             this.txtImagesDirectory.TabIndex = 0;
             // 
             // folderBrowserDialog1
@@ -190,25 +237,25 @@ namespace stereocorrespondence
             // 
             this.picLeftImage.Location = new System.Drawing.Point(12, 134);
             this.picLeftImage.Name = "picLeftImage";
-            this.picLeftImage.Size = new System.Drawing.Size(423, 378);
+            this.picLeftImage.Size = new System.Drawing.Size(383, 338);
             this.picLeftImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picLeftImage.TabIndex = 2;
             this.picLeftImage.TabStop = false;
             // 
             // picRightImage
             // 
-            this.picRightImage.Location = new System.Drawing.Point(441, 134);
+            this.picRightImage.Location = new System.Drawing.Point(417, 134);
             this.picRightImage.Name = "picRightImage";
-            this.picRightImage.Size = new System.Drawing.Size(423, 378);
+            this.picRightImage.Size = new System.Drawing.Size(389, 338);
             this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picRightImage.TabIndex = 3;
             this.picRightImage.TabStop = false;
             // 
             // picDepthMap
             // 
-            this.picDepthMap.Location = new System.Drawing.Point(228, 518);
+            this.picDepthMap.Location = new System.Drawing.Point(192, 478);
             this.picDepthMap.Name = "picDepthMap";
-            this.picDepthMap.Size = new System.Drawing.Size(423, 378);
+            this.picDepthMap.Size = new System.Drawing.Size(374, 327);
             this.picDepthMap.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picDepthMap.TabIndex = 4;
             this.picDepthMap.TabStop = false;
@@ -217,58 +264,11 @@ namespace stereocorrespondence
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // txtStereoCorrespondenceTime
-            // 
-            this.txtStereoCorrespondenceTime.Location = new System.Drawing.Point(779, 52);
-            this.txtStereoCorrespondenceTime.Name = "txtStereoCorrespondenceTime";
-            this.txtStereoCorrespondenceTime.Size = new System.Drawing.Size(67, 20);
-            this.txtStereoCorrespondenceTime.TabIndex = 11;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(680, 55);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(97, 13);
-            this.label3.TabIndex = 12;
-            this.label3.Text = "Matching time (mS)";
-            // 
-            // qualityToolStripMenuItem
-            // 
-            this.qualityToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lowToolStripMenuItem,
-            this.mediumToolStripMenuItem,
-            this.highToolStripMenuItem});
-            this.qualityToolStripMenuItem.Name = "qualityToolStripMenuItem";
-            this.qualityToolStripMenuItem.Size = new System.Drawing.Size(53, 20);
-            this.qualityToolStripMenuItem.Text = "Quality";
-            // 
-            // lowToolStripMenuItem
-            // 
-            this.lowToolStripMenuItem.Name = "lowToolStripMenuItem";
-            this.lowToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.lowToolStripMenuItem.Text = "Low";
-            this.lowToolStripMenuItem.Click += new System.EventHandler(this.lowToolStripMenuItem_Click);
-            // 
-            // mediumToolStripMenuItem
-            // 
-            this.mediumToolStripMenuItem.Name = "mediumToolStripMenuItem";
-            this.mediumToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.mediumToolStripMenuItem.Text = "Medium";
-            this.mediumToolStripMenuItem.Click += new System.EventHandler(this.mediumToolStripMenuItem_Click);
-            // 
-            // highToolStripMenuItem
-            // 
-            this.highToolStripMenuItem.Name = "highToolStripMenuItem";
-            this.highToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.highToolStripMenuItem.Text = "High";
-            this.highToolStripMenuItem.Click += new System.EventHandler(this.highToolStripMenuItem_Click);
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(876, 917);
+            this.ClientSize = new System.Drawing.Size(826, 824);
             this.Controls.Add(this.picDepthMap);
             this.Controls.Add(this.picRightImage);
             this.Controls.Add(this.picLeftImage);

@@ -67,6 +67,11 @@ namespace WindowsApplication1
             stereo_model = new stereoModel();
         }
 
+        public void setDisparityMapCompression(int horizontal_compression, int vertical_compression)
+        {
+            stereointerface.setDisparityMapCompression(horizontal_compression, vertical_compression);
+        }
+
         public void loadCalibrationData(String filename)
         {
             robot_head.loadCalibrationData(0, filename);

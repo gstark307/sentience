@@ -892,7 +892,11 @@ namespace WindowsApplication1
 
         private void disparityMapToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            int horizontal_compression = 1;
+            int vertical_compression = 2;
+
             stereo.setCorrespondenceAlgorithmType(1);
+            stereo.setDisparityMapCompression(horizontal_compression, vertical_compression);
             display_type = 2;
             stereoFeaturesToolStripMenuItem.Checked = false;
             roboRadarToolStripMenuItem.Checked = false;
