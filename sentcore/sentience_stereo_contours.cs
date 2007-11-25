@@ -166,276 +166,7 @@ namespace sentience.core
         }
 
         #endregion
-
-        #region "filtering/smoothing"
-
-        /// <summary>
-        /// elmimnate unlikely disparity values
-        /// </summary>
-        /// <param name="histogram_levels">number of disparity histogram levels</param>
-        /// <param name="threshold">threshold in the range 0-100</param>
-        private void filterDisparityHistogram(int histogram_levels,
-                                              int threshold)
-        {
-            // get the dimensions of the depth map
-            int map_wdth = disparity_map.GetLength(0);
-            int map_hght = disparity_map.GetLength(1);
-
-            float[] histogram = new float[histogram_levels];
-
-            int half_levels = histogram_levels / 2;
-        
-            // filter horizontally
-            int[] bucket = new int[map_wdth];
-            for (int y = 2; y < map_hght-2; y++)
-            {
-                // clear histogram values
-                float max_response = 0;
-                for (int h = 0; h < histogram_levels; h++) histogram[h] = 0;
-                
-                // for all disparities on this row
-                for (int x = 0; x < map_wdth; x++)
-                {
-                    // which histogram bucket should this go into
-                    int b = half_levels + (int)(disparity_map[x][y] * half_levels / max_disparity);
-                    if (b >= histogram_levels) b = histogram_levels - 1;
-                    if (b < 0) b = 0;                    
-                    
-                    // update histogram
-                    histogram[b]++;
-                    if (histogram[b] > max_response) max_response = histogram[b];
-                    
-                    bucket[x] = b;
-                }
-                
-                // calculate minimum threshold
-                float minimum_response = max_response * threshold / 100;
-                
-                // eliminate disparities below the minimum
-                for (int x = 0; x < map_wdth; x++)
-                {
-                    if (histogram[bucket[x]] < minimum_response)
-                        disparity_map[x][y] = 0;
-                }
-            }
-
-            // filter vertically
-            bucket = new int[map_hght];
-            for (int x = 2; x < map_wdth-2; x++)
-            {
-                // clear histogram values
-                float max_response = 0;
-                for (int h = 0; h < histogram_levels; h++) histogram[h] = 0;
-                
-                // for all disparities on this column
-                for (int y = 0; y < map_hght; y++)
-                {
-                    // which histogram bucket should this go into
-                    int b = half_levels + (int)(disparity_map[x][y] * half_levels / max_disparity);
-                    if (b >= histogram_levels) b = histogram_levels - 1;
-                    if (b < 0) b = 0;                    
-                    
-                    // update histogram
-                    histogram[b]++;
-                    if (histogram[b] > max_response) max_response = histogram[b];
-                    
-                    bucket[y] = b;
-                }
-                
-                // calculate minimum threshold
-                float minimum_response = max_response * threshold / 100;
-                
-                // eliminate disparities below the minimum
-                for (int y = 0; y < map_hght; y++)
-                {
-                    if (histogram[bucket[y]] < minimum_response)
-                        disparity_map[x][y] = 0;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="map_wdth">width of the disparity map</param>
-        /// <param name="map_hght">height of the disparity map</param>
-        /// <param name="threshold"></param>
-        private void filterDisparityMap(int map_wdth, int map_hght, int threshold)
-        {
-            float diff1, diff2;
-
-            for (int y = 2; y < map_hght-1; y++)
-            {
-                float prev_value = 0;
-                float value = disparity_map[0][y] * 255 / max_disparity;
-                for (int x = 0; x < map_wdth - 1; x++)
-                {
-                    float next_value = disparity_map[x + 1][y] * 255 / max_disparity;
-                    if ((value > 200) && (x > 0))
-                    {
-                        diff1 = value - prev_value;
-                        if (diff1 > threshold)
-                        {
-                            diff2 = value - next_value;
-                            if (diff2 > threshold)
-                            {
-                                if ((next_value > 0) && (prev_value > 0))
-                                    disparity_map[x][y] = (disparity_map[x + 1][y] + disparity_map[x - 1][y]) / 2;
-                                else
-                                {
-                                    if (next_value > 0)
-                                        disparity_map[x][y] = disparity_map[x + 1][y];
-                                    else
-                                        if (prev_value > 0)
-                                            disparity_map[x][y] = disparity_map[x - 1][y];
-                                        else
-                                            disparity_map[x][y] = 0;
-                                }
-                            }
-                        }
-
-                        float above_value = disparity_map[x][y - 2] * 255 / max_disparity;
-                        float curr_value = disparity_map[x][y - 1] * 255 / max_disparity;
-                        diff1 = curr_value - above_value;
-                        if (diff1 > threshold)
-                        {
-                            float below_value = disparity_map[x][y] * 255 / max_disparity;
-                            diff2 = curr_value - below_value;
-                            if (diff2 > threshold)
-                            {
-                                if ((above_value > 0) && (below_value > 0))
-                                    disparity_map[x][y - 1] = (disparity_map[x][y - 2] + disparity_map[x][y]) / 2;
-                                else
-                                {
-                                    if (above_value > 0)
-                                        disparity_map[x][y - 1] = disparity_map[x][y - 2];
-                                    else
-                                        if (below_value > 0)
-                                            disparity_map[x][y - 1] = disparity_map[x][y];
-                                        else
-                                            disparity_map[x][y - 1] = 0;
-                                }
-                            }
-                        }
-                    }
-                    prev_value = value;
-                    value = next_value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// perform smoothing on the disparity values when the stereo camera is rolled
-        /// at a 45 degree angle
-        /// </summary>
-        /// <param name="map_wdth">width of the disparity map</param>
-        /// <param name="map_hght">height of the disparity map</param>
-        /// <param name="slant_direction">is the camera rolled to the left or right</param>
-        public void smoothDisparityMapSlanted(int map_wdth, int map_hght, 
-                                              int slant_direction)
-        {
-            float tollerance = 1.0f * step_size;
-            //int search_y = (int)(map_hght * (max_disparity - value) / (5 * max_disparity));
-            int search_y = map_hght / 5;
-            if (search_y < 1) search_y = 1;
-
-            float[][] new_disparity_map = new float[disparity_map.Length][];
-            for (int i = 0; i < new_disparity_map.Length; i++) new_disparity_map[i] = new float[disparity_map[0].Length];
-
-            for (int x = 2; x < map_wdth - 2; x++)
-                for (int y = 0; y < map_hght; y++)
-                {
-                    float value = disparity_map[x][y];
-                    if ((value > 0))
-                    //&& (value * 255 / max_disparity < 150))
-                    {
-                        float tot = 0;
-                        int hits = 0;
-                        for (int xx = x - 2; xx < x + 2; xx++)
-                        {
-                            for (int yy = y - search_y; yy < y + search_y; yy++)
-                            {
-                                if ((yy > -1) && (yy < map_hght))
-                                {
-                                    int xxx = xx + (slant_direction * (yy - y));
-                                    if ((xxx > -1) && (xxx < map_wdth))
-                                    {
-                                        float value2 = disparity_map[xxx][yy];
-                                        if (value2 > 0)
-                                        {
-                                            float diff = value2 - value;
-                                            if (diff < 0) diff = -diff;
-                                            if (diff < tollerance)
-                                            {
-                                                tot += value2;
-                                                hits++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        new_disparity_map[x][y] = tot / hits;
-                    }
-                    else new_disparity_map[x][y] = disparity_map[x][y];
-                }
-            disparity_map = new_disparity_map;
-        }
-
-
-        /// <summary>
-        /// smooths the disparity map when the stereo camera is at a normal zero degrees roll angle
-        /// </summary>
-        /// <param name="map_wdth">width of the disparity map</param>
-        /// <param name="map_hght">height of the disparity map</param>
-        public void smoothDisparityMap(int map_wdth, int map_hght)
-        {
-            float tollerance = 1.0f * step_size;
-            //int search_y = (int)(map_hght * (max_disparity - value) / (5 * max_disparity));
-            int search_y = map_hght / 5;
-            if (search_y < 1) search_y = 1;
-
-            float[][] new_disparity_map = new float[disparity_map.Length][];
-            for (int i = 0; i < new_disparity_map.Length; i++) new_disparity_map[i] = new float[disparity_map[0].Length];
-
-            for (int x = 2; x < map_wdth-2; x++)
-                for (int y = 0; y < map_hght; y++)
-                {
-                    float value = disparity_map[x][y];
-                    if ((value > 0))                        
-                        //&& (value * 255 / max_disparity < 150))
-                    {
-                        float tot = 0;
-                        int hits = 0;
-                        for (int xx = x - 2; xx < x + 2; xx++)
-                        {
-                            for (int yy = y - search_y; yy < y + search_y; yy++)
-                            {
-                                if ((yy > -1) && (yy < map_hght))
-                                {
-                                    float value2 = disparity_map[xx][yy];
-                                    if (value2 > 0)
-                                    {
-                                        float diff = value2 - value;
-                                        if (diff < 0) diff = -diff;
-                                        if (diff < tollerance)
-                                        {
-                                            tot += value2;
-                                            hits++;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        new_disparity_map[x][y] = tot / hits;
-                    }
-                    else new_disparity_map[x][y] = disparity_map[x][y];
-                }
-            disparity_map = new_disparity_map;
-        }
-
-        #endregion
-
+		
         #region "updating the disparity map"
 
         // distance lokup table used to avoid doing square roots
@@ -806,6 +537,8 @@ namespace sentience.core
                         {
                             no_of_points_left = scalepoints_left[scale][0];
                             no_of_points_right = scalepoints_right[scale][0];
+							
+							//for each possible match in the left image
                             for (int i = no_of_points_left - 1; i >= 0; i--)
                             {
                                 disp = -1;
@@ -828,53 +561,76 @@ namespace sentience.core
                                 x2 = x_left / searchfactor;
                                 no_of_candidates = scalepoints_lookup[scale][x2][0];
 
+								// for each possible match in the right image
+								// note here that we scan from right to left
                                 for (int j = no_of_candidates - 1; j >= 0; j--)
                                 {
                                     idx2 = scalepoints_lookup[scale][x2][j + 1];
 
+									// get the horizontal position of the possible match in the right image
                                     x_right = scalepoints_right[scale][idx2];
+									
+									// what's the disparity ?
                                     dx = x_left - x_right;
+									
+									// is the disparity in the range we expect ?
                                     if ((dx > -1) && (dx < max_disp))
                                     {
+										// vertical context checking
 										vertical_right = img_left.column_maximal_edge[x_right];
                                         int dv = vertical_left - vertical_right;
 										if (dv < 0) dv = -dv;
-										if (dv < max_vertical_edge_difference)
-										{
 										
-                                        x_right2 = x_right - 2;
-                                        if (x_right2 < 0) x_right2 = 0;
-                                        prev_pattern_right = wavepoints_right_pattern[y][x_right2];
-                                        if (prev_pattern_left == prev_pattern_right)
-                                        {
-                                            x_right3 = x_right + 2;
-                                            if (x_right3 >= ww) x_right3 = ww - 1;
-                                            next_pattern_right = wavepoints_right_pattern[y][x_right3];
-                                            if (next_pattern_left == next_pattern_right)
+										// is the vertical context within tollerance ?
+										if (dv < max_vertical_edge_difference)
+										{										
+											// check the ordering of patterns
+                                            x_right2 = x_right - 2;
+                                            if (x_right2 < 0) x_right2 = 0;
+                                            prev_pattern_right = wavepoints_right_pattern[y][x_right2];
+                                            if (prev_pattern_left == prev_pattern_right)
                                             {
-                                                diff_right = wavepoints_right[y][x_right][0];
-                                                response_difference = diff_right - diff_left;
-                                                if (response_difference < 0) response_difference = -response_difference;
-                                                response_difference *= dv;
-												if (response_difference < min_response_difference)
+                                                x_right3 = x_right + 2;
+                                                if (x_right3 >= ww) x_right3 = ww - 1;
+                                                next_pattern_right = wavepoints_right_pattern[y][x_right3];
+                                                if (next_pattern_left == next_pattern_right)
                                                 {
-                                                    disp = dx;
-                                                    min_response_difference = response_difference;
+													// check the response magnitude difference
+                                                    diff_right = wavepoints_right[y][x_right][0];
+                                                    response_difference = diff_right - diff_left;
+                                                    if (response_difference < 0) response_difference = -response_difference;
+                                                    response_difference *= dv;
+													
+													// is the magnitude difference the best that we've found so far ? ?
+												    if (response_difference < min_response_difference)
+                                                    {
+														// record the disparity and minimum difference
+                                                        disp = dx;
+                                                        min_response_difference = response_difference;
+                                                    }
                                                 }
                                             }
-                                        }
 										}
                                     }
-                                    if (dx > max_disp) j = no_of_candidates;
+									
+									// if the horizontal difference is too large then we may 
+									// as well abandon the search
+                                    if (dx > max_disp) break;
                                 }
 
                                 if (disp > -1)
                                 {
+									// how confident are we in this match ?
                                     confidence = 1.0f - (min_response_difference / match_threshold);
                                     confidence /= (no_of_scales - scale);
                                     confidence *= confidence;
+									
+									// get the position on the disparity map
                                     int mx = (x_left + disp) / disparity_map_compression;
                                     int my = y / disparity_map_compression;
+									
+									// update the dispalrity map using a gaussian
+									// probability distribution
                                     updateDisparityMap(mx, my,
                                                        compressed_wdth, compressed_hght,
                                                        scale, disp * step_size, confidence);
@@ -890,7 +646,7 @@ namespace sentience.core
 
             }
 
-            // update disparity map            
+            // update disparity map
             float disparity_value;
             for (y = compressed_hght; y >= 0; y--)
             {
@@ -908,28 +664,9 @@ namespace sentience.core
                     }
                 }
             }            
-            
-            // remove snow            
-            //filterDisparityMap(wdth / (step_size * disparity_map_compression), hght / (vertical_compression * disparity_map_compression), 10);
-            //filterDisparityHistogram(20, 10);
-            
-            // smooth the disparity map
-            if (useSmoothing)
-            {
-                if ((roll > -Math.PI/8) && (roll < Math.PI/8))
-                    // conventional horizontal stereo camera mounting
-                    smoothDisparityMap(compressed_wdth, compressed_hght);
-                else
-                {
-                    // rolled camera mounting
-                    if (roll < 0)
-                        smoothDisparityMapSlanted(compressed_wdth, compressed_hght, 1);
-                    else
-                        smoothDisparityMapSlanted(compressed_wdth, compressed_hght, 0);
-                }
-            }
-                        
-            //update the selected features
+            			
+            // get a fixed quantity of features which may
+			// subsequently be used to create ray models
             getSelectedFeatures(wdth, hght);            
         }
 
