@@ -127,9 +127,9 @@ namespace sentience.core
 
             // get the positions of the head and cameras for this pose
             pos3D head_location = new pos3D(0, 0, 0);
-            pos3D[] camera_centre_location = new pos3D[rob.head.no_of_cameras];
-            pos3D[] left_camera_location = new pos3D[rob.head.no_of_cameras];
-            pos3D[] right_camera_location = new pos3D[rob.head.no_of_cameras];
+            pos3D[] camera_centre_location = new pos3D[rob.head.no_of_stereo_cameras];
+            pos3D[] left_camera_location = new pos3D[rob.head.no_of_stereo_cameras];
+            pos3D[] right_camera_location = new pos3D[rob.head.no_of_stereo_cameras];
             calculateCameraPositions(rob, ref head_location,
                                      ref camera_centre_location,
                                      ref left_camera_location,
@@ -152,7 +152,7 @@ namespace sentience.core
             drawing.drawBox(img, width, height, xx, yy, radius, radius, head_location.pan, 0, 255, 0, line_width);
 
             // draw the cameras
-            for (int cam = 0; cam < rob.head.no_of_cameras; cam++)
+            for (int cam = 0; cam < rob.head.no_of_stereo_cameras; cam++)
             {
                 // draw the left camera
                 int xx1 = (int)((left_camera_location[cam].x - min_x_mm) * width / w);
@@ -214,7 +214,7 @@ namespace sentience.core
             head_locn = head_locn.translate(x, y, 0);
             head_location.copyFrom(head_locn);
 
-            for (int cam = 0; cam < rob.head.no_of_cameras; cam++)
+            for (int cam = 0; cam < rob.head.no_of_stereo_cameras; cam++)
             {
                 // calculate the position of the centre of the stereo camera
                 // (baseline centre point)
@@ -256,9 +256,9 @@ namespace sentience.core
 
             // get the positions of the head and cameras for this pose
             pos3D head_location = new pos3D(0,0,0);
-            pos3D[] camera_centre_location = new pos3D[rob.head.no_of_cameras];
-            pos3D[] left_camera_location = new pos3D[rob.head.no_of_cameras];
-            pos3D[] right_camera_location = new pos3D[rob.head.no_of_cameras];
+            pos3D[] camera_centre_location = new pos3D[rob.head.no_of_stereo_cameras];
+            pos3D[] left_camera_location = new pos3D[rob.head.no_of_stereo_cameras];
+            pos3D[] right_camera_location = new pos3D[rob.head.no_of_stereo_cameras];
             calculateCameraPositions(rob, ref head_location,
                                      ref camera_centre_location,
                                      ref left_camera_location,

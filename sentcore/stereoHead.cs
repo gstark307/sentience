@@ -28,7 +28,7 @@ namespace sentience.core
     /// </summary>
     public class stereoHead : pos3D
     {
-        public int no_of_cameras;                // number of cameras on the head
+        public int no_of_stereo_cameras;                // number of cameras on the head
 
         public pos3D[] cameraPosition;           // position and orientation of each camera
         public stereoFeatures[] features;        // stereo features observed by each camera
@@ -37,24 +37,31 @@ namespace sentience.core
         public rayModelLookup[] sensormodel;     // sensor model data for each camera
         public scanMatching[] scanmatch;         // simple scan matching
 
-        public stereoHead(int no_of_cameras) : base(0,0,0)
+		/// <summary>
+		/// constructor
+		/// </summary>
+		/// <param name="no_of_stereo_cameras">
+		/// A <see cref="System.Int32"/>
+		/// The number of stereo cameras
+		/// </param>
+        public stereoHead(int no_of_stereo_cameras) : base(0,0,0)
         {
-            this.no_of_cameras = no_of_cameras;
+            this.no_of_stereo_cameras = no_of_stereo_cameras;
             
             // create feature lists
-            features = new stereoFeatures[no_of_cameras];
+            features = new stereoFeatures[no_of_stereo_cameras];
             
             // store filenames of the images for each camera
-            imageFilename = new String[no_of_cameras * 2];
+            imageFilename = new String[no_of_stereo_cameras * 2];
             
             // create the cameras
-            cameraPosition = new pos3D[no_of_cameras];
+            cameraPosition = new pos3D[no_of_stereo_cameras];
             
             // calibration data
-            calibration = new calibrationStereo[no_of_cameras];
+            calibration = new calibrationStereo[no_of_stereo_cameras];
             
             // create objects for each stereo camera
-            for (int cam = 0; cam < no_of_cameras; cam++)
+            for (int cam = 0; cam < no_of_stereo_cameras; cam++)
             {
                 calibration[cam] = new calibrationStereo();
                 cameraPosition[cam] = new pos3D(0, 0, 0);
@@ -62,10 +69,10 @@ namespace sentience.core
             }
 
             // sensor models
-            sensormodel = new rayModelLookup[no_of_cameras];
+            sensormodel = new rayModelLookup[no_of_stereo_cameras];
 
             //scan matching
-            scanmatch = new scanMatching[no_of_cameras];
+            scanmatch = new scanMatching[no_of_stereo_cameras];
 
             /*
             if (no_of_cameras == 4) initQuadCam();
@@ -180,7 +187,7 @@ namespace sentience.core
         /// <param name="directory"></param>
         public void loadCalibrationData(String directory)
         {
-            for (int cam = 0; cam < no_of_cameras; cam++)
+            for (int cam = 0; cam < no_of_stereo_cameras; cam++)
             {
                 String filename = directory + "calibration" + Convert.ToString(cam) + ".xml";
                 loadCalibrationData(cam, filename);
@@ -232,7 +239,7 @@ namespace sentience.core
         /// <param name="binfile">file to load from</param>
         public void loadStereoFeatures(BinaryReader binfile)
         {            
-            for (int i = 0; i < no_of_cameras; i++)
+            for (int i = 0; i < no_of_stereo_cameras; i++)
             {
                 // create a new object
                 stereoFeatures feat = new stereoFeatures(1);
@@ -251,7 +258,7 @@ namespace sentience.core
         /// <param name="binfile">file to save to</param>
         public void saveStereoFeatures(BinaryWriter binfile)
         {
-            for (int i = 0; i < no_of_cameras; i++)
+            for (int i = 0; i < no_of_stereo_cameras; i++)
                 features[i].save(binfile);
         }
 

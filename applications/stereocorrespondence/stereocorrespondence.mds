@@ -26,7 +26,7 @@
     <Execute type="None" entry="memcompressor" />
   </StartMode>
   <Entries>
-    <Entry filename="./stereocorrespondence.mdp" />
+    <Entry filename="stereocorrespondence.mdp" />
     <Entry filename="../../sentcore/sentcore.mdp" />
     <Entry filename="../../pathplanner/pathplanner.mdp" />
     <Entry filename="../../FASTcorners/FASTcorners.mdp" />

@@ -1,49 +1,49 @@
 <Project name="utilities" fileversion="2.0" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
-      <Output directory="./bin/Debug" assembly="utilities" />
+      <Output directory="bin/Debug" assembly="utilities" />
       <Build debugmode="True" target="Library" />
       <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
       <CodeGeneration compiler="Csc" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" mainclass="" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
     <Configuration name="Release" ctype="DotNetProjectConfiguration">
-      <Output directory="./bin/Release" assembly="utilities" />
+      <Output directory="bin/Release" assembly="utilities" />
       <Build debugmode="False" target="Library" />
       <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
       <CodeGeneration compiler="Csc" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" mainclass="" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
   </Configurations>
   <Contents>
-    <File name="./stopwatch.cs" subtype="Code" buildaction="Compile" />
-    <File name="./AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
-    <File name="./GtkBitmap.cs" subtype="Code" buildaction="Compile" />
-    <File name="./GtkImage.cs" subtype="Code" buildaction="Compile" />
-    <File name="./EventLog.cs" subtype="Code" buildaction="Compile" />
-    <File name="./geometry.cs" subtype="Code" buildaction="Compile" />
-    <File name="./xml.cs" subtype="Code" buildaction="Compile" />
-    <File name="./colours.cs" subtype="Code" buildaction="Compile" />
-    <File name="./ArrayConversions.cs" subtype="Code" buildaction="Compile" />
-    <File name="./probabilities.cs" subtype="Code" buildaction="Compile" />
-    <File name="./drawing.cs" subtype="Code" buildaction="Compile" />
-    <File name="./image.cs" subtype="Code" buildaction="Compile" />
-    <File name="./polynomial.cs" subtype="Code" buildaction="Compile" />
-    <File name="./region.cs" subtype="Code" buildaction="Compile" />
-    <File name="./regionCollection.cs" subtype="Code" buildaction="Compile" />
-    <File name="./polygon.cs" subtype="Code" buildaction="Compile" />
-    <File name="./blob.cs" subtype="Code" buildaction="Compile" />
-    <File name="./snake.cs" subtype="Code" buildaction="Compile" />
-    <File name="./linefeature.cs" subtype="Code" buildaction="Compile" />
-    <File name="./KeyValuePair.cs" subtype="Code" buildaction="Compile" />
-    <File name="./ThreadRegionGrowing.cs" subtype="Code" buildaction="Compile" />
-    <File name="./BitmapArrayConversions.cs" subtype="Code" buildaction="Compile" />
-    <File name="./FTPclient.cs" subtype="Code" buildaction="Compile" />
-    <File name="./kml.cs" subtype="Code" buildaction="Compile" />
-    <File name="./graph.cs" subtype="Code" buildaction="Compile" />
-    <File name="./graph_oscilloscope.cs" subtype="Code" buildaction="Compile" />
-    <File name="./graph_points.cs" subtype="Code" buildaction="Compile" />
-    <File name="./graph_intensity_histogram.cs" subtype="Code" buildaction="Compile" />
-    <File name="./graph_lines.cs" subtype="Code" buildaction="Compile" />
-    <File name="./grid2D.cs" subtype="Code" buildaction="Compile" />
+    <File name="stopwatch.cs" subtype="Code" buildaction="Compile" />
+    <File name="AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
+    <File name="GtkBitmap.cs" subtype="Code" buildaction="Compile" />
+    <File name="GtkImage.cs" subtype="Code" buildaction="Compile" />
+    <File name="EventLog.cs" subtype="Code" buildaction="Compile" />
+    <File name="geometry.cs" subtype="Code" buildaction="Compile" />
+    <File name="xml.cs" subtype="Code" buildaction="Compile" />
+    <File name="colours.cs" subtype="Code" buildaction="Compile" />
+    <File name="ArrayConversions.cs" subtype="Code" buildaction="Compile" />
+    <File name="probabilities.cs" subtype="Code" buildaction="Compile" />
+    <File name="drawing.cs" subtype="Code" buildaction="Compile" />
+    <File name="image.cs" subtype="Code" buildaction="Compile" />
+    <File name="polynomial.cs" subtype="Code" buildaction="Compile" />
+    <File name="region.cs" subtype="Code" buildaction="Compile" />
+    <File name="regionCollection.cs" subtype="Code" buildaction="Compile" />
+    <File name="polygon.cs" subtype="Code" buildaction="Compile" />
+    <File name="blob.cs" subtype="Code" buildaction="Compile" />
+    <File name="snake.cs" subtype="Code" buildaction="Compile" />
+    <File name="linefeature.cs" subtype="Code" buildaction="Compile" />
+    <File name="KeyValuePair.cs" subtype="Code" buildaction="Compile" />
+    <File name="ThreadRegionGrowing.cs" subtype="Code" buildaction="Compile" />
+    <File name="BitmapArrayConversions.cs" subtype="Code" buildaction="Compile" />
+    <File name="FTPclient.cs" subtype="Code" buildaction="Compile" />
+    <File name="kml.cs" subtype="Code" buildaction="Compile" />
+    <File name="graph.cs" subtype="Code" buildaction="Compile" />
+    <File name="graph_oscilloscope.cs" subtype="Code" buildaction="Compile" />
+    <File name="graph_points.cs" subtype="Code" buildaction="Compile" />
+    <File name="graph_intensity_histogram.cs" subtype="Code" buildaction="Compile" />
+    <File name="graph_lines.cs" subtype="Code" buildaction="Compile" />
+    <File name="grid2D.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="gdk-sharp, Version=2.10.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />

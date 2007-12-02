@@ -3,17 +3,27 @@
     <File name="Welcome" />
     <File name="../../utilities/GtkImage.cs" line="165" column="4" />
     <File name="MainWindow.cs" line="237" column="1" />
-    <File name="../../sentcore/sentience_stereo_contours.cs" line="670" column="47" />
-    <File name="../../sentcore/classimage.cs" line="34" column="32" />
+    <File name="../../sentcore/sentience_stereo_contours.cs" line="10" column="1" />
+    <File name="../../sentcore/classimage.cs" line="6" column="1" />
+    <File name="../../sentcore/calibration.cs" line="1" column="1" />
+    <File name="../../sentcore/motionModel.cs" line="1" column="1" />
+    <File name="../../sentcore/pos3D.cs" line="44" column="1" />
+    <File name="../../sentcore/stereoHead.cs" line="46" column="15" />
+    <File name="../../sentcore/particlePose.cs" line="262" column="61" />
+    <File name="../../sentcore/stereoModel.cs" line="126" column="1" />
+    <File name="../../sentcore/ThreadMappingState.cs" line="1" column="1" />
+    <File name="../../sentcore/ThreadMappingUpdate.cs" line="78" column="1" />
+    <File name="../../sentcore/ThreadStereoCorrespondence.cs" line="106" column="29" />
+    <File name="../../sentcore/ThreadStereoCorrespondenceState.cs" line="37" column="1" />
+    <File name="../../sentcore/stereoCorrespondence.cs" line="29" column="18" />
+    <File name="../../sentcore/robot.cs" line="843" column="4" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="sentcore" expanded="True">
-          <Node name="sentience_stereo_contours.cs" selected="True" />
+          <Node name="robot.cs" selected="True" />
         </Node>
-        <Node name="stereocorrespondence" expanded="True" />
-        <Node name="utilities" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -27,7 +37,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/sentience_stereo_contours.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/robot.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

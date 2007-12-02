@@ -124,7 +124,7 @@ namespace sentience.core
             int height = 100;
             Byte[] img_result = new Byte[width * height * 3];
 
-            for (int cam = 0; cam < robot_head.no_of_cameras; cam++)
+            for (int cam = 0; cam < robot_head.no_of_stereo_cameras; cam++)
             {
                 // update parameters based upon the calibration data
                 image_width = robot_head.calibration[cam].leftcam.image_width;

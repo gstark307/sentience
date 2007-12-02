@@ -97,7 +97,7 @@ namespace sentience.core
         #region "stereo correspondence"
 
         // routines for performing stereo correspondence
-        public stereoCorrespondence correspondence;
+        public stereoCorrespondence[] correspondence;
 
         //the type of stereo correspondance algorithm to be used
         //int correspondence_algorithm_type = sentience_stereo_interface.CORRESPONDENCE_LINES;
@@ -293,7 +293,8 @@ namespace sentience.core
             // detail, but not so large that the mapping consumes a huge amount of 
             // processing resource
             inverseSensorModel.no_of_stereo_features = rays_per_stereo_camera;
-            correspondence = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
+			for (int i = 0; i < no_of_stereo_cameras; i++)
+                correspondence[i] = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
 
             // add local occupancy grids
             LocalGrid = new occupancygridMultiHypothesis[mapping_threads];
@@ -385,10 +386,10 @@ namespace sentience.core
                                          int bytes_per_pixel)
         {
             // set the required number of stereo features
-            correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
+            correspondence[stereo_cam_index].setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
             // load the rectified images
-            return (correspondence.loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
+            return (correspondence[stereo_cam_index].loadRectifiedImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
         /// <summary>
@@ -404,12 +405,12 @@ namespace sentience.core
                                    Byte[] fullres_right, 
                                    int bytes_per_pixel)
         {
-            correspondence.setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
+            correspondence[stereo_cam_index].setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
             // set the calibration data for this camera
-            correspondence.setCalibration(head.calibration[stereo_cam_index]);
+            correspondence[stereo_cam_index].setCalibration(head.calibration[stereo_cam_index]);
 
-            return (correspondence.loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
+            return (correspondence[stereo_cam_index].loadRawImages(stereo_cam_index, fullres_left, fullres_right, head, inverseSensorModel.no_of_stereo_features, bytes_per_pixel, correspondence_algorithm_type));
         }
 
         #endregion
@@ -545,11 +546,14 @@ namespace sentience.core
                                         int context_radius_1, int context_radius_2,
                                         int local_averaging_radius, int required_features)
         {
-            correspondence.setDifferenceThreshold(difference_threshold);
-            correspondence.setMaxDisparity(5);
-            correspondence.setRequiredFeatures(required_features);
-            correspondence.setLocalAverageRadius(local_averaging_radius);
-            correspondence.setContextRadii(context_radius_1, context_radius_2);
+			for (int i = 0; i < no_of_stereo_cameras; i++)
+			{
+                correspondence[i].setDifferenceThreshold(difference_threshold);
+                correspondence[i].setMaxDisparity(5);
+                correspondence[i].setRequiredFeatures(required_features);
+                correspondence[i].setLocalAverageRadius(local_averaging_radius);
+                correspondence[i].setContextRadii(context_radius_1, context_radius_2);
+			}
         }
 
         /// <summary>
@@ -562,10 +566,13 @@ namespace sentience.core
         public void setStereoParameters(int max_disparity, int required_features, 
                                         float surround_radius, float matching_threshold)
         {
-            correspondence.setMaxDisparity(max_disparity);
-            correspondence.setRequiredFeatures(required_features);
-            correspondence.setSurroundRadius(surround_radius);
-            correspondence.setMatchingThreshold(matching_threshold);
+			for (int i = 0; i < no_of_stereo_cameras; i++)
+			{
+                correspondence[i].setMaxDisparity(max_disparity);
+                correspondence[i].setRequiredFeatures(required_features);
+                correspondence[i].setSurroundRadius(surround_radius);
+                correspondence[i].setMatchingThreshold(matching_threshold);
+			}
         }
 
         #endregion
@@ -711,6 +718,83 @@ namespace sentience.core
             previousPosition.tilt = tilt;
         }
 
+		/// <summary>
+		/// process a pair of images from a stereo camera
+		/// </summary>
+		/// <param name="stereo_camera_index">
+		/// A <see cref="System.Int32"/>
+		/// </param>
+		/// <param name="left_image">
+		/// A <see cref="Byte"/>
+		/// </param>
+		/// <param name="right_image">
+		/// A <see cref="Byte"/>
+		/// </param>
+		/// <returns>
+		/// A <see cref="System.Boolean"/>
+		/// </returns>
+		/*
+        private bool loadImages(Thread th, int stereo_camera_index, 
+		                        Byte[] left_image, Byte[] right_image)
+        {            
+            bool scanMatchesFound = false;
+
+			loadRawImages(stereo_camera_index, left_image, right_image, 3);
+
+            // perform scan matching for forwards or rearwards looking cameras
+            float pan_angle = head.pan + head.cameraPosition[stereo_camera_index].pan;
+            if ((pan_angle == 0) || (pan_angle == (float)Math.PI))
+            {
+                // create a scan matching object if needed
+                if (head.scanmatch[stereo_camera_index] == null)
+                    head.scanmatch[stereo_camera_index] = new scanMatching();
+
+                if (EnableScanMatching)
+                {
+                    // perform scan matching
+                    head.scanmatch[stereo_camera_index].update(
+					    correspondence[stereo_camera_index].getRectifiedImage(true),
+                        head.calibration[stereo_camera_index].leftcam.image_width,
+                        head.calibration[stereo_camera_index].leftcam.image_height,
+                        head.calibration[stereo_camera_index].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f,
+                        head.cameraPosition[stereo_camera_index].roll,
+                        ScanMatchingMaxPanAngleChange * (float)Math.PI / 180.0f);
+                    if (head.scanmatch[stereo_camera_index].pan_angle_change != scanMatching.NOT_MATCHED)
+                    {
+                        scanMatchesFound = true;
+                        if (ScanMatchingPanAngleEstimate == scanMatching.NOT_MATCHED)
+                        {
+                            // if this is the first time a match has been found 
+                            // use the current pan estimate
+                            ScanMatchingPanAngleEstimate = pan;
+                        }
+                        else
+                        {
+                            if (pan_angle == 0)
+                                // forward facing camera
+                                ScanMatchingPanAngleEstimate -= head.scanmatch[stereo_camera_index].pan_angle_change;
+                            else
+                                // rearward facing camera
+                                ScanMatchingPanAngleEstimate += head.scanmatch[stereo_camera_index].pan_angle_change;
+                        }
+                    }
+                }
+            }                 
+            else head.scanmatch[stereo_camera_index] = null;
+			return(scanMatchesFound);
+		}		
+		*/
+		
+        /// <summary>
+        /// the stereo correspondence thread has called back
+        /// </summary>
+        /// <param name="state"></param>
+        private static void StereoCorrespondenceCallback(object state)
+        {
+            // get the returned state
+            ThreadStereoCorrespondenceState cstate = (ThreadStereoCorrespondenceState)state;
+        }		
+		
         /// <summary>
         /// load stereo images from a list
         /// </summary>
@@ -718,55 +802,67 @@ namespace sentience.core
         private void loadImages(ArrayList images)
         {            
             clock.Start();
-
+			
             bool scanMatchesFound = false;
 
-            for (int i = 0; i < images.Count / 2; i++)
+            // create a set of threads
+            Thread[] correspondence_thread = new Thread[no_of_stereo_cameras];			
+			ArrayList activeThreads = new ArrayList();
+			
+            for (int stereo_camera_index = 0; stereo_camera_index < images.Count / 2; stereo_camera_index++)
             {
-                Byte[] left_image = (Byte[])images[i * 2];
-                Byte[] right_image = (Byte[])images[(i * 2) + 1];
-                loadRawImages(i, left_image, right_image, 3);
+                Byte[] left_image = (Byte[])images[stereo_camera_index * 2];
+                Byte[] right_image = (Byte[])images[(stereo_camera_index * 2) + 1];
 
-                // perform scan matching for forwards or rearwards looking cameras
-                float pan_angle = head.pan + head.cameraPosition[i].pan;
-                if ((pan_angle == 0) || (pan_angle == (float)Math.PI))
-                {
-                    // create a scan matching object if needed
-                    if (head.scanmatch[i] == null)
-                        head.scanmatch[i] = new scanMatching();
-
-                    if (EnableScanMatching)
-                    {
-                        // perform scan matching
-                        head.scanmatch[i].update(correspondence.getRectifiedImage(true),
-                                                 head.calibration[i].leftcam.image_width,
-                                                 head.calibration[i].leftcam.image_height,
-                                                 head.calibration[i].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f,
-                                                 head.cameraPosition[i].roll,
-                                                 ScanMatchingMaxPanAngleChange * (float)Math.PI / 180.0f);
-                        if (head.scanmatch[i].pan_angle_change != scanMatching.NOT_MATCHED)
-                        {
-                            scanMatchesFound = true;
-                            if (ScanMatchingPanAngleEstimate == scanMatching.NOT_MATCHED)
-                            {
-                                // if this is the first time a match has been found 
-                                // use the current pan estimate
-                                ScanMatchingPanAngleEstimate = pan;
-                            }
-                            else
-                            {
-                                if (pan_angle == 0)
-                                    // forward facing camera
-                                    ScanMatchingPanAngleEstimate -= head.scanmatch[i].pan_angle_change;
-                                else
-                                    // rearward facing camera
-                                    ScanMatchingPanAngleEstimate += head.scanmatch[i].pan_angle_change;
-                            }
-                        }
-                    }
-                }                 
-                else head.scanmatch[i] = null;
+				// create a state for the thread
+				ThreadStereoCorrespondenceState state = new ThreadStereoCorrespondenceState();
+				state.stereo_camera_index = stereo_camera_index;
+				state.correspondence = correspondence[stereo_camera_index];
+				state.correspondence_algorithm_type = correspondence_algorithm_type;
+				state.fullres_left = left_image;
+				state.fullres_right = right_image;
+				state.bytes_per_pixel = 3;
+				state.head = head;
+				state.no_of_stereo_features = inverseSensorModel.no_of_stereo_features;
+		        state.EnableScanMatching = EnableScanMatching;
+		        state.ScanMatchingMaxPanAngleChange = ScanMatchingMaxPanAngleChange;
+		        state.ScanMatchingPanAngleEstimate = ScanMatchingPanAngleEstimate;
+		        state.pan = pan;				
+				
+                // add this state to the threads to be processed
+                ThreadStereoCorrespondence correspondence_update = new ThreadStereoCorrespondence(new WaitCallback(StereoCorrespondenceCallback), state);
+                correspondence_thread[stereo_camera_index] = new Thread(new ThreadStart(correspondence_update.Execute));
+                correspondence_thread[stereo_camera_index].Name = "stereo correspondence " + stereo_camera_index.ToString();
+                correspondence_thread[stereo_camera_index].Priority = ThreadPriority.AboveNormal;
+                activeThreads.Add(state);				
+								
+				//if (loadImages(correspondence_thread[stereo_camera_index],
+				//               stereo_camera_index, left_image, right_image))
+				//	scanMatchesFound = true;
             }
+			
+            // start all stereo correspondence threads
+			for (int th = 0; th < correspondence_thread.Length; th++)
+                correspondence_thread[th].Start();
+
+            // now sit back and wait for all threads to complete
+            while (activeThreads.Count > 0)
+            {
+                for (int th = activeThreads.Count - 1; th >= 0; th--)
+                {
+                    // is this thread still active?
+                    ThreadStereoCorrespondenceState state = (ThreadStereoCorrespondenceState)activeThreads[th];
+                    if (!state.active)
+                    {
+						if (state.scanMatchesFound) scanMatchesFound = true;
+						
+                        // remove from the list of active threads
+                        activeThreads.RemoveAt(th);
+						
+						Console.WriteLine("Correspondence thread complete");
+                    }
+                }
+            }			
 
             // if no scan matches were found set the robots pan angle estimate accordingly
             if (!scanMatchesFound) ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
@@ -878,8 +974,8 @@ namespace sentience.core
                 loadImages(images);
 
                 // create an observation as a set of rays from the stereo correspondence results
-                ArrayList[] stereo_rays = new ArrayList[head.no_of_cameras];
-                for (int cam = 0; cam < head.no_of_cameras; cam++)
+                ArrayList[] stereo_rays = new ArrayList[head.no_of_stereo_cameras];
+                for (int cam = 0; cam < head.no_of_stereo_cameras; cam++)
                     stereo_rays[cam] = inverseSensorModel.createObservation(head, cam);
 
                 // update the motion model and occupancy grid
@@ -1272,7 +1368,7 @@ namespace sentience.core
             nodeRobot.AppendChild(nodeSensorPlatform);
 
             xml.AddComment(doc, nodeSensorPlatform, "Number of stereo cameras");
-            xml.AddTextElement(doc, nodeSensorPlatform, "NoOfStereoCameras", Convert.ToString(head.no_of_cameras));
+            xml.AddTextElement(doc, nodeSensorPlatform, "NoOfStereoCameras", Convert.ToString(head.no_of_stereo_cameras));
 
             xml.AddComment(doc, nodeSensorPlatform, "The type of head");
             xml.AddTextElement(doc, nodeSensorPlatform, "HeadType", Convert.ToString(HeadType));
@@ -1295,7 +1391,7 @@ namespace sentience.core
             xml.AddComment(doc, nodeSensorPlatform, "Orientation of the cameras");
             xml.AddTextElement(doc, nodeSensorPlatform, "CameraOrientation", Convert.ToString(CameraOrientation));
 
-            for (int i = 0; i < head.no_of_cameras; i++)
+            for (int i = 0; i < head.no_of_stereo_cameras; i++)
             {
                 nodeSensorPlatform.AppendChild(head.calibration[i].getXml(doc, nodeSensorPlatform, 2));
 
