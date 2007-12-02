@@ -66,6 +66,8 @@
     <Compile Include="stereoModel.cs" />
     <Compile Include="ThreadMappingState.cs" />
     <Compile Include="ThreadMappingUpdate.cs" />
+    <Compile Include="ThreadStereoCorrespondence.cs" />
+    <Compile Include="ThreadStereoCorrespondenceState.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LICENCE.txt" />

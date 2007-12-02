@@ -293,6 +293,7 @@ namespace sentience.core
             // detail, but not so large that the mapping consumes a huge amount of 
             // processing resource
             inverseSensorModel.no_of_stereo_features = rays_per_stereo_camera;
+            correspondence = new stereoCorrespondence[no_of_stereo_cameras];
 			for (int i = 0; i < no_of_stereo_cameras; i++)
                 correspondence[i] = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
 
@@ -717,73 +718,6 @@ namespace sentience.core
             previousPosition.pan = pan;
             previousPosition.tilt = tilt;
         }
-
-		/// <summary>
-		/// process a pair of images from a stereo camera
-		/// </summary>
-		/// <param name="stereo_camera_index">
-		/// A <see cref="System.Int32"/>
-		/// </param>
-		/// <param name="left_image">
-		/// A <see cref="Byte"/>
-		/// </param>
-		/// <param name="right_image">
-		/// A <see cref="Byte"/>
-		/// </param>
-		/// <returns>
-		/// A <see cref="System.Boolean"/>
-		/// </returns>
-		/*
-        private bool loadImages(Thread th, int stereo_camera_index, 
-		                        Byte[] left_image, Byte[] right_image)
-        {            
-            bool scanMatchesFound = false;
-
-			loadRawImages(stereo_camera_index, left_image, right_image, 3);
-
-            // perform scan matching for forwards or rearwards looking cameras
-            float pan_angle = head.pan + head.cameraPosition[stereo_camera_index].pan;
-            if ((pan_angle == 0) || (pan_angle == (float)Math.PI))
-            {
-                // create a scan matching object if needed
-                if (head.scanmatch[stereo_camera_index] == null)
-                    head.scanmatch[stereo_camera_index] = new scanMatching();
-
-                if (EnableScanMatching)
-                {
-                    // perform scan matching
-                    head.scanmatch[stereo_camera_index].update(
-					    correspondence[stereo_camera_index].getRectifiedImage(true),
-                        head.calibration[stereo_camera_index].leftcam.image_width,
-                        head.calibration[stereo_camera_index].leftcam.image_height,
-                        head.calibration[stereo_camera_index].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f,
-                        head.cameraPosition[stereo_camera_index].roll,
-                        ScanMatchingMaxPanAngleChange * (float)Math.PI / 180.0f);
-                    if (head.scanmatch[stereo_camera_index].pan_angle_change != scanMatching.NOT_MATCHED)
-                    {
-                        scanMatchesFound = true;
-                        if (ScanMatchingPanAngleEstimate == scanMatching.NOT_MATCHED)
-                        {
-                            // if this is the first time a match has been found 
-                            // use the current pan estimate
-                            ScanMatchingPanAngleEstimate = pan;
-                        }
-                        else
-                        {
-                            if (pan_angle == 0)
-                                // forward facing camera
-                                ScanMatchingPanAngleEstimate -= head.scanmatch[stereo_camera_index].pan_angle_change;
-                            else
-                                // rearward facing camera
-                                ScanMatchingPanAngleEstimate += head.scanmatch[stereo_camera_index].pan_angle_change;
-                        }
-                    }
-                }
-            }                 
-            else head.scanmatch[stereo_camera_index] = null;
-			return(scanMatchesFound);
-		}		
-		*/
 		
         /// <summary>
         /// the stereo correspondence thread has called back
@@ -800,8 +734,9 @@ namespace sentience.core
         /// </summary>
         /// <param name="images">list of images (byte arrays) in left/right order</param>
         private void loadImages(ArrayList images)
-        {            
-            clock.Start();
+        {
+            stopwatch correspondence_time = new stopwatch();
+            correspondence_time.Start();
 			
             bool scanMatchesFound = false;
 
@@ -827,7 +762,8 @@ namespace sentience.core
 		        state.EnableScanMatching = EnableScanMatching;
 		        state.ScanMatchingMaxPanAngleChange = ScanMatchingMaxPanAngleChange;
 		        state.ScanMatchingPanAngleEstimate = ScanMatchingPanAngleEstimate;
-		        state.pan = pan;				
+		        state.pan = pan;
+                state.active = true;
 				
                 // add this state to the threads to be processed
                 ThreadStereoCorrespondence correspondence_update = new ThreadStereoCorrespondence(new WaitCallback(StereoCorrespondenceCallback), state);
@@ -835,10 +771,6 @@ namespace sentience.core
                 correspondence_thread[stereo_camera_index].Name = "stereo correspondence " + stereo_camera_index.ToString();
                 correspondence_thread[stereo_camera_index].Priority = ThreadPriority.AboveNormal;
                 activeThreads.Add(state);				
-								
-				//if (loadImages(correspondence_thread[stereo_camera_index],
-				//               stereo_camera_index, left_image, right_image))
-				//	scanMatchesFound = true;
             }
 			
             // start all stereo correspondence threads
@@ -858,8 +790,6 @@ namespace sentience.core
 						
                         // remove from the list of active threads
                         activeThreads.RemoveAt(th);
-						
-						Console.WriteLine("Correspondence thread complete");
                     }
                 }
             }			
@@ -867,8 +797,8 @@ namespace sentience.core
             // if no scan matches were found set the robots pan angle estimate accordingly
             if (!scanMatchesFound) ScanMatchingPanAngleEstimate = scanMatching.NOT_MATCHED;
 
-            clock.Stop();
-            benchmark_stereo_correspondence = clock.time_elapsed_mS;
+            correspondence_time.Stop();
+            benchmark_stereo_correspondence = correspondence_time.time_elapsed_mS;
         }
 
         /// <summary>
