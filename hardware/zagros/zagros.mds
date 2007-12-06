@@ -1,0 +1,16 @@
+<Combine name="zagros" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="zagros" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="zagros" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="zagros" single="True">
+    <Execute type="None" entry="zagros" />
+  </StartMode>
+  <Entries>
+    <Entry filename="zagros.mdp" />
+  </Entries>
+</Combine>

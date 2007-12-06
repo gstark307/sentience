@@ -1,0 +1,29 @@
+﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/hardware/zagros/zagros.mds">
+  <Files>
+    <File name="Welcome" />
+    <File name="AssemblyInfo.cs" line="20" column="3" />
+    <File name="HC11comms.cs" line="45" column="12" />
+  </Files>
+  <Views>
+    <ViewMemento id="ProjectPad">
+      <Node expanded="True">
+        <Node name="zagros" expanded="True">
+          <Node name="HC11comms.cs" selected="True" />
+        </Node>
+      </Node>
+    </ViewMemento>
+    <ViewMemento id="ClassPad">
+      <Node expanded="True" />
+    </ViewMemento>
+    <ViewMemento id="ConnectionManagerPad">
+      <Node />
+    </ViewMemento>
+    <ViewMemento id="MonoDevelop.NUnit.TestPad">
+      <Node />
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/hardware/zagros/HC11comms.cs" />
+    <Property key="ActiveConfiguration" value="Debug" />
+  </Properties>
+</UserCombinePreferences>
