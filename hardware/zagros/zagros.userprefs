@@ -2,7 +2,7 @@
   <Files>
     <File name="Welcome" />
     <File name="AssemblyInfo.cs" line="20" column="3" />
-    <File name="HC11comms.cs" line="45" column="12" />
+    <File name="HC11comms.cs" line="221" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">

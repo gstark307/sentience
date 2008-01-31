@@ -94,7 +94,7 @@ namespace sentience.core
 
             if (garbage_entries > 0)
             {
-                for (int i = 0; i < garbage.Length; i++)
+                for (int i = garbage.Length-1; i >= 0; i--)
                 {
                     if (garbage[i] == true)
                         collected_items += GarbageCollect(i);
@@ -179,108 +179,124 @@ namespace sentience.core
         /// <param name="colour">average colour of this grid cell</param>
         /// <param name="mean_variance">average colour variance of this grid cell</param>
         /// <returns>probability value</returns>
-        public float GetProbability(particlePose pose, 
+        public unsafe float GetProbability(particlePose pose, 
                                     int x, int y, int z, 
                                     bool returnLogOdds,
                                     float[] colour, 
                                     ref float mean_variance)
         {
-            int hits = 0;
+            int col, p, i, hits = 0;
             float probabilityLogOdds = 0;
+			byte level;
+			List<particleGridCell> map_cache_observations;
+			List<particlePath> previous_paths = pose.previous_paths;
+			particleGridCell h;
+			particlePath path;
+			uint time_step = pose.time_step;
             mean_variance = 1;
 
-            for (int col = 0; col < 3; col++)
-                colour[col] = 0;
+			// pin some arrays to avoid range checking
+			fixed (float* unsafe_colour = colour)
+			{
+			    fixed (float* unsafe_min_level = min_level)
+			    {			
+			        fixed (float* unsafe_max_level = max_level)
+			        {
+			            for (col = 2; col >= 0; col--)
+			                unsafe_colour[col] = 0;
 
-            // first retrieve any distilled occupancy value
-            if (distilled != null)
-                if (distilled[z] != null)
-                {
-                    probabilityLogOdds += distilled[z].probabilityLogOdds;
-                    for (int col = 0; col < 3; col++)
-                        colour[col] += distilled[z].colour[col];
-                    hits++;
-                }
+			            // first retrieve any distilled occupancy value
+			            if (distilled != null)
+			                if (distilled[z] != null)
+			                {
+			                    probabilityLogOdds += distilled[z].probabilityLogOdds;
+			                    for (col = 2; col >= 0; col--)
+			                        unsafe_colour[col] += distilled[z].colour[col];
+			                    hits++;
+			                }
 
-            // and now get the data for any additional non-distilled particles
-            if ((Hypothesis[z] != null) && (pose != null))
-            {
-                if (pose.previous_paths != null)
-                {
-                    // cycle through the previous paths for this pose            
-                    for (int p = pose.previous_paths.Count-1; p >= 0; p--)
-                    {
-                        particlePath path = (particlePath)pose.previous_paths[p];
-                        if (path != null)
-                        {
-                            if (path.Enabled)
-                            {
-                                // do any hypotheses for this path exist at this location ?
-                                List<particleGridCell> map_cache_observations = path.GetHypotheses(x, y, z);
-                                if (map_cache_observations != null)
-                                {
-                                    for (int i = map_cache_observations.Count - 1; i >= 0; i--)
-                                    {
-                                        particleGridCell h = map_cache_observations[i];
-                                        if (h.Enabled)
-                                        {
-                                            // only use evidence older than the current time 
-                                            // step to avoid getting into a muddle
-                                            if (pose.time_step != h.pose.time_step)
-                                            {
-                                                probabilityLogOdds += h.probabilityLogOdds;
+			            // and now get the data for any additional non-distilled particles
+			            if ((Hypothesis[z] != null) && (pose != null))
+			            {
+			                if (previous_paths != null)
+			                {
+			                    // cycle through the previous paths for this pose            
+			                    for (p = previous_paths.Count-1; p >= 0; p--)
+			                    {
+			                        path = previous_paths[p];
+			                        if (path != null)
+			                        {
+			                            if (path.Enabled)
+			                            {
+			                                // do any hypotheses for this path exist at this location ?
+			                                map_cache_observations = path.GetHypotheses(x, y, z);
+			                                if (map_cache_observations != null)
+			                                {
+			                                    for (i = map_cache_observations.Count - 1; i >= 0; i--)
+			                                    {
+			                                        h = map_cache_observations[i];
+			                                        if (h.Enabled)
+			                                        {
+			                                            // only use evidence older than the current time 
+			                                            // step to avoid getting into a muddle
+			                                            if (time_step != h.pose.time_step)
+			                                            {
+			                                                probabilityLogOdds += h.probabilityLogOdds;
 
-                                                // update mean colour and variance
-                                                for (int col = 0; col < 3; col++)
-                                                {
-                                                    Byte level = h.colour[col];
-                                                    colour[col] += level;
+			                                                // update mean colour and variance
+			                                                for (col = 2; col >= 0; col--)
+			                                                {
+			                                                    level = h.colour[col];
+			                                                    unsafe_colour[col] += level;
 
-                                                    // update colour variance
-                                                    if (hits > 0)
-                                                    {
-                                                        if (level < min_level[col])
-                                                            min_level[col] = level;
+			                                                    // update colour variance
+			                                                    if (hits > 0)
+			                                                    {
+			                                                        if (level < unsafe_min_level[col])
+			                                                            unsafe_min_level[col] = level;
 
-                                                        if (level > max_level[col])
-                                                            max_level[col] = level;
-                                                    }
-                                                    else
-                                                    {
-                                                        min_level[col] = level;
-                                                        max_level[col] = level;
-                                                    }
-                                                }
+			                                                        if (level > unsafe_max_level[col])
+			                                                            unsafe_max_level[col] = level;
+			                                                    }
+			                                                    else
+			                                                    {
+			                                                        unsafe_min_level[col] = level;
+			                                                        unsafe_max_level[col] = level;
+			                                                    }
+			                                                }
 
-                                                hits++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // remove a dead path, because it has been distilled
-                                pose.previous_paths.RemoveAt(p);
-                            }
-                        }
-                    }
+			                                                hits++;
+			                                            }
+			                                        }
+			                                    }
+			                                }
+			                            }
+			                            else
+			                            {
+			                                // remove a dead path, because it has been distilled
+			                                pose.previous_paths.RemoveAt(p);
+			                            }
+			                        }
+			                    }
 
 
-                }
-            }
+			                }
+			            }
+					}
+				}
+			}
 
             if (hits > 0)
             {
                 // calculate mean colour variance
                 mean_variance = 0;
-                for (int col = 0; col < 3; col++)
+                for (col = 0; col < 3; col++)
                     mean_variance += max_level[col] - min_level[col];
                 //mean_variance /= (3 * 255.0f);
                 mean_variance *= 0.001307189542483660130718954248366f;
 
                 // calculate the average colour
-                for (int col = 2; col >= 0; col--)
+                for (col = 2; col >= 0; col--)
                     colour[col] /= hits;
 
                 // at the end we convert the total log odds value into a probability
@@ -327,7 +343,7 @@ namespace sentience.core
             distilled[z].probabilityLogOdds += hypothesis.probabilityLogOdds;
 
             // and update the distilled colour value
-            for (int col = 0; col < 3; col++)
+            for (int col = 2; col >= 0; col--)
             {
                 if (initialised)
                     distilled[z].colour[col] = hypothesis.colour[col];

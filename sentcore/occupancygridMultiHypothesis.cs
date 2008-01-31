@@ -496,6 +496,8 @@ namespace sentience.core
             int max_modelcomponent = VACANT_SENSORMODEL_RIGHT_CAMERA;
             if (TurboMode) max_modelcomponent = VACANT_SENSORMODEL_LEFT_CAMERA;
 
+			float[][] sensormodel_lookup_probability = sensormodel_lookup.probability;
+			
             // consider each of the three parts of the sensor model
             for (int modelcomponent = OCCUPIED_SENSORMODEL; modelcomponent <= max_modelcomponent; modelcomponent++)
             {
@@ -659,7 +661,7 @@ namespace sentience.core
                                 // get the probability at this point 
                                 // for the central axis of the ray using the inverse sensor model
                                 if (modelcomponent == OCCUPIED_SENSORMODEL)
-                                    centre_prob = 0.5f + (sensormodel_lookup.probability[sensormodel_index][grid_step] / 2.0f);
+                                    centre_prob = 0.5f + (sensormodel_lookup_probability[sensormodel_index][grid_step] * 0.5f);
                                 else
                                     // calculate the probability from the vacancy model
                                     centre_prob = vacancyFunction(grid_step / (float)steps, steps);
