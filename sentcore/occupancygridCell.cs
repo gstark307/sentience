@@ -189,10 +189,10 @@ namespace sentience.core
             float probabilityLogOdds = 0;
 			byte level;
 			List<particleGridCell> map_cache_observations;
-			List<particlePath> previous_paths = pose.previous_paths;
+			List<particlePath> previous_paths;
 			particleGridCell h;
 			particlePath path;
-			uint time_step = pose.time_step;
+			uint time_step;
             mean_variance = 1;
 
 			// pin some arrays to avoid range checking
@@ -218,8 +218,11 @@ namespace sentience.core
 			            // and now get the data for any additional non-distilled particles
 			            if ((Hypothesis[z] != null) && (pose != null))
 			            {
+                            previous_paths = pose.previous_paths;                            
 			                if (previous_paths != null)
 			                {
+                                time_step = pose.time_step;
+
 			                    // cycle through the previous paths for this pose            
 			                    for (p = previous_paths.Count-1; p >= 0; p--)
 			                    {
