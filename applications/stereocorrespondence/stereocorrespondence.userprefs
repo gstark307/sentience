@@ -28,9 +28,6 @@
     <ViewMemento id="ClassPad">
       <Node expanded="True" />
     </ViewMemento>
-    <ViewMemento id="ConnectionManagerPad">
-      <Node />
-    </ViewMemento>
     <ViewMemento id="MonoDevelop.NUnit.TestPad">
       <Node />
     </ViewMemento>

@@ -1862,23 +1862,24 @@ namespace sluggish.utilities
         #region "loading from different formats"
 
         /// <summary>
-        /// load a bitmap file and return a byte array
-        /// </summary>
-        public static byte[] loadFromBitmap(String filename,
+		/// load a bitmap file and return a byte array
+		/// </summary>
+		public static byte[] loadFromBitmap(String filename,
                                             ref int image_width, ref int image_height,
                                             ref int bytes_per_pixel)
         {
             const int offset = 0x12;
+            const int data_offset_position = 0xA;
             byte[] bmp = null;
-
+        
             if (File.Exists(filename))
             {
                 FileStream fp = new FileStream(filename, FileMode.Open);
                 BinaryReader binfile = new BinaryReader(fp);
-
+                
                 byte[] data = new byte[54];
                 binfile.Read(data, 0, 54);
-
+                
                 byte[] width_bytes = new byte[4];
                 for (int i = 0; i < width_bytes.Length; i++)
                     width_bytes[i] = data[i + offset];
@@ -1887,23 +1888,36 @@ namespace sluggish.utilities
                 for (int i = 0; i < height_bytes.Length; i++)
                     height_bytes[i] = data[i + offset + 4];
 
-                bytes_per_pixel = ArrayConversions.ToWord(data[offset + 10], data[offset + 11]) / 8;
+                byte[] data_offset_bytes = new byte[4];
+                for (int i = 0; i < data_offset_bytes.Length; i++)
+                    data_offset_bytes[i] = data[i + data_offset_position];
+                    
+                bytes_per_pixel = ArrayConversions.ToWord(data[offset + 10], data[offset + 11]) / 8;                    
                 image_width = ArrayConversions.ToDWord(width_bytes);
                 image_height = ArrayConversions.ToDWord(height_bytes);
-
+                int data_offset = ArrayConversions.ToDWord(data_offset_bytes);
+                
                 binfile.Close();
                 fp.Close();
-
-                bmp = loadFromBitmap(filename, image_width, image_height, bytes_per_pixel);
+                
+                bmp = loadFromBitmap(filename, image_width, image_height, bytes_per_pixel, data_offset);
             }
-
-            return (bmp);
+            
+            return(bmp);
         }
 
         /// <summary>
-        /// load a bitmap file and return a byte array
-        /// </summary>
+		/// load a bitmap file and return a byte array
+		/// </summary>
         public static byte[] loadFromBitmap(String filename, int image_width, int image_height, int bytes_per_pixel)
+        {
+            return (loadFromBitmap(filename, image_width, image_height, bytes_per_pixel, 54));
+        }
+        
+        /// <summary>
+		/// load a bitmap file and return a byte array
+		/// </summary>
+		public static byte[] loadFromBitmap(String filename, int image_width, int image_height, int bytes_per_pixel, int data_offset)
         {
             byte[] bmp = new Byte[image_width * image_height * bytes_per_pixel];
 
@@ -1912,7 +1926,7 @@ namespace sluggish.utilities
                 FileStream fp = new FileStream(filename, FileMode.Open);
                 BinaryReader binfile = new BinaryReader(fp);
 
-                int n = 54;
+                int n = data_offset;
                 int n2 = 0;
                 byte[] data = new byte[(image_width * image_height * bytes_per_pixel) + n];
                 binfile.Read(data, 0, (image_width * image_height * bytes_per_pixel) + n);
@@ -1939,9 +1953,11 @@ namespace sluggish.utilities
         }
 
 
-        public static byte[] loadFromPGM(String filename, int image_width, int image_height, int bytes_per_pixel)
+        public static byte[] loadFromPGM(String filename, 
+                                         ref int image_width, ref int image_height, 
+                                         int bytes_per_pixel)
         {
-            byte[] bmp = new byte[image_width * image_height * bytes_per_pixel];
+            byte[] bmp = null;
 
             if (File.Exists(filename))
             {
@@ -1949,8 +1965,71 @@ namespace sluggish.utilities
                 BinaryReader binfile = new BinaryReader(fp);
                 int n = 96;
                 int n2 = 0;
-                byte[] data = new byte[(image_width * image_height) + n];
-                binfile.Read(data, 0, (image_width * image_height) + n);
+                int row = 0;
+                bool reading_image_data = false;
+                
+                byte[] data = new byte[n];
+                binfile.Read(data, 0, n);                
+                
+                int i = 0;
+                string s = "";
+                bool isnumeric = true;
+                while ((i < n-1) && (!reading_image_data))
+                {
+                    if (data[i] == 10)
+                    {
+                        //Console.Write(s);
+                        if ((isnumeric) && (s.Length > 0))
+                        {
+                            string[] w = s.Split(' ');
+                            if (w.Length == 2)
+                            {
+                                image_width = Convert.ToInt32(w[0]);
+                                image_height = Convert.ToInt32(w[1]);
+                                i = n;
+                            }
+                        }
+                        s = s.Trim();
+                        if (s.Length > 0)
+                        {
+                            if (s.Substring(0,1) != "#")
+                            {
+                                row++;
+                                
+                                if (row >= 2)
+                                {
+                                    reading_image_data = true;
+                                    //Console.WriteLine("hello");
+                                    //Console.WriteLine("i = " + i.ToString());
+                                }
+                            }
+                        }
+                        s = "";
+                        isnumeric = true;
+                    }
+                    else
+                    {
+                        if (data[i] == 9) data[i] = 32;
+                        char c = Convert.ToChar(data[i]);
+                        if ((c != ' ') && (data[i] != 13))
+                        {
+                            if (!((data[i] >= 48) && (data[i] < 58)))
+                                isnumeric = false;
+                        }
+                        s += c;
+                    }
+                    i++;
+                }
+                i--;
+                
+                //Console.WriteLine("row = " + row.ToString());
+                //Console.WriteLine("i = " + i.ToString());
+                
+                n=0;
+                bmp = new byte[image_width * image_height * bytes_per_pixel];
+                data = new byte[(image_width * image_height)+n];
+                binfile.Read(data, 0, (image_width * image_height)+n);
+                
                 for (int y = 0; y < image_height; y++)
                 {
                     for (int x = 0; x < image_width; x++)

@@ -47,20 +47,27 @@ namespace stereo
 
                     if (image_data.Count == 2)
                     {
-                        // get the file in which raw data will be saved
-                        string data_filename = GetDataFile(args);
+                        if ((image_width == 0) || (image_height== 0))
+                        {
+                            Console.WriteLine("Error loading images: images have zero dimensions");
+                        }
+                        else
+                        {                        
+                            // get the file in which raw data will be saved
+                            string data_filename = GetDataFile(args);
 
-                        // get the maximum disparity value
-                        int maximum_disparity_percent = GetMaximumDisparity(args);
+                            // get the maximum disparity value
+                            int maximum_disparity_percent = GetMaximumDisparity(args);
 
-                        // get the stereo camera calibration filename
-                        string calibration_filename = GetCalibrationFile(args);
+                            // get the stereo camera calibration filename
+                            string calibration_filename = GetCalibrationFile(args);
 
-                        string output_filename = "depthmap.bmp";
-                        if (filename.Count > 2) output_filename = filename[2];
+                            string output_filename = "depthmap.bmp";
+                            if (filename.Count > 2) output_filename = filename[2];
 
-                        // perform stereo correspondence
-                        StereoMatch(calibration_filename, data_filename, image_data, image_width, image_height, maximum_disparity_percent, output_filename);
+                            // perform stereo correspondence
+                            StereoMatch(calibration_filename, data_filename, image_data, image_width, image_height, maximum_disparity_percent, output_filename);
+                        }
                     }
                 }
             }
@@ -100,7 +107,7 @@ namespace stereo
         /// <returns>maximum disparity value</returns>
         private static int GetMaximumDisparity(string[] args)
         {
-            int maximum_disparity_percent = 20;
+            int maximum_disparity_percent = 10;
 
             for (int i = 0; i < args.Length - 1; i++)
             {
@@ -400,18 +407,25 @@ namespace stereo
         {
             byte[] img = null;
 
-            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
-            if (bmp != null)
+            if (filename.ToLower().EndsWith(".pgm"))
             {
-                image_width = bmp.Width;
-                image_height = bmp.Height;
-                img = new byte[image_width * image_height * 3];
+                img = image.loadFromPGM(filename, ref image_width, ref image_height, 1);
+            }
+            else
+            {
+                Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+                if (bmp != null)
+                {
+                    image_width = bmp.Width;
+                    image_height = bmp.Height;
+                    img = new byte[image_width * image_height * 3];
 
-                // get the as a byte array
-                BitmapArrayConversions.updatebitmap(bmp, img);
+                    // get the as a byte array
+                    BitmapArrayConversions.updatebitmap(bmp, img);
 
-                // convert the image to mono format (1 byte per pixel)
-                img = image.monoImage(img, image_width, image_height);
+                    // convert the image to mono format (1 byte per pixel)
+                    img = image.monoImage(img, image_width, image_height);
+                }
             }
 
             return (img);

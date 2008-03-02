@@ -683,9 +683,9 @@ namespace sentience.core
         {
             int tries = 0;
             int x_reduction = step_size * disparity_map_compression;
-            int max_x = wdth / x_reduction;
+            int max_x = disparity_map.Length; //wdth / x_reduction;
             int y_reduction = vertical_compression * disparity_map_compression;
-            int max_y = hght / y_reduction;
+            int max_y = disparity_map[0].Length; //hght / y_reduction;
             no_of_selected_features = 0;
             selected_features = new float[required_features*3];
             bool[,] touched = new bool[max_x, max_y];

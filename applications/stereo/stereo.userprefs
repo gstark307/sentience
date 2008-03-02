@@ -1,22 +1,20 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/stereo/stereo.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="23" column="22" />
-    <File name="../../sentcore/calibration.cs" line="26" column="1" />
-    <File name="../../FASTcorners/FAST.cs" line="28" column="1" />
-    <File name="Properties/AssemblyInfo.cs" line="13" column="16" />
+    <File name="Main.cs" line="1" column="1" />
+    <File name="../../utilities/image.cs" line="1974" column="27" />
+    <File name="../../utilities/ArrayConversions.cs" line="29" column="4" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="stereo" expanded="True" selected="True">
-          <Node name="Properties" expanded="True" />
+        <Node name="stereo" expanded="True">
+          <Node name="Main.cs" selected="True" />
         </Node>
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
       <Node expanded="True">
-        <Node name="pathplanner" expanded="True" />
         <Node name="sentcore" expanded="True" />
         <Node name="utilities" expanded="True" />
       </Node>
@@ -26,7 +24,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/stereo/Properties/AssemblyInfo.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/stereo/Main.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>
