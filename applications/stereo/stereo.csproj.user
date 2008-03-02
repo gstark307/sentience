@@ -1,0 +1,8 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <StartArguments>test_left_1.jpg test_right_1.jpg test.bmp -calib calibration.xml</StartArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <StartArguments>test_left_1.jpg test_right_1.jpg test.bmp -calib calibration.xml</StartArguments>
+  </PropertyGroup>
+</Project>
