@@ -51,11 +51,11 @@
     <File name="ThreadStereoCorrespondenceState.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
-    <ProjectReference type="Project" localcopy="True" refto="FASTcorners" />
     <ProjectReference type="Project" localcopy="True" refto="memcompressor" />
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Project" localcopy="True" refto="pathplanner" />
     <ProjectReference type="Project" localcopy="True" refto="utilities" />
+    <ProjectReference type="Project" localcopy="True" refto="FASTcorners" />
   </References>
 </Project>

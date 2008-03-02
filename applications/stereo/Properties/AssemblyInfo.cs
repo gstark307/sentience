@@ -1,33 +1,37 @@
-﻿using System.Reflection;
+// /home/motters/develop/sentience/applications/mapping/AssemblyInfo.cs created with MonoDevelop
+// User: motters at 6:50 PM 8/11/2007
+//
+// To change standard headers go to Edit->Preferences->Coding->Standard Headers
+//
+using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
+// Information about this assembly is defined by the following
+// attributes.
+//
+// change them to the information which is associated with the assembly
+// you compile.
+
 [assembly: AssemblyTitle("stereo")]
-[assembly: AssemblyDescription("A command line utility for stereo correspondence")]
+[assembly: AssemblyDescription("A command line utility for stereo correspondance")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sluggish Software")]
 [assembly: AssemblyProduct("stereo")]
-[assembly: AssemblyCopyright("Copyright © Sluggish Software 2008")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("b7caf6f7-7e13-44ee-b27a-34017b6e5e0a")]
-
-// Version information for an assembly consists of the following four values:
+// The assembly version has following format :
 //
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
+// Major.Minor.Build.Revision
 //
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+// You can specify all values by your own or you can build default build and revision
+// numbers with the '*' character (the default):
+
+[assembly: AssemblyVersion("1.0.*")]
+
+// The following attributes specify the key for the sign of your assembly. See the
+// .NET Framework documentation for more information about signing.
+// This is not required, if you don't want signing let these attributes like they're.
+[assembly: AssemblyDelaySign(false)]
+[assembly: AssemblyKeyFile("")]

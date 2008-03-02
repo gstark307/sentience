@@ -1,0 +1,37 @@
+<Combine name="stereo" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="stereo" configuration="Debug" />
+      <Entry build="True" name="sentcore" configuration="Debug" />
+      <Entry build="True" name="pathplanner" configuration="Debug" />
+      <Entry build="True" name="memcompressor" configuration="Debug" />
+      <Entry build="True" name="FASTcorners" configuration="Debug" />
+      <Entry build="True" name="utilities" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="stereo" configuration="Release" />
+      <Entry build="True" name="sentcore" configuration="Release" />
+      <Entry build="True" name="pathplanner" configuration="Release" />
+      <Entry build="True" name="memcompressor" configuration="Release" />
+      <Entry build="True" name="FASTcorners" configuration="Release" />
+      <Entry build="True" name="utilities" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="stereo" single="True">
+    <Execute type="None" entry="stereo" />
+    <Execute type="None" entry="sentcore" />
+    <Execute type="None" entry="pathplanner" />
+    <Execute type="None" entry="memcompressor" />
+    <Execute type="None" entry="FASTcorners" />
+    <Execute type="None" entry="utilities" />
+  </StartMode>
+  <MonoDevelop.ChangeLogAddIn.ChangeLogInfo policy="UpdateNearestChangeLog" />
+  <Entries>
+    <Entry filename="stereo.mdp" />
+    <Entry filename="../../sentcore/sentcore.mdp" />
+    <Entry filename="../../pathplanner/pathplanner.mdp" />
+    <Entry filename="../../MemCompressor/memcompressor.mdp" />
+    <Entry filename="../../FASTcorners/FASTcorners.mdp" />
+    <Entry filename="../../utilities/utilities.mdp" />
+  </Entries>
+</Combine>
