@@ -1,0 +1,20 @@
+<Combine name="fishfood" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="fishfood" configuration="Debug" />
+      <Entry build="True" name="Packages" configuration="" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="fishfood" configuration="Release" />
+      <Entry build="True" name="Packages" configuration="" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="fishfood" single="True">
+    <Execute type="None" entry="fishfood" />
+    <Execute type="None" entry="Packages" />
+  </StartMode>
+  <Entries>
+    <Entry filename="fishfood.mdp" />
+    <Entry filename="Packages.mdse" />
+  </Entries>
+</Combine>
