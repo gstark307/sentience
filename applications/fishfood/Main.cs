@@ -198,6 +198,8 @@ namespace sentience.calibration
                 if (dot_shapes[i].y > by) by = dot_shapes[i].y;
                 dots.Add(dot_shapes[i]);
             }
+            
+            Console.WriteLine(dot_shapes.Count.ToString() + " dots discovered");
 
             // create a histogram of the spacings between dots            
             int distance_quantisation = 5;
@@ -221,17 +223,79 @@ namespace sentience.calibration
                 
                 // find the histogram peak
                 float histogram_max = 0;
-                int peak = 0;
+                float typical_dot_separation = 0;
                 for (int i = 0; i < dot_spacing_histogram.Length; i++)
                 {
                     if (dot_spacing_histogram[i] > histogram_max)
                     {
                         histogram_max = dot_spacing_histogram[i];
-                        peak = i * distance_quantisation;
+                        typical_dot_separation = i * distance_quantisation;
                     }
                 }
                 
+                // join dots within the typical separation radius
+                int joins = 0;
+                float max_separation = typical_dot_separation * 1.2f;
+                for (int i = 0; i < dot_shapes.Count; i++)
+                {
+                    for (int j = i+1; j < dot_shapes.Count; j++)
+                    {
+                        if (i != j)
+                        {
+                            float dx = dot_shapes[i].x - dot_shapes[j].x;
+                            float dy = dot_shapes[i].y - dot_shapes[j].y;
+                            float dist = (float)Math.Sqrt((dx*dx)+(dy*dy));
+                            if (dist < max_separation)
+                            {
+                                dots.LinkByIndex(i, j);
+                                dots.LinkByIndex(j, i);
+                                joins++;
+                            }
+                        }
+                    }
+                }
                 
+                Console.WriteLine(joins.ToString() + " dots joined");
+                                
+                // remove crossed links
+                List<hypergraph_link> victims = new List<hypergraph_link>();
+                for (int i = 0; i < dots.Links.Count; i++)
+                {
+                    hypergraph_link link1 = dots.Links[i];
+                    calibrationDot link1_from = (calibrationDot)link1.From;
+                    calibrationDot link1_to = (calibrationDot)link1.To;
+                    float x0 = link1_from.x;
+                    float y0 = link1_from.y;
+                    float x1 = link1_to.x;
+                    float y1 = link1_to.y;
+                    for (int j = i + 1; j < dots.Links.Count; j++)
+                    {
+                        hypergraph_link link2 = dots.Links[j];
+                        if ((link2.From != link1.From) &&
+                            (link2.From != link1.To) &&
+                            (link2.To != link1.From) &&
+                            (link2.To != link1.To))
+                        {
+                            calibrationDot link2_from = (calibrationDot)link2.From;
+                            calibrationDot link2_to = (calibrationDot)link2.To;
+                            float x2 = link2_from.x;
+                            float y2 = link2_from.y;
+                            float x3 = link2_to.x;
+                            float y3 = link2_to.y;
+                            
+                            float ix = 0, iy = 0;
+                            if (geometry.intersection(x0,y0,x1,y1, x2,y2,x3,y3, ref ix, ref iy))
+                            {
+                                if (!victims.Contains(link1)) victims.Add(link1);
+                                if (!victims.Contains(link2)) victims.Add(link2);
+                            }
+                        }
+                    }
+                }
+                
+                dots.RemoveLinks(victims);
+                
+                Console.WriteLine(victims.Count.ToString() + " crossed links removed");
             }
                 
             return(dots);

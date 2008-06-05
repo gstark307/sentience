@@ -51,17 +51,20 @@ namespace sentience.calibration
     public class hypergraph
     {
         public List<hypergraph_node> Nodes;
+        public List<hypergraph_link> Links;
         
         #region "constructors"        
         
         public hypergraph()
         {
             Nodes = new List<hypergraph_node>();
+            Links = new List<hypergraph_link>();
         }
 
         public hypergraph(int no_of_nodes, int no_of_flags)
         {
             Nodes = new List<hypergraph_node>();
+            Links = new List<hypergraph_link>();
             for (int i = 0; i < no_of_nodes; i++)
             {
                 hypergraph_node node = new hypergraph_node(no_of_flags);
@@ -151,6 +154,7 @@ namespace sentience.calibration
             link.From = Nodes[from_node_index];
             link.To = Nodes[to_node_index];
             link.To.Add(link);
+            Links.Add(link);
         }
 
         public void LinkByID(int from_node_ID, int to_node_ID)
@@ -159,6 +163,7 @@ namespace sentience.calibration
             link.From = GetNode(from_node_ID);
             link.To = GetNode(to_node_ID);
             link.To.Add(link);
+            Links.Add(link);
         }
 
         public void LinkByName(string from_node_name, string to_node_name)
@@ -167,6 +172,36 @@ namespace sentience.calibration
             link.From = GetNode(from_node_name);
             link.To = GetNode(to_node_name);
             link.To.Add(link);
+            Links.Add(link);
+        }
+        
+        #endregion
+        
+        #region "removing links"
+        
+        /// <summary>
+        /// removes the given link from the graph
+        /// </summary>
+        /// <param name="victim">
+        /// link object to be removed <see cref="hypergraph_link"/>
+        /// </param>
+        public void RemoveLink(hypergraph_link victim)
+        {
+            hypergraph_node node = victim.To;
+            node.Links.Remove(victim);
+            Links.Remove(victim);
+        }
+
+        /// <summary>
+        /// removes the given set of links from the graph
+        /// </summary>
+        /// <param name="victims">
+        /// list of link objects to be removed <see cref="List`1"/>
+        /// </param>
+        public void RemoveLinks(List<hypergraph_link> victims)
+        {
+            for (int i = 0; i < victims.Count; i++)
+                RemoveLink(victims[i]);
         }
         
         #endregion

@@ -1,14 +1,15 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="183" column="36" />
-    <File name="shapes.cs" line="72" column="1" />
+    <File name="Main.cs" line="295" column="17" />
+    <File name="shapes.cs" line="1795" column="13" />
+    <File name="hypergraph.cs" line="195" column="22" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="fishfood" expanded="True">
-          <Node name="shapes.cs" selected="True" />
+          <Node name="Main.cs" selected="True" />
         </Node>
       </Node>
     </ViewMemento>
@@ -20,7 +21,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/shapes.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/Main.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>
