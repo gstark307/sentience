@@ -10,7 +10,7 @@ namespace sentience.calibration
     {
         #region "detecting calibration dots"
         
-    	public static List<polygon2D> DetectDots(string filename, 
+    	public static List<calibrationDot> DetectDots(string filename, 
                                                  int grouping_radius_percent,                                                    
                                                  int erosion_dilation,
                                                  float minimum_width, 
@@ -27,8 +27,8 @@ namespace sentience.calibration
             // convert the colour image to mono
             byte[] img_mono = image.monoImage(img_colour, bmp.Width, bmp.Height);
 
-            List<List<int>> groups = null;            
-            List<polygon2D> dots = DetectDots(img_mono, 
+            List<List<int>> groups = null;     
+            List<calibrationDot> dots = DetectDots(img_mono, img_colour,
                                               bmp.Width, bmp.Height,
                                               grouping_radius_percent,
                                               erosion_dilation,
@@ -72,7 +72,17 @@ namespace sentience.calibration
                     int b = 0;
                     for (int i = 0; i < dots.Count; i++)
                     {
-                        dots[i].show(img_output, bmp.Width, bmp.Height, r, g, b, 0);
+                        int rr = r;
+                        int gg = g;
+                        int bb = b;
+                        
+                        if (dots[i].centre)
+                        {
+                            rr = 255;
+                            gg = 0;
+                            bb = 0;
+                        }
+                        drawing.drawCross(img_output, bmp.Width, bmp.Height, (int)dots[i].x, (int)dots[i].y, (int)dots[i].radius + 1, rr,gg,bb,0);
                     }
                 }
                                                    
@@ -87,15 +97,17 @@ namespace sentience.calibration
         }
         
         
-    	public static List<polygon2D> DetectDots(byte[] mono_img, 
-                                                 int img_width, int img_height,
-                                                 int grouping_radius_percent,
-                                                 int erosion_dilation,
-                                                 float minimum_width,
-                                                 float maximum_width,
-                                                 ref List<int> edges,
-                                                 ref List<List<int>> groups)
+    	public static List<calibrationDot> DetectDots(byte[] mono_img, byte[] img_colour, 
+                                                      int img_width, int img_height,
+                                                      int grouping_radius_percent,
+                                                      int erosion_dilation,
+                                                      float minimum_width,
+                                                      float maximum_width,
+                                                      ref List<int> edges,
+                                                      ref List<List<int>> groups)
         {
+            // create a list to store the results
+            List<calibrationDot> dots = null;
             const int connect_edges_radius = 5;
             int minimum_width_pixels = (int)(minimum_width * img_width / 100);
             int maximum_width_pixels = (int)(maximum_width * img_width / 100);
@@ -103,9 +115,6 @@ namespace sentience.calibration
             
             // maximum recursion depth when joining edges
             const int max_search_depth = 8000;
-            
-            // create a list to store the results
-            List<polygon2D> dot_shapes = new List<polygon2D>();
             
             // create edge detection object
             CannyEdgeDetector edge_detector = new CannyEdgeDetector();
@@ -141,25 +150,24 @@ namespace sentience.calibration
             edges = edge_detector.edges;
 
             // group edges together into objects
-            groups = 
-                        GetGroups(edge_detector.edges, 
-                                  img_width, img_height, 0, 
-                                  minimum_size_percent,
-                                  false, max_search_depth, false, 
-                                  grouping_radius_percent);
+            groups = GetGroups(edge_detector.edges, 
+                               img_width, img_height, 0, 
+                               minimum_size_percent,
+                               false, max_search_depth, false, 
+                               grouping_radius_percent);
                                         
             if (groups != null)
             {
-                dot_shapes = GetDots(groups,
-                                     img_width, img_height,
-                                     0.7f, 1.3f,
-                                     minimum_width_pixels, maximum_width_pixels);
+                dots = GetDots(groups, img_colour,
+                               img_width, img_height,
+                               0.7f, 1.3f,
+                               minimum_width_pixels, maximum_width_pixels);
             }
 
             // remove any overlapping squares
             //dot_shapes = SelectSquares(dot_shapes, 0);
             
-            return(dot_shapes);
+            return(dots);
         }
                 
         #endregion
@@ -1732,15 +1740,45 @@ namespace sentience.calibration
             return(results);
         }
 
-        public static List<polygon2D> GetDots(List<List<int>> groups,
-                                              int img_width, int img_height,
-                                              float minimum_aspect, float maximum_aspect,
-                                              int minimum_width, int maximum_width)
+        private static void SampleDotColour(byte[] img_colour,
+                                            int img_width, int img_height,
+                                            int x, int y,
+                                            int[] colour)
         {
-            List<polygon2D> results = null;            
+            int radius = 2;
+            
+            for (int xx = x - radius; xx <= x + radius; xx++)
+            {
+                if ((xx > -1) && (xx < img_width))
+                {
+                    for (int yy = y - radius; yy <= y + radius; yy++)
+                    {
+                        if ((yy > -1) && (yy < img_height))
+                        {
+                            int n = ((yy * img_width) + xx)*3;
+                            for (int col = 0; col < 3; col++)
+                            {
+                                colour[col] += img_colour[n + 2 - col];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static List<calibrationDot> GetDots(List<List<int>> groups,
+                                                   byte[] img_colour,
+                                                   int img_width, int img_height,
+                                                   float minimum_aspect, float maximum_aspect,
+                                                   int minimum_width, int maximum_width)
+        {
+            List<calibrationDot> dots = new List<calibrationDot>();
             
             float ideal_aspect = minimum_aspect + ((maximum_aspect - minimum_aspect)/2.0f);
             float minimum_diff_from_ideal = 9999;
+            
+            float max_redness = 0;
+            int winner = -1;
             
             for (int i = 0; i < groups.Count; i++)
             {
@@ -1785,17 +1823,33 @@ namespace sentience.calibration
                         cx /= (edges.Count/2);
                         cy /= (edges.Count/2);
                         
-                        polygon2D dot = polygon2D.CreateCircle(cx, cy, radius, 30);
-                    
-                        if (results == null)
-                            results = new List<polygon2D>();
+                        calibrationDot cdot = new calibrationDot();
+                        cdot.x = cx;
+                        cdot.y = cy;
+                        cdot.radius = radius;
                         
-                        results.Add(dot);
+                        // get the colour of the dot
+                        int[] dot_colour = new int[3];
+                        SampleDotColour(img_colour, img_width, img_height, (int)cx, (int)cy, dot_colour);
+                        cdot.r = dot_colour[0];
+                        cdot.g = dot_colour[1];
+                        cdot.b = dot_colour[2];
+                        
+                        float redness = (cdot.r*2) - cdot.g - cdot.b;
+                        if (redness > max_redness)
+                        {
+                            max_redness = redness;
+                            winner = dots.Count;
+                        }
+                        
+                        dots.Add(cdot);
                     }
                 }
 
             }
-            return(results);
+            
+            if (winner > -1) dots[winner].centre = true;
+            return(dots);
         }
 
         

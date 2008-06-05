@@ -32,6 +32,9 @@ namespace sentience.calibration
         // pixel position within the image
         public float x, y;
         
+        // radius of the dot in pixels
+        public float radius;
+        
         // coordinate on the grid
         public int grid_x, grid_y;
         

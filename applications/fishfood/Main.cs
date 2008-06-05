@@ -165,9 +165,9 @@ namespace sentience.calibration
             float maximum_width = 10;
             List<int> edges = null;
             
-            List<polygon2D> dot_shapes = shapes.DetectDots(filename, grouping_radius_percent, erosion_dilation,
-                                                           minimum_width, maximum_width,
-                                                           ref edges, "edges.jpg", "groups.jpg", "dots.jpg");            
+            List<calibrationDot> dot_shapes = shapes.DetectDots(filename, grouping_radius_percent, erosion_dilation,
+                                                                minimum_width, maximum_width,
+                                                                ref edges, "edges.jpg", "groups.jpg", "dots.jpg");            
         }
 
         
@@ -182,10 +182,58 @@ namespace sentience.calibration
             int maximum_width = 100;
             List<int> edges = null;
             
-            List<polygon2D> dot_shapes = shapes.DetectDots(filename, grouping_radius_percent, erosion_dilation,
-                                                           minimum_width, maximum_width,
-                                                           ref edges, "edges.jpg", "groups.jpg", "dots.jpg");
+            List<calibrationDot> dot_shapes = shapes.DetectDots(filename, grouping_radius_percent, erosion_dilation,
+                                                                minimum_width, maximum_width,
+                                                                ref edges, "edges.jpg", "groups.jpg", "dots.jpg");
             
+            float tx = 99999;
+            float ty = 99999;
+            float bx = 0;
+            float by = 0;
+            for (int i = 0; i < dot_shapes.Count; i++)
+            {
+                if (dot_shapes[i].x < tx) tx = dot_shapes[i].x;
+                if (dot_shapes[i].y < ty) ty = dot_shapes[i].y;
+                if (dot_shapes[i].x > bx) bx = dot_shapes[i].x;
+                if (dot_shapes[i].y > by) by = dot_shapes[i].y;
+                dots.Add(dot_shapes[i]);
+            }
+
+            // create a histogram of the spacings between dots            
+            int distance_quantisation = 5;
+            if (bx - tx > distance_quantisation)
+            {
+                float[] dot_spacing_histogram = new float[(int)(bx-tx) / distance_quantisation];
+                for (int i = 0; i < dot_shapes.Count; i++)
+                {
+                    for (int j = 0; j < dot_shapes.Count; j++)
+                    {
+                        if (i != j)
+                        {
+                            float dx = dot_shapes[i].x - dot_shapes[j].x;
+                            float dy = dot_shapes[i].y - dot_shapes[j].y;
+                            float dist = (float)Math.Sqrt((dx*dx)+(dy*dy)) / distance_quantisation;
+                            if ((int)dist < dot_spacing_histogram.Length)
+                                dot_spacing_histogram[(int)dist]++;
+                        }
+                    }
+                }
+                
+                // find the histogram peak
+                float histogram_max = 0;
+                int peak = 0;
+                for (int i = 0; i < dot_spacing_histogram.Length; i++)
+                {
+                    if (dot_spacing_histogram[i] > histogram_max)
+                    {
+                        histogram_max = dot_spacing_histogram[i];
+                        peak = i * distance_quantisation;
+                    }
+                }
+                
+                
+            }
+                
             return(dots);
         }
         
