@@ -158,7 +158,8 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
+            //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
+            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             int grouping_radius_percent = 2;
             int erosion_dilation = 0;
             float minimum_width = 0.0f;
