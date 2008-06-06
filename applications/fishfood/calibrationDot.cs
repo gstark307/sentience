@@ -38,7 +38,7 @@ namespace sentience.calibration
         // coordinate on the grid
         public int grid_x, grid_y;
         
-        public calibrationDot() : base(1)
+        public calibrationDot() : base(4)
         {
         }
     }

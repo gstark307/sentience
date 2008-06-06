@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace sentience.calibration
 {
@@ -156,10 +157,31 @@ namespace sentience.calibration
         
         #endregion
 
+        #region "testing"
+
         private static void Test()
         {
             //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
             string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+
+            hypergraph dots = DetectDots(filename);
+
+            List<calibrationDot> centre_dots = null;
+            polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
+
+            ShowSquare(filename, centre_square, "centre_square.jpg");
+
+            float horizontal_dx = centre_dots[1].x - centre_dots[0].x;
+            float horizontal_dy = centre_dots[1].y - centre_dots[0].y;
+            float vertical_dx = centre_dots[3].x - centre_dots[0].x;
+            float vertical_dy = centre_dots[3].y - centre_dots[0].y;
+            for (int i = 0; i < centre_dots.Count; i++)
+                LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0);
+
+            Console.WriteLine(dots.Links.Count.ToString() + " links created");
+
+            ShowGrid(filename, dots, "grid.jpg");
+            /*
             int grouping_radius_percent = 2;
             int erosion_dilation = 0;
             float minimum_width = 0.0f;
@@ -168,19 +190,351 @@ namespace sentience.calibration
             
             List<calibrationDot> dot_shapes = shapes.DetectDots(filename, grouping_radius_percent, erosion_dilation,
                                                                 minimum_width, maximum_width,
-                                                                ref edges, "edges.jpg", "groups.jpg", "dots.jpg");            
+                                                                ref edges, "edges.jpg", "groups.jpg", "dots.jpg");
+
+
+             */
         }
 
-        
+        #endregion
+
+        #region "display"
+
+        private static void ShowSquare(string filename, polygon2D square,
+                                       string output_filename)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+            square.show(img, bmp.Width, bmp.Height, 0, 255, 0, 0);
+
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
+        private static void ShowGrid(string filename, hypergraph dots,
+                                       string output_filename)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+
+            for (int i = 0; i < dots.Nodes.Count; i++)
+            {
+                calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                drawing.drawCircle(img, bmp.Width, bmp.Height, dot.x, dot.y, dot.radius, 0, 255, 0, 0);
+            }
+
+            for (int i = 0; i < dots.Links.Count; i++)
+            {
+                calibrationDot from_dot = (calibrationDot)dots.Links[i].From;
+                calibrationDot to_dot = (calibrationDot)dots.Links[i].To;
+                drawing.drawLine(img, bmp.Width, bmp.Height, (int)from_dot.x, (int)from_dot.y, (int)to_dot.x, (int)to_dot.y, 255, 0, 0, 0, false);
+            }
+
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
+
+        #endregion
+
         #region "detecting dots"
-        
+
+        private static void LinkDots(hypergraph dots,
+                                     calibrationDot current_dot,
+                                     float horizontal_dx, float horizontal_dy,
+                                     float vertical_dx, float vertical_dy,
+                                     int start_index)
+        {
+            if (!current_dot.centre)
+            {
+                int start_index2 = 0;
+                float tollerance_divisor = 0.2f;
+                float horizontal_tollerance = (float)Math.Sqrt((horizontal_dx * horizontal_dx) + (horizontal_dy * horizontal_dy)) * tollerance_divisor;
+                float vertical_tollerance = (float)Math.Sqrt((vertical_dx * vertical_dx) + (vertical_dy * vertical_dy)) * tollerance_divisor;
+
+                float x=0, y=0;
+                List<int> indexes_found = new List<int>();
+                List<bool> found_vertical = new List<bool>();
+
+                // check each direction
+                for (int i = 0; i < 4; i++)
+                {
+                    // starting direction offset
+                    int ii = i + start_index;
+                    if (ii >= 4) ii -= 4;
+
+                    if (current_dot.Flags[ii] == false)
+                    {
+                        current_dot.Flags[ii] = true;
+                        int opposite_flag = ii + 2;
+                        if (opposite_flag >= 4) opposite_flag -= 4;
+
+                        switch (ii)
+                        {
+                            case 0:
+                                {
+                                    // look above
+                                    x = current_dot.x - vertical_dx;
+                                    y = current_dot.y - vertical_dy;
+                                    break;
+                                }
+                            case 1:
+                                {
+                                    // look right
+                                    x = current_dot.x + horizontal_dx;
+                                    y = current_dot.y + horizontal_dy;
+                                    break;
+                                }
+                            case 2:
+                                {
+                                    // look below
+                                    x = current_dot.x + vertical_dx;
+                                    y = current_dot.y + vertical_dy;
+                                    break;
+                                }
+                            case 3:
+                                {
+                                    // look left
+                                    x = current_dot.x - horizontal_dx;
+                                    y = current_dot.y - horizontal_dy;
+                                    break;
+                                }
+                        }
+
+                        for (int j = 0; j < dots.Nodes.Count; j++)
+                        {
+                            if ((!((calibrationDot)dots.Nodes[j]).centre) &&
+                                (dots.Nodes[j] != current_dot))
+                            {
+                                float dx = ((calibrationDot)dots.Nodes[j]).x - x;
+                                float dy = ((calibrationDot)dots.Nodes[j]).y - y;
+                                float dist_from_expected_position = (float)Math.Sqrt(dx * dx + dy * dy);
+                                bool dot_found = false;
+                                if ((ii == 0) || (ii == 2))
+                                {
+                                    // vertical search
+                                    if (dist_from_expected_position < vertical_tollerance)
+                                    {
+                                        dot_found = true;
+                                        found_vertical.Add(true);
+                                    }
+                                }
+                                else
+                                {
+                                    // horizontal search
+                                    if (dist_from_expected_position < horizontal_tollerance)
+                                    {
+                                        dot_found = true;
+                                        found_vertical.Add(false);
+                                    }
+                                }
+
+                                if (dot_found)
+                                {
+                                    if (dots.Nodes[j].Flags[opposite_flag] == false)
+                                    {
+                                        indexes_found.Add(j);
+                                        j = dots.Nodes.Count;
+                                    }
+                                }
+
+                            }
+                        }
+
+
+                        
+                    }
+                }
+
+                for (int i = 0; i < indexes_found.Count; i++)
+                {
+                    start_index2 = start_index + 1;
+                    if (start_index2 >= 4) start_index2 -= 4;
+
+                    float found_dx = ((calibrationDot)dots.Nodes[indexes_found[i]]).x - current_dot.x;
+                    float found_dy = ((calibrationDot)dots.Nodes[indexes_found[i]]).y - current_dot.y;
+
+                    dots.LinkByReference((calibrationDot)dots.Nodes[indexes_found[i]], current_dot);
+
+                    if (found_vertical[i])
+                    {
+                        if (((vertical_dy > 0) && (found_dy < 0)) ||
+                            ((vertical_dy < 0) && (found_dy > 0)))
+                        {
+                            found_dx = -found_dx;
+                            found_dy = -found_dy;
+                        }
+                        LinkDots(dots, (calibrationDot)dots.Nodes[indexes_found[i]], horizontal_dx, horizontal_dy, found_dx, found_dy, start_index2);
+                    }
+                    else
+                    {
+                        if (((horizontal_dx > 0) && (found_dx < 0)) ||
+                            ((horizontal_dx < 0) && (found_dx > 0)))
+                        {
+                            found_dx = -found_dx;
+                            found_dy = -found_dy;
+                        }
+                        LinkDots(dots, (calibrationDot)dots.Nodes[indexes_found[i]], found_dx, found_dy, vertical_dx, vertical_dy, start_index2);
+                    }
+                    
+                }
+
+            }
+        }
+
+        private static polygon2D GetCentreSquare(hypergraph dots,
+                                                 ref List<calibrationDot> centredots)
+        {
+            centredots = new List<calibrationDot>();
+
+            // find the centre dot
+            calibrationDot centre = null;
+            int i = 0;
+            while ((i < dots.Nodes.Count) && (centre == null))
+            {
+                calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                if (dot.centre) centre = dot;
+                i++;
+            }
+
+            // look for the four surrounding dots
+            List<calibrationDot> centre_dots = new List<calibrationDot>();
+            List<float> distances = new List<float>();
+            i = 0;
+            for (i = 0; i < dots.Nodes.Count; i++)
+            {
+                calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                if (!dot.centre)
+                {
+                    float dx = dot.x - centre.x;
+                    float dy = dot.y - centre.y;
+                    float dist = (float)Math.Sqrt(dx*dx + dy*dy);
+                    if (distances.Count == 4)
+                    {
+                        int index = -1;
+                        float max_dist = 0;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            if (distances[j] > max_dist)
+                            {
+                                index = j;
+                                max_dist = distances[j];
+                            }
+                        }
+                        if (dist < max_dist)
+                        {
+                            distances[index] = dist;
+                            centre_dots[index] = dot;
+                        }
+                    }
+                    else
+                    {
+                        distances.Add(dist);
+                        centre_dots.Add(dot);
+                    }
+                }
+            }
+
+            polygon2D centre_square = null;
+            if (centre_dots.Count == 4)
+            {
+                centre_square = new polygon2D();
+                for (i = 0; i < 4; i++)
+                    centre_square.Add(0, 0);
+
+                float xx = centre.x;
+                float yy = centre.y;
+                int index = 0;
+                for (i = 0; i < 4; i++)
+                {
+                    if ((centre_dots[i].x < xx) &&
+                        (centre_dots[i].y < yy))
+                    {
+                        xx = centre_dots[i].x;
+                        yy = centre_dots[i].y;
+                        centre_square.x_points[0] = xx;
+                        centre_square.y_points[0] = yy;
+                        index = i;
+                    }
+                }
+                centredots.Add(centre_dots[index]);
+
+                xx = centre.x;
+                yy = centre.y;
+                for (i = 0; i < 4; i++)
+                {
+                    if ((centre_dots[i].x > xx) &&
+                        (centre_dots[i].y < yy))
+                    {
+                        xx = centre_dots[i].x;
+                        yy = centre_dots[i].y;
+                        centre_square.x_points[1] = xx;
+                        centre_square.y_points[1] = yy;
+                        index = i;
+                    }
+                }
+                centredots.Add(centre_dots[index]);
+
+                xx = centre.x;
+                yy = centre.y;
+                for (i = 0; i < 4; i++)
+                {
+                    if ((centre_dots[i].x > xx) &&
+                        (centre_dots[i].y > yy))
+                    {
+                        xx = centre_dots[i].x;
+                        yy = centre_dots[i].y;
+                        centre_square.x_points[2] = xx;
+                        centre_square.y_points[2] = yy;
+                        index = i;
+                    }
+                }
+                centredots.Add(centre_dots[index]);
+
+                xx = centre.x;
+                yy = centre.y;
+                for (i = 0; i < 4; i++)
+                {
+                    if ((centre_dots[i].x < xx) &&
+                        (centre_dots[i].y > yy))
+                    {
+                        xx = centre_dots[i].x;
+                        yy = centre_dots[i].y;
+                        centre_square.x_points[3] = xx;
+                        centre_square.y_points[3] = yy;
+                        index = i;
+                    }
+                }
+                centredots.Add(centre_dots[index]);
+            }
+            return (centre_square);
+        }
+
+        /// <summary>
+        /// detects calibration dots within the given image
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
         private static hypergraph DetectDots(string filename)
         {
+            Console.WriteLine("Detecting dots in image " + filename);
+
             hypergraph dots = new hypergraph();
-            int grouping_radius_percent = 3;
+
+            int grouping_radius_percent = 2;
             int erosion_dilation = 0;
-            int minimum_width = 2;
-            int maximum_width = 100;
+            float minimum_width = 0.0f;
+            float maximum_width = 10;
             List<int> edges = null;
             
             List<calibrationDot> dot_shapes = shapes.DetectDots(filename, grouping_radius_percent, erosion_dilation,
@@ -202,6 +556,7 @@ namespace sentience.calibration
             
             Console.WriteLine(dot_shapes.Count.ToString() + " dots discovered");
 
+            /*
             // create a histogram of the spacings between dots            
             int distance_quantisation = 5;
             if (bx - tx > distance_quantisation)
@@ -297,8 +652,10 @@ namespace sentience.calibration
                 dots.RemoveLinks(victims);
                 
                 Console.WriteLine(victims.Count.ToString() + " crossed links removed");
-            }
                 
+            }
+            */
+
             return(dots);
         }
         
