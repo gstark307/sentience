@@ -409,6 +409,35 @@ namespace sentience.calibration
                         float dy = centre_of_distortion.y - grid[grid_x, grid_y].y;
                         float radial_distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
 
+                        float radial_distance_original = curve.RegVal(radial_distance);
+                        if (radial_distance_original > 0)
+                        {
+                            float ratio = radial_distance_original / radial_distance;
+                            float x2 = (float)Math.Round(centre_of_distortion.x + (dx * ratio));
+                            x2 = (x2 - (image_width / 2)) * scale;
+                            float y2 = (float)Math.Round(centre_of_distortion.y + (dy * ratio));
+                            y2 = (y2 - (image_height / 2)) * scale;
+
+                            // apply rotation
+                            float x3 = x2, y3 = y2;
+                            rotatePoint(x2, y2, -rotation, ref x3, ref y3);
+
+                            x3 += (image_width / 2);
+                            y3 += (image_height / 2);
+
+                            if (((int)x3 > -1) && ((int)x3 < image_width) &&
+                                ((int)y3 > -1) && ((int)y3 < image_height))
+                            {
+                                int n = (y * image_width) + x;
+                                int n2 = ((int)y3 * image_width) + (int)x3;
+
+                                calibration_map[n] = n2;
+                                calibration_map_inverse[(int)x3, (int)y3, 0] = x;
+                                calibration_map_inverse[(int)x3, (int)y3, 1] = y;
+                            }
+                        }
+
+
                     }
                 }
             }

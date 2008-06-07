@@ -1,14 +1,18 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="365" column="34" />
+    <File name="Main.cs" line="425" column="1" />
     <File name="shapes.cs" line="1795" column="13" />
-    <File name="hypergraph.cs" line="195" column="22" />
+    <File name="hypergraph.cs" line="190" column="35" />
+    <File name="calibrationLink.cs" line="21" column="1" />
+    <File name="calibrationDot.cs" line="1" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="fishfood" expanded="True" />
+        <Node name="fishfood" expanded="True">
+          <Node name="Main.cs" selected="True" />
+        </Node>
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
