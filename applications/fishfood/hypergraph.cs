@@ -183,6 +183,15 @@ namespace sentience.calibration
             link.To.Add(link);
             Links.Add(link);
         }
+
+        public void LinkByReference(hypergraph_node from_node, hypergraph_node to_node,
+                                    hypergraph_link link)
+        {
+            link.From = from_node;
+            link.To = to_node;
+            link.To.Add(link);
+            Links.Add(link);
+        }
         
         #endregion
         

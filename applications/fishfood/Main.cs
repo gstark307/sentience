@@ -161,8 +161,8 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
-            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
+            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
 
             hypergraph dots = DetectDots(filename);
 
@@ -181,7 +181,10 @@ namespace sentience.calibration
 
             Console.WriteLine(dots.Links.Count.ToString() + " links created");
 
+            ApplyGrid(dots, centre_dots);
+
             ShowGrid(filename, dots, search_regions, "grid.jpg");
+            ShowGridCoordinates(filename, dots, "coordinates.jpg");
             /*
             int grouping_radius_percent = 2;
             int erosion_dilation = 0;
@@ -256,10 +259,104 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        private static void ShowGridCoordinates(string filename, 
+                                                hypergraph dots,
+                                                string output_filename)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+
+            for (int i = 0; i < dots.Nodes.Count; i++)
+            {
+                calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                drawing.drawCircle(img, bmp.Width, bmp.Height, dot.x, dot.y, dot.radius, 0, 255, 0, 0);
+                
+                if (dot.grid_x != 9999)
+                {
+                    string coord = dot.grid_x.ToString() + "," + dot.grid_y.ToString();
+                    drawing.AddText(img, bmp.Width, bmp.Height, coord, "Courier New", 8, 0,0,0, (int)dot.x-0, (int)dot.y+5);
+                }
+            }
+
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
 
         #endregion
 
         #region "detecting dots"
+
+        private static void ApplyGrid(hypergraph dots, 
+                                      List<calibrationDot> centre_dots)
+        {
+            const int UNASSIGNED = 9999;
+            
+            // mark all dots as unassigned
+            for (int i = 0; i < dots.Nodes.Count; i++)
+            {
+                calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                dot.grid_x = UNASSIGNED;
+                dot.grid_y = UNASSIGNED;
+            }
+            
+            // assign grid positions to the four dots
+            // surrounding the centre dot
+            centre_dots[0].grid_x = -1;
+            centre_dots[0].grid_y = 1;
+
+            centre_dots[1].grid_x = 0;
+            centre_dots[1].grid_y = 1;
+
+            centre_dots[2].grid_x = 0;
+            centre_dots[2].grid_y = 0;
+
+            centre_dots[3].grid_x = -1;
+            centre_dots[3].grid_y = 0;
+            
+            int dots_assigned = 4;
+            
+            // recursively assign grid positions to dots
+            for (int i = 0; i < centre_dots.Count; i++)
+                ApplyGrid(centre_dots[i], UNASSIGNED, ref dots_assigned);
+                
+            Console.WriteLine(dots_assigned.ToString() + " dots assigned grid coordinates");
+        }
+        
+        private static void ApplyGrid(calibrationDot current_dot, int unassigned_value, ref int dots_assigned)
+        {
+            for (int i = 0; i < current_dot.Links.Count; i++)
+            {
+                calibrationLink link = (calibrationLink)current_dot.Links[i];
+                calibrationDot dot = (calibrationDot)link.From;
+                if (dot.grid_x == unassigned_value)
+                {
+                    if (link.horizontal)
+                    {
+                        if (dot.x < current_dot.x)
+                            dot.grid_x = current_dot.grid_x - 1;
+                        else
+                            dot.grid_x = current_dot.grid_x + 1;
+                        dot.grid_y = current_dot.grid_y;
+                    }
+                    else
+                    {
+                        dot.grid_x = current_dot.grid_x;
+                        if (dot.y < current_dot.y)
+                            dot.grid_y = current_dot.grid_y - 1;
+                        else
+                            dot.grid_y = current_dot.grid_y + 1;
+                    }
+                    dots_assigned++;
+                    ApplyGrid(dot, unassigned_value, ref dots_assigned);
+                }
+            }
+        }
 
         private static void LinkDots(hypergraph dots,
                                      calibrationDot current_dot,
@@ -360,11 +457,8 @@ namespace sentience.calibration
 
                                 if (dot_found)
                                 {
-                                    if (dots.Nodes[j].Flags[opposite_flag] == false)
-                                    {
-                                        indexes_found.Add(j);
-                                        j = dots.Nodes.Count;
-                                    }
+                                    indexes_found.Add(j);
+                                    j = dots.Nodes.Count;
                                 }
 
                             }
@@ -383,10 +477,12 @@ namespace sentience.calibration
                     float found_dx = ((calibrationDot)dots.Nodes[indexes_found[i]]).x - current_dot.x;
                     float found_dy = ((calibrationDot)dots.Nodes[indexes_found[i]]).y - current_dot.y;
 
-                    dots.LinkByReference((calibrationDot)dots.Nodes[indexes_found[i]], current_dot);
-
+                    calibrationLink link = new calibrationLink();
+                    
                     if (found_vertical[i])
                     {
+                        link.horizontal = false;
+                        
                         if (((vertical_dy > 0) && (found_dy < 0)) ||
                             ((vertical_dy < 0) && (found_dy > 0)))
                         {
@@ -397,6 +493,8 @@ namespace sentience.calibration
                     }
                     else
                     {
+                        link.horizontal = true;
+                        
                         if (((horizontal_dx > 0) && (found_dx < 0)) ||
                             ((horizontal_dx < 0) && (found_dx > 0)))
                         {
@@ -405,6 +503,8 @@ namespace sentience.calibration
                         }
                         LinkDots(dots, (calibrationDot)dots.Nodes[indexes_found[i]], found_dx, found_dy, vertical_dx, vertical_dy, start_index2, search_regions);
                     }
+                    
+                    dots.LinkByReference((calibrationDot)dots.Nodes[indexes_found[i]], current_dot, link);
                     
                 }
 

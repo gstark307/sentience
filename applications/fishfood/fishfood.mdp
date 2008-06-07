@@ -15,7 +15,6 @@
   </Configurations>
   <Contents>
     <File name="Main.cs" subtype="Code" buildaction="Compile" />
-    <File name="AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
     <File name="BitmapArrayConversions.cs" subtype="Code" buildaction="Compile" />
     <File name="canny.cs" subtype="Code" buildaction="Compile" />
     <File name="commandline.cs" subtype="Code" buildaction="Compile" />
@@ -29,6 +28,8 @@
     <File name="ArrayConversions.cs" subtype="Code" buildaction="Compile" />
     <File name="drawing.cs" subtype="Code" buildaction="Compile" />
     <File name="calibrationDot.cs" subtype="Code" buildaction="Compile" />
+    <File name="Properties/AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibrationLink.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
