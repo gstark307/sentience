@@ -171,16 +171,17 @@ namespace sentience.calibration
 
             ShowSquare(filename, centre_square, "centre_square.jpg");
 
+            List<calibrationDot> search_regions = new List<calibrationDot>();
             float horizontal_dx = centre_dots[1].x - centre_dots[0].x;
             float horizontal_dy = centre_dots[1].y - centre_dots[0].y;
             float vertical_dx = centre_dots[3].x - centre_dots[0].x;
             float vertical_dy = centre_dots[3].y - centre_dots[0].y;
             for (int i = 0; i < centre_dots.Count; i++)
-                LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0);
+                LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0, search_regions);
 
             Console.WriteLine(dots.Links.Count.ToString() + " links created");
 
-            ShowGrid(filename, dots, "grid.jpg");
+            ShowGrid(filename, dots, search_regions, "grid.jpg");
             /*
             int grouping_radius_percent = 2;
             int erosion_dilation = 0;
@@ -216,12 +217,23 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
-        private static void ShowGrid(string filename, hypergraph dots,
-                                       string output_filename)
+        private static void ShowGrid(string filename, 
+                                     hypergraph dots,
+                                     List<calibrationDot> search_regions,
+                                     string output_filename)
         {
             Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
+
+            if (search_regions != null)
+            {
+                for (int i = 0; i < search_regions.Count; i++)
+                {
+                    calibrationDot dot = (calibrationDot)search_regions[i];
+                    drawing.drawCircle(img, bmp.Width, bmp.Height, dot.x, dot.y, dot.radius, 255, 255, 0, 0);
+                }
+            }
 
             for (int i = 0; i < dots.Nodes.Count; i++)
             {
@@ -253,12 +265,13 @@ namespace sentience.calibration
                                      calibrationDot current_dot,
                                      float horizontal_dx, float horizontal_dy,
                                      float vertical_dx, float vertical_dy,
-                                     int start_index)
+                                     int start_index,
+                                     List<calibrationDot> search_regions)
         {
             if (!current_dot.centre)
             {
                 int start_index2 = 0;
-                float tollerance_divisor = 0.2f;
+                float tollerance_divisor = 0.3f;
                 float horizontal_tollerance = (float)Math.Sqrt((horizontal_dx * horizontal_dx) + (horizontal_dy * horizontal_dy)) * tollerance_divisor;
                 float vertical_tollerance = (float)Math.Sqrt((vertical_dx * vertical_dx) + (vertical_dy * vertical_dy)) * tollerance_divisor;
 
@@ -310,6 +323,12 @@ namespace sentience.calibration
                                     break;
                                 }
                         }
+
+                        calibrationDot search_region = new calibrationDot();
+                        search_region.x = x;
+                        search_region.y = y;
+                        search_region.radius = horizontal_tollerance;
+                        search_regions.Add(search_region);
 
                         for (int j = 0; j < dots.Nodes.Count; j++)
                         {
@@ -374,7 +393,7 @@ namespace sentience.calibration
                             found_dx = -found_dx;
                             found_dy = -found_dy;
                         }
-                        LinkDots(dots, (calibrationDot)dots.Nodes[indexes_found[i]], horizontal_dx, horizontal_dy, found_dx, found_dy, start_index2);
+                        LinkDots(dots, (calibrationDot)dots.Nodes[indexes_found[i]], horizontal_dx, horizontal_dy, found_dx, found_dy, start_index2, search_regions);
                     }
                     else
                     {
@@ -384,7 +403,7 @@ namespace sentience.calibration
                             found_dx = -found_dx;
                             found_dy = -found_dy;
                         }
-                        LinkDots(dots, (calibrationDot)dots.Nodes[indexes_found[i]], found_dx, found_dy, vertical_dx, vertical_dy, start_index2);
+                        LinkDots(dots, (calibrationDot)dots.Nodes[indexes_found[i]], found_dx, found_dy, vertical_dx, vertical_dy, start_index2, search_regions);
                     }
                     
                 }
