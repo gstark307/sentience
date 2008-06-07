@@ -102,6 +102,32 @@ namespace sentience.calibration
         
         #region "calibration"
         
+        private static hypergraph Detect(string filename)
+        {
+            hypergraph dots = DetectDots(filename);
+
+            List<calibrationDot> centre_dots = null;
+            polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
+
+            ShowSquare(filename, centre_square, "centre_square.jpg");
+
+            List<calibrationDot> search_regions = new List<calibrationDot>();
+            float horizontal_dx = centre_dots[1].x - centre_dots[0].x;
+            float horizontal_dy = centre_dots[1].y - centre_dots[0].y;
+            float vertical_dx = centre_dots[3].x - centre_dots[0].x;
+            float vertical_dy = centre_dots[3].y - centre_dots[0].y;
+            for (int i = 0; i < centre_dots.Count; i++)
+                LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0, search_regions);
+
+            Console.WriteLine(dots.Links.Count.ToString() + " links created");
+
+            ApplyGrid(dots, centre_dots);
+
+            ShowGrid(filename, dots, search_regions, "grid.jpg");
+            ShowGridCoordinates(filename, dots, "coordinates.jpg");
+            return (dots);
+        }
+
         private static void Calibrate(string directory,
                                int baseline_mm,
                                int dotdist_mm,
@@ -139,11 +165,12 @@ namespace sentience.calibration
                     else
                     {
                         // find dots within the images
+                        hypergraph[,] dots = new hypergraph[2, image_filename[0].Count];
                         for (int cam = 0; cam < 2; cam++)
                         {
                             for (int i = 0; i < image_filename[cam].Count; i++)
                             {
-                                hypergraph dots = DetectDots(image_filename[cam][i]);
+                                dots[cam, i] = Detect(image_filename[cam][i]);
                             }
                         }
                     }
@@ -161,43 +188,9 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
-            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
-
-            hypergraph dots = DetectDots(filename);
-
-            List<calibrationDot> centre_dots = null;
-            polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
-
-            ShowSquare(filename, centre_square, "centre_square.jpg");
-
-            List<calibrationDot> search_regions = new List<calibrationDot>();
-            float horizontal_dx = centre_dots[1].x - centre_dots[0].x;
-            float horizontal_dy = centre_dots[1].y - centre_dots[0].y;
-            float vertical_dx = centre_dots[3].x - centre_dots[0].x;
-            float vertical_dy = centre_dots[3].y - centre_dots[0].y;
-            for (int i = 0; i < centre_dots.Count; i++)
-                LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0, search_regions);
-
-            Console.WriteLine(dots.Links.Count.ToString() + " links created");
-
-            ApplyGrid(dots, centre_dots);
-
-            ShowGrid(filename, dots, search_regions, "grid.jpg");
-            ShowGridCoordinates(filename, dots, "coordinates.jpg");
-            /*
-            int grouping_radius_percent = 2;
-            int erosion_dilation = 0;
-            float minimum_width = 0.0f;
-            float maximum_width = 10;
-            List<int> edges = null;
-            
-            List<calibrationDot> dot_shapes = shapes.DetectDots(filename, grouping_radius_percent, erosion_dilation,
-                                                                minimum_width, maximum_width,
-                                                                ref edges, "edges.jpg", "groups.jpg", "dots.jpg");
-
-
-             */
+            //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
+            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            Detect(filename);
         }
 
         #endregion
@@ -287,6 +280,148 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+
+        #endregion
+
+        #region "detecting lens distortion"
+
+        /// <summary>
+        /// update the calibration lookup table, which maps pixels
+        /// in the rectified image into the original image
+        /// </summary>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="curve">polynomial curve describing the lens distortion</param>
+        /// <param name="scale"></param>
+        /// <param name="rotation"></param>
+        /// <param name="centre_of_distortion_x"></param>
+        /// <param name="centre_of_distortion_y"></param>
+        /// <param name="calibration_map"></param>
+        /// <param name="calibration_map_inverse"></param>
+        private void updateCalibrationMap(int image_width,
+                                          int image_height,
+                                          polynomial curve,
+                                          float scale,
+                                          float rotation,
+                                          float centre_of_distortion_x,
+                                          float centre_of_distortion_y,
+                                          ref int[] calibration_map,
+                                          ref int[, ,] calibration_map_inverse)
+        {
+            calibration_map = new int[image_width * image_height];
+            calibration_map_inverse = new int[image_width, image_height, 2];
+            for (int x = 0; x < image_width; x++)
+            {
+                float dx = x - centre_of_distortion_x;
+
+                for (int y = 0; y < image_height; y++)
+                {
+                    float dy = y - centre_of_distortion_y;
+
+                    float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                    if (radial_dist_rectified >= 0.01f)
+                    {
+                        float radial_dist_original = curve.RegVal(radial_dist_rectified);
+                        if (radial_dist_original > 0)
+                        {
+                            float ratio = radial_dist_original / radial_dist_rectified;
+                            float x2 = (float)Math.Round(centre_of_distortion_x + (dx * ratio));
+                            x2 = (x2 - (image_width / 2)) * scale;
+                            float y2 = (float)Math.Round(centre_of_distortion_y + (dy * ratio));
+                            y2 = (y2 - (image_height / 2)) * scale;
+
+                            // apply rotation
+                            float x3 = x2, y3 = y2;
+                            rotatePoint(x2, y2, -rotation, ref x3, ref y3);
+
+                            x3 += (image_width / 2);
+                            y3 += (image_height / 2);
+
+                            if (((int)x3 > -1) && ((int)x3 < image_width) &&
+                                ((int)y3 > -1) && ((int)y3 < image_height))
+                            {
+                                int n = (y * image_width) + x;
+                                int n2 = ((int)y3 * image_width) + (int)x3;
+
+                                calibration_map[n] = n2;
+                                calibration_map_inverse[(int)x3, (int)y3, 0] = x;
+                                calibration_map_inverse[(int)x3, (int)y3, 1] = y;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+
+        /// <summary>
+        /// puts the given dots into a grid for easy lookup
+        /// </summary>
+        /// <param name="dots">detected calibration dots</param>
+        /// <returns>grid object</returns>
+        private static calibrationDot[,] CreateGrid(hypergraph dots)
+        {
+            int grid_tx = 9999, grid_ty = 9999;
+            int grid_bx = -9999, grid_by = -9999;
+            for (int i = 0; i < dots.Nodes.Count; i++)
+            {
+                calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                if (Math.Abs(dot.grid_x) < 50)
+                {
+                    if (dot.grid_x < grid_tx) grid_tx = dot.grid_x;
+                    if (dot.grid_y < grid_ty) grid_ty = dot.grid_y;
+                    if (dot.grid_x > grid_bx) grid_bx = dot.grid_x;
+                    if (dot.grid_y > grid_by) grid_by = dot.grid_y;
+                }
+            }
+
+            calibrationDot[,] grid = null;
+            if (grid_bx > grid_tx + 1)
+            {
+                grid = new calibrationDot[grid_bx - grid_tx, grid_by - grid_ty];
+
+                for (int i = 0; i < dots.Nodes.Count; i++)
+                {
+                    calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                    if ((!dot.centre) && (Math.Abs(dot.grid_x) < 50))
+                    {
+                        grid[dot.grid_x - grid_tx, dot.grid_y - grid_ty] = dot;
+                    }
+                }
+            }
+
+            return (grid);
+        }
+
+        private static void RectifyGrid(calibrationDot[,] grid,
+                                        polynomial distortion_curve,
+                                        calibrationDot centre_of_distortion)
+        {
+            for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+            {
+                for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
+                {
+                    if (grid[grid_x, grid_y] != null)
+                    {
+                        float dx = centre_of_distortion.x - grid[grid_x, grid_y].x;
+                        float dy = centre_of_distortion.y - grid[grid_x, grid_y].y;
+                        float radial_distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
+
+                    }
+                }
+            }
+
+        }
+
+        private static void DetectLensDistortion(hypergraph dots)
+        {
+            calibrationDot[,] grid = CreateGrid(dots);
+            if (grid != null)
+            {
+            }
+        }
 
         #endregion
 

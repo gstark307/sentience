@@ -28,9 +28,12 @@ namespace sentience.calibration
         
         // colour of the dot
         public float r, g, b;
-        
+
         // pixel position within the image
         public float x, y;
+
+        // rectified pixel position within the image
+        public float rectified_x, rectified_y;
         
         // radius of the dot in pixels
         public float radius;
