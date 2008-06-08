@@ -19,7 +19,7 @@
 
 using System;
 
-namespace sluggish.utilities
+namespace sentience.calibration
 {
 	public class geometry
 	{		

@@ -18,11 +18,15 @@ namespace sentience.calibration
                                                  ref List<int> edges,
                                                  string edges_filename,
                                                  string groups_filename,
-                                                 string output_filename)
+                                                 string output_filename,
+                                                 ref int image_width, ref int image_height)
         {
             Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
             byte[] img_colour = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img_colour);
+
+            image_width = bmp.Width;
+            image_height = bmp.Height;
             
             // convert the colour image to mono
             byte[] img_mono = image.monoImage(img_colour, bmp.Width, bmp.Height);
