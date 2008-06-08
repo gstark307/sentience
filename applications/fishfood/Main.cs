@@ -445,6 +445,24 @@ namespace sentience.calibration
             return (grid);
         }
 
+        private static float LineCurvature(List<float> line)
+        {
+            float curvature = 0;
+
+            float x0 = line[0];
+            float y0 = line[1];
+            float x1 = line[line.Count - 2];
+            float y1 = line[line.Count - 1];
+
+            for (int i = 2; i < line.Count - 2; i++)
+            {
+                float x = line[i];
+                float y = line[i + 1];
+                float dist_to_line = 0;
+            }
+            return (curvature);
+        }
+
         private static List<List<float>> RectifyLines(List<List<float>> lines,
                                                       polynomial distortion_curve,
                                                       calibrationDot centre_of_distortion)
