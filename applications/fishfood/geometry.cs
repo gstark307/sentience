@@ -19,7 +19,7 @@
 
 using System;
 
-namespace sentience.calibration
+namespace sluggish.utilities
 {
 	public class geometry
 	{		
@@ -145,6 +145,48 @@ namespace sentience.calibration
                     perpendicular_dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
                 }
             }
+
+            return (perpendicular_dist);
+        }
+
+        /// <summary>
+        /// returns the signed perpendicular distance of a point from a line
+        /// </summary>
+        /// <param name="x0">line first point x coordinate</param>
+        /// <param name="y0">line first point y coordinate</param>
+        /// <param name="x1">line second point x coordinate</param>
+        /// <param name="y1">line second point y coordinate</param>
+        /// <param name="point_x">point x coordinate</param>
+        /// <param name="point_y">point y coordinate</param>
+        /// <returns>signed distance of the point from the line</returns>
+        public static float pointDistanceFromLine(float x0, float y0, float x1, float y1,
+                                                  float point_x, float point_y)
+        {
+            float perpendicular_dist = 0;
+
+            // compute the dot product AB . BC
+            float[] AB = new float[2];
+            float[] BC = new float[2];
+            AB[0] = x1 - x0;
+            AB[1] = y1 - x1;
+            BC[0] = point_x - x1;
+            BC[1] = point_y - y1;
+            float dot = AB[0] * BC[0] + AB[1] * BC[1];
+
+            // compute the cross product AB x AC
+            float[] AC = new float[2];
+            AC[0] = point_x - x0;
+            AC[1] = point_y - y0;
+            float cross = AB[0] * AC[1] - AB[1] * AC[0];
+
+            // compute the distance from A to B
+            float d1 = x0 - x1;
+            float d2 = y0 - y1;
+            float distance = (float)Math.Sqrt(d1*d1 + d2*d2);
+    
+            //Compute the distance from AB to C
+            if (distance > 0)
+                perpendicular_dist = cross / distance;
 
             return (perpendicular_dist);
         }
