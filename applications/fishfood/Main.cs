@@ -398,7 +398,7 @@ namespace sentience.calibration
             for (int i = 0; i < lines.Count; i++)
                 curvature += LineCurvature(lines[i]);
 
-            if (lines.Count > 0) curvature /= lines.Count;
+            //if (lines.Count > 0) curvature /= lines.Count;
             return (curvature);
         }
 
@@ -421,10 +421,11 @@ namespace sentience.calibration
             {
                 float x = line[i];
                 float y = line[i + 1];
-                curvature += Math.Abs(geometry.pointDistanceFromLine(x0, y0, x1, y1, x, y));
+                float c = Math.Abs(geometry.pointDistanceFromLine(x0, y0, x1, y1, x, y));
+                curvature += c*c;
                 hits++;
             }
-            if (hits > 0) curvature /= hits;
+            if (hits > 0) curvature = (float)Math.Sqrt(curvature / hits);
             return (curvature);
         }
 
@@ -544,6 +545,26 @@ namespace sentience.calibration
 
         #region "detecting lens distortion"
 
+        private static void ScaleLines(List<List<float>> lines, float scale, int image_width, int image_height)
+        {
+            float half_width = image_width/2;
+            float half_height = image_height/2;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                List<float> line = lines[i];
+                for (int j = 0; j < line.Count; j += 2)
+                {
+                    float x = line[j];
+                    float y = line[j + 1];
+                    float dx = x - half_width;
+                    float dy = y - half_height;
+                    
+                    line[j] = half_width + (dx * scale);
+                    line[j + 1] = half_height + (dy * scale);
+                }
+            }
+        }
+
         private static void DetectLensDistortion(int image_width, int image_height,
                                                  List<List<float>> lines,
                                                  ref polynomial curve,
@@ -554,46 +575,59 @@ namespace sentience.calibration
             float min_line_length = line_length * 0.8f;
             float max_line_length = line_length * 1.2f;
 
-            int search_steps = 100;
-            float[] search_range_min = new float[2];
-            float[] search_range_max = new float[2];
+            int search_steps = 200;
+            float[] search_range_min = new float[3];
+            float[] search_range_max = new float[3];
 
-            search_range_min[0] = -10;
-            search_range_max[0] = 10;
-            search_range_min[1] = -10;
-            search_range_max[1] = 10;
+            search_range_min[0] = 0;
+            search_range_max[0] = 0;
+            search_range_min[1] = 1;
+            search_range_max[1] = 1.2f;
+            search_range_min[2] = 0.0001f;
+            search_range_max[2] = 0.001f;
 
             float scale = 1;
             float rotation = 0;
             curve = new polynomial();
-            curve.SetDegree(2);
+            curve.SetDegree(3);
             
             centre_of_distortion = new calibrationDot();
             centre_of_distortion.x = image_width/2;
             centre_of_distortion.y = image_height/2;
-            float minimum_curvature;
-            float best_coeff0=0, best_coeff1=0;
+            float minimum_curvature, prev_minimum_curvature = float.MaxValue;
+            float best_coeff0 = 0;
+            float best_coeff1 = search_range_min[1] + ((search_range_max[1] - search_range_min[1]) / 2);
+            float best_coeff2 = search_range_min[2] + ((search_range_max[2] - search_range_min[2]) / 2);
+
+            curve.SetCoeff(0, best_coeff0);
 
             best_rectified_lines = null;
 
+            Random rnd = new Random();
+
             int tries = 0;
-            while (tries < 5)
+            while (tries < 20)
             {
-                minimum_curvature = float.MaxValue;
+                minimum_curvature = float.MaxValue-1;
+                
+                float range1 = (search_range_max[1] - search_range_min[1]) / search_steps;
+                float range2 = (search_range_max[2] - search_range_min[2]) / search_steps;
                 
                 // perform the search
                 for (int i = 0; i < search_steps; i++)
                 {
-                    float coeff0 = search_range_min[0] + (i * (search_range_max[0] - search_range_min[0]) / search_steps);
-                    if (coeff0 != 0)
+                    float coeff1 = search_range_min[1] + (i * (search_range_max[1] - search_range_min[1]) / search_steps);
+                    coeff1 += ((float)rnd.NextDouble() - 0.5f) * range1;
+                    if (coeff1 != 0)
                     {
-                        curve.SetCoeff(0, coeff0);
+                        curve.SetCoeff(1, coeff1);                        
                         for (int j = 0; j < search_steps; j++)
                         {
-                            float coeff1 = search_range_min[1] + (j * (search_range_max[1] - search_range_min[1]) / search_steps);
-                            if (coeff1 != 0)
+                            float coeff2 = search_range_min[2] + (j * (search_range_max[2] - search_range_min[2]) / search_steps);
+                            coeff2 += ((float)rnd.NextDouble() - 0.5f) * range2;
+                            if (coeff2 != 0)
                             {
-                                curve.SetCoeff(1, coeff1);
+                                curve.SetCoeff(2, coeff2);
 
                                 List<List<float>> rectified_lines =
                                     RectifyLines(lines,
@@ -604,6 +638,10 @@ namespace sentience.calibration
                                 if (rectified_lines.Count == lines.Count)
                                 {
                                     float rectified_line_length = LineLength(rectified_lines);
+                                    
+                                    float scale2 = line_length / rectified_line_length;
+                                    ScaleLines(rectified_lines, scale2, image_width, image_height);
+                                    
                                     if ((rectified_line_length > min_line_length) &&
                                         (rectified_line_length < max_line_length))
                                     {
@@ -613,8 +651,8 @@ namespace sentience.calibration
                                             //Console.WriteLine("Curvature0: " + curvature.ToString());
                                             if (curvature < minimum_curvature)
                                             {
-                                                best_coeff0 = coeff0;
                                                 best_coeff1 = coeff1;
+                                                best_coeff2 = coeff2;
                                                 best_rectified_lines = rectified_lines;
                                                 minimum_curvature = curvature;
                                             }
@@ -626,16 +664,24 @@ namespace sentience.calibration
                     }
                 }
 
-                // refine the search
-                float search_radius = (search_range_max[0] - search_range_min[0]) / 2;
-                search_range_min[0] = best_coeff0 - search_radius;
-                search_range_max[0] = best_coeff0 + search_radius;
+                float search_multiplier = 0.9f;
 
-                search_radius = (search_range_max[1] - search_range_min[1]) / 2;
+                // refine the search
+                float search_radius = ((search_range_max[1] - search_range_min[1])/2.0f) * search_multiplier;
                 search_range_min[1] = best_coeff1 - search_radius;
-                search_range_max[1] = best_coeff1 + search_radius;
-                //Console.WriteLine("Coeff 0: " + best_coeff0.ToString());
-                //Console.WriteLine("Coeff 1: " + best_coeff1.ToString());
+                search_range_max[1] = best_coeff1 + search_radius;                 
+
+                search_radius = ((search_range_max[2] - search_range_min[2])/2.0f) * search_multiplier;
+                search_range_min[2] = best_coeff2 - search_radius;
+                search_range_max[2] = best_coeff2 + search_radius;
+                
+                //search_range_max[1] *= 0.9f;
+                //search_range_max[2] *= 0.9f;
+                
+                Console.WriteLine("search range min: " + search_range_min[2].ToString());
+                Console.WriteLine("search range max: " + search_range_max[2].ToString());
+                Console.WriteLine("Coeff 1: " + best_coeff1.ToString());
+                Console.WriteLine("Coeff 2: " + best_coeff2.ToString());
                 Console.WriteLine("Curvature: " + minimum_curvature.ToString());
                 //if (best_rectified_lines != null)
                 //    Console.WriteLine("Rectified lines: " + best_rectified_lines.Count.ToString());
@@ -652,8 +698,8 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
-            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
+            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             Detect(filename);
         }
 
@@ -1173,106 +1219,6 @@ namespace sentience.calibration
             }
             
             Console.WriteLine(dot_shapes.Count.ToString() + " dots discovered");
-
-            /*
-            // create a histogram of the spacings between dots            
-            int distance_quantisation = 5;
-            if (bx - tx > distance_quantisation)
-            {
-                float[] dot_spacing_histogram = new float[(int)(bx-tx) / distance_quantisation];
-                for (int i = 0; i < dot_shapes.Count; i++)
-                {
-                    for (int j = 0; j < dot_shapes.Count; j++)
-                    {
-                        if (i != j)
-                        {
-                            float dx = dot_shapes[i].x - dot_shapes[j].x;
-                            float dy = dot_shapes[i].y - dot_shapes[j].y;
-                            float dist = (float)Math.Sqrt((dx*dx)+(dy*dy)) / distance_quantisation;
-                            if ((int)dist < dot_spacing_histogram.Length)
-                                dot_spacing_histogram[(int)dist]++;
-                        }
-                    }
-                }
-                
-                // find the histogram peak
-                float histogram_max = 0;
-                float typical_dot_separation = 0;
-                for (int i = 0; i < dot_spacing_histogram.Length; i++)
-                {
-                    if (dot_spacing_histogram[i] > histogram_max)
-                    {
-                        histogram_max = dot_spacing_histogram[i];
-                        typical_dot_separation = i * distance_quantisation;
-                    }
-                }
-                
-                // join dots within the typical separation radius
-                int joins = 0;
-                float max_separation = typical_dot_separation * 1.2f;
-                for (int i = 0; i < dot_shapes.Count; i++)
-                {
-                    for (int j = i+1; j < dot_shapes.Count; j++)
-                    {
-                        if (i != j)
-                        {
-                            float dx = dot_shapes[i].x - dot_shapes[j].x;
-                            float dy = dot_shapes[i].y - dot_shapes[j].y;
-                            float dist = (float)Math.Sqrt((dx*dx)+(dy*dy));
-                            if (dist < max_separation)
-                            {
-                                dots.LinkByIndex(i, j);
-                                dots.LinkByIndex(j, i);
-                                joins++;
-                            }
-                        }
-                    }
-                }
-                
-                Console.WriteLine(joins.ToString() + " dots joined");
-                                
-                // remove crossed links
-                List<hypergraph_link> victims = new List<hypergraph_link>();
-                for (int i = 0; i < dots.Links.Count; i++)
-                {
-                    hypergraph_link link1 = dots.Links[i];
-                    calibrationDot link1_from = (calibrationDot)link1.From;
-                    calibrationDot link1_to = (calibrationDot)link1.To;
-                    float x0 = link1_from.x;
-                    float y0 = link1_from.y;
-                    float x1 = link1_to.x;
-                    float y1 = link1_to.y;
-                    for (int j = i + 1; j < dots.Links.Count; j++)
-                    {
-                        hypergraph_link link2 = dots.Links[j];
-                        if ((link2.From != link1.From) &&
-                            (link2.From != link1.To) &&
-                            (link2.To != link1.From) &&
-                            (link2.To != link1.To))
-                        {
-                            calibrationDot link2_from = (calibrationDot)link2.From;
-                            calibrationDot link2_to = (calibrationDot)link2.To;
-                            float x2 = link2_from.x;
-                            float y2 = link2_from.y;
-                            float x3 = link2_to.x;
-                            float y3 = link2_to.y;
-                            
-                            float ix = 0, iy = 0;
-                            if (geometry.intersection(x0,y0,x1,y1, x2,y2,x3,y3, ref ix, ref iy))
-                            {
-                                if (!victims.Contains(link1)) victims.Add(link1);
-                                if (!victims.Contains(link2)) victims.Add(link2);
-                            }
-                        }
-                    }
-                }
-                
-                dots.RemoveLinks(victims);
-                
-                Console.WriteLine(victims.Count.ToString() + " crossed links removed");
-                
-            }
-            */
 
             return(dots);
         }
