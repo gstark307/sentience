@@ -113,10 +113,10 @@ namespace sentience.calibration
             ShowSquare(filename, centre_square, "centre_square.jpg");
 
             List<calibrationDot> search_regions = new List<calibrationDot>();
-            float horizontal_dx = centre_dots[1].x - centre_dots[0].x;
-            float horizontal_dy = centre_dots[1].y - centre_dots[0].y;
-            float vertical_dx = centre_dots[3].x - centre_dots[0].x;
-            float vertical_dy = centre_dots[3].y - centre_dots[0].y;
+            double horizontal_dx = centre_dots[1].x - centre_dots[0].x;
+            double horizontal_dy = centre_dots[1].y - centre_dots[0].y;
+            double vertical_dx = centre_dots[3].x - centre_dots[0].x;
+            double vertical_dy = centre_dots[3].y - centre_dots[0].y;
             for (int i = 0; i < centre_dots.Count; i++)
                 LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0, search_regions);
 
@@ -128,17 +128,28 @@ namespace sentience.calibration
             grid2D overlay_grid = OverlayIdealGrid(grid);
             if (overlay_grid != null)
             {
-                List<List<float>> lines = CreateLines(dots, grid);
+                List<List<double>> lines = CreateLines(dots, grid);
 
                 polynomial lens_distortion_curve = null;
                 calibrationDot centre_of_distortion = null;
-                List<List<float>> best_rectified_lines = null;
-                DetectLensDistortion(image_width, image_height, grid, lines,
+                List<List<double>> best_rectified_lines = null;
+                DetectLensDistortion(image_width, image_height, grid, overlay_grid, lines,
                                      ref lens_distortion_curve, ref centre_of_distortion,
                                      ref best_rectified_lines);
 
+                float scale = 1;
+                float rotation = 0;
+                int[] calibration_map = null;
+                int[,,] calibration_map_inverse = null;
+                updateCalibrationMap(image_width, image_height,
+                                     lens_distortion_curve,
+                                     scale, rotation,
+                                     (float)centre_of_distortion.x, (float)centre_of_distortion.y,
+                                     ref calibration_map,
+                                     ref calibration_map_inverse);
 
-
+                Rectify(filename, calibration_map, "rectified.jpg");
+                                     
                 if (best_rectified_lines != null)
                 {
                     ShowLines(filename, lines, "lines.jpg");
@@ -208,23 +219,23 @@ namespace sentience.calibration
 
         #region "creating calibration lookup tables, used to rectify whole images"
 
-        protected static void rotatePoint(float x, float y, float ang,
-                                          ref float rotated_x, ref float rotated_y)
+        protected static void rotatePoint(double x, double y, double ang,
+                                          ref double rotated_x, ref double rotated_y)
         {
-            float hyp;
+            double hyp;
             rotated_x = x;
             rotated_y = y;
 
             if (ang != 0)
             {
-                hyp = (float)Math.Sqrt((x * x) + (y * y));
+                hyp = Math.Sqrt((x * x) + (y * y));
                 if (hyp > 0)
                 {
-                    float rot_angle = (float)Math.Acos(y / hyp);
-                    if (x < 0) rot_angle = (float)(Math.PI * 2) - rot_angle;
-                    float new_angle = ang + rot_angle;
-                    rotated_x = hyp * (float)Math.Sin(new_angle);
-                    rotated_y = hyp * (float)Math.Cos(new_angle);
+                    double rot_angle = Math.Acos(y / hyp);
+                    if (x < 0) rot_angle = (Math.PI * 2) - rot_angle;
+                    double new_angle = ang + rot_angle;
+                    rotated_x = hyp * Math.Sin(new_angle);
+                    rotated_y = hyp * Math.Cos(new_angle);
                 }
             }
         }
@@ -267,17 +278,17 @@ namespace sentience.calibration
                     float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
                     if (radial_dist_rectified >= 0.01f)
                     {
-                        float radial_dist_original = curve.RegVal(radial_dist_rectified);
+                        double radial_dist_original = curve.RegVal(radial_dist_rectified);
                         if (radial_dist_original > 0)
                         {
-                            float ratio = radial_dist_original / radial_dist_rectified;
+                            double ratio = radial_dist_original / radial_dist_rectified;
                             float x2 = (float)Math.Round(centre_of_distortion_x + (dx * ratio));
                             x2 = (x2 - (image_width / 2)) * scale;
                             float y2 = (float)Math.Round(centre_of_distortion_y + (dy * ratio));
                             y2 = (y2 - (image_height / 2)) * scale;
 
                             // apply rotation
-                            float x3 = x2, y3 = y2;
+                            double x3 = x2, y3 = y2;
                             rotatePoint(x2, y2, -rotation, ref x3, ref y3);
 
                             x3 += half_width;
@@ -308,15 +319,15 @@ namespace sentience.calibration
         /// </summary>
         /// <param name="dots"></param>
         /// <returns></returns>
-        private static List<List<float>> CreateLines(hypergraph dots,
-                                                     calibrationDot[,] grid)
+        private static List<List<double>> CreateLines(hypergraph dots,
+                                                      calibrationDot[,] grid)
         {
-            List<List<float>> lines = new List<List<float>>();            
+            List<List<double>> lines = new List<List<double>>();            
             if (grid != null)
             {
                 for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
                 {
-                    List<float> line = new List<float>();
+                    List<double> line = new List<double>();
                     for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
                     {
                         if (grid[grid_x, grid_y] != null)
@@ -332,7 +343,7 @@ namespace sentience.calibration
                 }
                 for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
                 {
-                    List<float> line = new List<float>();
+                    List<double> line = new List<double>();
                     for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
                     {
                         if (grid[grid_x, grid_y] != null)
@@ -488,49 +499,110 @@ namespace sentience.calibration
         #region "rectification"
 
         /// <summary>
+        /// rectify the given image
+        /// </summary>
+        /// <param name="img">raw image</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <returns></returns>
+        private static byte[] Rectify(Byte[] img, int width, int height,
+                                      int[] calibration_map)
+        {
+            byte[] rectified_image = null;
+            if (calibration_map != null)
+            {
+                rectified_image = new Byte[width * height * 3];
+                for (int i = 0; i < width * height; i++)
+                {
+                    int j = calibration_map[i];
+                    if ((j < width * height) && (j > -1))
+                    {
+                        for (int col = 0; col < 3; col++)
+                            rectified_image[(i * 3) + col] = img[(j * 3) + col];
+                    }
+                }
+            }
+            return (rectified_image);
+        }
+
+
+        private static byte[] Rectify(string filename, 
+                                      int[] calibration_map,
+                                      ref int image_width, ref int image_height)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];            
+            BitmapArrayConversions.updatebitmap(bmp, img);
+
+            byte[] rectified = Rectify(img, bmp.Width, bmp.Height, calibration_map);
+
+            image_width = bmp.Width;
+            image_height = bmp.Height;
+
+            return (rectified);
+        }
+
+        private static void Rectify(string filename,
+                                    int[] calibration_map,
+                                    string rectified_filename)
+        {
+            int image_width = 0;
+            int image_height = 0;
+            byte[] rectified_img = Rectify(filename, calibration_map, ref image_width, ref image_height);
+
+            Bitmap output_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(rectified_img, output_bmp);
+            if (rectified_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(rectified_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (rectified_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(rectified_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+
+        }
+
+        /// <summary>
         /// applies the given curve to the lines to produce rectified coordinates
         /// </summary>
         /// <param name="lines"></param>
         /// <param name="distortion_curve"></param>
         /// <param name="centre_of_distortion"></param>
         /// <returns></returns>
-        private static List<List<float>> RectifyLines(List<List<float>> lines,
-                                                      int image_width, int image_height,
-                                                      polynomial curve,
-                                                      calibrationDot centre_of_distortion,
-                                                      float rotation,
-                                                      float scale)
+        private static List<List<double>> RectifyLines(List<List<double>> lines,
+                                                       int image_width, int image_height,
+                                                       polynomial curve,
+                                                       calibrationDot centre_of_distortion,
+                                                       double rotation,
+                                                       double scale)
         {
-            List<List<float>> rectified_lines = new List<List<float>>();
+            List<List<double>> rectified_lines = new List<List<double>>();
 
             float half_width = image_width / 2;
             float half_height = image_height / 2;
 
             for (int i = 0; i < lines.Count; i++)
             {
-                List<float> line = lines[i];
-                List<float> rectified_line = new List<float>();
+                List<double> line = lines[i];
+                List<double> rectified_line = new List<double>();
                 for (int j = 0; j < line.Count; j += 2)
                 {
-                    float x = line[j];
-                    float y = line[j + 1];
+                    double x = line[j];
+                    double y = line[j + 1];
 
-                    float dx = x - centre_of_distortion.x;
-                    float dy = y - centre_of_distortion.y;
-                    float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                    double dx = x - centre_of_distortion.x;
+                    double dy = y - centre_of_distortion.y;
+                    double radial_dist_rectified = Math.Sqrt((dx * dx) + (dy * dy));
                     if (radial_dist_rectified >= 0.01f)
                     {
-                        float radial_dist_original = curve.RegVal(radial_dist_rectified);
+                        double radial_dist_original = curve.RegVal(radial_dist_rectified);
                         if (radial_dist_original > 0)
                         {
-                            float ratio = radial_dist_original / radial_dist_rectified;
-                            float x2 = (float)Math.Round(centre_of_distortion.x + (dx * ratio));
+                            double ratio = radial_dist_rectified / radial_dist_original;
+                            double x2 = Math.Round(centre_of_distortion.x + (dx * ratio));
                             x2 = (x2 - (image_width / 2)) * scale;
-                            float y2 = (float)Math.Round(centre_of_distortion.y + (dy * ratio));
+                            double y2 = Math.Round(centre_of_distortion.y + (dy * ratio));
                             y2 = (y2 - (image_height / 2)) * scale;
 
                             // apply rotation
-                            float rectified_x = x2, rectified_y = y2;
+                            double rectified_x = x2, rectified_y = y2;
                             rotatePoint(x2, y2, -rotation, ref rectified_x, ref rectified_y);
 
                             rectified_x += half_width;
@@ -573,6 +645,162 @@ namespace sentience.calibration
             }
         }
 
+        /// <summary>
+        /// fits a curve to the given grid using the given centre of distortion
+        /// </summary>
+        /// <param name="image_width">width of the image in pixels</param>
+        /// <param name="image_height">height of the image in pixels</param>
+        /// <param name="grid">detected grid dots</param>
+        /// <param name="overlay_grid">overlayed ideal rectified grid</param>
+        /// <param name="centre_of_distortion">centre of lens distortion</param>
+        /// <param name="centre_of_distortion_search_radius">search radius for the centre of distortion</param>
+        /// <returns>fitted curve</returns>
+        private static polynomial FitCurve(int image_width, int image_height,
+                                           calibrationDot[,] grid,
+                                           grid2D overlay_grid,
+                                           calibrationDot centre_of_distortion,
+                                           double centre_of_distortion_search_radius)
+        {
+            Random rnd = new Random(0);
+            double noise = 1.0f;
+
+            int degrees = 2;
+            double prev_RMS_error = double.MaxValue;
+            double increment = 1.0f;
+            polynomial best_curve = null;
+
+            double search_radius = (float)centre_of_distortion_search_radius;
+            double half_width = image_width / 2;
+            double half_height = image_height / 2;
+            double half_noise = noise / 2;
+            double max_radius_sqr = centre_of_distortion_search_radius * centre_of_distortion_search_radius;
+
+            for (int pass = 0; pass < 900; pass++)
+            {
+
+                double centre_x = 0;
+                double centre_y = 0;
+                double mass = 0;
+
+                for (double cx = half_width - search_radius; cx < half_width + search_radius; cx += increment)
+                {
+                    double dx = cx - half_width;
+                    for (double cy = half_height - search_radius; cy < half_height + search_radius; cy += increment)
+                    {
+                        double dy = cy - half_height;
+                        double dist = dx * dx + dy * dy;
+                        if (dist < max_radius_sqr)
+                        {
+                            polynomial curve = new polynomial();
+                            curve.SetDegree(degrees);
+
+                            centre_of_distortion.x = cx + (rnd.NextDouble() * noise) - half_noise;
+                            centre_of_distortion.y = cy + (rnd.NextDouble() * noise) - half_noise;
+                            FitCurve(grid, overlay_grid, centre_of_distortion, curve, noise, rnd);
+                            double error = curve.GetSquaredError();
+                            error *= error;
+
+                            if (error > 0.000000001)
+                            {
+                                error = 1.0f / error;  // inverse
+                                centre_x += centre_of_distortion.x * error;
+                                centre_y += centre_of_distortion.y * error;
+                                mass += error;
+                            }
+                            
+                            
+                        }
+                    }
+                }
+
+                if (mass > 0)
+                {
+                    centre_x /= mass;
+                    centre_y /= mass;
+
+                    centre_of_distortion.x = centre_x;
+                    centre_of_distortion.y = centre_y;
+
+                    best_curve = new polynomial();
+                    best_curve.SetDegree(degrees);
+                    FitCurve(grid, overlay_grid, centre_of_distortion, best_curve, noise, rnd);
+
+                    double RMS_error = best_curve.GetRMSerror();
+
+                    if (RMS_error < prev_RMS_error)
+                    {
+                        search_radius *= 0.99;
+                        increment *= 0.99;
+                        noise *= 0.99;
+                        half_noise = noise / 2;
+                        half_width = centre_x;
+                        half_height = centre_y;
+                        prev_RMS_error = RMS_error;
+                        Console.WriteLine("Pass " + pass.ToString() + ": " + RMS_error.ToString());
+                    }
+
+                }
+            }
+
+            centre_of_distortion.x = half_width;
+            centre_of_distortion.y = half_height;
+            best_curve = new polynomial();
+            best_curve.SetDegree(degrees);
+            FitCurve(grid, overlay_grid, centre_of_distortion, best_curve, 0, rnd);
+
+            return (best_curve);
+        }
+
+        /// <summary>
+        /// fits a curve to the given grid using the given centre of distortion
+        /// </summary>
+        /// <param name="grid">detected grid dots</param>
+        /// <param name="overlay_grid">overlayed ideal rectified grid</param>
+        /// <param name="centre_of_distortion">centre of lens distortion</param>
+        /// <param name="curve">curve to be fitted</param>
+        private static void FitCurve(calibrationDot[,] grid,
+                                     grid2D overlay_grid,
+                                     calibrationDot centre_of_distortion,
+                                     polynomial curve,
+                                     double noise, Random rnd)
+        {
+            double half_noise = noise / 2;
+            // for every detected dot
+            for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+            {
+                for (int grid_y = 0; grid_y < grid.GetLength(1)-1; grid_y++)
+                {
+                    if (grid[grid_x, grid_y] != null)
+                    {
+                        // find the rectified distance of the dot from the centre of distortion
+                        double rectified_x = overlay_grid.line_intercepts[grid_x, grid_y + 1, 0] + (rnd.NextDouble() * noise) - half_noise;
+                        double rectified_y = overlay_grid.line_intercepts[grid_x, grid_y + 1, 1] + (rnd.NextDouble() * noise) - half_noise;
+                        double rectified_dx = rectified_x - centre_of_distortion.x;
+                        double rectified_dy = rectified_y - centre_of_distortion.y;
+                        double rectified_radial_dist = Math.Sqrt(rectified_dx * rectified_dx + rectified_dy * rectified_dy);
+
+                        // find the actual raw image distance of the dot from the centre of distortion
+                        double actual_x = grid[grid_x, grid_y].x + (rnd.NextDouble() * noise) - half_noise;
+                        double actual_y = grid[grid_x, grid_y].y + (rnd.NextDouble() * noise) - half_noise;
+                        double actual_dx = actual_x - centre_of_distortion.x;
+                        double actual_dy = actual_y - centre_of_distortion.y;
+                        double actual_radial_dist = Math.Sqrt(actual_dx * actual_dx + actual_dy * actual_dy);
+
+                        // plot
+                        curve.AddPoint(rectified_radial_dist, actual_radial_dist);
+                    }
+                }
+            }
+
+            // find the best fit curve
+            curve.Solve();
+        }
+
+        /// <summary>
+        /// returns an ideally spaced grid over the actual detected spots
+        /// </summary>
+        /// <param name="grid"></param>
+        /// <returns></returns>
         private static grid2D OverlayIdealGrid(calibrationDot[,] grid)
         {
             grid2D overlay_grid = null;
@@ -611,21 +839,21 @@ namespace sentience.calibration
 
             if (found)
             {
-                float dx, dy;
-                float x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-                float x2 = 0, y2 = 0, x3 = 0, y3 = 0;
+                double dx, dy;
+                double x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+                double x2 = 0, y2 = 0, x3 = 0, y3 = 0;
                 for (int i = 0; i < 2; i++)
                 {
-                    float cx=0,cy=0;
+                    double cx = 0, cy = 0;
                     int prev_grid_x = 0;
-                    float prev_x = -1;
-                    float prev_y = -1;
-                    float spacing = 0;
+                    double prev_x = -1;
+                    double prev_y = -1;
+                    double spacing = 0;
                     int spacing_hits = 0;
-                    float x_left = 0;
-                    float y_left = 0;
-                    float x_right = 0;
-                    float y_right = 0;
+                    double x_left = 0;
+                    double y_left = 0;
+                    double x_right = 0;
+                    double y_right = 0;
                     int hits_left = 0;
                     int hits_right = 0;
                     int grid_y = grid_ty;
@@ -651,7 +879,7 @@ namespace sentience.calibration
                             {
                                 dx = grid[grid_x, grid_y].x - prev_x;
                                 dy = grid[grid_x, grid_y].y - prev_y;
-                                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                                double dist = Math.Sqrt(dx * dx + dy * dy);
                                 spacing += dist / (grid_x - prev_grid_x);
                                 spacing_hits++;
                             }
@@ -678,50 +906,50 @@ namespace sentience.calibration
 
                         dx = x_right - x_left;
                         dy = y_right - y_left;
-                        float hyp = (float)Math.Sqrt(dx * dx + dy * dy);
+                        double hyp = Math.Sqrt(dx * dx + dy * dy);
                         if (hyp > 0)
                         {
-                            float angle = (float)Math.Acos(dy / hyp);
-                            if (dx < 0) angle = ((float)Math.PI * 2) - angle;
+                            double angle = Math.Acos(dy / hyp);
+                            if (dx < 0) angle = (Math.PI * 2) - angle;
 
-                            float width = spacing * grid.GetLength(0) / 2;
+                            double width = spacing * grid.GetLength(0) / 2;
 
                             if (i == 0)
                             {
-                                x0 = cx + (width * (float)Math.Sin(angle - Math.PI));
-                                y0 = cy + (width * (float)Math.Cos(angle - Math.PI));
-                                x1 = cx + (width * (float)Math.Sin(angle));
-                                y1 = cy + (width * (float)Math.Cos(angle));
+                                x0 = cx + (width * Math.Sin(angle - Math.PI));
+                                y0 = cy + (width * Math.Cos(angle - Math.PI));
+                                x1 = cx + (width * Math.Sin(angle));
+                                y1 = cy + (width * Math.Cos(angle));
                             }
                             else
                             {
-                                x2 = cx + (width * (float)Math.Sin(angle - Math.PI));
-                                y2 = cy + (width * (float)Math.Cos(angle - Math.PI));
-                                x3 = cx + (width * (float)Math.Sin(angle));
-                                y3 = cy + (width * (float)Math.Cos(angle));
+                                x2 = cx + (width * Math.Sin(angle - Math.PI));
+                                y2 = cy + (width * Math.Cos(angle - Math.PI));
+                                x3 = cx + (width * Math.Sin(angle));
+                                y3 = cy + (width * Math.Cos(angle));
                             }
                         }
                     }
                 }
 
                 polygon2D perimeter = new polygon2D();
-                perimeter.Add(x0, y0);
-                perimeter.Add(x1, y1);
-                perimeter.Add(x3, y3);
-                perimeter.Add(x2, y2);
+                perimeter.Add((float)x0, (float)y0);
+                perimeter.Add((float)x1, (float)y1);
+                perimeter.Add((float)x3, (float)y3);
+                perimeter.Add((float)x2, (float)y2);
                 overlay_grid = new grid2D(grid_bx - grid_tx, grid_by - grid_ty, perimeter, 0, false);
 
                 dx = 0;
                 dy = 0;
                 int hits = 0;
-                for (int grid_x = 0; grid_x < grid.GetLength(0)-1; grid_x++)
+                for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
                 {
                     for (int grid_y = 0; grid_y < grid.GetLength(1)-1; grid_y++)
                     {
                         if (grid[grid_x, grid_y] != null)
                         {
-                            float intercept_x = overlay_grid.line_intercepts[grid_x, grid_y+1, 0];
-                            float intercept_y = overlay_grid.line_intercepts[grid_x, grid_y+1, 1];
+                            double intercept_x = overlay_grid.line_intercepts[grid_x, grid_y + 1, 0];
+                            double intercept_y = overlay_grid.line_intercepts[grid_x, grid_y + 1, 1];
                             dx += grid[grid_x, grid_y].x - intercept_x;
                             dy += grid[grid_x, grid_y].y - intercept_y;
                             hits++;
@@ -743,10 +971,10 @@ namespace sentience.calibration
                     y3 += dy;
 
                     perimeter = new polygon2D();
-                    perimeter.Add(x0, y0);
-                    perimeter.Add(x1, y1);
-                    perimeter.Add(x3, y3);
-                    perimeter.Add(x2, y2);
+                    perimeter.Add((float)x0, (float)y0);
+                    perimeter.Add((float)x1, (float)y1);
+                    perimeter.Add((float)x3, (float)y3);
+                    perimeter.Add((float)x2, (float)y2);
                     overlay_grid = new grid2D(grid_bx - grid_tx, grid_by - grid_ty, perimeter, 0, false);
                 }
             }
@@ -757,138 +985,28 @@ namespace sentience.calibration
 
         private static void DetectLensDistortion(int image_width, int image_height,
                                                  calibrationDot[,] grid,
-                                                 List<List<float>> lines,
+                                                 grid2D overlay_grid,
+                                                 List<List<double>> lines,
                                                  ref polynomial curve,
                                                  ref calibrationDot centre_of_distortion,
-                                                 ref List<List<float>> best_rectified_lines)
+                                                 ref List<List<double>> best_rectified_lines)
         {
-        }
-
-
-
-        private static void DetectLensDistortionOld(int image_width, int image_height,
-                                                 List<List<float>> lines,
-                                                 ref polynomial curve,
-                                                 ref calibrationDot centre_of_distortion,
-                                                 ref List<List<float>> best_rectified_lines)
-        {
-            float line_length = LineLength(lines);
-            float min_line_length = line_length * 0.8f;
-            float max_line_length = line_length * 1.2f;
-
-            int search_steps = 200;
-            float[] search_range_min = new float[3];
-            float[] search_range_max = new float[3];
-
-            search_range_min[0] = 0;
-            search_range_max[0] = 0;
-            search_range_min[1] = 1;
-            search_range_max[1] = 1.2f;
-            search_range_min[2] = 0.0001f;
-            search_range_max[2] = 0.001f;
-
-            float scale = 1;
-            float rotation = 0;
-            curve = new polynomial();
-            curve.SetDegree(3);
-            
+            double centre_of_distortion_search_radius = image_width / 100.0f;
             centre_of_distortion = new calibrationDot();
-            centre_of_distortion.x = image_width/2;
-            centre_of_distortion.y = image_height/2;
-            float minimum_curvature, prev_minimum_curvature = float.MaxValue;
-            float best_coeff0 = 0;
-            float best_coeff1 = search_range_min[1] + ((search_range_max[1] - search_range_min[1]) / 2);
-            float best_coeff2 = search_range_min[2] + ((search_range_max[2] - search_range_min[2]) / 2);
+            curve = FitCurve(image_width, image_height,
+                             grid, overlay_grid,
+                             centre_of_distortion,
+                             centre_of_distortion_search_radius);
 
-            curve.SetCoeff(0, best_coeff0);
+            double rotation = 0;
+            double scale = 1;
 
-            best_rectified_lines = null;
-
-            Random rnd = new Random();
-
-            int tries = 0;
-            while (tries < 20)
-            {
-                minimum_curvature = float.MaxValue-1;
-                
-                float range1 = (search_range_max[1] - search_range_min[1]) / search_steps;
-                float range2 = (search_range_max[2] - search_range_min[2]) / search_steps;
-                
-                // perform the search
-                for (int i = 0; i < search_steps; i++)
-                {
-                    float coeff1 = search_range_min[1] + (i * (search_range_max[1] - search_range_min[1]) / search_steps);
-                    coeff1 += ((float)rnd.NextDouble() - 0.5f) * range1;
-                    if (coeff1 != 0)
-                    {
-                        curve.SetCoeff(1, coeff1);                        
-                        for (int j = 0; j < search_steps; j++)
-                        {
-                            float coeff2 = search_range_min[2] + (j * (search_range_max[2] - search_range_min[2]) / search_steps);
-                            coeff2 += ((float)rnd.NextDouble() - 0.5f) * range2;
-                            if (coeff2 != 0)
-                            {
-                                curve.SetCoeff(2, coeff2);
-
-                                List<List<float>> rectified_lines =
-                                    RectifyLines(lines,
-                                                 image_width, image_height,
-                                                 curve,
-                                                 centre_of_distortion,
-                                                 rotation, scale);
-                                if (rectified_lines.Count == lines.Count)
-                                {
-                                    float rectified_line_length = LineLength(rectified_lines);
-                                    
-                                    float scale2 = line_length / rectified_line_length;
-                                    ScaleLines(rectified_lines, scale2, image_width, image_height, image_width/2, image_height/2);
-                                    
-                                    if ((rectified_line_length > min_line_length) &&
-                                        (rectified_line_length < max_line_length))
-                                    {
-                                        float curvature = LineCurvature(rectified_lines);
-                                        if (curvature > 0)
-                                        {
-                                            //Console.WriteLine("Curvature0: " + curvature.ToString());
-                                            if (curvature < minimum_curvature)
-                                            {
-                                                best_coeff1 = coeff1;
-                                                best_coeff2 = coeff2;
-                                                best_rectified_lines = rectified_lines;
-                                                minimum_curvature = curvature;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                float search_multiplier = 0.9f;
-
-                // refine the search
-                float search_radius = ((search_range_max[1] - search_range_min[1])/2.0f) * search_multiplier;
-                search_range_min[1] = best_coeff1 - search_radius;
-                search_range_max[1] = best_coeff1 + search_radius;                 
-
-                search_radius = ((search_range_max[2] - search_range_min[2])/2.0f) * search_multiplier;
-                search_range_min[2] = best_coeff2 - search_radius;
-                search_range_max[2] = best_coeff2 + search_radius;
-                
-                //search_range_max[1] *= 0.9f;
-                //search_range_max[2] *= 0.9f;
-                
-                Console.WriteLine("search range min: " + search_range_min[2].ToString());
-                Console.WriteLine("search range max: " + search_range_max[2].ToString());
-                Console.WriteLine("Coeff 1: " + best_coeff1.ToString());
-                Console.WriteLine("Coeff 2: " + best_coeff2.ToString());
-                Console.WriteLine("Curvature: " + minimum_curvature.ToString());
-                //if (best_rectified_lines != null)
-                //    Console.WriteLine("Rectified lines: " + best_rectified_lines.Count.ToString());
-                tries++;
-            }
-
+            best_rectified_lines =
+                RectifyLines(lines,
+                             image_width, image_height,
+                             curve,
+                             centre_of_distortion,
+                             rotation, scale);
         }
 
         #endregion
@@ -924,7 +1042,7 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
-        private static void ShowLines(string filename, List<List<float>> lines,
+        private static void ShowLines(string filename, List<List<double>> lines,
                                       string output_filename)
         {
             Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
@@ -943,12 +1061,12 @@ namespace sentience.calibration
                 g = rnd.Next(255);
                 b = rnd.Next(255);
 
-                List<float> line = lines[i];
-                float prev_x=0, prev_y=0;
+                List<double> line = lines[i];
+                double prev_x = 0, prev_y = 0;
                 for (int j = 0; j < line.Count; j += 2)
                 {
-                    float x = line[j];
-                    float y = line[j + 1];
+                    double x = line[j];
+                    double y = line[j + 1];
                     if (j > 0)
                         drawing.drawLine(img, bmp.Width, bmp.Height, (int)prev_x, (int)prev_y, (int)x, (int)y, r, g, b, 0, false);
                     prev_x = x;
@@ -978,14 +1096,14 @@ namespace sentience.calibration
                 for (int i = 0; i < search_regions.Count; i++)
                 {
                     calibrationDot dot = (calibrationDot)search_regions[i];
-                    drawing.drawCircle(img, bmp.Width, bmp.Height, dot.x, dot.y, dot.radius, 255, 255, 0, 0);
+                    drawing.drawCircle(img, bmp.Width, bmp.Height, (float)dot.x, (float)dot.y, (float)dot.radius, 255, 255, 0, 0);
                 }
             }
 
             for (int i = 0; i < dots.Nodes.Count; i++)
             {
                 calibrationDot dot = (calibrationDot)dots.Nodes[i];
-                drawing.drawCircle(img, bmp.Width, bmp.Height, dot.x, dot.y, dot.radius, 0, 255, 0, 0);
+                drawing.drawCircle(img, bmp.Width, bmp.Height, (float)dot.x, (float)dot.y, dot.radius, 0, 255, 0, 0);
             }
 
             for (int i = 0; i < dots.Links.Count; i++)
@@ -1036,7 +1154,7 @@ namespace sentience.calibration
             for (int i = 0; i < dots.Nodes.Count; i++)
             {
                 calibrationDot dot = (calibrationDot)dots.Nodes[i];
-                drawing.drawCircle(img, bmp.Width, bmp.Height, dot.x, dot.y, dot.radius, 0, 255, 0, 0);
+                drawing.drawCircle(img, bmp.Width, bmp.Height, (float)dot.x, (float)dot.y, dot.radius, 0, 255, 0, 0);
                 
                 if (dot.grid_x != 9999)
                 {
@@ -1126,19 +1244,19 @@ namespace sentience.calibration
 
         private static void LinkDots(hypergraph dots,
                                      calibrationDot current_dot,
-                                     float horizontal_dx, float horizontal_dy,
-                                     float vertical_dx, float vertical_dy,
+                                     double horizontal_dx, double horizontal_dy,
+                                     double vertical_dx, double vertical_dy,
                                      int start_index,
                                      List<calibrationDot> search_regions)
         {
             if (!current_dot.centre)
             {
                 int start_index2 = 0;
-                float tollerance_divisor = 0.3f;
-                float horizontal_tollerance = (float)Math.Sqrt((horizontal_dx * horizontal_dx) + (horizontal_dy * horizontal_dy)) * tollerance_divisor;
-                float vertical_tollerance = (float)Math.Sqrt((vertical_dx * vertical_dx) + (vertical_dy * vertical_dy)) * tollerance_divisor;
+                double tollerance_divisor = 0.3f;
+                double horizontal_tollerance = Math.Sqrt((horizontal_dx * horizontal_dx) + (horizontal_dy * horizontal_dy)) * tollerance_divisor;
+                double vertical_tollerance = Math.Sqrt((vertical_dx * vertical_dx) + (vertical_dy * vertical_dy)) * tollerance_divisor;
 
-                float x=0, y=0;
+                double x = 0, y = 0;
                 List<int> indexes_found = new List<int>();
                 List<bool> found_vertical = new List<bool>();
 
@@ -1190,7 +1308,7 @@ namespace sentience.calibration
                         calibrationDot search_region = new calibrationDot();
                         search_region.x = x;
                         search_region.y = y;
-                        search_region.radius = horizontal_tollerance;
+                        search_region.radius = (float)horizontal_tollerance;
                         search_regions.Add(search_region);
 
                         for (int j = 0; j < dots.Nodes.Count; j++)
@@ -1198,9 +1316,9 @@ namespace sentience.calibration
                             if ((!((calibrationDot)dots.Nodes[j]).centre) &&
                                 (dots.Nodes[j] != current_dot))
                             {
-                                float dx = ((calibrationDot)dots.Nodes[j]).x - x;
-                                float dy = ((calibrationDot)dots.Nodes[j]).y - y;
-                                float dist_from_expected_position = (float)Math.Sqrt(dx * dx + dy * dy);
+                                double dx = ((calibrationDot)dots.Nodes[j]).x - x;
+                                double dy = ((calibrationDot)dots.Nodes[j]).y - y;
+                                double dist_from_expected_position = Math.Sqrt(dx * dx + dy * dy);
                                 bool dot_found = false;
                                 if ((ii == 0) || (ii == 2))
                                 {
@@ -1240,8 +1358,8 @@ namespace sentience.calibration
                     start_index2 = start_index + 1;
                     if (start_index2 >= 4) start_index2 -= 4;
 
-                    float found_dx = ((calibrationDot)dots.Nodes[indexes_found[i]]).x - current_dot.x;
-                    float found_dy = ((calibrationDot)dots.Nodes[indexes_found[i]]).y - current_dot.y;
+                    double found_dx = ((calibrationDot)dots.Nodes[indexes_found[i]]).x - current_dot.x;
+                    double found_dy = ((calibrationDot)dots.Nodes[indexes_found[i]]).y - current_dot.y;
 
                     calibrationLink link = new calibrationLink();
                     
@@ -1294,20 +1412,20 @@ namespace sentience.calibration
 
             // look for the four surrounding dots
             List<calibrationDot> centre_dots = new List<calibrationDot>();
-            List<float> distances = new List<float>();
+            List<double> distances = new List<double>();
             i = 0;
             for (i = 0; i < dots.Nodes.Count; i++)
             {
                 calibrationDot dot = (calibrationDot)dots.Nodes[i];
                 if (!dot.centre)
                 {
-                    float dx = dot.x - centre.x;
-                    float dy = dot.y - centre.y;
-                    float dist = (float)Math.Sqrt(dx*dx + dy*dy);
+                    double dx = dot.x - centre.x;
+                    double dy = dot.y - centre.y;
+                    double dist = Math.Sqrt(dx * dx + dy * dy);
                     if (distances.Count == 4)
                     {
                         int index = -1;
-                        float max_dist = 0;
+                        double max_dist = 0;
                         for (int j = 0; j < 4; j++)
                         {
                             if (distances[j] > max_dist)
@@ -1337,8 +1455,8 @@ namespace sentience.calibration
                 for (i = 0; i < 4; i++)
                     centre_square.Add(0, 0);
 
-                float xx = centre.x;
-                float yy = centre.y;
+                double xx = centre.x;
+                double yy = centre.y;
                 int index = 0;
                 for (i = 0; i < 4; i++)
                 {
@@ -1347,8 +1465,8 @@ namespace sentience.calibration
                     {
                         xx = centre_dots[i].x;
                         yy = centre_dots[i].y;
-                        centre_square.x_points[0] = xx;
-                        centre_square.y_points[0] = yy;
+                        centre_square.x_points[0] = (float)xx;
+                        centre_square.y_points[0] = (float)yy;
                         index = i;
                     }
                 }
@@ -1363,8 +1481,8 @@ namespace sentience.calibration
                     {
                         xx = centre_dots[i].x;
                         yy = centre_dots[i].y;
-                        centre_square.x_points[1] = xx;
-                        centre_square.y_points[1] = yy;
+                        centre_square.x_points[1] = (float)xx;
+                        centre_square.y_points[1] = (float)yy;
                         index = i;
                     }
                 }
@@ -1379,8 +1497,8 @@ namespace sentience.calibration
                     {
                         xx = centre_dots[i].x;
                         yy = centre_dots[i].y;
-                        centre_square.x_points[2] = xx;
-                        centre_square.y_points[2] = yy;
+                        centre_square.x_points[2] = (float)xx;
+                        centre_square.y_points[2] = (float)yy;
                         index = i;
                     }
                 }
@@ -1395,8 +1513,8 @@ namespace sentience.calibration
                     {
                         xx = centre_dots[i].x;
                         yy = centre_dots[i].y;
-                        centre_square.x_points[3] = xx;
-                        centre_square.y_points[3] = yy;
+                        centre_square.x_points[3] = (float)xx;
+                        centre_square.y_points[3] = (float)yy;
                         index = i;
                     }
                 }
@@ -1427,11 +1545,11 @@ namespace sentience.calibration
                                                                 minimum_width, maximum_width,
                                                                 ref edges, "edges.jpg", "groups.jpg", "dots.jpg",
                                                                 ref image_width, ref image_height);
-            
-            float tx = 99999;
-            float ty = 99999;
-            float bx = 0;
-            float by = 0;
+
+            double tx = 99999;
+            double ty = 99999;
+            double bx = 0;
+            double by = 0;
             for (int i = 0; i < dot_shapes.Count; i++)
             {
                 if (dot_shapes[i].x < tx) tx = dot_shapes[i].x;

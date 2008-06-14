@@ -30,7 +30,7 @@ namespace sentience.calibration
         public float r, g, b;
 
         // pixel position within the image
-        public float x, y;
+        public double x, y;
 
         // rectified pixel position within the image
         public float rectified_x, rectified_y;

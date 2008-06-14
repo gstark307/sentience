@@ -29,20 +29,20 @@ namespace sentience.calibration
         private int GlobalO;         // degree of the polynomial expected
         private bool Finished;
 
-        private float[] SumX;
-        private float[] SumYX;
-        private float[,] M;
-        private float[] C; // coefficients
+        private double[] SumX;
+        private double[] SumYX;
+        private double[,] M;
+        private double[] C; // coefficients
 
         private ArrayList Xpoints;
         private ArrayList Ypoints;
 
         public polynomial()
         {
-            SumX = new float[(2 * MaxO) + 1];
-            SumYX = new float[MaxO + 1];
-            M = new float[MaxO, MaxO + 1];
-            C = new float[MaxO + 1]; // coefficients in: Y = C(0)*X^0 + C(1)*X^1 + C(2)*X^2 + ...
+            SumX = new double[(2 * MaxO) + 1];
+            SumYX = new double[MaxO + 1];
+            M = new double[MaxO, MaxO + 1];
+            C = new double[MaxO + 1]; // coefficients in: Y = C(0)*X^0 + C(1)*X^1 + C(2)*X^2 + ...
 
             Init();
             GlobalO = 4;
@@ -56,7 +56,7 @@ namespace sentience.calibration
         private void GaussSolve(int O)
         {
             int i, j, k, iMax;
-            float T, O1;
+            double T, O1;
   
             O1 = O + 1;
             // first triangulize the matrix
@@ -85,7 +85,7 @@ namespace sentience.calibration
                 for (j = i + 1; j <= O; j++) // scale all following lines to have a leading zero
                 {
                     T = M[j, i] / M[i, i];
-                    M[j, i] = (float)0;
+                    M[j, i] = (double)0;
                     for (k = i + 1; k <= O1; k++)
                     {
                         M[j, k] = M[j, k] - M[i, k] * T;
@@ -177,13 +177,13 @@ namespace sentience.calibration
             }
         }
 
-        public void SetCoeff(int Exponent, float value)
+        public void SetCoeff(int Exponent, double value)
         {
             Finished = true;
             C[Exponent] = value;
         }
 
-        public float Coeff(int Exponent)
+        public double Coeff(int Exponent)
         {
             int Ex, O;
 
@@ -216,10 +216,10 @@ namespace sentience.calibration
             return((int)(SumX[0]));
         }
 
-        public void AddPoint(float x, float y)
+        public void AddPoint(double x, double y)
         {
             int i, Max2O;
-            float TX;
+            double TX;
 
             Xpoints.Add(x);
             Ypoints.Add(y);
@@ -242,53 +242,59 @@ namespace sentience.calibration
             }
         }
 
-        public float RegVal(float x)
+        public double RegVal(double x)
         {
             int i, O;
-            float retval=0;
+            double retval=0;
 
             if (!Finished) Solve();
             O = GlobalO;
             //if (XYCount() <= O) O = XYCount() - 1;
             for (i = 0; i <= O; i++)
-                retval = retval + C[i] * (float)Math.Pow(x, i);
+                retval = retval + C[i] * Math.Pow(x, i);
             return (retval);
         }
 
 
-        public float GetRMSerror()
+        public double GetRMSerror()
         {
-            float rms_error = 0;
+            return (Math.Sqrt(GetSquaredError()));
+        }
+
+        public double GetSquaredError()
+        {
+            double error = 0;
 
             if (Xpoints.Count > 0)
             {
                 for (int i = 0; i < Xpoints.Count; i++)
                 {
-                    float x = (float)Xpoints[i];
-                    float y = (float)Ypoints[i];
-                    float y2 = RegVal(x);
-                    float diff = y - y2;
-                    rms_error += (diff * diff);
+                    double x = (double)Xpoints[i];
+                    double y = (double)Ypoints[i];
+                    double y2 = RegVal(x);
+                    double diff = y - y2;
+                    error += (diff * diff);
                 }
-                rms_error = (float)Math.Sqrt(rms_error/(float)Xpoints.Count);
+                error /= Xpoints.Count;
             }
-            return (rms_error);
+            return (error);
         }
+
 
         public void Show(Byte[] img, int width, int height)
         {
-            float min_x = 0;
-            float min_y = 0;
-            float max_x = 1;
-            float max_y = 1;
+            double min_x = 0;
+            double min_y = 0;
+            double max_x = 1;
+            double max_y = 1;
             int i = 0;
 
             for (i = 0; i < width * height * 3; i++) img[i] = 255;
 
             for (i = 0; i < Xpoints.Count; i++)
             {
-                float x = (float)Xpoints[i];
-                float y = (float)Ypoints[i];
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
                 if (x > max_x) max_x = x;
                 if (y > max_y) max_y = y;
                 if (x < min_x) min_x = x;
@@ -309,8 +315,8 @@ namespace sentience.calibration
 
             for (i = 0; i < Xpoints.Count; i++)
             {
-                float x = (float)Xpoints[i];
-                float y = (float)Ypoints[i];
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
                 int xx = (int)((x-min_x) * (width - 1) / (max_x-min_x));
                 int yy = (int)(height - 1 - ((y-min_y) * (height - 1) / (max_y-min_y)));
                 int n = ((yy * width) + xx) * 3;
