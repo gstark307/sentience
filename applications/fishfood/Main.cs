@@ -124,21 +124,29 @@ namespace sentience.calibration
 
             ApplyGrid(dots, centre_dots);
 
-            List<List<float>> lines = CreateLines(dots);
-
-            polynomial lens_distortion_curve = null;
-            calibrationDot centre_of_distortion = null;
-            List<List<float>> best_rectified_lines = null;
-            DetectLensDistortion(image_width, image_height, lines, 
-                                 ref lens_distortion_curve, ref centre_of_distortion,
-                                 ref best_rectified_lines);
-
-            if (best_rectified_lines != null)
+            calibrationDot[,] grid = CreateGrid(dots);
+            grid2D overlay_grid = OverlayIdealGrid(grid);
+            if (overlay_grid != null)
             {
-                ShowLines(filename, lines, "lines.jpg");
-                ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                List<List<float>> lines = CreateLines(dots, grid);
+
+                polynomial lens_distortion_curve = null;
+                calibrationDot centre_of_distortion = null;
+                List<List<float>> best_rectified_lines = null;
+                DetectLensDistortion(image_width, image_height, grid, lines,
+                                     ref lens_distortion_curve, ref centre_of_distortion,
+                                     ref best_rectified_lines);
+
+
+
+                if (best_rectified_lines != null)
+                {
+                    ShowLines(filename, lines, "lines.jpg");
+                    ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                }
             }
 
+            ShowOverlayGrid(filename, overlay_grid, "grid_overlay.jpg");
             ShowGrid(filename, dots, search_regions, "grid.jpg");
             ShowGridCoordinates(filename, dots, "coordinates.jpg");
             return (dots);
@@ -300,10 +308,10 @@ namespace sentience.calibration
         /// </summary>
         /// <param name="dots"></param>
         /// <returns></returns>
-        private static List<List<float>> CreateLines(hypergraph dots)
+        private static List<List<float>> CreateLines(hypergraph dots,
+                                                     calibrationDot[,] grid)
         {
-            List<List<float>> lines = new List<List<float>>();
-            calibrationDot[,] grid = CreateGrid(dots);
+            List<List<float>> lines = new List<List<float>>();            
             if (grid != null)
             {
                 for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
@@ -545,10 +553,10 @@ namespace sentience.calibration
 
         #region "detecting lens distortion"
 
-        private static void ScaleLines(List<List<float>> lines, float scale, int image_width, int image_height)
+        private static void ScaleLines(List<List<float>> lines, float scale, 
+                                       int image_width, int image_height,
+                                       int centre_x, int centre_y)
         {
-            float half_width = image_width/2;
-            float half_height = image_height/2;
             for (int i = 0; i < lines.Count; i++)
             {
                 List<float> line = lines[i];
@@ -556,16 +564,209 @@ namespace sentience.calibration
                 {
                     float x = line[j];
                     float y = line[j + 1];
-                    float dx = x - half_width;
-                    float dy = y - half_height;
+                    float dx = x - centre_x;
+                    float dy = y - centre_y;
                     
-                    line[j] = half_width + (dx * scale);
-                    line[j + 1] = half_height + (dy * scale);
+                    line[j] = centre_x + (dx * scale);
+                    line[j + 1] = centre_y + (dy * scale);
                 }
             }
         }
 
+        private static grid2D OverlayIdealGrid(calibrationDot[,] grid)
+        {
+            grid2D overlay_grid = null;
+            int grid_tx = -1;
+            int grid_ty = -1;
+            int grid_bx = -1;
+            int grid_by = -1;
+
+            int offset_x = 0;
+            int offset_y = 0;
+
+            bool found = false;
+
+            while ((offset_y < 3) && (!found))
+            {
+                offset_x = 0;
+                while ((offset_x < 3) && (!found))
+                {
+                    grid_tx = offset_x;
+                    grid_ty = offset_y;
+                    grid_bx = grid.GetLength(0) - 1 - offset_x;
+                    grid_by = grid.GetLength(1) - 1 - offset_y;
+
+                    if ((grid[grid_tx, grid_ty] != null) &&
+                        (grid[grid_bx, grid_ty] != null) &&
+                        (grid[grid_bx, grid_by] != null) &&
+                        (grid[grid_tx, grid_by] != null))
+                    {
+                        found = true;
+                    }
+
+                    offset_x++;
+                }
+                offset_y++;
+            }
+
+            if (found)
+            {
+                float dx, dy;
+                float x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+                float x2 = 0, y2 = 0, x3 = 0, y3 = 0;
+                for (int i = 0; i < 2; i++)
+                {
+                    float cx=0,cy=0;
+                    int prev_grid_x = 0;
+                    float prev_x = -1;
+                    float prev_y = -1;
+                    float spacing = 0;
+                    int spacing_hits = 0;
+                    float x_left = 0;
+                    float y_left = 0;
+                    float x_right = 0;
+                    float y_right = 0;
+                    int hits_left = 0;
+                    int hits_right = 0;
+                    int grid_y = grid_ty;
+                    if (i > 0) grid_y = grid_by;
+                    for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+                    {
+                        if (grid[grid_x, grid_y] != null)
+                        {
+                            if (grid_x < grid.GetLength(0) / 2)
+                            {
+                                x_left += grid[grid_x, grid_y].x;
+                                y_left += grid[grid_x, grid_y].y;
+                                hits_left++;
+                            }
+                            else
+                            {
+                                x_right += grid[grid_x, grid_y].x;
+                                y_right += grid[grid_x, grid_y].y;
+                                hits_right++;
+                            }
+
+                            if (prev_x > -1)
+                            {
+                                dx = grid[grid_x, grid_y].x - prev_x;
+                                dy = grid[grid_x, grid_y].y - prev_y;
+                                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                                spacing += dist / (grid_x - prev_grid_x);
+                                spacing_hits++;
+                            }
+                            prev_x = grid[grid_x, grid_y].x;
+                            prev_y = grid[grid_x, grid_y].y;
+                            prev_grid_x = grid_x;
+                        }
+                    }
+
+                    if ((hits_left > 0) && (hits_right > 0))
+                    {
+                        cx = (x_left + x_right) / (hits_left + hits_right);
+                        cy = (y_left + y_right) / (hits_left + hits_right);
+
+                        x_left /= hits_left;
+                        y_left /= hits_left;
+                        x_right /= hits_right;
+                        y_right /= hits_right;
+                    }
+
+                    if (spacing_hits > 0)
+                    {
+                        spacing /= spacing_hits;
+
+                        dx = x_right - x_left;
+                        dy = y_right - y_left;
+                        float hyp = (float)Math.Sqrt(dx * dx + dy * dy);
+                        if (hyp > 0)
+                        {
+                            float angle = (float)Math.Acos(dy / hyp);
+                            if (dx < 0) angle = ((float)Math.PI * 2) - angle;
+
+                            float width = spacing * grid.GetLength(0) / 2;
+
+                            if (i == 0)
+                            {
+                                x0 = cx + (width * (float)Math.Sin(angle - Math.PI));
+                                y0 = cy + (width * (float)Math.Cos(angle - Math.PI));
+                                x1 = cx + (width * (float)Math.Sin(angle));
+                                y1 = cy + (width * (float)Math.Cos(angle));
+                            }
+                            else
+                            {
+                                x2 = cx + (width * (float)Math.Sin(angle - Math.PI));
+                                y2 = cy + (width * (float)Math.Cos(angle - Math.PI));
+                                x3 = cx + (width * (float)Math.Sin(angle));
+                                y3 = cy + (width * (float)Math.Cos(angle));
+                            }
+                        }
+                    }
+                }
+
+                polygon2D perimeter = new polygon2D();
+                perimeter.Add(x0, y0);
+                perimeter.Add(x1, y1);
+                perimeter.Add(x3, y3);
+                perimeter.Add(x2, y2);
+                overlay_grid = new grid2D(grid_bx - grid_tx, grid_by - grid_ty, perimeter, 0, false);
+
+                dx = 0;
+                dy = 0;
+                int hits = 0;
+                for (int grid_x = 0; grid_x < grid.GetLength(0)-1; grid_x++)
+                {
+                    for (int grid_y = 0; grid_y < grid.GetLength(1)-1; grid_y++)
+                    {
+                        if (grid[grid_x, grid_y] != null)
+                        {
+                            float intercept_x = overlay_grid.line_intercepts[grid_x, grid_y+1, 0];
+                            float intercept_y = overlay_grid.line_intercepts[grid_x, grid_y+1, 1];
+                            dx += grid[grid_x, grid_y].x - intercept_x;
+                            dy += grid[grid_x, grid_y].y - intercept_y;
+                            hits++;
+                        }
+                    }
+                }
+                if (hits > 0)
+                {
+                    dx /= hits;
+                    dy /= hits;
+
+                    x0 += dx;
+                    y0 += dy;
+                    x1 += dx;
+                    y1 += dy;
+                    x2 += dx;
+                    y2 += dy;
+                    x3 += dx;
+                    y3 += dy;
+
+                    perimeter = new polygon2D();
+                    perimeter.Add(x0, y0);
+                    perimeter.Add(x1, y1);
+                    perimeter.Add(x3, y3);
+                    perimeter.Add(x2, y2);
+                    overlay_grid = new grid2D(grid_bx - grid_tx, grid_by - grid_ty, perimeter, 0, false);
+                }
+            }
+
+            return (overlay_grid);
+        }
+
+
         private static void DetectLensDistortion(int image_width, int image_height,
+                                                 calibrationDot[,] grid,
+                                                 List<List<float>> lines,
+                                                 ref polynomial curve,
+                                                 ref calibrationDot centre_of_distortion,
+                                                 ref List<List<float>> best_rectified_lines)
+        {
+        }
+
+
+
+        private static void DetectLensDistortionOld(int image_width, int image_height,
                                                  List<List<float>> lines,
                                                  ref polynomial curve,
                                                  ref calibrationDot centre_of_distortion,
@@ -640,7 +841,7 @@ namespace sentience.calibration
                                     float rectified_line_length = LineLength(rectified_lines);
                                     
                                     float scale2 = line_length / rectified_line_length;
-                                    ScaleLines(rectified_lines, scale2, image_width, image_height);
+                                    ScaleLines(rectified_lines, scale2, image_width, image_height, image_width/2, image_height/2);
                                     
                                     if ((rectified_line_length > min_line_length) &&
                                         (rectified_line_length < max_line_length))
@@ -698,8 +899,8 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
-            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            //string filename = "~/calibrationdata/forward2/raw0_5000_2000.jpg";
+            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             Detect(filename);
         }
 
@@ -801,6 +1002,28 @@ namespace sentience.calibration
             if (output_filename.ToLower().EndsWith("bmp"))
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
+
+        private static void ShowOverlayGrid(string filename,
+                                            grid2D overlay_grid,
+                                            string output_filename)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+
+            if (overlay_grid != null)
+            {
+                overlay_grid.ShowIntercepts(img, bmp.Width, bmp.Height, 255, 0, 0, 5, 0);
+            }
+
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
 
         private static void ShowGridCoordinates(string filename, 
                                                 hypergraph dots,

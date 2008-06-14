@@ -2,9 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using sluggish.utilities;
-using sluggish.imageprocessing;
-using sluggish.utilities.graph;
 using System.Drawing;
 
 namespace sentience.calibration
@@ -55,7 +52,7 @@ namespace sentience.calibration
         public grid2Dcell[][] cell;
 
         // interception points between lines
-        protected float[, ,] line_intercepts;
+        public float[, ,] line_intercepts;
 
         // horizontal and vertical lines which make up the grid
         protected ArrayList[] line;
@@ -1430,10 +1427,10 @@ namespace sentience.calibration
                 float intercept_x = 0, intercept_y = 0;
 
                 // find the interception of this point with the vertical axis
-                sluggish.utilities.geometry.intersection(x_axis_origin, y_axis_origin,
-                                                         x_axis_origin_vertical, y_axis_origin_vertical,
-                                                         x, y, x_horizontal, y_horizontal,
-                                                         ref intercept_x, ref intercept_y);
+                geometry.intersection(x_axis_origin, y_axis_origin,
+                                      x_axis_origin_vertical, y_axis_origin_vertical,
+                                      x, y, x_horizontal, y_horizontal,
+                                      ref intercept_x, ref intercept_y);
                 if (intercept_x != 9999)
                 {
                     // calculate the distance from the origin
@@ -1447,10 +1444,10 @@ namespace sentience.calibration
                 }
 
                 // find the interception of this point with the horizontal axis
-                sluggish.utilities.geometry.intersection(x_axis_origin, y_axis_origin,
-                                                         x_axis_origin_horizontal, y_axis_origin_horizontal,
-                                                         x, y, x_vertical, y_vertical,
-                                                         ref intercept_x, ref intercept_y);
+                geometry.intersection(x_axis_origin, y_axis_origin,
+                                      x_axis_origin_horizontal, y_axis_origin_horizontal,
+                                      x, y, x_vertical, y_vertical,
+                                      ref intercept_x, ref intercept_y);
                 if (intercept_x != 9999)
                 {
                     // calculate the distance from the origin
@@ -1680,19 +1677,19 @@ namespace sentience.calibration
             // show some text: "horizontal spacings" and "vertical spacings"
             if (horizontal_scale_spacings != "")
             {
-                sluggish.utilities.drawing.AddText(output_img, output_img_width, output_img_height,
-                                                   horizontal_scale_spacings,
-                                                   font, font_size,
-                                                   0, 0, 0,
-                                                   output_img_width / 50, (font_size / 2));
+                drawing.AddText(output_img, output_img_width, output_img_height,
+                                horizontal_scale_spacings,
+                                font, font_size,
+                                0, 0, 0,
+                                output_img_width / 50, (font_size / 2));
             }
             if (vertical_scale_spacings != "")
             {
-                sluggish.utilities.drawing.AddText(output_img, output_img_width, output_img_height,
-                                                   vertical_scale_spacings,
-                                                   font, font_size,
-                                                   0, 0, 0,
-                                                   output_img_width / 50, (output_img_height/2) + (font_size / 2));
+                drawing.AddText(output_img, output_img_width, output_img_height,
+                                vertical_scale_spacings,
+                                font, font_size,
+                                0, 0, 0,
+                                output_img_width / 50, (output_img_height/2) + (font_size / 2));
             }
         }
 
@@ -2172,475 +2169,6 @@ namespace sentience.calibration
                     }
                 }
             }
-        }
-
-
-        /// <summary>
-        /// detects spots within the given grid
-        /// </summary>
-        /// <remarks>
-        /// </remarks>
-        /// <param name="raw_image_mono">raw image</param>
-        /// <param name="raw_image_width">width of the raw image</param>
-        /// <param name="raw_image_height">height of the raw image</param>
-        /// <param name="detected_grid">the detected datamatrix grid</param>
-        /// <param name="quiet_zone_cells">quiet zone width within the grid</param>
-        /// <param name="black_on_white">whether this pattern contains dark markings on a lighter background</param>
-        /// <param name="spots">returned list of spots</param>
-        /// <param name="average_spot_radius">returned average spot radius in pixels</param>
-        public static unsafe void DetectSpots(byte[] raw_image_mono,
-                                              int raw_image_width, int raw_image_height,
-                                              grid2D detected_grid,
-                                              int quiet_zone_cells,
-                                              bool black_on_white,
-                                              List<float> spots,
-                                              ref float average_spot_radius,
-                                              ref float average_spot_ovality)
-        {
-            if (detected_grid != null)
-            {
-                if (detected_grid.cell != null)
-                {
-                    // get the width of each grid cell
-                    float grid_cell_width = detected_grid.cell[0][0].perimeter.getSideLength(0);
-
-                    // minimum and maximum spot radii
-                    float minimum_spot_radius = grid_cell_width * 10 / 100;
-                    float maximum_spot_radius = grid_cell_width * 80 / 100;
-                    average_spot_radius = 0;
-                    average_spot_ovality = 0;
-
-                    // lists which store the spots along each row and column
-                    // this is used later for line fitting
-                    List<float>[] row_spots = new List<float>[detected_grid.cell[0].Length];
-                    List<float>[] col_spots = new List<float>[detected_grid.cell.Length];
-
-                    spots.Clear();
-
-                    // used during local threshold interpolation
-                    float root2 = (float)Math.Sqrt(2);
-
-                    // create an array to store the grid cell values
-                    int detected_grid_width = detected_grid.cell.Length;
-                    int detected_grid_height = detected_grid.cell[0].Length;
-
-                    // dimensions of the grid, excluding the quiet zone
-                    int search_radius = 0, search_diameter = 0;
-                    int wdth = detected_grid_width - (quiet_zone_cells * 2);
-                    int hght = detected_grid_height - (quiet_zone_cells * 2);
-
-                    // create a set of local histograms
-                    // Note that the lower the number of histogram levels the less accurate
-                    // the global threshold calculation will be, which tends to affect
-                    // performance on low contrast codes
-                    int histogram_levels = 255;      // number of pixel intensity histogram levels
-                    int downsampling_factor = 4;     // we don't need a histogram for every grid cell, so use a compression factor
-
-                    // dimensions of the 2D histograms array
-                    int downsampled_width = (detected_grid_width - (quiet_zone_cells * 2)) / downsampling_factor;
-                    int downsampled_height = (detected_grid_height - (quiet_zone_cells * 2)) / downsampling_factor;
-                    if (downsampled_width < 1) downsampled_width = 1;
-                    if (downsampled_height < 1) downsampled_height = 1;
-
-                    // create a new set of local histograms
-                    int[] local_intensity_histograms = new int[downsampled_width * downsampled_height * histogram_levels];
-
-                    // create a list to store the centre positions of each grid cell
-                    List<float> grid_cell_centres = new List<float>();
-
-                    fixed (byte* unsafe_raw_image_mono = raw_image_mono)
-                    {
-                        // for each row of the grid
-                        int grid_cell_centres_index = 0;
-                        int grid_x, grid_y;
-                        int gx, gy, tx, ty, bx, by, bucket, n, n0, x, y;
-                        float gxx, gyy, cell_centre_x, cell_centre_y;
-                        int intensity, prev_intensity;
-
-                        // precompute multiplier used to bucket the intensity level
-                        float mult1 = (histogram_levels - 1) * 0.003921569f;
-
-                        for (grid_x = quiet_zone_cells; grid_x < detected_grid_width - quiet_zone_cells; grid_x++)
-                        {
-                            // get the x coordinate within the histograms array
-                            gx = ((grid_x - quiet_zone_cells) / downsampling_factor);
-                            if (gx >= downsampled_width) gx = downsampled_width - 1;
-
-                            // for each column of the grid
-                            for (grid_y = quiet_zone_cells; grid_y < detected_grid_height - quiet_zone_cells; grid_y++)
-                            {
-                                // get the grid_y cell object
-                                grid2Dcell c = detected_grid.cell[grid_x][grid_y];
-                                if (c != null)
-                                {
-                                    if (c.perimeter != null)
-                                    {
-                                        // get the y coordinate within the histograms array
-                                        gy = ((grid_y - quiet_zone_cells) / downsampling_factor);
-                                        if (gy >= downsampled_height) gy = downsampled_height - 1;
-
-                                        // find the centre of the cell
-                                        cell_centre_x = 0;
-                                        cell_centre_y = 0;
-                                        c.perimeter.GetSquareCentre(ref cell_centre_x, ref cell_centre_y);
-
-                                        // store the grid cell centres for display purposes
-                                        grid_cell_centres.Add(cell_centre_x);
-                                        grid_cell_centres.Add(cell_centre_y);
-                                        grid_cell_centres_index++;
-
-                                        // set the search radius proportional to the size of the cell
-                                        if (search_radius == 0)
-                                        {
-                                            search_radius = (int)(c.perimeter.getShortestSide() / 4);
-                                            if (search_radius < 1) search_radius = 1;
-                                            if (search_radius > 3) search_radius = 3;
-                                            search_diameter = search_radius * 2;
-                                        }
-
-                                        // sample a few pixels around the centre of the grid cell
-                                        tx = (int)(cell_centre_x - search_radius);
-                                        bx = tx + search_diameter;
-                                        ty = (int)(cell_centre_y - search_radius);
-                                        by = ty + search_diameter;
-                                        if (tx < 0) tx = 0;
-                                        if (bx >= raw_image_width) bx = raw_image_width - 1;
-                                        if (ty < 0) ty = 0;
-                                        if (by >= raw_image_height) by = raw_image_height - 1;
-
-                                        // calculate the starting array index for the histogram data
-                                        int histograms_index = ((gy * downsampled_width) + gx) * histogram_levels;
-
-                                        prev_intensity = -1;
-                                        n0 = (ty * raw_image_width) + tx;
-                                        for (y = ty; y <= by; y++)
-                                        {
-                                            n = n0;
-                                            for (x = tx; x <= bx; x++)
-                                            {
-                                                intensity = unsafe_raw_image_mono[n++];
-
-                                                // which histogram bucket does this go into ?
-                                                bucket = (int)(intensity * mult1);
-
-                                                // update the appropriate histogram
-                                                local_intensity_histograms[histograms_index + bucket]++;
-
-                                                // also use interpolated intensity value
-                                                // to increase the amount of data in the histogram
-                                                if (prev_intensity > -1)
-                                                {
-                                                    bucket = (int)((prev_intensity + ((intensity - prev_intensity) * 0.5f)) * mult1);
-                                                    local_intensity_histograms[histograms_index + bucket]++;
-                                                }
-
-                                                // record the previous intensity value
-                                                prev_intensity = intensity;
-                                            }
-                                            n0 += raw_image_width;
-                                        }
-
-                                    }
-                                }
-                            }
-                        }
-
-                        // array storing local thresholds which will be used to binarise the data
-                        float[,] local_threshold = new float[detected_grid.cell.Length, detected_grid.cell[0].Length];
-
-                        // make a temporary buffer used to calculate the global threshold
-                        int[] temp_histogram_buffer = new int[histogram_levels];
-
-                        // update the thresholds
-                        float mean_light = 0;
-                        float mean_dark = 0;
-                        float dark_ratio = 0;
-                        int histogram_index = 0;
-                        for (gy = 0; gy < downsampled_height; gy++)
-                        {
-                            for (gx = 0; gx < downsampled_width; gx++)
-                            {
-                                // calculate the local black/white threshold from the local histogram
-                                local_threshold[gx, gy] = SquareDetector.GetGlobalThreshold(local_intensity_histograms, histogram_levels, histogram_index, temp_histogram_buffer, ref mean_dark, ref mean_light, ref dark_ratio);
-                                histogram_index += histogram_levels;
-                            }
-                        }
-
-                        // for each row of the grid
-                        grid_cell_centres_index = 0;
-                        for (grid_x = quiet_zone_cells; grid_x < detected_grid_width - quiet_zone_cells; grid_x++)
-                        {
-                            // get the x coordinate within the histograms array
-                            gxx = (grid_x - quiet_zone_cells) / (float)downsampling_factor;
-                            if (gxx >= downsampled_width) gxx = downsampled_width - 1;
-
-                            // for each column of the grid
-                            for (grid_y = quiet_zone_cells; grid_y < detected_grid_height - quiet_zone_cells; grid_y++)
-                            {
-                                grid2Dcell c = detected_grid.cell[grid_x][grid_y];
-                                if (c != null)
-                                {
-                                    if (c.perimeter != null)
-                                    {
-                                        // get the y coordinate within the histograms array
-                                        gyy = (grid_y - quiet_zone_cells) / (float)downsampling_factor;
-                                        if (gyy >= downsampled_height) gyy = downsampled_height - 1;
-
-                                        // get the threshold at this point
-                                        // note that this is an interpolated value
-                                        int gx2 = (int)gxx + 1;
-                                        int gy2 = (int)gyy + 1;
-                                        if (gx2 >= downsampled_width) gx2 = downsampled_width - 1;
-                                        if (gy2 >= downsampled_height) gy2 = downsampled_height - 1;
-                                        float dx = gxx - (int)gxx;
-                                        float dy = gyy - (int)gyy;
-                                        float weight = (float)Math.Sqrt((dx * dx) + (dy * dy)) / root2;
-                                        float local_thresh = (local_threshold[(int)gxx, (int)gyy] * (1.0f - weight)) +
-                                                             (local_threshold[(int)gx2, (int)gy2] * weight);
-
-
-                                        // get the centre position of the grid cell
-                                        cell_centre_x = grid_cell_centres[grid_cell_centres_index * 2];
-                                        cell_centre_y = grid_cell_centres[(grid_cell_centres_index * 2) + 1];
-                                        grid_cell_centres_index++;
-
-                                        // sample a few pixels around the centre
-                                        // and determine whether they are light or dark
-                                        // using the appropriate threshold value
-                                        tx = (int)(cell_centre_x - search_radius);
-                                        bx = tx + search_diameter;
-                                        ty = (int)(cell_centre_y - search_radius);
-                                        by = ty + search_diameter;
-                                        if (tx < 1) tx = 1;
-                                        if (bx >= raw_image_width - 1) bx = raw_image_width - 2;
-                                        if (ty < 1) ty = 1;
-                                        if (by >= raw_image_height - 1) by = raw_image_height - 2;
-
-                                        float prob = GridCellProbability(unsafe_raw_image_mono, raw_image_width,
-                                                                         black_on_white, tx, ty, bx, by,
-                                                                         local_thresh, 0);
-
-                                        if (prob > 0.5f)
-                                        {
-                                            float spot_centre_x = 0;
-                                            float spot_centre_y = 0;
-                                            float spot_radius = 0;
-
-                                            //c.perimeter.getCentreOfGravity(ref spot_centre_x, ref spot_centre_y);
-                                            //spot_radius = c.perimeter.getSideLength(0) * 40 / 100;
-
-                                            LocateSpotCentre(unsafe_raw_image_mono, raw_image_width, raw_image_height,
-                                                             c.perimeter, black_on_white,
-                                                             ref spot_centre_x, ref spot_centre_y);
-
-                                            float spot_ovality = 0;
-                                            spot_radius = DetectSpotRadius(unsafe_raw_image_mono, raw_image_width, raw_image_height,
-                                                                           spot_centre_x, spot_centre_y, minimum_spot_radius, maximum_spot_radius,
-                                                                           ref spot_ovality);
-
-                                            average_spot_radius += spot_radius;
-                                            average_spot_ovality += spot_ovality;
-
-                                            if (row_spots[grid_y] == null) row_spots[grid_y] = new List<float>();
-                                            row_spots[grid_y].Add(spots.Count);
-                                            if (col_spots[grid_x] == null) col_spots[grid_x] = new List<float>();
-                                            col_spots[grid_x].Add(spots.Count);
-
-                                            spots.Add(spot_centre_x); // 0
-                                            spots.Add(spot_centre_y); // 1
-                                            spots.Add(spot_radius);   // 2
-                                            spots.Add(0.0f);          // 3 dot offset x
-                                            spots.Add(0.0f);          // 4 dot offset y
-                                            spots.Add(grid_x);        // 5
-                                            spots.Add(grid_y);        // 6
-                                            spots.Add(0.0f);          // 7 dot offset as a fraction of grid cell width
-                                            spots.Add(spot_ovality);  // 8 spot ovality
-                                        }
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // calculate average spot radius and ovality
-                    if (spots.Count > SPOT_PARAMETERS)
-                    {
-                        int no_of_spots = spots.Count / SPOT_PARAMETERS;
-                        average_spot_radius /= no_of_spots;
-                        average_spot_ovality /= no_of_spots;
-                        average_spot_radius = (int)(average_spot_radius * 100) / 100.0f;
-                        average_spot_ovality = (int)(average_spot_ovality * 100) / 100.0f;
-                    }
-
-                    // correct any radii outside of the main sequence
-                    float min_spot_radius = average_spot_radius * 0.9f; // lower bound
-                    float max_spot_radius = average_spot_radius * 1.1f; // upper bound
-                    for (int i = 2; i < spots.Count; i += SPOT_PARAMETERS)
-                    {
-                        if (spots[i] < min_spot_radius)
-                            spots[i] = average_spot_radius;
-
-                        if (spots[i] > max_spot_radius)
-                            spots[i] = average_spot_radius;
-                    }
-
-                    // fit lines to the rows and columns
-                    for (int i = 0; i < row_spots.Length; i++)
-                    {
-                        if (row_spots[i] != null)
-                        {
-                            // only consider rows which have enough spots
-                            if (row_spots[i].Count > 3)
-                            {
-                                // create line fitting object
-                                polynomial line_fit = new polynomial();
-                                line_fit.SetDegree(1);
-
-                                // get the average spot position
-                                float av_x = 0;
-                                float av_y = 0;
-                                for (int j = 0; j < row_spots[i].Count; j++)
-                                {
-                                    int index = (int)row_spots[i][j];
-                                    av_x += spots[index];
-                                    av_y += spots[index + 1];
-                                }
-                                av_x /= row_spots[i].Count;
-                                av_y /= row_spots[i].Count;
-
-                                for (int j = 0; j < row_spots[i].Count; j++)
-                                {
-                                    // get the index of this spot within the spots list
-                                    int index = (int)row_spots[i][j];
-
-                                    // get the spot centre position
-                                    float spot_centre_x = spots[index];
-                                    float spot_centre_y = spots[index + 1];
-
-                                    // add it to the line
-                                    // note that these positions are relative
-                                    // to the average
-                                    line_fit.AddPoint(spot_centre_x - av_x, spot_centre_y - av_y);
-                                }
-
-                                line_fit.Solve();
-
-                                // get the best fitted line coordinates
-                                float x0 = av_x;
-                                float y0 = av_y;
-                                float x1 = av_x + 1;
-                                float y1 = av_y + line_fit.RegVal(1);
-
-                                // how far is each detected spot centre from the line?
-                                for (int j = 0; j < row_spots[i].Count; j++)
-                                {
-                                    // get the index of this spot within the spots list
-                                    int index = (int)row_spots[i][j];
-
-                                    // get the actual detected spot centre position
-                                    float spot_centre_x = spots[index];
-                                    float spot_centre_y = spots[index + 1];
-                                    float spot_radius = spots[index + 2];
-
-                                    float ideal_spot_centre_x = 0;
-                                    float ideal_spot_centre_y = 0;
-
-                                    float dot_offset = geometry.pointDistanceFromLine(x0, y0, x1, y1, spot_centre_x, spot_centre_y,
-                                                                                      ref ideal_spot_centre_x, ref ideal_spot_centre_y);
-
-                                    if ((dot_offset != 999999) && (dot_offset < spot_radius*0.5f))
-                                    {
-                                        spots[index + 3] = spot_centre_x - ideal_spot_centre_x;
-                                        spots[index + 4] = spot_centre_y - ideal_spot_centre_y;
-                                    }
-                                }
-
-
-                            }
-                        }
-                    }
-
-                    for (int i = 0; i < col_spots.Length; i++)
-                    {
-                        if (col_spots[i] != null)
-                        {
-                            // only consider cols which have enough spots
-                            if (col_spots[i].Count > 3)
-                            {
-                                // create line fitting object
-                                polynomial line_fit = new polynomial();
-                                line_fit.SetDegree(1);
-
-                                // get the average spot position
-                                float av_x = 0;
-                                float av_y = 0;
-                                for (int j = 0; j < col_spots[i].Count; j++)
-                                {
-                                    int index = (int)col_spots[i][j];
-                                    av_x += spots[index];
-                                    av_y += spots[index + 1];
-                                }
-                                av_x /= col_spots[i].Count;
-                                av_y /= col_spots[i].Count;
-
-                                for (int j = 0; j < col_spots[i].Count; j++)
-                                {
-                                    // get the index of this spot within the spots list
-                                    int index = (int)col_spots[i][j];
-
-                                    // get the spot centre position
-                                    float spot_centre_x = spots[index];
-                                    float spot_centre_y = spots[index + 1];
-
-                                    // add it to the line
-                                    // note that these positions are relative
-                                    // to the average
-                                    line_fit.AddPoint(spot_centre_y - av_y, spot_centre_x - av_x);
-                                }
-
-                                line_fit.Solve();
-
-                                // get the best fitted line coordinates
-                                float x0 = av_x;
-                                float y0 = av_y;
-                                float x1 = av_x + line_fit.RegVal(1);
-                                float y1 = av_y + 1;
-
-                                // how far is each detected spot centre from the line?
-                                for (int j = 0; j < col_spots[i].Count; j++)
-                                {
-                                    // get the index of this spot within the spots list
-                                    int index = (int)col_spots[i][j];
-
-                                    // get the actual detected spot centre position
-                                    float spot_centre_x = spots[index];
-                                    float spot_centre_y = spots[index + 1];
-                                    float spot_radius = spots[index + 2];
-
-                                    float ideal_spot_centre_x = 0;
-                                    float ideal_spot_centre_y = 0;
-
-                                    float dot_offset = geometry.pointDistanceFromLine(x0, y0, x1, y1, spot_centre_x, spot_centre_y,
-                                                                                      ref ideal_spot_centre_x, ref ideal_spot_centre_y);
-
-                                    if ((dot_offset != 999999) && (dot_offset < spot_radius * 0.5f))
-                                    {
-                                        float dot_offset_x = spots[index + 3] + (spot_centre_x - ideal_spot_centre_x);
-                                        float dot_offset_y = spots[index + 4] + (spot_centre_y - ideal_spot_centre_y);
-                                        spots[index + 3] = dot_offset_x;
-                                        spots[index + 4] = dot_offset_y;
-                                        spots[index + 7] = (float)Math.Sqrt((dot_offset_x * dot_offset_x) + (dot_offset_y * dot_offset_y)) * 100 / grid_cell_width;
-                                    }
-                                }
-
-
-                            }
-                        }
-                    }
-                }
-            }
-
         }
 
 
