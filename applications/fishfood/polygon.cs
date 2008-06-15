@@ -568,7 +568,7 @@ namespace sentience.calibration
         #region "measuring angles"
 
         /// <summary>
-        /// returns teh interior angle subtended at the given vertex
+        /// returns the interior angle subtended at the given vertex
         /// </summary>
         /// <param name="vertex">
         /// index number of the vertex <see cref="System.Int32"/>
@@ -675,6 +675,24 @@ namespace sentience.calibration
                 if (orientation > (float)Math.PI) orientation -= (float)Math.PI;
             }
 
+            return (orientation);
+        }
+
+        /// <summary>
+        /// returns the orientation of the given side
+        /// </summary>
+        /// <param name="side_index">index number of the side</param>
+        /// <returns>orientation in radians</returns>
+        public float GetSideOrientation(int side_index)
+        {
+            int next_side_index = side_index + 1;
+            if (next_side_index >= x_points.Count) next_side_index -= x_points.Count;
+            float dx = x_points[next_side_index] - x_points[side_index];
+            float dy = y_points[next_side_index] - y_points[side_index];
+
+            float length = (float)Math.Sqrt(dx*dx+dy*dy);
+            float orientation = (float)Math.Acos(dy / length);
+            if (dx < 0) orientation = ((float)Math.PI * 2) - orientation;
             return (orientation);
         }
 

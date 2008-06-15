@@ -110,6 +110,14 @@ namespace sentience.calibration
             List<calibrationDot> centre_dots = null;
             polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
 
+            // find the rotation from the centre square
+            float rotation = centre_square.GetSideOrientation(1);
+            while (rotation > Math.PI / 2)
+                rotation -= ((float)Math.PI / 2);
+            if (rotation > (float)Math.PI / 4)
+                rotation -= ((float)Math.PI / 2);
+            float rotation_degrees = rotation / (float)Math.PI * 180;
+
             ShowSquare(filename, centre_square, "centre_square.jpg");
 
             List<calibrationDot> search_regions = new List<calibrationDot>();
@@ -138,7 +146,7 @@ namespace sentience.calibration
                                      ref best_rectified_lines);
 
                 float scale = 1;
-                float rotation = 0;
+
                 int[] calibration_map = null;
                 int[,,] calibration_map_inverse = null;
                 updateCalibrationMap(image_width, image_height,
@@ -158,6 +166,7 @@ namespace sentience.calibration
             }
 
             ShowOverlayGrid(filename, overlay_grid, "grid_overlay.jpg");
+            ShowOverlayGridPerimeter(filename, overlay_grid, "grid_overlay_perimeter.jpg");
             ShowGrid(filename, dots, search_regions, "grid.jpg");
             ShowGridCoordinates(filename, dots, "coordinates.jpg");
             return (dots);
@@ -772,22 +781,26 @@ namespace sentience.calibration
                 {
                     if (grid[grid_x, grid_y] != null)
                     {
-                        // find the rectified distance of the dot from the centre of distortion
-                        double rectified_x = overlay_grid.line_intercepts[grid_x, grid_y + 1, 0] + (rnd.NextDouble() * noise) - half_noise;
-                        double rectified_y = overlay_grid.line_intercepts[grid_x, grid_y + 1, 1] + (rnd.NextDouble() * noise) - half_noise;
-                        double rectified_dx = rectified_x - centre_of_distortion.x;
-                        double rectified_dy = rectified_y - centre_of_distortion.y;
-                        double rectified_radial_dist = Math.Sqrt(rectified_dx * rectified_dx + rectified_dy * rectified_dy);
+                        if ((grid_x < overlay_grid.line_intercepts.GetLength(0)) &&
+                            (grid_y + 1 < overlay_grid.line_intercepts.GetLength(1)))
+                        {
+                            // find the rectified distance of the dot from the centre of distortion
+                            double rectified_x = overlay_grid.line_intercepts[grid_x, grid_y + 1, 0] + (rnd.NextDouble() * noise) - half_noise;
+                            double rectified_y = overlay_grid.line_intercepts[grid_x, grid_y + 1, 1] + (rnd.NextDouble() * noise) - half_noise;
+                            double rectified_dx = rectified_x - centre_of_distortion.x;
+                            double rectified_dy = rectified_y - centre_of_distortion.y;
+                            double rectified_radial_dist = Math.Sqrt(rectified_dx * rectified_dx + rectified_dy * rectified_dy);
 
-                        // find the actual raw image distance of the dot from the centre of distortion
-                        double actual_x = grid[grid_x, grid_y].x + (rnd.NextDouble() * noise) - half_noise;
-                        double actual_y = grid[grid_x, grid_y].y + (rnd.NextDouble() * noise) - half_noise;
-                        double actual_dx = actual_x - centre_of_distortion.x;
-                        double actual_dy = actual_y - centre_of_distortion.y;
-                        double actual_radial_dist = Math.Sqrt(actual_dx * actual_dx + actual_dy * actual_dy);
+                            // find the actual raw image distance of the dot from the centre of distortion
+                            double actual_x = grid[grid_x, grid_y].x + (rnd.NextDouble() * noise) - half_noise;
+                            double actual_y = grid[grid_x, grid_y].y + (rnd.NextDouble() * noise) - half_noise;
+                            double actual_dx = actual_x - centre_of_distortion.x;
+                            double actual_dy = actual_y - centre_of_distortion.y;
+                            double actual_radial_dist = Math.Sqrt(actual_dx * actual_dx + actual_dy * actual_dy);
 
-                        // plot
-                        curve.AddPoint(rectified_radial_dist, actual_radial_dist);
+                            // plot
+                            curve.AddPoint(rectified_radial_dist, actual_radial_dist);
+                        }
                     }
                 }
             }
@@ -814,7 +827,7 @@ namespace sentience.calibration
 
             bool found = false;
 
-            while ((offset_y < 3) && (!found))
+            while ((offset_y < 5) && (!found))
             {
                 offset_x = 0;
                 while ((offset_x < 3) && (!found))
@@ -939,20 +952,54 @@ namespace sentience.calibration
                 perimeter.Add((float)x2, (float)y2);
                 overlay_grid = new grid2D(grid_bx - grid_tx, grid_by - grid_ty, perimeter, 0, false);
 
+                // TODO: these offsets seems questionable
+                int grid_x_offset = 0;
+                int grid_y_offset = 1;
+
+                int grid_x_offset_start = 0;
+                int grid_x_offset_end = 0;
+                if (grid_x_offset < 0)
+                {
+                    grid_x_offset_start = -grid_x_offset;
+                    grid_x_offset_end = 0;
+                }
+                else
+                {
+                    grid_x_offset_start = 0;
+                    grid_x_offset_end = grid_x_offset;
+                }
+                int grid_y_offset_start = 0;
+                int grid_y_offset_end = 0;
+                if (grid_y_offset < 0)
+                {
+                    grid_y_offset_start = -grid_y_offset;
+                    grid_y_offset_end = 0;
+                }
+                else
+                {
+                    grid_y_offset_start = 0;
+                    grid_y_offset_end = grid_y_offset;
+                }
                 dx = 0;
                 dy = 0;
                 int hits = 0;
-                for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+                for (int grid_x = grid_x_offset_start; grid_x < grid.GetLength(0) - grid_x_offset_end; grid_x++)
                 {
-                    for (int grid_y = 0; grid_y < grid.GetLength(1)-1; grid_y++)
+                    for (int grid_y = grid_y_offset_start; grid_y < grid.GetLength(1) - grid_y_offset_end; grid_y++)
                     {
                         if (grid[grid_x, grid_y] != null)
                         {
-                            double intercept_x = overlay_grid.line_intercepts[grid_x, grid_y + 1, 0];
-                            double intercept_y = overlay_grid.line_intercepts[grid_x, grid_y + 1, 1];
-                            dx += grid[grid_x, grid_y].x - intercept_x;
-                            dy += grid[grid_x, grid_y].y - intercept_y;
-                            hits++;
+                            if ((grid_x + grid_x_offset < overlay_grid.line_intercepts.GetLength(0)) &&
+                                (grid_y + grid_y_offset < overlay_grid.line_intercepts.GetLength(1)))
+                            {
+                                double intercept_x = overlay_grid.line_intercepts[grid_x + grid_x_offset, grid_y + grid_y_offset, 0];
+                                double intercept_y = overlay_grid.line_intercepts[grid_x + grid_x_offset, grid_y + grid_y_offset, 1];
+                                //double intercept_x = overlay_grid.line_intercepts[grid_x, grid_y + 1, 0];
+                                //double intercept_y = overlay_grid.line_intercepts[grid_x, grid_y + 1, 1];
+                                dx += grid[grid_x, grid_y].x - intercept_x;
+                                dy += grid[grid_x, grid_y].y - intercept_y;
+                                hits++;
+                            }
                         }
                     }
                 }
@@ -1017,8 +1064,8 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            //string filename = "~/calibrationdata/forward2/raw0_5000_2000.jpg";
-            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            string filename = "~/calibrationdata/forward2/raw1_5000_2000.jpg";
+            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5000_2000.jpg";
             Detect(filename);
         }
 
@@ -1132,6 +1179,27 @@ namespace sentience.calibration
             if (overlay_grid != null)
             {
                 overlay_grid.ShowIntercepts(img, bmp.Width, bmp.Height, 255, 0, 0, 5, 0);
+            }
+
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
+        private static void ShowOverlayGridPerimeter(string filename,
+                                                     grid2D overlay_grid,
+                                                     string output_filename)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+
+            if (overlay_grid != null)
+            {
+                overlay_grid.perimeter.show(img, bmp.Width, bmp.Height, 255, 0, 0, 0);
             }
 
             Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
