@@ -133,9 +133,13 @@ namespace sentience.calibration
             ApplyGrid(dots, centre_dots);
 
             calibrationDot[,] grid = CreateGrid(dots);
-            grid2D overlay_grid = OverlayIdealGrid(grid);
+            
+            List<calibrationDot> corners = new List<calibrationDot>();
+            grid2D overlay_grid = OverlayIdealGrid(grid, corners);
             if (overlay_grid != null)
             {
+                //ShowDots(corners, filename, "corners.jpg");
+                
                 List<List<double>> lines = CreateLines(dots, grid);
 
                 polynomial lens_distortion_curve = null;
@@ -814,7 +818,8 @@ namespace sentience.calibration
         /// </summary>
         /// <param name="grid"></param>
         /// <returns></returns>
-        private static grid2D OverlayIdealGrid(calibrationDot[,] grid)
+        private static grid2D OverlayIdealGrid(calibrationDot[,] grid,
+                                               List<calibrationDot> corners)
         {
             grid2D overlay_grid = null;
             int grid_tx = -1;
@@ -842,7 +847,7 @@ namespace sentience.calibration
                         (grid[grid_bx, grid_by] != null) &&
                         (grid[grid_tx, grid_by] != null))
                     {
-                        found = true;
+                        found = true;                        
                     }
 
                     offset_x++;
@@ -893,7 +898,7 @@ namespace sentience.calibration
                                 dx = grid[grid_x, grid_y].x - prev_x;
                                 dy = grid[grid_x, grid_y].y - prev_y;
                                 double dist = Math.Sqrt(dx * dx + dy * dy);
-                                spacing += dist / (grid_x - prev_grid_x);
+                                spacing += (dist / (grid_x - prev_grid_x));
                                 spacing_hits++;
                             }
                             prev_x = grid[grid_x, grid_y].x;
@@ -944,18 +949,36 @@ namespace sentience.calibration
                         }
                     }
                 }
+                
+                x0 = grid[grid_tx, grid_ty].x;
+                y0 = grid[grid_tx, grid_ty].y;
+                x1 = grid[grid_bx, grid_ty].x;
+                y1 = grid[grid_bx, grid_ty].y;
+                x2 = grid[grid_tx, grid_by].x;
+                y2 = grid[grid_tx, grid_by].y;
+                x3 = grid[grid_bx, grid_by].x;
+                y3 = grid[grid_bx, grid_by].y;
+                
+                // record the positions of the corners
+                corners.Add(grid[grid_tx, grid_ty]);
+                corners.Add(grid[grid_bx, grid_ty]);
+                corners.Add(grid[grid_bx, grid_by]);
+                corners.Add(grid[grid_tx, grid_by]);
 
                 polygon2D perimeter = new polygon2D();
                 perimeter.Add((float)x0, (float)y0);
                 perimeter.Add((float)x1, (float)y1);
                 perimeter.Add((float)x3, (float)y3);
                 perimeter.Add((float)x2, (float)y2);
-                overlay_grid = new grid2D(grid_bx - grid_tx, grid_by - grid_ty, perimeter, 0, false);
+                
+                int grid_width = grid_bx - grid_tx;
+                int grid_height = grid_by - grid_ty;
+                                
+                overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
 
-                // TODO: these offsets seems questionable
-                int grid_x_offset = 0;
-                int grid_y_offset = 1;
-
+                int grid_x_offset = -grid_tx;
+                int grid_y_offset = -grid_ty;
+                
                 int grid_x_offset_start = 0;
                 int grid_x_offset_end = 0;
                 if (grid_x_offset < 0)
@@ -1007,7 +1030,7 @@ namespace sentience.calibration
                 {
                     dx /= hits;
                     dy /= hits;
-
+                    
                     x0 += dx;
                     y0 += dy;
                     x1 += dx;
@@ -1022,7 +1045,7 @@ namespace sentience.calibration
                     perimeter.Add((float)x1, (float)y1);
                     perimeter.Add((float)x3, (float)y3);
                     perimeter.Add((float)x2, (float)y2);
-                    overlay_grid = new grid2D(grid_bx - grid_tx, grid_by - grid_ty, perimeter, 0, false);
+                    overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
                 }
             }
 
@@ -1064,7 +1087,7 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            string filename = "~/calibrationdata/forward2/raw1_5000_2000.jpg";
+            string filename = "/home/motters/calibrationdata/forward2/raw1_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5000_2000.jpg";
             Detect(filename);
         }
@@ -1120,6 +1143,24 @@ namespace sentience.calibration
                     prev_y = y;
                 }
             }
+
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
+
+        private static void ShowDots(List<calibrationDot> dots, string filename, string output_filename)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+
+            for (int i = 0; i < dots.Count; i++)
+                drawing.drawCross(img, bmp.Width, bmp.Height, (int)dots[i].x, (int)dots[i].y, 5, 255, 0,0, 0);
 
             Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
