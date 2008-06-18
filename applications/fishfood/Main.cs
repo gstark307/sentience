@@ -138,7 +138,16 @@ namespace sentience.calibration
             grid2D overlay_grid = OverlayIdealGrid(grid, corners);
             if (overlay_grid != null)
             {
-                //ShowDots(corners, filename, "corners.jpg");
+                ShowDots(corners, filename, "corners.jpg");
+                
+                /*
+                List<calibrationDot> grid_dots = new List<calibrationDot>();
+                for (int x = 0; x < grid.GetLength(0); x++)
+                    for (int y = 0; y < grid.GetLength(1); y++)
+                        if (grid[x, y] != null)
+                            grid_dots.Add(grid[x, y]);
+                ShowDots(grid_dots, filename, "grid_dots.jpg");
+                */
                 
                 List<List<double>> lines = CreateLines(dots, grid);
 
@@ -148,24 +157,29 @@ namespace sentience.calibration
                 DetectLensDistortion(image_width, image_height, grid, overlay_grid, lines,
                                      ref lens_distortion_curve, ref centre_of_distortion,
                                      ref best_rectified_lines);
-
-                float scale = 1;
-
-                int[] calibration_map = null;
-                int[,,] calibration_map_inverse = null;
-                updateCalibrationMap(image_width, image_height,
-                                     lens_distortion_curve,
-                                     scale, rotation,
-                                     (float)centre_of_distortion.x, (float)centre_of_distortion.y,
-                                     ref calibration_map,
-                                     ref calibration_map_inverse);
-
-                Rectify(filename, calibration_map, "rectified.jpg");
                                      
-                if (best_rectified_lines != null)
+                if (lens_distortion_curve != null)
                 {
-                    ShowLines(filename, lines, "lines.jpg");
-                    ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                    ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
+                    
+                    float scale = 1;
+
+                    int[] calibration_map = null;
+                    int[,,] calibration_map_inverse = null;
+                    updateCalibrationMap(image_width, image_height,
+                                         lens_distortion_curve,
+                                         scale, rotation,
+                                         (float)centre_of_distortion.x, (float)centre_of_distortion.y,
+                                         ref calibration_map,
+                                         ref calibration_map_inverse);
+
+                    Rectify(filename, calibration_map, "rectified.jpg");
+                                         
+                    if (best_rectified_lines != null)
+                    {
+                        ShowLines(filename, lines, "lines.jpg");
+                        ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                    }
                 }
             }
 
@@ -399,7 +413,7 @@ namespace sentience.calibration
             calibrationDot[,] grid = null;
             if (grid_bx > grid_tx + 1)
             {
-                grid = new calibrationDot[grid_bx - grid_tx+1, grid_by - grid_ty+1];
+                grid = new calibrationDot[grid_bx - grid_tx + 1, grid_by - grid_ty + 1];
 
                 for (int i = 0; i < dots.Nodes.Count; i++)
                 {
@@ -690,7 +704,6 @@ namespace sentience.calibration
 
             for (int pass = 0; pass < 900; pass++)
             {
-
                 double centre_x = 0;
                 double centre_y = 0;
                 double mass = 0;
@@ -840,7 +853,7 @@ namespace sentience.calibration
                     grid_tx = offset_x;
                     grid_ty = offset_y;
                     grid_bx = grid.GetLength(0) - 1 - offset_x;
-                    grid_by = grid.GetLength(1) - 1 - offset_y;
+                    grid_by = grid.GetLength(1) - 1 - offset_y;                    
 
                     if ((grid[grid_tx, grid_ty] != null) &&
                         (grid[grid_bx, grid_ty] != null) &&
@@ -854,6 +867,36 @@ namespace sentience.calibration
                 }
                 offset_y++;
             }
+            
+            offset_y = grid_ty - 1;
+            while (offset_y >= 0)
+            {
+                if ((grid[grid_tx, offset_y] != null) &&
+                    (grid[grid_bx, offset_y] != null))
+                {
+                    grid_ty = offset_y;
+                    offset_y--;
+                }
+                else break;
+            }
+            
+            offset_y = grid_by + 1;
+            while (offset_y < grid.GetLength(1))
+            {
+                if ((grid[grid_tx, offset_y] != null) &&
+                    (grid[grid_bx, offset_y] != null))
+                {
+                    grid_by = offset_y;
+                    offset_y++;
+                }
+                else break;
+            }
+
+            // record the positions of the corners
+            corners.Add(grid[grid_tx, grid_ty]);
+            corners.Add(grid[grid_bx, grid_ty]);
+            corners.Add(grid[grid_bx, grid_by]);
+            corners.Add(grid[grid_tx, grid_by]);
 
             if (found)
             {
@@ -909,8 +952,19 @@ namespace sentience.calibration
 
                     if ((hits_left > 0) && (hits_right > 0))
                     {
-                        cx = (x_left + x_right) / (hits_left + hits_right);
-                        cy = (y_left + y_right) / (hits_left + hits_right);
+                        //cx = (x_left + x_right) / (hits_left + hits_right);
+                        //cy = (y_left + y_right) / (hits_left + hits_right);
+                        
+                        if (i == 0)
+                        {
+                            cx = grid[grid_tx, grid_ty].x + ((grid[grid_bx, grid_ty].x - grid[grid_tx, grid_ty].x)/2.0f);
+                            cy = grid[grid_tx, grid_ty].y + ((grid[grid_bx, grid_ty].y - grid[grid_tx, grid_ty].y)/2.0f);
+                        }
+                        else
+                        {
+                            cx = grid[grid_tx, grid_by].x + ((grid[grid_bx, grid_by].x - grid[grid_tx, grid_by].x)/2.0f);
+                            cy = grid[grid_tx, grid_by].y + ((grid[grid_bx, grid_by].y - grid[grid_tx, grid_by].y)/2.0f);
+                        }
 
                         x_left /= hits_left;
                         y_left /= hits_left;
@@ -930,7 +984,7 @@ namespace sentience.calibration
                             double angle = Math.Acos(dy / hyp);
                             if (dx < 0) angle = (Math.PI * 2) - angle;
 
-                            double width = spacing * grid.GetLength(0) / 2;
+                            double width = spacing * (grid.GetLength(0)-1) / 2;
 
                             if (i == 0)
                             {
@@ -950,6 +1004,7 @@ namespace sentience.calibration
                     }
                 }
                 
+                /*
                 x0 = grid[grid_tx, grid_ty].x;
                 y0 = grid[grid_tx, grid_ty].y;
                 x1 = grid[grid_bx, grid_ty].x;
@@ -958,12 +1013,7 @@ namespace sentience.calibration
                 y2 = grid[grid_tx, grid_by].y;
                 x3 = grid[grid_bx, grid_by].x;
                 y3 = grid[grid_bx, grid_by].y;
-                
-                // record the positions of the corners
-                corners.Add(grid[grid_tx, grid_ty]);
-                corners.Add(grid[grid_bx, grid_ty]);
-                corners.Add(grid[grid_bx, grid_by]);
-                corners.Add(grid[grid_tx, grid_by]);
+                */
 
                 polygon2D perimeter = new polygon2D();
                 perimeter.Add((float)x0, (float)y0);
@@ -971,8 +1021,8 @@ namespace sentience.calibration
                 perimeter.Add((float)x3, (float)y3);
                 perimeter.Add((float)x2, (float)y2);
                 
-                int grid_width = grid_bx - grid_tx;
-                int grid_height = grid_by - grid_ty;
+                int grid_width = grid_bx - grid_tx + 2;
+                int grid_height = grid_by - grid_ty + 2;
                                 
                 overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
 
@@ -1045,7 +1095,7 @@ namespace sentience.calibration
                     perimeter.Add((float)x1, (float)y1);
                     perimeter.Add((float)x3, (float)y3);
                     perimeter.Add((float)x2, (float)y2);
-                    overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
+                    //overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
                 }
             }
 
@@ -1087,7 +1137,7 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            string filename = "/home/motters/calibrationdata/forward2/raw1_5000_2000.jpg";
+            string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5000_2000.jpg";
             Detect(filename);
         }
@@ -1152,6 +1202,21 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        private static void ShowDistortionCurve(polynomial curve, string output_filename)
+        {
+            int img_width = 640;
+            int img_height = 480;
+            byte[] img = new byte[img_width * img_height * 3];
+            
+            curve.Show(img, img_width, img_height);
+
+            Bitmap output_bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
 
         private static void ShowDots(List<calibrationDot> dots, string filename, string output_filename)
         {
