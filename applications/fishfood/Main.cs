@@ -724,7 +724,7 @@ namespace sentience.calibration
                             centre_of_distortion.y = cy + (rnd.NextDouble() * noise) - half_noise;
                             FitCurve(grid, overlay_grid, centre_of_distortion, curve, noise, rnd);
                             double error = curve.GetSquaredError();
-                            error *= error;
+                            error = error * error;
 
                             if (error > 0.000000001)
                             {
@@ -1021,8 +1021,8 @@ namespace sentience.calibration
                 perimeter.Add((float)x3, (float)y3);
                 perimeter.Add((float)x2, (float)y2);
                 
-                int grid_width = grid_bx - grid_tx + 2;
-                int grid_height = grid_by - grid_ty + 2;
+                int grid_width = grid_bx - grid_tx;
+                int grid_height = grid_by - grid_ty;
                                 
                 overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
 
@@ -1095,7 +1095,7 @@ namespace sentience.calibration
                     perimeter.Add((float)x1, (float)y1);
                     perimeter.Add((float)x3, (float)y3);
                     perimeter.Add((float)x2, (float)y2);
-                    //overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
+                    overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
                 }
             }
 
@@ -1111,7 +1111,7 @@ namespace sentience.calibration
                                                  ref calibrationDot centre_of_distortion,
                                                  ref List<List<double>> best_rectified_lines)
         {
-            double centre_of_distortion_search_radius = image_width / 100.0f;
+            double centre_of_distortion_search_radius = image_width / 80.0f;
             centre_of_distortion = new calibrationDot();
             curve = FitCurve(image_width, image_height,
                              grid, overlay_grid,
