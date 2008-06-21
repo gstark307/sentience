@@ -110,14 +110,6 @@ namespace sentience.calibration
             List<calibrationDot> centre_dots = null;
             polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
 
-            // find the rotation from the centre square
-            float rotation = centre_square.GetSideOrientation(1);
-            while (rotation > Math.PI / 2)
-                rotation -= ((float)Math.PI / 2);
-            if (rotation > (float)Math.PI / 4)
-                rotation -= ((float)Math.PI / 2);
-            float rotation_degrees = rotation / (float)Math.PI * 180;
-
             ShowSquare(filename, centre_square, "centre_square.jpg");
 
             List<calibrationDot> search_regions = new List<calibrationDot>();
@@ -164,6 +156,13 @@ namespace sentience.calibration
                 if (lens_distortion_curve != null)
                 {
                     ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
+
+                    // detect the camera rotation
+                    List<List<double>> rectified_centre_line = null;
+                    double rotation = DetectCameraRotation(image_width, image_height,
+                                                           grid, lens_distortion_curve, centre_of_distortion,
+                                                           ref rectified_centre_line);
+                    double rotation_degrees = rotation / Math.PI * 180;
                     
                     float scale = 1;
 
@@ -171,15 +170,18 @@ namespace sentience.calibration
                     int[,,] calibration_map_inverse = null;
                     updateCalibrationMap(image_width, image_height,
                                          lens_distortion_curve,
-                                         scale, rotation,
+                                         scale, (float)rotation,
                                          (float)centre_of_distortion.x, (float)centre_of_distortion.y,
                                          ref calibration_map,
                                          ref calibration_map_inverse);
 
                     Rectify(filename, calibration_map, "rectified.jpg");
-                                         
+                        
+                    if (rectified_centre_line != null)
+                        ShowLines(filename, rectified_centre_line, "rectified_centre_line.jpg");
+
                     if (best_rectified_lines != null)
-                    {
+                    {                        
                         ShowLines(filename, lines, "lines.jpg");
                         ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
                     }
@@ -433,6 +435,8 @@ namespace sentience.calibration
 
         #endregion
 
+        
+
         #region "detecting the curvature of lines"
 
         /// <summary>
@@ -448,7 +452,7 @@ namespace sentience.calibration
                 curvature += LineCurvature(lines[i]);
 
             //if (lines.Count > 0) curvature /= lines.Count;
-            return (curvature);
+            return (curvature / lines.Count);
         }
 
         /// <summary>
@@ -465,16 +469,20 @@ namespace sentience.calibration
             double x1 = line[line.Count - 2];
             double y1 = line[line.Count - 1];
 
+            double length = 0;
             int hits = 0;
             for (int i = 2; i < line.Count - 2; i += 2)
             {
                 double x = line[i];
                 double y = line[i + 1];
+                double dx = x - line[i - 2];
+                double dy = y - line[i - 1];
+                length += Math.Sqrt(dx * dx + dy * dy);
                 double c = Math.Abs(geometry.pointDistanceFromLine((float)x0, (float)y0, (float)x1, (float)y1, (float)x, (float)y));
                 curvature += c*c;
                 hits++;
             }
-            if (hits > 0) curvature = Math.Sqrt(curvature / hits);
+            if ((hits > 0) && (length > 0)) curvature = Math.Sqrt(curvature / hits) / length;
             return (curvature);
         }
 
@@ -653,6 +661,91 @@ namespace sentience.calibration
 
         #endregion
 
+        #region "detecting the rotation of the camera"
+
+        private static double DetectCameraRotation(int image_width, int image_height,
+                                                   calibrationDot[,] grid,
+                                                   polynomial curve,
+                                                   calibrationDot centre_of_distortion,
+                                                   ref List<List<double>> rectified_centre_line)
+        {
+            double rotation = 0;
+            List<List<double>> centre_line = new List<List<double>>();
+            List<double> line = new List<double>();
+
+            // get the vertical centre line within the image
+            for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
+            {
+                int grid_x = 0;
+                bool found = false;
+                while ((grid_x < grid.GetLength(0)) && (!found))
+                {
+                    if (grid[grid_x, grid_y] != null)
+                    {
+                        if (grid[grid_x, grid_y].grid_x == 0)
+                        {
+                            line.Add(grid[grid_x, grid_y].x);
+                            line.Add(grid[grid_x, grid_y].y);
+                            found = true;
+                        }
+                    }
+                    grid_x++;
+                }
+            }
+            centre_line.Add(line);
+
+            // rectify the centre line
+            rectified_centre_line =
+                RectifyLines(centre_line, image_width, image_height,
+                             curve, centre_of_distortion, 0, 1);
+
+            if (rectified_centre_line != null)
+            {
+                if (rectified_centre_line.Count > 0)
+                {
+                    double[] px = new double[2];
+                    double[] py = new double[2];
+                    int[] hits = new int[2];
+                    line = rectified_centre_line[0];
+                    for (int i = 0; i < line.Count; i += 2)
+                    {
+                        double x = line[i];
+                        double y = line[i + 1];
+                        if (i < line.Count / 2)
+                        {
+                            px[0] += x;
+                            py[0] += y;
+                            hits[0]++;
+                        }
+                        else
+                        {
+                            px[1] += x;
+                            py[1] += y;
+                            hits[1]++;
+                        }
+                    }
+
+                    if ((hits[0] > 0) && (hits[1] > 0))
+                    {
+                        px[0] /= hits[0];
+                        py[0] /= hits[0];
+                        px[1] /= hits[1];
+                        py[1] /= hits[1];
+                        double dx = px[1] - px[0];
+                        double dy = py[1] - py[0];
+
+                        double length = Math.Sqrt(dx * dx + dy * dy);
+                        if (length > 0)
+                            rotation = Math.Asin(dx / length);
+                    }
+                }
+            }
+
+            return (rotation);
+        }
+
+        #endregion
+
         #region "detecting lens distortion"
 
         private static void ScaleLines(List<List<float>> lines, float scale, 
@@ -804,10 +897,16 @@ namespace sentience.calibration
                                      double noise, Random rnd,
                                      int grid_offset_x, int grid_offset_y)
         {
+            double[] prev_col = new double[grid.GetLength(1) * 2];
+            double[] col = new double[prev_col.Length];
+
             double half_noise = noise / 2;
             // for every detected dot
             for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
             {
+                double prev_rectified_radial_dist=0;
+                double prev_actual_radial_dist=0;
+                int prev_grid_y = -1;
                 for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
                 {
                     if (grid[grid_x, grid_y] != null)
@@ -832,9 +931,41 @@ namespace sentience.calibration
 
                             // plot
                             curve.AddPoint(rectified_radial_dist, actual_radial_dist);
+
+                            if (prev_grid_y == grid_y - 1)
+                            {
+                                double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) / 2.0f);
+                                double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) / 2.0f);
+                                curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
+                            }
+                            if (grid_x > 0)
+                            {
+                                if (grid[grid_x - 1, grid_y] != null)
+                                {
+                                    if (prev_col[grid_y * 2] != 0)
+                                    {
+                                        prev_rectified_radial_dist = prev_col[grid_y * 2];
+                                        prev_actual_radial_dist = prev_col[(grid_y * 2) + 1];
+
+                                        double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) / 2.0f);
+                                        double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) / 2.0f);
+                                        curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
+                                    }
+                                }
+                            }
+
+                            col[(grid_y * 2)] = rectified_radial_dist;
+                            col[(grid_y * 2) + 1] = actual_radial_dist;
+
+                            prev_rectified_radial_dist = rectified_radial_dist;
+                            prev_actual_radial_dist = actual_radial_dist;
+                            prev_grid_y = grid_y;
                         }
                     }
                 }
+
+                for (int i = 0; i < col.Length; i++)
+                    prev_col[i] = col[i];
             }
 
             // find the best fit curve
@@ -860,52 +991,117 @@ namespace sentience.calibration
             int offset_y = 0;
 
             bool found = false;
+            int max_region_area = 0;
 
-            while ((offset_y < 5) && (!found))
+            for (int test_orientation = 0; test_orientation < 2; test_orientation++)
             {
-                offset_x = 0;
-                while ((offset_x < 3) && (!found))
-                {
-                    grid_tx = offset_x;
-                    grid_ty = offset_y;
-                    grid_bx = grid.GetLength(0) - 1 - offset_x;
-                    grid_by = grid.GetLength(1) - 1 - offset_y;                    
+                bool temp_found = false;
 
-                    if ((grid[grid_tx, grid_ty] != null) &&
-                        (grid[grid_bx, grid_ty] != null) &&
-                        (grid[grid_bx, grid_by] != null) &&
-                        (grid[grid_tx, grid_by] != null))
+                int temp_grid_tx = -1;
+                int temp_grid_ty = -1;
+                int temp_grid_bx = -1;
+                int temp_grid_by = -1;
+
+                int temp_offset_x = 0;
+                int temp_offset_y = 0;
+
+                switch(test_orientation)
+                {
+                    case 0:
+                        {
+                            while ((temp_offset_y < 5) && (!temp_found))
+                            {
+                                temp_offset_x = 0;
+                                while ((temp_offset_x < 3) && (!temp_found))
+                                {
+                                    temp_grid_tx = temp_offset_x;
+                                    temp_grid_ty = temp_offset_y;
+                                    temp_grid_bx = grid.GetLength(0) - 1 - temp_offset_x;
+                                    temp_grid_by = grid.GetLength(1) - 1 - temp_offset_y;
+
+                                    if ((grid[temp_grid_tx, temp_grid_ty] != null) &&
+                                        (grid[temp_grid_bx, temp_grid_ty] != null) &&
+                                        (grid[temp_grid_bx, temp_grid_by] != null) &&
+                                        (grid[temp_grid_tx, temp_grid_by] != null))
+                                    {
+                                        temp_found = true;
+                                    }
+
+                                    temp_offset_x++;
+                                }
+                                temp_offset_y++;
+                            }
+                            break;
+                        }
+                    case 1:
+                        {
+                            while ((temp_offset_x < 3) && (!temp_found))
+                            {
+                                temp_offset_y = 0;
+                                while ((temp_offset_y < 5) && (!temp_found))
+                                {
+                                    temp_grid_tx = temp_offset_x;
+                                    temp_grid_ty = temp_offset_y;
+                                    temp_grid_bx = grid.GetLength(0) - 1 - temp_offset_x;
+                                    temp_grid_by = grid.GetLength(1) - 1 - temp_offset_y;
+
+                                    if ((grid[temp_grid_tx, temp_grid_ty] != null) &&
+                                        (grid[temp_grid_bx, temp_grid_ty] != null) &&
+                                        (grid[temp_grid_bx, temp_grid_by] != null) &&
+                                        (grid[temp_grid_tx, temp_grid_by] != null))
+                                    {
+                                        temp_found = true;
+                                    }
+
+                                    temp_offset_y++;
+                                }
+                                temp_offset_x++;
+                            }
+                            break;
+                        }
+                }
+
+                temp_offset_y = temp_grid_ty - 1;
+                while (temp_offset_y >= 0)
+                {
+                    if ((grid[temp_grid_tx, temp_offset_y] != null) &&
+                        (grid[temp_grid_bx, temp_offset_y] != null))
                     {
-                        found = true;                        
+                        temp_grid_ty = temp_offset_y;
+                        temp_offset_y--;
                     }
+                    else break;
+                }
 
-                    offset_x++;
-                }
-                offset_y++;
-            }
-            
-            offset_y = grid_ty - 1;
-            while (offset_y >= 0)
-            {
-                if ((grid[grid_tx, offset_y] != null) &&
-                    (grid[grid_bx, offset_y] != null))
+                temp_offset_y = temp_grid_by + 1;
+                while (temp_offset_y < grid.GetLength(1))
                 {
-                    grid_ty = offset_y;
-                    offset_y--;
+                    if ((grid[temp_grid_tx, temp_offset_y] != null) &&
+                        (grid[temp_grid_bx, temp_offset_y] != null))
+                    {
+                        temp_grid_by = temp_offset_y;
+                        temp_offset_y++;
+                    }
+                    else break;
                 }
-                else break;
-            }
-            
-            offset_y = grid_by + 1;
-            while (offset_y < grid.GetLength(1))
-            {
-                if ((grid[grid_tx, offset_y] != null) &&
-                    (grid[grid_bx, offset_y] != null))
-                {
-                    grid_by = offset_y;
-                    offset_y++;
+
+                if (temp_found)
+                {     
+                    int region_area = (temp_grid_bx - temp_grid_tx) * (temp_grid_by - temp_grid_ty);
+                    if (region_area > max_region_area)
+                    {
+                        max_region_area = region_area;
+                        found = true;
+
+                        grid_tx = temp_grid_tx;
+                        grid_ty = temp_grid_ty;
+                        grid_bx = temp_grid_bx;
+                        grid_by = temp_grid_by;
+
+                        offset_x = temp_offset_x;
+                        offset_y = temp_offset_y;
+                    }
                 }
-                else break;
             }
 
             // record the positions of the corners
@@ -917,122 +1113,16 @@ namespace sentience.calibration
             if (found)
             {
                 double dx, dy;
-                double x0 = 0, y0 = 0, x1 = 0, y1 = 0;
-                double x2 = 0, y2 = 0, x3 = 0, y3 = 0;
-
-                /*
-                for (int i = 0; i < 2; i++)
-                {
-                    double cx = 0, cy = 0;
-                    int prev_grid_x = 0;
-                    double prev_x = -1;
-                    double prev_y = -1;
-                    double spacing = 0;
-                    int spacing_hits = 0;
-                    double x_left = 0;
-                    double y_left = 0;
-                    double x_right = 0;
-                    double y_right = 0;
-                    int hits_left = 0;
-                    int hits_right = 0;
-                    int grid_y = grid_ty;
-                    if (i > 0) grid_y = grid_by;
-                    for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
-                    {
-                        if (grid[grid_x, grid_y] != null)
-                        {
-                            if (grid_x < grid.GetLength(0) / 2)
-                            {
-                                x_left += grid[grid_x, grid_y].x;
-                                y_left += grid[grid_x, grid_y].y;
-                                hits_left++;
-                            }
-                            else
-                            {
-                                x_right += grid[grid_x, grid_y].x;
-                                y_right += grid[grid_x, grid_y].y;
-                                hits_right++;
-                            }
-
-                            if (prev_x > -1)
-                            {
-                                dx = grid[grid_x, grid_y].x - prev_x;
-                                dy = grid[grid_x, grid_y].y - prev_y;
-                                double dist = Math.Sqrt(dx * dx + dy * dy);
-                                spacing += (dist / (grid_x - prev_grid_x));
-                                spacing_hits++;
-                            }
-                            prev_x = grid[grid_x, grid_y].x;
-                            prev_y = grid[grid_x, grid_y].y;
-                            prev_grid_x = grid_x;
-                        }
-                    }
-
-                    if ((hits_left > 0) && (hits_right > 0))
-                    {
-                        //cx = (x_left + x_right) / (hits_left + hits_right);
-                        //cy = (y_left + y_right) / (hits_left + hits_right);
-                        
-                        if (i == 0)
-                        {
-                            cx = grid[grid_tx, grid_ty].x + ((grid[grid_bx, grid_ty].x - grid[grid_tx, grid_ty].x)/2.0f);
-                            cy = grid[grid_tx, grid_ty].y + ((grid[grid_bx, grid_ty].y - grid[grid_tx, grid_ty].y)/2.0f);
-                        }
-                        else
-                        {
-                            cx = grid[grid_tx, grid_by].x + ((grid[grid_bx, grid_by].x - grid[grid_tx, grid_by].x)/2.0f);
-                            cy = grid[grid_tx, grid_by].y + ((grid[grid_bx, grid_by].y - grid[grid_tx, grid_by].y)/2.0f);
-                        }
-
-                        x_left /= hits_left;
-                        y_left /= hits_left;
-                        x_right /= hits_right;
-                        y_right /= hits_right;
-                    }
-
-                    if (spacing_hits > 0)
-                    {
-                        spacing /= spacing_hits;
-
-                        dx = x_right - x_left;
-                        dy = y_right - y_left;
-                        double hyp = Math.Sqrt(dx * dx + dy * dy);
-                        if (hyp > 0)
-                        {
-                            double angle = Math.Acos(dy / hyp);
-                            if (dx < 0) angle = (Math.PI * 2) - angle;
-
-                            double width = spacing * (grid.GetLength(0)-1) / 2;
-
-                            if (i == 0)
-                            {
-                                x0 = cx + (width * Math.Sin(angle - Math.PI));
-                                y0 = cy + (width * Math.Cos(angle - Math.PI));
-                                x1 = cx + (width * Math.Sin(angle));
-                                y1 = cy + (width * Math.Cos(angle));
-                            }
-                            else
-                            {
-                                x2 = cx + (width * Math.Sin(angle - Math.PI));
-                                y2 = cy + (width * Math.Cos(angle - Math.PI));
-                                x3 = cx + (width * Math.Sin(angle));
-                                y3 = cy + (width * Math.Cos(angle));
-                            }
-                        }
-                    }
-                }
-                */
                 
-                x0 = grid[grid_tx, grid_ty].x;
-                y0 = grid[grid_tx, grid_ty].y;
-                x1 = grid[grid_bx, grid_ty].x;
-                y1 = grid[grid_bx, grid_ty].y;
-                x2 = grid[grid_tx, grid_by].x;
-                y2 = grid[grid_tx, grid_by].y;
-                x3 = grid[grid_bx, grid_by].x;
-                y3 = grid[grid_bx, grid_by].y;
+                double x0 = grid[grid_tx, grid_ty].x;
+                double y0 = grid[grid_tx, grid_ty].y;
+                double x1 = grid[grid_bx, grid_ty].x;
+                double y1 = grid[grid_bx, grid_ty].y;
+                double x2 = grid[grid_tx, grid_by].x;
+                double y2 = grid[grid_tx, grid_by].y;
+                double x3 = grid[grid_bx, grid_by].x;
+                double y3 = grid[grid_bx, grid_by].y;
                 
-
                 polygon2D perimeter = new polygon2D();
                 perimeter.Add((float)x0, (float)y0);
                 perimeter.Add((float)x1, (float)y1);
@@ -1187,7 +1277,7 @@ namespace sentience.calibration
         private static void Test()
         {
             //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
-            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5000_2000.jpg";
             Detect(filename);
         }
 
