@@ -280,6 +280,278 @@ namespace sentience.calibration
             return (error);
         }
 
+        private double[] RunningAverage(int steps)
+        {
+            double min_x = 0;
+            double min_y = 0;
+            double max_x = 1;
+            double max_y = 1;
+            int i = 0;
+
+            double[] mean_x = new double[steps];
+            int [] hits_x = new int[steps];
+            double[] mean_y = new double[steps];
+            int[] hits_y = new int[steps];
+
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
+                if (x > max_x) max_x = x;
+                if (y > max_y) max_y = y;
+                if (x < min_x) min_x = x;
+                if (y < min_y) min_y = y;
+            }
+
+            double x_range = max_x - min_x;
+            double y_range = max_y - min_y;
+
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
+                int bucket_x = (int)((x - min_x) * (steps - 1) / x_range);
+                int bucket_y = (int)((y - min_y) * (steps - 1) / y_range);
+                
+                mean_x[bucket_x] += x;
+                hits_x[bucket_x]++;
+
+                mean_y[bucket_y] += y;
+                hits_y[bucket_y]++;
+
+                if (bucket_x > 0)
+                {
+                    mean_x[bucket_x - 1] += x;
+                    hits_x[bucket_x - 1]++;
+                }
+                if (bucket_x < steps - 1)
+                {
+                    mean_x[bucket_x + 1] += x;
+                    hits_x[bucket_x + 1]++;
+                }
+                if (bucket_y > 0)
+                {
+                    mean_y[bucket_y - 1] += y;
+                    hits_y[bucket_y - 1]++;
+                }
+                if (bucket_y < steps - 1)
+                {
+                    mean_y[bucket_y + 1] += y;
+                    hits_y[bucket_y + 1]++;
+                }
+            }
+
+            double[] mean = new double[steps * 2];
+            for (int step = 0; step < steps; step++)
+            {
+                if (hits_x[step] > 0) mean_x[step] /= hits_x[step];
+                if (hits_y[step] > 0) mean_y[step] /= hits_y[step];
+                mean[step * 2] = mean_x[step];
+                mean[(step * 2) + 1] = mean_y[step];
+            }
+            return (mean);
+        }
+
+        public double GetVariance()
+        {
+            double[] minimum = null;
+            double[] maximum = null;
+            double[] mean = null;
+            return (Variance(20, ref minimum, ref maximum, ref mean));
+        }
+
+        private double Variance(int steps,
+                                ref double[] minimum,
+                                ref double[] maximum,
+                                ref double[] mean)
+        {
+            double min_x = 0;
+            double min_y = 0;
+            double max_x = 1;
+            double max_y = 1;
+            int i = 0;
+
+            double[] mean_x = new double[steps];
+            int[] hits_x = new int[steps];
+            double[] mean_y = new double[steps];
+            int[] hits_y = new int[steps];
+
+            double[] minx = new double[steps];
+            double[] miny = new double[steps];
+            double[] maxx = new double[steps];
+            double[] maxy = new double[steps];
+
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
+                if (x > max_x) max_x = x;
+                if (y > max_y) max_y = y;
+                if (x < min_x) min_x = x;
+                if (y < min_y) min_y = y;
+            }
+
+            double x_range = max_x - min_x;
+            double y_range = max_y - min_y;
+
+            for (i = 0; i < minx.Length; i++)
+            {
+                minx[i] = min_x + ((i+1) * x_range / minx.Length);
+                maxx[i] = min_x + ((i+1) * x_range / minx.Length);
+                miny[i] = double.MaxValue;
+                maxy[i] = double.MinValue;
+            }
+
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
+                int bucket_x = (int)((x - min_x) * (steps - 1) / x_range);
+                int bucket_y = (int)((y - min_y) * (steps - 1) / y_range);
+
+                mean_x[bucket_x] += x;
+                hits_x[bucket_x]++;
+
+                mean_y[bucket_y] += y;
+                hits_y[bucket_y]++;
+
+                if (y < miny[bucket_x]) miny[bucket_x] = y;
+                if (y > maxy[bucket_x]) maxy[bucket_x] = y;
+
+                if (bucket_x > 0)
+                {
+                    mean_x[bucket_x - 1] += x;
+                    hits_x[bucket_x - 1]++;
+                }
+                if (bucket_x < steps - 1)
+                {
+                    mean_x[bucket_x + 1] += x;
+                    hits_x[bucket_x + 1]++;
+                }
+                if (bucket_y > 0)
+                {
+                    mean_y[bucket_y - 1] += y;
+                    hits_y[bucket_y - 1]++;
+
+                    //if (y < miny[bucket_y - 1]) miny[bucket_y - 1] = y;
+                    //if ((maxy[bucket_y - 1] == 0) || (y > maxy[bucket_y - 1])) maxy[bucket_y - 1] = y;
+                }
+                if (bucket_y < steps - 1)
+                {
+                    mean_y[bucket_y + 1] += y;
+                    hits_y[bucket_y + 1]++;
+
+                    //if (y < miny[bucket_y + 1]) miny[bucket_y + 1] = y;
+                    //if (y > maxy[bucket_y + 1]) maxy[bucket_y + 1] = y;
+                }
+            }
+
+            mean = new double[steps * 2];
+            minimum = new double[steps * 2];
+            maximum = new double[steps * 2];
+            double mean_variance = 0;
+            int mean_variance_hits = 0;
+            for (int step = 0; step < steps; step++)
+            {
+                if (hits_x[step] > 0) mean_x[step] /= hits_x[step];
+                if (hits_y[step] > 0) mean_y[step] /= hits_y[step];
+                mean[step * 2] = mean_x[step];
+                mean[(step * 2) + 1] = mean_y[step];
+                minimum[step * 2] = minx[step];
+                minimum[(step * 2) + 1] = miny[step];
+                maximum[step * 2] = maxx[step];
+                maximum[(step * 2) + 1] = maxy[step];
+                if ((miny[step] < double.MaxValue) &&
+                    (maxy[step] > double.MinValue))
+                {
+                    mean_variance += (maxy[step] - miny[step]) * (steps - step) * (steps - step);
+                    mean_variance_hits++;
+                }
+            }
+            if (mean_variance_hits > 0) mean_variance = Math.Sqrt(mean_variance) / mean_variance_hits;
+            return (mean_variance);
+        }
+
+
+        public void ShowVariance(Byte[] img, int width, int height)
+        {
+            double min_x = 0;
+            double min_y = 0;
+            double max_x = 1;
+            double max_y = 1;
+            int i = 0;
+
+            for (i = 0; i < width * height * 3; i++) img[i] = 255;
+
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
+                if (x > max_x) max_x = x;
+                if (y > max_y) max_y = y;
+                if (x < min_x) min_x = x;
+                if (y < min_y) min_y = y;
+            }
+
+            // draw axes
+            if (min_x < 0)
+            {
+                int xx = (int)((0 - min_x) * (width - 1) / (max_x - min_x));
+                drawing.drawLine(img, width, height, xx, 0, xx, height - 1, 200, 200, 200, 0, false);
+            }
+            if (min_y < 0)
+            {
+                int yy = (int)((0 - min_y) * (height - 1) / (max_y - min_y));
+                drawing.drawLine(img, width, height, 0, yy, width - 1, yy, 200, 200, 200, 0, false);
+            }
+
+            // show data points
+            for (i = 0; i < Xpoints.Count; i++)
+            {
+                double x = (double)Xpoints[i];
+                double y = (double)Ypoints[i];
+                int xx = (int)((x - min_x) * (width - 1) / (max_x - min_x));
+                int yy = (int)(height - 1 - ((y - min_y) * (height - 1) / (max_y - min_y)));
+
+                drawing.drawSpot(img, width, height, xx, yy, 1, 200, 200, 200);
+            }
+
+            double[] average = null;
+            double[] minimum = null;
+            double[] maximum = null;
+            Variance(20, ref minimum, ref maximum, ref average);
+
+            int r = 255, g = 0, b = 0;
+            for (int j = 0; j < 3; j++)
+            {                
+                double[] graph = null;
+                switch (j)
+                {
+                    case 0: { graph = average; r = 0; g = 255; b = 0;  break; }
+                    case 1: { graph = minimum; r = 0; g = 0; b = 255; break; }
+                    case 2: { graph = maximum; r = 255; g = 0; b = 0; break; }
+                }
+
+                int prev_xx = 0, prev_yy = height - 1;
+                for (i = 0; i < graph.Length; i += 2)
+                {
+                    double x = graph[i];
+                    double y = graph[i + 1];
+                    if ((y > double.MinValue) && (y < double.MaxValue))
+                    {
+                        int xx = (int)((x - min_x) * (width - 1) / (max_x - min_x));
+                        int yy = (int)(height - 1 - ((y - min_y) * (height - 1) / (max_y - min_y)));
+
+                        drawing.drawLine(img, width, height, prev_xx, prev_yy, xx, yy, r, g, b, 0, false);
+
+                        prev_xx = xx;
+                        prev_yy = yy;
+                    }
+                }
+            }
+        }
+
+
 
         public void Show(Byte[] img, int width, int height)
         {
@@ -310,20 +582,36 @@ namespace sentience.calibration
             if (min_y < 0)
             {
                 int yy = (int)((0 - min_y) * (height - 1) / (max_y - min_y));
-                drawing.drawLine(img, width, height, 0, yy, width-1, yy, 200, 200, 200, 0, false);
+                drawing.drawLine(img, width, height, 0, yy, width - 1, yy, 200, 200, 200, 0, false);
             }
 
+            // show data points
             for (i = 0; i < Xpoints.Count; i++)
             {
                 double x = (double)Xpoints[i];
                 double y = (double)Ypoints[i];
-                int xx = (int)((x-min_x) * (width - 1) / (max_x-min_x));
-                int yy = (int)(height - 1 - ((y-min_y) * (height - 1) / (max_y-min_y)));
-                int n = ((yy * width) + xx) * 3;
-                img[n] = 150;
-                img[n + 1] = 150;
-                img[n + 2] = 150;
+                int xx = (int)((x - min_x) * (width - 1) / (max_x - min_x));
+                int yy = (int)(height - 1 - ((y - min_y) * (height - 1) / (max_y - min_y)));
+
+                drawing.drawSpot(img, width, height, xx, yy, 1, 150, 150, 150);
             }
+
+            // show average
+            double[] average = RunningAverage(20);
+            int prev_xx = 0, prev_yy = height - 1;
+            for (i = 0; i < average.Length; i += 2)
+            {
+                double x = average[i];
+                double y = average[i + 1];
+                int xx = (int)((x - min_x) * (width - 1) / (max_x - min_x));
+                int yy = (int)(height - 1 - ((y - min_y) * (height - 1) / (max_y - min_y)));
+
+                drawing.drawLine(img, width, height, prev_xx, prev_yy, xx, yy, 0, 255, 0, 1, false);
+
+                prev_xx = xx;
+                prev_yy = yy;
+            }
+
 
             if (max_x == 1)
             {
@@ -337,7 +625,7 @@ namespace sentience.calibration
             {
                 int xx = (int)(x * (width - 1) / max_x);
                 int yy = height - 1 - (int)(RegVal(x) * (height-1) / max_y);
-                drawing.drawLine(img, width, height, prev_x, prev_y, xx, yy, 100, 100, 100, 0, false);
+                drawing.drawLine(img, width, height, prev_x, prev_y, xx, yy, 255, 0, 0, 1, false);
                 prev_x = xx;
                 prev_y = yy;
             }

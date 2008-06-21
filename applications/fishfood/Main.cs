@@ -156,6 +156,7 @@ namespace sentience.calibration
                 if (lens_distortion_curve != null)
                 {
                     ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
+                    ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
 
                     // detect the camera rotation
                     List<List<double>> rectified_centre_line = null;
@@ -822,11 +823,13 @@ namespace sentience.calibration
                             centre_of_distortion.y = cy + (rnd.NextDouble() * noise) - half_noise;
                             FitCurve(grid, overlay_grid, centre_of_distortion, curve, noise, rnd, grid_offset_x, grid_offset_y);
 
+                            double mean_variance = curve.GetVariance();
+
                             List<List<double>> rectified_lines = RectifyLines(lines, image_width, image_height, curve, centre_of_distortion, 0, 1);
                             double average_line_curvature = LineCurvature(rectified_lines);
 
                             double error = curve.GetSquaredError();
-                            error = error * error * average_line_curvature;
+                            error = error * mean_variance * average_line_curvature;
 
                             if (error > 0.000000001)
                             {
@@ -853,11 +856,13 @@ namespace sentience.calibration
                     best_curve.SetDegree(degrees);
                     FitCurve(grid, overlay_grid, centre_of_distortion, best_curve, noise, rnd, grid_offset_x, grid_offset_y);
 
+                    double mean_variance = best_curve.GetVariance();
+
                     List<List<double>> rectified_lines = RectifyLines(lines, image_width, image_height, best_curve, centre_of_distortion, 0, 1);
                     double average_line_curvature = LineCurvature(rectified_lines);
 
                     double RMS_error = best_curve.GetRMSerror();
-                    double error_value = RMS_error * average_line_curvature;
+                    double error_value = RMS_error * mean_variance * average_line_curvature;
 
                     if (error_value < prev_error_value)
                     {
@@ -970,6 +975,93 @@ namespace sentience.calibration
 
             // find the best fit curve
             curve.Solve();
+
+            //if (curve.Coeff(5) > 0) curve.SetCoeff(5, 0);
+            //if (curve.Coeff(6) > 0) curve.SetCoeff(6, 0);
+            //Console.WriteLine("coeff 6: " + curve.Coeff(6).ToString());
+        }
+
+
+        private static void BestFit(int grid_tx, int grid_ty,
+                                    calibrationDot[,] grid,
+                                    grid2D overlay_grid,
+                                    ref double min_dist,
+                                    ref double min_dx, ref double min_dy,
+                                    ref int min_hits,
+                                    ref int grid_offset_x, ref int grid_offset_y)
+        {
+            for (int off_x = -1; off_x <= 1; off_x++)
+            {
+                for (int off_y = -1; off_y <= 1; off_y++)
+                {
+                    int grid_x_offset = -grid_tx + off_x;
+                    int grid_y_offset = -grid_ty + off_y;
+
+                    int grid_x_offset_start = 0;
+                    int grid_x_offset_end = 0;
+                    if (grid_x_offset < 0)
+                    {
+                        grid_x_offset_start = -grid_x_offset;
+                        grid_x_offset_end = 0;
+                    }
+                    else
+                    {
+                        grid_x_offset_start = 0;
+                        grid_x_offset_end = grid_x_offset;
+                    }
+                    int grid_y_offset_start = 0;
+                    int grid_y_offset_end = 0;
+                    if (grid_y_offset < 0)
+                    {
+                        grid_y_offset_start = -grid_y_offset;
+                        grid_y_offset_end = 0;
+                    }
+                    else
+                    {
+                        grid_y_offset_start = 0;
+                        grid_y_offset_end = grid_y_offset;
+                    }
+                    double dx = 0;
+                    double dy = 0;
+                    int hits = 0;
+                    for (int grid_x = grid_x_offset_start; grid_x < grid.GetLength(0) - grid_x_offset_end; grid_x++)
+                    {
+                        for (int grid_y = grid_y_offset_start; grid_y < grid.GetLength(1) - grid_y_offset_end; grid_y++)
+                        {
+                            if (grid[grid_x, grid_y] != null)
+                            {
+                                if ((grid_x + grid_x_offset < overlay_grid.line_intercepts.GetLength(0)) &&
+                                    (grid_y + grid_y_offset < overlay_grid.line_intercepts.GetLength(1)))
+                                {
+                                    double intercept_x = overlay_grid.line_intercepts[grid_x + grid_x_offset, grid_y + grid_y_offset, 0];
+                                    double intercept_y = overlay_grid.line_intercepts[grid_x + grid_x_offset, grid_y + grid_y_offset, 1];
+                                    dx += grid[grid_x, grid_y].x - intercept_x;
+                                    dy += grid[grid_x, grid_y].y - intercept_y;
+                                    hits++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (hits > 0)
+                    {
+                        dx /= hits;
+                        dy /= hits;
+
+                        double dist = Math.Sqrt(dx * dx + dy * dy);
+                        if (dist < min_dist)
+                        {
+                            min_dist = dist;
+                            min_dx = dx;
+                            min_dy = dy;
+                            min_hits = hits;
+                            grid_offset_x = grid_x_offset;
+                            grid_offset_y = grid_y_offset;
+                        }
+
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -993,6 +1085,8 @@ namespace sentience.calibration
             bool found = false;
             int max_region_area = 0;
 
+            // try searching horizontally and vertically
+            // then pick the result with the greatest area
             for (int test_orientation = 0; test_orientation < 2; test_orientation++)
             {
                 bool temp_found = false;
@@ -1131,85 +1225,49 @@ namespace sentience.calibration
                 
                 int grid_width = grid_bx - grid_tx;
                 int grid_height = grid_by - grid_ty;
-                                
-                overlay_grid = new grid2D(grid_width, grid_height, perimeter, 0, false);
 
-                int hits, min_hits = 0;
+                int min_hits = 0;                
+                double min_dx = 0, min_dy = 0;
+
+                // try various perimeter sizes
                 double min_dist = double.MaxValue;
-                double min_dx=0, min_dy=0;
-                for (int off_x = -1; off_x <= 1; off_x++)
+                int max_perim_size_tries = 100;
+                polygon2D best_perimeter = perimeter;
+                for (int perim_size = 0; perim_size < max_perim_size_tries; perim_size++)
                 {
-                    for (int off_y = -1; off_y <= 1; off_y++)
+                    // try a small range of translations
+                    for (int nudge_x = -10; nudge_x <= 10; nudge_x++)
                     {
-
-                        int grid_x_offset = -grid_tx + off_x;
-                        int grid_y_offset = -grid_ty + off_y;
-
-                        int grid_x_offset_start = 0;
-                        int grid_x_offset_end = 0;
-                        if (grid_x_offset < 0)
+                        for (int nudge_y = -5; nudge_y <= 5; nudge_y++)
                         {
-                            grid_x_offset_start = -grid_x_offset;
-                            grid_x_offset_end = 0;
-                        }
-                        else
-                        {
-                            grid_x_offset_start = 0;
-                            grid_x_offset_end = grid_x_offset;
-                        }
-                        int grid_y_offset_start = 0;
-                        int grid_y_offset_end = 0;
-                        if (grid_y_offset < 0)
-                        {
-                            grid_y_offset_start = -grid_y_offset;
-                            grid_y_offset_end = 0;
-                        }
-                        else
-                        {
-                            grid_y_offset_start = 0;
-                            grid_y_offset_end = grid_y_offset;
-                        }
-                        dx = 0;
-                        dy = 0;
-                        hits = 0;
-                        for (int grid_x = grid_x_offset_start; grid_x < grid.GetLength(0) - grid_x_offset_end; grid_x++)
-                        {
-                            for (int grid_y = grid_y_offset_start; grid_y < grid.GetLength(1) - grid_y_offset_end; grid_y++)
+                            // create a perimeter at this scale and translation
+                            polygon2D temp_perimeter = perimeter.Scale(1.0f + (perim_size * 0.1f / max_perim_size_tries));
+                            for (int i = 0; i < temp_perimeter.x_points.Count; i++)
                             {
-                                if (grid[grid_x, grid_y] != null)
-                                {
-                                    if ((grid_x + grid_x_offset < overlay_grid.line_intercepts.GetLength(0)) &&
-                                        (grid_y + grid_y_offset < overlay_grid.line_intercepts.GetLength(1)))
-                                    {
-                                        double intercept_x = overlay_grid.line_intercepts[grid_x + grid_x_offset, grid_y + grid_y_offset, 0];
-                                        double intercept_y = overlay_grid.line_intercepts[grid_x + grid_x_offset, grid_y + grid_y_offset, 1];
-                                        dx += grid[grid_x, grid_y].x - intercept_x;
-                                        dy += grid[grid_x, grid_y].y - intercept_y;
-                                        hits++;
-                                    }
-                                }
+                                temp_perimeter.x_points[i] += nudge_x;
+                                temp_perimeter.y_points[i] += nudge_y;
                             }
-                        }
 
-                        if (hits > 0)
-                        {
-                            dx /= hits;
-                            dy /= hits;
+                            // create a grid based upon the perimeter
+                            grid2D temp_overlay_grid = new grid2D(grid_width, grid_height, temp_perimeter, 0, false);
 
-                            double dist = Math.Sqrt(dx * dx + dy * dy);
-                            if (dist < min_dist)
+                            // how closely does the grid fit the actual observations ?
+                            double temp_min_dist = min_dist;
+                            BestFit(grid_tx, grid_ty, grid,
+                                    temp_overlay_grid, ref min_dist,
+                                    ref min_dx, ref min_dy, ref min_hits,
+                                    ref grid_offset_x, ref grid_offset_y);
+
+                            // record the closest fit
+                            if (temp_min_dist < min_dist)
                             {
-                                min_dist = dist;
-                                min_dx = dx;
-                                min_dy = dy;
-                                min_hits = hits;
-                                grid_offset_x = grid_x_offset;
-                                grid_offset_y = grid_y_offset;
+                                best_perimeter = temp_perimeter;
+                                overlay_grid = temp_overlay_grid;
                             }
-                            
                         }
                     }
                 }
+
                 if (min_hits > 0)
                 {
                     dx = min_dx;
@@ -1278,6 +1336,7 @@ namespace sentience.calibration
         {
             //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
             string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5000_2000.jpg";
+            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5250_2000.jpg";
             Detect(filename);
         }
 
@@ -1348,6 +1407,22 @@ namespace sentience.calibration
             byte[] img = new byte[img_width * img_height * 3];
             
             curve.Show(img, img_width, img_height);
+
+            Bitmap output_bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
+        private static void ShowCurveVariance(polynomial curve, string output_filename)
+        {
+            int img_width = 640;
+            int img_height = 480;
+            byte[] img = new byte[img_width * img_height * 3];
+
+            curve.ShowVariance(img, img_width, img_height);
 
             Bitmap output_bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
