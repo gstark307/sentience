@@ -458,13 +458,30 @@ namespace sentience.calibration
         {
             drawCircle(img, img_width, img_height, (float)x, (float)y, (float)radius, r, g, b, line_width);
         }
-            
+
         public static void drawCircle(Byte[] img, int img_width, int img_height,
                                       float x, float y, float radius, int r, int g, int b, int line_width)
         {
             int points = 20;
             int prev_xx = 0, prev_yy = 0;
-            for (int i = 0; i < points+1; i++)
+            for (int i = 0; i < points + 1; i++)
+            {
+                float angle = i * 2 * (float)Math.PI / points;
+                int xx = (int)Math.Round(x + (radius * Math.Sin(angle)));
+                int yy = (int)Math.Round(y + (radius * Math.Cos(angle)));
+
+                if (i > 0)
+                    drawLine(img, img_width, img_height, prev_xx, prev_yy, xx, yy, r, g, b, line_width, false);
+                prev_xx = xx;
+                prev_yy = yy;
+            }
+        }
+
+        public static void drawCircle(Byte[] img, int img_width, int img_height,
+                                      float x, float y, float radius, int r, int g, int b, int line_width, int points)
+        {
+            int prev_xx = 0, prev_yy = 0;
+            for (int i = 0; i < points + 1; i++)
             {
                 float angle = i * 2 * (float)Math.PI / points;
                 int xx = (int)Math.Round(x + (radius * Math.Sin(angle)));

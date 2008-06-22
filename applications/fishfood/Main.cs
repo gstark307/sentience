@@ -157,6 +157,7 @@ namespace sentience.calibration
                 {
                     ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
                     ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
+                    ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, "lens_distortion.jpg");
 
                     // detect the camera rotation
                     List<List<double>> rectified_centre_line = null;
@@ -939,9 +940,12 @@ namespace sentience.calibration
 
                             if (prev_grid_y == grid_y - 1)
                             {
-                                double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) / 2.0f);
-                                double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) / 2.0f);
-                                curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
+                                for (float inter = 0.25f; inter <= 0.75f; inter += 0.25f)
+                                {
+                                    double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) * inter);
+                                    double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) * inter);
+                                    curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
+                                }
                             }
                             if (grid_x > 0)
                             {
@@ -952,9 +956,12 @@ namespace sentience.calibration
                                         prev_rectified_radial_dist = prev_col[grid_y * 2];
                                         prev_actual_radial_dist = prev_col[(grid_y * 2) + 1];
 
-                                        double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) / 2.0f);
-                                        double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) / 2.0f);
-                                        curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
+                                        for (float inter = 0.25f; inter <= 0.75f; inter += 0.25f)
+                                        {
+                                            double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) * inter);
+                                            double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) * inter);
+                                            curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
+                                        }
                                     }
                                 }
                             }
@@ -1335,7 +1342,7 @@ namespace sentience.calibration
         private static void Test()
         {
             //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
-            string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5000_2000.jpg";
+            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5250_2000.jpg";
             Detect(filename);
         }
@@ -1415,6 +1422,65 @@ namespace sentience.calibration
             if (output_filename.ToLower().EndsWith("bmp"))
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
+
+        private static void ShowLensDistortion(int img_width, int img_height,
+                                               calibrationDot centre_of_distortion,
+                                               polynomial curve, 
+                                               string output_filename)
+        {
+            byte[] img = new byte[img_width * img_height * 3];
+
+            for (int i = 0; i < img.Length; i++) img[i] = 255;
+
+            float max_radius = img_width/2;
+            float max_difference = 0;
+            for (float r = 0; r < max_radius * 1.4f; r += 0.2f)
+            {
+                float diff = (float)Math.Abs(r - curve.RegVal(r));
+                if (diff > max_difference) max_difference = diff;
+            }
+            
+            if (max_difference > 0)
+            {
+                int rr, gg, bb;
+                for (float r = 0; r < max_radius * 1.4f; r += 0.2f)
+                {
+                    float original_r = (float)curve.RegVal(r);
+                    float d1 = r - original_r;
+                    float diff = Math.Abs(d1) / max_difference;
+                    if (diff > 1.0f) diff = 1.0f;
+                    byte difference = (byte)(255 - (diff * 255));
+                    if (d1 >= 0)
+                    {
+                        rr = difference;
+                        gg = difference;
+                        bb = 0;
+                    }
+                    else
+                    {
+                        rr = 0;
+                        gg = difference;
+                        bb = difference;
+                    }
+                    drawing.drawCircle(img, img_width, img_height,
+                                       (float)centre_of_distortion.x,
+                                       (float)centre_of_distortion.y,
+                                       original_r, rr, gg, bb, 1,300);
+                }
+            }
+            drawing.drawCross(img, img_width, img_height,
+                              (int)centre_of_distortion.x,
+                              (int)centre_of_distortion.y,
+                              5, 255, 0, 0, 1);
+
+            Bitmap output_bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
 
         private static void ShowCurveVariance(polynomial curve, string output_filename)
         {

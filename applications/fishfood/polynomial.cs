@@ -513,7 +513,7 @@ namespace sentience.calibration
                 int xx = (int)((x - min_x) * (width - 1) / (max_x - min_x));
                 int yy = (int)(height - 1 - ((y - min_y) * (height - 1) / (max_y - min_y)));
 
-                drawing.drawSpot(img, width, height, xx, yy, 1, 200, 200, 200);
+                drawing.drawCross(img, width, height, xx, yy, 2, 150, 150, 150, 0);
             }
 
             double[] average = null;
@@ -563,6 +563,9 @@ namespace sentience.calibration
 
             for (i = 0; i < width * height * 3; i++) img[i] = 255;
 
+            // show diagonal
+            drawing.drawLine(img, width, height, 0, height - 1, width - 1, 0, 200, 200, 200, 0, false);
+
             for (i = 0; i < Xpoints.Count; i++)
             {
                 double x = (double)Xpoints[i];
@@ -593,25 +596,8 @@ namespace sentience.calibration
                 int xx = (int)((x - min_x) * (width - 1) / (max_x - min_x));
                 int yy = (int)(height - 1 - ((y - min_y) * (height - 1) / (max_y - min_y)));
 
-                drawing.drawSpot(img, width, height, xx, yy, 1, 150, 150, 150);
+                drawing.drawCross(img, width, height, xx, yy, 2, 150, 150, 150, 0);
             }
-
-            // show average
-            double[] average = RunningAverage(20);
-            int prev_xx = 0, prev_yy = height - 1;
-            for (i = 0; i < average.Length; i += 2)
-            {
-                double x = average[i];
-                double y = average[i + 1];
-                int xx = (int)((x - min_x) * (width - 1) / (max_x - min_x));
-                int yy = (int)(height - 1 - ((y - min_y) * (height - 1) / (max_y - min_y)));
-
-                drawing.drawLine(img, width, height, prev_xx, prev_yy, xx, yy, 0, 255, 0, 1, false);
-
-                prev_xx = xx;
-                prev_yy = yy;
-            }
-
 
             if (max_x == 1)
             {
@@ -625,7 +611,7 @@ namespace sentience.calibration
             {
                 int xx = (int)(x * (width - 1) / max_x);
                 int yy = height - 1 - (int)(RegVal(x) * (height-1) / max_y);
-                drawing.drawLine(img, width, height, prev_x, prev_y, xx, yy, 255, 0, 0, 1, false);
+                drawing.drawLine(img, width, height, prev_x, prev_y, xx, yy, 255, 0, 0, 0, false);
                 prev_x = xx;
                 prev_y = yy;
             }
