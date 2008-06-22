@@ -102,7 +102,7 @@ namespace sentience.calibration
         
         #region "calibration"
         
-        private static hypergraph Detect(string filename)
+        private static hypergraph Detect(string filename, float fov_degrees)
         {
             int image_width = 0, image_height = 0;
             hypergraph dots = DetectDots(filename, ref image_width, ref image_height);
@@ -157,8 +157,7 @@ namespace sentience.calibration
                 {
                     ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
                     ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
-                    ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, "lens_distortion.jpg");
-                    ShowLensDistortion2(image_width, image_height, centre_of_distortion, lens_distortion_curve, "lens_distortion2.jpg");
+                    ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, fov_degrees, 10, "lens_distortion.jpg");
 
                     // detect the camera rotation
                     List<List<double>> rectified_centre_line = null;
@@ -240,7 +239,7 @@ namespace sentience.calibration
                         {
                             for (int i = 0; i < image_filename[cam].Count; i++)
                             {
-                                dots[cam, i] = Detect(image_filename[cam][i]);
+                                dots[cam, i] = Detect(image_filename[cam][i], fov_degrees);
                             }
                         }
                     }
@@ -814,11 +813,13 @@ namespace sentience.calibration
                                            List<List<double>> lines)
         {
             Random rnd = new Random(0);
-            double noise = 1.0f;
 
             int degrees = 2;
             double minimum_error = double.MaxValue;
+            List<double> prev_minimum_error = new List<double>();
+            prev_minimum_error.Add(minimum_error);
             double increment = 1.0f;
+            double noise = increment / 2;
             polynomial best_curve = null;
 
             double search_radius = (float)centre_of_distortion_search_radius;
@@ -826,8 +827,14 @@ namespace sentience.calibration
             double half_height = image_height / 2;
             double half_noise = noise / 2;
             double max_radius_sqr = centre_of_distortion_search_radius * centre_of_distortion_search_radius;
+            int scaled_up = 0;
 
-            for (int pass = 0; pass < 200; pass++)
+            List<double> result = new List<double>();
+            double abort_threshold = 0.0001;
+            int abort_passes = 5;
+
+            int max_passes = 300;
+            for (int pass = 0; pass < max_passes; pass++)
             {
                 double centre_x = 0;
                 double centre_y = 0;
@@ -855,13 +862,13 @@ namespace sentience.calibration
                             double average_line_curvature = LineCurvature(rectified_lines);
 
                             double error = curve.GetSquaredError();
-                            error = error * mean_variance * average_line_curvature;
+                            error = error * error * mean_variance * mean_variance * average_line_curvature * average_line_curvature;
                             //error = mean_variance * average_line_curvature * average_line_curvature;
                             //error = average_line_curvature * average_line_curvature;
 
-                            if (error > 0.000000001)
+                            if (error > 0.1)
                             {
-                                error = 1.0f / error;  // inverse
+                                error = 100000.0f / error;  // inverse
                                 centre_x += centre_of_distortion.x * error;
                                 centre_y += centre_of_distortion.y * error;
                                 mass += error;
@@ -890,22 +897,55 @@ namespace sentience.calibration
                     double average_line_curvature = LineCurvature(rectified_lines);
 
                     double RMS_error = best_curve.GetRMSerror();
-                    double error_value = RMS_error * mean_variance * average_line_curvature;
+                    double error_value = RMS_error * RMS_error * mean_variance * mean_variance * average_line_curvature * average_line_curvature;
                     //double error_value = mean_variance * average_line_curvature * average_line_curvature;
                     //double error_value = average_line_curvature * average_line_curvature;
 
+                    double scaledown = 0.99999999;
                     if (error_value < minimum_error)
                     {
-                        search_radius *= 0.9999;
-                        increment *= 0.9999;
-                        noise *= 0.9999;
+                        // cool down
+                        prev_minimum_error.Add(minimum_error);
+                        search_radius *= scaledown;
+                        increment *= scaledown;
+                        noise = increment/2;
                         half_noise = noise / 2;
                         half_width = centre_x;
                         half_height = centre_y;
                         minimum_error = error_value;
                         Console.WriteLine("Pass " + pass.ToString() + ": " + RMS_error.ToString());
+                        scaled_up = 0;
                     }
-
+                    else
+                    {
+                        if (scaled_up < 5)
+                        {
+                            // heat up
+                            double scaleup = 1.0 / scaledown;
+                            search_radius *= scaleup;
+                            increment *= scaleup;
+                            noise = increment / 2;
+                            half_noise = noise / 2;
+                            scaled_up++;
+                            if (prev_minimum_error.Count > 0)
+                            {
+                                minimum_error = prev_minimum_error[prev_minimum_error.Count - 1];
+                                prev_minimum_error.RemoveAt(prev_minimum_error.Count - 1);
+                            }
+                        }
+                    }
+                    
+                    result.Add(RMS_error);
+                    if (result.Count > abort_passes)
+                    {
+                        if (result[result.Count - 1 - abort_passes] - RMS_error < abort_threshold)
+                        {
+                            // it looks like the error is no longer converging
+                            // time to bail out chaps
+                            pass = max_passes;
+                            Console.WriteLine("Error converged");
+                        }
+                    }
                 }
             }
 
@@ -954,15 +994,19 @@ namespace sentience.calibration
                             (grid_x + grid_offset_x >= 0) && (grid_y + grid_offset_y >= 0))
                         {
                             // find the rectified distance of the dot from the centre of distortion
-                            double rectified_x = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 0] + (rnd.NextDouble() * noise) - half_noise;
-                            double rectified_y = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 1] + (rnd.NextDouble() * noise) - half_noise;
+                            //double rectified_x = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 0] + (rnd.NextDouble() * noise) - half_noise;
+                            //double rectified_y = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 1] + (rnd.NextDouble() * noise) - half_noise;
+                            double rectified_x = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 0];
+                            double rectified_y = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 1];
                             double rectified_dx = rectified_x - centre_of_distortion.x;
                             double rectified_dy = rectified_y - centre_of_distortion.y;
                             double rectified_radial_dist = Math.Sqrt(rectified_dx * rectified_dx + rectified_dy * rectified_dy);
 
                             // find the actual raw image distance of the dot from the centre of distortion
-                            double actual_x = grid[grid_x, grid_y].x + (rnd.NextDouble() * noise) - half_noise;
-                            double actual_y = grid[grid_x, grid_y].y + (rnd.NextDouble() * noise) - half_noise;
+                            //double actual_x = grid[grid_x, grid_y].x + (rnd.NextDouble() * noise) - half_noise;
+                            //double actual_y = grid[grid_x, grid_y].y + (rnd.NextDouble() * noise) - half_noise;
+                            double actual_x = grid[grid_x, grid_y].x;
+                            double actual_y = grid[grid_x, grid_y].y;
                             double actual_dx = actual_x - centre_of_distortion.x;
                             double actual_dy = actual_y - centre_of_distortion.y;
                             double actual_radial_dist = Math.Sqrt(actual_dx * actual_dx + actual_dy * actual_dy);
@@ -1353,7 +1397,7 @@ namespace sentience.calibration
                                                  ref List<List<double>> best_rectified_lines,
                                                  int grid_offset_x, int grid_offset_y)
         {
-            double centre_of_distortion_search_radius = image_width / 100.0f;
+            double centre_of_distortion_search_radius = image_width / 50.0f;
             centre_of_distortion = new calibrationDot();
             curve = FitCurve(image_width, image_height,
                              grid, overlay_grid,
@@ -1380,10 +1424,10 @@ namespace sentience.calibration
 
         private static void Test()
         {
-            //string filename = "/home/motters/calibrationdata/forward2/raw0_5000_2000.jpg";
-            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            string filename = "/home/motters/calibrationdata/forward2/raw1_5000_2000.jpg";
+            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5250_2000.jpg";
-            Detect(filename);
+            Detect(filename, 78);
         }
 
         #endregion
@@ -1462,69 +1506,11 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+
         private static void ShowLensDistortion(int img_width, int img_height,
                                                calibrationDot centre_of_distortion,
-                                               polynomial curve, 
-                                               string output_filename)
-        {
-            byte[] img = new byte[img_width * img_height * 3];
-
-            for (int i = 0; i < img.Length; i++) img[i] = 255;
-
-            float max_radius = img_width/2;
-            float max_difference = 0;
-            for (float r = 0; r < max_radius * 1.0f; r += 0.2f)
-            {
-                float diff = (float)Math.Abs(r - curve.RegVal(r));
-                if (diff > max_difference) max_difference = diff;
-            }
-            
-            if (max_difference > 0)
-            {
-                int rr, gg, bb;
-                for (float r = 0; r < max_radius * 1.8f; r += 0.2f)
-                {
-                    float original_r = (float)curve.RegVal(r);
-                    float d1 = r - original_r;
-                    float diff = Math.Abs(d1) / max_difference;
-                    if (diff > 1.0f) diff = 1.0f;
-                    byte difference = (byte)(255 - (diff * 255));
-                    if (d1 >= 0)
-                    {
-                        rr = 0;
-                        gg = 0;
-                        bb = difference;
-                    }
-                    else
-                    {
-                        rr = difference;
-                        gg = 0;
-                        bb = 0;
-                    }
-                    drawing.drawCircle(img, img_width, img_height,
-                                       (float)centre_of_distortion.x,
-                                       (float)centre_of_distortion.y,
-                                       original_r, rr, gg, bb, 1,300);
-                }
-            }
-            /*
-            drawing.drawCross(img, img_width, img_height,
-                              (int)centre_of_distortion.x,
-                              (int)centre_of_distortion.y,
-                              5, 255, 0, 0, 1);
-            */
-
-            Bitmap output_bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
-            if (output_filename.ToLower().EndsWith("jpg"))
-                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
-            if (output_filename.ToLower().EndsWith("bmp"))
-                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
-        }
-
-        private static void ShowLensDistortion2(int img_width, int img_height,
-                                               calibrationDot centre_of_distortion,
                                                polynomial curve,
+                                               float FOV_degrees, float increment_degrees,
                                                string output_filename)
         {
             byte[] img = new byte[img_width * img_height * 3];
@@ -1532,41 +1518,38 @@ namespace sentience.calibration
             for (int i = 0; i < img.Length; i++) img[i] = 255;
 
             float max_radius = img_width / 2;
-            float max_difference = 0;
-            float prev_diff = 0;
+
+            float total_difference = 0;
             for (float r = 0; r < max_radius * 1.0f; r += 0.2f)
             {
                 float diff = (float)Math.Abs(r - curve.RegVal(r));
-                float diff2 = Math.Abs(prev_diff - diff);
-                prev_diff = diff;
-                if (diff2 > max_difference) max_difference = diff2;
+                total_difference += diff;
             }
 
-            if (max_difference > 0)
+            if (total_difference > 0)
             {
                 int rr, gg, bb;
-                prev_diff = 0;
+                float diff_sum = 0;
                 for (float r = 0; r < max_radius * 1.8f; r += 0.2f)
                 {
                     float original_r = (float)curve.RegVal(r);
                     float d1 = r - original_r;
-                    float diff2 = Math.Abs(prev_diff - d1);
-                    prev_diff = d1;
+                    diff_sum += Math.Abs(d1);
 
-                    float diff = diff2 / max_difference;
+                    float diff = diff_sum / total_difference;
                     if (diff > 1.0f) diff = 1.0f;
-                    byte difference = (byte)(255 - (diff * 255));
+                    byte difference = (byte)(50 + (diff * 205));
                     if (d1 >= 0)
                     {
-                        rr = 0;
-                        gg = 0;
+                        rr = difference;
+                        gg = difference;
                         bb = difference;
                     }
                     else
                     {
                         rr = difference;
-                        gg = 0;
-                        bb = 0;
+                        gg = difference;
+                        bb = difference;
                     }
                     drawing.drawCircle(img, img_width, img_height,
                                        (float)centre_of_distortion.x,
@@ -1574,12 +1557,36 @@ namespace sentience.calibration
                                        r, rr, gg, bb, 1, 300);
                 }
             }
-            /*
-            drawing.drawCross(img, img_width, img_height,
-                              (int)centre_of_distortion.x,
-                              (int)centre_of_distortion.y,
-                              5, 255, 0, 0, 1);
-            */
+            
+            float increment = max_radius * increment_degrees / FOV_degrees;
+            float angle_degrees = increment_degrees;
+            for (float r = increment; r <= max_radius*150/100; r += increment)
+            {
+                float radius = (float)curve.RegVal(r);
+                drawing.drawCircle(img, img_width, img_height,
+                                   (float)centre_of_distortion.x,
+                                   (float)centre_of_distortion.y,
+                                   radius, 0, 0, 0, 0, 360);
+                
+                drawing.AddText(img, img_width, img_height, angle_degrees.ToString(),
+                                "Courier New", 10, 0,0,0,
+                                (int)centre_of_distortion.x + (int)radius + 10, (int)centre_of_distortion.y);
+                                
+                angle_degrees += increment_degrees;
+            }
+            for (int x = 0; x < img_width; x += img_width / 20)
+            {
+                for (int y = 0; y < img_height; y += img_width / 20)
+                {
+                    float dx = x - (float)centre_of_distortion.x;
+                    float dy = y - (float)centre_of_distortion.y;
+                    float radius = (float)Math.Sqrt(dx * dx + dy * dy);
+                    
+                }
+            }
+            
+            drawing.drawLine(img, img_width, img_height, 0, (int)centre_of_distortion.y, img_width-1, (int)centre_of_distortion.y, 0,0,0,0,false);
+            drawing.drawLine(img, img_width, img_height, (int)centre_of_distortion.x, 0, (int)centre_of_distortion.x, img_height-1, 0,0,0,0,false);
 
             Bitmap output_bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
