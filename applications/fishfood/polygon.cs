@@ -698,6 +698,35 @@ namespace sentience.calibration
 
         #endregion
 
+        /// <summary>
+        /// scales the length of one of the sides of the polygon
+        /// </summary>
+        /// <param name="side_index">vertex index</param>
+        /// <param name="scale">scaling factor</param>
+        /// <returns>scaled version</returns>
+        public polygon2D ScaleSideLength(int side_index, float scale)
+        {
+            polygon2D scaled = this.Copy();
+            int next_side_index = side_index + 1;
+            if (next_side_index >= x_points.Count) next_side_index = 0;
+
+            float x0 = x_points[side_index];
+            float y0 = y_points[side_index];
+            float x1 = x_points[next_side_index];
+            float y1 = y_points[next_side_index];
+            float dx = x1 - x0;
+            float dy = y1 - y0;
+            float cx = x0 + (dx * 0.5f);
+            float cy = y0 + (dy * 0.5f);
+            dx *= 0.5f;
+            dy *= 0.5f;
+            scaled.x_points[side_index] = cx - (dx * scale);
+            scaled.y_points[side_index] = cy - (dy * scale);
+            scaled.x_points[next_side_index] = cx + (dx * scale);
+            scaled.y_points[next_side_index] = cy + (dy * scale);
+            return (scaled);
+        }
+
         #region "special stuff for squares"
 
         /// <summary>
