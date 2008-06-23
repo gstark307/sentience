@@ -102,98 +102,119 @@ namespace sentience.calibration
         
         #region "calibration"
         
-        private static hypergraph Detect(string filename, float fov_degrees)
+        private static hypergraph Detect(string filename, float fov_degrees,
+                                         ref double centre_of_distortion_x, ref double centre_of_distortion_y,
+                                         ref polynomial lens_distortion_curve,
+                                         ref double camera_rotation, ref double scale)
         {
             int image_width = 0, image_height = 0;
             hypergraph dots = DetectDots(filename, ref image_width, ref image_height);
 
-            List<calibrationDot> centre_dots = null;
-            polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
-
-            ShowSquare(filename, centre_square, "centre_square.jpg");
-
-            List<calibrationDot> search_regions = new List<calibrationDot>();
-            double horizontal_dx = centre_dots[1].x - centre_dots[0].x;
-            double horizontal_dy = centre_dots[1].y - centre_dots[0].y;
-            double vertical_dx = centre_dots[3].x - centre_dots[0].x;
-            double vertical_dy = centre_dots[3].y - centre_dots[0].y;
-            for (int i = 0; i < centre_dots.Count; i++)
-                LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0, search_regions);
-
-            Console.WriteLine(dots.Links.Count.ToString() + " links created");
-
-            ApplyGrid(dots, centre_dots);
-
-            calibrationDot[,] grid = CreateGrid(dots);
-
-
-            int grid_offset_x = 0, grid_offset_y = 0;
-            List<calibrationDot> corners = new List<calibrationDot>();
-            grid2D overlay_grid = OverlayIdealGrid(grid, corners, ref grid_offset_x, ref grid_offset_y);
-            if (overlay_grid != null)
-            {
-                ShowDots(corners, filename, "corners.jpg");
-                
-                /*
-                List<calibrationDot> grid_dots = new List<calibrationDot>();
-                for (int x = 0; x < grid.GetLength(0); x++)
-                    for (int y = 0; y < grid.GetLength(1); y++)
-                        if (grid[x, y] != null)
-                            grid_dots.Add(grid[x, y]);
-                ShowDots(grid_dots, filename, "grid_dots.jpg");
-                */
-                
-                List<List<double>> lines = CreateLines(dots, grid);
-
-                polynomial lens_distortion_curve = null;
-                calibrationDot centre_of_distortion = null;
-                List<List<double>> best_rectified_lines = null;
-                DetectLensDistortion(image_width, image_height, grid, overlay_grid, lines,
-                                     ref lens_distortion_curve, ref centre_of_distortion,
-                                     ref best_rectified_lines,
-                                     grid_offset_x, grid_offset_y);
+            // how far is the centre dot from the centre of the image ?
+            float centre_dot_horizontal_distance = float.MaxValue;
+            float centre_dot_vertical_distance = 0;
+            GetCentreDotDisplacement(image_width, image_height, dots, 
+                                     ref centre_dot_horizontal_distance,
+                                     ref centre_dot_vertical_distance);
                                      
-                if (lens_distortion_curve != null)
+            if ((Math.Abs(centre_dot_horizontal_distance) > image_width / 10) ||
+                (Math.Abs(centre_dot_vertical_distance) > image_height / 5))
+            {
+                Console.WriteLine("The calibration pattern centre dot was not detected or is too far away from the centre of the image");
+            }
+            else
+            {
+                // square around the centre dot
+                List<calibrationDot> centre_dots = null;
+                polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
+
+                ShowSquare(filename, centre_square, "centre_square.jpg");
+
+                List<calibrationDot> search_regions = new List<calibrationDot>();
+                double horizontal_dx = centre_dots[1].x - centre_dots[0].x;
+                double horizontal_dy = centre_dots[1].y - centre_dots[0].y;
+                double vertical_dx = centre_dots[3].x - centre_dots[0].x;
+                double vertical_dy = centre_dots[3].y - centre_dots[0].y;
+                for (int i = 0; i < centre_dots.Count; i++)
+                    LinkDots(dots, centre_dots[i], horizontal_dx, horizontal_dy, vertical_dx, vertical_dy, 0, search_regions);
+
+                Console.WriteLine(dots.Links.Count.ToString() + " links created");
+
+                ApplyGrid(dots, centre_dots);
+
+                calibrationDot[,] grid = CreateGrid(dots);
+
+
+                int grid_offset_x = 0, grid_offset_y = 0;
+                List<calibrationDot> corners = new List<calibrationDot>();
+                grid2D overlay_grid = OverlayIdealGrid(grid, corners, ref grid_offset_x, ref grid_offset_y);
+                if (overlay_grid != null)
                 {
-                    ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
-                    ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
-                    ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, fov_degrees, 10, "lens_distortion.jpg");
-
-                    // detect the camera rotation
-                    List<List<double>> rectified_centre_line = null;
-                    double rotation = DetectCameraRotation(image_width, image_height,
-                                                           grid, lens_distortion_curve, centre_of_distortion,
-                                                           ref rectified_centre_line);
-                    double rotation_degrees = rotation / Math.PI * 180;
+                    ShowDots(corners, filename, "corners.jpg");
                     
-                    float scale = 1;
+                    /*
+                    List<calibrationDot> grid_dots = new List<calibrationDot>();
+                    for (int x = 0; x < grid.GetLength(0); x++)
+                        for (int y = 0; y < grid.GetLength(1); y++)
+                            if (grid[x, y] != null)
+                                grid_dots.Add(grid[x, y]);
+                    ShowDots(grid_dots, filename, "grid_dots.jpg");
+                    */
+                    
+                    List<List<double>> lines = CreateLines(dots, grid);
 
-                    int[] calibration_map = null;
-                    int[,,] calibration_map_inverse = null;
-                    updateCalibrationMap(image_width, image_height,
-                                         lens_distortion_curve,
-                                         scale, (float)rotation,
-                                         (float)centre_of_distortion.x, (float)centre_of_distortion.y,
-                                         ref calibration_map,
-                                         ref calibration_map_inverse);
+                    lens_distortion_curve = null;
+                    calibrationDot centre_of_distortion = null;
+                    List<List<double>> best_rectified_lines = null;
+                    DetectLensDistortion(image_width, image_height, grid, overlay_grid, lines,
+                                         ref lens_distortion_curve, ref centre_of_distortion,
+                                         ref best_rectified_lines,
+                                         grid_offset_x, grid_offset_y);
+                                         
+                    if (lens_distortion_curve != null)
+                    {
+                        ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
+                        ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
+                        ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, fov_degrees, 10, "lens_distortion.jpg");
 
-                    Rectify(filename, calibration_map, "rectified.jpg");
+                        // detect the camera rotation
+                        List<List<double>> rectified_centre_line = null;
+                        camera_rotation = DetectCameraRotation(image_width, image_height,
+                                                               grid, lens_distortion_curve, centre_of_distortion,
+                                                               ref rectified_centre_line);
+                        double rotation_degrees = camera_rotation / Math.PI * 180;
                         
-                    if (rectified_centre_line != null)
-                        ShowLines(filename, rectified_centre_line, "rectified_centre_line.jpg");
+                        scale = 1;
 
-                    if (best_rectified_lines != null)
-                    {                        
-                        ShowLines(filename, lines, "lines.jpg");
-                        ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                        int[] calibration_map = null;
+                        int[,,] calibration_map_inverse = null;
+                        updateCalibrationMap(image_width, image_height,
+                                             lens_distortion_curve,
+                                             (float)scale, (float)camera_rotation,
+                                             (float)centre_of_distortion.x, (float)centre_of_distortion.y,
+                                             ref calibration_map,
+                                             ref calibration_map_inverse);
+
+                        Rectify(filename, calibration_map, "rectified.jpg");
+                            
+                        if (rectified_centre_line != null)
+                            ShowLines(filename, rectified_centre_line, "rectified_centre_line.jpg");
+
+                        if (best_rectified_lines != null)
+                        {                        
+                            ShowLines(filename, lines, "lines.jpg");
+                            ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                        }
                     }
                 }
-            }
 
-            ShowOverlayGrid(filename, overlay_grid, "grid_overlay.jpg");
-            ShowOverlayGridPerimeter(filename, overlay_grid, "grid_overlay_perimeter.jpg");
-            ShowGrid(filename, dots, search_regions, "grid.jpg");
-            ShowGridCoordinates(filename, dots, "coordinates.jpg");
+                ShowOverlayGrid(filename, overlay_grid, "grid_overlay.jpg");
+                ShowOverlayGridPerimeter(filename, overlay_grid, "grid_overlay_perimeter.jpg");
+                ShowGrid(filename, dots, search_regions, "grid.jpg");
+                ShowGridCoordinates(filename, dots, "coordinates.jpg");
+            
+            }
+            
             return (dots);
         }
 
@@ -234,14 +255,54 @@ namespace sentience.calibration
                     else
                     {
                         // find dots within the images
-                        hypergraph[,] dots = new hypergraph[2, image_filename[0].Count];
+                        polynomial[] distortion_curve = new polynomial[2];
+                        double[] centre_x = new double[2];
+                        double[] centre_y = new double[2];
+                        double[] scale_factor = new double[2];
+                        double[] rotation = new double[2];
+                        
                         for (int cam = 0; cam < 2; cam++)
                         {
                             for (int i = 0; i < image_filename[cam].Count; i++)
                             {
-                                dots[cam, i] = Detect(image_filename[cam][i], fov_degrees);
+                                double centre_of_distortion_x = 0;
+                                double centre_of_distortion_y = 0;
+                                polynomial lens_distortion_curve = null;
+                                double camera_rotation = 0;
+                                double scale = 0;
+                                hypergraph dots =  
+                                    Detect(image_filename[cam][i], fov_degrees,
+                                    ref centre_of_distortion_x, ref centre_of_distortion_y,
+                                    ref lens_distortion_curve,
+                                    ref camera_rotation, ref scale);
+                                    
+                                if (lens_distortion_curve != null)
+                                {
+                                    bool update = false;
+                                    if (distortion_curve[cam] == null)
+                                    {
+                                        update = true;
+                                    }
+                                    else
+                                    {
+                                        if (lens_distortion_curve.GetRMSerror() < distortion_curve[cam].GetRMSerror())
+                                            update = true;
+                                    }
+                                    
+                                    if (update)
+                                    {
+                                        // record the result with the smallest RMS error
+                                        distortion_curve[cam] = lens_distortion_curve;
+                                        centre_x[cam] = centre_of_distortion_x;
+                                        centre_y[cam] = centre_of_distortion_y;
+                                        rotation[cam] = camera_rotation;
+                                        scale_factor[cam] = scale;
+                                    }
+                                }
                             }
                         }
+                        
+                        
                     }
                 }
             }
@@ -250,6 +311,51 @@ namespace sentience.calibration
                 Console.WriteLine("No calibration " + file_extension + " images were found");
             }
         }
+        
+        #region "calculate the angular displacement of the centre dot"
+        
+        
+        /// <summary>
+        /// returns the horizontal and vertical distance of the centre dot from the centre of the image
+        /// </summary>
+        /// <param name="image_width">
+        /// width of the image <see cref="System.Int32"/>
+        /// </param>
+        /// <param name="image_height">
+        /// height of the image <see cref="System.Int32"/>
+        /// </param>
+        /// <param name="dots">
+        /// detected dots <see cref="hypergraph"/>
+        /// </param>
+        /// <param name="horizontal_distance">
+        /// horizontal distance from the image centre in pixels <see cref="System.Single"/>
+        /// </param>
+        /// <param name="vertical_distance">
+        /// vertical distance from the image centre in pixels <see cref="System.Single"/>
+        /// </param>
+        private static void GetCentreDotDisplacement(int image_width, int image_height,
+                                                     hypergraph dots,
+                                                     ref float horizontal_distance,
+                                                     ref float vertical_distance)
+        {
+            calibrationDot centre_dot = null;
+            int i = 0;
+            while ((i < dots.Nodes.Count) && (centre_dot == null))
+            {
+                calibrationDot dot = (calibrationDot)dots.Nodes[i];
+                if (dot.centre)
+                    centre_dot = dot;
+                else
+                    i++;
+            }
+            if (centre_dot != null)
+            {
+                horizontal_distance = (float)centre_dot.x - (image_width / 2.0f);
+                vertical_distance = (float)centre_dot.y - (image_height / 2.0f);
+            }
+        }
+        
+        #endregion
 
         #region "creating calibration lookup tables, used to rectify whole images"
 
@@ -1427,7 +1533,17 @@ namespace sentience.calibration
             string filename = "/home/motters/calibrationdata/forward2/raw1_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5250_2000.jpg";
-            Detect(filename, 78);
+            
+            double centre_of_distortion_x = 0;
+            double centre_of_distortion_y = 0;
+            polynomial lens_distortion_curve = null;
+            double camera_rotation = 0;
+            double scale = 0;
+            
+            Detect(filename, 78,
+                   ref centre_of_distortion_x, ref centre_of_distortion_y,
+                   ref lens_distortion_curve,
+                   ref camera_rotation, ref scale);
         }
 
         #endregion
