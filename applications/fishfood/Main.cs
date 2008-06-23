@@ -90,7 +90,20 @@ namespace sentience.calibration
                                     else
                                     {
                                         float fov_degrees = Convert.ToSingle(fov_str);
-                                    
+
+                                        float dot_spacing_mm = 50;
+                                        string dot_spacing_str = commandline.GetParameterValue("spacing", parameters);
+                                        if (dot_spacing_str == "")
+                                        {
+                                            Console.WriteLine("Please specify the calibration pattern dot spacing in millimetres");
+                                        }
+                                        else
+                                        {
+                                            dot_spacing_mm = Convert.ToSingle(dot_spacing_str);
+                                         
+                                         
+                                            
+                                        }                                    
                                     }
                                 }
                             }
@@ -102,7 +115,8 @@ namespace sentience.calibration
         
         #region "calibration"
         
-        private static hypergraph Detect(string filename, float fov_degrees,
+        private static hypergraph Detect(string filename, 
+                                         float fov_degrees, float dist_to_centre_dot_mm, float dot_spacing_mm,
                                          ref double centre_of_distortion_x, ref double centre_of_distortion_y,
                                          ref polynomial lens_distortion_curve,
                                          ref double camera_rotation, ref double scale)
@@ -129,6 +143,15 @@ namespace sentience.calibration
                 polygon2D centre_square = GetCentreSquare(dots, ref centre_dots);
 
                 ShowSquare(filename, centre_square, "centre_square.jpg");
+                
+                float ideal_centre_square_angular_diameter_degrees = (2.0f * (float)Math.Atan(0.5f * dot_spacing_mm / dist_to_centre_dot_mm)) * 180 / (float)Math.PI;
+                float ideal_centre_square_dimension_pixels = ideal_centre_square_angular_diameter_degrees * image_width / fov_degrees;
+                //scale = ((centre_square.getSideLength(0) + centre_square.getSideLength(2)) * 0.5f) / ideal_centre_square_dimension_pixels;
+                scale = 1;
+                
+                Console.WriteLine("centre_square ideal_dimension: " + ideal_centre_square_dimension_pixels.ToString());
+                Console.WriteLine("centre_square actual_dimension: " + ((centre_square.getSideLength(0) + centre_square.getSideLength(2)) * 0.5f).ToString());
+                Console.WriteLine("scale: " + scale.ToString());
 
                 List<calibrationDot> search_regions = new List<calibrationDot>();
                 double horizontal_dx = centre_dots[1].x - centre_dots[0].x;
@@ -184,7 +207,7 @@ namespace sentience.calibration
                                                                ref rectified_centre_line);
                         double rotation_degrees = camera_rotation / Math.PI * 180;
                         
-                        scale = 1;
+                        //scale = 1;
 
                         int[] calibration_map = null;
                         int[,,] calibration_map_inverse = null;
@@ -219,11 +242,12 @@ namespace sentience.calibration
         }
 
         private static void Calibrate(string directory,
-                               int baseline_mm,
-                               int dotdist_mm,
-                               int height_mm,
-                               float fov_degrees,
-                               string file_extension)
+                                      int baseline_mm,
+                                      int dotdist_mm,
+                                      int height_mm,
+                                      float fov_degrees,
+                                      float dot_spacing_mm,
+                                      string file_extension)
         {
             string[] filename = Directory.GetFiles(directory, "*." + file_extension);
             if (filename != null)
@@ -254,6 +278,9 @@ namespace sentience.calibration
                     }
                     else
                     {
+                        // distance to the centre dot
+                        float dist_to_centre_dot_mm = (float)Math.Sqrt(dotdist_mm * dotdist_mm + height_mm * height_mm);
+                    
                         // find dots within the images
                         polynomial[] distortion_curve = new polynomial[2];
                         double[] centre_x = new double[2];
@@ -271,7 +298,7 @@ namespace sentience.calibration
                                 double camera_rotation = 0;
                                 double scale = 0;
                                 hypergraph dots =  
-                                    Detect(image_filename[cam][i], fov_degrees,
+                                    Detect(image_filename[cam][i], fov_degrees, dist_to_centre_dot_mm, dot_spacing_mm,
                                     ref centre_of_distortion_x, ref centre_of_distortion_y,
                                     ref lens_distortion_curve,
                                     ref camera_rotation, ref scale);
@@ -936,8 +963,8 @@ namespace sentience.calibration
             int scaled_up = 0;
 
             List<double> result = new List<double>();
-            double abort_threshold = 0.0001;
-            int abort_passes = 5;
+            double abort_threshold = 0.000001;
+            int abort_passes = 21;
 
             int max_passes = 300;
             for (int pass = 0; pass < max_passes; pass++)
@@ -1534,13 +1561,15 @@ namespace sentience.calibration
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5250_2000.jpg";
             
+            float dist_to_centre_dot_mm = 1000;
+            float dot_spacing_mm = 50;
             double centre_of_distortion_x = 0;
             double centre_of_distortion_y = 0;
             polynomial lens_distortion_curve = null;
             double camera_rotation = 0;
             double scale = 0;
             
-            Detect(filename, 78,
+            Detect(filename, 78, dist_to_centre_dot_mm, dot_spacing_mm,
                    ref centre_of_distortion_x, ref centre_of_distortion_y,
                    ref lens_distortion_curve,
                    ref camera_rotation, ref scale);
@@ -2267,6 +2296,7 @@ namespace sentience.calibration
             ValidParameters.Add("dotdist");      // horizontal distance to the calibration pattern dot
             ValidParameters.Add("height");       // height above the calibration pattern in millimetres
             ValidParameters.Add("fov");          // field of view in degrees
+            ValidParameters.Add("spacing");      // spacing between dots in millimetres
 
             return (ValidParameters);
         }
@@ -2290,6 +2320,7 @@ namespace sentience.calibration
             Console.WriteLine("                  -dotdist <horizontal distance to the calibration pattern dot in millimetres>");
             Console.WriteLine("                  -height <height above the calibration pattern in millimetres>");
             Console.WriteLine("                  -fov <horizontal field of view in degrees>");
+            Console.WriteLine("                  -spacing <spacing between dots in millimetres>");
         }
 
         #endregion
