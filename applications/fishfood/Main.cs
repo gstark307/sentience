@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Xml;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
@@ -100,9 +101,20 @@ namespace sentience.calibration
                                         else
                                         {
                                             dot_spacing_mm = Convert.ToSingle(dot_spacing_str);
+                                                                                        
+                                            float focal_length_mm = 5;
+                                            string focal_length_str = commandline.GetParameterValue("f", parameters);
+                                            if (focal_length_str == "")
+                                            {
+                                                Console.WriteLine("Please specify the focal length of the camera");
+                                            }
+                                            else
+                                            {
+                                                focal_length_mm = Convert.ToSingle(focal_length_str);
                                             
                                             
                                             
+                                            }                                         
                                         }                                
                                     }
                                 }
@@ -119,7 +131,9 @@ namespace sentience.calibration
                                          float fov_degrees, float dist_to_centre_dot_mm, float dot_spacing_mm,
                                          ref double centre_of_distortion_x, ref double centre_of_distortion_y,
                                          ref polynomial lens_distortion_curve,
-                                         ref double camera_rotation, ref double scale)
+                                         ref double camera_rotation, ref double scale,
+                                         string lens_distortion_image_filename,
+                                         string curve_fit_image_filename)
         {
             int image_width = 0, image_height = 0;
             hypergraph dots = DetectDots(filename, ref image_width, ref image_height);
@@ -174,16 +188,7 @@ namespace sentience.calibration
                 if (overlay_grid != null)
                 {
                     ShowDots(corners, filename, "corners.jpg");
-                    
-                    /*
-                    List<calibrationDot> grid_dots = new List<calibrationDot>();
-                    for (int x = 0; x < grid.GetLength(0); x++)
-                        for (int y = 0; y < grid.GetLength(1); y++)
-                            if (grid[x, y] != null)
-                                grid_dots.Add(grid[x, y]);
-                    ShowDots(grid_dots, filename, "grid_dots.jpg");
-                    */
-                    
+                                        
                     List<List<double>> lines = CreateLines(dots, grid);
 
                     lens_distortion_curve = null;
@@ -196,9 +201,9 @@ namespace sentience.calibration
                                          
                     if (lens_distortion_curve != null)
                     {
-                        ShowDistortionCurve(lens_distortion_curve, "curve_fit.jpg");
+                        ShowDistortionCurve(lens_distortion_curve, curve_fit_image_filename);
                         ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
-                        ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, fov_degrees, 10, "lens_distortion.jpg");
+                        ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, fov_degrees, 10, lens_distortion_image_filename);
 
                         // detect the camera rotation
                         List<List<double>> rectified_centre_line = null;
@@ -276,6 +281,9 @@ namespace sentience.calibration
                     }
                     else
                     {
+                        string lens_distortion_image_filename = "lens_distortion.jpg";
+                        string curve_fit_image_filename = "curve_fit.jpg";
+                        
                         // distance to the centre dot
                         float dist_to_centre_dot_mm = (float)Math.Sqrt(dotdist_mm * dotdist_mm + height_mm * height_mm);
                     
@@ -299,7 +307,9 @@ namespace sentience.calibration
                                     Detect(image_filename[cam][i], fov_degrees, dist_to_centre_dot_mm, dot_spacing_mm,
                                     ref centre_of_distortion_x, ref centre_of_distortion_y,
                                     ref lens_distortion_curve,
-                                    ref camera_rotation, ref scale);
+                                    ref camera_rotation, ref scale,
+                                    lens_distortion_image_filename,
+                                    curve_fit_image_filename);
                                     
                                 if (lens_distortion_curve != null)
                                 {
@@ -322,6 +332,14 @@ namespace sentience.calibration
                                         centre_y[cam] = centre_of_distortion_y;
                                         rotation[cam] = camera_rotation;
                                         scale_factor[cam] = scale;
+                                        
+                                        string temp_filename = "lens_distortion" + cam.ToString() + ".jpg";
+                                        if (File.Exists(temp_filename)) File.Delete(temp_filename);
+                                        File.Copy(lens_distortion_image_filename, temp_filename);
+
+                                        temp_filename = "curve_fit" + cam.ToString() + ".jpg";
+                                        if (File.Exists(temp_filename)) File.Delete(temp_filename);
+                                        File.Copy(curve_fit_image_filename, temp_filename);
                                     }
                                 }
                             }
@@ -1571,7 +1589,9 @@ namespace sentience.calibration
             Detect(filename, 78, dist_to_centre_dot_mm, dot_spacing_mm,
                    ref centre_of_distortion_x, ref centre_of_distortion_y,
                    ref lens_distortion_curve,
-                   ref camera_rotation, ref scale);
+                   ref camera_rotation, ref scale,
+                   "lens_distortion.jpg",
+                   "curve_fit.jpg");
         }
 
         #endregion
@@ -2278,6 +2298,208 @@ namespace sentience.calibration
         }
         
         #endregion
+
+        #region "saving calibration data as Xml"
+
+        /// <summary>
+        /// return an Xml document containing camera calibration parameters
+        /// </summary>
+        /// <returns></returns>
+        private static XmlDocument getXmlDocument(
+            float focal_length_mm,
+            float baseline_mm,
+            float fov_degrees,
+            int image_width, int image_height,
+            polynomial[] lens_distortion_curve,
+            float[] centre_of_distortion_x, float[] centre_of_distortion_y,
+            float[] rotation, float[] scale,
+            string[] lens_distortion_image_filename,
+            string[] curve_fit_image_filename,
+            float offset_x, float offset_y)
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
+            doc.AppendChild(commentnode);
+
+            XmlElement nodeCalibration = doc.CreateElement("Sentience");
+            doc.AppendChild(nodeCalibration);
+
+            xml.AddComment(doc, nodeCalibration, "Sentience");
+
+            XmlElement elem = getXml(doc, nodeCalibration,            
+                focal_length_mm,
+                baseline_mm,
+                fov_degrees,
+                image_width, image_height,
+                lens_distortion_curve,
+                centre_of_distortion_x, centre_of_distortion_y,
+                rotation, scale,
+                lens_distortion_image_filename,
+                curve_fit_image_filename,
+                offset_x, offset_y);
+            doc.DocumentElement.AppendChild(elem);
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save camera calibration parameters as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        private static void Save(
+            string filename,
+            float focal_length_mm,
+            float baseline_mm,
+            float fov_degrees,
+            int image_width, int image_height,
+            polynomial[] lens_distortion_curve,
+            float[] centre_of_distortion_x, float[] centre_of_distortion_y,
+            float[] rotation, float[] scale,
+            string[] lens_distortion_image_filename,
+            string[] curve_fit_image_filename,            
+            float offset_x, float offset_y)
+        {
+            XmlDocument doc = 
+                getXmlDocument(
+                    focal_length_mm,
+                    baseline_mm,
+                    fov_degrees,
+                    image_width, image_height,
+                    lens_distortion_curve,
+                    centre_of_distortion_x, centre_of_distortion_y,
+                    rotation, scale,
+                    lens_distortion_image_filename,
+                    curve_fit_image_filename,
+                    offset_x, offset_y);
+
+            doc.Save(filename);
+        }
+
+        private static XmlElement getXml(
+            XmlDocument doc, XmlElement parent,
+            float focal_length_mm,
+            float baseline_mm,
+            float fov_degrees,
+            int image_width, int image_height,
+            polynomial[] lens_distortion_curve,
+            float[] centre_of_distortion_x, float[] centre_of_distortion_y,
+            float[] rotation, float[] scale,
+            string[] lens_distortion_image_filename,
+            string[] curve_fit_image_filename,
+            float offset_x, float offset_y)
+        {
+            // make sure that floating points are saved in a standard format
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
+
+            XmlElement nodeStereoCamera;
+            if (lens_distortion_curve.Length > 1)
+                nodeStereoCamera = doc.CreateElement("StereoCamera");
+            else
+                nodeStereoCamera = doc.CreateElement("MonocularCamera");
+            parent.AppendChild(nodeStereoCamera);
+
+            xml.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
+            xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focal_length_mm, format));
+
+            if (lens_distortion_curve.Length > 1)
+            {
+                xml.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
+                xml.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline_mm, format));
+            }
+
+            xml.AddComment(doc, nodeStereoCamera, "Calibration Data");
+
+            XmlElement nodeCalibration = doc.CreateElement("Calibration");
+            nodeStereoCamera.AppendChild(nodeCalibration);
+
+            if (lens_distortion_curve.Length > 1)
+            {
+                string offsets = Convert.ToString(offset_x, format) + "," +
+                                 Convert.ToString(offset_y, format);
+                xml.AddComment(doc, nodeCalibration, "Image offsets in pixels due to small missalignment from parallel");
+                xml.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
+            }
+
+            for (int cam = 0; cam < lens_distortion_curve.Length; cam++)
+            {
+                XmlElement elem = getCameraXml(
+                    doc, fov_degrees,
+                    image_width, image_height,
+                    lens_distortion_curve[cam],
+                    centre_of_distortion_x[cam], centre_of_distortion_y[cam],
+                    rotation[cam], scale[cam],
+                    lens_distortion_image_filename[cam],
+                    curve_fit_image_filename[cam]);
+                nodeCalibration.AppendChild(elem);
+            }
+
+            return (nodeStereoCamera);
+        }
+
+
+        /// <summary>
+        /// return an xml element containing camera calibration parameters
+        /// </summary>
+        /// <param name="doc">xml document to add the data to</param>
+        /// <returns>an xml element</returns>
+        private static XmlElement getCameraXml(
+            XmlDocument doc,
+            float fov_degrees,
+            int image_width, int image_height,
+            polynomial lens_distortion_curve,
+            float centre_of_distortion_x, float centre_of_distortion_y,
+            float rotation, float scale,
+            string lens_distortion_image_filename,
+            string curve_fit_image_filename)
+        {
+            // make sure that floating points are saved in a standard format
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
+            
+            string coefficients = "";
+            if (lens_distortion_curve != null)
+            {                
+                int degree = lens_distortion_curve.GetDegree();
+                for (int i = 0; i <= degree; i++)
+                {
+                    coefficients += Convert.ToString(lens_distortion_curve.Coeff(i), format);
+                    if (i < degree) coefficients += ",";
+                }
+            }
+            else coefficients = "0,0,0";
+
+            XmlElement elem = doc.CreateElement("Camera");
+            doc.DocumentElement.AppendChild(elem);
+            xml.AddComment(doc, elem, "Horizontal field of view of the camera in degrees");
+            xml.AddTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(fov_degrees, format));
+            xml.AddComment(doc, elem, "Image dimensions in pixels");
+            xml.AddTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width, format) + "," + Convert.ToString(image_height, format));
+            xml.AddComment(doc, elem, "The centre of distortion in pixels");
+            xml.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion_x, format) + "," + Convert.ToString(centre_of_distortion_y, format));
+            xml.AddComment(doc, elem, "Polynomial coefficients used to describe the camera lens distortion");
+            xml.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
+            xml.AddComment(doc, elem, "Scaling factor");
+            xml.AddTextElement(doc, elem, "Scale", Convert.ToString(scale));
+            xml.AddComment(doc, elem, "Rotation of the image in degrees");
+            xml.AddTextElement(doc, elem, "RotationDegrees", Convert.ToString(rotation / (float)Math.PI * 180.0f));
+            xml.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
+            xml.AddTextElement(doc, elem, "RMSerror", Convert.ToString(lens_distortion_curve.GetRMSerror(), format));
+            xml.AddComment(doc, elem, "Image showing the lens distortion");
+            xml.AddTextElement(doc, elem, "DistortionImageFilename", lens_distortion_image_filename);
+            xml.AddComment(doc, elem, "Image showing the best fit curve");
+            xml.AddTextElement(doc, elem, "CurveFitImageFilename", curve_fit_image_filename);
+
+            return (elem);
+        }
+
+
+        #endregion
+
         
         #region "validation"
 
@@ -2296,6 +2518,7 @@ namespace sentience.calibration
             ValidParameters.Add("height");       // height above the calibration pattern in millimetres
             ValidParameters.Add("fov");          // field of view in degrees
             ValidParameters.Add("spacing");      // spacing between dots in millimetres
+            ValidParameters.Add("f");            // focal length in millimetres
 
             return (ValidParameters);
         }
@@ -2320,6 +2543,7 @@ namespace sentience.calibration
             Console.WriteLine("                  -height <height above the calibration pattern in millimetres>");
             Console.WriteLine("                  -fov <horizontal field of view in degrees>");
             Console.WriteLine("                  -spacing <spacing between dots in millimetres>");
+            Console.WriteLine("                  -f <focal length in millimetres>");
         }
 
         #endregion
