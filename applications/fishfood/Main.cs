@@ -114,7 +114,7 @@ namespace sentience.calibration
                                             
                                             
                                             
-                                            }                                         
+                                            }                          
                                         }                                
                                     }
                                 }
@@ -128,14 +128,17 @@ namespace sentience.calibration
         #region "calibration"
         
         private static hypergraph Detect(string filename, 
+                                         ref int image_width, ref int image_height,
                                          float fov_degrees, float dist_to_centre_dot_mm, float dot_spacing_mm,
                                          ref double centre_of_distortion_x, ref double centre_of_distortion_y,
                                          ref polynomial lens_distortion_curve,
                                          ref double camera_rotation, ref double scale,
                                          string lens_distortion_image_filename,
-                                         string curve_fit_image_filename)
+                                         string curve_fit_image_filename,
+                                         ref float centre_dot_x, ref float centre_dot_y)
         {
-            int image_width = 0, image_height = 0;
+            image_width = 0;
+            image_height = 0;
             hypergraph dots = DetectDots(filename, ref image_width, ref image_height);
 
             // how far is the centre dot from the centre of the image ?
@@ -144,6 +147,9 @@ namespace sentience.calibration
             GetCentreDotDisplacement(image_width, image_height, dots, 
                                      ref centre_dot_horizontal_distance,
                                      ref centre_dot_vertical_distance);
+                                     
+            centre_dot_x = centre_dot_horizontal_distance + (image_width / 2);
+            centre_dot_y = centre_dot_vertical_distance + (image_width / 2);
                                      
             if ((Math.Abs(centre_dot_horizontal_distance) > image_width / 10) ||
                 (Math.Abs(centre_dot_vertical_distance) > image_height / 5))
@@ -211,6 +217,9 @@ namespace sentience.calibration
                                                                grid, lens_distortion_curve, centre_of_distortion,
                                                                ref rectified_centre_line, scale);
                         double rotation_degrees = camera_rotation / Math.PI * 180;
+                        
+                        centre_of_distortion_x = centre_of_distortion.x;
+                        centre_of_distortion_y = centre_of_distortion.y;
                         
                         int[] calibration_map = null;
                         int[,,] calibration_map_inverse = null;
@@ -283,6 +292,7 @@ namespace sentience.calibration
                     {
                         string lens_distortion_image_filename = "lens_distortion.jpg";
                         string curve_fit_image_filename = "curve_fit.jpg";
+                        int img_width = 0, img_height = 0;
                         
                         // distance to the centre dot
                         float dist_to_centre_dot_mm = (float)Math.Sqrt(dotdist_mm * dotdist_mm + height_mm * height_mm);
@@ -294,22 +304,52 @@ namespace sentience.calibration
                         double[] scale_factor = new double[2];
                         double[] rotation = new double[2];
                         
+                        // unrectified position of the calibration dot (in image coordinates) for each image
+                        List<double>[] centre_dot_x = new List<double>[2];
+                        List<double>[] centre_dot_y = new List<double>[2];
+                        
+                        // pan/tilt mechanism servo positions
+                        List<double>[] pan_servo_position = new List<double>[2];
+                        List<double>[] tilt_servo_position = new List<double>[2];
+                        
                         for (int cam = 0; cam < 2; cam++)
                         {
+                            // unrectified centre dot positions in image coordinates
+                            centre_dot_x[cam] = new List<double>();
+                            centre_dot_y[cam] = new List<double>();
+
+                            // pan/tilt mechanism servo positions
+                            pan_servo_position[cam] = new List<double>();
+                            tilt_servo_position[cam] = new List<double>();
+                            
                             for (int i = 0; i < image_filename[cam].Count; i++)
                             {
+                                // extract the pan and tilt servo positions of from the filename
+                                double pan = 9999, tilt = 9999;
+                                GetPanTilt(image_filename[cam][i], ref pan, ref tilt);
+                                pan_servo_position[cam].Add(pan);
+                                tilt_servo_position[cam].Add(tilt);
+                            
+                                // detect the dots and calculate a best fit curve
                                 double centre_of_distortion_x = 0;
                                 double centre_of_distortion_y = 0;
                                 polynomial lens_distortion_curve = null;
                                 double camera_rotation = 0;
                                 double scale = 0;
+                                float dot_x = -1, dot_y = -1;
                                 hypergraph dots =  
-                                    Detect(image_filename[cam][i], fov_degrees, dist_to_centre_dot_mm, dot_spacing_mm,
+                                    Detect(image_filename[cam][i],
+                                    ref img_width, ref img_height,
+                                    fov_degrees, dist_to_centre_dot_mm, dot_spacing_mm,
                                     ref centre_of_distortion_x, ref centre_of_distortion_y,
                                     ref lens_distortion_curve,
                                     ref camera_rotation, ref scale,
                                     lens_distortion_image_filename,
-                                    curve_fit_image_filename);
+                                    curve_fit_image_filename,
+                                    ref dot_x, ref dot_y);
+                                    
+                                centre_dot_x[cam].Add(dot_x);
+                                centre_dot_y[cam].Add(dot_y);
                                     
                                 if (lens_distortion_curve != null)
                                 {
@@ -346,12 +386,54 @@ namespace sentience.calibration
                         }
                         
                         
+                        
                     }
                 }
             }
             else
             {
                 Console.WriteLine("No calibration " + file_extension + " images were found");
+            }
+        }
+        
+        /// <summary>
+        /// extract the pan and tilt values from the given filename
+        /// </summary>
+        /// <param name="filename">
+        /// filename containing pan and tilt angles separated by underscores <see cref="System.String"/>
+        /// </param>
+        /// <param name="pan_angle">
+        /// returned pan angle <see cref="System.Double"/>
+        /// </param>
+        /// <param name="tilt_angle">
+        /// returned tilt angle <see cref="System.Double"/>
+        /// </param>
+        private static void GetPanTilt(string filename, ref double pan_angle, ref double tilt_angle)
+        {
+            List<int> pos = new List<int>();
+            
+            // find the position of underscores
+            int p = 0;
+            while (p > -1)
+            {
+                p = filename.IndexOf("_", p);
+                if (p > -1)
+                {
+                    pos.Add(p);
+                    p++;
+                }
+            }
+            
+            int endpos = filename.IndexOf(".");
+            
+            if ((pos.Count >= 2) && (endpos > -1))
+            {
+                string pan_str = filename.Substring(pos[pos.Count-2]+1, pos[pos.Count-1] - pos[pos.Count-2] - 1);
+                string tilt_str = filename.Substring(pos[pos.Count-1]+1, endpos - pos[pos.Count-1] - 1);
+                Console.WriteLine("pan: " + pan_str);
+                Console.WriteLine("tilt: " + tilt_str);
+                pan_angle = Convert.ToDouble(pan_str);
+                tilt_angle = Convert.ToDouble(tilt_str);
             }
         }
         
@@ -1580,18 +1662,40 @@ namespace sentience.calibration
             
             float dist_to_centre_dot_mm = 600;
             float dot_spacing_mm = 50;
-            double centre_of_distortion_x = 0;
-            double centre_of_distortion_y = 0;
-            polynomial lens_distortion_curve = null;
-            double camera_rotation = 0;
-            double scale = 0;
+            double[] centre_of_distortion_x = new double[1];
+            double[] centre_of_distortion_y = new double[1];
+            polynomial[] lens_distortion_curve = new polynomial[1];
+            double[] camera_rotation = new double[1];
+            double[] scale = new double[1];
+            float dot_x = -1, dot_y = -1;
+            float focal_length_mm = 5;
+            float baseline_mm = 100;
+            float fov_degrees = 78;
+            string[] lens_distortion_filename = { "lens_distortion.jpg" };
+            string[] curve_fit_filename = { "curve_fit.jpg" };
+            int image_width = 640;
+            int image_height = 480;
             
-            Detect(filename, 78, dist_to_centre_dot_mm, dot_spacing_mm,
-                   ref centre_of_distortion_x, ref centre_of_distortion_y,
-                   ref lens_distortion_curve,
-                   ref camera_rotation, ref scale,
-                   "lens_distortion.jpg",
-                   "curve_fit.jpg");
+            //double pan_angle = 0;
+            //double tilt_angle = 0;            
+            //GetPanTilt(filename, ref pan_angle, ref tilt_angle);
+                     
+            Detect(filename,
+                   ref image_width, ref image_height,
+                   fov_degrees, dist_to_centre_dot_mm, dot_spacing_mm,
+                   ref centre_of_distortion_x[0], ref centre_of_distortion_y[0],
+                   ref lens_distortion_curve[0],
+                   ref camera_rotation[0], ref scale[0],
+                   lens_distortion_filename[0],
+                   curve_fit_filename[0],
+                   ref dot_x, ref dot_y);
+                   
+            Save("calibration.xml", "Test", focal_length_mm, baseline_mm, fov_degrees,
+                 image_width, image_height, lens_distortion_curve,
+                 centre_of_distortion_x, centre_of_distortion_y, camera_rotation, scale,
+                 lens_distortion_filename, curve_fit_filename,
+                 0, 0);
+               
         }
 
         #endregion
@@ -2306,13 +2410,14 @@ namespace sentience.calibration
         /// </summary>
         /// <returns></returns>
         private static XmlDocument getXmlDocument(
+            string device_name,
             float focal_length_mm,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
             polynomial[] lens_distortion_curve,
-            float[] centre_of_distortion_x, float[] centre_of_distortion_y,
-            float[] rotation, float[] scale,
+            double[] centre_of_distortion_x, double[] centre_of_distortion_y,
+            double[] rotation, double[] scale,
             string[] lens_distortion_image_filename,
             string[] curve_fit_image_filename,
             float offset_x, float offset_y)
@@ -2332,7 +2437,8 @@ namespace sentience.calibration
 
             xml.AddComment(doc, nodeCalibration, "Sentience");
 
-            XmlElement elem = getXml(doc, nodeCalibration,            
+            XmlElement elem = getXml(doc, nodeCalibration,  
+                device_name,
                 focal_length_mm,
                 baseline_mm,
                 fov_degrees,
@@ -2354,19 +2460,21 @@ namespace sentience.calibration
         /// <param name="filename">file name to save as</param>
         private static void Save(
             string filename,
+            string device_name,
             float focal_length_mm,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
             polynomial[] lens_distortion_curve,
-            float[] centre_of_distortion_x, float[] centre_of_distortion_y,
-            float[] rotation, float[] scale,
+            double[] centre_of_distortion_x, double[] centre_of_distortion_y,
+            double[] rotation, double[] scale,
             string[] lens_distortion_image_filename,
             string[] curve_fit_image_filename,            
             float offset_x, float offset_y)
         {
             XmlDocument doc = 
                 getXmlDocument(
+                    device_name,
                     focal_length_mm,
                     baseline_mm,
                     fov_degrees,
@@ -2383,13 +2491,14 @@ namespace sentience.calibration
 
         private static XmlElement getXml(
             XmlDocument doc, XmlElement parent,
+            string device_name,
             float focal_length_mm,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
             polynomial[] lens_distortion_curve,
-            float[] centre_of_distortion_x, float[] centre_of_distortion_y,
-            float[] rotation, float[] scale,
+            double[] centre_of_distortion_x, double[] centre_of_distortion_y,
+            double[] rotation, double[] scale,
             string[] lens_distortion_image_filename,
             string[] curve_fit_image_filename,
             float offset_x, float offset_y)
@@ -2403,6 +2512,12 @@ namespace sentience.calibration
             else
                 nodeStereoCamera = doc.CreateElement("MonocularCamera");
             parent.AppendChild(nodeStereoCamera);
+
+            if ((device_name != null) && (device_name != ""))
+            {
+                xml.AddComment(doc, nodeStereoCamera, "Name of the camera device");
+                xml.AddTextElement(doc, nodeStereoCamera, "DeviceName", device_name);
+            }
 
             xml.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
             xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focal_length_mm, format));
@@ -2453,8 +2568,8 @@ namespace sentience.calibration
             float fov_degrees,
             int image_width, int image_height,
             polynomial lens_distortion_curve,
-            float centre_of_distortion_x, float centre_of_distortion_y,
-            float rotation, float scale,
+            double centre_of_distortion_x, double centre_of_distortion_y,
+            double rotation, double scale,
             string lens_distortion_image_filename,
             string curve_fit_image_filename)
         {

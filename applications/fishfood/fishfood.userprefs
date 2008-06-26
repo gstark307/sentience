@@ -1,7 +1,7 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="1597" column="19" />
+    <File name="Main.cs" line="390" column="22" />
     <File name="shapes.cs" line="1795" column="13" />
     <File name="hypergraph.cs" line="19" column="1" />
     <File name="calibrationLink.cs" line="27" column="1" />
@@ -12,7 +12,7 @@
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="fishfood" expanded="True">
-          <Node name="Resources" selected="True" />
+          <Node name="Main.cs" selected="True" />
         </Node>
       </Node>
     </ViewMemento>
