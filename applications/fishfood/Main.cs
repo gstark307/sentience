@@ -30,7 +30,7 @@ namespace sentience.calibration
     {
         public static void Main(string[] args)
         {
-            Test();
+            //Test();
             
             
             // extract command line parameters
@@ -137,6 +137,7 @@ namespace sentience.calibration
                                          ref double camera_rotation, ref double scale,
                                          string lens_distortion_image_filename,
                                          string curve_fit_image_filename,
+                                         string rectified_image_filename,
                                          ref float centre_dot_x, ref float centre_dot_y)
         {
             image_width = 0;
@@ -232,7 +233,7 @@ namespace sentience.calibration
                                              ref calibration_map,
                                              ref calibration_map_inverse);
 
-                        Rectify(filename, calibration_map, "rectified.jpg");
+                        Rectify(filename, calibration_map, rectified_image_filename);
                             
                         if (rectified_centre_line != null)
                             ShowLines(filename, rectified_centre_line, "rectified_centre_line.jpg");
@@ -264,6 +265,15 @@ namespace sentience.calibration
                                       float focal_length_mm,
                                       string file_extension)
         {
+            if (directory.Contains("\\"))
+            {
+                if (!directory.EndsWith("\\")) directory += "\\";
+            }
+            else
+            {
+                if (directory.Contains("/"))
+                    if (!directory.EndsWith("/")) directory += "/";
+            }
             string[] filename = Directory.GetFiles(directory, "*." + file_extension);
             if (filename != null)
             {
@@ -275,9 +285,9 @@ namespace sentience.calibration
                 // populate the lists
                 for (int i = 0; i < filename.Length; i++)
                 {
-                    if (filename[i].StartsWith("raw0"))
+                    if (filename[i].Contains("raw0"))
                         image_filename[0].Add(filename[i]);
-                    if (filename[i].StartsWith("raw1"))
+                    if (filename[i].Contains("raw1"))
                         image_filename[1].Add(filename[i]);
                 }
                 
@@ -295,8 +305,10 @@ namespace sentience.calibration
                     {
                         string lens_distortion_image_filename = "temp_lens_distortion.jpg";
                         string curve_fit_image_filename = "temp_curve_fit.jpg";
+                        string rectified_image_filename = "temp_rectified.jpg";
                         string[] lens_distortion_filename = { "lens_distortion0.jpg", "lens_distortion1.jpg" };
                         string[] curve_fit_filename = { "curve_fit0.jpg", "curve_fit1.jpg" };
+                        string[] rectified_filename = { "rectified0.jpg", "rectified1.jpg" };
                         int img_width = 0, img_height = 0;
                         
                         // distance to the centre dot
@@ -353,6 +365,7 @@ namespace sentience.calibration
                                     ref camera_rotation, ref scale,
                                     lens_distortion_image_filename,
                                     curve_fit_image_filename,
+                                    rectified_image_filename,
                                     ref dot_x, ref dot_y);
                                     
                                 centre_dot_x[cam].Add(dot_x);
@@ -387,6 +400,9 @@ namespace sentience.calibration
 
                                         if (File.Exists(curve_fit_filename[cam])) File.Delete(curve_fit_filename[cam]);
                                         File.Copy(curve_fit_image_filename, curve_fit_filename[cam]);
+                                        
+                                        if (File.Exists(rectified_filename[cam])) File.Delete(rectified_filename[cam]);
+                                        File.Copy(rectified_image_filename, rectified_filename[cam]);
                                     }
                                 }
                             }
@@ -1681,14 +1697,14 @@ namespace sentience.calibration
                 }
             }
 
-            // record the positions of the corners
-            corners.Add(grid[grid_tx, grid_ty]);
-            corners.Add(grid[grid_bx, grid_ty]);
-            corners.Add(grid[grid_bx, grid_by]);
-            corners.Add(grid[grid_tx, grid_by]);
-
             if (found)
             {
+                // record the positions of the corners
+                corners.Add(grid[grid_tx, grid_ty]);
+                corners.Add(grid[grid_bx, grid_ty]);
+                corners.Add(grid[grid_bx, grid_by]);
+                corners.Add(grid[grid_tx, grid_by]);
+
                 double dx, dy;
                 
                 double x0 = grid[grid_tx, grid_ty].x;
@@ -1837,6 +1853,7 @@ namespace sentience.calibration
             float fov_degrees = 78;
             string[] lens_distortion_filename = { "lens_distortion.jpg" };
             string[] curve_fit_filename = { "curve_fit.jpg" };
+            string[] rectified_filename = { "rectified.jpg" };
             int image_width = 640;
             int image_height = 480;
             
@@ -1852,8 +1869,9 @@ namespace sentience.calibration
                    ref camera_rotation[0], ref scale[0],
                    lens_distortion_filename[0],
                    curve_fit_filename[0],
+                   rectified_filename[0],
                    ref dot_x, ref dot_y);
-                   
+
             Save("calibration.xml", "Test", focal_length_mm, baseline_mm, fov_degrees,
                  image_width, image_height, lens_distortion_curve,
                  centre_of_distortion_x, centre_of_distortion_y, camera_rotation, scale,
