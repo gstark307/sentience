@@ -111,9 +111,11 @@ namespace sentience.calibration
                                             else
                                             {
                                                 focal_length_mm = Convert.ToSingle(focal_length_str);
-                                            
-                                            
-                                            
+
+
+                                                Calibrate(directory, baseline_mm, dotdist_mm, height_mm,
+                                                          fov_degrees, dot_spacing_mm,
+                                                          focal_length_mm, "jpg");
                                             }                          
                                         }                                
                                     }
@@ -169,9 +171,9 @@ namespace sentience.calibration
                 scale = ((centre_square.getSideLength(0) + centre_square.getSideLength(2)) * 0.5f) / ideal_centre_square_dimension_pixels;
                 //scale = 1;
                 
-                Console.WriteLine("centre_square ideal_dimension: " + ideal_centre_square_dimension_pixels.ToString());
-                Console.WriteLine("centre_square actual_dimension: " + ((centre_square.getSideLength(0) + centre_square.getSideLength(2)) * 0.5f).ToString());
-                Console.WriteLine("scale: " + scale.ToString());
+                //Console.WriteLine("centre_square ideal_dimension: " + ideal_centre_square_dimension_pixels.ToString());
+                //Console.WriteLine("centre_square actual_dimension: " + ((centre_square.getSideLength(0) + centre_square.getSideLength(2)) * 0.5f).ToString());
+                //Console.WriteLine("scale: " + scale.ToString());
 
                 List<calibrationDot> search_regions = new List<calibrationDot>();
                 double horizontal_dx = centre_dots[1].x - centre_dots[0].x;
@@ -236,7 +238,7 @@ namespace sentience.calibration
                             ShowLines(filename, rectified_centre_line, "rectified_centre_line.jpg");
 
                         if (best_rectified_lines != null)
-                        {                        
+                        {           
                             ShowLines(filename, lines, "lines.jpg");
                             ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
                         }
@@ -259,6 +261,7 @@ namespace sentience.calibration
                                       int height_mm,
                                       float fov_degrees,
                                       float dot_spacing_mm,
+                                      float focal_length_mm,
                                       string file_extension)
         {
             string[] filename = Directory.GetFiles(directory, "*." + file_extension);
@@ -290,8 +293,10 @@ namespace sentience.calibration
                     }
                     else
                     {
-                        string lens_distortion_image_filename = "lens_distortion.jpg";
-                        string curve_fit_image_filename = "curve_fit.jpg";
+                        string lens_distortion_image_filename = "temp_lens_distortion.jpg";
+                        string curve_fit_image_filename = "temp_curve_fit.jpg";
+                        string[] lens_distortion_filename = { "lens_distortion0.jpg", "lens_distortion1.jpg" };
+                        string[] curve_fit_filename = { "curve_fit0.jpg", "curve_fit1.jpg" };
                         int img_width = 0, img_height = 0;
                         
                         // distance to the centre dot
@@ -311,6 +316,8 @@ namespace sentience.calibration
                         // pan/tilt mechanism servo positions
                         List<double>[] pan_servo_position = new List<double>[2];
                         List<double>[] tilt_servo_position = new List<double>[2];
+
+                        int[] winner_index = new int[2];
                         
                         for (int cam = 0; cam < 2; cam++)
                         {
@@ -329,7 +336,7 @@ namespace sentience.calibration
                                 GetPanTilt(image_filename[cam][i], ref pan, ref tilt);
                                 pan_servo_position[cam].Add(pan);
                                 tilt_servo_position[cam].Add(tilt);
-                            
+
                                 // detect the dots and calculate a best fit curve
                                 double centre_of_distortion_x = 0;
                                 double centre_of_distortion_y = 0;
@@ -372,21 +379,74 @@ namespace sentience.calibration
                                         centre_y[cam] = centre_of_distortion_y;
                                         rotation[cam] = camera_rotation;
                                         scale_factor[cam] = scale;
-                                        
-                                        string temp_filename = "lens_distortion" + cam.ToString() + ".jpg";
-                                        if (File.Exists(temp_filename)) File.Delete(temp_filename);
-                                        File.Copy(lens_distortion_image_filename, temp_filename);
 
-                                        temp_filename = "curve_fit" + cam.ToString() + ".jpg";
-                                        if (File.Exists(temp_filename)) File.Delete(temp_filename);
-                                        File.Copy(curve_fit_image_filename, temp_filename);
+                                        winner_index[cam] = i;
+                                        
+                                        if (File.Exists(lens_distortion_filename[cam])) File.Delete(lens_distortion_filename[cam]);
+                                        File.Copy(lens_distortion_image_filename, lens_distortion_filename[cam]);
+
+                                        if (File.Exists(curve_fit_filename[cam])) File.Delete(curve_fit_filename[cam]);
+                                        File.Copy(curve_fit_image_filename, curve_fit_filename[cam]);
                                     }
                                 }
                             }
                         }
-                        
-                        
-                        
+
+
+                        // positions of the centre dots
+                        List<List<double>> rectified_dots = new List<List<double>>();
+                        for (int cam = 0; cam < 2; cam++)
+                        {
+                            if (distortion_curve[cam] != null)
+                            {
+                                // position in the centre dots in the raw image
+                                List<double> pts = new List<double>(); 
+                                
+                                for (int i = 0; i < centre_dot_x[cam].Count; i++)
+                                {
+                                    pts.Add(centre_dot_x[cam][i]);
+                                    pts.Add(centre_dot_y[cam][i]);
+                                }
+
+                                // rectified positions for the centre dots
+                                List<double> rectified_pts =
+                                    RectifyDots(pts, img_width, img_height,
+                                                distortion_curve[cam],
+                                                centre_x[cam], centre_y[cam],
+                                                rotation[cam], scale_factor[cam]);
+
+                                rectified_dots.Add(rectified_pts);
+                            }
+                        }
+
+                        if (distortion_curve[0] != null)
+                        {
+                            // find the relative offset if the left and right images
+                            double offset_x = 0;
+                            double offset_y = 0;
+
+                            if (distortion_curve[1] != null)
+                            {
+                                double x0 = rectified_dots[0][winner_index[0] * 2];
+                                double y0 = rectified_dots[0][(winner_index[0] * 2) + 1];
+                                double x1 = rectified_dots[1][winner_index[1] * 2];
+                                double y1 = rectified_dots[1][(winner_index[1] * 2) + 1];
+                                offset_x = x1 - x0;
+                                offset_y = y1 - y0;
+
+                                // subtract the expected disparity for the centre dot
+                                float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_mm, baseline_mm, img_width, fov_degrees, dist_to_centre_dot_mm);
+                                offset_x -= expected_centre_dot_disparity;
+                            }
+
+                            // save the results as an XML file
+                            Save("calibration.xml", "Test", focal_length_mm, baseline_mm, fov_degrees,
+                                 img_width, img_height, distortion_curve,
+                                 centre_x, centre_y, rotation, scale_factor,
+                                 lens_distortion_filename, curve_fit_filename,
+                                 (float)offset_x, (float)offset_y);
+                        }
+
                     }
                 }
             }
@@ -394,6 +454,53 @@ namespace sentience.calibration
             {
                 Console.WriteLine("No calibration " + file_extension + " images were found");
             }
+        }
+
+        /// <summary>
+        /// return the distance to obstacles in mm
+        /// </summary>
+        /// <param name="focal_length_mm"></param>
+        /// <param name="camera_baseline_mm"></param>
+        /// <param name="img_width"></param>
+        /// <param name="fov_degrees"></param>
+        /// <param name="disparity_pixels"></param>
+        /// <returns></returns>
+        private static float GetDistanceFromDisparity(float focal_length_mm, float camera_baseline_mm,
+                                                      int img_width, float fov_degrees,
+                                                      float disparity_pixels)
+        {
+            float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
+            float disparity_angle = disparity_pixels * fov_radians / img_width;
+            return (focal_length_mm * camera_baseline_mm / disparity_angle);
+        }
+
+        private static float GetDisparityFromDistance(float focal_length_mm, float camera_baseline_mm,
+                                                      int img_width, float fov_degrees,
+                                                      float distance_mm)
+        {
+            float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
+            float disparity_angle = focal_length_mm * camera_baseline_mm / distance_mm;
+            float disparity_pixels = disparity_angle * img_width / fov_radians;
+            return (disparity_pixels);
+        }
+
+        /// <summary>
+        /// returns the focal length corresponding to the given disparity
+        /// </summary>
+        /// <param name="distance_mm"></param>
+        /// <param name="camera_baseline_mm"></param>
+        /// <param name="img_width"></param>
+        /// <param name="fov_degrees"></param>
+        /// <param name="disparity_pixels"></param>
+        /// <returns></returns>
+        private static float GetFocalLengthFromDisparity(float distance_mm, float camera_baseline_mm,
+                                                         int img_width, float fov_degrees,
+                                                         float disparity_pixels)
+        {
+            float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
+            float disparity_angle = disparity_pixels * fov_radians / img_width;
+            float focal_length_mm = distance_mm * disparity_angle / camera_baseline_mm;
+            return (focal_length_mm);
         }
         
         /// <summary>
@@ -915,6 +1022,63 @@ namespace sentience.calibration
 
             return (rectified_lines);
         }
+
+        /// <summary>
+        /// applies the given curve to the lines to produce rectified coordinates
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <param name="distortion_curve"></param>
+        /// <param name="centre_of_distortion"></param>
+        /// <returns></returns>
+        private static List<double> RectifyDots(List<double> dots,
+                                                int image_width, int image_height,
+                                                polynomial curve,
+                                                double centre_of_distortion_x,
+                                                double centre_of_distortion_y,
+                                                double rotation,
+                                                double scale)
+        {
+            List<double> rectified_dots = new List<double>();
+
+            float half_width = image_width / 2;
+            float half_height = image_height / 2;
+
+            List<double> rectified_line = new List<double>();
+            for (int j = 0; j < dots.Count; j += 2)
+            {
+                double x = dots[j];
+                double y = dots[j + 1];
+
+                double dx = x - centre_of_distortion_x;
+                double dy = y - centre_of_distortion_y;
+                double radial_dist_rectified = Math.Sqrt((dx * dx) + (dy * dy));
+                if (radial_dist_rectified >= 0.01f)
+                {
+                    double radial_dist_original = curve.RegVal(radial_dist_rectified);
+                    if (radial_dist_original > 0)
+                    {
+                        double ratio = radial_dist_rectified / radial_dist_original;
+                        double x2 = Math.Round(centre_of_distortion_x + (dx * ratio));
+                        x2 = (x2 - (image_width / 2)) * scale;
+                        double y2 = Math.Round(centre_of_distortion_y + (dy * ratio));
+                        y2 = (y2 - (image_height / 2)) * scale;
+
+                        // apply rotation
+                        double rectified_x = x2, rectified_y = y2;
+                        rotatePoint(x2, y2, -rotation, ref rectified_x, ref rectified_y);
+
+                        rectified_x += half_width;
+                        rectified_y += half_height;
+
+                        rectified_dots.Add(rectified_x);
+                        rectified_dots.Add(rectified_y);
+                    }
+                }
+            }
+
+            return (rectified_dots);
+        }
+
 
         #endregion
 
@@ -2506,8 +2670,14 @@ namespace sentience.calibration
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
 
+            // is this a stereo or a monocular camera ?
+            bool stereo_camera = false;
+            if (lens_distortion_curve.Length == 2)
+                if ((lens_distortion_curve[0] != null) && (lens_distortion_curve[1] != null))
+                    stereo_camera = true;
+
             XmlElement nodeStereoCamera;
-            if (lens_distortion_curve.Length > 1)
+            if (stereo_camera)
                 nodeStereoCamera = doc.CreateElement("StereoCamera");
             else
                 nodeStereoCamera = doc.CreateElement("MonocularCamera");
@@ -2522,7 +2692,7 @@ namespace sentience.calibration
             xml.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
             xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focal_length_mm, format));
 
-            if (lens_distortion_curve.Length > 1)
+            if (stereo_camera)
             {
                 xml.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
                 xml.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline_mm, format));
@@ -2533,7 +2703,7 @@ namespace sentience.calibration
             XmlElement nodeCalibration = doc.CreateElement("Calibration");
             nodeStereoCamera.AppendChild(nodeCalibration);
 
-            if (lens_distortion_curve.Length > 1)
+            if (stereo_camera)
             {
                 string offsets = Convert.ToString(offset_x, format) + "," +
                                  Convert.ToString(offset_y, format);
