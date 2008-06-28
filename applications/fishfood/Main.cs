@@ -2043,6 +2043,7 @@ namespace sentience.calibration
                                 
                 angle_degrees += increment_degrees;
             }
+
             for (int x = 0; x < img_width; x += img_width / 20)
             {
                 for (int y = 0; y < img_height; y += img_width / 20)
@@ -2050,7 +2051,21 @@ namespace sentience.calibration
                     float dx = x - (float)centre_of_distortion.x;
                     float dy = y - (float)centre_of_distortion.y;
                     float radius = (float)Math.Sqrt(dx * dx + dy * dy);
-                    
+
+                    float tot = 0;
+                    for (float r = 0; r < radius; r += 0.2f)
+                    {
+                        float diff = (float)Math.Abs(r - curve.RegVal(r));
+                        tot += diff;
+                    }
+
+                    float r1 = (float)Math.Abs((radius-2f) - curve.RegVal(radius-2f));
+                    float r2 = (float)Math.Abs(radius - curve.RegVal(radius));
+                    float fraction = 1.0f + (Math.Abs(r2 - r1) * img_width * 1.5f / total_difference);
+
+                    int x2 = (int)(centre_of_distortion.x + (dx * fraction));
+                    int y2 = (int)(centre_of_distortion.y + (dy * fraction));
+                    drawing.drawLine(img, img_width, img_height, x, y, x2, y2, 255, 0, 0, 0, false);
                 }
             }
             
