@@ -19,7 +19,7 @@
 */
 
 using System;
-using System.Collections;
+using System.Collections.Generic;
 
 namespace sentience.calibration
 {
@@ -34,8 +34,8 @@ namespace sentience.calibration
         private double[,] M;
         private double[] C; // coefficients
 
-        private ArrayList Xpoints;
-        private ArrayList Ypoints;
+        private List<double> Xpoints;
+        private List<double> Ypoints;
 
         public polynomial()
         {
@@ -85,7 +85,7 @@ namespace sentience.calibration
                 for (j = i + 1; j <= O; j++) // scale all following lines to have a leading zero
                 {
                     T = M[j, i] / M[i, i];
-                    M[j, i] = (double)0;
+                    M[j, i] = 0.0;
                     for (k = i + 1; k <= O1; k++)
                     {
                         M[j, k] = M[j, k] - M[i, k] * T;
@@ -164,8 +164,8 @@ namespace sentience.calibration
         {
             int i;
 
-            Xpoints = new ArrayList();
-            Ypoints = new ArrayList();
+            Xpoints = new List<double>();
+            Ypoints = new List<double>();
 
             Finished = false;
             for (i = 0; i <= MaxO; i++)
@@ -261,6 +261,7 @@ namespace sentience.calibration
             return (Math.Sqrt(GetSquaredError()));
         }
 
+
         public double GetSquaredError()
         {
             double error = 0;
@@ -269,11 +270,31 @@ namespace sentience.calibration
             {
                 for (int i = 0; i < Xpoints.Count; i++)
                 {
-                    double x = (double)Xpoints[i];
-                    double y = (double)Ypoints[i];
+                    double x = Xpoints[i];
+                    double y = Ypoints[i];
                     double y2 = RegVal(x);
                     double diff = y - y2;
                     error += (diff * diff);
+                }
+                error /= Xpoints.Count;
+            }
+            return (error);
+        }
+
+        public double GetMeanError()
+        {
+            double error = 0;
+
+            if (Xpoints.Count > 0)
+            {
+                for (int i = 0; i < Xpoints.Count; i++)
+                {
+                    double x = Xpoints[i];
+                    double y = Ypoints[i];
+                    double y2 = RegVal(x);
+                    double diff = y - y2;
+                    if (diff < 0) diff = -diff;
+                    error += diff;
                 }
                 error /= Xpoints.Count;
             }
@@ -553,18 +574,18 @@ namespace sentience.calibration
 
 
 
-        public void Show(Byte[] img, int width, int height)
+        public void Show(Byte[] img, int width, int height,
+                         string horizontal_scale, string vertical_scale)
         {
-            double min_x = 0;
-            double min_y = 0;
+            const double border_x = 0.07;
+            const double border_y = 0.1;
+            double min_x = -border_x;
+            double min_y = -border_y;
             double max_x = 1;
             double max_y = 1;
             int i = 0;
 
             for (i = 0; i < width * height * 3; i++) img[i] = 255;
-
-            // show diagonal
-            drawing.drawLine(img, width, height, 0, height - 1, width - 1, 0, 200, 200, 200, 0, false);
 
             for (i = 0; i < Xpoints.Count; i++)
             {
@@ -575,18 +596,24 @@ namespace sentience.calibration
                 if (x < min_x) min_x = x;
                 if (y < min_y) min_y = y;
             }
+            min_x = -max_x * border_x;
+            min_y = -max_y * border_y;
 
-            // draw axes
-            if (min_x < 0)
-            {
-                int xx = (int)((0 - min_x) * (width - 1) / (max_x - min_x));
-                drawing.drawLine(img, width, height, xx, 0, xx, height - 1, 200, 200, 200, 0, false);
-            }
-            if (min_y < 0)
-            {
-                int yy = (int)((0 - min_y) * (height - 1) / (max_y - min_y));
-                drawing.drawLine(img, width, height, 0, yy, width - 1, yy, 200, 200, 200, 0, false);
-            }
+            float minor_increment = 10;
+            float major_increment = 50;
+            int axes_line_width = 0;
+            DrawAxes(img, width, height,
+                     minor_increment, minor_increment,
+                     major_increment, major_increment,
+                     1, 0, 0, 0, axes_line_width, true,
+                     horizontal_scale, vertical_scale,
+                     (float)min_x, (float)min_y,
+                     (float)max_x, (float)max_y);
+
+            // show diagonal
+            int x1 = (int)(-min_x * (width - 1) / (max_x - min_x));
+            int y1 = height - 1 - (int)(-min_y * (height - 1) / (max_y - min_y));
+            drawing.drawLine(img, width, height, x1, y1, width - 1, 0, 200, 200, 200, 0, false);
 
             // show data points
             for (i = 0; i < Xpoints.Count; i++)
@@ -599,22 +626,209 @@ namespace sentience.calibration
                 drawing.drawCross(img, width, height, xx, yy, 2, 150, 150, 150, 0);
             }
 
-            if (max_x == 1)
-            {
-                max_x = width/2;
-                max_y = height/2;
-            }
-
             int prev_x = 0;
             int prev_y = height - 1;
             for (int x = 0; x < max_x; x++)
             {
-                int xx = (int)(x * (width - 1) / max_x);
-                int yy = height - 1 - (int)(RegVal(x) * (height-1) / max_y);
-                drawing.drawLine(img, width, height, prev_x, prev_y, xx, yy, 255, 0, 0, 0, false);
+                int xx = (int)((x - min_x) * (width - 1) / (max_x- min_x));
+                int yy = height - 1 - (int)((RegVal(x) - min_y) * (height-1) / (max_y - min_y));
+                if (x > 0)
+                    drawing.drawLine(img, width, height, prev_x, prev_y, xx, yy, 255, 0, 0, 0, false);
                 prev_x = xx;
                 prev_y = yy;
             }
         }
+
+
+        #region "drawing axes"
+
+        /// <summary>
+        /// draws axes on the graph
+        /// </summary>
+        /// <param name="x_increment_minor">minor incremnent along the x axis</param>
+        /// <param name="y_increment_minor">minor increment along the y axis</param>
+        /// <param name="x_increment_major">major increment along the x axis</param>
+        /// <param name="y_increment_major">major increment along the y axis</param>
+        /// <param name="increment_marking_size">size of the increment markings</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="lineWidth">line width</param>
+        /// <param name="horizontal_scale">name of the horizontal scale</param>
+        /// <param name="vertical_scale">name of the vertical scale</param>
+        public void DrawAxes(byte[] img, int image_width, int image_height,
+                             float x_increment_minor, float y_increment_minor,
+                             float x_increment_major, float y_increment_major,
+                             int increment_marking_size,
+                             int r, int g, int b, int lineWidth,
+                             bool show_numbers,
+                             string horizontal_scale, string vertical_scale,
+                             float min_value_x, float min_value_y,
+                             float max_value_x, float max_value_y)
+        {
+            // draw the horizontal axis
+            float y = image_height - 1 - (((0 - min_value_y) / (max_value_y - min_value_y)) * image_height);
+            drawing.drawLine(img, image_width, image_height,
+                             0, (int)y, image_width - 1, (int)y,
+                             r, g, b, lineWidth, false);
+
+            //float x = ((Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width);
+            float x = ((0 - min_value_x) / (max_value_x - min_value_x)) * image_width;
+
+            // show the name of the horizontal axis
+            if (horizontal_scale != "")
+                AddText(img, image_width, image_height, horizontal_scale, "Arial", 10, r, g, b,
+                        min_value_x + ((max_value_x - min_value_x) * 0.45f),
+                        -(max_value_y - min_value_y) / 20,
+                        min_value_x, min_value_y,
+                        max_value_x, max_value_y);
+
+            AddText(img, image_width, image_height, "RMS error (pixels): " + GetRMSerror().ToString(), "Arial", 10, r, g, b,
+                    min_value_x + ((max_value_x - min_value_x) * 0.6f),
+                    (max_value_y - min_value_y) / 20,
+                    min_value_x, min_value_y,
+                    max_value_x, max_value_y);
+
+            for (int i = 0; i < 2; i++)
+            {
+                float increment_size = x_increment_minor;
+                int marking_size = increment_marking_size;
+                if (i > 0)
+                {
+                    increment_size = x_increment_major;
+                    marking_size = (increment_marking_size * 2);
+                }
+
+                float xx = 0;
+                while (xx < max_value_x)
+                {
+                    int screen_x = (int)(x + (xx * image_width / (max_value_x - min_value_x)));
+                    drawing.drawLine(img, image_width, image_height,
+                                     screen_x, (int)y, screen_x, (int)(y + marking_size),
+                                     r, g, b, lineWidth, false);
+                    if ((show_numbers) && (i > 0) && (xx != 0))
+                    {
+                        String number_str = ((int)(xx * 100) / 100.0f).ToString();
+                        float xx2 = xx - ((max_value_x - min_value_x) / 100);
+                        float yy2 = -(max_value_y - min_value_y) / 40;
+                        AddText(img, image_width, image_height, number_str, "Arial", 8, r, g, b, xx2, yy2,
+                                min_value_x, min_value_y,
+                                max_value_x, max_value_y);
+                    }
+                    xx += increment_size;
+                }
+
+
+                xx = 0;
+                while (xx > min_value_x)
+                {
+                    int screen_x = (int)(x + (xx * image_width / (max_value_x - min_value_x)));
+                    drawing.drawLine(img, image_width, image_height,
+                                     screen_x, (int)y, screen_x, (int)(y + marking_size),
+                                     r, g, b, lineWidth, false);
+                    if ((show_numbers) && (i > 0) && (xx != 0))
+                    {
+                        String number_str = ((int)(xx * 100) / 100.0f).ToString();
+                        float xx2 = xx - ((max_value_x - min_value_x) / 100);
+                        float yy2 = -(max_value_y - min_value_y) / 40;
+                        AddText(img, image_width, image_height, number_str, "Arial", 8, r, g, b, xx2, yy2,
+                                min_value_x, min_value_y,
+                                max_value_x, max_value_y);
+                    }
+                    xx -= increment_size;
+                }
+
+            }
+
+            // draw the vertical axis
+            x = ((0 - min_value_x) / (max_value_x - min_value_x)) * image_width;
+
+            //x = (Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width;
+            drawing.drawLine(img, image_width, image_height,
+                             (int)x, 0, (int)x, image_height - 1,
+                             r, g, b, lineWidth, false);
+
+            y = image_height - 1 - (((0 - min_value_y) / (max_value_y - min_value_y)) * image_height);
+
+            // show the name of the vertical axis
+            if (horizontal_scale != "")
+                AddText(img, image_width, image_height, vertical_scale, "Arial", 10, r, g, b,
+                        (max_value_x - min_value_x) / 150,
+                        min_value_y + ((max_value_y - min_value_y) * 0.98f),
+                        min_value_x, min_value_y,
+                        max_value_x, max_value_y);
+
+            for (int i = 0; i < 2; i++)
+            {
+                float increment_size = y_increment_minor;
+                int marking_size = (int)(increment_marking_size * image_width / (float)image_height);
+                if (i > 0)
+                {
+                    increment_size = y_increment_major;
+                    marking_size = (int)(increment_marking_size * 2 * image_width / (float)image_height);
+                }
+
+                float yy = 0;
+                while (yy < max_value_y)
+                {
+                    int screen_y = (int)(image_height - 1 - (((yy - min_value_y) / (max_value_y - min_value_y)) * image_height));
+                    drawing.drawLine(img, image_width, image_height,
+                                     (int)x, screen_y, (int)x - marking_size, screen_y,
+                                     r, g, b, lineWidth, false);
+                    if ((show_numbers) && (i > 0) && (yy != 0))
+                    {
+                        String number_str = ((int)(yy * 100) / 100.0f).ToString();
+                        float yy2 = yy - ((max_value_y - min_value_y) / 200);
+                        float xx2 = -(max_value_x - min_value_x) / 20;
+                        AddText(img, image_width, image_height, number_str, "Arial", 8, r, g, b, xx2, yy2,
+                                min_value_x, min_value_y,
+                                max_value_x, max_value_y);
+                    }
+                    yy += increment_size;
+                }
+                yy = 0;
+                while (yy > min_value_y)
+                {
+                    int screen_y = (int)(image_height - 1 - (((yy - min_value_y) / (max_value_y - min_value_y)) * image_height));
+                    drawing.drawLine(img, image_width, image_height,
+                                     (int)x, screen_y, (int)x - marking_size, screen_y,
+                                     r, g, b, lineWidth, false);
+                    yy -= increment_size;
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// add some text to the graph at the given position
+        /// </summary>
+        /// <param name="text">text to be added</param>
+        /// <param name="font">font style</param>
+        /// <param name="font_size">font size</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="position_x">x coordinate at which to insert the text</param>
+        /// <param name="position_y">y coordinate at which to insert the text</param>
+        public void AddText(byte[] img, int image_width, int image_height, 
+                            String text,
+                            String font, int font_size,
+                            int r, int g, int b,
+                            float position_x, float position_y,
+                            float min_value_x, float min_value_y,
+                            float max_value_x, float max_value_y)
+        {
+            // convert from graph coordinates into screen coordinates
+            float x = (position_x - min_value_x) * image_width / (max_value_x - min_value_x);
+            float y = image_height - 1 - ((position_y - min_value_y) * image_height / (max_value_y - min_value_y));
+
+            drawing.AddText(img, image_width, image_height,
+                            text, font, font_size,
+                            r, g, b,
+                            x, y);
+        }
+
+        #endregion
+
     }
 }

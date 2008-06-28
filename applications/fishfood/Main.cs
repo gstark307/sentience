@@ -166,12 +166,13 @@ namespace sentience.calibration
                 // are the dots covering an adequate area of the image ?
                 int dots_at_top_of_image = 0;
                 int dots_at_bottom_of_image = 0;
+                int border_percent = 20;
                 for (int i = 0; i < dots.Nodes.Count; i++)
                 {
                     calibrationDot d = (calibrationDot)dots.Nodes[i];
-                    if (d.y < image_height * 15 / 100)
+                    if (d.y < image_height * border_percent / 100)
                         dots_at_top_of_image++;
-                    if (d.y > image_height - (image_height * 15 / 100))
+                    if (d.y > image_height - (image_height * border_percent / 100))
                         dots_at_bottom_of_image++;
                 }
 
@@ -1253,11 +1254,13 @@ namespace sentience.calibration
         {
             Random rnd = new Random(0);
             minimum_error = double.MaxValue;
+            double search_min_error = minimum_error;
 
-            int degrees = 2;
+            int degrees = 3;
+            int best_degrees = degrees;
             List<double> prev_minimum_error = new List<double>();
             prev_minimum_error.Add(minimum_error);
-            double increment = 1.0f;
+            double increment = 3.0f;
             double noise = increment / 2;
             polynomial best_curve = null;
 
@@ -1269,10 +1272,10 @@ namespace sentience.calibration
             int scaled_up = 0;
 
             List<double> result = new List<double>();
-            double abort_threshold = 0.000001;
-            int abort_passes = 21;
+            double best_cx = half_width, best_cy = half_height;
 
-            int max_passes = 300;
+            float maxerr = (image_width / 2) * (image_width / 2);
+            int max_passes = 1000;
             for (int pass = 0; pass < max_passes; pass++)
             {
                 double centre_x = 0;
@@ -1298,22 +1301,18 @@ namespace sentience.calibration
                             // do a sanity check on the curve
                             if (ValidCurve(curve, image_width))
                             {
-                                double mean_variance = curve.GetVariance();
-
-                                List<List<double>> rectified_lines = RectifyLines(lines, image_width, image_height, curve, centre_of_distortion, 0, 1);
-                                double average_line_curvature = LineCurvature(rectified_lines);
-
-                                double error = curve.GetSquaredError();
-                                error = error * error * mean_variance * mean_variance * average_line_curvature * average_line_curvature;
-                                //error = mean_variance * average_line_curvature * average_line_curvature;
-                                //error = average_line_curvature * average_line_curvature;
-
-                                if (error > 0.1)
+                                double error = curve.GetMeanError();
+                                error = error * error;
+                                
+                                if (error > 0.001)
                                 {
-                                    error = 100000.0f / error;  // inverse
-                                    centre_x += centre_of_distortion.x * error;
-                                    centre_y += centre_of_distortion.y * error;
-                                    mass += error;
+                                    error = maxerr - error;  // inverse
+                                    if (error > 0)
+                                    {
+                                        centre_x += centre_of_distortion.x * error;
+                                        centre_y += centre_of_distortion.y * error;
+                                        mass += error;
+                                    }
                                 }
                             }
                             
@@ -1329,78 +1328,66 @@ namespace sentience.calibration
                     centre_of_distortion.x = centre_x;
                     centre_of_distortion.y = centre_y;
 
-                    best_curve = new polynomial();
-                    best_curve.SetDegree(degrees);
-                    FitCurve(grid, overlay_grid, centre_of_distortion, best_curve, noise, rnd, grid_offset_x, grid_offset_y);
+                    polynomial curve2 = new polynomial();
+                    curve2.SetDegree(degrees);
+                    FitCurve(grid, overlay_grid, centre_of_distortion, curve2, noise, rnd, grid_offset_x, grid_offset_y);
 
-                    double mean_variance = best_curve.GetVariance();
+                    double mean_error = curve2.GetMeanError();
 
-                    List<List<double>> rectified_lines = RectifyLines(lines, image_width, image_height, best_curve, centre_of_distortion, 0, 1);
-                    double average_line_curvature = LineCurvature(rectified_lines);
-
-                    double RMS_error = best_curve.GetRMSerror();
-                    double error_value = RMS_error * RMS_error * mean_variance * mean_variance * average_line_curvature * average_line_curvature;
-                    //double error_value = mean_variance * average_line_curvature * average_line_curvature;
-                    //double error_value = average_line_curvature * average_line_curvature;
-
-                    double scaledown = 0.99999999;
-                    if (error_value < minimum_error)
+                    double scaledown = 0.99999999999999;
+                    if (mean_error < search_min_error)
                     {
+
+                        search_min_error = mean_error;
+
                         // cool down
-                        prev_minimum_error.Add(minimum_error);
+                        prev_minimum_error.Add(search_min_error);
                         search_radius *= scaledown;
                         increment *= scaledown;
-                        noise = increment/2;
+                        noise = increment / 2;
                         half_noise = noise / 2;
                         half_width = centre_x;
                         half_height = centre_y;
-                        minimum_error = error_value;
-                        Console.WriteLine("Pass " + pass.ToString() + ": " + RMS_error.ToString());
+
+                        if (mean_error < minimum_error)
+                        {
+                            best_cx = half_width;
+                            best_cy = half_height;
+                            minimum_error = mean_error;
+                            Console.WriteLine("Cool " + pass.ToString() + ": " + mean_error.ToString());
+                            best_degrees = degrees;
+                            best_curve = curve2;
+                        }
+
                         scaled_up = 0;
                     }
                     else
                     {
-                        if (scaled_up < 5)
+                        // heat up
+                        double scaleup = 1.0 / scaledown;
+                        search_radius /= scaledown;
+                        increment /= scaledown;
+                        noise = increment / 2;
+                        half_noise = noise / 2;
+                        scaled_up++;
+                        half_width = best_cx + (rnd.NextDouble() * noise) - half_noise;
+                        half_height = best_cy + (rnd.NextDouble() * noise) - half_noise;
+                        if (prev_minimum_error.Count > 0)
                         {
-                            // heat up
-                            double scaleup = 1.0 / scaledown;
-                            search_radius *= scaleup;
-                            increment *= scaleup;
-                            noise = increment / 2;
-                            half_noise = noise / 2;
-                            scaled_up++;
-                            if (prev_minimum_error.Count > 0)
-                            {
-                                minimum_error = prev_minimum_error[prev_minimum_error.Count - 1];
-                                prev_minimum_error.RemoveAt(prev_minimum_error.Count - 1);
-                            }
+                            minimum_error = prev_minimum_error[prev_minimum_error.Count - 1];
+                            prev_minimum_error.RemoveAt(prev_minimum_error.Count - 1);
                         }
                     }
                     
-                    result.Add(RMS_error);
-                    if ((result.Count > abort_passes) && (pass > 100))
-                    {
-                        if (result[result.Count - 1 - abort_passes] - RMS_error < abort_threshold)
-                        {
-                            // it looks like the error is no longer converging
-                            // time to bail out chaps
-                            pass = max_passes;
-                            Console.WriteLine("Error converged");
-                        }
-                    }
+                    result.Add(mean_error);
                 }
             }
 
             minimum_error = Math.Sqrt(minimum_error);
-            //Console.WriteLine("Minimum curvature (pixels): " + minimum_error.ToString());
 
-            centre_of_distortion.x = half_width;
-            centre_of_distortion.y = half_height;
-            best_curve = new polynomial();
-            best_curve.SetDegree(degrees);
-            FitCurve(grid, overlay_grid, centre_of_distortion, best_curve, 0, rnd, grid_offset_x, grid_offset_y);
-
-            minimum_error = best_curve.GetRMSerror();
+            centre_of_distortion.x = best_cx;
+            centre_of_distortion.y = best_cy;
+            minimum_error = best_curve.GetMeanError();
 
             return (best_curve);
         }
@@ -1437,89 +1424,68 @@ namespace sentience.calibration
             double[] col = new double[prev_col.Length];
 
             double half_noise = noise / 2;
-            // for every detected dot
-            for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+            double rectified_x, rectified_y;
+
+            for (int pass = 0; pass < 1; pass++)
             {
-                double prev_rectified_radial_dist=0;
-                double prev_actual_radial_dist=0;
-                int prev_grid_y = -1;
-                for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
+                // for every detected dot
+                for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
                 {
-                    if (grid[grid_x, grid_y] != null)
+                    double prev_rectified_radial_dist = 0;
+                    double prev_actual_radial_dist = 0;
+                    int prev_grid_y = -1;
+                    for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
                     {
-                        if ((grid_x + grid_offset_x < overlay_grid.line_intercepts.GetLength(0)) &&
-                            (grid_y + grid_offset_y < overlay_grid.line_intercepts.GetLength(1)) &&
-                            (grid_x + grid_offset_x >= 0) && (grid_y + grid_offset_y >= 0))
+                        if (grid[grid_x, grid_y] != null)
                         {
-                            // find the rectified distance of the dot from the centre of distortion
-                            //double rectified_x = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 0] + (rnd.NextDouble() * noise) - half_noise;
-                            //double rectified_y = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 1] + (rnd.NextDouble() * noise) - half_noise;
-                            double rectified_x = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 0];
-                            double rectified_y = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 1];
-                            double rectified_dx = rectified_x - centre_of_distortion.x;
-                            double rectified_dy = rectified_y - centre_of_distortion.y;
-                            double rectified_radial_dist = Math.Sqrt(rectified_dx * rectified_dx + rectified_dy * rectified_dy);
-
-                            // find the actual raw image distance of the dot from the centre of distortion
-                            //double actual_x = grid[grid_x, grid_y].x + (rnd.NextDouble() * noise) - half_noise;
-                            //double actual_y = grid[grid_x, grid_y].y + (rnd.NextDouble() * noise) - half_noise;
-                            double actual_x = grid[grid_x, grid_y].x;
-                            double actual_y = grid[grid_x, grid_y].y;
-                            double actual_dx = actual_x - centre_of_distortion.x;
-                            double actual_dy = actual_y - centre_of_distortion.y;
-                            double actual_radial_dist = Math.Sqrt(actual_dx * actual_dx + actual_dy * actual_dy);
-
-                            // plot
-                            curve.AddPoint(rectified_radial_dist, actual_radial_dist);
-
-                            if (prev_grid_y == grid_y - 1)
+                            if ((grid_x + grid_offset_x < overlay_grid.line_intercepts.GetLength(0)) &&
+                                (grid_y + grid_offset_y < overlay_grid.line_intercepts.GetLength(1)) &&
+                                (grid_x + grid_offset_x >= 0) && (grid_y + grid_offset_y >= 0))
                             {
-                                for (float inter = 0.25f; inter <= 0.75f; inter += 0.25f)
+                                // find the rectified distance of the dot from the centre of distortion
+                                rectified_x = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 0];
+                                rectified_y = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 1];
+                                if (pass > 0)
                                 {
-                                    double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) * inter);
-                                    double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) * inter);
-                                    curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
+                                    rectified_x += (((rnd.NextDouble() * noise) - half_noise) * 0.1);
+                                    rectified_y += (((rnd.NextDouble() * noise) - half_noise) * 0.1);
                                 }
+
+                                //double rectified_x = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 0];
+                                //double rectified_y = overlay_grid.line_intercepts[grid_x + grid_offset_x, grid_y + grid_offset_y, 1];
+                                double rectified_dx = rectified_x - centre_of_distortion.x;
+                                double rectified_dy = rectified_y - centre_of_distortion.y;
+                                double rectified_radial_dist = Math.Sqrt(rectified_dx * rectified_dx + rectified_dy * rectified_dy);
+
+                                // find the actual raw image distance of the dot from the centre of distortion
+                                //double actual_x = grid[grid_x, grid_y].x + (((rnd.NextDouble() * noise) - half_noise) * 2);
+                                //double actual_y = grid[grid_x, grid_y].y + (((rnd.NextDouble() * noise) - half_noise) * 2);
+                                double actual_x = grid[grid_x, grid_y].x;
+                                double actual_y = grid[grid_x, grid_y].y;
+                                double actual_dx = actual_x - centre_of_distortion.x;
+                                double actual_dy = actual_y - centre_of_distortion.y;
+                                double actual_radial_dist = Math.Sqrt(actual_dx * actual_dx + actual_dy * actual_dy);
+
+                                // plot
+                                curve.AddPoint(rectified_radial_dist, actual_radial_dist);
+
+                                col[(grid_y * 2)] = rectified_radial_dist;
+                                col[(grid_y * 2) + 1] = actual_radial_dist;
+
+                                prev_rectified_radial_dist = rectified_radial_dist;
+                                prev_actual_radial_dist = actual_radial_dist;
+                                prev_grid_y = grid_y;
                             }
-                            if (grid_x > 0)
-                            {
-                                if (grid[grid_x - 1, grid_y] != null)
-                                {
-                                    if (prev_col[grid_y * 2] != 0)
-                                    {
-                                        prev_rectified_radial_dist = prev_col[grid_y * 2];
-                                        prev_actual_radial_dist = prev_col[(grid_y * 2) + 1];
-
-                                        for (float inter = 0.25f; inter <= 0.75f; inter += 0.25f)
-                                        {
-                                            double intermediate_rectified_radial_dist = prev_rectified_radial_dist + ((rectified_radial_dist - prev_rectified_radial_dist) * inter);
-                                            double intermediate_actual_radial_dist = prev_actual_radial_dist + ((actual_radial_dist - prev_actual_radial_dist) * inter);
-                                            curve.AddPoint(intermediate_rectified_radial_dist, intermediate_actual_radial_dist);
-                                        }
-                                    }
-                                }
-                            }
-
-                            col[(grid_y * 2)] = rectified_radial_dist;
-                            col[(grid_y * 2) + 1] = actual_radial_dist;
-
-                            prev_rectified_radial_dist = rectified_radial_dist;
-                            prev_actual_radial_dist = actual_radial_dist;
-                            prev_grid_y = grid_y;
                         }
                     }
-                }
 
-                for (int i = 0; i < col.Length; i++)
-                    prev_col[i] = col[i];
+                    for (int i = 0; i < col.Length; i++)
+                        prev_col[i] = col[i];
+                }
             }
 
             // find the best fit curve
-            curve.Solve();
-
-            //if (curve.Coeff(5) > 0) curve.SetCoeff(5, 0);
-            //if (curve.Coeff(6) > 0) curve.SetCoeff(6, 0);
-            //Console.WriteLine("coeff 6: " + curve.Coeff(6).ToString());
+            curve.Solve();            
         }
 
 
@@ -1857,7 +1823,7 @@ namespace sentience.calibration
                                                  double scale,
                                                  ref double minimum_error)
         {
-            double centre_of_distortion_search_radius = image_width / 50.0f;
+            double centre_of_distortion_search_radius = image_width / 80.0f;
             centre_of_distortion = new calibrationDot();
             curve = FitCurve(image_width, image_height,
                              grid, overlay_grid,
@@ -1998,8 +1964,8 @@ namespace sentience.calibration
             int img_width = 640;
             int img_height = 480;
             byte[] img = new byte[img_width * img_height * 3];
-            
-            curve.Show(img, img_width, img_height);
+
+            curve.Show(img, img_width, img_height, "Rectified radial distance (pixels)", "Raw image radial distance (pixels)");
 
             Bitmap output_bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
