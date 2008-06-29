@@ -1299,7 +1299,9 @@ namespace sentience.calibration
 
             centre_of_distortion.x = best_cx;
             centre_of_distortion.y = best_cy;
-            minimum_error = best_curve.GetMeanError();
+            
+            if (best_curve != null)
+                minimum_error = best_curve.GetMeanError();
 
             return (best_curve);
         }
@@ -1744,14 +1746,17 @@ namespace sentience.calibration
                              grid_offset_x, grid_offset_y, lines,
                              ref minimum_error);
 
-            double rotation = 0;
+            if (curve != null)
+            {
+                double rotation = 0;
 
-            best_rectified_lines =
-                RectifyLines(lines,
-                             image_width, image_height,
-                             curve,
-                             centre_of_distortion,
-                             rotation, scale);
+                best_rectified_lines =
+                    RectifyLines(lines,
+                                 image_width, image_height,
+                                 curve,
+                                 centre_of_distortion,
+                                 rotation, scale);
+            }
         }
 
         #endregion

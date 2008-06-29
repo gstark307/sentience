@@ -1,17 +1,20 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="1361" column="21" />
+    <File name="Main.cs" line="6" column="29" />
     <File name="shapes.cs" line="1795" column="13" />
     <File name="hypergraph.cs" line="19" column="1" />
     <File name="calibrationLink.cs" line="27" column="1" />
     <File name="calibrationDot.cs" line="5" column="1" />
     <File name="geometry.cs" line="22" column="32" />
+    <File name="calibration.cs" line="139" column="6" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="fishfood" expanded="True" selected="True" />
+        <Node name="fishfood" expanded="True">
+          <Node name="calibration.cs" selected="True" />
+        </Node>
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -22,7 +25,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/Main.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/calibration.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>
