@@ -390,6 +390,7 @@ namespace sentience.calibration
 
                                 // subtract the expected disparity for the centre dot
                                 float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_mm, baseline_mm, img_width, fov_degrees, dist_to_centre_dot_mm);
+                                float check_dist_mm = GetDistanceFromDisparity(focal_length_mm, baseline_mm, img_width, fov_degrees, expected_centre_dot_disparity);
                                 offset_x -= expected_centre_dot_disparity;
                             }
 
@@ -434,7 +435,7 @@ namespace sentience.calibration
         {
             float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
             float disparity_angle = focal_length_mm * camera_baseline_mm / distance_mm;
-            float disparity_pixels = disparity_angle * img_width / fov_radians;
+            float disparity_pixels = (img_width/2) - (disparity_angle * img_width / fov_radians);
             return (disparity_pixels);
         }
 
