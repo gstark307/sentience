@@ -38,6 +38,7 @@
   <ItemGroup>
     <Compile Include="ArrayConversions.cs" />
     <Compile Include="BitmapArrayConversions.cs" />
+    <Compile Include="calibration.cs" />
     <Compile Include="calibrationDot.cs" />
     <Compile Include="calibrationLink.cs" />
     <Compile Include="canny.cs" />
