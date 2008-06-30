@@ -435,7 +435,7 @@ namespace sentience.calibration
         {
             float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
             float disparity_angle = focal_length_mm * camera_baseline_mm / distance_mm;
-            float disparity_pixels = (img_width/2) - (disparity_angle * img_width / fov_radians);
+            float disparity_pixels = (disparity_angle * img_width / fov_radians);
             return (disparity_pixels);
         }
 
@@ -1767,8 +1767,8 @@ namespace sentience.calibration
 
         public static void Test()
         {
-            //string filename = "/home/motters/calibrationdata/forward2/raw1_5000_2000.jpg";
-            string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
+            string filename = "/home/motters/calibrationdata/forward2/raw1_5000_2000.jpg";
+            //string filename = "c:\\develop\\sentience\\calibrationimages\\raw0_5000_2000.jpg";
             //string filename = "c:\\develop\\sentience\\calibrationimages\\raw1_5250_2000.jpg";
 
             float dotdist_mm = 525;
@@ -1796,6 +1796,13 @@ namespace sentience.calibration
             //double tilt_angle = 0;            
             //GetPanTilt(filename, ref pan_angle, ref tilt_angle);
 
+            float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_mm, baseline_mm, image_width, fov_degrees, dist_to_centre_dot_mm);
+            float check_dist_mm = GetDistanceFromDisparity(focal_length_mm, baseline_mm, image_width, fov_degrees, expected_centre_dot_disparity);
+            
+            Console.WriteLine("dist_to_centre_dot_mm: " + dist_to_centre_dot_mm.ToString());
+            Console.WriteLine("check_dist_mm: " + check_dist_mm.ToString());
+
+/*
             Detect(filename,
                    ref image_width, ref image_height,
                    fov_degrees, dist_to_centre_dot_mm, dot_spacing_mm,
@@ -1813,6 +1820,7 @@ namespace sentience.calibration
                  centre_of_distortion_x, centre_of_distortion_y, camera_rotation, scale,
                  lens_distortion_filename, curve_fit_filename,
                  0, 0);
+*/
 
         }
 
