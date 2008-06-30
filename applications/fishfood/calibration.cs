@@ -391,7 +391,13 @@ namespace sentience.calibration
                                 // subtract the expected disparity for the centre dot
                                 float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_mm, baseline_mm, img_width, fov_degrees, dist_to_centre_dot_mm);
                                 float check_dist_mm = GetDistanceFromDisparity(focal_length_mm, baseline_mm, img_width, fov_degrees, expected_centre_dot_disparity);
+                                
+                                Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
+                                Console.WriteLine("observed disparity: " + offset_x.ToString());
+                                
                                 offset_x -= expected_centre_dot_disparity;
+                                
+                                
                             }
 
                             // save the results as an XML file
@@ -426,7 +432,8 @@ namespace sentience.calibration
         {
             float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
             float disparity_angle = disparity_pixels * fov_radians / img_width;
-            return (focal_length_mm * camera_baseline_mm / disparity_angle);
+            float disparity = focal_length_mm * (float)Math.Tan(disparity_angle);
+            return (focal_length_mm * camera_baseline_mm / disparity);
         }
 
         private static float GetDisparityFromDistance(float focal_length_mm, float camera_baseline_mm,
@@ -434,7 +441,8 @@ namespace sentience.calibration
                                                       float distance_mm)
         {
             float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
-            float disparity_angle = focal_length_mm * camera_baseline_mm / distance_mm;
+            float disparity = focal_length_mm * camera_baseline_mm / distance_mm;
+            float disparity_angle = (float)Math.Atan(disparity / focal_length_mm);
             float disparity_pixels = (disparity_angle * img_width / fov_radians);
             return (disparity_pixels);
         }
@@ -454,7 +462,10 @@ namespace sentience.calibration
         {
             float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
             float disparity_angle = disparity_pixels * fov_radians / img_width;
-            float focal_length_mm = distance_mm * disparity_angle / camera_baseline_mm;
+            
+            // TODO
+            float disparity = (float)Math.Atan(disparity_angle);
+            float focal_length_mm = distance_mm * disparity / camera_baseline_mm;
             return (focal_length_mm);
         }
 
@@ -1799,8 +1810,9 @@ namespace sentience.calibration
             float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_mm, baseline_mm, image_width, fov_degrees, dist_to_centre_dot_mm);
             float check_dist_mm = GetDistanceFromDisparity(focal_length_mm, baseline_mm, image_width, fov_degrees, expected_centre_dot_disparity);
             
-            Console.WriteLine("dist_to_centre_dot_mm: " + dist_to_centre_dot_mm.ToString());
-            Console.WriteLine("check_dist_mm: " + check_dist_mm.ToString());
+            //Console.WriteLine("dist_to_centre_dot_mm: " + dist_to_centre_dot_mm.ToString());
+            //Console.WriteLine("check_dist_mm: " + check_dist_mm.ToString());
+            //Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
 
 /*
             Detect(filename,
