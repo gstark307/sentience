@@ -30,7 +30,7 @@ namespace sentience.calibration
     {
         public static void Main(string[] args)
         {
-            //calibration.Test();
+            calibration.Test();
             
             
             // extract command line parameters
@@ -112,11 +112,11 @@ namespace sentience.calibration
                                             {
                                                 focal_length_mm = Convert.ToSingle(focal_length_str);
                                                 
-                                                
+                                                /*
                                                 calibration.Calibrate(directory, baseline_mm, dotdist_mm, height_mm,
                                                                       fov_degrees, dot_spacing_mm,
                                                                       focal_length_mm, "jpg");
-                                                
+                                                */
                                             }                          
                                         }                                
                                     }
@@ -127,7 +127,7 @@ namespace sentience.calibration
                 }
             }
         }
-            
+
         #region "validation"
 
         /// <summary>

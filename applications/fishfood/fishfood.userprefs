@@ -1,13 +1,13 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="119" column="49" />
+    <File name="Main.cs" line="33" column="13" />
     <File name="shapes.cs" line="1795" column="13" />
     <File name="hypergraph.cs" line="19" column="1" />
     <File name="calibrationLink.cs" line="27" column="1" />
     <File name="calibrationDot.cs" line="5" column="1" />
     <File name="geometry.cs" line="22" column="32" />
-    <File name="calibration.cs" line="466" column="20" />
+    <File name="calibration.cs" line="472" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
