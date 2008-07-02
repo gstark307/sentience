@@ -186,7 +186,7 @@ namespace sentience.calibration
         /// <param name="height_mm">vertical height of the cameras above the calibration pattern</param>
         /// <param name="fov_degrees">field of view of the cameras in degrees</param>
         /// <param name="dot_spacing_mm">spacing between dots on the calibration pattern in millimetres</param>
-        /// <param name="focal_length_mm">focal length of the cameras</param>
+        /// <param name="focal_length_pixels">focal length of the cameras in pixels</param>
         /// <param name="file_extension">file extension of the calibration images (typically "jpg" or "bmp")</param>
         public static void Calibrate(string directory,
                                      int baseline_mm,
@@ -194,7 +194,7 @@ namespace sentience.calibration
                                      int height_mm,
                                      float fov_degrees,
                                      float dot_spacing_mm,
-                                     float focal_length_mm,
+                                     float focal_length_pixels,
                                      string file_extension)
         {
             if (directory.Contains("\\"))
@@ -387,13 +387,16 @@ namespace sentience.calibration
                                 double y1 = rectified_dots[1][(winner_index[1] * 2) + 1];
                                 offset_x = x1 - x0;
                                 offset_y = y1 - y0;
+                                
+                                focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
+                                Console.WriteLine("focal_length_pixels: " + focal_length_pixels.ToString());
 
                                 // subtract the expected disparity for the centre dot
-                                float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_mm, baseline_mm, img_width, fov_degrees, dist_to_centre_dot_mm);
-                                float check_dist_mm = GetDistanceFromDisparity(focal_length_mm, baseline_mm, img_width, fov_degrees, expected_centre_dot_disparity);
+                                float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_pixels, baseline_mm, dist_to_centre_dot_mm);
+                                float check_dist_mm = GetDistanceFromDisparity(focal_length_pixels, baseline_mm, expected_centre_dot_disparity);
                                 
-                                Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
-                                Console.WriteLine("observed disparity: " + offset_x.ToString());
+                                //Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
+                                //Console.WriteLine("observed disparity: " + offset_x.ToString());
                                 
                                 offset_x -= expected_centre_dot_disparity;
                                 
@@ -401,7 +404,7 @@ namespace sentience.calibration
                             }
 
                             // save the results as an XML file
-                            Save("calibration.xml", "Test", focal_length_mm, baseline_mm, fov_degrees,
+                            Save("calibration.xml", "Test", focal_length_pixels, baseline_mm, fov_degrees,
                                  img_width, img_height, distortion_curve,
                                  centre_x, centre_y, rotation, scale_factor,
                                  lens_distortion_filename, curve_fit_filename,
@@ -420,54 +423,35 @@ namespace sentience.calibration
         /// <summary>
         /// return the distance to obstacles in mm
         /// </summary>
-        /// <param name="focal_length_mm"></param>
+        /// <param name="focal_length_pixels"></param>
         /// <param name="camera_baseline_mm"></param>
-        /// <param name="img_width"></param>
-        /// <param name="fov_degrees"></param>
         /// <param name="disparity_pixels"></param>
         /// <returns></returns>
-        private static float GetDistanceFromDisparity(float focal_length_mm, float camera_baseline_mm,
-                                                      int img_width, float fov_degrees,
+        private static float GetDistanceFromDisparity(float focal_length_pixels, float camera_baseline_mm,
                                                       float disparity_pixels)
         {
-            float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
-            float disparity_angle = disparity_pixels * fov_radians / img_width;
-            float disparity = focal_length_mm * (float)Math.Tan(disparity_angle);
-            return (focal_length_mm * camera_baseline_mm / disparity);
+            return (focal_length_pixels * camera_baseline_mm / disparity_pixels);
         }
 
-        private static float GetDisparityFromDistance(float focal_length_mm, float camera_baseline_mm,
-                                                      int img_width, float fov_degrees,
+        private static float GetDisparityFromDistance(float focal_length_pixels, float camera_baseline_mm,
                                                       float distance_mm)
         {
-            float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
-            float disparity = focal_length_mm * camera_baseline_mm / distance_mm;
-            float disparity_angle = (float)Math.Atan(disparity / focal_length_mm);
-            float disparity_pixels = (disparity_angle * img_width / fov_radians);
+            float disparity_pixels = focal_length_pixels * camera_baseline_mm / distance_mm;
             return (disparity_pixels);
         }
 
         /// <summary>
-        /// returns the focal length corresponding to the given disparity
+        /// returns the focal length (in pixels) corresponding to the given disparity
         /// </summary>
         /// <param name="distance_mm"></param>
         /// <param name="camera_baseline_mm"></param>
-        /// <param name="img_width"></param>
-        /// <param name="fov_degrees"></param>
         /// <param name="disparity_pixels"></param>
         /// <returns></returns>
         private static float GetFocalLengthFromDisparity(float distance_mm, float camera_baseline_mm,
-                                                         int img_width, float fov_degrees,
                                                          float disparity_pixels)
         {
-            float fov_radians = fov_degrees / 180.0f * (float)Math.PI;
-            float disparity_angle = disparity_pixels * fov_radians / img_width;
-            //float disparity = disparity_pixels * (float)Math.Tan(disparity_angle);
-            //float focal_length_mm = distance_mm * disparity / camera_baseline_mm;
-            
-            float focal_length_mm =  disparity / (float)Math.Tan(disparity_angle);
-            
-            return (focal_length_mm);
+            float focal_length_pixels =  distance_mm * disparity_pixels / camera_baseline_mm;            
+            return (focal_length_pixels);
         }
 
         /// <summary>
@@ -1794,7 +1778,7 @@ namespace sentience.calibration
             double[] camera_rotation = new double[1];
             double[] scale = new double[1];
             float dot_x = -1, dot_y = -1;
-            float focal_length_mm = 5;
+            float focal_length_pixels = 50;
             float baseline_mm = 100;
             float fov_degrees = 78;
             string[] lens_distortion_filename = { "lens_distortion.jpg" };
@@ -1808,13 +1792,9 @@ namespace sentience.calibration
             //double tilt_angle = 0;            
             //GetPanTilt(filename, ref pan_angle, ref tilt_angle);
 
-            float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_mm, baseline_mm, image_width, fov_degrees, dist_to_centre_dot_mm);
-            float check_dist_mm = GetDistanceFromDisparity(focal_length_mm, baseline_mm, image_width, fov_degrees, expected_centre_dot_disparity);
+            float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_pixels, baseline_mm, dist_to_centre_dot_mm);
+            float check_dist_mm = GetDistanceFromDisparity(focal_length_pixels, baseline_mm, expected_centre_dot_disparity);
             
-            float expected_focal_length_mm = GetFocalLengthFromDisparity(dist_to_centre_dot_mm, baseline_mm, image_width, fov_degrees, expected_centre_dot_disparity);
-
-            Console.WriteLine("focal_length_mm: " + focal_length_mm.ToString());
-            Console.WriteLine("expected_focal_length_mm: " + expected_focal_length_mm.ToString());
             
             //Console.WriteLine("dist_to_centre_dot_mm: " + dist_to_centre_dot_mm.ToString());
             //Console.WriteLine("check_dist_mm: " + check_dist_mm.ToString());
@@ -2621,7 +2601,7 @@ namespace sentience.calibration
         private static void Save(
             string filename,
             string device_name,
-            float focal_length_mm,
+            float focal_length_pixels,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
@@ -2635,7 +2615,7 @@ namespace sentience.calibration
             XmlDocument doc =
                 getXmlDocument(
                     device_name,
-                    focal_length_mm,
+                    focal_length_pixels,
                     baseline_mm,
                     fov_degrees,
                     image_width, image_height,
@@ -2652,7 +2632,7 @@ namespace sentience.calibration
         private static XmlElement getXml(
             XmlDocument doc, XmlElement parent,
             string device_name,
-            float focal_length_mm,
+            float focal_length_pixels,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
@@ -2685,8 +2665,8 @@ namespace sentience.calibration
                 xml.AddTextElement(doc, nodeStereoCamera, "DeviceName", device_name);
             }
 
-            xml.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
-            xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focal_length_mm, format));
+            xml.AddComment(doc, nodeStereoCamera, "Focal length in pixels");
+            xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthPixels", Convert.ToString(focal_length_pixels, format));
 
             if (stereo_camera)
             {
