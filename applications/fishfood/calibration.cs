@@ -372,10 +372,12 @@ namespace sentience.calibration
                                 rectified_dots.Add(rectified_pts);
                             }
                         }
+                        
+                        ShowCentreDots(filename[winner_index[0]], rectified_dots, "centre_dots.jpg");
 
                         if (distortion_curve[0] != null)
                         {
-                            // find the relative offset if the left and right images
+                            // find the relative offset in the left and right images
                             double offset_x = 0;
                             double offset_y = 0;
 
@@ -388,8 +390,12 @@ namespace sentience.calibration
                                 offset_x = x1 - x0;
                                 offset_y = y1 - y0;
                                 
-                                focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
-                                Console.WriteLine("focal_length_pixels: " + focal_length_pixels.ToString());
+                                // calculate the focal length
+                                if (focal_length_pixels < 1)
+                                {
+                                    focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
+                                    Console.WriteLine("focal_length_pixels: " + focal_length_pixels.ToString());
+                                }
 
                                 // subtract the expected disparity for the centre dot
                                 float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_pixels, baseline_mm, dist_to_centre_dot_mm);
@@ -1778,7 +1784,7 @@ namespace sentience.calibration
             double[] camera_rotation = new double[1];
             double[] scale = new double[1];
             float dot_x = -1, dot_y = -1;
-            float focal_length_pixels = 50;
+            float focal_length_pixels = 300;
             float baseline_mm = 100;
             float fov_degrees = 78;
             string[] lens_distortion_filename = { "lens_distortion.jpg" };
@@ -1833,6 +1839,45 @@ namespace sentience.calibration
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
             square.show(img, bmp.Width, bmp.Height, 0, 255, 0, 0);
+
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            if (output_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (output_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+
+        private static void ShowCentreDots(string filename, List<List<double>> centre_dots,
+                                           string output_filename)
+        {
+            Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+
+            int r,g,b;
+            for (int cam = 0; cam < centre_dots.Count; cam++)
+            {
+                if (cam == 0)
+                {
+                    r = 255;
+                    g = 0;
+                    b = 0;
+                }
+                else
+                {
+                    r = 0;
+                    g = 255;
+                    b = 0;
+                }
+                
+                for (int i = 0; i < centre_dots[cam].Count; i += 2)
+                {
+                    double x = centre_dots[cam][i];
+                    double y = centre_dots[cam][i + 1];
+                    drawing.drawSpot(img, bmp.Width, bmp.Height, (int)x, (int)y, 2, 255, 0, 0);
+                }
+            }
 
             Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
@@ -2551,7 +2596,7 @@ namespace sentience.calibration
         /// <returns></returns>
         private static XmlDocument getXmlDocument(
             string device_name,
-            float focal_length_mm,
+            float focal_length_pixels,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
@@ -2579,7 +2624,7 @@ namespace sentience.calibration
 
             XmlElement elem = getXml(doc, nodeCalibration,
                 device_name,
-                focal_length_mm,
+                focal_length_pixels,
                 baseline_mm,
                 fov_degrees,
                 image_width, image_height,

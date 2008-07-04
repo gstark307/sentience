@@ -102,22 +102,17 @@ namespace sentience.calibration
                                         {
                                             dot_spacing_mm = Convert.ToSingle(dot_spacing_str);
                                                                                         
-                                            float focal_length_mm = 5;
+                                            float focal_length_pixels = 0;
                                             string focal_length_str = commandline.GetParameterValue("f", parameters);
-                                            if (focal_length_str == "")
+                                            if (focal_length_str != "")
                                             {
-                                                Console.WriteLine("Please specify the focal length of the camera");
+                                                focal_length_pixels = Convert.ToSingle(focal_length_str);
                                             }
-                                            else
-                                            {
-                                                focal_length_mm = Convert.ToSingle(focal_length_str);
+                                            
+                                            calibration.Calibrate(directory, baseline_mm, dotdist_mm, height_mm,
+                                                                  fov_degrees, dot_spacing_mm,
+                                                                  focal_length_pixels, "jpg");
                                                 
-                                                
-                                                calibration.Calibrate(directory, baseline_mm, dotdist_mm, height_mm,
-                                                                      fov_degrees, dot_spacing_mm,
-                                                                      focal_length_mm, "jpg");
-                                                
-                                            }                          
                                         }                                
                                     }
                                 }
@@ -145,7 +140,7 @@ namespace sentience.calibration
             ValidParameters.Add("height");       // height above the calibration pattern in millimetres
             ValidParameters.Add("fov");          // field of view in degrees
             ValidParameters.Add("spacing");      // spacing between dots in millimetres
-            ValidParameters.Add("f");            // focal length in millimetres
+            ValidParameters.Add("f");            // focal length in pixels
 
             return (ValidParameters);
         }
@@ -170,7 +165,7 @@ namespace sentience.calibration
             Console.WriteLine("                  -height <height above the calibration pattern in millimetres>");
             Console.WriteLine("                  -fov <horizontal field of view in degrees>");
             Console.WriteLine("                  -spacing <spacing between dots in millimetres>");
-            Console.WriteLine("                  -f <focal length in millimetres>");
+            Console.WriteLine("                  -f <focal length in pixels>");
         }
 
         #endregion
