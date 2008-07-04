@@ -54,7 +54,7 @@ namespace sentience.calibration
                                      ref centre_dot_vertical_distance);
 
             centre_dot_x = centre_dot_horizontal_distance + (image_width / 2);
-            centre_dot_y = centre_dot_vertical_distance + (image_width / 2);
+            centre_dot_y = centre_dot_vertical_distance + (image_height / 2);
 
             if ((Math.Abs(centre_dot_horizontal_distance) > image_width / 10) ||
                 (Math.Abs(centre_dot_vertical_distance) > image_height / 5))
@@ -254,24 +254,23 @@ namespace sentience.calibration
                         double[] rotation = new double[2];
 
                         // unrectified position of the calibration dot (in image coordinates) for each image
-                        List<double>[] centre_dot_x = new List<double>[2];
-                        List<double>[] centre_dot_y = new List<double>[2];
+                        List<List<double>> centre_dot_position = new List<List<double>>();
 
                         // pan/tilt mechanism servo positions
-                        List<double>[] pan_servo_position = new List<double>[2];
-                        List<double>[] tilt_servo_position = new List<double>[2];
+                        List<List<double>> pan_servo_position = new List<List<double>>();
+                        List<List<double>> tilt_servo_position = new List<List<double>>();
 
                         int[] winner_index = new int[2];
 
-                        for (int cam = 0; cam < 2; cam++)
+                        for (int cam = 0; cam < image_filename.GetLength(0); cam++)
                         {
                             // unrectified centre dot positions in image coordinates
-                            centre_dot_x[cam] = new List<double>();
-                            centre_dot_y[cam] = new List<double>();
+                            centre_dot_position.Add(new List<double>());
+                            centre_dot_position.Add(new List<double>());
 
                             // pan/tilt mechanism servo positions
-                            pan_servo_position[cam] = new List<double>();
-                            tilt_servo_position[cam] = new List<double>();
+                            pan_servo_position.Add(new List<double>());
+                            tilt_servo_position.Add(new List<double>());
 
                             double minimum_error = double.MaxValue;
 
@@ -304,8 +303,8 @@ namespace sentience.calibration
                                     ref dot_x, ref dot_y,
                                     ref min_err);
 
-                                centre_dot_x[cam].Add(dot_x);
-                                centre_dot_y[cam].Add(dot_y);
+                                centre_dot_position[cam].Add(dot_x);
+                                centre_dot_position[cam].Add(dot_y);
 
                                 if (lens_distortion_curve != null)
                                 {
@@ -349,17 +348,17 @@ namespace sentience.calibration
 
                         // positions of the centre dots
                         List<List<double>> rectified_dots = new List<List<double>>();
-                        for (int cam = 0; cam < 2; cam++)
+                        for (int cam = 0; cam < image_filename.GetLength(0); cam++)
                         {
                             if (distortion_curve[cam] != null)
                             {
                                 // position in the centre dots in the raw image
                                 List<double> pts = new List<double>();
 
-                                for (int i = 0; i < centre_dot_x[cam].Count; i++)
+                                for (int i = 0; i < centre_dot_position[cam].Count; i += 2)
                                 {
-                                    pts.Add(centre_dot_x[cam][i]);
-                                    pts.Add(centre_dot_y[cam][i]);
+                                    pts.Add(centre_dot_position[cam][i]);
+                                    pts.Add(centre_dot_position[cam][i + 1]);
                                 }
 
                                 // rectified positions for the centre dots
@@ -374,6 +373,9 @@ namespace sentience.calibration
                         }
                         
                         ShowCentreDots(filename[winner_index[0]], rectified_dots, "centre_dots.jpg");
+                        ShowCentreDots(filename[winner_index[0]], centre_dot_position, "centre_dots2.jpg");
+
+                        
 
                         if (distortion_curve[0] != null)
                         {
@@ -394,7 +396,7 @@ namespace sentience.calibration
                                 if (focal_length_pixels < 1)
                                 {
                                     focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
-                                    Console.WriteLine("focal_length_pixels: " + focal_length_pixels.ToString());
+                                    Console.WriteLine("Calculated focal length (pixels): " + focal_length_pixels.ToString());
                                 }
 
                                 // subtract the expected disparity for the centre dot
@@ -456,7 +458,8 @@ namespace sentience.calibration
         private static float GetFocalLengthFromDisparity(float distance_mm, float camera_baseline_mm,
                                                          float disparity_pixels)
         {
-            float focal_length_pixels =  distance_mm * disparity_pixels / camera_baseline_mm;            
+            float focal_length_pixels =  distance_mm * disparity_pixels / camera_baseline_mm;
+            if (focal_length_pixels < 0) focal_length_pixels = -focal_length_pixels;
             return (focal_length_pixels);
         }
 
@@ -1875,7 +1878,7 @@ namespace sentience.calibration
                 {
                     double x = centre_dots[cam][i];
                     double y = centre_dots[cam][i + 1];
-                    drawing.drawSpot(img, bmp.Width, bmp.Height, (int)x, (int)y, 2, 255, 0, 0);
+                    drawing.drawSpot(img, bmp.Width, bmp.Height, (int)x, (int)y, 2, r, g, b);
                 }
             }
 
