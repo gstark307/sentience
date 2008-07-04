@@ -45,6 +45,8 @@
     <Compile Include="commandline.cs" />
     <Compile Include="drawing.cs" />
     <Compile Include="geometry.cs" />
+    <Compile Include="graph.cs" />
+    <Compile Include="graph_points.cs" />
     <Compile Include="grid2D.cs" />
     <Compile Include="hypergraph.cs" />
     <Compile Include="image.cs" />

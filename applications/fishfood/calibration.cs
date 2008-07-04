@@ -178,6 +178,128 @@ namespace sentience.calibration
         }
 
         /// <summary>
+        /// calibrates the pan/tilt mechanism, based on the observed positions of the 
+        /// calibration pattern centre dot as the robot's head moves
+        /// </summary>
+        /// <param name="pan_servo_position">pan servo positions, in arbitrary units</param>
+        /// <param name="tilt_servo_position">tilt servo positions, in arbitrary units</param>
+        /// <param name="rectified_centre_dot_position">rectified centre dot position for each observation</param>
+        /// <param name="fov_degrees">horizontal field of view in degrees</param>
+        /// <param name="image_width">image width</param>
+        /// <param name="image_height">image height</param>
+        /// <param name="dotdist_mm">horizontal distance to the calibration centre dot in millimetres</param>
+        /// <param name="height_mm">vertical height of the cameras above the calibration pattern in millimetres</param>
+        private static void CalibratePanTilt(
+            List<List<double>> pan_servo_position,
+            List<List<double>> tilt_servo_position,
+            List<List<double>> rectified_centre_dot_position,
+            double fov_degrees, 
+            int image_width, int image_height,
+            double dotdist_mm, double height_mm)
+        {
+            double fov_radians = fov_degrees * Math.PI / 180.0f;
+
+            // what is the tilt angle when the dot is in the centre of the image ?
+            double observation_tilt = -Math.Atan(height_mm / dotdist_mm);
+
+            // centre of the image in pixels
+            int half_width = image_width / 2;
+            int half_height = image_height / 2;
+
+            // we don't want to consider all centre dot positions
+            // dots around the periphery of the image are likely to be
+            // false positives, so here we define a bounding box
+            // inside which we're reasonably confident that the dots are real!
+            int tx = image_width * 30 / 100;
+            int bx = image_width - tx;
+            int ty = image_height * 30 / 100;
+            int by = image_height - ty;
+
+            float min_tilt = -(float)fov_radians;
+            float max_tilt = 0;
+            float min_pan = -(float)fov_radians/2;
+            float max_pan = (float)fov_radians / 2;
+
+            float min_servo_pan = float.MaxValue;
+            float max_servo_pan = float.MinValue;
+            float min_servo_tilt = float.MaxValue;
+            float max_servo_tilt = float.MinValue;
+
+            // get the range of pan/tilt servo positions
+            for (int cam = 0; cam < rectified_centre_dot_position.Count; cam++)
+            {
+                for (int i = 0; i < rectified_centre_dot_position[cam].Count; i += 2)
+                {
+                    double rectified_centre_dot_x = rectified_centre_dot_position[cam][i];
+                    double rectified_centre_dot_y = rectified_centre_dot_position[cam][i + 1];
+
+                    // is this inside the bounding box ?
+                    if ((rectified_centre_dot_x > tx) && (rectified_centre_dot_x < bx) &&
+                        (rectified_centre_dot_y > ty) && (rectified_centre_dot_y < by))
+                    {
+                        // servo position
+                        double servo_pan = pan_servo_position[cam][i / 2];
+                        double servo_tilt = tilt_servo_position[cam][i / 2];
+
+                        if (servo_pan < min_servo_pan) min_servo_pan = (float)servo_pan;
+                        if (servo_pan > max_servo_pan) max_servo_pan = (float)servo_pan;
+                        if (servo_tilt < min_servo_tilt) min_servo_tilt = (float)servo_tilt;
+                        if (servo_tilt > max_servo_tilt) max_servo_tilt = (float)servo_tilt;
+                    }
+                }
+            }
+
+            float servo_pan_range = max_servo_pan - min_servo_pan;
+            float servo_tilt_range = max_servo_tilt - min_servo_tilt;
+            min_servo_pan -= servo_pan_range / 10;
+            max_servo_pan += servo_pan_range / 10;
+            min_servo_tilt -= servo_tilt_range / 10;
+            max_servo_tilt += servo_tilt_range / 10;
+
+            // create pan and tilt graphs
+            graph_points graph_pan = new graph_points(min_servo_pan, max_servo_pan,
+                                                      min_pan, max_pan);
+            graph_pan.DrawAxes((max_servo_pan - min_servo_pan) / 50, Math.Abs(max_pan - min_pan) / 50,
+                               (max_servo_pan - min_servo_pan) / 10, Math.Abs(max_pan - min_pan) / 10,
+                               3, 0, 0, 0, 0, false, "Servo pan", "pan angle");                               
+
+            graph_points graph_tilt = new graph_points(min_servo_tilt, max_servo_tilt,
+                                                       min_tilt, max_tilt);
+            graph_tilt.DrawAxes((max_servo_tilt - min_servo_tilt) / 50, Math.Abs(max_tilt - min_tilt) / 50,
+                                (max_servo_tilt - min_servo_tilt) / 10, Math.Abs(max_tilt - min_tilt) / 10,
+                                3, 0, 0, 0, 0, false, "Servo tilt", "tilt angle");
+
+            for (int cam = 0; cam < rectified_centre_dot_position.Count; cam++)
+            {
+                for (int i = 0; i < rectified_centre_dot_position[cam].Count; i += 2)
+                {
+                    double rectified_centre_dot_x = rectified_centre_dot_position[cam][i];
+                    double rectified_centre_dot_y = rectified_centre_dot_position[cam][i + 1];
+
+                    // is this inside the bounding box ?
+                    if ((rectified_centre_dot_x > tx) && (rectified_centre_dot_x < bx) &&
+                        (rectified_centre_dot_y > ty) && (rectified_centre_dot_y < by))
+                    {
+                        // servo position
+                        double servo_pan = pan_servo_position[cam][i / 2];
+                        double servo_tilt = tilt_servo_position[cam][i / 2];
+
+                        // calculate pan and tilt angles
+                        double pan_angle = (rectified_centre_dot_x - half_width) * fov_radians / image_width;
+                        double tilt_angle = -(rectified_centre_dot_y - half_height) * fov_radians / image_width;
+                        tilt_angle += observation_tilt;
+
+                        graph_pan.Update((float)servo_pan, (float)pan_angle);
+                        graph_tilt.Update((float)servo_tilt, (float)tilt_angle);
+                    }
+                }
+            }
+
+            graph_pan.SaveImage("servo_pan.jpg");
+            graph_tilt.SaveImage("servo_tilt.jpg");
+        }
+
+        /// <summary>
         /// calibrate stereo camera from the given images
         /// </summary>
         /// <param name="directory">directory containing the calibration images</param>
@@ -375,7 +497,11 @@ namespace sentience.calibration
                         ShowCentreDots(filename[winner_index[0]], rectified_dots, "centre_dots.jpg");
                         ShowCentreDots(filename[winner_index[0]], centre_dot_position, "centre_dots2.jpg");
 
-                        
+                        // calibrate the pan and tilt mechanism
+                        CalibratePanTilt(pan_servo_position, tilt_servo_position,
+                                         rectified_dots, fov_degrees,
+                                         img_width, img_height,
+                                         dotdist_mm, height_mm);
 
                         if (distortion_curve[0] != null)
                         {
