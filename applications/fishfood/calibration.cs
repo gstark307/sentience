@@ -218,13 +218,37 @@ namespace sentience.calibration
             int half_width = image_width / 2;
             int half_height = image_height / 2;
 
+            // get the peak pan position
+            double peak_pan_value = 0;
+            int max_hits = 0;
+            for (int i = 0; i < pan_servo_position[0].Count; i++)
+            {
+                int hits = 0;
+                for (int j = 0; j < pan_servo_position[0].Count; j++)
+                {
+                    if (i != j)
+                    {
+                        if (pan_servo_position[0][i] == pan_servo_position[0][j])
+                        {
+                            hits++;
+                            if (hits > max_hits)
+                            {
+                                max_hits = hits;
+                                peak_pan_value = pan_servo_position[0][i];
+                            }
+                        }
+                    }
+                }
+            }
+
+
             // we don't want to consider all centre dot positions
             // dots around the periphery of the image are likely to be
             // false positives, so here we define a bounding box
             // inside which we're reasonably confident that the dots are real!
-            int tx = image_width * 20 / 100;
+            int tx = image_width * 10 / 100;
             int bx = image_width - tx;
-            int ty = image_height * 20 / 100;
+            int ty = image_height * 10 / 100;
             int by = image_height - ty;
 
             float min_tilt = -(float)fov_radians;
@@ -288,12 +312,19 @@ namespace sentience.calibration
                                 "Servo tilt (arbitrary servo units)", "tilt angle (degrees)",
                                 70, 10);
 
-            for (int cam = 0; cam < rectified_centre_dot_position.Count; cam++)
+            //for (int cam = 0; cam < rectified_centre_dot_position.Count; cam++)
+            for (int cam = 0; cam < 1; cam++)
             {
                 for (int i = 0; i < rectified_centre_dot_position[cam].Count; i += 2)
                 {
                     double rectified_centre_dot_x = rectified_centre_dot_position[cam][i];
                     double rectified_centre_dot_y = rectified_centre_dot_position[cam][i + 1];
+
+                    double rectified_centre_dot_x2 = rectified_centre_dot_position[cam+1][i];
+                    double rectified_centre_dot_y2 = rectified_centre_dot_position[cam+1][i + 1];
+
+                    rectified_centre_dot_x += ((rectified_centre_dot_x2 - rectified_centre_dot_x) / 2);
+                    rectified_centre_dot_y += ((rectified_centre_dot_y2 - rectified_centre_dot_y) / 2);
 
                     // is this inside the bounding box ?
                     if ((rectified_centre_dot_x > tx) && (rectified_centre_dot_x < bx) &&
@@ -305,12 +336,15 @@ namespace sentience.calibration
 
                         // calculate pan and tilt angles
                         double pan_angle = (rectified_centre_dot_x - half_width) * fov_radians / image_width;
-                        double tilt_angle = -(rectified_centre_dot_y - half_height) * fov_radians / image_width;
+                        double tilt_angle = (rectified_centre_dot_y - half_height) * fov_radians / image_width;
                         tilt_angle += observation_tilt;
 
-                        graph_pan.Update((float)servo_pan, (float)pan_angle);
-                        graph_tilt.Update((float)servo_tilt, (float)tilt_angle);
+                        if (pan_servo_position[cam][i / 2] != peak_pan_value)
+                            graph_pan.Update((float)servo_pan, (float)pan_angle);
+
+                        graph_tilt.Update((float)servo_tilt, (float)tilt_angle);                        
                     }
+                   
                 }
             }
 
@@ -1414,7 +1448,7 @@ namespace sentience.calibration
 
                     double mean_error = curve2.GetMeanError();
 
-                    double scaledown = 0.99999999999999;
+                    double scaledown = 0.99999999999999999999;
                     if (mean_error < search_min_error)
                     {
 
@@ -1435,6 +1469,7 @@ namespace sentience.calibration
                             best_cy = half_height;
                             minimum_error = mean_error;
                             Console.WriteLine("Cool " + pass.ToString() + ": " + mean_error.ToString());
+                            if (max_passes - pass < 500) max_passes += 500;
                             best_degrees = degrees;
                             best_curve = curve2;
                         }

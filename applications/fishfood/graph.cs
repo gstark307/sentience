@@ -330,6 +330,11 @@ namespace sentience.calibration
                              String horizontal_scale, String vertical_scale,
                              int horizontal_scale_position, int vertical_scale_position)
         {
+            if (x_increment_minor < 0.0001f) x_increment_minor = 0.0001f;
+            if (y_increment_minor < 0.0001f) y_increment_minor = 0.0001f;
+            if (x_increment_major < 0.0001f) x_increment_major = 0.0001f;
+            if (y_increment_major < 0.0001f) y_increment_major = 0.0001f;
+
             // draw the horizontal axis
             float y = screen_height-1-(((0 - min_value_y) / (max_value_y - min_value_y)) * screen_height);
             drawing.drawLine(image, screen_width, screen_height,
