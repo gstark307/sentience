@@ -189,13 +189,21 @@ namespace sentience.calibration
         /// <param name="image_height">image height</param>
         /// <param name="dotdist_mm">horizontal distance to the calibration centre dot in millimetres</param>
         /// <param name="height_mm">vertical height of the cameras above the calibration pattern in millimetres</param>
+        /// <param name="pan">polynomial curve linking pan angle in arbitrary servo units to degrees in the real world</param>
+        /// <param name="pan_offset_x">pan x offset</param>
+        /// <param name="pan_offset_y">pan y offset</param>
+        /// <param name="tilt">polynomial curve linking tilt angle in arbitrary servo units to degrees in the real world</param>
+        /// <param name="tilt_offset_x">tilt x offset</param>
+        /// <param name="tilt_offset_y">tilt y offset</param>
         private static void CalibratePanTilt(
             List<List<double>> pan_servo_position,
             List<List<double>> tilt_servo_position,
             List<List<double>> rectified_centre_dot_position,
             double fov_degrees, 
             int image_width, int image_height,
-            double dotdist_mm, double height_mm)
+            double dotdist_mm, double height_mm,
+            ref polynomial pan, ref float pan_offset_x, ref float pan_offset_y,
+            ref polynomial tilt, ref float tilt_offset_x, ref float tilt_offset_y)
         {
             double fov_radians = fov_degrees * Math.PI / 180.0f;
 
@@ -210,13 +218,13 @@ namespace sentience.calibration
             // dots around the periphery of the image are likely to be
             // false positives, so here we define a bounding box
             // inside which we're reasonably confident that the dots are real!
-            int tx = image_width * 30 / 100;
+            int tx = image_width * 20 / 100;
             int bx = image_width - tx;
-            int ty = image_height * 30 / 100;
+            int ty = image_height * 20 / 100;
             int by = image_height - ty;
 
             float min_tilt = -(float)fov_radians;
-            float max_tilt = 0;
+            float max_tilt = (float)fov_radians/20;
             float min_pan = -(float)fov_radians/2;
             float max_pan = (float)fov_radians / 2;
 
@@ -251,23 +259,30 @@ namespace sentience.calibration
 
             float servo_pan_range = max_servo_pan - min_servo_pan;
             float servo_tilt_range = max_servo_tilt - min_servo_tilt;
-            min_servo_pan -= servo_pan_range / 10;
-            max_servo_pan += servo_pan_range / 10;
-            min_servo_tilt -= servo_tilt_range / 10;
-            max_servo_tilt += servo_tilt_range / 10;
+            min_servo_pan -= servo_pan_range / 5;
+            max_servo_pan += servo_pan_range / 5;
+            min_servo_tilt -= servo_tilt_range / 5;
+            max_servo_tilt += servo_tilt_range / 5;
+
+            float angle_minor_increment = (float)Math.PI / 180;  // one degre
+            float angle_major_increment = angle_minor_increment * 10;  // ten degrees
 
             // create pan and tilt graphs
             graph_points graph_pan = new graph_points(min_servo_pan, max_servo_pan,
                                                       min_pan, max_pan);
-            graph_pan.DrawAxes((max_servo_pan - min_servo_pan) / 50, Math.Abs(max_pan - min_pan) / 50,
-                               (max_servo_pan - min_servo_pan) / 10, Math.Abs(max_pan - min_pan) / 10,
-                               3, 0, 0, 0, 0, false, "Servo pan", "pan angle");                               
+            graph_pan.DrawAxes((max_servo_pan - min_servo_pan) / 50, angle_minor_increment,
+                               (max_servo_pan - min_servo_pan) / 10, angle_major_increment,
+                               3, 0, 0, 0, 0, false, 
+                               "Servo pan (arbitrary servo units)", "pan angle (degrees)",
+                               10, 95);   
 
             graph_points graph_tilt = new graph_points(min_servo_tilt, max_servo_tilt,
                                                        min_tilt, max_tilt);
-            graph_tilt.DrawAxes((max_servo_tilt - min_servo_tilt) / 50, Math.Abs(max_tilt - min_tilt) / 50,
-                                (max_servo_tilt - min_servo_tilt) / 10, Math.Abs(max_tilt - min_tilt) / 10,
-                                3, 0, 0, 0, 0, false, "Servo tilt", "tilt angle");
+            graph_tilt.DrawAxes((max_servo_tilt - min_servo_tilt) / 50, angle_minor_increment,
+                                (max_servo_tilt - min_servo_tilt) / 10, angle_major_increment,
+                                3, 0, 0, 0, 0, false,
+                                "Servo tilt (arbitrary servo units)", "tilt angle (degrees)",
+                                70, 10);
 
             for (int cam = 0; cam < rectified_centre_dot_position.Count; cam++)
             {
@@ -294,6 +309,17 @@ namespace sentience.calibration
                     }
                 }
             }
+
+            graph_pan.FitCurve(1, 255, 0, 0);
+            graph_tilt.FitCurve(1, 255, 0, 0);
+
+            // pan/tilt mechanism model
+            pan = graph_pan.curve_fit;
+            pan_offset_x = graph_pan.curve_fit_offset_x;
+            pan_offset_y = graph_pan.curve_fit_offset_y;
+            tilt = graph_tilt.curve_fit;
+            tilt_offset_x = graph_tilt.curve_fit_offset_x;
+            tilt_offset_y = graph_tilt.curve_fit_offset_y;
 
             graph_pan.SaveImage("servo_pan.jpg");
             graph_tilt.SaveImage("servo_tilt.jpg");
@@ -498,10 +524,15 @@ namespace sentience.calibration
                         ShowCentreDots(filename[winner_index[0]], centre_dot_position, "centre_dots2.jpg");
 
                         // calibrate the pan and tilt mechanism
+                        polynomial pan_curve = null, tilt_curve = null;
+                        float pan_offset_x = 0, pan_offset_y = 0;
+                        float tilt_offset_x = 0, tilt_offset_y = 0;
                         CalibratePanTilt(pan_servo_position, tilt_servo_position,
                                          rectified_dots, fov_degrees,
                                          img_width, img_height,
-                                         dotdist_mm, height_mm);
+                                         dotdist_mm, height_mm,
+                                         ref pan_curve, ref pan_offset_x, ref pan_offset_y,
+                                         ref tilt_curve, ref tilt_offset_x, ref tilt_offset_y);
 
                         if (distortion_curve[0] != null)
                         {
@@ -542,7 +573,9 @@ namespace sentience.calibration
                                  img_width, img_height, distortion_curve,
                                  centre_x, centre_y, rotation, scale_factor,
                                  lens_distortion_filename, curve_fit_filename,
-                                 (float)offset_x, (float)offset_y);
+                                 (float)offset_x, (float)offset_y,
+                                 pan_curve, pan_offset_x, pan_offset_y,
+                                 tilt_curve, tilt_offset_x, tilt_offset_y);
                         }
 
                     }
@@ -2734,7 +2767,9 @@ namespace sentience.calibration
             double[] rotation, double[] scale,
             string[] lens_distortion_image_filename,
             string[] curve_fit_image_filename,
-            float offset_x, float offset_y)
+            float offset_x, float offset_y,
+            polynomial pan_curve, float pan_offset_x, float pan_offset_y,
+            polynomial tilt_curve, float tilt_offset_x, float tilt_offset_y)
         {
             // Create the document.
             XmlDocument doc = new XmlDocument();
@@ -2762,7 +2797,9 @@ namespace sentience.calibration
                 rotation, scale,
                 lens_distortion_image_filename,
                 curve_fit_image_filename,
-                offset_x, offset_y);
+                offset_x, offset_y,
+                pan_curve, pan_offset_x, pan_offset_y,
+                tilt_curve, tilt_offset_x, tilt_offset_y);
             doc.DocumentElement.AppendChild(elem);
 
             return (doc);
@@ -2784,7 +2821,9 @@ namespace sentience.calibration
             double[] rotation, double[] scale,
             string[] lens_distortion_image_filename,
             string[] curve_fit_image_filename,
-            float offset_x, float offset_y)
+            float offset_x, float offset_y,
+            polynomial pan_curve, float pan_offset_x, float pan_offset_y,
+            polynomial tilt_curve, float tilt_offset_x, float tilt_offset_y)
         {
             XmlDocument doc =
                 getXmlDocument(
@@ -2798,10 +2837,47 @@ namespace sentience.calibration
                     rotation, scale,
                     lens_distortion_image_filename,
                     curve_fit_image_filename,
-                    offset_x, offset_y);
+                    offset_x, offset_y,
+                    pan_curve, pan_offset_x, pan_offset_y,
+                    tilt_curve, tilt_offset_x, tilt_offset_y);
 
             doc.Save(filename);
         }
+
+        /// <summary>
+        /// returns settings for either pan or tilt axis in Xml format
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="parent"></param>
+        /// <param name="axis_name"></param>
+        /// <param name="curve"></param>
+        /// <param name="offset_x"></param>
+        /// <param name="offset_y"></param>
+        /// <returns></returns>
+        private static XmlElement getPanTiltAxis(
+            XmlDocument doc, XmlElement parent,
+            string axis_name,
+            polynomial curve, float offset_x, float offset_y)
+        {
+            // make sure that floating points are saved in a standard format
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
+
+            // pan/tilt mechanism parameters
+            XmlElement nodeAxis = doc.CreateElement("Axis");
+            xml.AddTextElement(doc, nodeAxis, "AxisName", axis_name);
+
+            string coefficients = "";
+            for (int i = 0; i <= curve.GetDegree(); i++)
+            {
+                coefficients += Convert.ToSingle(curve.Coeff(i), format);
+                if (i < curve.GetDegree()) coefficients += ",";
+            }
+            xml.AddTextElement(doc, nodeAxis, "Coefficients", coefficients);
+            xml.AddTextElement(doc, nodeAxis, "Offsets", Convert.ToString(offset_x, format) + "," + Convert.ToString(offset_y, format));
+            parent.AppendChild(nodeAxis);
+            return (nodeAxis);
+        }
+
 
         private static XmlElement getXml(
             XmlDocument doc, XmlElement parent,
@@ -2815,7 +2891,9 @@ namespace sentience.calibration
             double[] rotation, double[] scale,
             string[] lens_distortion_image_filename,
             string[] curve_fit_image_filename,
-            float offset_x, float offset_y)
+            float offset_x, float offset_y,
+            polynomial pan_curve, float pan_offset_x, float pan_offset_y,
+            polynomial tilt_curve, float tilt_offset_x, float tilt_offset_y)
         {
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
@@ -2826,6 +2904,14 @@ namespace sentience.calibration
                 if ((lens_distortion_curve[0] != null) && (lens_distortion_curve[1] != null))
                     stereo_camera = true;
 
+            // pan/tilt mechanism parameters
+            XmlElement nodePanTilt;
+            nodePanTilt = doc.CreateElement("CameraPanTilt");
+            nodePanTilt.AppendChild(getPanTiltAxis(doc, nodePanTilt, "Pan", pan_curve, pan_offset_x, pan_offset_y));
+            nodePanTilt.AppendChild(getPanTiltAxis(doc, nodePanTilt, "Tilt", tilt_curve, tilt_offset_x, tilt_offset_y));
+            parent.AppendChild(nodePanTilt);
+
+            // camera parameters
             XmlElement nodeStereoCamera;
             if (stereo_camera)
                 nodeStereoCamera = doc.CreateElement("StereoCamera");

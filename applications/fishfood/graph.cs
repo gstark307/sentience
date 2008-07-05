@@ -50,6 +50,8 @@ namespace sentience.calibration
         public float max_value_y;
         public float min_value_y;
 
+        public polynomial curve_fit;
+
         public byte[] colour = new byte[3];
 
         /// <summary>
@@ -244,6 +246,66 @@ namespace sentience.calibration
 
         #endregion
 
+        #region "curve fitting"
+
+        public float curve_fit_offset_x;
+        public float curve_fit_offset_y;
+
+        public virtual void FitCurve(int no_of_coefficients,
+                                     int r, int g, int b)
+        {
+            curve_fit = new polynomial();
+            curve_fit.SetDegree(no_of_coefficients);
+
+            float centre_x = 0;
+            float centre_y = 0;
+            for (int i = 0; i < history.Count; i += 2)
+            {
+                float x = (float)history[i];
+                float y = (float)history[i + 1];
+                centre_x += x;
+                centre_y += y;
+            }
+            centre_x /= (history.Count / 2);
+            centre_y /= (history.Count / 2);
+
+            curve_fit_offset_x = centre_x;
+            curve_fit_offset_y = centre_y;
+
+            for (int i = 0; i < history.Count; i += 2)
+            {
+                float x = (float)history[i] - curve_fit_offset_x;
+                float y = (float)history[i + 1] - curve_fit_offset_y;
+
+                curve_fit.AddPoint(x, y);
+            }
+            curve_fit.Solve();
+
+            int prev_x_screen = int.MaxValue;
+            int prev_y_screen = 0;
+            for (float x = min_value_x; x < max_value_x; x += (max_value_x - min_value_x) / 50.0f)
+            {
+                float y = (float)curve_fit.RegVal(x - curve_fit_offset_x) + curve_fit_offset_y;
+
+                // get the screen coordinates
+                int x_screen = (int)((x - min_value_x) * (screen_width - 1) / (max_value_x - min_value_x));
+                int y_screen = screen_height - 1 - (int)((y - min_value_y) * (screen_height - 1) / (max_value_y - min_value_y));
+
+                if (prev_x_screen != int.MaxValue)
+                {
+                    drawing.drawLine(image, screen_width, screen_height,
+                                     prev_x_screen, prev_y_screen,
+                                     x_screen, y_screen,
+                                     r, g, b, 0, false);                                     
+                }
+
+                prev_x_screen = x_screen;
+                prev_y_screen = y_screen;
+            }
+        }
+
+        #endregion
+
         #region "drawing axes"
 
         /// <summary>
@@ -265,7 +327,8 @@ namespace sentience.calibration
                              int increment_marking_size,
                              int r, int g, int b, int lineWidth,
                              bool show_numbers,
-                             String horizontal_scale, String vertical_scale)
+                             String horizontal_scale, String vertical_scale,
+                             int horizontal_scale_position, int vertical_scale_position)
         {
             // draw the horizontal axis
             float y = screen_height-1-(((0 - min_value_y) / (max_value_y - min_value_y)) * screen_height);
@@ -279,8 +342,8 @@ namespace sentience.calibration
             // show the name of the horizontal axis
             if (horizontal_scale != "")
                 AddText(horizontal_scale, "Arial", 10, r, g, b,
-                        min_value_x + ((max_value_x - min_value_x) * 0.45f),
-                        -(max_value_y - min_value_y) / 20);
+                        min_value_x + ((max_value_x - min_value_x) * horizontal_scale_position / 100.0f),
+                        -(max_value_y - min_value_y) / 30);
 
             for (int i = 0; i < 2; i++)
             {
@@ -331,6 +394,7 @@ namespace sentience.calibration
 
             // draw the vertical axis
             x = ((0 - min_value_x) / (max_value_x - min_value_x)) * screen_width;
+            if (x < 30) x = 30;
 
             //x = (Math.Abs(min_value_x) / (max_value_x - min_value_x)) * screen_width;
             drawing.drawLine(image, screen_width, screen_height,
@@ -340,10 +404,12 @@ namespace sentience.calibration
             y = screen_height - 1 - (((0 - min_value_y) / (max_value_y - min_value_y)) * screen_height);
 
             // show the name of the vertical axis
-            if (horizontal_scale != "")
-                AddText(vertical_scale, "Arial", 10, r, g, b,
-                        (max_value_x - min_value_x) / 150,
-                        min_value_y + ((max_value_y - min_value_y) * 0.98f));
+            if (vertical_scale != "")
+            {
+                float vx = (min_value_x + ((max_value_x - min_value_x) * 0.06f));
+                float vy = (min_value_y + ((max_value_y - min_value_y) * vertical_scale_position / 100.0f));
+                AddText(vertical_scale, "Arial", 10, r, g, b, vx, vy);
+            }
 
             for (int i = 0; i < 2; i++)
             {
