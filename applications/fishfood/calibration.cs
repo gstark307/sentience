@@ -56,7 +56,7 @@ namespace sentience.calibration
             centre_dot_x = centre_dot_horizontal_distance + (image_width / 2);
             centre_dot_y = centre_dot_vertical_distance + (image_height / 2);
 
-            if ((Math.Abs(centre_dot_horizontal_distance) > image_width / 10) ||
+            if ((Math.Abs(centre_dot_horizontal_distance) > image_width / 8) ||
                 (Math.Abs(centre_dot_vertical_distance) > image_height / 5))
             {
                 Console.WriteLine("The calibration pattern centre dot was not detected or is too far away from the centre of the image");
@@ -109,67 +109,71 @@ namespace sentience.calibration
 
                     calibrationDot[,] grid = CreateGrid(dots);
 
-
-                    int grid_offset_x = 0, grid_offset_y = 0;
-                    List<calibrationDot> corners = new List<calibrationDot>();
-                    grid2D overlay_grid = OverlayIdealGrid(grid, corners, ref grid_offset_x, ref grid_offset_y);
-                    if (overlay_grid != null)
+                    if (grid != null)
                     {
-                        ShowDots(corners, filename, "corners.jpg");
-
-                        List<List<double>> lines = CreateLines(dots, grid);
-
-                        lens_distortion_curve = null;
-                        calibrationDot centre_of_distortion = null;
-                        List<List<double>> best_rectified_lines = null;
-                        DetectLensDistortion(image_width, image_height, grid, overlay_grid, lines,
-                                             ref lens_distortion_curve, ref centre_of_distortion,
-                                             ref best_rectified_lines,
-                                             grid_offset_x, grid_offset_y, scale,
-                                             ref minimum_error);
-
-                        if (lens_distortion_curve != null)
+                        int grid_offset_x = 0, grid_offset_y = 0;
+                        List<calibrationDot> corners = new List<calibrationDot>();
+                        grid2D overlay_grid = OverlayIdealGrid(grid, corners, ref grid_offset_x, ref grid_offset_y);
+                        if (overlay_grid != null)
                         {
-                            ShowDistortionCurve(lens_distortion_curve, curve_fit_image_filename);
-                            ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
-                            ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, fov_degrees, 10, lens_distortion_image_filename);
+                            ShowDots(corners, filename, "corners.jpg");
 
-                            // detect the camera rotation
-                            List<List<double>> rectified_centre_line = null;
-                            camera_rotation = DetectCameraRotation(image_width, image_height,
-                                                                   grid, lens_distortion_curve, centre_of_distortion,
-                                                                   ref rectified_centre_line, scale);
-                            double rotation_degrees = camera_rotation / Math.PI * 180;
+                            List<List<double>> lines = CreateLines(dots, grid);
 
-                            centre_of_distortion_x = centre_of_distortion.x;
-                            centre_of_distortion_y = centre_of_distortion.y;
+                            lens_distortion_curve = null;
+                            calibrationDot centre_of_distortion = null;
+                            List<List<double>> best_rectified_lines = null;
+                            DetectLensDistortion(image_width, image_height, grid, overlay_grid, lines,
+                                                 ref lens_distortion_curve, ref centre_of_distortion,
+                                                 ref best_rectified_lines,
+                                                 grid_offset_x, grid_offset_y, scale,
+                                                 ref minimum_error);
 
-                            int[] calibration_map = null;
-                            int[, ,] calibration_map_inverse = null;
-                            updateCalibrationMap(image_width, image_height,
-                                                 lens_distortion_curve,
-                                                 (float)scale, (float)camera_rotation,
-                                                 (float)centre_of_distortion.x, (float)centre_of_distortion.y,
-                                                 ref calibration_map,
-                                                 ref calibration_map_inverse);
-
-                            Rectify(filename, calibration_map, rectified_image_filename);
-
-                            if (rectified_centre_line != null)
-                                ShowLines(filename, rectified_centre_line, "rectified_centre_line.jpg");
-
-                            if (best_rectified_lines != null)
+                            if (lens_distortion_curve != null)
                             {
-                                ShowLines(filename, lines, "lines.jpg");
-                                ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                                ShowDistortionCurve(lens_distortion_curve, curve_fit_image_filename);
+                                ShowCurveVariance(lens_distortion_curve, "curve_variance.jpg");
+                                ShowLensDistortion(image_width, image_height, centre_of_distortion, lens_distortion_curve, fov_degrees, 10, lens_distortion_image_filename);
+
+                                // detect the camera rotation
+                                List<List<double>> rectified_centre_line = null;
+                                camera_rotation = DetectCameraRotation(image_width, image_height,
+                                                                       grid, lens_distortion_curve, centre_of_distortion,
+                                                                       ref rectified_centre_line, scale);
+                                double rotation_degrees = camera_rotation / Math.PI * 180;
+
+                                camera_rotation = 0;
+
+                                centre_of_distortion_x = centre_of_distortion.x;
+                                centre_of_distortion_y = centre_of_distortion.y;
+
+                                int[] calibration_map = null;
+                                int[, ,] calibration_map_inverse = null;
+                                updateCalibrationMap(image_width, image_height,
+                                                     lens_distortion_curve,
+                                                     (float)scale, (float)camera_rotation,
+                                                     (float)centre_of_distortion.x, (float)centre_of_distortion.y,
+                                                     ref calibration_map,
+                                                     ref calibration_map_inverse);
+
+                                Rectify(filename, calibration_map, rectified_image_filename);
+
+                                if (rectified_centre_line != null)
+                                    ShowLines(filename, rectified_centre_line, "rectified_centre_line.jpg");
+
+                                if (best_rectified_lines != null)
+                                {
+                                    ShowLines(filename, lines, "lines.jpg");
+                                    ShowLines(filename, best_rectified_lines, "rectified_lines.jpg");
+                                }
                             }
                         }
-                    }
 
-                    ShowOverlayGrid(filename, overlay_grid, "grid_overlay.jpg");
-                    ShowOverlayGridPerimeter(filename, overlay_grid, "grid_overlay_perimeter.jpg");
-                    ShowGrid(filename, dots, search_regions, "grid.jpg");
-                    ShowGridCoordinates(filename, dots, "coordinates.jpg");
+                        ShowOverlayGrid(filename, overlay_grid, "grid_overlay.jpg");
+                        ShowOverlayGridPerimeter(filename, overlay_grid, "grid_overlay_perimeter.jpg");
+                        ShowGrid(filename, dots, search_regions, "grid.jpg");
+                        ShowGridCoordinates(filename, dots, "coordinates.jpg");
+                    }
                 }
 
             }
@@ -1702,12 +1706,22 @@ namespace sentience.calibration
                                     temp_grid_bx = grid.GetLength(0) - 1 - temp_offset_x;
                                     temp_grid_by = grid.GetLength(1) - 1 - temp_offset_y;
 
-                                    if ((grid[temp_grid_tx, temp_grid_ty] != null) &&
-                                        (grid[temp_grid_bx, temp_grid_ty] != null) &&
-                                        (grid[temp_grid_bx, temp_grid_by] != null) &&
-                                        (grid[temp_grid_tx, temp_grid_by] != null))
+                                    if ((temp_grid_bx < grid.GetLength(0)) &&
+                                        (temp_grid_tx < grid.GetLength(0)) &&
+                                        (temp_grid_by < grid.GetLength(1)) &&
+                                        (temp_grid_ty < grid.GetLength(1)) &&
+                                        (temp_grid_ty >= 0) &&
+                                        (temp_grid_by >= 0) &&
+                                        (temp_grid_tx >= 0) &&
+                                        (temp_grid_bx >= 0))
                                     {
-                                        temp_found = true;
+                                        if ((grid[temp_grid_tx, temp_grid_ty] != null) &&
+                                            (grid[temp_grid_bx, temp_grid_ty] != null) &&
+                                            (grid[temp_grid_bx, temp_grid_by] != null) &&
+                                            (grid[temp_grid_tx, temp_grid_by] != null))
+                                        {
+                                            temp_found = true;
+                                        }
                                     }
 
                                     temp_offset_x++;
@@ -1728,12 +1742,22 @@ namespace sentience.calibration
                                     temp_grid_bx = grid.GetLength(0) - 1 - temp_offset_x;
                                     temp_grid_by = grid.GetLength(1) - 1 - temp_offset_y;
 
-                                    if ((grid[temp_grid_tx, temp_grid_ty] != null) &&
-                                        (grid[temp_grid_bx, temp_grid_ty] != null) &&
-                                        (grid[temp_grid_bx, temp_grid_by] != null) &&
-                                        (grid[temp_grid_tx, temp_grid_by] != null))
+                                    if ((temp_grid_bx < grid.GetLength(0)) &&
+                                        (temp_grid_tx < grid.GetLength(0)) &&
+                                        (temp_grid_by < grid.GetLength(1)) &&
+                                        (temp_grid_ty < grid.GetLength(1)) &&
+                                        (temp_grid_ty >= 0) &&
+                                        (temp_grid_by >= 0) &&
+                                        (temp_grid_tx >= 0) &&
+                                        (temp_grid_bx >= 0))
                                     {
-                                        temp_found = true;
+                                        if ((grid[temp_grid_tx, temp_grid_ty] != null) &&
+                                            (grid[temp_grid_bx, temp_grid_ty] != null) &&
+                                            (grid[temp_grid_bx, temp_grid_by] != null) &&
+                                            (grid[temp_grid_tx, temp_grid_by] != null))
+                                        {
+                                            temp_found = true;
+                                        }
                                     }
 
                                     temp_offset_y++;
@@ -1747,11 +1771,16 @@ namespace sentience.calibration
                 temp_offset_y = temp_grid_ty - 1;
                 while (temp_offset_y >= 0)
                 {
-                    if ((grid[temp_grid_tx, temp_offset_y] != null) &&
-                        (grid[temp_grid_bx, temp_offset_y] != null))
+                    if ((temp_offset_y < grid.GetLength(1)) &&
+                        (temp_offset_y >= 0))
                     {
-                        temp_grid_ty = temp_offset_y;
-                        temp_offset_y--;
+                        if ((grid[temp_grid_tx, temp_offset_y] != null) &&
+                            (grid[temp_grid_bx, temp_offset_y] != null))
+                        {
+                            temp_grid_ty = temp_offset_y;
+                            temp_offset_y--;
+                        }
+                        else break;
                     }
                     else break;
                 }
@@ -1759,11 +1788,16 @@ namespace sentience.calibration
                 temp_offset_y = temp_grid_by + 1;
                 while (temp_offset_y < grid.GetLength(1))
                 {
-                    if ((grid[temp_grid_tx, temp_offset_y] != null) &&
-                        (grid[temp_grid_bx, temp_offset_y] != null))
+                    if ((temp_offset_y < grid.GetLength(1)) &&
+                        (temp_offset_y >= 0))
                     {
-                        temp_grid_by = temp_offset_y;
-                        temp_offset_y++;
+                        if ((grid[temp_grid_tx, temp_offset_y] != null) &&
+                            (grid[temp_grid_bx, temp_offset_y] != null))
+                        {
+                            temp_grid_by = temp_offset_y;
+                            temp_offset_y++;
+                        }
+                        else break;
                     }
                     else break;
                 }
