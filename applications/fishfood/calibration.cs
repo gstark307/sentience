@@ -40,7 +40,8 @@ namespace sentience.calibration
                                         string curve_fit_image_filename,
                                         string rectified_image_filename,
                                         ref float centre_dot_x, ref float centre_dot_y,
-                                        ref double minimum_error)
+                                        ref double minimum_error,
+                                        ref int[] calibration_map)
         {
             image_width = 0;
             image_height = 0;
@@ -88,7 +89,7 @@ namespace sentience.calibration
 
                     float ideal_centre_square_angular_diameter_degrees = (2.0f * (float)Math.Atan(0.5f * dot_spacing_mm / dist_to_centre_dot_mm)) * 180 / (float)Math.PI;
                     float ideal_centre_square_dimension_pixels = ideal_centre_square_angular_diameter_degrees * image_width / fov_degrees;
-                    scale = ((centre_square.getSideLength(0) + centre_square.getSideLength(2)) * 0.5f) / ideal_centre_square_dimension_pixels;
+                    scale = 1; // ((centre_square.getSideLength(0) + centre_square.getSideLength(2)) * 0.5f) / ideal_centre_square_dimension_pixels;
                     //scale = 1;
 
                     //Console.WriteLine("centre_square ideal_dimension: " + ideal_centre_square_dimension_pixels.ToString());
@@ -147,7 +148,7 @@ namespace sentience.calibration
                                 centre_of_distortion_x = centre_of_distortion.x;
                                 centre_of_distortion_y = centre_of_distortion.y;
 
-                                int[] calibration_map = null;
+                                calibration_map = null;
                                 int[, ,] calibration_map_inverse = null;
                                 updateCalibrationMap(image_width, image_height,
                                                      lens_distortion_curve,
@@ -446,6 +447,8 @@ namespace sentience.calibration
                         List<List<double>> pan_servo_position = new List<List<double>>();
                         List<List<double>> tilt_servo_position = new List<List<double>>();
 
+                        List<int[]> calibration_map = new List<int[]>();
+
                         int[] winner_index = new int[2];
 
                         for (int cam = 0; cam < image_filename.GetLength(0); cam++)
@@ -476,6 +479,7 @@ namespace sentience.calibration
                                 double scale = 0;
                                 float dot_x = -1, dot_y = -1;
                                 double min_err = double.MaxValue;
+                                int[] calib_map = null;
                                 hypergraph dots =
                                     Detect(image_filename[cam][i],
                                     ref img_width, ref img_height,
@@ -487,7 +491,7 @@ namespace sentience.calibration
                                     curve_fit_image_filename,
                                     rectified_image_filename,
                                     ref dot_x, ref dot_y,
-                                    ref min_err);
+                                    ref min_err, ref calib_map);
 
                                 centre_dot_position[cam].Add(dot_x);
                                 centre_dot_position[cam].Add(dot_y);
@@ -515,6 +519,10 @@ namespace sentience.calibration
                                         centre_y[cam] = centre_of_distortion_y;
                                         rotation[cam] = camera_rotation;
                                         scale_factor[cam] = scale;
+                                        if (calibration_map.Count <= cam) 
+                                            calibration_map.Add(calib_map);
+                                        else
+                                            calibration_map[cam] = calib_map;
 
                                         winner_index[cam] = i;
 
@@ -560,6 +568,16 @@ namespace sentience.calibration
                         
                         ShowCentreDots(filename[winner_index[0]], rectified_dots, "centre_dots.jpg");
                         ShowCentreDots(filename[winner_index[0]], centre_dot_position, "centre_dots2.jpg");
+
+                        if (calibration_map.Count == 2)
+                        {
+                            if ((calibration_map[0] != null) &&
+                                (calibration_map[1] != null))
+                            {
+                                Rectify(image_filename[0][winner_index[0]], image_filename[1][winner_index[0]],
+                                        calibration_map[0], calibration_map[1], "Rectification2.jpg");
+                            }
+                        }
 
                         // calibrate the pan and tilt mechanism
                         polynomial pan_curve = null, tilt_curve = null;
@@ -1117,6 +1135,53 @@ namespace sentience.calibration
                 output_bmp.Save(rectified_filename, System.Drawing.Imaging.ImageFormat.Bmp);
 
         }
+
+        private static void Rectify(string filename_camera0, string filename_camera1,
+                                    int[] calibration_map_camera0, int[] calibration_map_camera1,
+                                    string rectified_filename)
+        {
+            Bitmap bmp0 = (Bitmap)Bitmap.FromFile(filename_camera0);
+            byte[] img0 = new byte[bmp0.Width * bmp0.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp0, img0);
+
+            Bitmap bmp1 = (Bitmap)Bitmap.FromFile(filename_camera1);
+            byte[] img1 = new byte[bmp1.Width * bmp1.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp1, img1);
+
+            int image_width = 0;
+            int image_height = 0;
+            byte[] rectified_img0 = Rectify(filename_camera0, calibration_map_camera0, ref image_width, ref image_height);
+            byte[] rectified_img1 = Rectify(filename_camera1, calibration_map_camera1, ref image_width, ref image_height);
+
+            byte[] composite_img = new byte[image_width * 4 * image_height * 3];
+            int n = 0;
+            for (int y = 0; y < image_height; y++)
+            {
+                for (int x = 0; x < image_width; x++)
+                {
+                    int n2 = ((y * image_width * 2) + x) * 3;
+                    int n3 = (((y + image_height) * image_width * 2) + x) * 3;
+                    for (int col = 0; col < 3; col++)
+                    {
+                        composite_img[n2 + col] = img0[n + col];
+                        composite_img[n2 + col + (image_width * 3)] = img1[n + col];
+
+                        composite_img[n3 + col] = rectified_img0[n + col];
+                        composite_img[n3 + col + (image_width * 3)] = rectified_img1[n + col];
+                    }
+                    n += 3;
+                }
+            }
+
+            Bitmap output_bmp = new Bitmap(image_width*2, image_height*2, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(composite_img, output_bmp);
+            if (rectified_filename.ToLower().EndsWith("jpg"))
+                output_bmp.Save(rectified_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            if (rectified_filename.ToLower().EndsWith("bmp"))
+                output_bmp.Save(rectified_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+
+        }
+
 
         /// <summary>
         /// applies the given curve to the lines to produce rectified coordinates
