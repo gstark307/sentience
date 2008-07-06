@@ -7,14 +7,12 @@
     <File name="calibrationLink.cs" line="27" column="1" />
     <File name="calibrationDot.cs" line="5" column="1" />
     <File name="geometry.cs" line="22" column="32" />
-    <File name="calibration.cs" line="285" column="1" />
+    <File name="calibration.cs" line="324" column="25" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="fishfood" expanded="True">
-          <Node name="calibration.cs" selected="True" />
-        </Node>
+        <Node name="fishfood" expanded="True" selected="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">

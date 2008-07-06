@@ -321,31 +321,33 @@ namespace sentience.calibration
                     double rectified_centre_dot_x = rectified_centre_dot_position[cam][i];
                     double rectified_centre_dot_y = rectified_centre_dot_position[cam][i + 1];
 
-                    double rectified_centre_dot_x2 = rectified_centre_dot_position[cam+1][i];
-                    double rectified_centre_dot_y2 = rectified_centre_dot_position[cam+1][i + 1];
-
-                    rectified_centre_dot_x += ((rectified_centre_dot_x2 - rectified_centre_dot_x) / 2);
-                    rectified_centre_dot_y += ((rectified_centre_dot_y2 - rectified_centre_dot_y) / 2);
-
-                    // is this inside the bounding box ?
-                    if ((rectified_centre_dot_x > tx) && (rectified_centre_dot_x < bx) &&
-                        (rectified_centre_dot_y > ty) && (rectified_centre_dot_y < by))
+                    if (rectified_centre_dot_position[cam+1].Count > i + 1)
                     {
-                        // servo position
-                        double servo_pan = pan_servo_position[cam][i / 2];
-                        double servo_tilt = tilt_servo_position[cam][i / 2];
+                        double rectified_centre_dot_x2 = rectified_centre_dot_position[cam+1][i];
+                        double rectified_centre_dot_y2 = rectified_centre_dot_position[cam+1][i + 1];
 
-                        // calculate pan and tilt angles
-                        double pan_angle = (rectified_centre_dot_x - half_width) * fov_radians / image_width;
-                        double tilt_angle = (rectified_centre_dot_y - half_height) * fov_radians / image_width;
-                        tilt_angle += observation_tilt;
+                        rectified_centre_dot_x += ((rectified_centre_dot_x2 - rectified_centre_dot_x) / 2);
+                        rectified_centre_dot_y += ((rectified_centre_dot_y2 - rectified_centre_dot_y) / 2);
 
-                        if (pan_servo_position[cam][i / 2] != peak_pan_value)
-                            graph_pan.Update((float)servo_pan, (float)pan_angle);
+                        // is this inside the bounding box ?
+                        if ((rectified_centre_dot_x > tx) && (rectified_centre_dot_x < bx) &&
+                            (rectified_centre_dot_y > ty) && (rectified_centre_dot_y < by))
+                        {
+                            // servo position
+                            double servo_pan = pan_servo_position[cam][i / 2];
+                            double servo_tilt = tilt_servo_position[cam][i / 2];
 
-                        graph_tilt.Update((float)servo_tilt, (float)tilt_angle);                        
+                            // calculate pan and tilt angles
+                            double pan_angle = (rectified_centre_dot_x - half_width) * fov_radians / image_width;
+                            double tilt_angle = (rectified_centre_dot_y - half_height) * fov_radians / image_width;
+                            tilt_angle += observation_tilt;
+
+                            if (pan_servo_position[cam][i / 2] != peak_pan_value)
+                                graph_pan.Update((float)servo_pan, (float)pan_angle);
+
+                            graph_tilt.Update((float)servo_tilt, (float)tilt_angle);                        
+                        }
                     }
-                   
                 }
             }
 
@@ -1431,7 +1433,7 @@ namespace sentience.calibration
                                            List<List<double>> lines,
                                            ref double minimum_error)
         {
-            Random rnd = new Random(0);
+            Random rnd = new Random();
             minimum_error = double.MaxValue;
             double search_min_error = minimum_error;
 
@@ -1956,7 +1958,7 @@ namespace sentience.calibration
                 double min_dist = double.MaxValue;
                 int max_perim_size_tries = 100;
                 polygon2D best_perimeter = perimeter;
-                Random rnd = new Random(0);
+                Random rnd = new Random();
                 for (int perim_size = 0; perim_size < max_perim_size_tries; perim_size++)
                 {
                     // try a small range of translations
