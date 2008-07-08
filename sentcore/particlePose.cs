@@ -119,7 +119,7 @@ namespace sentience.core
         /// <param name="max_y_mm">bottom right y coordinate</param>
         /// <param name="showFieldOfView">whether to show the field of view of each camera</param>
         public void Show(robot rob, 
-                         Byte[] img, int width, int height, bool clearBackground,
+                         byte[] img, int width, int height, bool clearBackground,
                          int min_x_mm, int min_y_mm,
                          int max_x_mm, int max_y_mm, int line_width,
                          bool showFieldOfView)
@@ -329,7 +329,7 @@ namespace sentience.core
         /// <summary>
         /// distills all grid particles associated with this pose
         /// </summary>
-        /// <param name="grid"></param>
+        /// <param name="grid">grid to be updated</param>
         public void Distill(occupancygridMultiHypothesis grid)
         {
             for (int i = observed_grid_cells.Count-1; i >= 0; i--)

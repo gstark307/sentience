@@ -21,7 +21,6 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections.Generic;
-using System.Text;
 using sluggish.utilities.xml;
 
 namespace sentience.core
@@ -35,14 +34,23 @@ namespace sentience.core
     /// </summary>
     public sealed class rayModelLookup
     {
-        // stores the sensor models
+        // 2D array stores the sensor models
         public float[][] probability = null;
 
         // the length of each sensor model, given as an array index
         public int[] length = null;
 
-        public int dimension_disparity, dimension_probability;
+        // width of the ray model
+        public int dimension_disparity;
+        
+        // length of the ray model
+        public int dimension_probability;
 
+        /// <summary>
+        /// initialise
+        /// </summary>
+        /// <param name="max_disparity_pixels">maximum disparity in pixels</param>
+        /// <param name="max_sensor_model_length">maximum sensor model length in grid cells</param>
         private void init(int max_disparity_pixels,
                           int max_sensor_model_length)
         {
@@ -54,6 +62,12 @@ namespace sentience.core
             length = new int[dimension_disparity];
         }
 
+     
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="max_disparity_pixels">maximum disparity in pixels</param>
+        /// <param name="max_sensor_model_length">maximum sensor model length in grid cells</param>
         public rayModelLookup(int max_disparity_pixels,
                               int max_sensor_model_length)
         {
@@ -62,6 +76,12 @@ namespace sentience.core
 
         #region "saving and loading"
 
+        /// <summary>
+        /// returns the ray model as an XML object
+        /// </summary>
+        /// <param name="doc">xml document object</param>
+        /// <param name="parent"></param>
+        /// <returns></returns>
         public XmlElement getXml(XmlDocument doc, XmlElement parent)
         {
             xml.AddComment(doc, parent, "Inverse sensor model data");
@@ -90,9 +110,9 @@ namespace sentience.core
         }
 
         /// <summary>
-        /// return an Xml document containing camera calibration parameters
+        /// return an Xml document containing sensor model parameters
         /// </summary>
-        /// <returns></returns>
+        /// <returns>xml document object</returns>
         private XmlDocument getXmlDocument()
         {
             // Create the document.
@@ -114,17 +134,17 @@ namespace sentience.core
         }
 
         /// <summary>
-        /// save camera calibration parameters as an xml file
+        /// save ray model parameters as an xml file
         /// </summary>
         /// <param name="filename">file name to save as</param>
-        public void Save(String filename)
+        public void Save(string filename)
         {
             XmlDocument doc = getXmlDocument();
             doc.Save(filename);
         }
 
         /// <summary>
-        /// creates a new sensor model array from the given list of loaded ray models
+        /// creates a new ray model array from the given list of loaded ray models
         /// </summary>
         /// <param name="rayModelsData">list containing ray model data as strings</param>
         public void LoadSensorModelData(List<string> rayModelsData)
@@ -157,10 +177,10 @@ namespace sentience.core
         }
 
         /// <summary>
-        /// load camera calibration parameters from file
+        /// load ray model parameters from file
         /// </summary>
         /// <param name="filename"></param>
-        public bool Load(String filename)
+        public bool Load(string filename)
         {
             bool loaded = false;
 
@@ -190,10 +210,11 @@ namespace sentience.core
         }
 
         /// <summary>
-        /// parse an xml node to extract camera calibration parameters
+        /// parse an xml node to extract ray model parameters
         /// </summary>
         /// <param name="xnod"></param>
         /// <param name="level"></param>
+        /// <param name="rayModelsData">ray model data loaded so far</param>
         public void LoadFromXml(XmlNode xnod, int level, List<string> rayModelsData)
         {
             XmlNode xnodWorking;

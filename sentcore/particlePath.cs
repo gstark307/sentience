@@ -92,6 +92,12 @@ namespace sentience.core
             }
         }
 
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="parent">parent path from which this originates</param>
+        /// <param name="path_ID">unique ID for this path</param>
+        /// <param name="grid_dimension_cells">dimension of the grid</param>
         public particlePath(particlePath parent, UInt32 path_ID, int grid_dimension_cells)
         {
             ID = path_ID;
@@ -270,7 +276,7 @@ namespace sentience.core
         /// <summary>
         /// add a new pose to the path
         /// </summary>
-        /// <param name="pose"></param>
+        /// <param name="pose">pose to be added</param>
         public void Add(particlePose pose)
         {
             pose.path = this;
@@ -329,7 +335,7 @@ namespace sentience.core
         /// <param name="starting_forward_velocity">the forward velocity to start with in mm/sec</param>
         /// <param name="starting_angular_velocity">the angular velocity to start with in radians/sec</param>
         /// <param name="time_per_index_sec">time taken between indexes along the path in seconds</param>
-        /// <returns></returns>
+        /// <returns>list of forward and angular velocities</returns>
         public List<float> getVelocities(float starting_forward_velocity,
                                          float starting_angular_velocity,
                                          float time_per_index_sec)
@@ -525,6 +531,12 @@ namespace sentience.core
 
         #region "saving and loading"
 
+        /// <summary>
+        /// returns the path as an xml object
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="parent"></param>
+        /// <returns></returns>
         public XmlElement getXml(XmlDocument doc, XmlElement parent)
         {
             XmlElement nodePath = doc.CreateElement("RobotPath");
@@ -548,7 +560,7 @@ namespace sentience.core
         /// <summary>
         /// return an Xml document containing camera calibration parameters
         /// </summary>
-        /// <returns></returns>
+        /// <returns>xml document object</returns>
         private XmlDocument getXmlDocument()
         {
             // Create the document.
@@ -573,7 +585,7 @@ namespace sentience.core
         /// save camera calibration parameters as an xml file
         /// </summary>
         /// <param name="filename">file name to save as</param>
-        public void Save(String filename)
+        public void Save(string filename)
         {
             XmlDocument doc = getXmlDocument();
             doc.Save(filename);
@@ -583,7 +595,7 @@ namespace sentience.core
         /// load camera calibration parameters from file
         /// </summary>
         /// <param name="filename"></param>
-        public bool Load(String filename)
+        public bool Load(string filename)
         {
             bool loaded = false;
 
