@@ -1,18 +1,32 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="115" column="45" />
-    <File name="shapes.cs" line="1795" column="13" />
-    <File name="hypergraph.cs" line="19" column="1" />
-    <File name="calibrationLink.cs" line="27" column="1" />
-    <File name="calibrationDot.cs" line="5" column="1" />
-    <File name="geometry.cs" line="22" column="32" />
-    <File name="calibration.cs" line="324" column="25" />
+    <File name="Main.cs" line="37" column="13" />
+    <File name="shapes.cs" line="10" column="41" />
+    <File name="hypergraph.cs" line="60" column="23" />
+    <File name="calibrationLink.cs" line="25" column="64" />
+    <File name="calibrationDot.cs" line="25" column="50" />
+    <File name="geometry.cs" line="25" column="31" />
+    <File name="calibration.cs" line="30" column="34" />
+    <File name="ArrayConversions.cs" line="26" column="20" />
+    <File name="BitmapArrayConversions.cs" line="28" column="1" />
+    <File name="canny.cs" line="40" column="49" />
+    <File name="commandline.cs" line="26" column="38" />
+    <File name="drawing.cs" line="27" column="63" />
+    <File name="graph.cs" line="47" column="1" />
+    <File name="graph_points.cs" line="43" column="3" />
+    <File name="grid2D.cs" line="40" column="29" />
+    <File name="image.cs" line="29" column="42" />
+    <File name="polygon.cs" line="1521" column="23" />
+    <File name="polynomial.cs" line="27" column="33" />
+    <File name="xml.cs" line="26" column="48" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="fishfood" expanded="True" selected="True" />
+        <Node name="fishfood" expanded="True">
+          <Node name="Main.cs" selected="True" />
+        </Node>
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -23,7 +37,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/calibration.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/Main.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

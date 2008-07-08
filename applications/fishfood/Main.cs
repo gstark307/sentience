@@ -26,6 +26,9 @@ using System.Drawing;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// command line utility for calibration of stereo cameras
+    /// </summary>
     class MainClass
     {
         public static void Main(string[] args)

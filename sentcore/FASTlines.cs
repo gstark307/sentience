@@ -23,6 +23,9 @@ using sluggish.imageprocessing.FASTcorners;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// line detection using FAST corners
+    /// </summary>
     public class FASTlines
     {
         public bool showGravity = false;

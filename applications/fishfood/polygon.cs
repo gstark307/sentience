@@ -1515,6 +1515,9 @@ namespace sentience.calibration
     /// </summary>
     public class polygon2DTracker
     {
+        /// <summary>
+        /// contains data used to track a polygon
+        /// </summary>
         internal class polygon2DTrackerData
         {
             // centre point of the polygon

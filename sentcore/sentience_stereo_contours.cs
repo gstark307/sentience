@@ -25,6 +25,9 @@ using CenterSpace.Free;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// contour based stereo correspondence algorithm
+    /// </summary>
     public class sentience_stereo_contours
     {
         MersenneTwister rnd = new MersenneTwister(100);

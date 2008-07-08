@@ -20,12 +20,15 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Collections;
+using System.Collections.Generic;
 using CenterSpace.Free;
 using sluggish.utilities;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// fundamental stereo vision maths and models
+    /// </summary>
     public sealed class stereoModel
     {
         // random number generator
@@ -487,9 +490,9 @@ namespace sentience.core
         /// <param name="head">head configuration</param>
         /// <param name="camera_index">index number for the stereo camera</param>
         /// <returns>list of evidence rays</returns>
-        public ArrayList createObservation(stereoHead head, int camera_index)
+        public List<evidenceRay> createObservation(stereoHead head, int camera_index)
         {
-            ArrayList result = new ArrayList();
+            List<evidenceRay> result = new List<evidenceRay>();
 
             // get essential data for this stereo camera
             baseline = head.calibration[camera_index].baseline;

@@ -18,7 +18,7 @@
 */
 
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 
 namespace sentience.core
@@ -68,9 +68,9 @@ namespace sentience.core
         /// return this path segment as a sequence of poses
         /// </summary>
         /// <returns>list of poses of type particlePose</returns>
-        public ArrayList getPoses()
+        public List<particlePose> getPoses()
         {
-            ArrayList result = new ArrayList();
+            List<particlePose> result = new List<particlePose>();
             float xx = x;
             float yy = y;
             float curr_pan = pan;

@@ -20,7 +20,10 @@
 using System;
 
 namespace sentience.calibration
-{	
+{
+    /// <summary>
+    /// Used to convert between arrays and various other data types
+    /// </summary>	
 	public class ArrayConversions
 	{
 		

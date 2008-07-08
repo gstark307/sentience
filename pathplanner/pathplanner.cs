@@ -235,8 +235,8 @@ namespace sentience.pathplanner
         /// <param name="finish_x_mm">finishing x coordinate in mm</param>
         /// <param name="finish_y_mm">finishing y coordinate in mm</param>
         /// <returns>the path positions in millimetres</returns>
-        public ArrayList CreatePlan(float start_x_mm, float start_y_mm,
-                                    float finish_x_mm, float finish_y_mm)
+        public List<float> CreatePlan(float start_x_mm, float start_y_mm,
+                                      float finish_x_mm, float finish_y_mm)
         {
             // get the dimension of the occupancy grid
             int dimension = navigable_space.GetLength(0);
@@ -252,7 +252,7 @@ namespace sentience.pathplanner
             List<AStar_PathFinderNode> path = pathfinder.FindPath(PathStart, PathEnd);
 
             // convert the path into millimetres and store it in an array list
-            ArrayList result = new ArrayList();
+            List<float> result = new List<float>();
             if (path != null)
             {
                 for (int i = 0; i < path.Count; i++)
@@ -290,7 +290,7 @@ namespace sentience.pathplanner
 
                     if (spline_x.Count > 1)
                     {
-                        ArrayList smoothed_result = new ArrayList();
+                        List<float> smoothed_result = new List<float>();
                         smoothed_result.Add((float)result[0]);
                         smoothed_result.Add((float)result[1]);
                         for (int i = 1; i < spline_x.Count; i++)

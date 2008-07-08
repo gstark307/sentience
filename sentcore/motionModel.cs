@@ -21,11 +21,15 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Collections;
+using System.Collections.Generic;
 using sluggish.utilities.xml;
 using CenterSpace.Free;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// robot motion model
+    /// </summary>
     public class motionModel
     {
         // default noise parameters for the motion model
@@ -86,10 +90,10 @@ namespace sentience.core
         public int pose_maturation = 2;        
 
         // list of poses
-        public ArrayList Poses;
+        public List<particlePath> Poses;
 
         // stores all active paths so that they're not garbage collected
-        private ArrayList ActivePoses;
+        private List<particlePath> ActivePoses;
 
         // pose score threshold in the range 0-100 below which low probability poses are pruned
         public int cull_threshold = 75;
@@ -126,8 +130,8 @@ namespace sentience.core
 
             this.rob = rob;
             this.LocalGrid = LocalGrid;
-            Poses = new ArrayList();
-            ActivePoses = new ArrayList();
+            Poses = new List<particlePath>();
+            ActivePoses = new List<particlePath>();
             motion_noise = new float[6];
 
             // some default noise values
@@ -214,19 +218,20 @@ namespace sentience.core
         /// <param name="b"></param>
         private float sample_normal_distribution(float b)
         {
-            float value = 0;
+            float v = 0;
 
             for (int i = 0; i < 12; i++)
-                value += ((rnd.Next(200000) / 100000.0f) - 1.0f) * b;
+                v += (((float)rnd.NextDoublePositive() * 2) - 1.0f) * b;
+                //v += ((rnd.Next(200000) / 100000.0f) - 1.0f) * b;
 
-            return(value / 2.0f);
+            return(v / 2.0f);
         }
 
         /// <summary>
         /// update the given pose using the motion model
         /// </summary>
-        /// <param name="pose"></param>
-        /// <param name="time_elapsed_sec"></param>
+        /// <param name="path">path to add the new estimated pose to</param>
+        /// <param name="time_elapsed_sec">time elapsed since the last update in seconds</param>
         private void sample_motion_model_velocity(particlePath path, float time_elapsed_sec)
         {
             // calculate noisy velocities
@@ -276,7 +281,7 @@ namespace sentience.core
             // sort poses by score
             for (int i = 0; i < Poses.Count-1; i++)
             {
-                particlePath p1 = (particlePath)Poses[i];
+                particlePath p1 = Poses[i];
 
                 // keep track of the bounding region within which the path tree occurs
                 if (p1.current_pose.x < min_tree_x) min_tree_x = p1.current_pose.x;
@@ -289,7 +294,7 @@ namespace sentience.core
                 int winner_index = 0;
                 for (int j = i + 1; j < Poses.Count; j++)
                 {
-                    particlePath p2 = (particlePath)Poses[i];
+                    particlePath p2 = Poses[i];
                     float sc = p2.total_score;
                     if ((sc > max_score) ||
                         ((max_score == 0) && (sc != 0)))
@@ -307,14 +312,14 @@ namespace sentience.core
             }            
 
             // the best path is at the top
-            best_path = (particlePath)Poses[0];
+            best_path = Poses[0];
 
             // It's culling season
             int cull_index = (100 - cull_threshold) * Poses.Count / 100;
             if (cull_index > Poses.Count - 2) cull_index = Poses.Count - 2;
             for (int i = Poses.Count - 1; i > cull_index; i--)
             {
-                particlePath path = (particlePath)Poses[i];
+                particlePath path = Poses[i];
                 if (path.path.Count >= pose_maturation)
                 {                    
                     // remove mapping hypotheses for this path
@@ -326,10 +331,10 @@ namespace sentience.core
             }
 
             // garbage collect any dead paths (R.I.P.)
-            ArrayList possible_roots = new ArrayList(); // stores paths where all branches have coinverged to a single possibility
+            List<particlePath> possible_roots = new List<particlePath>(); // stores paths where all branches have coinverged to a single possibility
             for (int i = ActivePoses.Count - 1; i >= 0; i--)
             {
-                particlePath path = (particlePath)ActivePoses[i];
+                particlePath path = ActivePoses[i];
 
                 if ((!path.Enabled) ||
                     ((path.total_children == 0) && (path.branch_pose == null) && (path.current_pose.time_step < time_step - pose_maturation - 5)))
@@ -353,7 +358,7 @@ namespace sentience.core
             if (possible_roots.Count == 1)
             {
                 // collapse tha psth
-                particlePath path = (particlePath)possible_roots[0];
+                particlePath path = possible_roots[0];
 
                 if (path.branch_pose != null)
                 {
@@ -390,7 +395,7 @@ namespace sentience.core
                     // identify a potential parent at random, 
                     // from one of the surviving paths
                     int random_parent_index = rnd.Next(max-1);
-                    particlePath parent_path = (particlePath)Poses[random_parent_index];
+                    particlePath parent_path = Poses[random_parent_index];
                     
                     // only mature parents can have children
                     if (parent_path.path.Count >= pose_maturation)
@@ -425,12 +430,12 @@ namespace sentience.core
         /// <summary>
         /// show an above view of the robot using the best available pose
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="clear_background"></param>
-        public void ShowBestPose(Byte[] img, int width, int height,
-                         bool clear_background, bool showFieldOfView)
+        /// <param name="img">image data within which to draw</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="clear_background">whether to clear the image before drawing</param>
+        public void ShowBestPose(byte[] img, int width, int height,
+                                 bool clear_background, bool showFieldOfView)
         {
             if (best_path != null)
             {
@@ -450,14 +455,14 @@ namespace sentience.core
         /// <summary>
         /// show an above view of the robot using the best available pose
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="min_x"></param>
-        /// <param name="min_y"></param>
-        /// <param name="max_x"></param>
-        /// <param name="max_y"></param>
-        /// <param name="clear_background"></param>
+        /// <param name="img">image data within which to draw</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="min_x">bounding box top left x coordinate</param>
+        /// <param name="min_y">bounding box top left y coordinate</param>
+        /// <param name="max_x">bounding box bottom right x coordinate</param>
+        /// <param name="max_y">bounding box bottom right y coordinate</param>
+        /// <param name="clear_background">whether to clear the image before drawing</param>
         public void ShowBestPose(Byte[] img, int width, int height,
                                  int min_x, int min_y, int max_x, int max_y,
                                  bool clear_background, bool showFieldOfView)
@@ -476,9 +481,9 @@ namespace sentience.core
         /// <summary>
         /// show the position uncertainty distribution
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
+        /// <param name="img">image data within which to draw</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
         public void Show(Byte[] img, int width, int height,
                          bool clearBackground)
         {
@@ -488,7 +493,7 @@ namespace sentience.core
             float max_y = -99999;
             for (int sample = 0; sample < Poses.Count; sample++)
             {
-                particlePose pose = ((particlePath)Poses[sample]).current_pose;
+                particlePose pose = Poses[sample].current_pose;
                 if (pose.x < min_x) min_x = pose.x;
                 if (pose.y < min_y) min_y = pose.y;
                 if (pose.x > max_x) max_x = pose.x;
@@ -500,19 +505,20 @@ namespace sentience.core
         /// <summary>
         /// show the position uncertainty distribution within the given region
         /// </summary>
-        /// <param name="img">bitmap image (3bpp)</param>
+        /// <param name="img">image data within which to draw</param>
         /// <param name="width">width of the image</param>
         /// <param name="height">height of the image</param>
-        /// <param name="min_x_mm"></param>
-        /// <param name="min_y_mm"></param>
-        /// <param name="max_x_mm"></param>
-        /// <param name="max_y_mm"></param>
-        public void Show(Byte[] img, int width, int height,
+        /// <param name="min_x">bounding box top left x coordinate</param>
+        /// <param name="min_y">bounding box top left y coordinate</param>
+        /// <param name="max_x">bounding box bottom right x coordinate</param>
+        /// <param name="max_y">bounding box bottom right y coordinate</param>
+        /// <param name="clear_background">whether to clear the image before drawing</param>
+        public void Show(byte[] img, int width, int height,
                          float min_x_mm, float min_y_mm,
                          float max_x_mm, float max_y_mm,
-                         bool clearBackground)
+                         bool clear_background)
         {
-            if (clearBackground)
+            if (clear_background)
             {
                 // clear the image
                 for (int i = 0; i < width * height * 3; i++)
@@ -523,7 +529,7 @@ namespace sentience.core
             {
                 for (int sample = 0; sample < Poses.Count; sample++)
                 {
-                    particlePose pose = ((particlePath)Poses[sample]).current_pose;
+                    particlePose pose = Poses[sample].current_pose;
                     int x = (int)((pose.x - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
                     if ((x > 0) && (x < width))
                     {
@@ -546,24 +552,28 @@ namespace sentience.core
         /// <summary>
         /// show the most probable path taken by the robot
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="min_x_mm"></param>
-        /// <param name="min_y_mm"></param>
-        /// <param name="max_x_mm"></param>
-        /// <param name="max_y_mm"></param>
-        /// <param name="clearBackground"></param>
-        public void ShowPath(Byte[] img, int width, int height,
+        /// <param name="img">image data within which to draw</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="line_thickness">thickness of the path</param>
+        /// <param name="min_x">bounding box top left x coordinate</param>
+        /// <param name="min_y">bounding box top left y coordinate</param>
+        /// <param name="max_x">bounding box bottom right x coordinate</param>
+        /// <param name="max_y">bounding box bottom right y coordinate</param>
+        /// <param name="clear_background">whether to clear the image before drawing</param>
+        public void ShowPath(byte[] img, int width, int height,
                              int r, int g, int b, int line_thickness,
                              float min_x_mm, float min_y_mm,
                              float max_x_mm, float max_y_mm,
-                             bool clearBackground)
+                             bool clear_background)
         {
             if (best_path != null)
                 best_path.Show(img, width, height, r, g, b, line_thickness,
                                min_x_mm, min_y_mm, max_x_mm, max_y_mm, 
-                               clearBackground, 0);
+                               clear_background, 0);
         }
 
         /// <summary>
@@ -583,7 +593,7 @@ namespace sentience.core
             {
                 bool clearBackground = false;
                 if (i == 0) clearBackground = true;
-                particlePath path = (particlePath)ActivePoses[i];
+                particlePath path = ActivePoses[i];
                 path.Show(img, width, height, r, g, b, line_thickness,
                           min_tree_x, min_tree_y, max_tree_x, max_tree_y,
                           clearBackground, root_time_step);
@@ -601,8 +611,8 @@ namespace sentience.core
         /// Note that scores are always expressed as log odds matching probability
         /// from grid localisation
         /// </summary>
-        /// <param name="pose"></param>
-        /// <param name="new_score"></param>
+        /// <param name="path">path whose score is to be updated</param>
+        /// <param name="new_score">the new score to be added to the path</param>
         public void updatePoseScore(particlePath path, float new_score)
         {
             path.total_score += new_score;
@@ -610,18 +620,21 @@ namespace sentience.core
         }
 
         /// <summary>
-        /// reset the pose list
+        /// reset the list of possible robot poses
         /// </summary>
         /// <param name="mode"></param>
         public void Reset(int mode)
         {
             switch (mode)
             {
+                // normally used during SLAM
                 case MODE_EGOCENTRIC:
                     {
                         ResetEgocentric();
                         break;
                     }
+                    
+                // normally used during monte carlo localisation
                 case MODE_MONTE_CARLO:
                     {
                         ResetMonteCarlo();
@@ -643,6 +656,7 @@ namespace sentience.core
 
         /// <summary>
         /// resets the pose list distributed randomly across the entire grid
+        /// for use with monte carlo localisation
         /// </summary>
         private void ResetMonteCarlo()
         {
@@ -657,8 +671,9 @@ namespace sentience.core
 
 
         /// <summary>
-        /// predict the next time step
+        /// forward prediction - predicts the next state/pose of the robot
         /// </summary>
+        /// <param name="time_elapsed_sec">time elapsed since the last update in seconds</param>
         public void Predict(float time_elapsed_sec)
         {
             if (time_elapsed_sec > 0)
@@ -679,8 +694,8 @@ namespace sentience.core
                 }
 
                 // update poses
-                for (int sample = 0; sample < Poses.Count; sample++)
-                    sample_motion_model_velocity((particlePath)Poses[sample], time_elapsed_sec);
+                for (int sample = Poses.Count-1; sample >= 0; sample--)
+                    sample_motion_model_velocity(Poses[sample], time_elapsed_sec);
 
                 time_step++;
 
@@ -695,11 +710,11 @@ namespace sentience.core
         /// </summary>
         /// <param name="stereo_rays">list of evidence rays to be inserted into the grid</param>
         /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
-        public void AddObservation(ArrayList[] stereo_rays, bool localiseOnly)
+        public void AddObservation(List<evidenceRay>[] stereo_rays, bool localiseOnly)
         {
             for (int p = 0; p < Poses.Count; p++)
             {
-                particlePath path = (particlePath)Poses[p];
+                particlePath path = Poses[p];
                 float logodds_localisation_score = 
                     path.current_pose.AddObservation(stereo_rays,
                                                      rob, LocalGrid, 

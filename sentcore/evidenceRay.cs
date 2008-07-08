@@ -24,6 +24,9 @@ using System.Text;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// inverse sensor model for a single observed feature
+    /// </summary>
     public sealed class evidenceRay
     {
         public const int pan_steps = 25;
@@ -57,7 +60,7 @@ namespace sentience.core
         /// <summary>
         /// save the ray to file
         /// </summary>
-        /// <param name="binfile"></param>
+        /// <param name="binfile">binary file into which to save the data</param>
         public void Save(BinaryWriter binfile)
         {
             for (int i = 0; i < 2; i++)
@@ -77,7 +80,7 @@ namespace sentience.core
         /// <summary>
         /// load the ray from file
         /// </summary>
-        /// <param name="binfile"></param>
+        /// <param name="binfile">binary file from which to load the data</param>
         public void Load(BinaryReader binfile)
         {
             for (int i = 0; i < 2; i++)
@@ -105,9 +108,9 @@ namespace sentience.core
         /// <summary>
         /// what is the occupancy probability at the given point ?
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
+        /// <param name="x">x coordinate relative to the observer</param>
+        /// <param name="y">y coordinate relative to the observer</param>
+        /// <returns>occupancy probability</returns>
         public float probability(float x, float y)
         {
             float dx, dy;
@@ -142,6 +145,14 @@ namespace sentience.core
             return (prob);
         }
 
+        /// <summary>
+        /// what is the occupancy probability at the given point ?
+        /// </summary>
+        /// <param name="x">x coordinate relative to the observer</param>
+        /// <param name="y">y coordinate relative to the observer</param>
+        /// <param name="gaussianLookup">lookup table for gaussian distribution</param>
+        /// <param name="forwardBias">tweaks the peak probability closer to or further away from the observer</param>
+        /// <returns>occupancy probability</returns>
         public float probability(float x, float y, float[] gaussianLookup, float forwardBias)
         {
             float dx, dy;
@@ -156,9 +167,9 @@ namespace sentience.core
             {
                 if (distFromObserver < start_dist + length)
                 {
-                    //this just uses a crude forward adjustment parameter
-                    //to bias the peak probability position.
-                    //Better than this is possible.
+                    // this just uses a crude forward adjustment parameter
+                    // to bias the peak probability position.
+                    // Better than this is possible.
                     float fraction = (distFromObserver - start_dist) / length;
                     float peakProbability = fattestPoint - ((0.5f-fattestPoint)*forwardBias);                    
                     if (fraction > peakProbability)
@@ -182,7 +193,7 @@ namespace sentience.core
         /// <summary>
         /// translate and rotate the ray by the given values
         /// </summary>
-        /// <param name="r"></param>        
+        /// <param name="r">object containing the desired translation and rotation</param>        
         public void translateRotate(pos3D r)
         {
             //take a note of where the ray was observed from
@@ -213,8 +224,10 @@ namespace sentience.core
         /// returns a version of this evidence ray rotated through the given 
         /// pan angle in the XY plane.  This is used for generating trial poses.
         /// </summary>
-        /// <param name="extra_pan"></param>
-        /// <returns></returns>
+        /// <param name="extra_pan">pan angle to be added</param>
+        /// <param name="translation_x">new obsevation x coordinate</param>
+        /// <param name="translation_y">new obsevation y coordinate</param>
+        /// <returns>evidence ray object</returns>
         public evidenceRay trialPose(float extra_pan,
                                      float translation_x, float translation_y)
         {

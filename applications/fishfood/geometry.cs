@@ -21,6 +21,9 @@ using System;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// computational geometry
+    /// </summary>
 	public class geometry
 	{		
 		public geometry()

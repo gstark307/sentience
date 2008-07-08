@@ -20,7 +20,7 @@
 using System;
 using System.Xml;
 using System.IO;
-using System.Collections;
+using System.Collections.Generic;
 using sentience.pathplanner;
 using sluggish.utilities.xml;
 using sluggish.utilities.timing;
@@ -28,6 +28,9 @@ using System.Threading;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// object containing the state of a robot
+    /// </summary>
     public class robot : pos3D
     {
         // name of the robot
@@ -605,10 +608,10 @@ namespace sentience.core
         /// mapping update, which can consist of multiple threads running concurrently
         /// </summary>
         /// <param name="stereo_rays">rays to be thrown into the grid map</param>
-        private void MappingUpdate(ArrayList[] stereo_rays)
+        private void MappingUpdate(List<evidenceRay>[] stereo_rays)
         {
             // list of currently active threads
-            ArrayList activeThreads = new ArrayList();
+            List<ThreadMappingState> activeThreads = new List<ThreadMappingState>();
 
             // create a set of threads
             Thread[] mapping_thread = new Thread[mapping_threads];
@@ -733,7 +736,7 @@ namespace sentience.core
         /// load stereo images from a list
         /// </summary>
         /// <param name="images">list of images (byte arrays) in left/right order</param>
-        private void loadImages(ArrayList images)
+        private void loadImages(List<byte[]> images)
         {
             stopwatch correspondence_time = new stopwatch();
             correspondence_time.Start();
@@ -742,12 +745,12 @@ namespace sentience.core
 
             // create a set of threads
             Thread[] correspondence_thread = new Thread[no_of_stereo_cameras];			
-			ArrayList activeThreads = new ArrayList();
+			List<ThreadStereoCorrespondenceState> activeThreads = new List<ThreadStereoCorrespondenceState>();
 			
             for (int stereo_camera_index = 0; stereo_camera_index < images.Count / 2; stereo_camera_index++)
             {
-                Byte[] left_image = (Byte[])images[stereo_camera_index * 2];
-                Byte[] right_image = (Byte[])images[(stereo_camera_index * 2) + 1];
+                byte[] left_image = images[stereo_camera_index * 2];
+                byte[] right_image = images[(stereo_camera_index * 2) + 1];
 
 				// create a state for the thread
 				ThreadStereoCorrespondenceState state = new ThreadStereoCorrespondenceState();
@@ -896,7 +899,7 @@ namespace sentience.core
         /// <param name="images">list containing stereo images in left/right order</param>
         /// <param name="motion_model">the motion model to be used</param>
         /// <param name="grid">the ocupancy grid to be updated</param>
-        private void update(ArrayList images)
+        private void update(List<byte[]> images)
         {
             if (images != null)
             {                
@@ -904,7 +907,7 @@ namespace sentience.core
                 loadImages(images);
 
                 // create an observation as a set of rays from the stereo correspondence results
-                ArrayList[] stereo_rays = new ArrayList[head.no_of_stereo_cameras];
+                List<evidenceRay>[] stereo_rays = new List<evidenceRay>[head.no_of_stereo_cameras];
                 for (int cam = 0; cam < head.no_of_stereo_cameras; cam++)
                     stereo_rays[cam] = inverseSensorModel.createObservation(head, cam);
 
@@ -921,7 +924,7 @@ namespace sentience.core
         /// <param name="y">y position in mm</param>
         /// <param name="pan">pan angle in radians</param>
         /// <param name="mapping">mapping or localisation</param>
-        public void updateFromKnownPosition(ArrayList images,
+        public void updateFromKnownPosition(List<byte[]> images,
                                             float x, float y, float pan)                   
         {
             // update the grid
@@ -991,7 +994,7 @@ namespace sentience.core
         /// <param name="right_wheel_encoder">right wheel encoder position</param>
         /// <param name="time_elapsed_sec">time elapsed since the last update in sec</param>
         /// <param name="mapping">mapping or localisation</param>
-        public void updateFromEncoderPositions(ArrayList images,
+        public void updateFromEncoderPositions(List<byte[]> images,
                                                long left_wheel_encoder, long right_wheel_encoder,
                                                float time_elapsed_sec)
         {
@@ -1042,7 +1045,7 @@ namespace sentience.core
         /// <param name="forward_velocity">forward velocity in mm/sec</param>
         /// <param name="angular_velocity">angular velocity in radians/sec</param>
         /// <param name="time_elapsed_sec">time elapsed since the last update in sec</param>
-        public void updateFromVelocities(ArrayList images, 
+        public void updateFromVelocities(List<byte[]> images, 
                                          float forward_velocity, float angular_velocity,
                                          float time_elapsed_sec)
         {
@@ -1148,7 +1151,7 @@ namespace sentience.core
                 planner.Update(0, 0, LocalGridDimension - 1, LocalGridDimension - 1);
 
                 // create the plan
-                ArrayList new_plan = planner.CreatePlan(x, y, destination_x, destination_y);
+                List<float> new_plan = planner.CreatePlan(x, y, destination_x, destination_y);
                 if (new_plan.Count > 0)
                 {
                     // convert the plan into a set of poses
@@ -1690,7 +1693,7 @@ namespace sentience.core
 
             if (xnod.Name == "InverseSensorModels")
             {
-                ArrayList rayModelsData = new ArrayList();
+                List<string> rayModelsData = new List<string>();
                 head.sensormodel[cameraIndex - 1] = new rayModelLookup(1, 1);
                 head.sensormodel[cameraIndex-1].LoadFromXml(xnod, level + 1, rayModelsData);
                 head.sensormodel[cameraIndex-1].LoadSensorModelData(rayModelsData);

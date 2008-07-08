@@ -7,8 +7,7 @@ using System.Drawing;
 namespace sentience.calibration
 {
     /// <summary>
-    /// a 2D grid cell intended for use when applying 2D grids to images
-    /// for applications such as checkerboard calibration
+    /// a 2D grid cell intended for use when applying 2D grids to images for applications such as checkerboard calibration
     /// </summary>
     public class grid2Dcell
     {
@@ -37,6 +36,9 @@ namespace sentience.calibration
         }
     }
 
+    /// <summary>
+    /// represents a 2D grid
+    /// </summary>
     public class grid2D
     {
         // perimeter of the grid

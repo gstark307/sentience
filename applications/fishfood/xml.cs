@@ -22,6 +22,9 @@ using System.Xml;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// contains functions for dealing with XML
+    /// </summary>
 	public class xml
 	{
 		public xml()

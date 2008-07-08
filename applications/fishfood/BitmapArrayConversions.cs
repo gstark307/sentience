@@ -26,7 +26,6 @@ namespace sentience.calibration
 {
     /// <summary>
     /// conversions between bitmap objects and byte arrays
-    /// This is based upon GPL code originally used in the Sentience project
     /// </summary>
     public partial class BitmapArrayConversions
     {

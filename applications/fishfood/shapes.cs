@@ -6,6 +6,9 @@ using System.Drawing;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// detecting shapes such as squares
+    /// </summary>
     public class shapes
     {
         #region "detecting calibration dots"

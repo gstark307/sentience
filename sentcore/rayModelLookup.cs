@@ -20,7 +20,7 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using sluggish.utilities.xml;
 
@@ -127,13 +127,13 @@ namespace sentience.core
         /// creates a new sensor model array from the given list of loaded ray models
         /// </summary>
         /// <param name="rayModelsData">list containing ray model data as strings</param>
-        public void LoadSensorModelData(ArrayList rayModelsData)
+        public void LoadSensorModelData(List<string> rayModelsData)
         {
             // get the maximum array size needed to store the data
             int ray_model_normal_length = 10;
             for (int i = 0; i < rayModelsData.Count; i++)
             {
-                String[] dataStr = ((String)rayModelsData[i]).Split(',');
+                String[] dataStr = (rayModelsData[i]).Split(',');
                 if (dataStr.Length > ray_model_normal_length) ray_model_normal_length = dataStr.Length;
             }
 
@@ -178,7 +178,7 @@ namespace sentience.core
                 XmlNode xnodDE = xd.DocumentElement;
 
                 // recursively walk the node tree
-                ArrayList rayModelsData = new ArrayList();
+                List<string> rayModelsData = new List<string>();
                 LoadFromXml(xnodDE, 0, rayModelsData);
                 LoadSensorModelData(rayModelsData);
 
@@ -194,7 +194,7 @@ namespace sentience.core
         /// </summary>
         /// <param name="xnod"></param>
         /// <param name="level"></param>
-        public void LoadFromXml(XmlNode xnod, int level, ArrayList rayModelsData)
+        public void LoadFromXml(XmlNode xnod, int level, List<string> rayModelsData)
         {
             XmlNode xnodWorking;
 

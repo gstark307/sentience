@@ -28,6 +28,9 @@ using sluggish.utilities.xml;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// scheduled for deletion
+    /// </summary>
     public class calibration_point
     {
         public float x, y;
@@ -40,7 +43,7 @@ namespace sentience.calibration
     }
 
     /// <summary>
-    /// defines a region of interest containing the calibration pattern
+    /// scheduled for deletion - defines a region of interest containing the calibration pattern
     /// </summary>
     public class calibration_region_of_interest
     {
@@ -85,6 +88,9 @@ namespace sentience.calibration
         }
     }
 
+    /// <summary>
+    /// scheduled for deletion
+    /// </summary>
     public class calibration_line
     {
         private float lin = -1;
@@ -262,6 +268,9 @@ namespace sentience.calibration
         }
     }
 
+    /// <summary>
+    /// scheduled for deletion
+    /// </summary>
     public class calibration_edge : calibration_point
     {
         public int magnitude;
@@ -277,6 +286,9 @@ namespace sentience.calibration
         }
     }
 
+    /// <summary>
+    /// scheduled for deletion
+    /// </summary>
     public class calibration
     {
         Random rnd = new Random();

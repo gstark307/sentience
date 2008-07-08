@@ -36,6 +36,9 @@ using System.Drawing;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// edge detection using the canny algorithm
+    /// </summary>
     public class CannyEdgeDetector 
     {
  	    // statics	

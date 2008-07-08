@@ -18,7 +18,7 @@
 */
 
 using System;
-using System.Collections;
+using System.Collections.Generic;
 
 namespace sentience.core
 {
@@ -36,7 +36,7 @@ namespace sentience.core
         public occupancygridMultiHypothesis grid;
 
         // stereo rays to be thrown into the grid
-        public ArrayList[] stereo_rays;
+        public List<evidenceRay>[] stereo_rays;
 
         // the motion model for the robot
         public motionModel motion;

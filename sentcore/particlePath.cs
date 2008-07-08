@@ -330,11 +330,11 @@ namespace sentience.core
         /// <param name="starting_angular_velocity">the angular velocity to start with in radians/sec</param>
         /// <param name="time_per_index_sec">time taken between indexes along the path in seconds</param>
         /// <returns></returns>
-        public ArrayList getVelocities(float starting_forward_velocity,
-                                       float starting_angular_velocity,
-                                       float time_per_index_sec)
+        public List<float> getVelocities(float starting_forward_velocity,
+                                         float starting_angular_velocity,
+                                         float time_per_index_sec)
         {
-            ArrayList result = new ArrayList();
+            List<float> result = new List<float>();
 
             float forward_velocity = starting_forward_velocity;
             float angular_velocity = starting_angular_velocity;

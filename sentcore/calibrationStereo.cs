@@ -27,6 +27,9 @@ using sluggish.utilities.xml;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// scheduled for deletion
+    /// </summary>
     public class calibrationStereo
     {
         public calibration leftcam, rightcam;

@@ -22,6 +22,9 @@ using System.Collections;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// represents a 2D feature being tracked
+    /// </summary>
     public class sentienceTrackingFeature
     {
         #region "variables"

@@ -23,6 +23,9 @@ using System.Collections.Generic;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// polynomial curve fitting
+    /// </summary>
     public class polynomial
     {
         private const int MaxO = 25; // max polynomial degree

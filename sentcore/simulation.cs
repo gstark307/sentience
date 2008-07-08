@@ -20,7 +20,7 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using sluggish.utilities.xml;
 using sluggish.utilities.graph;
@@ -47,7 +47,7 @@ namespace sentience.core
         public particlePath path = null;
 
         // a list containing the forward and angular velocity values along the path
-        ArrayList velocities;
+        private List<float> velocities;
 
         // time which elapses per step in seconds
         public float time_per_index_sec = 2;
@@ -63,7 +63,7 @@ namespace sentience.core
         private float min_x=0, min_y=0, max_x=0, max_y=0;
 
         // segments which make up the path
-        public ArrayList pathSegments = null;
+        public List<simulationPathSegment> pathSegments = null;
 
         public robot rob;
         
@@ -75,7 +75,7 @@ namespace sentience.core
         {
             this.RobotDesignFile = RobotDesignFile;
             this.ImagesPath = ImagesPath;
-            pathSegments = new ArrayList();
+            pathSegments = new List<simulationPathSegment>();
             Reset();
         }
         
@@ -143,9 +143,9 @@ namespace sentience.core
         /// returns a list of performance benchmarks
         /// </summary>
         /// <returns>list of benchmark timings</returns>
-        public ArrayList GetBenchmarks()
+        public List<string> GetBenchmarks()
         {
-            ArrayList benchmarks = new ArrayList();
+            List<string> benchmarks = new List<string>();
             benchmarks.Add("Robot position " + Convert.ToString((int)rob.x) + ", " +
                                                Convert.ToString((int)rob.y));
 
@@ -335,7 +335,7 @@ namespace sentience.core
                     prev_pose = (particlePose)path.path[path.path.Count - 1];
 
                 // update the list of poses
-                ArrayList poses = segment.getPoses();
+                List<particlePose> poses = segment.getPoses();
 
                 if (prev_pose != null)
                 {
@@ -388,7 +388,7 @@ namespace sentience.core
         /// run the simulation, one step at a time
         /// </summary>
         /// <param name="images">stereo image bitmaps for this time step</param>
-        public void RunOneStep(ArrayList images)
+        public void RunOneStep(List<byte[]> images)
         {
             if (path != null)
             {
@@ -556,7 +556,7 @@ namespace sentience.core
                 XmlDocument xd = new XmlDocument();
                 xd.Load(xtr);
 
-                pathSegments = new ArrayList();
+                pathSegments = new List<simulationPathSegment>();
 
                 // get the document root node
                 XmlNode xnodDE = xd.DocumentElement;

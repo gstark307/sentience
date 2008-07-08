@@ -23,6 +23,9 @@ using System.Collections.Generic;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// draws objects within images, such as lines and circles
+    /// </summary>
 	public class drawing
 	{		
 		public drawing()

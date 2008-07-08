@@ -26,6 +26,9 @@ using System.Drawing;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// stereo camera calibration
+    /// </summary>
     public class calibration
     {
         #region "calibration"

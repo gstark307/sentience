@@ -20,7 +20,10 @@
 using System;
 
 namespace sentience.calibration
-{    
+{
+    /// <summary>
+    /// represents a link between dots on a calibration pattern
+    /// </summary>    
     public class calibrationLink : hypergraph_link
     {
         // whether this link is horizontal or vertical

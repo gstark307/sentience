@@ -23,6 +23,9 @@ using sluggish.imageprocessing.FASTcorners;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// stereo correspondence based upon FAST corners
+    /// </summary>
     public class sentience_stereo_FAST
     {
         public const int MAX_POINT_FEATURES = 6000;

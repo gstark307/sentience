@@ -22,6 +22,9 @@ using System.Collections;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// parses command line arguments
+    /// </summary>
     public class commandline
     {
         #region "adding and removing parameters"

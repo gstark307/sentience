@@ -25,6 +25,9 @@ using sluggish.utilities;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// represents a possible robot pose
+    /// </summary>
     public sealed class particlePose
     {
         // position of the pose in millimetres
@@ -246,7 +249,7 @@ namespace sentience.core
         /// <param name="LocalGrid">occupancy grid into which to insert the observation</param>
         /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
         /// <returns>localisation matching score</returns>
-        public float AddObservation(ArrayList[] stereo_rays,
+        public float AddObservation(List<evidenceRay>[] stereo_rays,
                                     robot rob, 
                                     occupancygridMultiHypothesis LocalGrid,
                                     bool localiseOnly)
@@ -274,7 +277,7 @@ namespace sentience.core
                 {
                     // observed ray.  Note that this is in an egocentric
                     // coordinate frame relative to the head of the robot
-                    evidenceRay ray = (evidenceRay)stereo_rays[cam][r];
+                    evidenceRay ray = stereo_rays[cam][r];
 
                     // translate and rotate this ray appropriately for the pose
                     evidenceRay trial_ray = ray.trialPose(camera_centre_location[cam].pan, 

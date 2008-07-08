@@ -25,6 +25,9 @@ using System.Drawing;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// various image processing routines
+    /// </summary>
 	public class image
     {
         #region "constructors"

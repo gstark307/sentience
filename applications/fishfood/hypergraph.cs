@@ -22,12 +22,18 @@ using System.Collections.Generic;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// represents a link between nodes in a graph
+    /// </summary>
     public class hypergraph_link
     {
         public hypergraph_node From;
         public hypergraph_node To;
     }
     
+    /// <summary>
+    /// represents a graph node
+    /// </summary>
     public class hypergraph_node
     {
         public string Name;
@@ -48,6 +54,9 @@ namespace sentience.calibration
         }
     }
     
+    /// <summary>
+    /// represents a set of nodes and links
+    /// </summary>
     public class hypergraph
     {
         public List<hypergraph_node> Nodes;

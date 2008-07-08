@@ -25,12 +25,15 @@ using sluggish.utilities;
 
 namespace sentience.core
 {
+    /// <summary>
+    /// contains various image processing routines, such as integral image and blob detection
+    /// </summary>
     public sealed class classimage
     {
         //dimensions of the image
         public int width, height;
 
-        public Byte[] image;
+        public byte[] image;
         private int[] Integral;
 
         private float[] row_average;

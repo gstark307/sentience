@@ -21,6 +21,9 @@ using System;
 
 namespace sentience.calibration
 {
+    /// <summary>
+    /// represents a dot on a calibration pattern
+    /// </summary>
     public class calibrationDot : hypergraph_node
     {   
         // is this the centre dot?
