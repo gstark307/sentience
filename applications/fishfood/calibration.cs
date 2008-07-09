@@ -1518,7 +1518,7 @@ namespace sentience.calibration
 
                     double mean_error = curve2.GetMeanError();
 
-                    double scaledown = 0.99999999999999999999;
+                    double scaledown = 0.99999999999999999;
                     if (mean_error < search_min_error)
                     {
 
