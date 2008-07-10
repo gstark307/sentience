@@ -406,8 +406,9 @@ namespace sentience.calibration
         /// <param name="sampling_step_size">
         /// step sized used to sample the image in pixels <see cref="System.Int32"/>
         /// </param>
-        private void AutoThreshold(byte[] img,
-                                   int sampling_step_size)
+        private static void AutoThreshold(byte[] img, int width, int height,
+                                          int sampling_step_size,
+                                          ref float low_threshold, ref float high_threshold)
         {
             int bytes_per_pixel = img.Length / (width*height);
             int tx = width/3;
@@ -441,13 +442,60 @@ namespace sentience.calibration
             
             float fraction = (contrast - 0.048f) / (0.42f - 0.048f);            
             
-            lowThreshold = 1.6f + (fraction * (8.0f - 1.6f));
-            highThreshold = 2.0f + (fraction * (10f - 2.0f));
+            low_threshold = 1.6f + (fraction * (8.0f - 1.6f));
+            high_threshold = 2.0f + (fraction * (10f - 2.0f));
             
             //Console.WriteLine("contrast: " + contrast.ToString());
             //Console.WriteLine("low threshold: " + lowThreshold.ToString());
             //Console.WriteLine("high threshold: " + highThreshold.ToString());
         }
+
+        /// <summary>
+        /// automatically calculate the high and low canny thresholds
+        /// based upon the mean light and dark values from a 
+        /// histogram taken from the centre region of the image
+        /// </summary>
+        /// <param name="img">
+        /// image data <see cref="System.Byte"/>
+        /// </param>
+        /// <param name="sampling_step_size">
+        /// step sized used to sample the image in pixels <see cref="System.Int32"/>
+        /// </param>
+        private static void AutoThreshold2(byte[] img, int width, int height,
+                                           int sampling_step_size,
+                                           ref float low_threshold, ref float high_threshold)
+        {
+            int bytes_per_pixel = img.Length / (width*height);
+            int tx = width/3;
+            int ty = height/3;
+            int bx = width - 1 - tx;
+            int by = height - 1 - ty;
+            float[] histogram = new float[256];
+            for (int y = ty; y <= by; y += sampling_step_size)
+            {
+                int n = ((y * width) + tx) * bytes_per_pixel;
+                for (int x = tx; x <= bx; x += sampling_step_size)
+                {
+                    if (bytes_per_pixel > 1)
+                    {
+                        histogram[img[n+2]]++;
+                    }
+                    else
+                    {
+                        histogram[img[n]]++;
+                    }
+                    n += bytes_per_pixel;
+                }
+            }
+            float mean_dark = 0;
+            float mean_light = 0;
+            float dark_ratio = 0;
+            GetGlobalThreshold(histogram, ref mean_dark, ref mean_light, ref dark_ratio);
+            
+            low_threshold = mean_dark;;
+            high_threshold = mean_light;
+        }
+
         
         #endregion
     	
@@ -500,7 +548,9 @@ namespace sentience.calibration
             sourceImage = img;
             
             // adjust thresholds automatically
-            if (automatic_thresholds) AutoThreshold(sourceImage, 2);
+            if (automatic_thresholds) 
+                AutoThreshold(sourceImage, 2, width, height,
+                              ref lowThreshold, ref highThreshold);
                 
     		picsize = width * height;
     		initArrays();
@@ -1185,6 +1235,449 @@ namespace sentience.calibration
         }
         
         #endregion
+
+        #region "canny-deriche edge detection"
+
+        /// <summary>
+        /// Deriche Filter
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="alphaD"></param>
+        /// <param name="result">resulting filtered image</param>
+        private static void Deriche(byte[] ip,
+                                    int image_width, int image_height,
+                                    float alphaD,
+                                    ref byte[] result)
+        {
+            int pixels;
+            float[] nf_grx = null;
+            float[] nf_gry = null;
+            int[] a1 = null;
+            float[] a2 = null;
+            float[] a3 = null;
+            float[] a4 = null;
+
+            int icols = 0;
+            int rows, cols;
+            int lig_1, lig_2, lig_3;
+            int col_1, col_2, col_3;
+            int icol_1, icol_2;
+            int i, j;
+            float ad1, ad2;
+            float an1, an2, an3, an4;
+            float an11;
+
+            pixels = image_height * image_width;
+
+            lig_1 = image_height - 1;
+            lig_2 = image_height - 2;
+            lig_3 = image_height - 3;
+            col_1 = image_width - 1;
+            col_2 = image_width - 2;
+            col_3 = image_width - 3;
+
+            // temporary buffers
+            nf_grx = new float[pixels];
+            nf_gry = new float[pixels];
+
+            a1 = new int[pixels];
+            a2 = new float[pixels];
+            a3 = new float[pixels];
+            a4 = new float[pixels];
+
+            ad1 = (float)-Math.Exp(-alphaD);
+            ad2 = 0;
+            an1 = 1;
+            an2 = 0;
+            an3 = ad1;
+            an4 = 0;
+            an11 = 1;
+
+            //  FIRST STEP:  Y GRADIENT
+            //  x-smoothing
+            int n = 0;
+            for (i = 0; i < image_height; i++)
+                for (j = 0; j < image_width; j++)
+                    a1[i * image_width + j] = (int)ip[n++];
+
+            for (i = 0; i < image_height; ++i)
+            {
+                icols = i * image_width;
+                icol_1 = icols - 1;
+                icol_2 = icols - 2;
+                a2[icols] = an1 * a1[icols];
+                a2[icols + 1] = an1 * a1[icols + 1] + an2 * a1[icols] - ad1 * a2[icols];
+                for (j = 2; j < image_width; ++j)
+                    a2[icols + j] = an1 * a1[icols + j] + an2 * a1[icol_1 + j] - ad1 * a2[icol_1 + j] - ad2 * a2[icol_2 + j];
+            }
+
+            for (i = 0; i < image_height; ++i)
+            {
+                icols = i * image_width;
+                icol_1 = icols + 1;
+                icol_2 = icols + 2;
+                a3[icols + col_1] = 0;
+                a3[icols + col_2] = an3 * a1[icols + col_1];
+                for (j = col_3; j >= 0; --j)
+                    a3[icols + j] = an3 * a1[icol_1 + j] + an4 * a1[icol_2 + j] - ad1 * a3[icol_1 + j] - ad2 * a3[icol_2 + j];
+            }
+
+            icol_1 = pixels;
+
+            for (i = 0; i < icol_1; ++i)
+                a2[i] += a3[i];
+
+            //  FIRST STEP Y-GRADIENT : y-derivative
+            //  columns top - down
+            for (j = 0; j < image_width; ++j)
+            {
+                a3[j] = 0;
+                a3[image_width + j] = an11 * a2[j] - ad1 * a3[j];
+                for (i = 2; i < image_height; ++i)
+                    a3[i * image_width + j] = an11 * a2[(i - 1) * image_width + j] - ad1 * a3[(i - 1) * image_width + j] - ad2 * a3[(i - 2) * image_width + j];
+            }
+
+            //  columns down top
+            for (j = 0; j < image_width; ++j)
+            {
+                a4[lig_1 * image_width + j] = 0;
+                a4[(lig_2 * image_width) + j] = -an11 * a2[lig_1 * image_width + j] - ad1 * a4[lig_1 * image_width + j];
+                for (i = lig_3; i >= 0; --i)
+                    a4[i * image_width + j] = -an11 * a2[(i + 1) * image_width + j] - ad1 * a4[(i + 1) * image_width + j] - ad2 * a4[(i + 2) * image_width + j];
+            }
+
+            icol_1 = pixels;
+
+            for (i = 0; i < icol_1; ++i)
+                a3[i] += a4[i];
+
+            for (i = 0; i < image_height; ++i)
+                for (j = 0; j < image_width; ++j)
+                    nf_gry[i * image_width + j] = a3[i * image_width + j];
+
+
+            //  SECOND STEP X-GRADIENT
+            n = 0;
+            for (i = 0; i < image_height; ++i)
+                for (j = 0; j < image_width; ++j)
+                    a1[i * image_width + j] = (int)ip[n++];
+
+            for (i = 0; i < image_height; ++i)
+            {
+                icols = i * image_width;
+                icol_1 = icols - 1;
+                icol_2 = icols - 2;
+                a2[icols] = 0;
+                a2[icols + 1] = an11 * a1[icols];
+                for (j = 2; j < image_width; ++j)
+                    a2[icols + j] = an11 * a1[icol_1 + j] - ad1 * a2[icol_1 + j] - ad2 * a2[icol_2 + j];
+            }
+
+            for (i = 0; i < image_height; ++i)
+            {
+                icols = i * image_width;
+                icol_1 = icols + 1;
+                icol_2 = icols + 2;
+                a3[icols + col_1] = 0;
+                a3[icols + col_2] = -an11 * a1[icols + col_1];
+                for (j = col_3; j >= 0; --j)
+                    a3[icols + j] = -an11 * a1[icol_1 + j] - ad1 * a3[icol_1 + j] - ad2 * a3[icol_2 + j];
+            }
+
+            icol_1 = pixels;
+
+            for (i = 0; i < icol_1; ++i)
+                a2[i] += a3[i];
+
+            //  on the columns
+            //  columns top down
+            for (j = 0; j < image_width; ++j)
+            {
+                a3[j] = an1 * a2[j];
+                a3[image_width + j] = an1 * a2[image_width + j] + an2 * a2[j] - ad1 * a3[j];
+                for (i = 2; i < image_height; ++i)
+                    a3[i * image_width + j] = an1 * a2[i * image_width + j] + an2 * a2[(i - 1) * image_width + j] - ad1 * a3[(i - 1) * image_width + j] - ad2 * a3[(i - 2) * image_width + j];
+            }
+
+            //  columns down top
+            for (j = 0; j < image_width; ++j)
+            {
+                a4[lig_1 * image_width + j] = 0;
+                a4[lig_2 * image_width + j] = an3 * a2[lig_1 * image_width + j] - ad1 * a4[lig_1 * image_width + j];
+                for (i = lig_3; i >= 0; --i)
+                    a4[i * image_width + j] = an3 * a2[(i + 1) * image_width + j] + an4 * a2[(i + 2) * image_width + j] - ad1 * a4[(i + 1) * image_width + j] - ad2 * a4[(i + 2) * image_width + j];
+            }
+
+            icol_1 = pixels;
+
+            for (i = 0; i < icol_1; ++i)
+                a3[i] += a4[i];
+
+            for (i = 0; i < image_height; i++)
+                for (j = 0; j < image_width; j++)
+                    nf_grx[i * image_width + j] = a3[i * image_width + j];
+
+            //  SECOND STEP X-GRADIENT : the x-gradient is done
+            //  THIRD STEP : NORM
+            //  computation of the magnitude
+            for (i = 0; i < image_height; i++)
+                for (j = 0; j < image_width; j++)
+                    a2[i * image_width + j] = nf_gry[i * image_width + j];
+
+            icol_1 = pixels;
+
+            // gradient magnitude
+            for (i = 0; i < icol_1; ++i)
+                a2[i] = (float)Math.Sqrt(a2[i] * a2[i] + a3[i] * a3[i]);
+
+            bool create_result = false;
+
+            if (result == null)
+                create_result = true;
+            else
+            {
+                if (result.Length != pixels)
+                    create_result = true;
+            }
+
+            if (create_result)
+                result = new byte[pixels];
+
+            float min = a2[0];
+            float max = a2[0];
+            for (i = 1; i < pixels; i++)
+            {
+                if (a2[i] > max) max = a2[i];
+                if (a2[i] < min) min = a2[i];
+            }
+
+            for (i = 0; i < pixels; i++)
+                result[i] = (byte)(255.0 * (a2[i] - min) / (max - min));
+        }
+            	 
+    	/// <summary>
+    	/// double threshold
+    	/// </summary>
+    	/// <param name="ima"></param>
+    	/// <param name="image_width">image width</param>
+    	/// <param name="image_height">image height</param>
+    	/// <param name="high_threshold">high threshold</param>
+    	/// <param name="low_threshold">low threshold</param>
+    	/// <param name="res">returned thresholded image</param>
+    	private static void DoubleThreshold(byte[] ima,
+    	                                    int image_width, int image_height,
+    	                                    float high_threshold, float low_threshold,
+    	                                    ref byte[] res) 
+    	{
+            if (res == null)
+            {
+    		    res = new byte[image_width * image_height];
+    		}
+    		else
+    		{
+    		    if (res.Length != ima.Length)
+    		        res = new byte[image_width * image_height];
+    		}
+
+            for (int i = ima.Length - 1; i >= 0; i--)
+            {
+				int pix = ima[i];
+				if (pix >= high_threshold) 
+				{
+					res[i] = 255;
+				} 
+				else
+				{
+				    if (pix >= low_threshold) 
+  					    res[i] = 128;
+				}
+            }
+    	}
+
+    	/// <summary>
+    	/// hysteresis thresholding
+    	/// </summary>
+    	/// <param name="ima">original edges image</param>
+    	/// <param name="image_width">image width</param>
+    	/// <param name="image_height">image height</param>
+    	/// <param name="res">thresholded image</param> 
+    	private static void Hyst(byte[] ima, 
+    	                         int image_width, int image_height,
+    	                         ref byte[] res)
+    	{
+    	    int n;
+    	    if (res == null)
+    	    {
+    	        res = (byte[])ima.Clone();
+    	    }
+    	    else
+    	    {
+    	        if (res.Length != ima.Length)
+    	            res = (byte[])ima.Clone();
+    	    }
+    	    
+    		bool change = true;
+    		while (change) 
+    		{
+    			change = false;
+    			for (int y = 1; y < image_height - 1; y++)    			 
+    			{
+    			    n = (y * image_width) + 1;
+    			    for (int x = 1; x < image_width - 1; x++)	 
+    				{
+    					if (res[n] == 255) 
+    					{
+    						if (res[n + 1] == 128) 
+    						{
+    							change = true;
+    							res[n + 1]= 255;
+    						}
+    						if (res[n-1] == 128) 
+    						{
+    							change = true;
+    							res[n - 1] = 255;
+    						}
+    						if (res[n + image_width] == 128) 
+    						{
+    							change = true;
+    							res[n + image_width] = 255;
+    						}
+    						if (res[n - image_width] == 128) 
+    						{
+    							change = true;
+    							res[n - image_width] = 255;
+    						}
+    						if (res[n + image_width + 1] == 128) 
+    						{
+    							change = true;
+    							res[n + image_width + 1] = 255;
+    						}
+    						if (res[n - image_width - 1] == 128) 
+    						{
+    							change = true;
+    							res[n - image_width - 1] = 255;
+    						}
+    						if (res[n + image_width - 1] == 128) 
+    						{
+    							change = true;
+    							res[n + image_width - 1] = 255;
+    						}
+    						if (res[n - image_width + 1] == 128) 
+    						{
+    							change = true;
+    							res[n - image_width + 1] = 255;
+    						}
+    					}
+    					n++;
+    				}
+    			}
+    			if (change) 
+    			{
+    			    for (int y = image_height - 2; y > 0; y--)    				
+    				{
+    				    n = (y * image_width) + image_width - 2;
+    					for (int x = image_width - 2; x > 0; x--)  
+    					{
+    						if (res[n] == 255) 
+    						{
+    							if (res[n + 1] == 128) 
+    							{
+    								change = true;
+    								res[n + 1] = 255;
+    							}
+    							if (res[n - 1] == 128) 
+    							{
+    								change = true;
+    								res[n - 1] = 255;
+    							}
+    							if (res[n + image_width] == 128) 
+    							{
+    								change = true;
+    								res[n + image_width] = 255;
+    							}
+    							if (res[n - image_width] == 128) 
+    							{
+    								change = true;
+    								res[n - image_width] = 255;
+    							}
+    							if (res[n + image_width + 1] == 128) 
+    							{
+    								change = true;
+    								res[n + image_width + 1] = 255;
+    							}
+    							if (res[n - image_width - 1] == 128) 
+    							{
+    								change = true;
+    								res[n - image_width - 1] = 255;
+    							}
+    							if (res[n + image_width - 1] == 128) 
+    							{
+    								change = true;
+    								res[n + image_width - 1] = 255;
+    							}
+    							if (res[n - image_width + 1] == 128) 
+    							{
+    								change = true;
+    								res[n - image_width + 1] = 255;
+    							}
+    						}
+    						n--;
+    					}    					
+    				}
+    			}
+    		}
+    		
+    		// suppression
+    		n = 0;
+    		for (int i = 0; i < image_width * image_height; i++)
+    		{
+		        if (res[n] == 128) res[n] = 0;
+		        n++;
+    		}
+    	}
+
+
+    	public static void CannyDeriche(string filename, string edges_filename) 
+        {            
+            if (File.Exists(filename))
+            {
+                Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+                byte[] img = new byte[bmp.Width * bmp.Height * 3];
+                BitmapArrayConversions.updatebitmap(bmp, img);
+                
+                byte[] img_mono = image.monoImage(img, bmp.Width, bmp.Height);
+                
+                float low_threshold = 0;
+                float high_threshold = 0;
+                AutoThreshold2(img_mono, bmp.Width, bmp.Height, 5, ref low_threshold, ref high_threshold);
+                float contrast = high_threshold - low_threshold;
+                
+                low_threshold -= (contrast * 0.2f);
+                //if (low_threshold < 0) low_threshold = 0;
+                //high_threshold += (contrast * 0.2f);
+                                
+                float alpha = 500.0f;
+                byte[] result = null;
+                byte[] result2 = null;
+                byte[] result3 = null;
+                Deriche(img_mono, bmp.Width, bmp.Height, alpha, ref result);
+                DoubleThreshold(result, bmp.Width, bmp.Height, low_threshold, high_threshold, ref result2);
+                Hyst(result2, bmp.Width, bmp.Height, ref result3);
+                
+                byte[] edges = image.colourImage(result3, bmp.Width, bmp.Height, null);
+                
+                Bitmap edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                BitmapArrayConversions.updatebitmap_unsafe(edges, edges_bmp);
+                if (edges_filename.ToLower().EndsWith("jpg"))
+                    edges_bmp.Save(edges_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+                if (edges_filename.ToLower().EndsWith("bmp"))
+                    edges_bmp.Save(edges_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+            }
+        }
+
+        
+        #endregion
+
      
     }
     

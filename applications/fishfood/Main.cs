@@ -33,6 +33,8 @@ namespace sentience.calibration
     {
         public static void Main(string[] args)
         {
+            //CannyEdgeDetector.CannyDeriche("/home/motters/computer_vision.jpg", "/home/motters/computer_vision_edges.jpg"); 
+            //CannyEdgeDetector.CannyDeriche("/home/motters/grok2_head.jpg", "/home/motters/grok2_head_edges.jpg"); 
             //calibration.Test();
             
             
