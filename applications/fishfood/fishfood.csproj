@@ -51,6 +51,7 @@
     <Compile Include="hypergraph.cs" />
     <Compile Include="image.cs" />
     <Compile Include="Main.cs" />
+    <Compile Include="MersenneTwister.cs" />
     <Compile Include="polygon.cs" />
     <Compile Include="polynomial.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

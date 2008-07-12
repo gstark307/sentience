@@ -23,6 +23,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using CenterSpace.Free;
 
 namespace sentience.calibration
 {
@@ -33,18 +34,40 @@ namespace sentience.calibration
     {
         #region "calibration"
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="fov_degrees"></param>
+        /// <param name="dist_to_centre_dot_mm"></param>
+        /// <param name="dot_spacing_mm"></param>
+        /// <param name="centre_of_distortion_x"></param>
+        /// <param name="centre_of_distortion_y"></param>
+        /// <param name="lens_distortion_curve"></param>
+        /// <param name="camera_rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="lens_distortion_image_filename"></param>
+        /// <param name="curve_fit_image_filename"></param>
+        /// <param name="rectified_image_filename"></param>
+        /// <param name="centre_dot_x"></param>
+        /// <param name="centre_dot_y"></param>
+        /// <param name="minimum_error"></param>
+        /// <param name="calibration_map"></param>
+        /// <returns></returns>
         private static hypergraph Detect(string filename,
-                                        ref int image_width, ref int image_height,
-                                        float fov_degrees, float dist_to_centre_dot_mm, float dot_spacing_mm,
-                                        ref double centre_of_distortion_x, ref double centre_of_distortion_y,
-                                        ref polynomial lens_distortion_curve,
-                                        ref double camera_rotation, ref double scale,
-                                        string lens_distortion_image_filename,
-                                        string curve_fit_image_filename,
-                                        string rectified_image_filename,
-                                        ref float centre_dot_x, ref float centre_dot_y,
-                                        ref double minimum_error,
-                                        ref int[] calibration_map)
+                                         ref int image_width, ref int image_height,
+                                         float fov_degrees, float dist_to_centre_dot_mm, float dot_spacing_mm,
+                                         ref double centre_of_distortion_x, ref double centre_of_distortion_y,
+                                         ref polynomial lens_distortion_curve,
+                                         ref double camera_rotation, ref double scale,
+                                         string lens_distortion_image_filename,
+                                         string curve_fit_image_filename,
+                                         string rectified_image_filename,
+                                         ref float centre_dot_x, ref float centre_dot_y,
+                                         ref double minimum_error,
+                                         ref int[] calibration_map)
         {
             image_width = 0;
             image_height = 0;
@@ -524,7 +547,7 @@ namespace sentience.calibration
                                         centre_y[cam] = centre_of_distortion_y;
                                         rotation[cam] = camera_rotation;
                                         scale_factor[cam] = scale;
-                                        if (calibration_map.Count <= cam) 
+                                        if (calibration_map.Count <= cam)
                                             calibration_map.Add(calib_map);
                                         else
                                             calibration_map[cam] = calib_map;
@@ -570,7 +593,7 @@ namespace sentience.calibration
                                 rectified_dots.Add(rectified_pts);
                             }
                         }
-                        
+
                         ShowCentreDots(filename[winner_index[0]], rectified_dots, "centre_dots.jpg");
                         ShowCentreDots(filename[winner_index[0]], centre_dot_position, "centre_dots2.jpg");
 
@@ -584,61 +607,65 @@ namespace sentience.calibration
                             }
                         }
 
-                        // calibrate the pan and tilt mechanism
-                        polynomial pan_curve = null, tilt_curve = null;
-                        float pan_offset_x = 0, pan_offset_y = 0;
-                        float tilt_offset_x = 0, tilt_offset_y = 0;
-                        CalibratePanTilt(pan_servo_position, tilt_servo_position,
-                                         rectified_dots, fov_degrees,
-                                         img_width, img_height,
-                                         dotdist_mm, height_mm,
-                                         ref pan_curve, ref pan_offset_x, ref pan_offset_y,
-                                         ref tilt_curve, ref tilt_offset_x, ref tilt_offset_y);
-
-                        if (distortion_curve[0] != null)
+                        if (rectified_dots.Count > 1)
                         {
-                            // find the relative offset in the left and right images
-                            double offset_x = 0;
-                            double offset_y = 0;
 
-                            if (distortion_curve[1] != null)
+                            // calibrate the pan and tilt mechanism
+                            polynomial pan_curve = null, tilt_curve = null;
+                            float pan_offset_x = 0, pan_offset_y = 0;
+                            float tilt_offset_x = 0, tilt_offset_y = 0;
+                            CalibratePanTilt(pan_servo_position, tilt_servo_position,
+                                             rectified_dots, fov_degrees,
+                                             img_width, img_height,
+                                             dotdist_mm, height_mm,
+                                             ref pan_curve, ref pan_offset_x, ref pan_offset_y,
+                                             ref tilt_curve, ref tilt_offset_x, ref tilt_offset_y);
+
+                            if (distortion_curve[0] != null)
                             {
-                                double x0 = rectified_dots[0][winner_index[0] * 2];
-                                double y0 = rectified_dots[0][(winner_index[0] * 2) + 1];
-                                double x1 = rectified_dots[1][winner_index[1] * 2];
-                                double y1 = rectified_dots[1][(winner_index[1] * 2) + 1];
-                                offset_x = x1 - x0;
-                                offset_y = y1 - y0;
-                                
-                                // calculate the focal length
-                                if (focal_length_pixels < 1)
+                                // find the relative offset in the left and right images
+                                double offset_x = 0;
+                                double offset_y = 0;
+
+                                if (distortion_curve[1] != null)
                                 {
-                                    focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
-                                    Console.WriteLine("Calculated focal length (pixels): " + focal_length_pixels.ToString());
+                                    double x0 = rectified_dots[0][winner_index[0] * 2];
+                                    double y0 = rectified_dots[0][(winner_index[0] * 2) + 1];
+                                    double x1 = rectified_dots[1][winner_index[1] * 2];
+                                    double y1 = rectified_dots[1][(winner_index[1] * 2) + 1];
+                                    offset_x = x1 - x0;
+                                    offset_y = y1 - y0;
+
+                                    // calculate the focal length
+                                    if (focal_length_pixels < 1)
+                                    {
+                                        focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
+                                        Console.WriteLine("Calculated focal length (pixels): " + focal_length_pixels.ToString());
+                                    }
+
+                                    // subtract the expected disparity for the centre dot
+                                    float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_pixels, baseline_mm, dist_to_centre_dot_mm);
+                                    float check_dist_mm = GetDistanceFromDisparity(focal_length_pixels, baseline_mm, expected_centre_dot_disparity);
+
+                                    //Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
+                                    //Console.WriteLine("observed disparity: " + offset_x.ToString());
+
+                                    offset_x -= expected_centre_dot_disparity;
+
+
                                 }
 
-                                // subtract the expected disparity for the centre dot
-                                float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_pixels, baseline_mm, dist_to_centre_dot_mm);
-                                float check_dist_mm = GetDistanceFromDisparity(focal_length_pixels, baseline_mm, expected_centre_dot_disparity);
-                                
-                                //Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
-                                //Console.WriteLine("observed disparity: " + offset_x.ToString());
-                                
-                                offset_x -= expected_centre_dot_disparity;
-                                
-                                
+                                // save the results as an XML file
+                                Save("calibration.xml", "Test", focal_length_pixels, baseline_mm, fov_degrees,
+                                     img_width, img_height, distortion_curve,
+                                     centre_x, centre_y, rotation, scale_factor,
+                                     lens_distortion_filename, curve_fit_filename,
+                                     (float)offset_x, (float)offset_y,
+                                     pan_curve, pan_offset_x, pan_offset_y,
+                                     tilt_curve, tilt_offset_x, tilt_offset_y);
                             }
 
-                            // save the results as an XML file
-                            Save("calibration.xml", "Test", focal_length_pixels, baseline_mm, fov_degrees,
-                                 img_width, img_height, distortion_curve,
-                                 centre_x, centre_y, rotation, scale_factor,
-                                 lens_distortion_filename, curve_fit_filename,
-                                 (float)offset_x, (float)offset_y,
-                                 pan_curve, pan_offset_x, pan_offset_y,
-                                 tilt_curve, tilt_offset_x, tilt_offset_y);
                         }
-
                     }
                 }
             }
@@ -1436,7 +1463,7 @@ namespace sentience.calibration
                                            List<List<double>> lines,
                                            ref double minimum_error)
         {
-            Random rnd = new Random();
+            MersenneTwister rnd = new MersenneTwister(0);
             minimum_error = double.MaxValue;
             double search_min_error = minimum_error;
 
@@ -1604,7 +1631,7 @@ namespace sentience.calibration
                                      grid2D overlay_grid,
                                      calibrationDot centre_of_distortion,
                                      polynomial curve,
-                                     double noise, Random rnd,
+                                     double noise, MersenneTwister rnd,
                                      int grid_offset_x, int grid_offset_y)
         {
             double[] prev_col = new double[grid.GetLength(1) * 2];
@@ -1961,7 +1988,7 @@ namespace sentience.calibration
                 double min_dist = double.MaxValue;
                 int max_perim_size_tries = 100;
                 polygon2D best_perimeter = perimeter;
-                Random rnd = new Random();
+                MersenneTwister rnd = new MersenneTwister(0);
                 for (int perim_size = 0; perim_size < max_perim_size_tries; perim_size++)
                 {
                     // try a small range of translations
@@ -2133,6 +2160,12 @@ namespace sentience.calibration
 
         #region "display"
 
+        /// <summary>
+        /// shows the detected centre square
+        /// </summary>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="square">square to be displayed</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowSquare(string filename, polygon2D square,
                                        string output_filename)
         {
@@ -2149,6 +2182,12 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// shows the centres of detected dots on the calibration pattern
+        /// </summary>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="centre_dots">dots to be shown</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowCentreDots(string filename, List<List<double>> centre_dots,
                                            string output_filename)
         {
@@ -2188,6 +2227,12 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// shows lines on the calibration pattern
+        /// </summary>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="lines">lines to be shown</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowLines(string filename, List<List<double>> lines,
                                       string output_filename)
         {
@@ -2195,7 +2240,7 @@ namespace sentience.calibration
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
 
-            Random rnd = new Random();
+            MersenneTwister rnd = new MersenneTwister(0);
 
             for (int i = 0; i < lines.Count; i++)
             {
@@ -2228,6 +2273,11 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// displays the lens distortion curve
+        /// </summary>
+        /// <param name="curve">curve to be displayed</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowDistortionCurve(polynomial curve, string output_filename)
         {
             int img_width = 640;
@@ -2244,7 +2294,16 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
-
+        /// <summary>
+        /// shows the lens distortion model
+        /// </summary>
+        /// <param name="img_width">width of the image</param>
+        /// <param name="img_height">height of the image</param>
+        /// <param name="centre_of_distortion">coordinates for the centre of distortion</param>
+        /// <param name="curve">distortion curve</param>
+        /// <param name="FOV_degrees">horizontal field of view in degrees</param>
+        /// <param name="increment_degrees">increment for concentric circles in degrees</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowLensDistortion(int img_width, int img_height,
                                                calibrationDot centre_of_distortion,
                                                polynomial curve,
@@ -2350,7 +2409,11 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
-
+        /// <summary>
+        /// shows an indication of the curve fit variance or scatter
+        /// </summary>
+        /// <param name="curve">best fit curve</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowCurveVariance(polynomial curve, string output_filename)
         {
             int img_width = 640;
@@ -2367,6 +2430,12 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// displays dots within the given image
+        /// </summary>
+        /// <param name="dots">dots to be shown</param>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowDots(List<calibrationDot> dots, string filename, string output_filename)
         {
             Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
@@ -2384,6 +2453,13 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// shows the grid fitted to the calibration pattern
+        /// </summary>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="dots">detected dots on the grid</param>
+        /// <param name="search_regions">search regions around the dots</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowGrid(string filename,
                                      hypergraph dots,
                                      List<calibrationDot> search_regions,
@@ -2423,6 +2499,12 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// shows the ideal rectified grid
+        /// </summary>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="overlay_grid">ideal rectified grid</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowOverlayGrid(string filename,
                                             grid2D overlay_grid,
                                             string output_filename)
@@ -2444,6 +2526,12 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
+        /// <summary>
+        /// shows the perimeter of the ideal rectified grid
+        /// </summary>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="overlay_grid">ideal rectified grid</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowOverlayGridPerimeter(string filename,
                                                      grid2D overlay_grid,
                                                      string output_filename)
@@ -2465,7 +2553,12 @@ namespace sentience.calibration
                 output_bmp.Save(output_filename, System.Drawing.Imaging.ImageFormat.Bmp);
         }
 
-
+        /// <summary>
+        /// shows the grid coordinates for each detected dot
+        /// </summary>
+        /// <param name="filename">raw image filename</param>
+        /// <param name="dots">detected dots</param>
+        /// <param name="output_filename">filename to save as</param>
         private static void ShowGridCoordinates(string filename,
                                                 hypergraph dots,
                                                 string output_filename)
@@ -2535,7 +2628,14 @@ namespace sentience.calibration
             Console.WriteLine(dots_assigned.ToString() + " dots assigned grid coordinates");
         }
 
-        private static void ApplyGrid(calibrationDot current_dot, int unassigned_value, ref int dots_assigned)
+        /// <summary>
+        /// applies grid coordinates to the given connected dots
+        /// </summary>
+        /// <param name="current_dot">the current dot of interest</param>
+        /// <param name="unassigned_value"></param>
+        /// <param name="dots_assigned"></param>
+        private static void ApplyGrid(calibrationDot current_dot, 
+                                      int unassigned_value, ref int dots_assigned)
         {
             for (int i = 0; i < current_dot.Links.Count; i++)
             {
@@ -2565,6 +2665,17 @@ namespace sentience.calibration
             }
         }
 
+        /// <summary>
+        /// links detected dots together
+        /// </summary>
+        /// <param name="dots">detected dots</param>
+        /// <param name="current_dot">the current dot of interest</param>
+        /// <param name="horizontal_dx">current expected horizontal displacement x coordinate</param>
+        /// <param name="horizontal_dy">current expected horizontal displacement y coordinate</param>
+        /// <param name="vertical_dx">current expected vertical displacement x coordinate</param>
+        /// <param name="vertical_dy">current expected vertical displacement x coordinate</param>
+        /// <param name="start_index">index number indicating which direction we will search in first</param>
+        /// <param name="search_regions">returned list of search regions</param>
         private static void LinkDots(hypergraph dots,
                                      calibrationDot current_dot,
                                      double horizontal_dx, double horizontal_dy,
@@ -2718,6 +2829,12 @@ namespace sentience.calibration
             }
         }
 
+        /// <summary>
+        /// detects a square around the centre dot on the calibration pattern
+        /// </summary>
+        /// <param name="dots">detected dots</param>
+        /// <param name="centredots">returned dots belonging to the centre square</param>
+        /// <returns>centre square</returns>
         private static polygon2D GetCentreSquare(hypergraph dots,
                                                  ref List<calibrationDot> centredots)
         {
@@ -2849,8 +2966,10 @@ namespace sentience.calibration
         /// <summary>
         /// detects calibration dots within the given image
         /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
+        /// <param name="filename">image to be examined</param>
+        /// <param name="image_width">returned image width</param>
+        /// <param name="image_height">returned image height</param>
+        /// <returns>detected dots</returns>
         private static hypergraph DetectDots(string filename,
                                              ref int image_width, ref int image_height)
         {
@@ -2894,6 +3013,27 @@ namespace sentience.calibration
         /// <summary>
         /// return an Xml document containing camera calibration parameters
         /// </summary>
+        /// <param name="device_name"></param>
+        /// <param name="focal_length_pixels"></param>
+        /// <param name="baseline_mm"></param>
+        /// <param name="fov_degrees"></param>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="lens_distortion_curve"></param>
+        /// <param name="centre_of_distortion_x"></param>
+        /// <param name="centre_of_distortion_y"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="lens_distortion_image_filename"></param>
+        /// <param name="curve_fit_image_filename"></param>
+        /// <param name="offset_x"></param>
+        /// <param name="offset_y"></param>
+        /// <param name="pan_curve"></param>
+        /// <param name="pan_offset_x"></param>
+        /// <param name="pan_offset_y"></param>
+        /// <param name="tilt_curve"></param>
+        /// <param name="tilt_offset_x"></param>
+        /// <param name="tilt_offset_y"></param>
         /// <returns></returns>
         private static XmlDocument getXmlDocument(
             string device_name,
@@ -2947,7 +3087,28 @@ namespace sentience.calibration
         /// <summary>
         /// save camera calibration parameters as an xml file
         /// </summary>
-        /// <param name="filename">file name to save as</param>
+        /// <param name="filename"></param>
+        /// <param name="device_name"></param>
+        /// <param name="focal_length_pixels"></param>
+        /// <param name="baseline_mm"></param>
+        /// <param name="fov_degrees"></param>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="lens_distortion_curve"></param>
+        /// <param name="centre_of_distortion_x"></param>
+        /// <param name="centre_of_distortion_y"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="lens_distortion_image_filename"></param>
+        /// <param name="curve_fit_image_filename"></param>
+        /// <param name="offset_x"></param>
+        /// <param name="offset_y"></param>
+        /// <param name="pan_curve"></param>
+        /// <param name="pan_offset_x"></param>
+        /// <param name="pan_offset_y"></param>
+        /// <param name="tilt_curve"></param>
+        /// <param name="tilt_offset_x"></param>
+        /// <param name="tilt_offset_y"></param>
         private static void Save(
             string filename,
             string device_name,
@@ -3106,8 +3267,18 @@ namespace sentience.calibration
         /// <summary>
         /// return an xml element containing camera calibration parameters
         /// </summary>
-        /// <param name="doc">xml document to add the data to</param>
-        /// <returns>an xml element</returns>
+        /// <param name="doc"></param>
+        /// <param name="fov_degrees"></param>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="lens_distortion_curve"></param>
+        /// <param name="centre_of_distortion_x"></param>
+        /// <param name="centre_of_distortion_y"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="lens_distortion_image_filename"></param>
+        /// <param name="curve_fit_image_filename"></param>
+        /// <returns></returns>
         private static XmlElement getCameraXml(
             XmlDocument doc,
             float fov_degrees,

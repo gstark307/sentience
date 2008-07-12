@@ -36,66 +36,63 @@ using System.Drawing;
 
 namespace sentience.calibration
 {
-    /// <summary>
-    /// edge detection using the canny algorithm
-    /// </summary>
-    public class CannyEdgeDetector 
+    public class CannyEdgeDetector
     {
- 	    // statics	
-	    private static float GAUSSIAN_CUT_OFF = 0.005f;
-	    private static float MAGNITUDE_SCALE = 100f;
-	    private static float MAGNITUDE_LIMIT = 1000f;
-	    private static int MAGNITUDE_MAX = (int) (MAGNITUDE_SCALE * MAGNITUDE_LIMIT);
+        // statics	
+        private static float GAUSSIAN_CUT_OFF = 0.005f;
+        private static float MAGNITUDE_SCALE = 100f;
+        private static float MAGNITUDE_LIMIT = 1000f;
+        private static int MAGNITUDE_MAX = (int)(MAGNITUDE_SCALE * MAGNITUDE_LIMIT);
 
-    	// fields	
-    	private int height;
-    	private int width;
-    	private int picsize;
-    	private int[] data;
-    	private int[] magnitude;
-    	private float[] orientation;
-    	private byte[] sourceImage;
-    	private byte[] edgesImage;
-    	
-    	private float gaussianKernelRadius;
-    	private float lowThreshold;
-    	private float highThreshold;
-    	private int gaussianKernelWidth;
-    	private bool contrastNormalized;
+        // fields	
+        private int height;
+        private int width;
+        private int picsize;
+        private int[] data;
+        private int[] magnitude;
+        private float[] orientation;
+        private byte[] sourceImage;
+        private byte[] edgesImage;
 
-    	private float[] xConv;
-    	private float[] yConv;
-    	private float[] xGradient;
-    	private float[] yGradient;
-        
+        private float gaussianKernelRadius;
+        private float lowThreshold;
+        private float highThreshold;
+        private int gaussianKernelWidth;
+        private bool contrastNormalized;
+
+        private float[] xConv;
+        private float[] yConv;
+        private float[] xGradient;
+        private float[] yGradient;
+
         // list of edge locations
         public List<int> edges;
 
         // whether to calculate edge orientations
         public bool enable_edge_orientations;
-        
+
         // control thresholds automatically based upon contrast
         public bool automatic_thresholds;
-	
+
         #region "constructors"
-    	
+
         /// <summary>
         /// Constructs a new detector with default parameters. 
         /// </summary>
-    	public CannyEdgeDetector() 
+        public CannyEdgeDetector()
         {
-    		lowThreshold = 2.5f;
-    		highThreshold = 7.5f;
-    		gaussianKernelRadius = 2f;
-    		gaussianKernelWidth = 16;
-    		contrastNormalized = false;
+            lowThreshold = 2.5f;
+            highThreshold = 7.5f;
+            gaussianKernelRadius = 2f;
+            gaussianKernelWidth = 16;
+            contrastNormalized = false;
             automatic_thresholds = true;
-    	}
-        
+        }
+
         #endregion
 
         #region "accessors"
-    	
+
         /// <summary>
         /// The image that provides the luminance data used by this detector to
         /// generate edges.
@@ -103,11 +100,11 @@ namespace sentience.calibration
         /// <returns>
         /// the source image, or null <see cref="System.Byte"/>
         /// </returns>
-    	public byte[] getSourceImage() 
+        public byte[] getSourceImage()
         {
-    		return sourceImage;
-    	}
-    	
+            return sourceImage;
+        }
+
         /// <summary>
         /// Specifies the image that will provide the luminance data in which edges
         /// will be detected. A source image must be set before the process method
@@ -116,10 +113,10 @@ namespace sentience.calibration
         /// <param name="image">
         /// a source of luminance data <see cref="System.Byte"/>
         /// </param>
-    	public void setSourceImage(byte[] image) 
+        public void setSourceImage(byte[] image)
         {
-    		sourceImage = image;
-    	}
+            sourceImage = image;
+        }
 
         /// <summary>
         /// Obtains an image containing the edges detected during the last call to
@@ -130,11 +127,11 @@ namespace sentience.calibration
         /// <returns>
         /// an image containing the detected edges, or null if the process <see cref="System.Byte"/>
         /// </returns>
-    	public byte[] getEdgesImage() 
+        public byte[] getEdgesImage()
         {
-    		return edgesImage;
-    	}
-     
+            return edgesImage;
+        }
+
         /// <summary>
         /// Sets the edges image. Calling this method will not change the operation
         /// of the edge detector in any way. It is intended to provide a means by
@@ -143,10 +140,10 @@ namespace sentience.calibration
         /// <param name="edgesImage">
         /// expected (though not required) to be null <see cref="System.Byte"/>
         /// </param>
-    	public void setEdgesImage(byte[] edgesImage) 
+        public void setEdgesImage(byte[] edgesImage)
         {
-    		this.edgesImage = edgesImage;
-    	}
+            this.edgesImage = edgesImage;
+        }
 
         /// <summary>
         /// The low threshold for hysteresis. The default value is 2.5.
@@ -154,11 +151,11 @@ namespace sentience.calibration
         /// <returns>
         /// the low hysteresis threshold <see cref="System.Single"/>
         /// </returns>
-    	public float getLowThreshold() 
+        public float getLowThreshold()
         {
-    		return lowThreshold;
-    	}
-    	
+            return lowThreshold;
+        }
+
 
         /// <summary>
         /// Sets the low threshold for hysteresis. Suitable values for this parameter
@@ -168,23 +165,23 @@ namespace sentience.calibration
         /// <param name="threshold">
         /// a low hysteresis threshold <see cref="System.Single"/>
         /// </param>
-    	public void setLowThreshold(float threshold) 
+        public void setLowThreshold(float threshold)
         {
-    		//if (threshold < 0) throw new IllegalArgumentException();
-    		lowThreshold = threshold;
-    	}
-     
+            //if (threshold < 0) throw new IllegalArgumentException();
+            lowThreshold = threshold;
+        }
+
         /// <summary>
         /// The high threshold for hysteresis. The default value is 7.5. 
         /// </summary>
         /// <returns>
         /// the high hysteresis threshold <see cref="System.Single"/>
         /// </returns>
-    	public float getHighThreshold() 
+        public float getHighThreshold()
         {
-    		return highThreshold;
-    	}
-    	
+            return highThreshold;
+        }
+
         /// <summary>
         /// Sets the high threshold for hysteresis. Suitable values for this
         /// parameter must be determined experimentally for each application. It is
@@ -194,11 +191,11 @@ namespace sentience.calibration
         /// <param name="threshold">
         /// a high hysteresis threshold <see cref="System.Single"/>
         /// </param>
-    	public void setHighThreshold(float threshold) 
+        public void setHighThreshold(float threshold)
         {
-    		//if (threshold < 0) throw new IllegalArgumentException();
-    		highThreshold = threshold;
-    	}
+            //if (threshold < 0) throw new IllegalArgumentException();
+            highThreshold = threshold;
+        }
 
         /// <summary>
         /// The number of pixels across which the Gaussian kernel is applied.
@@ -207,11 +204,11 @@ namespace sentience.calibration
         /// <returns>
         /// the radius of the convolution operation in pixels <see cref="System.Int32"/>
         /// </returns>
-    	public int getGaussianKernelWidth() 
+        public int getGaussianKernelWidth()
         {
-    		return gaussianKernelWidth;
-    	}
-    	
+            return gaussianKernelWidth;
+        }
+
         /// <summary>
         /// The number of pixels across which the Gaussian kernel is applied.
         /// This implementation will reduce the radius if the contribution of pixel
@@ -220,11 +217,11 @@ namespace sentience.calibration
         /// <param name="gaussianKernelWidth">
         /// a radius for the convolution operation in pixels, at least 2 <see cref="System.Int32"/>
         /// </param>
-    	public void setGaussianKernelWidth(int gaussianKernelWidth) 
+        public void setGaussianKernelWidth(int gaussianKernelWidth)
         {
-    		if (gaussianKernelWidth < 2) gaussianKernelWidth = 2;
-    		this.gaussianKernelWidth = gaussianKernelWidth;
-    	}
+            if (gaussianKernelWidth < 2) gaussianKernelWidth = 2;
+            this.gaussianKernelWidth = gaussianKernelWidth;
+        }
 
         /// <summary>
         /// The radius of the Gaussian convolution kernel used to smooth the source
@@ -233,11 +230,11 @@ namespace sentience.calibration
         /// <returns>
         /// the Gaussian kernel radius in pixels <see cref="System.Single"/>
         /// </returns>
-    	public float getGaussianKernelRadius() 
+        public float getGaussianKernelRadius()
         {
-    		return gaussianKernelRadius;
-    	}
-    	
+            return gaussianKernelRadius;
+        }
+
         /// <summary>
         /// Sets the radius of the Gaussian convolution kernel used to smooth the
         /// source image prior to gradient calculation.
@@ -245,12 +242,12 @@ namespace sentience.calibration
         /// <param name="gaussianKernelRadius">
         /// a Gaussian kernel radius in pixels, must exceed 0.1f. <see cref="System.Single"/>
         /// </param>
-    	public void setGaussianKernelRadius(float gaussianKernelRadius) 
+        public void setGaussianKernelRadius(float gaussianKernelRadius)
         {
-    		if (gaussianKernelRadius < 0.1f) gaussianKernelRadius = 0.1f;
-    		this.gaussianKernelRadius = gaussianKernelRadius;
-    	}
-    	
+            if (gaussianKernelRadius < 0.1f) gaussianKernelRadius = 0.1f;
+            this.gaussianKernelRadius = gaussianKernelRadius;
+        }
+
         /// <summary>
         /// Whether the luminance data extracted from the source image is normalized
         /// by linearizing its histogram prior to edge extraction. The default value
@@ -259,22 +256,22 @@ namespace sentience.calibration
         /// <returns>
         /// whether the contrast is normalized <see cref="System.Boolean"/>
         /// </returns>
-    	public bool isContrastNormalized() 
+        public bool isContrastNormalized()
         {
-    		return contrastNormalized;
-    	}
-    	
+            return contrastNormalized;
+        }
+
         /// <summary>
         /// Sets whether the contrast is normalized
         /// </summary>
         /// <param name="contrastNormalized">
         /// true if the contrast should be normalized <see cref="System.Boolean"/>
         /// </param>
-    	public void setContrastNormalized(bool contrastNormalized) 
+        public void setContrastNormalized(bool contrastNormalized)
         {
-    		this.contrastNormalized = contrastNormalized;
-    	}
-        
+            this.contrastNormalized = contrastNormalized;
+        }
+
         /// <summary>
         /// calculate a global threshold based upon an intensity histogram
         /// </summary>
@@ -301,7 +298,7 @@ namespace sentience.calibration
             int histlength = histogram.Length;
             MeanDark = 0;
             MeanLight = 0;
-            
+
             // calculate squared magnitudes
             // this avoids unnecessary multiplications later on
             float[] histogram_squared_magnitude = new float[histogram.Length];
@@ -310,18 +307,18 @@ namespace sentience.calibration
 
             //const float threshold_increment = 0.25f;
             const int max_grey_levels = 255;
-            
+
             // precompute some values to avoid excessive divisions
             float mult1 = histlength / (float)max_grey_levels;
             float mult2 = 255.0f / max_grey_levels;
-            
+
             int h, bucket;
             float magnitude_sqr, Variance, divisor;
 
             fixed (float* unsafe_histogram = histogram_squared_magnitude)
             {
                 // evaluate all possible thresholds
-				for (int grey_level = max_grey_levels-1; grey_level >= 0; grey_level--)
+                for (int grey_level = max_grey_levels - 1; grey_level >= 0; grey_level--)
                 {
                     // compute mean and variance for this threshold
                     // in a struggle between light and darkness
@@ -331,9 +328,9 @@ namespace sentience.calibration
                     currMeanLight = 0;
                     VarianceDark = 0;
                     VarianceLight = 0;
-					
+
                     bucket = (int)(grey_level * mult1);
-                    for (h = histlength-1; h >= 0; h--)
+                    for (h = histlength - 1; h >= 0; h--)
                     {
                         magnitude_sqr = unsafe_histogram[h];
                         if (h < bucket)
@@ -349,19 +346,19 @@ namespace sentience.calibration
                             LightHits += magnitude_sqr;
                         }
                     }
-                    					
+
                     // compute means
                     if (DarkHits > 0)
                     {
                         // rescale into 0-255 range
-						divisor = DarkHits * histlength;
+                        divisor = DarkHits * histlength;
                         currMeanDark = currMeanDark * 255 / divisor;
                         VarianceDark = VarianceDark * 255 / divisor;
                     }
                     if (LightHits > 0)
                     {
                         // rescale into 0-255 range
-						divisor = LightHits * histlength;
+                        divisor = LightHits * histlength;
                         currMeanLight = currMeanLight * 255 / divisor;
                         VarianceLight = VarianceLight * 255 / divisor;
                     }
@@ -389,12 +386,13 @@ namespace sentience.calibration
 
             global_threshold = (Tmin + Tmax) / 2;
 
-            if (BestLightHits + BestDarkHits > 0) 
+            if (BestLightHits + BestDarkHits > 0)
                 DarkRatio = BestDarkHits * 100 / (BestLightHits + BestDarkHits);
 
             return (global_threshold);
-        }        
-        
+        }
+
+
         /// <summary>
         /// automatically calculate the high and low canny thresholds
         /// based upon the mean light and dark values from a 
@@ -406,13 +404,12 @@ namespace sentience.calibration
         /// <param name="sampling_step_size">
         /// step sized used to sample the image in pixels <see cref="System.Int32"/>
         /// </param>
-        private static void AutoThreshold(byte[] img, int width, int height,
-                                          int sampling_step_size,
-                                          ref float low_threshold, ref float high_threshold)
+        private void AutoThreshold(byte[] img,
+                                   int sampling_step_size)
         {
-            int bytes_per_pixel = img.Length / (width*height);
-            int tx = width/3;
-            int ty = height/3;
+            int bytes_per_pixel = img.Length / (width * height);
+            int tx = width / 3;
+            int ty = height / 3;
             int bx = width - 1 - tx;
             int by = height - 1 - ty;
             float[] histogram = new float[256];
@@ -423,7 +420,7 @@ namespace sentience.calibration
                 {
                     if (bytes_per_pixel > 1)
                     {
-                        histogram[img[n+2]]++;
+                        histogram[img[n + 2]]++;
                     }
                     else
                     {
@@ -439,66 +436,19 @@ namespace sentience.calibration
             mean_dark /= 255.0f;
             mean_light /= 255.0f;
             float contrast = mean_light - mean_dark;
-            
-            float fraction = (contrast - 0.048f) / (0.42f - 0.048f);            
-            
-            low_threshold = 1.6f + (fraction * (8.0f - 1.6f));
-            high_threshold = 2.0f + (fraction * (10f - 2.0f));
-            
+
+            float fraction = (contrast - 0.048f) / (0.42f - 0.048f);
+
+            lowThreshold = 1.6f + (fraction * (8.0f - 1.6f));
+            highThreshold = 2.0f + (fraction * (10f - 2.0f));
+
             //Console.WriteLine("contrast: " + contrast.ToString());
             //Console.WriteLine("low threshold: " + lowThreshold.ToString());
             //Console.WriteLine("high threshold: " + highThreshold.ToString());
         }
 
-        /// <summary>
-        /// automatically calculate the high and low canny thresholds
-        /// based upon the mean light and dark values from a 
-        /// histogram taken from the centre region of the image
-        /// </summary>
-        /// <param name="img">
-        /// image data <see cref="System.Byte"/>
-        /// </param>
-        /// <param name="sampling_step_size">
-        /// step sized used to sample the image in pixels <see cref="System.Int32"/>
-        /// </param>
-        private static void AutoThreshold2(byte[] img, int width, int height,
-                                           int sampling_step_size,
-                                           ref float low_threshold, ref float high_threshold)
-        {
-            int bytes_per_pixel = img.Length / (width*height);
-            int tx = width/3;
-            int ty = height/3;
-            int bx = width - 1 - tx;
-            int by = height - 1 - ty;
-            float[] histogram = new float[256];
-            for (int y = ty; y <= by; y += sampling_step_size)
-            {
-                int n = ((y * width) + tx) * bytes_per_pixel;
-                for (int x = tx; x <= bx; x += sampling_step_size)
-                {
-                    if (bytes_per_pixel > 1)
-                    {
-                        histogram[img[n+2]]++;
-                    }
-                    else
-                    {
-                        histogram[img[n]]++;
-                    }
-                    n += bytes_per_pixel;
-                }
-            }
-            float mean_dark = 0;
-            float mean_light = 0;
-            float dark_ratio = 0;
-            GetGlobalThreshold(histogram, ref mean_dark, ref mean_light, ref dark_ratio);
-            
-            low_threshold = mean_dark;;
-            high_threshold = mean_light;
-        }
-
-        
         #endregion
-    	
+
         #region "methods"
 
         /// <summary>
@@ -510,16 +460,16 @@ namespace sentience.calibration
         /// <param name="edges_filename">
         /// filename to save edges image <see cref="System.String"/>
         /// </param>
-    	public void Update(string filename, string edges_filename) 
-        {            
+        public void Update(string filename, string edges_filename)
+        {
             if (File.Exists(filename))
             {
                 Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
                 byte[] img = new byte[bmp.Width * bmp.Height * 3];
                 BitmapArrayConversions.updatebitmap(bmp, img);
-                
+
                 Update(img, bmp.Width, bmp.Height);
-                
+
                 Bitmap edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 BitmapArrayConversions.updatebitmap_unsafe(edgesImage, edges_bmp);
                 if (edges_filename.ToLower().EndsWith("jpg"))
@@ -528,7 +478,7 @@ namespace sentience.calibration
                     edges_bmp.Save(edges_filename, System.Drawing.Imaging.ImageFormat.Bmp);
             }
         }
-        
+
         /// <summary>
         /// processes an image
         /// </summary>
@@ -541,84 +491,84 @@ namespace sentience.calibration
         /// <param name="height">
         /// image height <see cref="System.Int32"/>
         /// </param>
-    	public byte[] Update(byte[] img, int width, int height) 
+        public byte[] Update(byte[] img, int width, int height)
         {
-    		this.width = width;
-    		this.height = height;
+            this.width = width;
+            this.height = height;
             sourceImage = img;
-            
+
             // adjust thresholds automatically
-            if (automatic_thresholds) 
-                AutoThreshold(sourceImage, 2, width, height,
-                              ref lowThreshold, ref highThreshold);
-                
-    		picsize = width * height;
-    		initArrays();
-    		readLuminance();
-    		if (contrastNormalized) normalizeContrast();
-    		computeGradients(gaussianKernelRadius, gaussianKernelWidth);
-    		int low = (int)Math.Round(lowThreshold * MAGNITUDE_SCALE);
-    		int high = (int)Math.Round( highThreshold * MAGNITUDE_SCALE);
-    		performHysteresis(low, high, data);
-    		thresholdEdges();
-    		writeEdges(data);
-            return(edgesImage);
-    	}
-        
+            if (automatic_thresholds) AutoThreshold(sourceImage, 2);
+
+            picsize = width * height;
+            initArrays();
+            readLuminance();
+            if (contrastNormalized) normalizeContrast();
+            computeGradients(gaussianKernelRadius, gaussianKernelWidth);
+            int low = (int)Math.Round(lowThreshold * MAGNITUDE_SCALE);
+            int high = (int)Math.Round(highThreshold * MAGNITUDE_SCALE);
+            performHysteresis(low, high, data);
+            thresholdEdges();
+            writeEdges(data);
+            return (edgesImage);
+        }
+
         #endregion
-             
+
         #region "private utility methods"
-        
+
         private byte[] smooth(byte[] img, int radius)
         {
             int bytes_per_pixel = img.Length / (width * height);
-            byte[] smoothed = new byte[img.Length];            
-            
+            byte[] smoothed = new byte[img.Length];
+
             for (int i = 0; i < radius; i++)
             {
-                for (int y = 0; y < height-1; y++)
+                for (int y = 0; y < height - 1; y++)
                 {
-                    for (int x = 0; x < width-1; x++)
+                    for (int x = 0; x < width - 1; x++)
                     {
                         int n = ((y * width) + x) * bytes_per_pixel;
                         int n1 = ((y * width) + x + 1) * bytes_per_pixel;
-                        int n2 = (((y+1) * width) + x + 1) * bytes_per_pixel;
-                        int n3 = (((y+1) * width) + x) * bytes_per_pixel;
-                        
+                        int n2 = (((y + 1) * width) + x + 1) * bytes_per_pixel;
+                        int n3 = (((y + 1) * width) + x) * bytes_per_pixel;
+
                         byte smoothed_value = (byte)((img[n] + img[n1] + img[n2] + img[n3]) / 4);
                         for (int col = 0; col < bytes_per_pixel; col++)
-                            smoothed[n+col] = smoothed_value;
+                            smoothed[n + col] = smoothed_value;
                     }
                 }
-                if (i < radius-1) 
+                if (i < radius - 1)
                 {
                     byte[] temp = img;
                     img = smoothed;
                     smoothed = temp;
                 }
             }
-            return(smoothed); 
+            return (smoothed);
         }
-    	
-    	private void initArrays() {
-    		if (data == null || picsize != data.Length) {
-    			data = new int[picsize];
-    			magnitude = new int[picsize];
-    			orientation = new float[picsize];
 
-    			xConv = new float[picsize];
-    			yConv = new float[picsize];
-    			xGradient = new float[picsize];
-    			yGradient = new float[picsize];
-    		}
-    	}
+        private void initArrays()
+        {
+            if (data == null || picsize != data.Length)
+            {
+                data = new int[picsize];
+                magnitude = new int[picsize];
+                orientation = new float[picsize];
+
+                xConv = new float[picsize];
+                yConv = new float[picsize];
+                xGradient = new float[picsize];
+                yGradient = new float[picsize];
+            }
+        }
 
         #region "creating convolution masks"
-        
+
         private int kwidth;
         private float[] kernel;
-    	private float[] diffKernel;
-        
+        private float[] diffKernel;
+
         /// <summary>
         /// generate the gaussian convolution masks
         /// </summary>
@@ -644,22 +594,22 @@ namespace sentience.calibration
             if (create)
             {
                 kernel = new float[kernelWidth];
-    	        diffKernel = new float[kernelWidth];
-                
-        		for (kwidth = 0; kwidth < kernelWidth; kwidth++) 
+                diffKernel = new float[kernelWidth];
+
+                for (kwidth = 0; kwidth < kernelWidth; kwidth++)
                 {
-        			float g1 = gaussian(kwidth, kernelRadius);
-        			if (g1 <= GAUSSIAN_CUT_OFF && kwidth >= 2) break;
-        			float g2 = gaussian(kwidth - 0.5f, kernelRadius);
-        			float g3 = gaussian(kwidth + 0.5f, kernelRadius);
-        			kernel[kwidth] = (g1 + g2 + g3) / 3f / (2f * (float) Math.PI * kernelRadius * kernelRadius);
-        			diffKernel[kwidth] = g3 - g2;
-        		}
+                    float g1 = gaussian(kwidth, kernelRadius);
+                    if (g1 <= GAUSSIAN_CUT_OFF && kwidth >= 2) break;
+                    float g2 = gaussian(kwidth - 0.5f, kernelRadius);
+                    float g3 = gaussian(kwidth + 0.5f, kernelRadius);
+                    kernel[kwidth] = (g1 + g2 + g3) / 3f / (2f * (float)Math.PI * kernelRadius * kernelRadius);
+                    diffKernel[kwidth] = g3 - g2;
+                }
             }
         }
-    	
+
         #endregion
-        
+
         /// <summary>
         /// Compute gradients
         /// </summary>
@@ -681,172 +631,172 @@ namespace sentience.calibration
         /// <param name="kernelWidth">
         /// A <see cref="System.Int32"/>
         /// </param>
-    	private void computeGradients(float kernelRadius, int kernelWidth) 
+        private void computeGradients(float kernelRadius, int kernelWidth)
         {
             // create gaussian convolution masks
             createMasks(kernelRadius, kernelWidth);
-            
-    		int initX = kwidth - 1;
-    		int maxX = width - (kwidth - 1);
-    		int initY = width * (kwidth - 1);
-    		int maxY = width * (height - (kwidth - 1));
-    		
-    		//perform convolution in x and y directions
-			for (int y = initY; y < maxY; y += width) 
+
+            int initX = kwidth - 1;
+            int maxX = width - (kwidth - 1);
+            int initY = width * (kwidth - 1);
+            int maxY = width * (height - (kwidth - 1));
+
+            //perform convolution in x and y directions
+            for (int y = initY; y < maxY; y += width)
             {
-       		    for (int x = initX; x < maxX; x++) 
+                for (int x = initX; x < maxX; x++)
                 {
-    				int index = x + y;
-    				float sumX = data[index] * kernel[0];
-    				float sumY = sumX;
-    				int xOffset = 1;
-    				int yOffset = width;
+                    int index = x + y;
+                    float sumX = data[index] * kernel[0];
+                    float sumY = sumX;
+                    int xOffset = 1;
+                    int yOffset = width;
                     int index1 = index - yOffset;
                     int index2 = index + yOffset;
                     int index3 = index - xOffset;
                     int index4 = index + xOffset;
                     float k;
-    				while (xOffset < kwidth) 
+                    while (xOffset < kwidth)
                     {
                         k = kernel[xOffset];
-    					sumY += k * (data[index1] + data[index2]);
-    					sumX += k * (data[index3] + data[index4]);
-    					xOffset++;
+                        sumY += k * (data[index1] + data[index2]);
+                        sumX += k * (data[index3] + data[index4]);
+                        xOffset++;
                         index1 -= width;
                         index2 += width;
                         index3--;
                         index4++;
-    				}
-    				
-    				yConv[index] = sumY;
-    				xConv[index] = sumX;
-    			}
-     
-    		}
-     
-    		for (int x = initX; x < maxX; x++) 
-            {
-    			for (int y = initY; y < maxY; y += width) 
-                {
-    				float sum = 0f;
-    				int index = x + y;
-    				for (int i = 1; i < kwidth; i++)
-    					sum += diffKernel[i] * (yConv[index - i] - yConv[index + i]);
-     
-    				xGradient[index] = sum;
-    			}
-     
-    		}
+                    }
 
-    		for (int x = kwidth; x < width - kwidth; x++) 
+                    yConv[index] = sumY;
+                    xConv[index] = sumX;
+                }
+
+            }
+
+            for (int x = initX; x < maxX; x++)
             {
-    			for (int y = initY; y < maxY; y += width) 
+                for (int y = initY; y < maxY; y += width)
                 {
-    				float sum = 0.0f;
-    				int index = x + y;
-    				int yOffset = width;
-    				for (int i = 1; i < kwidth; i++) 
+                    float sum = 0f;
+                    int index = x + y;
+                    for (int i = 1; i < kwidth; i++)
+                        sum += diffKernel[i] * (yConv[index - i] - yConv[index + i]);
+
+                    xGradient[index] = sum;
+                }
+
+            }
+
+            for (int x = kwidth; x < width - kwidth; x++)
+            {
+                for (int y = initY; y < maxY; y += width)
+                {
+                    float sum = 0.0f;
+                    int index = x + y;
+                    int yOffset = width;
+                    for (int i = 1; i < kwidth; i++)
                     {
-    					sum += diffKernel[i] * (xConv[index - yOffset] - xConv[index + yOffset]);
-    					yOffset += width;
-    				}
-     
-    				yGradient[index] = sum;
-    			}     
-    		}
-     
-    		initX = kwidth;
-    		maxX = width - kwidth;
-    		initY = width * kwidth;
-    		maxY = width * (height - kwidth);
+                        sum += diffKernel[i] * (xConv[index - yOffset] - xConv[index + yOffset]);
+                        yOffset += width;
+                    }
+
+                    yGradient[index] = sum;
+                }
+            }
+
+            initX = kwidth;
+            maxX = width - kwidth;
+            initY = width * kwidth;
+            maxY = width * (height - kwidth);
             for (int y = initY; y < maxY; y += width)
             {
-       		    for (int x = initX; x < maxX; x++)
+                for (int x = initX; x < maxX; x++)
                 {
-    				int index = x + y;
-                    
-    				int indexN = index - width;
-    				int indexS = index + width;
-    				int indexW = index - 1;
-    				int indexE = index + 1;
-    				int indexNW = indexN - 1;
-    				int indexNE = indexN + 1;
-    				int indexSW = indexS - 1;
-    				int indexSE = indexS + 1;
-                    
-    				float xGrad = xGradient[index];
-    				float yGrad = yGradient[index];
+                    int index = x + y;
 
-    				float gradMag = hypot2(xGrad, yGrad);
+                    int indexN = index - width;
+                    int indexS = index + width;
+                    int indexW = index - 1;
+                    int indexE = index + 1;
+                    int indexNW = indexN - 1;
+                    int indexNE = indexN + 1;
+                    int indexSW = indexS - 1;
+                    int indexSE = indexS + 1;
 
-    				//perform non-maximal supression
-    				float nMag = hypot2(xGradient[indexN], yGradient[indexN]);
-    				float sMag = hypot2(xGradient[indexS], yGradient[indexS]);
-    				float wMag = hypot2(xGradient[indexW], yGradient[indexW]);
-    				float eMag = hypot2(xGradient[indexE], yGradient[indexE]);
-    				float neMag = hypot2(xGradient[indexNE], yGradient[indexNE]);
-    				float seMag = hypot2(xGradient[indexSE], yGradient[indexSE]);
-    				float swMag = hypot2(xGradient[indexSW], yGradient[indexSW]);
-    				float nwMag = hypot2(xGradient[indexNW], yGradient[indexNW]);
+                    float xGrad = xGradient[index];
+                    float yGrad = yGradient[index];
+
+                    float gradMag = hypot2(xGrad, yGrad);
+
+                    //perform non-maximal supression
+                    float nMag = hypot2(xGradient[indexN], yGradient[indexN]);
+                    float sMag = hypot2(xGradient[indexS], yGradient[indexS]);
+                    float wMag = hypot2(xGradient[indexW], yGradient[indexW]);
+                    float eMag = hypot2(xGradient[indexE], yGradient[indexE]);
+                    float neMag = hypot2(xGradient[indexNE], yGradient[indexNE]);
+                    float seMag = hypot2(xGradient[indexSE], yGradient[indexSE]);
+                    float swMag = hypot2(xGradient[indexSW], yGradient[indexSW]);
+                    float nwMag = hypot2(xGradient[indexNW], yGradient[indexNW]);
 
                     float tmp;
-    				/*
-    				 * An explanation of what's happening here, for those who want
-    				 * to understand the source: This performs the "non-maximal
-    				 * supression" phase of the Canny edge detection in which we
-    				 * need to compare the gradient magnitude to that in the
-    				 * direction of the gradient; only if the value is a local
-    				 * maximum do we consider the point as an edge candidate.
-    				 * 
-    				 * We need to break the comparison into a number of different
-    				 * cases depending on the gradient direction so that the
-    				 * appropriate values can be used. To avoid computing the
-    				 * gradient direction, we use two simple comparisons: first we
-    				 * check that the partial derivatives have the same sign (1)
-    				 * and then we check which is larger (2). As a consequence, we
-    				 * have reduced the problem to one of four identical cases that
-    				 * each test the central gradient magnitude against the values at
-    				 * two points with 'identical support'; what this means is that
-    				 * the geometry required to accurately interpolate the magnitude
-    				 * of gradient function at those points has an identical
-    				 * geometry (upto right-angled-rotation/reflection).
-    				 * 
-    				 * When comparing the central gradient to the two interpolated
-    				 * values, we avoid performing any divisions by multiplying both
-    				 * sides of each inequality by the greater of the two partial
-    				 * derivatives. The common comparand is stored in a temporary
-    				 * variable (3) and reused in the mirror case (4).
-    				 * 
-    				 */
-    				if (xGrad * yGrad <= (float) 0 // (1)
-    					? MathAbs(xGrad) >= MathAbs(yGrad) // (2)
-    						? (tmp = MathAbs(xGrad * gradMag)) >= MathAbs(yGrad * neMag - (xGrad + yGrad) * eMag) // (3)
-    							&& tmp > MathAbs(yGrad * swMag - (xGrad + yGrad) * wMag) // (4)
-    						: (tmp = MathAbs(yGrad * gradMag)) >= MathAbs(xGrad * neMag - (yGrad + xGrad) * nMag) // (3)
-    							&& tmp > MathAbs(xGrad * swMag - (yGrad + xGrad) * sMag) // (4)
-    					: MathAbs(xGrad) >= MathAbs(yGrad) // (2)
-    						? (tmp = MathAbs(xGrad * gradMag)) >= MathAbs(yGrad * seMag + (xGrad - yGrad) * eMag) // (3)
-    							&& tmp > MathAbs(yGrad * nwMag + (xGrad - yGrad) * wMag) // (4)
-    						: (tmp = MathAbs(yGrad * gradMag)) >= MathAbs(xGrad * seMag + (yGrad - xGrad) * sMag) // (3)
-    							&& tmp > MathAbs(xGrad * nwMag + (yGrad - xGrad) * nMag) // (4)
-    					) 
+                    /*
+                     * An explanation of what's happening here, for those who want
+                     * to understand the source: This performs the "non-maximal
+                     * supression" phase of the Canny edge detection in which we
+                     * need to compare the gradient magnitude to that in the
+                     * direction of the gradient; only if the value is a local
+                     * maximum do we consider the point as an edge candidate.
+                     * 
+                     * We need to break the comparison into a number of different
+                     * cases depending on the gradient direction so that the
+                     * appropriate values can be used. To avoid computing the
+                     * gradient direction, we use two simple comparisons: first we
+                     * check that the partial derivatives have the same sign (1)
+                     * and then we check which is larger (2). As a consequence, we
+                     * have reduced the problem to one of four identical cases that
+                     * each test the central gradient magnitude against the values at
+                     * two points with 'identical support'; what this means is that
+                     * the geometry required to accurately interpolate the magnitude
+                     * of gradient function at those points has an identical
+                     * geometry (upto right-angled-rotation/reflection).
+                     * 
+                     * When comparing the central gradient to the two interpolated
+                     * values, we avoid performing any divisions by multiplying both
+                     * sides of each inequality by the greater of the two partial
+                     * derivatives. The common comparand is stored in a temporary
+                     * variable (3) and reused in the mirror case (4).
+                     * 
+                     */
+                    if (xGrad * yGrad <= (float)0 // (1)
+                        ? MathAbs(xGrad) >= MathAbs(yGrad) // (2)
+                            ? (tmp = MathAbs(xGrad * gradMag)) >= MathAbs(yGrad * neMag - (xGrad + yGrad) * eMag) // (3)
+                                && tmp > MathAbs(yGrad * swMag - (xGrad + yGrad) * wMag) // (4)
+                            : (tmp = MathAbs(yGrad * gradMag)) >= MathAbs(xGrad * neMag - (yGrad + xGrad) * nMag) // (3)
+                                && tmp > MathAbs(xGrad * swMag - (yGrad + xGrad) * sMag) // (4)
+                        : MathAbs(xGrad) >= MathAbs(yGrad) // (2)
+                            ? (tmp = MathAbs(xGrad * gradMag)) >= MathAbs(yGrad * seMag + (xGrad - yGrad) * eMag) // (3)
+                                && tmp > MathAbs(yGrad * nwMag + (xGrad - yGrad) * wMag) // (4)
+                            : (tmp = MathAbs(yGrad * gradMag)) >= MathAbs(xGrad * seMag + (yGrad - xGrad) * sMag) // (3)
+                                && tmp > MathAbs(xGrad * nwMag + (yGrad - xGrad) * nMag) // (4)
+                        )
                     {
-                        magnitude[index] = gradMag >= MAGNITUDE_LIMIT ? MAGNITUDE_MAX : (int) (MAGNITUDE_SCALE * gradMag);
+                        magnitude[index] = gradMag >= MAGNITUDE_LIMIT ? MAGNITUDE_MAX : (int)(MAGNITUDE_SCALE * gradMag);
 
                         // orientation of the edge
                         if (enable_edge_orientations)
                             orientation[index] = (float)Math.Atan2(yGrad, xGrad);
-    				}
-                    else 
+                    }
+                    else
                     {
-    					magnitude[index] = 0;
+                        magnitude[index] = 0;
                         orientation[index] = 0;
-    				}
-                    
-    			}
-    		}
-    	}
-     
+                    }
+
+                }
+            }
+        }
+
         /// <summary>
         /// hypotenuse 
         /// </summary>
@@ -863,58 +813,49 @@ namespace sentience.calibration
         /// <returns>
         /// A <see cref="System.Single"/>
         /// </returns>        
-        private float hypot2(float x, float y) 
+        private float hypot2(float x, float y)
         {
-    		if (x == 0f) return (MathAbs(y));
-    		if (y == 0f) return (MathAbs(x));
-    		return (float)Math.Sqrt(x * x + y * y);
-    	}
+            if (x == 0f) return (MathAbs(y));
+            if (y == 0f) return (MathAbs(x));
+            return (float)Math.Sqrt(x * x + y * y);
+        }
 
-        private float hypot(float x, float y) 
+        private float hypot(float x, float y)
         {
-    		if (x == 0f) return y;
-    		if (y == 0f) return x;
+            if (x == 0f) return y;
+            if (y == 0f) return x;
             if (x < 0) x = -x;
             if (y < 0) y = -y;
-    		return (x + y);
-    	}
+            return (x + y);
+        }
 
         /// <summary>
         /// this method is faster than Math.Abs
         /// </summary>
-        /// <param name="x">
-        /// the value whose absolute we want <see cref="System.Single"/>
-        /// </param>
-        /// <returns>
-        /// absolute value <see cref="System.Single"/>
-        /// </returns>
-        private float MathAbs(float x) 
+        /// <param name="x">the value whose absolute we want</param>
+        /// <returns>absolute value</returns>
+        private float MathAbs(float x)
         {
-            if (x == 0f) return(0);
-            if (x < 0) 
-                return(-x);
+            if (x == 0f) return (0);
+            if (x < 0)
+                return (-x);
             else
-                return(x);
-    	}
+                return (x);
+        }
+
 
         /// <summary>
         /// gaussian function
         /// </summary>
-        /// <param name="x">
-        /// A <see cref="System.Single"/>
-        /// </param>
-        /// <param name="sigma">
-        /// A <see cref="System.Single"/>
-        /// </param>
-        /// <returns>
-        /// A <see cref="System.Single"/>
-        /// </returns>
-    	private float gaussian(float x, float sigma) 
+        /// <param name="x"></param>
+        /// <param name="sigma"></param>
+        /// <returns></returns>
+        private float gaussian(float x, float sigma)
         {
-    		return (float)Math.Exp(-(x * x) / (2f * sigma * sigma));
-    	}
+            return (float)Math.Exp(-(x * x) / (2f * sigma * sigma));
+        }
 
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -924,88 +865,111 @@ namespace sentience.calibration
         /// This is done for memory efficiency, other implementations may wish
         /// to separate these functions.
         /// </remarks>
-        /// <param name="low">
-        /// A <see cref="System.Int32"/>
-        /// </param>
-        /// <param name="high">
-        /// A <see cref="System.Int32"/>
-        /// </param>
-    	private void performHysteresis(int low, int high, int[] followedEdges) 
+        /// <param name="low"></param>
+        /// <param name="high"></param>
+        /// <param name="followedEdges"></param>
+        private void performHysteresis(int low, int high, int[] followedEdges)
         {
             // clear array containing followed edges
-            for (int i = followedEdges.Length-1; i >= 0; i--) followedEdges[i] = 0;
-     
-    		int offset = 0;
-            for (int y = 0; y < height; y++)                            		 
-            {
-    			for (int x = 0; x < width; x++) 
-                {
-    				if ((followedEdges[offset] == 0) && (magnitude[offset] >= high)) 
-    					follow(x, y, offset, low, followedEdges);
-    				offset++;
-    			}
-    		}
-     	}
+            for (int i = followedEdges.Length - 1; i >= 0; i--) followedEdges[i] = 0;
 
-    	private void follow(int x1, int y1, int i1, 
-                            int threshold, 
-                            int[] followedEdges) 
+            int offset = 0;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if ((followedEdges[offset] == 0) && (magnitude[offset] >= high))
+                        follow(x, y, offset, low, followedEdges);
+                    offset++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// edge surfing!
+        /// </summary>
+        /// <param name="x1"></param>
+        /// <param name="y1"></param>
+        /// <param name="i1"></param>
+        /// <param name="threshold"></param>
+        /// <param name="followedEdges"></param>
+        private void follow(int x1, int y1, int i1,
+                            int threshold,
+                            int[] followedEdges)
         {
-    		int x0 = x1 == 0 ? x1 : x1 - 1;
-    		int x2 = x1 == width - 1 ? x1 : x1 + 1;
-    		int y0 = y1 == 0 ? y1 : y1 - 1;
-    		int y2 = y1 == height -1 ? y1 : y1 + 1;
-    		
+            int x0 = x1 == 0 ? x1 : x1 - 1;
+            int x2 = x1 == width - 1 ? x1 : x1 + 1;
+            int y0 = y1 == 0 ? y1 : y1 - 1;
+            int y2 = y1 == height - 1 ? y1 : y1 + 1;
+
             // mark this location as having been followed
-    		followedEdges[i1] = magnitude[i1];
-            
+            followedEdges[i1] = magnitude[i1];
+
             // look for other pixels in the neighbourhood to follow
             for (int y = y0; y <= y2; y++)
             {
                 int i2 = y * width;
-    			for (int x = x0; x <= x2; x++) 
-                {    				
-    				if (!((y == y1) && (x == x1)))        // not the current pixel
+                for (int x = x0; x <= x2; x++)
+                {
+                    if (!((y == y1) && (x == x1)))        // not the current pixel
                     {
                         int i3 = i2 + x;
                         if ((followedEdges[i3] == 0) &&   // hasn't been followed
-    					    (magnitude[i3] >= threshold)) // with sufficient magnitude
+                            (magnitude[i3] >= threshold)) // with sufficient magnitude
                         {
-    					    follow(x, y, i3, threshold, followedEdges);
-    					    return;
-    				    }
+                            follow(x, y, i3, threshold, followedEdges);
+                            return;
+                        }
                     }
-    			}
-    		}
-            
-    	}
+                }
+            }
 
-    	private void thresholdEdges() 
-        {
-    		for (int i = data.Length-1; i >= 0; i--) 
-            {
-                if (data[i] != 0) data[i] = 0; else data[i] = 255; 
-    		}
-    	}
-    	
-    	private int luminance(int r, int g, int b) 
-        {
-    		return (((299 * r) + (587 * g) + (114 * b)) / 1000);
-    	}
+        }
 
-        private int luminance2(float r, float g, float b) 
+        /// <summary>
+        /// binarise the edges to 0 or 255 values
+        /// </summary>
+        private void thresholdEdges()
         {
-    		return (int)Math.Round(0.299f * r + 0.587f * g + 0.114f * b);
-    	}
-    	
-    	private void readLuminance() 
+            for (int i = data.Length - 1; i >= 0; i--)
+                if (data[i] != 0) data[i] = 0; else data[i] = 255;
+        }
+
+        /// <summary>
+        /// RGB to luminence conversion
+        /// </summary>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <returns>luninence value</returns>
+        private int luminance(int r, int g, int b)
+        {
+            return (((299 * r) + (587 * g) + (114 * b)) / 1000);
+        }
+
+        /// <summary>
+        /// RGB to luminence conversion
+        /// </summary>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <returns>luninence value</returns>
+        private int luminance2(float r, float g, float b)
+        {
+            return (int)Math.Round(0.299f * r + 0.587f * g + 0.114f * b);
+        }
+
+        /// <summary>
+        /// gets luminance data from the raw image
+        /// </summary>
+        private void readLuminance()
         {
             byte[] pixels = sourceImage;
-            int offset = pixels.Length-1;
+            int offset = pixels.Length - 1;
             if (pixels.Length == width * height * 3)
             {
                 int n = (width * height) - 1;
-                for (int i = pixels.Length-2; i >= 0; i -= 3) 
+                for (int i = pixels.Length - 2; i >= 0; i -= 3)
                 {
                     int r = pixels[offset--] & 0xff;
                     int g = pixels[offset--] & 0xff;
@@ -1015,34 +979,41 @@ namespace sentience.calibration
             }
             else
             {
-                for (int i = pixels.Length-1; i >= 0; i--) 
+                for (int i = pixels.Length - 1; i >= 0; i--)
                     data[i] = pixels[offset--] & 0xff;
             }
-    	}
-     
-    	private void normalizeContrast() 
+        }
+
+        /// <summary>
+        /// contrast normalisation
+        /// </summary>
+        private void normalizeContrast()
         {
-    		int[] histogram = new int[256];
-    		for (int i = 0; i < data.Length; i++) {
-    			histogram[data[i]]++;
-    		}
-    		int[] remap = new int[256];
-    		int sum = 0;
-    		int j = 0;
-    		for (int i = 0; i < histogram.Length; i++) {
-    			sum += histogram[i];
-    			int target = sum*255/picsize;
-    			for (int k = j+1; k <=target; k++) {
-    				remap[k] = i;
-    			}
-    			j = target;
-    		}
-    		
-    		for (int i = 0; i < data.Length; i++) {
-    			data[i] = remap[data[i]];
-    		}
-    	}
-    	
+            int[] histogram = new int[256];
+            for (int i = 0; i < data.Length; i++)
+            {
+                histogram[data[i]]++;
+            }
+            int[] remap = new int[256];
+            int sum = 0;
+            int j = 0;
+            for (int i = 0; i < histogram.Length; i++)
+            {
+                sum += histogram[i];
+                int target = sum * 255 / picsize;
+                for (int k = j + 1; k <= target; k++)
+                {
+                    remap[k] = i;
+                }
+                j = target;
+            }
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = remap[data[i]];
+            }
+        }
+
 
         /// <summary>
         /// update the edges image 
@@ -1052,33 +1023,32 @@ namespace sentience.calibration
         /// in any other format other than an INT_ARGB type BufferedImage.
         /// This may be easily remedied by providing alternative accessors.
         /// </remarks>
-        /// <param name="pixels">
-        /// A <see cref="System.Int32"/>
-        /// </param>
-    	private void writeEdges(int[] pixels) 
+        /// <param name="pixels"></param>
+        private void writeEdges(int[] pixels)
         {
-    		if (edgesImage == null) {
-    			edgesImage = new byte[width * height * 3];
+            if (edgesImage == null)
+            {
+                edgesImage = new byte[width * height * 3];
                 edges = new List<int>();
-    		}
+            }
             edges.Clear();
-            
+
             int n = 0;
-            int x=0,y=0;
+            int x = 0, y = 0;
             for (int i = 0; i < pixels.Length; i++)
             {
                 byte v = (byte)pixels[i];
-                
+
                 if (v == 0)
                 {
                     edges.Add(x);
                     edges.Add(y);
                 }
-                
+
                 edgesImage[n++] = v;
                 edgesImage[n++] = v;
                 edgesImage[n++] = v;
-                              
+
                 x++;
                 if (x >= width)
                 {
@@ -1086,103 +1056,97 @@ namespace sentience.calibration
                     y++;
                 }
             }
-    	}
-        
+        }
+
         #endregion
-        
+
         #region "display"
-        
+
         /// <summary>
         /// displays the detected magnitudes
         /// </summary>
-        /// <param name="img">
-        /// image data <see cref="System.Byte"/>
-        /// </param>
-        /// <param name="img_width">
-        /// image width <see cref="System.Int32"/>
-        /// </param>
-        /// <param name="img_height">
-        /// image_height <see cref="System.Int32"/>
-        /// </param>
+        /// <param name="img">image data</param>
+        /// <param name="img_width">image width</param>
+        /// <param name="img_height">image height</param>
         public void ShowMagnitudes(byte[] img, int img_width, int img_height)
         {
             for (int y = 0; y < img_height; y++)
             {
-                int yy = y * (height-1) / img_height;
+                int yy = y * (height - 1) / img_height;
                 for (int x = 0; x < img_width; x++)
                 {
-                    int xx = x * (width-1) / img_width;
-                    int mag = magnitude[(yy*width)+xx];
-                    int mag2 = mag * 255 / (MAGNITUDE_MAX/4);
+                    int xx = x * (width - 1) / img_width;
+                    int mag = magnitude[(yy * width) + xx];
+                    int mag2 = mag * 255 / (MAGNITUDE_MAX / 4);
                     if (mag2 > 255) mag2 = 255;
                     byte v = (byte)(255 - mag2);
 
                     // test
                     //byte v = (byte)data[(yy*width)+xx];
                     //if ((v == 255) && (magnitude[(yy*width)+xx] < 0)) v = (byte)0;
-                    
-                    int n = ((y * img_width) + x)*3;
+
+                    int n = ((y * img_width) + x) * 3;
                     img[n] = v;
-                    img[n+1] = v;
-                    img[n+2] = v;
-                    
+                    img[n + 1] = v;
+                    img[n + 2] = v;
+
                     if (v != 255)
                     {
                         if (mag >= highThreshold)
                         {
                             img[n] = 0;
-                            img[n+1] = v;
-                            img[n+2] = 0;
+                            img[n + 1] = v;
+                            img[n + 2] = 0;
                         }
                         if (mag < lowThreshold)
                         {
                             img[n] = 0;
-                            img[n+1] = 0;
-                            img[n+2] = v;
+                            img[n + 1] = 0;
+                            img[n + 2] = v;
                         }
                     }
                 }
             }
         }
-        
+
         #endregion
-        
+
         #region "detecting corner points"
-        
+
         public List<int> GetCorners()
         {
             List<int> corners = new List<int>();
 
-            int bytes_per_pixel = edgesImage.Length / (width*height);
-            int stride = (width-3) * bytes_per_pixel;
-            
+            int bytes_per_pixel = edgesImage.Length / (width * height);
+            int stride = (width - 3) * bytes_per_pixel;
+
             for (int i = 0; i < edges.Count; i += 2)
             {
                 int x = edges[i];
-                int y = edges[i+1];
-                if ((x > 0) && (x < width-1) &&
-                    (y > 0) && (y < height-1))
+                int y = edges[i + 1];
+                if ((x > 0) && (x < width - 1) &&
+                    (y > 0) && (y < height - 1))
                 {
                     int adjacent_edges = 0;
-                    int n = (((y-1) * width) + x-1)*bytes_per_pixel;
-                    for (int yy = y-1; yy <= y+1; yy++)
+                    int n = (((y - 1) * width) + x - 1) * bytes_per_pixel;
+                    for (int yy = y - 1; yy <= y + 1; yy++)
                     {
-                        for (int xx = x-1; xx <= x+1; xx++)
+                        for (int xx = x - 1; xx <= x + 1; xx++)
                         {
                             if (edgesImage[n] == 0)
                             {
                                 adjacent_edges++;
                                 if (adjacent_edges > 2)
                                 {
-                                    xx = x+2;
-                                    yy = y+2;
+                                    xx = x + 2;
+                                    yy = y + 2;
                                 }
                             }
                             n += 3;
                         }
                         n += stride;
                     }
-                    
+
                     if (adjacent_edges <= 2)
                     {
                         corners.Add(x);
@@ -1190,18 +1154,18 @@ namespace sentience.calibration
                     }
                 }
             }
-            return(corners);
+            return (corners);
         }
-        
+
         public void ConnectBrokenEdges(int maximum_separation)
         {
             List<int> corners = GetCorners();
-            bool[] connected = new bool[corners.Count];            
-            
-            for (int i = 0; i < corners.Count-2; i += 2)
+            bool[] connected = new bool[corners.Count];
+
+            for (int i = 0; i < corners.Count - 2; i += 2)
             {
                 int x0 = corners[i];
-                int y0 = corners[i+1];
+                int y0 = corners[i + 1];
                 for (int j = i + 2; j < corners.Count; j += 2)
                 {
                     if (!connected[j])
@@ -1211,12 +1175,12 @@ namespace sentience.calibration
                         if (dx < 0) dx = -dx;
                         if (dx <= maximum_separation)
                         {
-                            int y1 = corners[j+1];
+                            int y1 = corners[j + 1];
                             int dy = y1 - y0;
                             if (dy < 0) dy = -dy;
                             if (dy <= maximum_separation)
                             {
-                                int dist = (int)Math.Sqrt((dx*dx)+(dy*dy));
+                                int dist = (int)Math.Sqrt((dx * dx) + (dy * dy));
                                 for (int d = 1; d < dist; d++)
                                 {
                                     int ix = x0 + (d * dx / dist);
@@ -1224,7 +1188,7 @@ namespace sentience.calibration
                                     edges.Add(ix);
                                     edges.Add(iy);
                                 }
-                                
+
                                 connected[j] = true;
                                 j = corners.Count;
                             }
@@ -1233,452 +1197,9 @@ namespace sentience.calibration
                 }
             }
         }
-        
+
         #endregion
 
-        #region "canny-deriche edge detection"
-
-        /// <summary>
-        /// Deriche Filter
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <param name="alphaD"></param>
-        /// <param name="result">resulting filtered image</param>
-        private static void Deriche(byte[] ip,
-                                    int image_width, int image_height,
-                                    float alphaD,
-                                    ref byte[] result)
-        {
-            int pixels;
-            float[] nf_grx = null;
-            float[] nf_gry = null;
-            int[] a1 = null;
-            float[] a2 = null;
-            float[] a3 = null;
-            float[] a4 = null;
-
-            int icols = 0;
-            int rows, cols;
-            int lig_1, lig_2, lig_3;
-            int col_1, col_2, col_3;
-            int icol_1, icol_2;
-            int i, j;
-            float ad1, ad2;
-            float an1, an2, an3, an4;
-            float an11;
-
-            pixels = image_height * image_width;
-
-            lig_1 = image_height - 1;
-            lig_2 = image_height - 2;
-            lig_3 = image_height - 3;
-            col_1 = image_width - 1;
-            col_2 = image_width - 2;
-            col_3 = image_width - 3;
-
-            // temporary buffers
-            nf_grx = new float[pixels];
-            nf_gry = new float[pixels];
-
-            a1 = new int[pixels];
-            a2 = new float[pixels];
-            a3 = new float[pixels];
-            a4 = new float[pixels];
-
-            ad1 = (float)-Math.Exp(-alphaD);
-            ad2 = 0;
-            an1 = 1;
-            an2 = 0;
-            an3 = ad1;
-            an4 = 0;
-            an11 = 1;
-
-            //  FIRST STEP:  Y GRADIENT
-            //  x-smoothing
-            int n = 0;
-            for (i = 0; i < image_height; i++)
-                for (j = 0; j < image_width; j++)
-                    a1[i * image_width + j] = (int)ip[n++];
-
-            for (i = 0; i < image_height; ++i)
-            {
-                icols = i * image_width;
-                icol_1 = icols - 1;
-                icol_2 = icols - 2;
-                a2[icols] = an1 * a1[icols];
-                a2[icols + 1] = an1 * a1[icols + 1] + an2 * a1[icols] - ad1 * a2[icols];
-                for (j = 2; j < image_width; ++j)
-                    a2[icols + j] = an1 * a1[icols + j] + an2 * a1[icol_1 + j] - ad1 * a2[icol_1 + j] - ad2 * a2[icol_2 + j];
-            }
-
-            for (i = 0; i < image_height; ++i)
-            {
-                icols = i * image_width;
-                icol_1 = icols + 1;
-                icol_2 = icols + 2;
-                a3[icols + col_1] = 0;
-                a3[icols + col_2] = an3 * a1[icols + col_1];
-                for (j = col_3; j >= 0; --j)
-                    a3[icols + j] = an3 * a1[icol_1 + j] + an4 * a1[icol_2 + j] - ad1 * a3[icol_1 + j] - ad2 * a3[icol_2 + j];
-            }
-
-            icol_1 = pixels;
-
-            for (i = 0; i < icol_1; ++i)
-                a2[i] += a3[i];
-
-            //  FIRST STEP Y-GRADIENT : y-derivative
-            //  columns top - down
-            for (j = 0; j < image_width; ++j)
-            {
-                a3[j] = 0;
-                a3[image_width + j] = an11 * a2[j] - ad1 * a3[j];
-                for (i = 2; i < image_height; ++i)
-                    a3[i * image_width + j] = an11 * a2[(i - 1) * image_width + j] - ad1 * a3[(i - 1) * image_width + j] - ad2 * a3[(i - 2) * image_width + j];
-            }
-
-            //  columns down top
-            for (j = 0; j < image_width; ++j)
-            {
-                a4[lig_1 * image_width + j] = 0;
-                a4[(lig_2 * image_width) + j] = -an11 * a2[lig_1 * image_width + j] - ad1 * a4[lig_1 * image_width + j];
-                for (i = lig_3; i >= 0; --i)
-                    a4[i * image_width + j] = -an11 * a2[(i + 1) * image_width + j] - ad1 * a4[(i + 1) * image_width + j] - ad2 * a4[(i + 2) * image_width + j];
-            }
-
-            icol_1 = pixels;
-
-            for (i = 0; i < icol_1; ++i)
-                a3[i] += a4[i];
-
-            for (i = 0; i < image_height; ++i)
-                for (j = 0; j < image_width; ++j)
-                    nf_gry[i * image_width + j] = a3[i * image_width + j];
-
-
-            //  SECOND STEP X-GRADIENT
-            n = 0;
-            for (i = 0; i < image_height; ++i)
-                for (j = 0; j < image_width; ++j)
-                    a1[i * image_width + j] = (int)ip[n++];
-
-            for (i = 0; i < image_height; ++i)
-            {
-                icols = i * image_width;
-                icol_1 = icols - 1;
-                icol_2 = icols - 2;
-                a2[icols] = 0;
-                a2[icols + 1] = an11 * a1[icols];
-                for (j = 2; j < image_width; ++j)
-                    a2[icols + j] = an11 * a1[icol_1 + j] - ad1 * a2[icol_1 + j] - ad2 * a2[icol_2 + j];
-            }
-
-            for (i = 0; i < image_height; ++i)
-            {
-                icols = i * image_width;
-                icol_1 = icols + 1;
-                icol_2 = icols + 2;
-                a3[icols + col_1] = 0;
-                a3[icols + col_2] = -an11 * a1[icols + col_1];
-                for (j = col_3; j >= 0; --j)
-                    a3[icols + j] = -an11 * a1[icol_1 + j] - ad1 * a3[icol_1 + j] - ad2 * a3[icol_2 + j];
-            }
-
-            icol_1 = pixels;
-
-            for (i = 0; i < icol_1; ++i)
-                a2[i] += a3[i];
-
-            //  on the columns
-            //  columns top down
-            for (j = 0; j < image_width; ++j)
-            {
-                a3[j] = an1 * a2[j];
-                a3[image_width + j] = an1 * a2[image_width + j] + an2 * a2[j] - ad1 * a3[j];
-                for (i = 2; i < image_height; ++i)
-                    a3[i * image_width + j] = an1 * a2[i * image_width + j] + an2 * a2[(i - 1) * image_width + j] - ad1 * a3[(i - 1) * image_width + j] - ad2 * a3[(i - 2) * image_width + j];
-            }
-
-            //  columns down top
-            for (j = 0; j < image_width; ++j)
-            {
-                a4[lig_1 * image_width + j] = 0;
-                a4[lig_2 * image_width + j] = an3 * a2[lig_1 * image_width + j] - ad1 * a4[lig_1 * image_width + j];
-                for (i = lig_3; i >= 0; --i)
-                    a4[i * image_width + j] = an3 * a2[(i + 1) * image_width + j] + an4 * a2[(i + 2) * image_width + j] - ad1 * a4[(i + 1) * image_width + j] - ad2 * a4[(i + 2) * image_width + j];
-            }
-
-            icol_1 = pixels;
-
-            for (i = 0; i < icol_1; ++i)
-                a3[i] += a4[i];
-
-            for (i = 0; i < image_height; i++)
-                for (j = 0; j < image_width; j++)
-                    nf_grx[i * image_width + j] = a3[i * image_width + j];
-
-            //  SECOND STEP X-GRADIENT : the x-gradient is done
-            //  THIRD STEP : NORM
-            //  computation of the magnitude
-            for (i = 0; i < image_height; i++)
-                for (j = 0; j < image_width; j++)
-                    a2[i * image_width + j] = nf_gry[i * image_width + j];
-
-            icol_1 = pixels;
-
-            // gradient magnitude
-            for (i = 0; i < icol_1; ++i)
-                a2[i] = (float)Math.Sqrt(a2[i] * a2[i] + a3[i] * a3[i]);
-
-            bool create_result = false;
-
-            if (result == null)
-                create_result = true;
-            else
-            {
-                if (result.Length != pixels)
-                    create_result = true;
-            }
-
-            if (create_result)
-                result = new byte[pixels];
-
-            float min = a2[0];
-            float max = a2[0];
-            for (i = 1; i < pixels; i++)
-            {
-                if (a2[i] > max) max = a2[i];
-                if (a2[i] < min) min = a2[i];
-            }
-
-            for (i = 0; i < pixels; i++)
-                result[i] = (byte)(255.0 * (a2[i] - min) / (max - min));
-        }
-            	 
-    	/// <summary>
-    	/// double threshold
-    	/// </summary>
-    	/// <param name="ima"></param>
-    	/// <param name="image_width">image width</param>
-    	/// <param name="image_height">image height</param>
-    	/// <param name="high_threshold">high threshold</param>
-    	/// <param name="low_threshold">low threshold</param>
-    	/// <param name="res">returned thresholded image</param>
-    	private static void DoubleThreshold(byte[] ima,
-    	                                    int image_width, int image_height,
-    	                                    float high_threshold, float low_threshold,
-    	                                    ref byte[] res) 
-    	{
-            if (res == null)
-            {
-    		    res = new byte[image_width * image_height];
-    		}
-    		else
-    		{
-    		    if (res.Length != ima.Length)
-    		        res = new byte[image_width * image_height];
-    		}
-
-            for (int i = ima.Length - 1; i >= 0; i--)
-            {
-				int pix = ima[i];
-				if (pix >= high_threshold) 
-				{
-					res[i] = 255;
-				} 
-				else
-				{
-				    if (pix >= low_threshold) 
-  					    res[i] = 128;
-				}
-            }
-    	}
-
-    	/// <summary>
-    	/// hysteresis thresholding
-    	/// </summary>
-    	/// <param name="ima">original edges image</param>
-    	/// <param name="image_width">image width</param>
-    	/// <param name="image_height">image height</param>
-    	/// <param name="res">thresholded image</param> 
-    	private static void Hyst(byte[] ima, 
-    	                         int image_width, int image_height,
-    	                         ref byte[] res)
-    	{
-    	    int n;
-    	    if (res == null)
-    	    {
-    	        res = (byte[])ima.Clone();
-    	    }
-    	    else
-    	    {
-    	        if (res.Length != ima.Length)
-    	            res = (byte[])ima.Clone();
-    	    }
-    	    
-    		bool change = true;
-    		while (change) 
-    		{
-    			change = false;
-    			for (int y = 1; y < image_height - 1; y++)    			 
-    			{
-    			    n = (y * image_width) + 1;
-    			    for (int x = 1; x < image_width - 1; x++)	 
-    				{
-    					if (res[n] == 255) 
-    					{
-    						if (res[n + 1] == 128) 
-    						{
-    							change = true;
-    							res[n + 1]= 255;
-    						}
-    						if (res[n-1] == 128) 
-    						{
-    							change = true;
-    							res[n - 1] = 255;
-    						}
-    						if (res[n + image_width] == 128) 
-    						{
-    							change = true;
-    							res[n + image_width] = 255;
-    						}
-    						if (res[n - image_width] == 128) 
-    						{
-    							change = true;
-    							res[n - image_width] = 255;
-    						}
-    						if (res[n + image_width + 1] == 128) 
-    						{
-    							change = true;
-    							res[n + image_width + 1] = 255;
-    						}
-    						if (res[n - image_width - 1] == 128) 
-    						{
-    							change = true;
-    							res[n - image_width - 1] = 255;
-    						}
-    						if (res[n + image_width - 1] == 128) 
-    						{
-    							change = true;
-    							res[n + image_width - 1] = 255;
-    						}
-    						if (res[n - image_width + 1] == 128) 
-    						{
-    							change = true;
-    							res[n - image_width + 1] = 255;
-    						}
-    					}
-    					n++;
-    				}
-    			}
-    			if (change) 
-    			{
-    			    for (int y = image_height - 2; y > 0; y--)    				
-    				{
-    				    n = (y * image_width) + image_width - 2;
-    					for (int x = image_width - 2; x > 0; x--)  
-    					{
-    						if (res[n] == 255) 
-    						{
-    							if (res[n + 1] == 128) 
-    							{
-    								change = true;
-    								res[n + 1] = 255;
-    							}
-    							if (res[n - 1] == 128) 
-    							{
-    								change = true;
-    								res[n - 1] = 255;
-    							}
-    							if (res[n + image_width] == 128) 
-    							{
-    								change = true;
-    								res[n + image_width] = 255;
-    							}
-    							if (res[n - image_width] == 128) 
-    							{
-    								change = true;
-    								res[n - image_width] = 255;
-    							}
-    							if (res[n + image_width + 1] == 128) 
-    							{
-    								change = true;
-    								res[n + image_width + 1] = 255;
-    							}
-    							if (res[n - image_width - 1] == 128) 
-    							{
-    								change = true;
-    								res[n - image_width - 1] = 255;
-    							}
-    							if (res[n + image_width - 1] == 128) 
-    							{
-    								change = true;
-    								res[n + image_width - 1] = 255;
-    							}
-    							if (res[n - image_width + 1] == 128) 
-    							{
-    								change = true;
-    								res[n - image_width + 1] = 255;
-    							}
-    						}
-    						n--;
-    					}    					
-    				}
-    			}
-    		}
-    		
-    		// suppression
-    		n = 0;
-    		for (int i = 0; i < image_width * image_height; i++)
-    		{
-		        if (res[n] == 128) res[n] = 0;
-		        n++;
-    		}
-    	}
-
-
-    	public static void CannyDeriche(string filename, string edges_filename) 
-        {            
-            if (File.Exists(filename))
-            {
-                Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
-                byte[] img = new byte[bmp.Width * bmp.Height * 3];
-                BitmapArrayConversions.updatebitmap(bmp, img);
-                
-                byte[] img_mono = image.monoImage(img, bmp.Width, bmp.Height);
-                
-                float low_threshold = 0;
-                float high_threshold = 0;
-                AutoThreshold2(img_mono, bmp.Width, bmp.Height, 5, ref low_threshold, ref high_threshold);
-                float contrast = high_threshold - low_threshold;
-                
-                low_threshold -= (contrast * 0.2f);
-                //if (low_threshold < 0) low_threshold = 0;
-                //high_threshold += (contrast * 0.2f);
-                                
-                float alpha = 500.0f;
-                byte[] result = null;
-                byte[] result2 = null;
-                byte[] result3 = null;
-                Deriche(img_mono, bmp.Width, bmp.Height, alpha, ref result);
-                DoubleThreshold(result, bmp.Width, bmp.Height, low_threshold, high_threshold, ref result2);
-                Hyst(result2, bmp.Width, bmp.Height, ref result3);
-                
-                byte[] edges = image.colourImage(result3, bmp.Width, bmp.Height, null);
-                
-                Bitmap edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                BitmapArrayConversions.updatebitmap_unsafe(edges, edges_bmp);
-                if (edges_filename.ToLower().EndsWith("jpg"))
-                    edges_bmp.Save(edges_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
-                if (edges_filename.ToLower().EndsWith("bmp"))
-                    edges_bmp.Save(edges_filename, System.Drawing.Imaging.ImageFormat.Bmp);
-            }
-        }
-
-        
-        #endregion
-
-     
     }
-    
+
 }
