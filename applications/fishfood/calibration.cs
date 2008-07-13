@@ -83,8 +83,8 @@ namespace sentience.calibration
             centre_dot_x = centre_dot_horizontal_distance + (image_width / 2);
             centre_dot_y = centre_dot_vertical_distance + (image_height / 2);
 
-            if ((Math.Abs(centre_dot_horizontal_distance) > image_width / 8) ||
-                (Math.Abs(centre_dot_vertical_distance) > image_height / 5))
+            if ((Math.Abs(centre_dot_horizontal_distance) > image_width / 4) ||
+                (Math.Abs(centre_dot_vertical_distance) > image_height / 4))
             {
                 Console.WriteLine("The calibration pattern centre dot was not detected or is too far away from the centre of the image");
             }
@@ -412,6 +412,10 @@ namespace sentience.calibration
                                      float focal_length_pixels,
                                      string file_extension)
         {
+            string calibration_xml_filename = "calibration.xml";
+            if (File.Exists(calibration_xml_filename))
+                File.Delete(calibration_xml_filename);
+
             if (directory.Contains("\\"))
             {
                 if (!directory.EndsWith("\\")) directory += "\\";
@@ -626,43 +630,54 @@ namespace sentience.calibration
                                 // find the relative offset in the left and right images
                                 double offset_x = 0;
                                 double offset_y = 0;
+                                bool is_valid = false;
 
                                 if (distortion_curve[1] != null)
                                 {
-                                    double x0 = rectified_dots[0][winner_index[0] * 2];
-                                    double y0 = rectified_dots[0][(winner_index[0] * 2) + 1];
-                                    double x1 = rectified_dots[1][winner_index[1] * 2];
-                                    double y1 = rectified_dots[1][(winner_index[1] * 2) + 1];
-                                    offset_x = x1 - x0;
-                                    offset_y = y1 - y0;
+                                    int index0 = winner_index[0] * 2;
+                                    int index1 = winner_index[1] * 2;
 
-                                    // calculate the focal length
-                                    if (focal_length_pixels < 1)
+                                    if ((rectified_dots[0].Count < index0 + 1) &&
+                                        (rectified_dots[1].Count < index1 + 1))
                                     {
-                                        focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
-                                        Console.WriteLine("Calculated focal length (pixels): " + focal_length_pixels.ToString());
+                                        double x0 = rectified_dots[0][index0];
+                                        double y0 = rectified_dots[0][index0 + 1];
+                                        double x1 = rectified_dots[1][index1];
+                                        double y1 = rectified_dots[1][index1 + 1];
+                                        offset_x = x1 - x0;
+                                        offset_y = y1 - y0;
+
+                                        // calculate the focal length
+                                        if (focal_length_pixels < 1)
+                                        {
+                                            focal_length_pixels = GetFocalLengthFromDisparity((float)dist_to_centre_dot_mm, (float)baseline_mm, (float)offset_x);
+                                            Console.WriteLine("Calculated focal length (pixels): " + focal_length_pixels.ToString());
+                                        }
+
+                                        // subtract the expected disparity for the centre dot
+                                        float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_pixels, baseline_mm, dist_to_centre_dot_mm);
+                                        float check_dist_mm = GetDistanceFromDisparity(focal_length_pixels, baseline_mm, expected_centre_dot_disparity);
+
+                                        //Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
+                                        //Console.WriteLine("observed disparity: " + offset_x.ToString());
+
+                                        offset_x -= expected_centre_dot_disparity;
+
+                                        is_valid = true;
                                     }
-
-                                    // subtract the expected disparity for the centre dot
-                                    float expected_centre_dot_disparity = GetDisparityFromDistance(focal_length_pixels, baseline_mm, dist_to_centre_dot_mm);
-                                    float check_dist_mm = GetDistanceFromDisparity(focal_length_pixels, baseline_mm, expected_centre_dot_disparity);
-
-                                    //Console.WriteLine("expected_centre_dot_disparity: " + expected_centre_dot_disparity.ToString());
-                                    //Console.WriteLine("observed disparity: " + offset_x.ToString());
-
-                                    offset_x -= expected_centre_dot_disparity;
-
-
                                 }
 
-                                // save the results as an XML file
-                                Save("calibration.xml", "Test", focal_length_pixels, baseline_mm, fov_degrees,
-                                     img_width, img_height, distortion_curve,
-                                     centre_x, centre_y, rotation, scale_factor,
-                                     lens_distortion_filename, curve_fit_filename,
-                                     (float)offset_x, (float)offset_y,
-                                     pan_curve, pan_offset_x, pan_offset_y,
-                                     tilt_curve, tilt_offset_x, tilt_offset_y);
+                                if (is_valid)
+                                {
+                                    // save the results as an XML file
+                                    Save(calibration_xml_filename, "Test", focal_length_pixels, baseline_mm, fov_degrees,
+                                         img_width, img_height, distortion_curve,
+                                         centre_x, centre_y, rotation, scale_factor,
+                                         lens_distortion_filename, curve_fit_filename,
+                                         (float)offset_x, (float)offset_y,
+                                         pan_curve, pan_offset_x, pan_offset_y,
+                                         tilt_curve, tilt_offset_x, tilt_offset_y);
+                                }
                             }
 
                         }
