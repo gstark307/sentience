@@ -1,0 +1,35 @@
+﻿<UserCombinePreferences version="1.0" filename="/home/motters/surveyor/surveyorstereo/surveyorstereo.mds">
+  <Files>
+    <File name="Welcome" />
+    <File name="MainWindow.cs" line="39" column="9" />
+    <File name="../surveyorlib/AssemblyInfo.cs" line="16" column="32" />
+    <File name="../surveyorlib/GtkBitmap.cs" line="144" column="4" />
+    <File name="../surveyorlib/SurveyorVisionClient.cs" line="415" column="10" />
+    <File name="../surveyorlib/SurveyorvisionThreadGrabFrame.cs" line="94" column="31" />
+    <File name="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" line="110" column="14" />
+    <File name="../surveyorlib/GtkImage.cs" line="167" column="2" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="76" column="1" />
+    <File name="Main.cs" line="26" column="6" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="162" column="10" />
+  </Files>
+  <Views>
+    <ViewMemento id="ProjectPad">
+      <Node expanded="True">
+        <Node name="surveyorlib" expanded="True">
+          <Node name="GtkBitmap.cs" selected="True" />
+        </Node>
+        <Node name="surveyorstereo" expanded="True" />
+      </Node>
+    </ViewMemento>
+    <ViewMemento id="ClassPad">
+      <Node expanded="True" />
+    </ViewMemento>
+    <ViewMemento id="MonoDevelop.NUnit.TestPad">
+      <Node />
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Property key="ActiveWindow" value="/home/motters/surveyor/surveyorlib/GtkBitmap.cs" />
+    <Property key="ActiveConfiguration" value="Debug" />
+  </Properties>
+</UserCombinePreferences>

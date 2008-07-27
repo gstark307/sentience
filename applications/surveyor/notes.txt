@@ -1,0 +1,76 @@
+Surveyor Corporation stereo camera
+
+Notes
+
+These notes assume an Ubuntu Hardy OS.
+
+1.  Install java
+
+From System/Administration select Synaptic package manager
+search for "java" and select the following packages
+
+    java-gcj-compat
+    java-gcj-compat-dev
+
+Other packages will be selected automatically.
+Click apply to install
+
+2.  Download and compile the test application
+
+Download SRV1Test java from http://www.surveyor.com/blackfin/#blackfin5
+Save it to some directory.  In my case I put it in ~/surveyor
+
+Open a shell and move to the directory in which you saved
+the file, then type:
+
+    javac SRV1Test.java
+
+Listing the contents of the directory should show a whole 
+bunch of class files generated.
+
+3.  Connect to the camera
+
+Select System/Administration/Network and unlock using your password
+If you havn't already saved your existing network settings you
+may wish to do so now by clicking on the save icon and entering
+an appropriate name.
+
+Select wireless network, then properties
+
+    SSID:  SRV1
+    Configuration: static IP
+    IP: 169.254.0.10
+    Subnet: 255.255.255.0
+
+4.  Test communications
+
+Within a command shell type
+
+    telnet 169.254.0.10 9999
+
+If you get a 'connection refused' message you may need
+to connect using a USB dongle.
+
+    expert (5)
+    CPU speed   FF
+    clock speed   81
+    MTU size   1024
+
+    channel 1 (1)
+    baud rate   -1
+    divisor   2
+    flow control  2
+    port 10001
+    flush mode 80
+    pack cntr  C0
+    interch time  3
+
+    channel 2 (2)
+    baud rate   -1
+    divisor   2
+    flow control  2
+    port 10002
+    flush mode 80
+    pack cntr  C0
+    interch time  3
+

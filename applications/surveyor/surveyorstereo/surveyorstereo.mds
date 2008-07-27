@@ -1,0 +1,24 @@
+<Combine name="surveyorstereo" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="surveyorstereo" configuration="Debug" />
+      <Entry build="True" name="Packages" configuration="" />
+      <Entry build="True" name="surveyorlib" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="surveyorstereo" configuration="Release" />
+      <Entry build="True" name="Packages" configuration="" />
+      <Entry build="True" name="surveyorlib" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="surveyorstereo" single="True">
+    <Execute type="None" entry="surveyorstereo" />
+    <Execute type="None" entry="Packages" />
+    <Execute type="None" entry="surveyorlib" />
+  </StartMode>
+  <Entries>
+    <Entry filename="surveyorstereo.mdp" />
+    <Entry filename="Packages.mdse" />
+    <Entry filename="../surveyorlib/surveyorlib.mdp" />
+  </Entries>
+</Combine>

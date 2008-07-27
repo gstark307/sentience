@@ -1,0 +1,21 @@
+﻿<UserCombinePreferences version="1.0" filename="/home/motters/surveyor/surveyorlib/surveyorlib.mds">
+  <Files>
+    <File name="Welcome" />
+    <File name="GtkBitmap.cs" line="139" column="10" />
+  </Files>
+  <Views>
+    <ViewMemento id="ProjectPad">
+      <Node />
+    </ViewMemento>
+    <ViewMemento id="ClassPad">
+      <Node />
+    </ViewMemento>
+    <ViewMemento id="MonoDevelop.NUnit.TestPad">
+      <Node />
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Property key="ActiveWindow" value="/home/motters/surveyor/surveyorlib/GtkBitmap.cs" />
+    <Property key="ActiveConfiguration" value="Debug" />
+  </Properties>
+</UserCombinePreferences>
