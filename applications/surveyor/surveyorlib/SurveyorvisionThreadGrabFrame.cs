@@ -33,6 +33,7 @@ namespace surveyor.vision
     {
         private WaitCallback _callback;
         private object _data;
+        public bool Halt;
 
         /// <summary>
         /// constructor
@@ -60,7 +61,7 @@ namespace surveyor.vision
         private void Update(SurveyorVisionClient state)
         {
             DateTime data_last_requested = DateTime.Now;
-            while (state.Streaming)
+            while ((state.Streaming) && (!Halt))
             {
                 switch(state.grab_mode)
                 {

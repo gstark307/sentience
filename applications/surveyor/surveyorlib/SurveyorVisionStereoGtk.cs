@@ -47,7 +47,7 @@ namespace surveyor.vision
         
         #endregion
     
-        #region "displaying images"    
+        #region "displaying images"
     
         // images used for display
         public Gtk.Image[] display_image;

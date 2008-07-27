@@ -28,7 +28,7 @@ namespace surveyor.vision
         private SurveyorVisionClient[] camera;
         private string host;
         private int[] port_number;
-        public int fps = 4;
+        public int fps = 10;
                 
         #region "constructors"
         
@@ -132,6 +132,8 @@ namespace surveyor.vision
                     camera[cam].StopStream();
                     camera[cam].Stop();
                 }
+
+                
             }            
         }
         

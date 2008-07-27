@@ -59,13 +59,33 @@ namespace surveyor.vision
             if (display_image[0] != null)
             {
                 display_image[0].Image = left_image;
-                display_image[0].Refresh();
+
+                try
+                {
+                    window.Invoke((MethodInvoker)delegate
+                    {
+                        display_image[0].Refresh();
+                    });
+                }
+                catch
+                {
+                }
             }
 
             if (display_image[1] != null)
             {
                 display_image[1].Image = left_image;
-                display_image[1].Refresh();
+
+                try
+                {
+                    window.Invoke((MethodInvoker)delegate
+                    {
+                        display_image[1].Refresh();
+                    });
+                }
+                catch
+                {
+                }
             }
 
         }

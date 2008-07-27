@@ -28,5 +28,32 @@ namespace surveyorstereo
         {
             stereo_camera.Stop();
         }
+
+        /// <summary>
+        /// resize controls on the form
+        /// </summary>
+        private void ResizeControls()
+        {
+            if ((picLeftImage.Image != null) &&
+                (picRightImage.Image != null))
+            {
+                picLeftImage.Width = (this.Width / 2) - (picLeftImage.Left * 2);
+                picRightImage.Left = (picLeftImage.Left * 2) + picLeftImage.Width;
+                picRightImage.Width = picLeftImage.Width;
+
+                picLeftImage.Height = this.Height - picLeftImage.Top - 30;
+                picRightImage.Height = picLeftImage.Height;
+            }
+        }
+
+        private void frmStereo_ResizeEnd(object sender, EventArgs e)
+        {
+            ResizeControls();
+        }
+
+        private void frmStereo_SizeChanged(object sender, EventArgs e)
+        {
+            ResizeControls();
+        }
     }
 }

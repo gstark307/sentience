@@ -382,12 +382,15 @@ namespace surveyor.vision
 				m_clientSocket.Close();
 				m_clientSocket = null;				
 			}
+            
 			Running = false;
 		}
 
         #endregion
 
         #region "start and stop streaming"
+
+        SurveyorVisionThreadGrabFrame grab_frames;
 
         #region "callbacks"
 
@@ -408,7 +411,7 @@ namespace surveyor.vision
         public void StartStream()
         {
             Streaming = true;
-            SurveyorVisionThreadGrabFrame grab_frames = new SurveyorVisionThreadGrabFrame(new WaitCallback(FrameGrabCallback),this);        
+            grab_frames = new SurveyorVisionThreadGrabFrame(new WaitCallback(FrameGrabCallback),this);        
             Thread grabber_thread = new Thread(new ThreadStart(grab_frames.Execute));
             grabber_thread.Priority = ThreadPriority.Normal;
             grabber_thread.Start();        
@@ -429,6 +432,7 @@ namespace surveyor.vision
         public void StopStream()
         {
             Streaming = false;
+            grab_frames.Halt = true;
         }
 
         #endregion
