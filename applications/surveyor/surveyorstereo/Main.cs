@@ -30,9 +30,7 @@ namespace surveyor.vision
             MainWindow win = new MainWindow ();
             win.ShowAll ();
         
-		    Gdk.Threads.Enter ();
 		    Application.Run ();
-		    Gdk.Threads.Leave ();
         }
         
     }

@@ -52,32 +52,37 @@ namespace surveyor.vision
         // images used for display
         public Gtk.Image[] display_image;
         public Gtk.Window window;
+
+        /// <summary>
+        /// refreshes the GUI images
+        /// </summary>
+        /// <param name="window">Gtk window to be refreshed</param>
+        private void UpdateGUI(Gtk.Window window)
+        {            
+            window.GdkWindow.ProcessUpdates(true);
+        }
     
+        /// <summary>
+        /// shows both left and right camera images within the GUI
+        /// </summary>
+        /// <param name="left_image">left image bitmap</param>
+        /// <param name="right_image">right image bitmap</param>
         protected override void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
          
             if (display_image[0] != null)
             {
-                //left_image.Save("left.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                //display_image[0].Pixbuf = new Pixbuf("left.jpg");
-
                 GtkBitmap.setBitmap(left_image, display_image[0]);
-
-                Gdk.Threads.Enter();
-                display_image[0].QueueDraw();
-                display_image[0].Show();
-                Gdk.Threads.Leave();
-
             }
             
             if (display_image[1] != null)
             {
                 GtkBitmap.setBitmap(right_image, display_image[1]);
 
-                Gdk.Threads.Enter();
-                display_image[1].QueueDraw();
-                display_image[1].Show();
-                Gdk.Threads.Leave();
+                // Here we need to update the GUI after receiving the right camera image
+                // Since we're running in a separate thread from the GUI we have to
+                // call it in a special way
+                RunOnMainThread.Run(this, "UpdateGUI", new object[] { window });
             }
             
             if (window != null)
