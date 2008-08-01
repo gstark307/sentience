@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.IO;
 using System.Threading;
 using System.Drawing;
 
@@ -29,6 +30,10 @@ namespace surveyor.vision
         private string host;
         private int[] port_number;
         public int fps = 10;
+        
+        // whether to record raw camera images
+        public bool Record;
+        public ulong RecordFrameNumber;
                 
         #region "constructors"
         
@@ -54,6 +59,14 @@ namespace surveyor.vision
             port_number = new int[2];
             port_number[0] = port_number_left;
             port_number[1] = port_number_right;
+            
+            // delete and previously recorded images
+            string[] victims = Directory.GetFiles(".", "raw*.jpg");
+            if (victims != null)
+            {
+                for (int v = 0; v < victims.Length; v++)
+                    File.Delete(victims[v]);
+            }
         }
         
         #endregion
@@ -79,6 +92,15 @@ namespace surveyor.vision
                     
                     busy_processing = true;
                     Process(left, right);
+                    
+                    // save images to file
+                    if (Record)
+                    {
+                        RecordFrameNumber++;
+                        left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                        right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                    }
+                    
                     busy_processing = false;
                 }
             }

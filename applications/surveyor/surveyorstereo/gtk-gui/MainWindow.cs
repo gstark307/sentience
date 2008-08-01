@@ -16,6 +16,10 @@ public partial class MainWindow {
     
     private Gtk.Action ExitAction;
     
+    private Gtk.Action ToolsAction;
+    
+    private Gtk.ToggleAction RecordImagesAction;
+    
     private Gtk.VBox vbox1;
     
     private Gtk.MenuBar menubar1;
@@ -25,6 +29,10 @@ public partial class MainWindow {
     private Gtk.Image leftimage;
     
     private Gtk.Image rightimage;
+    
+    private Gtk.HBox hbox2;
+    
+    private Gtk.CheckButton chkRecord;
     
     protected virtual void Build() {
         Stetic.Gui.Initialize(this);
@@ -39,6 +47,13 @@ public partial class MainWindow {
         this.ExitAction = new Gtk.Action("ExitAction", Mono.Unix.Catalog.GetString("Exit"), null, "gtk-stop");
         this.ExitAction.ShortLabel = Mono.Unix.Catalog.GetString("Exit");
         w3.Add(this.ExitAction, null);
+        this.ToolsAction = new Gtk.Action("ToolsAction", Mono.Unix.Catalog.GetString("Tools"), null, null);
+        this.ToolsAction.ShortLabel = Mono.Unix.Catalog.GetString("Tools");
+        w3.Add(this.ToolsAction, null);
+        this.RecordImagesAction = new Gtk.ToggleAction("RecordImagesAction", Mono.Unix.Catalog.GetString("Record images"), null, null);
+        this.RecordImagesAction.Active = true;
+        this.RecordImagesAction.ShortLabel = Mono.Unix.Catalog.GetString("Record images");
+        w3.Add(this.RecordImagesAction, null);
         w1.InsertActionGroup(w3, 1);
         this.AddAccelGroup(w1.AccelGroup);
         this.CanFocus = true;
@@ -50,7 +65,7 @@ public partial class MainWindow {
         this.vbox1.Name = "vbox1";
         this.vbox1.Spacing = 6;
         // Container child vbox1.Gtk.Box+BoxChild
-        w1.AddUiFromString("<ui><menubar name='menubar1'><menu action='FileAction'><menuitem action='ExitAction'/></menu></menubar></ui>");
+        w1.AddUiFromString("<ui><menubar name='menubar1'><menu action='FileAction'><menuitem action='ExitAction'/></menu><menu action='ToolsAction'><menuitem action='RecordImagesAction'/></menu></menubar></ui>");
         this.menubar1 = ((Gtk.MenuBar)(w1.GetWidget("/menubar1")));
         this.menubar1.Name = "menubar1";
         this.vbox1.Add(this.menubar1);
@@ -60,12 +75,9 @@ public partial class MainWindow {
         w4.Fill = false;
         // Container child vbox1.Gtk.Box+BoxChild
         this.hbox1 = new Gtk.HBox();
-        this.hbox1.Name = "hbox1";
         this.hbox1.Spacing = 6;
         // Container child hbox1.Gtk.Box+BoxChild
         this.leftimage = new Gtk.Image();
-        this.leftimage.CanFocus = true;
-        this.leftimage.Events = ((Gdk.EventMask)(65536));
         this.leftimage.Name = "leftimage";
         this.hbox1.Add(this.leftimage);
         Gtk.Box.BoxChild w5 = ((Gtk.Box.BoxChild)(this.hbox1[this.leftimage]));
@@ -85,14 +97,35 @@ public partial class MainWindow {
         w7.Position = 1;
         w7.Expand = false;
         w7.Fill = false;
+        // Container child vbox1.Gtk.Box+BoxChild
+        this.hbox2 = new Gtk.HBox();
+        this.hbox2.Name = "hbox2";
+        this.hbox2.Spacing = 6;
+        // Container child hbox2.Gtk.Box+BoxChild
+        this.chkRecord = new Gtk.CheckButton();
+        this.chkRecord.CanFocus = true;
+        this.chkRecord.Name = "chkRecord";
+        this.chkRecord.Label = Mono.Unix.Catalog.GetString("Record");
+        this.chkRecord.DrawIndicator = true;
+        this.chkRecord.UseUnderline = true;
+        this.hbox2.Add(this.chkRecord);
+        Gtk.Box.BoxChild w8 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkRecord]));
+        w8.Position = 0;
+        this.vbox1.Add(this.hbox2);
+        Gtk.Box.BoxChild w9 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox2]));
+        w9.Position = 2;
+        w9.Expand = false;
+        w9.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
         }
-        this.DefaultWidth = 400;
+        this.DefaultWidth = 429;
         this.DefaultHeight = 300;
         this.Show();
         this.DeleteEvent += new Gtk.DeleteEventHandler(this.OnDeleteEvent);
         this.ExitAction.Activated += new System.EventHandler(this.OnExitActionActivated);
+        this.RecordImagesAction.Activated += new System.EventHandler(this.OnRecordImagesActionActivated);
+        this.chkRecord.Clicked += new System.EventHandler(this.OnChkRecordClicked);
     }
 }

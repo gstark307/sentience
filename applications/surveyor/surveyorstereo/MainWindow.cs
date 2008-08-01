@@ -18,19 +18,33 @@
 */
 
 using System;
+using System.Drawing;
 using Gtk;
 using surveyor.vision;
+using sluggish.utilities;
 using sluggish.utilities.gtk;
 
 public partial class MainWindow: Gtk.Window
-{    
+{
+    int image_width = 320;
+    int image_height = 240;
+    string stereo_camera_IP = "169.254.0.10";
+    
     public SurveyorVisionStereoGtk stereo_camera;
     
     public MainWindow (): base (Gtk.WindowType.Toplevel)
     {
         Build ();
+
+        byte[] img = new byte[image_width * image_height * 3];
+        Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+        Bitmap right_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+        BitmapArrayConversions.updatebitmap_unsafe(img, left_bmp);
+        BitmapArrayConversions.updatebitmap_unsafe(img, right_bmp);
+        GtkBitmap.setBitmap(left_bmp, leftimage);
+        GtkBitmap.setBitmap(right_bmp, rightimage);
         
-        stereo_camera = new SurveyorVisionStereoGtk("169.254.0.10", 10001, 10002);
+        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002);
         stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
@@ -54,6 +68,18 @@ public partial class MainWindow: Gtk.Window
     protected virtual void OnExitActionActivated (object sender, System.EventArgs e)
     {
         CloseForm();
+    }
+
+    protected virtual void OnRecordImagesActionActivated (object sender, System.EventArgs e)
+    {
+        RecordImagesAction.Active = !RecordImagesAction.Active;
+        stereo_camera.Record = RecordImagesAction.Active;
+    }
+
+    protected virtual void OnChkRecordClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.Record = !stereo_camera.Record;
+        chkRecord.Active = stereo_camera.Record; 
     }
         
 }
