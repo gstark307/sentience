@@ -3,7 +3,7 @@
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
       <Output directory="bin/Debug" assembly="fishfood" />
       <Build debugmode="True" target="Exe" />
-      <Execution runwithwarnings="True" commandlineparameters="-dir /home/motters/develop/sentience/calibrationdata2 -baseline 100 -spacing 50 -dotdist 525 -height 550 -fov 78" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
+      <Execution runwithwarnings="True" commandlineparameters="-dir /home/motters/calibrationdata2 -baseline 100 -spacing 50 -dotdist 525 -height 550 -fov 78" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
       <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" mainclass="" definesymbols="DEBUG" generatexmldocumentation="False" win32Icon="." ctype="CSharpCompilerParameters" />
     </Configuration>
     <Configuration name="Release" ctype="DotNetProjectConfiguration">
@@ -34,6 +34,7 @@
     <File name="calibration.cs" subtype="Code" buildaction="Compile" />
     <File name="graph.cs" subtype="Code" buildaction="Compile" />
     <File name="graph_points.cs" subtype="Code" buildaction="Compile" />
+    <File name="MersenneTwister.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

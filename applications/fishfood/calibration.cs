@@ -67,7 +67,8 @@ namespace sentience.calibration
                                          string rectified_image_filename,
                                          ref float centre_dot_x, ref float centre_dot_y,
                                          ref double minimum_error,
-                                         ref int[] calibration_map)
+                                         ref int[] calibration_map,
+                                         int random_seed)
         {
             image_width = 0;
             image_height = 0;
@@ -103,8 +104,9 @@ namespace sentience.calibration
                         dots_at_bottom_of_image++;
                 }
 
-                if ((dots_at_top_of_image > 2) &&
-                    (dots_at_bottom_of_image > 2))
+                //if ((dots_at_top_of_image > 2) &&
+                //    (dots_at_bottom_of_image > 2))
+                if (dots.Nodes.Count > 100)
                 {
 
                     // square around the centre dot
@@ -140,7 +142,7 @@ namespace sentience.calibration
                     {
                         int grid_offset_x = 0, grid_offset_y = 0;
                         List<calibrationDot> corners = new List<calibrationDot>();
-                        grid2D overlay_grid = OverlayIdealGrid(grid, corners, ref grid_offset_x, ref grid_offset_y);
+                        grid2D overlay_grid = OverlayIdealGrid(grid, corners, ref grid_offset_x, ref grid_offset_y, random_seed);
                         if (overlay_grid != null)
                         {
                             ShowDots(corners, filename, "corners.jpg");
@@ -154,7 +156,8 @@ namespace sentience.calibration
                                                  ref lens_distortion_curve, ref centre_of_distortion,
                                                  ref best_rectified_lines,
                                                  grid_offset_x, grid_offset_y, scale,
-                                                 ref minimum_error);
+                                                 ref minimum_error,
+                                                 random_seed);
 
                             if (lens_distortion_curve != null)
                             {
@@ -502,6 +505,8 @@ namespace sentience.calibration
                                 GetPanTilt(image_filename[cam][i], ref pan, ref tilt);
                                 pan_servo_position[cam].Add(pan);
                                 tilt_servo_position[cam].Add(tilt);
+                                
+                                int random_seed = 0;
 
                                 // detect the dots and calculate a best fit curve
                                 double centre_of_distortion_x = 0;
@@ -523,7 +528,8 @@ namespace sentience.calibration
                                     curve_fit_image_filename,
                                     rectified_image_filename,
                                     ref dot_x, ref dot_y,
-                                    ref min_err, ref calib_map);
+                                    ref min_err, ref calib_map,
+                                    random_seed);
 
                                 centre_dot_position[cam].Add(dot_x);
                                 centre_dot_position[cam].Add(dot_y);
@@ -1476,148 +1482,169 @@ namespace sentience.calibration
                                            double centre_of_distortion_search_radius,
                                            int grid_offset_x, int grid_offset_y,
                                            List<List<double>> lines,
-                                           ref double minimum_error)
-        {
-            MersenneTwister rnd = new MersenneTwister(0);
-            minimum_error = double.MaxValue;
-            double search_min_error = minimum_error;
-
-            int degrees = 3;
-            int best_degrees = degrees;
-            List<double> prev_minimum_error = new List<double>();
-            prev_minimum_error.Add(minimum_error);
-            double increment = 3.0f;
-            double noise = increment / 2;
+                                           ref double minimum_error,
+                                           int random_seed)
+        {   
+            double overall_minimum_error = double.MaxValue;
+            double centre_of_distortion_x=0, centre_of_distortion_y=0;
+            polynomial overall_best_curve = null;
             polynomial best_curve = null;
-
-            double search_radius = (float)centre_of_distortion_search_radius;
-            double half_width = image_width / 2;
-            double half_height = image_height / 2;
-            double half_noise = noise / 2;
-            double max_radius_sqr = centre_of_distortion_search_radius * centre_of_distortion_search_radius;
-            int scaled_up = 0;
-
-            List<double> result = new List<double>();
-            double best_cx = half_width, best_cy = half_height;
-
-            float maxerr = (image_width / 2) * (image_width / 2);
-            int max_passes = 1000;
-            for (int pass = 0; pass < max_passes; pass++)
+        
+            for (int rand_pass = random_seed; rand_pass < random_seed + 3; rand_pass++)
             {
-                double centre_x = 0;
-                double centre_y = 0;
-                double mass = 0;
+                minimum_error = double.MaxValue;
+                double search_min_error = minimum_error;
 
-                for (double cx = half_width - search_radius; cx < half_width + search_radius; cx += increment)
+                int degrees = 3;
+                int best_degrees = degrees;
+                List<double> prev_minimum_error = new List<double>();
+                prev_minimum_error.Add(minimum_error);
+                double increment = 3.0f;
+                double noise = increment / 2;
+                best_curve = null;
+
+                double search_radius = (float)centre_of_distortion_search_radius;
+                double half_width = image_width / 2;
+                double half_height = image_height / 2;
+                double half_noise = noise / 2;
+                double max_radius_sqr = centre_of_distortion_search_radius * centre_of_distortion_search_radius;
+                int scaled_up = 0;
+
+                List<double> result = new List<double>();
+                double best_cx = half_width, best_cy = half_height;
+            
+                float maxerr = (image_width / 2) * (image_width / 2);
+                MersenneTwister rnd = new MersenneTwister(rand_pass);
+                
+                int max_passes = 1000;
+                for (int pass = 0; pass < max_passes; pass++)
                 {
-                    double dx = cx - half_width;
-                    for (double cy = half_height - search_radius; cy < half_height + search_radius; cy += increment)
+                    double centre_x = 0;
+                    double centre_y = 0;
+                    double mass = 0;
+
+                    for (double cx = half_width - search_radius; cx < half_width + search_radius; cx += increment)
                     {
-                        double dy = cy - half_height;
-                        double dist = dx * dx + dy * dy;
-                        if (dist < max_radius_sqr)
+                        double dx = cx - half_width;
+                        for (double cy = half_height - search_radius; cy < half_height + search_radius; cy += increment)
                         {
-                            polynomial curve = new polynomial();
-                            curve.SetDegree(degrees);
-
-                            centre_of_distortion.x = cx + (rnd.NextDouble() * noise) - half_noise;
-                            centre_of_distortion.y = cy + (rnd.NextDouble() * noise) - half_noise;
-                            FitCurve(grid, overlay_grid, centre_of_distortion, curve, noise, rnd, grid_offset_x, grid_offset_y);
-
-                            // do a sanity check on the curve
-                            if (ValidCurve(curve, image_width))
+                            double dy = cy - half_height;
+                            double dist = dx * dx + dy * dy;
+                            if (dist < max_radius_sqr)
                             {
-                                double error = curve.GetMeanError();
-                                error = error * error;
+                                polynomial curve = new polynomial();
+                                curve.SetDegree(degrees);
 
-                                if (error > 0.001)
+                                centre_of_distortion.x = cx + (rnd.NextDouble() * noise) - half_noise;
+                                centre_of_distortion.y = cy + (rnd.NextDouble() * noise) - half_noise;
+                                FitCurve(grid, overlay_grid, centre_of_distortion, curve, noise, rnd, grid_offset_x, grid_offset_y);
+
+                                // do a sanity check on the curve
+                                if (ValidCurve(curve, image_width))
                                 {
-                                    error = maxerr - error;  // inverse
-                                    if (error > 0)
+                                    double error = curve.GetMeanError();
+                                    error = error * error;
+
+                                    if (error > 0.001)
                                     {
-                                        centre_x += centre_of_distortion.x * error;
-                                        centre_y += centre_of_distortion.y * error;
-                                        mass += error;
+                                        error = maxerr - error;  // inverse
+                                        if (error > 0)
+                                        {
+                                            centre_x += centre_of_distortion.x * error;
+                                            centre_y += centre_of_distortion.y * error;
+                                            mass += error;
+                                        }
                                     }
                                 }
+
+                            }
+                        }
+                    }
+
+                    if (mass > 0)
+                    {
+                        centre_x /= mass;
+                        centre_y /= mass;
+
+                        centre_of_distortion.x = centre_x;
+                        centre_of_distortion.y = centre_y;
+
+                        polynomial curve2 = new polynomial();
+                        curve2.SetDegree(degrees);
+                        FitCurve(grid, overlay_grid, centre_of_distortion, curve2, noise, rnd, grid_offset_x, grid_offset_y);
+
+                        double mean_error = curve2.GetMeanError();
+
+                        double scaledown = 0.99999999999999999;
+                        if (mean_error < search_min_error)
+                        {
+
+                            search_min_error = mean_error;
+
+                            // cool down
+                            prev_minimum_error.Add(search_min_error);
+                            search_radius *= scaledown;
+                            increment *= scaledown;
+                            noise = increment / 2;
+                            half_noise = noise / 2;
+                            half_width = centre_x;
+                            half_height = centre_y;
+
+                            if (mean_error < minimum_error)
+                            {
+                                best_cx = half_width;
+                                best_cy = half_height;
+                                minimum_error = mean_error;
+                                Console.WriteLine("Cool " + pass.ToString() + ": " + mean_error.ToString());
+                                if (max_passes - pass < 500) max_passes += 500;
+                                best_degrees = degrees;
+                                best_curve = curve2;
                             }
 
+                            scaled_up = 0;
                         }
+                        else
+                        {
+                            // heat up
+                            double scaleup = 1.0 / scaledown;
+                            search_radius /= scaledown;
+                            increment /= scaledown;
+                            noise = increment / 2;
+                            half_noise = noise / 2;
+                            scaled_up++;
+                            half_width = best_cx + (rnd.NextDouble() * noise) - half_noise;
+                            half_height = best_cy + (rnd.NextDouble() * noise) - half_noise;
+                            if (prev_minimum_error.Count > 0)
+                            {
+                                minimum_error = prev_minimum_error[prev_minimum_error.Count - 1];
+                                prev_minimum_error.RemoveAt(prev_minimum_error.Count - 1);
+                            }
+                        }
+
+                        result.Add(mean_error);
                     }
                 }
+            
+                minimum_error = Math.Sqrt(minimum_error);
 
-                if (mass > 0)
+                centre_of_distortion.x = best_cx;
+                centre_of_distortion.y = best_cy;
+                
+                if (best_curve != null)
+                    minimum_error = best_curve.GetMeanError();
+                    
+                if (minimum_error < overall_minimum_error)
                 {
-                    centre_x /= mass;
-                    centre_y /= mass;
-
-                    centre_of_distortion.x = centre_x;
-                    centre_of_distortion.y = centre_y;
-
-                    polynomial curve2 = new polynomial();
-                    curve2.SetDegree(degrees);
-                    FitCurve(grid, overlay_grid, centre_of_distortion, curve2, noise, rnd, grid_offset_x, grid_offset_y);
-
-                    double mean_error = curve2.GetMeanError();
-
-                    double scaledown = 0.99999999999999999;
-                    if (mean_error < search_min_error)
-                    {
-
-                        search_min_error = mean_error;
-
-                        // cool down
-                        prev_minimum_error.Add(search_min_error);
-                        search_radius *= scaledown;
-                        increment *= scaledown;
-                        noise = increment / 2;
-                        half_noise = noise / 2;
-                        half_width = centre_x;
-                        half_height = centre_y;
-
-                        if (mean_error < minimum_error)
-                        {
-                            best_cx = half_width;
-                            best_cy = half_height;
-                            minimum_error = mean_error;
-                            Console.WriteLine("Cool " + pass.ToString() + ": " + mean_error.ToString());
-                            if (max_passes - pass < 500) max_passes += 500;
-                            best_degrees = degrees;
-                            best_curve = curve2;
-                        }
-
-                        scaled_up = 0;
-                    }
-                    else
-                    {
-                        // heat up
-                        double scaleup = 1.0 / scaledown;
-                        search_radius /= scaledown;
-                        increment /= scaledown;
-                        noise = increment / 2;
-                        half_noise = noise / 2;
-                        scaled_up++;
-                        half_width = best_cx + (rnd.NextDouble() * noise) - half_noise;
-                        half_height = best_cy + (rnd.NextDouble() * noise) - half_noise;
-                        if (prev_minimum_error.Count > 0)
-                        {
-                            minimum_error = prev_minimum_error[prev_minimum_error.Count - 1];
-                            prev_minimum_error.RemoveAt(prev_minimum_error.Count - 1);
-                        }
-                    }
-
-                    result.Add(mean_error);
+                    overall_minimum_error = minimum_error;
+                    centre_of_distortion_x = best_cx;
+                    centre_of_distortion_y = best_cy;
+                    overall_best_curve = best_curve;
                 }
             }
-
-            minimum_error = Math.Sqrt(minimum_error);
-
-            centre_of_distortion.x = best_cx;
-            centre_of_distortion.y = best_cy;
-            
-            if (best_curve != null)
-                minimum_error = best_curve.GetMeanError();
-
+            overall_minimum_error = minimum_error;
+            centre_of_distortion.x = centre_of_distortion_x;
+            centre_of_distortion.y = centre_of_distortion_y;
+            best_curve = overall_best_curve;
             return (best_curve);
         }
 
@@ -1811,7 +1838,8 @@ namespace sentience.calibration
         /// <returns></returns>
         private static grid2D OverlayIdealGrid(calibrationDot[,] grid,
                                                List<calibrationDot> corners,
-                                               ref int grid_offset_x, ref int grid_offset_y)
+                                               ref int grid_offset_x, ref int grid_offset_y,
+                                               int random_seed)
         {
             grid2D overlay_grid = null;
             int grid_tx = -1;
@@ -2003,7 +2031,7 @@ namespace sentience.calibration
                 double min_dist = double.MaxValue;
                 int max_perim_size_tries = 100;
                 polygon2D best_perimeter = perimeter;
-                MersenneTwister rnd = new MersenneTwister(0);
+                MersenneTwister rnd = new MersenneTwister(random_seed);
                 for (int perim_size = 0; perim_size < max_perim_size_tries; perim_size++)
                 {
                     // try a small range of translations
@@ -2080,16 +2108,18 @@ namespace sentience.calibration
                                                  ref List<List<double>> best_rectified_lines,
                                                  int grid_offset_x, int grid_offset_y,
                                                  double scale,
-                                                 ref double minimum_error)
+                                                 ref double minimum_error,
+                                                 int random_seed)
         {
-            double centre_of_distortion_search_radius = image_width / 80.0f;
+            double centre_of_distortion_search_radius = image_width / 100f; //80.0f;
             centre_of_distortion = new calibrationDot();
             curve = FitCurve(image_width, image_height,
                              grid, overlay_grid,
                              centre_of_distortion,
                              centre_of_distortion_search_radius,
                              grid_offset_x, grid_offset_y, lines,
-                             ref minimum_error);
+                             ref minimum_error,
+                             random_seed);
 
             if (curve != null)
             {

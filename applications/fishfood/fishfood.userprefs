@@ -1,7 +1,7 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="35" column="10" />
+    <File name="Main.cs" line="19" column="1" />
     <File name="shapes.cs" line="10" column="41" />
     <File name="hypergraph.cs" line="60" column="23" />
     <File name="calibrationLink.cs" line="25" column="64" />
