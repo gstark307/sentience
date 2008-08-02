@@ -5,6 +5,7 @@
     <target-gtk-version>2.12.0</target-gtk-version>
   </configuration>
   <widget class="Gtk.Window" id="MainWindow" design-size="429 300">
+    <action-group name="New Action Group" />
     <action-group name="Default">
       <action id="FileAction">
         <property name="Type">Action</property>
@@ -32,7 +33,6 @@
         <signal name="Activated" handler="OnRecordImagesActionActivated" />
       </action>
     </action-group>
-    <action-group name="New Action Group" />
     <property name="MemberName" />
     <property name="CanFocus">True</property>
     <property name="Title" translatable="yes">Surveyor Stereo Vision Test</property>
@@ -71,9 +71,7 @@
               </widget>
               <packing>
                 <property name="Position">0</property>
-                <property name="AutoSize">True</property>
-                <property name="Expand">False</property>
-                <property name="Fill">False</property>
+                <property name="AutoSize">False</property>
               </packing>
             </child>
             <child>
@@ -82,9 +80,7 @@
               </widget>
               <packing>
                 <property name="Position">1</property>
-                <property name="AutoSize">True</property>
-                <property name="Expand">False</property>
-                <property name="Fill">False</property>
+                <property name="AutoSize">False</property>
               </packing>
             </child>
           </widget>
@@ -115,10 +111,34 @@
               </packing>
             </child>
             <child>
-              <placeholder />
+              <widget class="Gtk.CheckButton" id="chkCalibrate">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Label" translatable="yes">Calibrate left camera</property>
+                <property name="DrawIndicator">True</property>
+                <property name="HasLabel">True</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnChkCalibrateClicked" />
+              </widget>
+              <packing>
+                <property name="Position">1</property>
+                <property name="AutoSize">True</property>
+              </packing>
             </child>
             <child>
-              <placeholder />
+              <widget class="Gtk.CheckButton" id="chkCalibrateRight">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Label" translatable="yes">Calibrate right camera</property>
+                <property name="DrawIndicator">True</property>
+                <property name="HasLabel">True</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnChkCalibrateRightClicked" />
+              </widget>
+              <packing>
+                <property name="Position">2</property>
+                <property name="AutoSize">True</property>
+              </packing>
             </child>
           </widget>
           <packing>

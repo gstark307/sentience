@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Drawing;
+using sluggish.utilities;
 
 namespace surveyor.vision
 {
@@ -34,6 +35,10 @@ namespace surveyor.vision
         // whether to record raw camera images
         public bool Record;
         public ulong RecordFrameNumber;
+        
+        // whether to show the left or right image during calibration
+        public bool show_left_image;
+        public Bitmap calibration_pattern;
                 
         #region "constructors"
         
@@ -91,6 +96,15 @@ namespace surveyor.vision
                     Bitmap right = istate[1].current_frame;
                     
                     busy_processing = true;
+
+                    if (calibration_pattern != null)
+                    {
+                        if (!show_left_image)
+                            edges = DetectEdges(left);
+                        else
+                            edges = DetectEdges(right);
+                    }
+                                                            
                     Process(left, right);
                     
                     // save images to file
@@ -172,12 +186,36 @@ namespace surveyor.vision
         
         #endregion
         
+        #region "edge detection"
+        
+        
+        
+        protected Bitmap edges;
+        private EdgeDetector edge_detector;
+        
+        protected Bitmap DetectEdges(Bitmap bmp)
+        {
+            byte[] image_data = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, image_data);
+            
+            if (edge_detector == null) edge_detector = new EdgeDetectorCanny();
+            edge_detector.automatic_thresholds = true;
+            byte[] edges_data = edge_detector.Update(image_data, bmp.Width, bmp.Height);
+            
+            Bitmap edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(edges_data, edges_bmp);
+            
+            return(edges_bmp);
+        }
+        
+        #endregion
+        
         #region "displaying images"
        
         protected virtual void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
         }
-        
+
         #endregion
         
         #region "process images"

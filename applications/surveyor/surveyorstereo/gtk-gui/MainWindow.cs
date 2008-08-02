@@ -34,26 +34,30 @@ public partial class MainWindow {
     
     private Gtk.CheckButton chkRecord;
     
+    private Gtk.CheckButton chkCalibrate;
+    
+    private Gtk.CheckButton chkCalibrateRight;
+    
     protected virtual void Build() {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
         Gtk.UIManager w1 = new Gtk.UIManager();
-        Gtk.ActionGroup w2 = new Gtk.ActionGroup("New Action Group");
-        w1.InsertActionGroup(w2, 0);
-        Gtk.ActionGroup w3 = new Gtk.ActionGroup("Default");
+        Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");
         this.FileAction = new Gtk.Action("FileAction", Mono.Unix.Catalog.GetString("File"), null, null);
         this.FileAction.ShortLabel = Mono.Unix.Catalog.GetString("File");
-        w3.Add(this.FileAction, null);
+        w2.Add(this.FileAction, null);
         this.ExitAction = new Gtk.Action("ExitAction", Mono.Unix.Catalog.GetString("Exit"), null, "gtk-stop");
         this.ExitAction.ShortLabel = Mono.Unix.Catalog.GetString("Exit");
-        w3.Add(this.ExitAction, null);
+        w2.Add(this.ExitAction, null);
         this.ToolsAction = new Gtk.Action("ToolsAction", Mono.Unix.Catalog.GetString("Tools"), null, null);
         this.ToolsAction.ShortLabel = Mono.Unix.Catalog.GetString("Tools");
-        w3.Add(this.ToolsAction, null);
+        w2.Add(this.ToolsAction, null);
         this.RecordImagesAction = new Gtk.ToggleAction("RecordImagesAction", Mono.Unix.Catalog.GetString("Record images"), null, null);
         this.RecordImagesAction.Active = true;
         this.RecordImagesAction.ShortLabel = Mono.Unix.Catalog.GetString("Record images");
-        w3.Add(this.RecordImagesAction, null);
+        w2.Add(this.RecordImagesAction, null);
+        w1.InsertActionGroup(w2, 0);
+        Gtk.ActionGroup w3 = new Gtk.ActionGroup("New Action Group");
         w1.InsertActionGroup(w3, 1);
         this.AddAccelGroup(w1.AccelGroup);
         this.CanFocus = true;
@@ -75,6 +79,7 @@ public partial class MainWindow {
         w4.Fill = false;
         // Container child vbox1.Gtk.Box+BoxChild
         this.hbox1 = new Gtk.HBox();
+        this.hbox1.Name = "hbox1";
         this.hbox1.Spacing = 6;
         // Container child hbox1.Gtk.Box+BoxChild
         this.leftimage = new Gtk.Image();
@@ -82,16 +87,12 @@ public partial class MainWindow {
         this.hbox1.Add(this.leftimage);
         Gtk.Box.BoxChild w5 = ((Gtk.Box.BoxChild)(this.hbox1[this.leftimage]));
         w5.Position = 0;
-        w5.Expand = false;
-        w5.Fill = false;
         // Container child hbox1.Gtk.Box+BoxChild
         this.rightimage = new Gtk.Image();
         this.rightimage.Name = "rightimage";
         this.hbox1.Add(this.rightimage);
         Gtk.Box.BoxChild w6 = ((Gtk.Box.BoxChild)(this.hbox1[this.rightimage]));
         w6.Position = 1;
-        w6.Expand = false;
-        w6.Fill = false;
         this.vbox1.Add(this.hbox1);
         Gtk.Box.BoxChild w7 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox1]));
         w7.Position = 1;
@@ -111,11 +112,31 @@ public partial class MainWindow {
         this.hbox2.Add(this.chkRecord);
         Gtk.Box.BoxChild w8 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkRecord]));
         w8.Position = 0;
+        // Container child hbox2.Gtk.Box+BoxChild
+        this.chkCalibrate = new Gtk.CheckButton();
+        this.chkCalibrate.CanFocus = true;
+        this.chkCalibrate.Name = "chkCalibrate";
+        this.chkCalibrate.Label = Mono.Unix.Catalog.GetString("Calibrate left camera");
+        this.chkCalibrate.DrawIndicator = true;
+        this.chkCalibrate.UseUnderline = true;
+        this.hbox2.Add(this.chkCalibrate);
+        Gtk.Box.BoxChild w9 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkCalibrate]));
+        w9.Position = 1;
+        // Container child hbox2.Gtk.Box+BoxChild
+        this.chkCalibrateRight = new Gtk.CheckButton();
+        this.chkCalibrateRight.CanFocus = true;
+        this.chkCalibrateRight.Name = "chkCalibrateRight";
+        this.chkCalibrateRight.Label = Mono.Unix.Catalog.GetString("Calibrate right camera");
+        this.chkCalibrateRight.DrawIndicator = true;
+        this.chkCalibrateRight.UseUnderline = true;
+        this.hbox2.Add(this.chkCalibrateRight);
+        Gtk.Box.BoxChild w10 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkCalibrateRight]));
+        w10.Position = 2;
         this.vbox1.Add(this.hbox2);
-        Gtk.Box.BoxChild w9 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox2]));
-        w9.Position = 2;
-        w9.Expand = false;
-        w9.Fill = false;
+        Gtk.Box.BoxChild w11 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox2]));
+        w11.Position = 2;
+        w11.Expand = false;
+        w11.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
@@ -127,5 +148,7 @@ public partial class MainWindow {
         this.ExitAction.Activated += new System.EventHandler(this.OnExitActionActivated);
         this.RecordImagesAction.Activated += new System.EventHandler(this.OnRecordImagesActionActivated);
         this.chkRecord.Clicked += new System.EventHandler(this.OnChkRecordClicked);
+        this.chkCalibrate.Clicked += new System.EventHandler(this.OnChkCalibrateClicked);
+        this.chkCalibrateRight.Clicked += new System.EventHandler(this.OnChkCalibrateRightClicked);
     }
 }

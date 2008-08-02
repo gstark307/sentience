@@ -21,6 +21,7 @@ using System;
 using System.Threading;
 using System.Drawing;
 using Gdk;
+using sluggish.utilities;
 using sluggish.utilities.gtk;
 
 namespace surveyor.vision
@@ -52,14 +53,47 @@ namespace surveyor.vision
         // images used for display
         public Gtk.Image[] display_image;
         public Gtk.Window window;
+        
+        public Gtk.Image calibration_image;
+        public Gtk.Window calibration_window;
 
         /// <summary>
         /// refreshes the GUI images
         /// </summary>
         /// <param name="window">Gtk window to be refreshed</param>
-        private void UpdateGUI(Gtk.Window window)
+        private void UpdateGUI(Gtk.Window window, Gtk.Window calibration_window)
         {            
             window.GdkWindow.ProcessUpdates(true);
+            if (calibration_window != null) 
+                calibration_window.GdkWindow.ProcessUpdates(true);
+        }
+        
+        private Bitmap OverlayImage(Bitmap bmp, Bitmap overlay, int overlay_width)
+        {
+            Bitmap result = (Bitmap)bmp.Clone();
+            byte[] image_data = new byte[result.Width * result.Height * 3];
+            BitmapArrayConversions.updatebitmap(result, image_data);
+
+            byte[] overlay_data = new byte[overlay.Width * overlay.Height * 3];
+            BitmapArrayConversions.updatebitmap(overlay, overlay_data);
+            
+            int overlay_height = overlay.Height * overlay_width / overlay.Width;
+            
+            for (int y = 0; y < overlay_height; y++)
+            {
+                int yy = y * overlay.Height / overlay_height;
+                for (int x = 0; x < overlay_width; x++)
+                {
+                    int xx = x * overlay.Width / overlay_width;
+                    int n1 = ((yy * overlay.Width) + xx) * 3;
+                    int n2 = ((y * result.Width) + x) * 3;
+                    for (int col = 0; col < 3; col++)
+                        image_data[n2 + col] = overlay_data[n1 + col];
+                }
+            }
+            
+            BitmapArrayConversions.updatebitmap_unsafe(image_data, result);
+            return(result);
         }
     
         /// <summary>
@@ -72,17 +106,51 @@ namespace surveyor.vision
          
             if (display_image[0] != null)
             {
-                GtkBitmap.setBitmap(left_image, display_image[0]);
+                if ((show_left_image) &&
+                    (calibration_pattern != null))
+                {
+                    try
+                    {
+                        GtkBitmap.setBitmap(calibration_pattern, display_image[0]);
+                    }
+                    catch
+                    {
+                    }
+                }
+                else
+                {
+                    if ((calibration_pattern != null) && (edges != null))
+                        GtkBitmap.setBitmap(edges, display_image[0]);
+                    else
+                        GtkBitmap.setBitmap(left_image, display_image[0]);
+                }
             }
             
             if (display_image[1] != null)
             {
-                GtkBitmap.setBitmap(right_image, display_image[1]);
+                if ((!show_left_image) &&
+                    (calibration_pattern != null))
+                {
+                    try
+                    {
+                        GtkBitmap.setBitmap(calibration_pattern, display_image[1]);
+                    }
+                    catch
+                    {
+                    }
+                }
+                else
+                {
+                    if ((calibration_pattern != null) && (edges != null))
+                        GtkBitmap.setBitmap(edges, display_image[1]);
+                    else
+                        GtkBitmap.setBitmap(right_image, display_image[1]);
+                }
 
                 // Here we need to update the GUI after receiving the right camera image
                 // Since we're running in a separate thread from the GUI we have to
                 // call it in a special way
-                RunOnMainThread.Run(this, "UpdateGUI", new object[] { window });
+                RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
             }
             
             if (window != null)

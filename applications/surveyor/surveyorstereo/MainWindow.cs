@@ -1,5 +1,5 @@
 /*
-    Test GUI
+    Test GUI for the Surveyor stereo camera
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 
@@ -29,6 +29,10 @@ public partial class MainWindow: Gtk.Window
     int image_width = 320;
     int image_height = 240;
     string stereo_camera_IP = "169.254.0.10";
+     
+    // calibration dot pattern
+    int dots_across = 20;
+    int dot_radius_percent = 30;    
     
     public SurveyorVisionStereoGtk stereo_camera;
     
@@ -81,5 +85,52 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.Record = !stereo_camera.Record;
         chkRecord.Active = stereo_camera.Record; 
     }
+
+    private void ShowDotPattern(Gtk.Image dest_img)
+    {
+        stereo_camera.calibration_pattern = SurveyorCalibration.CreateDotPattern(image_width, image_height, dots_across, dot_radius_percent);
+        GtkBitmap.setBitmap(stereo_camera.calibration_pattern, dest_img);
+    }
+
+    private void Calibrate(bool Active)
+    {
+        Gtk.Image dest_img = null;
+        int window_index = 0;
+        if (stereo_camera.show_left_image)
+        {
+            dest_img = leftimage;
+            window_index = 0;
+        }
+        else
+        {
+            dest_img = rightimage;
+            window_index = 1;
+        }
+    
+        if (Active)
+        {
+            ShowDotPattern(dest_img);
+            stereo_camera.display_image[window_index] = dest_img;            
+        }
+        else
+        {
+            stereo_camera.calibration_pattern = null;
+            stereo_camera.display_image[0] = leftimage;
+            stereo_camera.display_image[1] = rightimage;
+        }
+    }
+
+    protected virtual void OnChkCalibrateClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.show_left_image = false;
+        Calibrate(chkCalibrate.Active);
+    }
+
+    protected virtual void OnChkCalibrateRightClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.show_left_image = true;
+        Calibrate(chkCalibrateRight.Active);
+    }
+
         
 }
