@@ -485,6 +485,68 @@ namespace surveyor.vision
             return(output_bmp);
         }
 
+        private static Bitmap ShowIdealGridDiff(Bitmap bmp,
+                                                CalibrationDot[,] grid)
+        {
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+            
+            if (grid != null)
+            {
+                for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+                {
+                    for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
+                    {
+                        if (grid[grid_x, grid_y] != null)
+                        {
+                            drawing.drawCross(img, bmp.Width, bmp.Height, 
+                                             (int)grid[grid_x, grid_y].x, (int)grid[grid_x, grid_y].y,
+                                             2, 255,0,0,0);
+                                             
+                            drawing.drawLine(img, bmp.Width, bmp.Height,
+                                             (int)grid[grid_x, grid_y].x, (int)grid[grid_x, grid_y].y,
+                                             (int)grid[grid_x, grid_y].rectified_x, (int)grid[grid_x, grid_y].rectified_y,
+                                             255,255,0,0,false);
+                        }
+                    }
+                }
+            }
+            
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            return(output_bmp);
+        }
+
+        private static Bitmap ShowIdealGrid(Bitmap bmp,
+                                            grid2D ideal_grid,
+                                            CalibrationDot[,] grid)
+        {
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+            
+            if (grid != null)
+            {
+                for (int grid_x = 0; grid_x < grid.GetLength(0); grid_x++)
+                {
+                    for (int grid_y = 0; grid_y < grid.GetLength(1); grid_y++)
+                    {
+                        if (grid[grid_x, grid_y] != null)
+                        {
+                            drawing.drawCross(img, bmp.Width, bmp.Height,
+                                              (int)grid[grid_x, grid_y].x, (int)grid[grid_x, grid_y].y,
+                                              1, 0,255,0,0);
+                        }
+                    }
+                }
+            }
+            if (ideal_grid != null) ideal_grid.ShowIntercepts(img, bmp.Width, bmp.Height, 255,0,0, 3, 0);
+            
+            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
+            return(output_bmp);
+        }
+
+
         /// <summary>
         /// puts the given dots into a grid for easy lookup
         /// </summary>
@@ -525,10 +587,10 @@ namespace surveyor.vision
         }
         
         
-        private static float GetIdealGridSpacing(CalibrationDot[,] grid,
-                                                 int image_width, int image_height,
-                                                 ref float pattern_orientation)
+        private static grid2D GetIdealGrid(CalibrationDot[,] grid,
+                                           int image_width, int image_height)
         {
+            grid2D ideal_grid = null;
             float ideal_spacing = 0;
             double centre_x = image_width / 2;
             double centre_y = image_height / 2;            
@@ -635,18 +697,57 @@ namespace surveyor.vision
                 if (hits > 0)
                 {
                     average_orientation /= hits;
-                    pattern_orientation = (float)average_orientation;
+                    float pattern_orientation = (float)average_orientation;
+                    
+                    float offset_x = (float)grid[grid_cx, grid_cy].x;
+                    float offset_y = (float)grid[grid_cx, grid_cy].y;
+                    float r = ideal_spacing * dots_across;
+                    
+                    polygon2D perimeter = new polygon2D();
+                    perimeter.Add(-r + offset_x, -r + offset_y);
+                    perimeter.Add(r + offset_x, -r + offset_y);
+                    perimeter.Add(r + offset_x, r + offset_y);
+                    perimeter.Add(-r + offset_x, r + offset_y);
+                    perimeter.rotate((float)average_orientation / 180 * (float)Math.PI, offset_x, offset_y);
+                    ideal_grid = new grid2D(dots_across*2, dots_across*2, perimeter, 0, false);
+                    
+                    int grid_width = grid.GetLength(0);
+                    int grid_height = grid.GetLength(1);
+                    int idx = 0;
+                    
+                    for (int x = 0; x < grid_width; x++)
+                    {
+                        for (int y = 0; y < grid_height; y++)
+                        {
+                            if (grid[x, y] != null)
+                            {
+                                int xx = (x - (grid_width / 2)) + grid_cx;
+                                int yy = (y - (grid_height / 2)) + grid_cy;
+                                
+                                if ((xx >= 0) && (xx < ideal_grid.cell.Length) &&
+                                    (yy >= 0) && (yy < ideal_grid.cell[0].Length))
+                                {
+                                    grid[x, y].rectified_x = 
+                                        ideal_grid.cell[xx][yy].perimeter.x_points[idx];
+                                    grid[x, y].rectified_y = 
+                                        ideal_grid.cell[xx][yy].perimeter.y_points[idx];
+                                }
+                            }
+                        }
+                    }
+                    
                 }
                 
             }
             
-            return(ideal_spacing);
+            return(ideal_grid);
         }
         
                 
         public static hypergraph DetectDots(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
                                             ref Bitmap detected_dots,
-                                            ref Bitmap linked_dots)
+                                            ref Bitmap linked_dots,
+                                            ref Bitmap grd)
         {
             const int minimum_links = (dots_across * (dots_across/2)) / 2;
             hypergraph dots = null;
@@ -700,8 +801,9 @@ namespace surveyor.vision
 
                                     if (grid != null)
                                     {
-                                        float pattern_orientation = 0;
-                                        float ideal_grid_spacing = GetIdealGridSpacing(grid, bmp.Width, bmp.Height, ref pattern_orientation);
+                                        grid2D ideal_grid = GetIdealGrid(grid, bmp.Width, bmp.Height);
+                                        
+                                        grd = ShowIdealGrid(bmp, ideal_grid, grid);
                                         
                                     }
                                 }
