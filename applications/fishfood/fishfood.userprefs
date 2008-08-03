@@ -2,27 +2,29 @@
   <Files>
     <File name="Welcome" />
     <File name="Main.cs" line="156" column="1" />
-    <File name="shapes.cs" line="2037" column="1" />
-    <File name="hypergraph.cs" line="60" column="23" />
-    <File name="calibrationLink.cs" line="25" column="64" />
+    <File name="shapes.cs" line="13" column="6" />
+    <File name="hypergraph.cs" line="1" column="1" />
+    <File name="calibrationLink.cs" line="1" column="1" />
     <File name="BitmapArrayConversions.cs" line="28" column="1" />
     <File name="canny.cs" line="965" column="14" />
     <File name="commandline.cs" line="26" column="38" />
-    <File name="drawing.cs" line="27" column="63" />
+    <File name="drawing.cs" line="1" column="1" />
     <File name="graph.cs" line="47" column="1" />
     <File name="graph_points.cs" line="43" column="3" />
-    <File name="grid2D.cs" line="40" column="29" />
-    <File name="image.cs" line="29" column="42" />
-    <File name="polygon.cs" line="1521" column="23" />
-    <File name="polynomial.cs" line="27" column="33" />
-    <File name="xml.cs" line="26" column="48" />
-    <File name="calibration.cs" line="3031" column="1" />
+    <File name="grid2D.cs" line="1" column="1" />
+    <File name="image.cs" line="39" column="11" />
+    <File name="polygon.cs" line="1" column="1" />
+    <File name="polynomial.cs" line="1" column="1" />
+    <File name="xml.cs" line="1" column="1" />
+    <File name="calibration.cs" line="1" column="1" />
+    <File name="calibrationDot.cs" line="21" column="1" />
+    <File name="geometry.cs" line="1" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="fishfood" expanded="True">
-          <Node name="shapes.cs" selected="True" />
+          <Node name="geometry.cs" selected="True" />
         </Node>
       </Node>
     </ViewMemento>
@@ -34,7 +36,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/shapes.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/geometry.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

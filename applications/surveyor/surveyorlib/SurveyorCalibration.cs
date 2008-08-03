@@ -26,8 +26,8 @@ namespace surveyor.vision
 {
     public class SurveyorCalibration
     {
-        public const int dots_across = 22;
-        public const int dot_radius_percent = 60;    
+        public const int dots_across = 20;
+        public const int dot_radius_percent = 30;    
     
         private static Bitmap DetectEdges(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
                                           ref hypergraph dots)
@@ -484,6 +484,164 @@ namespace surveyor.vision
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
             return(output_bmp);
         }
+
+        /// <summary>
+        /// puts the given dots into a grid for easy lookup
+        /// </summary>
+        /// <param name="dots">detected calibration dots</param>
+        /// <returns>grid object</returns>
+        private static CalibrationDot[,] CreateGrid(hypergraph dots)
+        {
+            int grid_tx = 9999, grid_ty = 9999;
+            int grid_bx = -9999, grid_by = -9999;
+            for (int i = 0; i < dots.Nodes.Count; i++)
+            {
+                CalibrationDot dot = (CalibrationDot)dots.Nodes[i];
+                if (Math.Abs(dot.grid_x) < 50)
+                {
+                    if (dot.grid_x < grid_tx) grid_tx = dot.grid_x;
+                    if (dot.grid_y < grid_ty) grid_ty = dot.grid_y;
+                    if (dot.grid_x > grid_bx) grid_bx = dot.grid_x;
+                    if (dot.grid_y > grid_by) grid_by = dot.grid_y;
+                }
+            }
+
+            CalibrationDot[,] grid = null;
+            if (grid_bx > grid_tx + 1)
+            {
+                grid = new CalibrationDot[grid_bx - grid_tx + 1, grid_by - grid_ty + 1];
+
+                for (int i = 0; i < dots.Nodes.Count; i++)
+                {
+                    CalibrationDot dot = (CalibrationDot)dots.Nodes[i];
+                    if ((!dot.centre) && (Math.Abs(dot.grid_x) < 50))
+                    {
+                        grid[dot.grid_x - grid_tx, dot.grid_y - grid_ty] = dot;
+                    }
+                }
+            }
+
+            return (grid);
+        }
+        
+        
+        private static float GetIdealGridSpacing(CalibrationDot[,] grid,
+                                                 int image_width, int image_height,
+                                                 ref float pattern_orientation)
+        {
+            float ideal_spacing = 0;
+            double centre_x = image_width / 2;
+            double centre_y = image_height / 2;            
+            double min_dist = double.MaxValue;
+            
+            int grid_cx=0, grid_cy=0;
+            
+            for (int x = 0; x < grid.GetLength(0); x++)
+            {
+                for (int y = 0; y < grid.GetLength(1); y++)
+                {
+                    if (grid[x, y] != null)
+                    {
+                        double dx = grid[x, y].x - centre_x;
+                        double dy = grid[x, y].y - centre_y;
+                        double dist = dx*dx + dy*dy;
+                        if (dist < min_dist)
+                        {
+                            min_dist = dist;
+                            grid_cx = x;
+                            grid_cy = y;
+                        }
+                    }
+                }
+            }
+            
+            if (grid_cx > 0)
+            {
+                int[] orientation_histogram = new int[361];
+                List<double>[] orientations = new List<double>[361];
+                double average_dist = 0;
+                int hits = 0;
+                
+                int local_search = 2;
+                for (int x = grid_cx - local_search; x <= grid_cx + local_search; x++)
+                {
+                    if ((x >= 0) && (x < grid.GetLength(0)-1))
+                    {
+                        for (int y = grid_cy - local_search; y <= grid_cy + local_search; y++)
+                        {
+                            if ((y >= 1) && (y < grid.GetLength(1)-1))
+                            {
+                                if (grid[x, y] != null)
+                                {
+                                    for (int i = 0; i < grid[x, y].Links.Count; i++)
+                                    {
+                                        CalibrationLink link = (CalibrationLink)grid[x, y].Links[i];
+                                        CalibrationDot from_dot = (CalibrationDot)link.From;
+                                        
+                                        double dx = grid[x, y].x - from_dot.x;
+                                        double dy = grid[x, y].y - from_dot.y;
+                                        double dist = Math.Sqrt(dx*dx + dy*dy);
+                                        
+                                        if (dist > 0)
+                                        {
+                                            double orientation = Math.Asin(dx / dist);
+                                            if (orientation < 0) orientation += Math.PI;
+                                            if (dy < 0) orientation = (Math.PI * 2) - orientation;
+                                            orientation = orientation / Math.PI * 180;
+                                            int bucket = (int)orientation;
+                                            orientation_histogram[bucket]++;
+                                            if (orientations[bucket] == null) orientations[bucket] = new List<double>();
+                                            orientations[bucket].Add(orientation);
+                                        
+                                            average_dist += Math.Sqrt(dx*dx + dy*dy);
+                                            hits++;
+                                        }
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    }
+                }
+                if (hits > 0) average_dist = average_dist / hits;
+                ideal_spacing = (float)average_dist;
+                
+                int max_orientation_response = 0;
+                int best_ang = 0;
+                for (int ang = 0; ang < 90; ang++)
+                {
+                    int response = orientation_histogram[ang] +
+                                   orientation_histogram[ang + 90] + 
+                                   orientation_histogram[ang + 180];
+                    if (response > max_orientation_response)
+                    {
+                        max_orientation_response = response;
+                        best_ang = ang;
+                    }
+                }
+                double average_orientation = 0;
+                hits = 0;
+                for (int offset = 0; offset < 3; offset++)
+                {
+                    if (orientations[best_ang + offset] != null)
+                    {
+                        for (int ang = 0; ang < orientations[best_ang + offset].Count; ang++)
+                        {
+                            average_orientation += orientations[best_ang + offset][ang] - (Math.PI*offset/2);
+                            hits++;
+                        }
+                    }
+                }
+                if (hits > 0)
+                {
+                    average_orientation /= hits;
+                    pattern_orientation = (float)average_orientation;
+                }
+                
+            }
+            
+            return(ideal_spacing);
+        }
         
                 
         public static hypergraph DetectDots(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
@@ -534,9 +692,18 @@ namespace surveyor.vision
                                 {
                                     linked_dots = ShowLinkedDots(bmp, dots, search_regions);
                                 
-                                    //Console.WriteLine(dots.Links.Count.ToString() + " links created");
-                                    
+                                    // assign a grid coordinate to each dot
                                     ApplyGrid(dots, centre_dots);
+                                    
+                                    // put the dots into a 2D grid for convenient lookup
+                                    CalibrationDot[,] grid = CreateGrid(dots);
+
+                                    if (grid != null)
+                                    {
+                                        float pattern_orientation = 0;
+                                        float ideal_grid_spacing = GetIdealGridSpacing(grid, bmp.Width, bmp.Height, ref pattern_orientation);
+                                        
+                                    }
                                 }
                             }
                         }

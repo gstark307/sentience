@@ -8,19 +8,21 @@
     <File name="../surveyorlib/SurveyorvisionThreadGrabFrame.cs" line="94" column="1" />
     <File name="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" line="110" column="14" />
     <File name="../surveyorlib/GtkImage.cs" line="167" column="2" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="119" column="18" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="71" column="10" />
     <File name="Main.cs" line="26" column="6" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="211" column="1" />
-    <File name="../surveyorlib/EdgeDetectorCanny.cs" line="939" column="10" />
-    <File name="../surveyorlib/SurveyorCalibration.cs" line="38" column="27" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="107" column="21" />
+    <File name="../surveyorlib/SurveyorCalibration.cs" line="639" column="18" />
+    <File name="../surveyorlib/calibration/EdgeDetectorCanny.cs" line="644" column="1" />
+    <File name="../surveyorlib/calibration/CameraCalibration.cs" line="1627" column="22" />
+    <File name="../surveyorlib/calibration/geometry.cs" line="20" column="14" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="surveyorlib" expanded="True">
-          <Node name="EdgeDetectorCanny.cs" selected="True" />
+          <Node name="calibration" expanded="True" />
+          <Node name="SurveyorCalibration.cs" selected="True" />
         </Node>
-        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -31,7 +33,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/EdgeDetectorCanny.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/SurveyorCalibration.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>
