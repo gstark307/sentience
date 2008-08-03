@@ -35,6 +35,9 @@ namespace sluggish.utilities
 
         // automatically detect appropriate edge detection thresholds
         public bool automatic_thresholds;
+        
+        // only show connected sets of edges
+        public bool connected_sets_only;
 
         public virtual byte[] Update(byte[] img, int width, int height)
         {

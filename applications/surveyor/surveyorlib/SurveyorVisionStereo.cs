@@ -99,10 +99,11 @@ namespace surveyor.vision
 
                     if (calibration_pattern != null)
                     {
+                        hypergraph dots = null;
                         if (!show_left_image)
-                            edges = DetectEdges(left);
+                            dots = SurveyorCalibration.DetectDots(left, ref edge_detector, ref edges, ref linked_dots);
                         else
-                            edges = DetectEdges(right);
+                            dots = SurveyorCalibration.DetectDots(right, ref edge_detector, ref edges, ref linked_dots);
                     }
                                                             
                     Process(left, right);
@@ -187,27 +188,30 @@ namespace surveyor.vision
         #endregion
         
         #region "edge detection"
-        
-        
-        
+                
         protected Bitmap edges;
-        private EdgeDetector edge_detector;
+        protected Bitmap linked_dots;
+        private EdgeDetectorCanny edge_detector;
         
-        protected Bitmap DetectEdges(Bitmap bmp)
+        protected Bitmap DetectEdges(Bitmap bmp, EdgeDetectorCanny edge_detector,
+                                     ref hypergraph dots)
         {
             byte[] image_data = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, image_data);
             
             if (edge_detector == null) edge_detector = new EdgeDetectorCanny();
             edge_detector.automatic_thresholds = true;
+            edge_detector.connected_sets_only = true;
             byte[] edges_data = edge_detector.Update(image_data, bmp.Width, bmp.Height);
+
+            edges_data = edge_detector.GetConnectedSetsImage(image_data, 10, bmp.Width / SurveyorCalibration.dots_across * 3, true, ref dots);
             
             Bitmap edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(edges_data, edges_bmp);
             
             return(edges_bmp);
         }
-        
+
         #endregion
         
         #region "displaying images"

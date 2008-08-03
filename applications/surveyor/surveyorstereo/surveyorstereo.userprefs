@@ -1,24 +1,26 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/surveyorstereo/surveyorstereo.mds">
   <Files>
     <File name="Welcome" />
-    <File name="MainWindow.cs" line="32" column="5" />
+    <File name="MainWindow.cs" line="120" column="5" />
     <File name="../surveyorlib/AssemblyInfo.cs" line="16" column="32" />
     <File name="../surveyorlib/GtkBitmap.cs" line="144" column="4" />
     <File name="../surveyorlib/SurveyorVisionClient.cs" line="415" column="10" />
     <File name="../surveyorlib/SurveyorvisionThreadGrabFrame.cs" line="94" column="1" />
     <File name="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" line="110" column="14" />
     <File name="../surveyorlib/GtkImage.cs" line="167" column="2" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="75" column="17" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="119" column="18" />
     <File name="Main.cs" line="26" column="6" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="184" column="1" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="211" column="1" />
+    <File name="../surveyorlib/EdgeDetectorCanny.cs" line="939" column="10" />
+    <File name="../surveyorlib/SurveyorCalibration.cs" line="38" column="27" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="surveyorlib" expanded="True" />
-        <Node name="surveyorstereo" expanded="True">
-          <Node name="MainWindow.cs" selected="True" />
+        <Node name="surveyorlib" expanded="True">
+          <Node name="EdgeDetectorCanny.cs" selected="True" />
         </Node>
+        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -29,7 +31,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorstereo/MainWindow.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/EdgeDetectorCanny.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

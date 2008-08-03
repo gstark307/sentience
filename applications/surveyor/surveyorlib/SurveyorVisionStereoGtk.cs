@@ -119,8 +119,15 @@ namespace surveyor.vision
                 }
                 else
                 {
+                    /*
                     if ((calibration_pattern != null) && (edges != null))
                         GtkBitmap.setBitmap(edges, display_image[0]);
+                    else
+                        GtkBitmap.setBitmap(left_image, display_image[0]);
+                    */
+                    
+                    if ((calibration_pattern != null) && (linked_dots != null))
+                        GtkBitmap.setBitmap(linked_dots, display_image[0]);
                     else
                         GtkBitmap.setBitmap(left_image, display_image[0]);
                 }
@@ -141,8 +148,15 @@ namespace surveyor.vision
                 }
                 else
                 {
+                    /*
                     if ((calibration_pattern != null) && (edges != null))
                         GtkBitmap.setBitmap(edges, display_image[1]);
+                    else
+                        GtkBitmap.setBitmap(right_image, display_image[1]);
+                    */
+
+                    if ((calibration_pattern != null) && (linked_dots != null))
+                        GtkBitmap.setBitmap(linked_dots, display_image[1]);
                     else
                         GtkBitmap.setBitmap(right_image, display_image[1]);
                 }

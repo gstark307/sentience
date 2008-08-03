@@ -17,6 +17,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using surveyor.vision;
 
 namespace sluggish.utilities
 {
@@ -137,15 +138,11 @@ namespace sluggish.utilities
         public static unsafe void GetThresholds(float[] histogram,
                                                 ref float MeanDark, ref float MeanLight)
         {
-            float Tmin = 0;
-            float Tmax = 0;
             float MinVariance = 999999;  // some large figure
             float currMeanDark, currMeanLight, VarianceDark, VarianceLight;
 
             float DarkHits = 0;
             float LightHits = 0;
-            float BestDarkHits = 0;
-            float BestLightHits = 0;
             int histlength = histogram.Length;
             MeanDark = 0;
             MeanLight = 0;
@@ -161,7 +158,6 @@ namespace sluggish.utilities
 
             // precompute some values to avoid excessive divisions
             float mult1 = histlength / (float)max_grey_levels;
-            float mult2 = 255.0f / max_grey_levels;
 
             int h, bucket;
             float magnitude_sqr, Variance, divisor;
@@ -220,17 +216,12 @@ namespace sluggish.utilities
                     if (Variance < MinVariance)
                     {
                         MinVariance = Variance;
-                        Tmin = grey_level * mult2;
                         MeanDark = currMeanDark;
                         MeanLight = currMeanLight;
-                        BestDarkHits = DarkHits;
-                        BestLightHits = LightHits;
                     }
                     if ((int)(Variance * 1000) == (int)(MinVariance * 1000))
                     {
-                        Tmax = grey_level * mult2;
                         MeanLight = currMeanLight;
-                        BestLightHits = LightHits;
                     }
                 }
             }
@@ -643,7 +634,7 @@ namespace sluggish.utilities
         /// <param name="followedEdges">indicates which edges have been followed</param>
         /// <param name="no_of_edges">number of detected edges</param>
         private unsafe void performHysteresis(int low, int high, int[] followedEdges, int no_of_edges)
-        {
+        {                    
             // clear array containing followed edges
             for (int i = followedEdges.Length - 1; i >= 0; i--) followedEdges[i] = 0;
 
@@ -700,7 +691,13 @@ namespace sluggish.utilities
                     {
                         if (magnitude[i3] >= threshold) // with sufficient magnitude
                         {
+                            try
+                            {
                             follow(x, y, i3, ref threshold, followedEdges, magnitude);
+                            }
+                            catch
+                            {
+                            }
                             return;
                         }
                     }
@@ -766,6 +763,215 @@ namespace sluggish.utilities
             }
         }
 
+        #endregion
+        
+        #region "finding connected sets"
+
+        public void GetConnectedSets(int x, int y, int n, List<int> cset, int[] followedEdges,
+                                     ref int tx, ref int ty, ref int bx, ref int by,
+                                     ref int cx, ref int cy)
+        {
+            cset.Add(n);
+            followedEdges[n] = 255;
+            
+            cx += x;
+            cy += y;
+            
+            if (x < tx) tx = x;
+            if (y < ty) ty = y;
+            if (x > bx) bx = x;
+            if (y > by) by = y;
+            
+            if ((x > 1) && (x < width - 2) &&
+                (y > 1) && (y < height - 2))
+            {
+                n = (y * width) + x;
+                if (followedEdges[n-1] == 0)
+                {
+                    GetConnectedSets(x-1, y, n-1, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                    return;
+                }
+                    
+                if (n - width - 1 > 0)
+                    if (followedEdges[n - width - 1] == 0)
+                    {
+                        GetConnectedSets(x-1, y-1, n - width - 1, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                        return;
+                    }
+
+                if (n - width > 0)
+                    if (followedEdges[n - width] == 0)
+                    {
+                        GetConnectedSets(x, y-1, n - width, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                        return;
+                    }
+
+                if (n - width + 1 > 0)
+                    if (followedEdges[n - width + 1] == 0)
+                    {
+                        GetConnectedSets(x+1, y-1, n - width + 1, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                        return;
+                    }
+
+                if (n + 1 > 0)
+                    if (followedEdges[n + 1] == 0)
+                    {
+                        GetConnectedSets(x+1, y, n + 1, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                        return;
+                    }
+
+                if (n + width + 1 > 0)
+                    if (followedEdges[n + width + 1] == 0)
+                    {
+                        GetConnectedSets(x+1, y+1, n + width + 1, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                        return;
+                    }
+
+                if (n + width > 0)
+                    if (followedEdges[n + width] == 0)
+                    {
+                        GetConnectedSets(x, y+1, n + width, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                        return;
+                    }
+
+                if (n + width - 1 > 0)
+                    if (followedEdges[n + width - 1] == 0)
+                    {
+                        GetConnectedSets(x-1, y+1, n + width - 1, cset, followedEdges, ref tx, ref ty, ref bx, ref by, ref cx, ref cy);
+                        return;
+                    }
+            }
+        }
+        
+        public List<List<int>> GetConnectedSets(int minimum_length,
+                                                int maximum_length,
+                                                bool square_aspect,
+                                                ref List<float> centres)
+        {
+            centres = new List<float>();
+            int[] followedEdges = data;
+            List<List<int>> connected_sets = new List<List<int>>();
+            
+            // clear array containing followed edges
+            for (int i = followedEdges.Length - 1; i >= 0; i--)
+                followedEdges[i] = edgesImage[i*3];
+            
+            for (int i = edges.Count-2; i >= 0; i -= 2)
+            {
+                int x = edges[i];
+                int y = edges[i + 1];
+                int index = (y * width) + x;
+                if (followedEdges[index] == 0)
+                {
+                    List<int> cset = new List<int>();
+                    int tx = x;
+                    int ty = y;
+                    int bx = x;
+                    int by = y;
+                    int cx = 0;
+                    int cy = 0;
+                    GetConnectedSets(x, y, index, cset, followedEdges,
+                                     ref tx, ref ty, ref bx, ref by,
+                                     ref cx, ref cy);
+                    if ((cset.Count > minimum_length) &&
+                        (cset.Count < maximum_length))
+                    {
+                        if (!square_aspect)
+                        {
+                            connected_sets.Add(cset);
+                        }
+                        else
+                        {
+                            int dx = bx - tx;
+                            int dy = by - ty;
+                            if ((dx > 3) && (dy > 3))
+                            {
+                                float aspect = dx/(float)dy;
+                                if ((aspect > 0.7f) && (aspect < 1.3f))
+                                {
+                                    float centre_x = cx / (float)cset.Count;
+                                    float centre_y = cy / (float)cset.Count;
+                                    int w = (bx - tx) * 20 / 100;
+                                    int h = (by - ty) * 20 / 100;
+                                    if ((centre_x > tx + w) &&
+                                        (centre_x < bx - w) &&
+                                        (centre_y > ty + h) &&
+                                        (centre_y < by - h))
+                                    {
+                                        float average_radius = 0;
+                                        for (int j = 0; j < cset.Count; j++)
+                                        {
+                                            index = cset[j];
+                                            y = index / width;
+                                            x = index - (y * width);
+                                            float dxx = x - centre_x;
+                                            float dyy = y - centre_y;
+                                            average_radius += (float)Math.Sqrt((dxx*dxx)+(dyy*dyy));
+                                        }
+                                        average_radius /= cset.Count;
+                                    
+                                        if (average_radius > 3)
+                                        {                                    
+                                            centres.Add(centre_x);
+                                            centres.Add(centre_y);
+                                            centres.Add(average_radius);
+                                            connected_sets.Add(cset);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return(connected_sets);
+        }
+        
+        public byte[] GetConnectedSetsImage(byte[] raw_image,
+                                            int minimum_length,
+                                            int maximum_length,
+                                            bool square_aspect,
+                                            ref hypergraph dots)
+        {
+            dots = new hypergraph();
+            int total_bytes = width * height * 3;
+            byte[] result = new byte[total_bytes];
+            for (int i = result.Length-1; i >= 0; i--) result[i] = raw_image[i];
+            
+            List<float> centres = null;
+            List<List<int>> connected_sets = GetConnectedSets(minimum_length, maximum_length, square_aspect, ref centres);
+            
+            for (int i = 0; i < centres.Count; i += 3)
+            {
+                float centre_x = centres[i];
+                float centre_y = centres[i + 1];
+                float radius = centres[i + 2];
+                
+                CalibrationDot dot = new CalibrationDot();
+                dot.x = centre_x;
+                dot.y = centre_y;
+                dot.radius = radius;
+                dots.Add(dot);
+                
+                for (int j = 0; j < 360; j += 5)
+                {
+                    float angle = j * (float)Math.PI * 2 / 360.0f;
+                    int x = (int)(centre_x + (Math.Sin(angle) * radius));
+                    int y = (int)(centre_y + (Math.Cos(angle) * radius));
+                    int n = ((y * width) + x) * 3;
+                    if ((n > 3) && (n < total_bytes - 4))
+                    {
+                        result[n] = 0;
+                        result[n+1] = 255;
+                        result[n+2] = 0;                        
+                    }
+                }
+            }
+            
+            return(result);
+        }
+        
         #endregion
     }
 

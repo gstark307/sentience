@@ -1,8 +1,8 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/fishfood/fishfood.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="19" column="1" />
-    <File name="shapes.cs" line="10" column="41" />
+    <File name="Main.cs" line="156" column="1" />
+    <File name="shapes.cs" line="2037" column="1" />
     <File name="hypergraph.cs" line="60" column="23" />
     <File name="calibrationLink.cs" line="25" column="64" />
     <File name="BitmapArrayConversions.cs" line="28" column="1" />
@@ -16,12 +16,13 @@
     <File name="polygon.cs" line="1521" column="23" />
     <File name="polynomial.cs" line="27" column="33" />
     <File name="xml.cs" line="26" column="48" />
+    <File name="calibration.cs" line="3031" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="fishfood" expanded="True">
-          <Node name="Main.cs" selected="True" />
+          <Node name="shapes.cs" selected="True" />
         </Node>
       </Node>
     </ViewMemento>
@@ -33,7 +34,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/Main.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/fishfood/shapes.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

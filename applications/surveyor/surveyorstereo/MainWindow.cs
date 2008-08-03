@@ -29,11 +29,7 @@ public partial class MainWindow: Gtk.Window
     int image_width = 320;
     int image_height = 240;
     string stereo_camera_IP = "169.254.0.10";
-     
-    // calibration dot pattern
-    int dots_across = 20;
-    int dot_radius_percent = 30;    
-    
+         
     public SurveyorVisionStereoGtk stereo_camera;
     
     public MainWindow (): base (Gtk.WindowType.Toplevel)
@@ -88,7 +84,7 @@ public partial class MainWindow: Gtk.Window
 
     private void ShowDotPattern(Gtk.Image dest_img)
     {
-        stereo_camera.calibration_pattern = SurveyorCalibration.CreateDotPattern(image_width, image_height, dots_across, dot_radius_percent);
+        stereo_camera.calibration_pattern = SurveyorCalibration.CreateDotPattern(image_width, image_height, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
         GtkBitmap.setBitmap(stereo_camera.calibration_pattern, dest_img);
     }
 
@@ -130,7 +126,5 @@ public partial class MainWindow: Gtk.Window
     {
         stereo_camera.show_left_image = true;
         Calibrate(chkCalibrateRight.Active);
-    }
-
-        
+    }   
 }

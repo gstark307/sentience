@@ -25,12 +25,23 @@
     <File name="SurveyorVisionStereoGtk.cs" subtype="Code" buildaction="Compile" />
     <File name="RunOnMainThread.cs" subtype="Code" buildaction="Compile" />
     <File name="SurveyorCalibration.cs" subtype="Code" buildaction="Compile" />
-    <File name="EdgeDetector.cs" subtype="Code" buildaction="Compile" />
-    <File name="EdgeDetectorCanny.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration" subtype="Directory" buildaction="Compile" />
+    <File name="calibration/EdgeDetector.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/EdgeDetectorCanny.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/CalibrationDot.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/Hypergraph.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/CalibrationLink.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/polynomial.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/drawing.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/Grid2D.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/polygon.cs" subtype="Code" buildaction="Compile" />
+    <File name="xml.cs" subtype="Code" buildaction="Compile" />
+    <File name="calibration/geometry.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Gac" localcopy="True" refto="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <ProjectReference type="Gac" localcopy="True" refto="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   </References>
 </Project>
