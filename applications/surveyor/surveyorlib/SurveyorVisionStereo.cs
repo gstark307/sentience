@@ -101,9 +101,9 @@ namespace surveyor.vision
                     {
                         hypergraph dots = null;
                         if (!show_left_image)
-                            dots = SurveyorCalibration.DetectDots(left, ref edge_detector, ref edges, ref linked_dots, ref grid);
+                            dots = SurveyorCalibration.DetectDots(left, ref edge_detector, ref edges, ref linked_dots, ref grid, ref grid_diff);
                         else
-                            dots = SurveyorCalibration.DetectDots(right, ref edge_detector, ref edges, ref linked_dots, ref grid);
+                            dots = SurveyorCalibration.DetectDots(right, ref edge_detector, ref edges, ref linked_dots, ref grid, ref grid_diff);
                     }
                                                             
                     Process(left, right);
@@ -192,6 +192,7 @@ namespace surveyor.vision
         protected Bitmap edges;
         protected Bitmap linked_dots;
         protected Bitmap grid;
+        protected Bitmap grid_diff;
         private EdgeDetectorCanny edge_detector;
         
         protected Bitmap DetectEdges(Bitmap bmp, EdgeDetectorCanny edge_detector,

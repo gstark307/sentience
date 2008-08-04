@@ -56,6 +56,7 @@ namespace surveyor.vision
         
         public Gtk.Image calibration_image;
         public Gtk.Window calibration_window;
+        private byte[] buffer = null;
 
         /// <summary>
         /// refreshes the GUI images
@@ -103,7 +104,7 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>
         protected override void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
-         
+        
             if (display_image[0] != null)
             {
                 if ((show_left_image) &&
@@ -111,7 +112,7 @@ namespace surveyor.vision
                 {
                     try
                     {
-                        GtkBitmap.setBitmap(calibration_pattern, display_image[0]);
+                        GtkBitmap.setBitmap(calibration_pattern, display_image[0], ref buffer);
                     }
                     catch
                     {
@@ -132,11 +133,16 @@ namespace surveyor.vision
                     else
                         GtkBitmap.setBitmap(left_image, display_image[0]);
                     */
-
+/*
                     if ((calibration_pattern != null) && (grid != null))
                         GtkBitmap.setBitmap(grid, display_image[0]);
                     else
                         GtkBitmap.setBitmap(left_image, display_image[0]);
+*/
+                    if ((calibration_pattern != null) && (grid_diff != null))
+                        GtkBitmap.setBitmap(grid_diff, display_image[0], ref buffer);
+                    else
+                        GtkBitmap.setBitmap(left_image, display_image[0], ref buffer);
                 }
             }
             
@@ -147,7 +153,7 @@ namespace surveyor.vision
                 {
                     try
                     {
-                        GtkBitmap.setBitmap(calibration_pattern, display_image[1]);
+                        GtkBitmap.setBitmap(calibration_pattern, display_image[1], ref buffer);
                     }
                     catch
                     {
@@ -169,10 +175,16 @@ namespace surveyor.vision
                         GtkBitmap.setBitmap(right_image, display_image[1]);
                     */
 
+/*
                     if ((calibration_pattern != null) && (grid != null))
                         GtkBitmap.setBitmap(grid, display_image[1]);
                     else
                         GtkBitmap.setBitmap(right_image, display_image[1]);
+*/
+                    if ((calibration_pattern != null) && (grid_diff != null))
+                        GtkBitmap.setBitmap(grid_diff, display_image[1], ref buffer);
+                    else
+                        GtkBitmap.setBitmap(right_image, display_image[1], ref buffer);
                 }
 
                 // Here we need to update the GUI after receiving the right camera image
@@ -187,6 +199,7 @@ namespace surveyor.vision
                 window.QueueDraw();
                 Gdk.Threads.Leave();
             }
+            
         }
         
         #endregion

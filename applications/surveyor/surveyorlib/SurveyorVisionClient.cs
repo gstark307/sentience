@@ -201,6 +201,8 @@ namespace surveyor.vision
                 Console.WriteLine("Timed out waiting for SRV1 reply");
         }
 
+        SocketPacket theSocPkt;
+
         /// <summary>
         /// waits for data to come back from the server
         /// </summary>
@@ -212,7 +214,8 @@ namespace surveyor.vision
 				{
 					m_pfnCallBack = new AsyncCallback (OnDataReceived);
 				}
-				SocketPacket theSocPkt = new SocketPacket ();
+				if (theSocPkt == null)
+				    theSocPkt = new SocketPacket ();
 				theSocPkt.thisSocket = m_clientSocket;
 				
 				// Start listening to the data asynchronously				
@@ -240,6 +243,8 @@ namespace surveyor.vision
         private int previous_image_width, previous_image_height;
         private int previous_header_pos = -1, header_pos = -1;
         private int search_pos;
+        private byte[] received_frame;
+        private MemoryStream memstream;
 
         // possible image resolutions (identifier, width, height)
         int[] ImageResolutions = {
@@ -265,15 +270,20 @@ namespace surveyor.vision
                 const int initial_block = 10;
                 end_index = (int)(start_index + initial_block + frame_size);
 
-                byte[] img = new byte[frame_size];
+                if (received_frame == null)
+                    received_frame = new byte[image_width*image_height*3];
+                    
                 int n = 0;
                 
                 for (int i = start_index + initial_block; i < end_index; i++, n++)
-                    img[n] = received_data[i];           
+                    received_frame[n] = received_data[i];           
                    
                 try
-                {                    
-                    current_frame = (Bitmap) Bitmap.FromStream(new MemoryStream(img, 0, (int)frame_size));
+                {
+                    if (current_frame != null) current_frame.Dispose();
+                    if (memstream != null) memstream.Dispose();
+                    memstream = new MemoryStream(received_frame, 0, (int)frame_size);
+                    current_frame = (Bitmap) Bitmap.FromStream(memstream);
                     if (Verbose) Console.WriteLine("Frame received");
                 }
                 catch (Exception ex)

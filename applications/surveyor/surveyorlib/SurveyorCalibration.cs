@@ -29,8 +29,9 @@ namespace surveyor.vision
         public const int dots_across = 20;
         public const int dot_radius_percent = 30;    
     
-        private static Bitmap DetectEdges(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
-                                          ref hypergraph dots)
+        private static void DetectEdges(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
+                                        ref hypergraph dots,
+                                        ref Bitmap edges_bmp)
         {
             byte[] image_data = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, image_data);
@@ -65,10 +66,10 @@ namespace surveyor.vision
             }
             if (centre_dot != null) centre_dot.centre = true;
 
-            Bitmap edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            if (edges_bmp == null)
+                edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                
             BitmapArrayConversions.updatebitmap_unsafe(edges_data, edges_bmp);
-            
-            return(edges_bmp);
         }
         
         /// <summary>
@@ -451,9 +452,10 @@ namespace surveyor.vision
         /// <param name="bmp">raw image</param>
         /// <param name="dots">detected dots on the grid</param>
         /// <param name="search_regions">search regions around the dots</param>
-        private static Bitmap ShowLinkedDots(Bitmap bmp,
-                                             hypergraph dots,
-                                             List<CalibrationDot> search_regions)
+        private static void ShowLinkedDots(Bitmap bmp,
+                                           hypergraph dots,
+                                           List<CalibrationDot> search_regions,
+                                           ref Bitmap output_bmp)
         {
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
@@ -480,13 +482,15 @@ namespace surveyor.vision
                 drawing.drawLine(img, bmp.Width, bmp.Height, (int)from_dot.x, (int)from_dot.y, (int)to_dot.x, (int)to_dot.y, 255, 0, 0, 0, false);
             }
 
-            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            if (output_bmp == null)
+                output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
-            return(output_bmp);
         }
 
-        private static Bitmap ShowIdealGridDiff(Bitmap bmp,
-                                                CalibrationDot[,] grid)
+        private static void ShowIdealGridDiff(Bitmap bmp,
+                                              CalibrationDot[,] grid,
+                                              ref Bitmap output_bmp)
         {
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
@@ -512,14 +516,15 @@ namespace surveyor.vision
                 }
             }
             
-            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            if (output_bmp == null)
+                output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
-            return(output_bmp);
         }
 
-        private static Bitmap ShowIdealGrid(Bitmap bmp,
-                                            grid2D ideal_grid,
-                                            CalibrationDot[,] grid)
+        private static void ShowIdealGrid(Bitmap bmp,
+                                          grid2D ideal_grid,
+                                          CalibrationDot[,] grid,
+                                          ref Bitmap output_bmp)
         {
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
@@ -541,9 +546,9 @@ namespace surveyor.vision
             }
             if (ideal_grid != null) ideal_grid.ShowIntercepts(img, bmp.Width, bmp.Height, 255,0,0, 3, 0);
             
-            Bitmap output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            if (output_bmp == null)
+                output_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
-            return(output_bmp);
         }
 
 
@@ -585,7 +590,7 @@ namespace surveyor.vision
 
             return (grid);
         }
-        
+
         
         private static grid2D GetIdealGrid(CalibrationDot[,] grid,
                                            int image_width, int image_height)
@@ -714,28 +719,101 @@ namespace surveyor.vision
                     int grid_width = grid.GetLength(0);
                     int grid_height = grid.GetLength(1);
                     int idx = 0;
-                    
-                    for (int x = 0; x < grid_width; x++)
+                    int xx=0, yy=0;
+                    float ideal_x, ideal_y;
+       
+                    for (int orient = 0; orient < 8; orient++)
                     {
-                        for (int y = 0; y < grid_height; y++)
+                        for (int x = 0; x < grid_width; x++)
                         {
-                            if (grid[x, y] != null)
+                            for (int y = 0; y < grid_height; y++)
                             {
-                                int xx = (x - (grid_width / 2)) + grid_cx;
-                                int yy = (y - (grid_height / 2)) + grid_cy;
-                                
-                                if ((xx >= 0) && (xx < ideal_grid.cell.Length) &&
-                                    (yy >= 0) && (yy < ideal_grid.cell[0].Length))
+                                if (grid[x, y] != null)
                                 {
-                                    grid[x, y].rectified_x = 
-                                        ideal_grid.cell[xx][yy].perimeter.x_points[idx];
-                                    grid[x, y].rectified_y = 
-                                        ideal_grid.cell[xx][yy].perimeter.y_points[idx];
+                                    switch(orient)
+                                    {
+                                        case 0:
+                                        {
+                                            xx = (x - grid_cx) + dots_across;
+                                            yy = (y - grid_cy) + dots_across;
+                                            break;
+                                        }
+                                        case 1:
+                                        {
+                                            xx = (x - grid_cx) + dots_across;
+                                            yy = (grid_cy - y) + dots_across;
+                                            break;
+                                        }
+                                        case 2:
+                                        {
+                                            xx = (grid_cx - x) + dots_across;
+                                            yy = (y - grid_cy) + dots_across;
+                                            break;
+                                        }
+                                        case 3:
+                                        {
+                                            xx = (grid_cx - x) + dots_across;
+                                            yy = (grid_cy - y) + dots_across;
+                                            break;
+                                        }
+                                        case 4:
+                                        {
+                                            xx = (y - grid_cy) + dots_across;
+                                            yy = (x - grid_cx) + dots_across;
+                                            break;
+                                        }
+                                        case 5:
+                                        {
+                                            xx = (y - grid_cy) + dots_across;
+                                            yy = (grid_cx - x) + dots_across;
+                                            break;
+                                        }
+                                        case 6:
+                                        {
+                                            xx = (grid_cy - y) + dots_across;
+                                            yy = (x - grid_cx) + dots_across;
+                                            break;
+                                        }
+                                        case 7:
+                                        {
+                                            xx = (grid_cy - y) + dots_across;
+                                            yy = (grid_cx - x) + dots_across;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if ((xx >= 0) && (xx < ideal_grid.cell.Length) &&
+                                        (yy >= 0) && (yy < ideal_grid.cell[0].Length))
+                                    {
+                                        ideal_x = ideal_grid.cell[xx][yy].perimeter.x_points[idx];
+                                        ideal_y = ideal_grid.cell[xx][yy].perimeter.y_points[idx];
+                                    
+                                        if (orient == 0)
+                                        {
+                                            grid[x, y].rectified_x = ideal_x;
+                                            grid[x, y].rectified_y = ideal_y;
+                                        }
+                                        else
+                                        {
+                                            double diff_x1 = grid[x, y].rectified_x - grid[x, y].x;
+                                            double diff_y1 = grid[x, y].rectified_y - grid[x, y].y;
+                                            double dist1 = diff_x1*diff_x1 + diff_y1*diff_y1;
+
+                                            double diff_x2 = ideal_x - grid[x, y].x;
+                                            double diff_y2 = ideal_y - grid[x, y].y;
+                                            double dist2 = diff_x2*diff_x2 + diff_y2*diff_y2;
+                                            
+                                            if (dist2 < dist1)
+                                            {
+                                                grid[x, y].rectified_x = ideal_x;
+                                                grid[x, y].rectified_y = ideal_y;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                    
                 }
                 
             }
@@ -747,11 +825,12 @@ namespace surveyor.vision
         public static hypergraph DetectDots(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
                                             ref Bitmap detected_dots,
                                             ref Bitmap linked_dots,
-                                            ref Bitmap grd)
+                                            ref Bitmap grd,
+                                            ref Bitmap grid_diff)
         {
             const int minimum_links = (dots_across * (dots_across/2)) / 2;
             hypergraph dots = null;
-            detected_dots = DetectEdges(bmp, ref edge_detector, ref dots);
+            DetectEdges(bmp, ref edge_detector, ref dots, ref detected_dots);
             
             if (dots != null)
             {
@@ -791,7 +870,7 @@ namespace surveyor.vision
 
                                 if (dots.Links.Count > minimum_links)
                                 {
-                                    linked_dots = ShowLinkedDots(bmp, dots, search_regions);
+                                    ShowLinkedDots(bmp, dots, search_regions, ref linked_dots);
                                 
                                     // assign a grid coordinate to each dot
                                     ApplyGrid(dots, centre_dots);
@@ -803,7 +882,8 @@ namespace surveyor.vision
                                     {
                                         grid2D ideal_grid = GetIdealGrid(grid, bmp.Width, bmp.Height);
                                         
-                                        grd = ShowIdealGrid(bmp, ideal_grid, grid);
+                                        ShowIdealGrid(bmp, ideal_grid, grid, ref grd);
+                                        ShowIdealGridDiff(bmp, grid, ref grid_diff);
                                         
                                     }
                                 }

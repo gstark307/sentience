@@ -136,6 +136,8 @@ namespace sluggish.utilities.gtk
 				
 		#region "conversion between Pixbuf and byte array"
 				
+		private static Gdk.Pixdata pd;
+				
 		/// <summary>
 	    /// updates the given Pixbuf object from the bitmap array
 	    /// </summary>
@@ -144,23 +146,28 @@ namespace sluggish.utilities.gtk
 		{
 		    if (pixbuffer != null)
 		    {
-				Gdk.Pixdata pd = new Gdk.Pixdata();
-					
+		        if (pd == null) pd = new Gdk.Pixdata();
+				
 				// extract the raw data in uncompressed format
 			    pd.FromPixbuf(pixbuffer, false);
-				byte[] pixel = pd.Serialize();
+			    
+			    // TODO call to serialize causes memory leak
+			    
+				byte[] pixel = pd.Serialize();				
 				
 				// set the pixel values, converting BGR to RGB
 				for (int i = 0; i < bmp.Length; i += 3)
 				{
 				    for (int col = 0; col < 3; col++)
-				        pixel[pixdata_header + i + col] = (byte)bmp[i + 2 - col];
+				        pixel[pixdata_header + i + col] = bmp[i + 2 - col];
 				}
 					
 				pd.Deserialize((uint)pixel.Length, pixel);		
+
+				Gdk.Pixbuf result = Gdk.Pixbuf.FromPixdata(pd, false); 
 				
 				// return the pixel data as a Pixbuf object in compressed format
-				return(Gdk.Pixbuf.FromPixdata(pd, true));
+				return(result);
 		    }
 		    else
 		    {
@@ -205,6 +212,14 @@ namespace sluggish.utilities.gtk
         /// </summary>
         /// <param name="bmp"></param>
         /// <param name="img"></param>
+		public static void setBitmap(Bitmap bmp, Gtk.Image img, ref byte[] bmp_data)
+		{
+		    if (bmp_data == null)
+		        bmp_data = new byte[bmp.Width * bmp.Height * 3];
+		    BitmapArrayConversions.updatebitmap(bmp, bmp_data);
+		    setBitmap(bmp_data, bmp.Width, bmp.Height, img);		    
+		}
+
 		public static void setBitmap(Bitmap bmp, Gtk.Image img)
 		{
 		    byte[] bmp_data = new byte[bmp.Width * bmp.Height * 3];
