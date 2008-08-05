@@ -50,7 +50,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.display_image[1] = rightimage;
         stereo_camera.Run();
         
-        
+        //leftimage.Pixbuf.Pixels = Gdk.Pixbuf.FromPixdata(
     }
     
     private void CloseForm()

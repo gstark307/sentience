@@ -21,6 +21,7 @@
 using System;
 using System.IO;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using sluggish.utilities;
 
 namespace sluggish.utilities.gtk
@@ -136,17 +137,39 @@ namespace sluggish.utilities.gtk
 				
 		#region "conversion between Pixbuf and byte array"
 				
-		private static Gdk.Pixdata pd;
-				
+		/// <summary>
+	    /// updates the given Pixbuf object from the bitmap array
+	    /// </summary>
+		public unsafe static Gdk.Pixbuf setBitmap(byte[] bmp, Gdk.Pixbuf pixbuffer)
+		{
+		    if (pixbuffer != null)
+		    {
+		        unsafe 
+		        {
+				    byte* pixels = (byte*)pixbuffer.Pixels;
+				    for (int i = bmp.Length-1; i >= 0; i--) pixels[i] = bmp[i];
+				}
+				Gdk.Pixbuf result = pixbuffer;
+
+				// return the pixel data as a Pixbuf object in compressed format
+				return(result);
+		    }
+		    else
+		    {
+		        Console.WriteLine("GtkBitmap/getBitmap/pixbuffer has not been initialised");
+		        return(null);
+		    }
+		}
+
 		/// <summary>
 	    /// updates the given Pixbuf object from the bitmap array
 	    /// </summary>
 		/// updates the given image object from the bitmap array
-		public static Gdk.Pixbuf setBitmap(byte[] bmp, Gdk.Pixbuf pixbuffer)
+		public static Gdk.Pixbuf setBitmapOld(byte[] bmp, Gdk.Pixbuf pixbuffer)
 		{
 		    if (pixbuffer != null)
 		    {
-		        if (pd == null) pd = new Gdk.Pixdata();
+		        Gdk.Pixdata pd = new Gdk.Pixdata();
 				
 				// extract the raw data in uncompressed format
 			    pd.FromPixbuf(pixbuffer, false);
@@ -175,6 +198,7 @@ namespace sluggish.utilities.gtk
 		        return(null);
 		    }
 		}
+
 		
 		/// <summary>
 	    /// updates the given image object from the bitmap array
@@ -204,6 +228,7 @@ namespace sluggish.utilities.gtk
 		    {
 		        img.Pixbuf = createPixbuf(width, height);
 		    }
+		    
 			img.Pixbuf = setBitmap(bmp, img.Pixbuf);
 		}
 
