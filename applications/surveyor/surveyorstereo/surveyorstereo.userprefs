@@ -4,19 +4,21 @@
     <File name="../surveyorlib/SurveyorCalibration.cs" line="101" column="45" />
     <File name="../surveyorlib/calibration/CameraCalibration.cs" line="12" column="31" />
     <File name="../surveyorlib/SurveyorVisionStereo.cs" line="154" column="69" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="59" column="38" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="184" column="45" />
     <File name="../surveyorlib/SurveyorVisionClient.cs" line="284" column="64" />
     <File name="../surveyorlib/SurveyorvisionThreadGrabFrame.cs" line="43" column="44" />
-    <File name="../surveyorlib/GtkBitmap.cs" line="156" column="38" />
-    <File name="MainWindow.cs" line="44" column="50" />
+    <File name="../surveyorlib/GtkBitmap.cs" line="240" column="4" />
+    <File name="MainWindow.cs" line="33" column="50" />
+    <File name="Main.cs" line="37" column="2" />
+    <File name="../surveyorlib/BitmapArrayConversions.cs" line="104" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="surveyorlib" expanded="True">
-          <Node name="GtkBitmap.cs" selected="True" />
+        <Node name="surveyorlib" expanded="True" />
+        <Node name="surveyorstereo" expanded="True">
+          <Node name="MainWindow.cs" selected="True" />
         </Node>
-        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -27,7 +29,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/GtkBitmap.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorstereo/MainWindow.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

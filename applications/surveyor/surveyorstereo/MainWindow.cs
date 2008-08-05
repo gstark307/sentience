@@ -27,7 +27,7 @@ using sluggish.utilities.gtk;
 public partial class MainWindow: Gtk.Window
 {
     int image_width = 320;
-    int image_height = 240;
+    int image_height = 256;
     string stereo_camera_IP = "169.254.0.10";
          
     public SurveyorVisionStereoGtk stereo_camera;
@@ -50,7 +50,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.display_image[1] = rightimage;
         stereo_camera.Run();
         
-        //leftimage.Pixbuf.Pixels = Gdk.Pixbuf.FromPixdata(
+        //leftimage.Pixbuf.Pixels. = Gdk.Pixbuf.FromPixdata(
     }
     
     private void CloseForm()

@@ -144,12 +144,19 @@ namespace sluggish.utilities.gtk
 		{
 		    if (pixbuffer != null)
 		    {
-		        unsafe 
+		        unsafe
 		        {
-				    byte* pixels = (byte*)pixbuffer.Pixels;
-				    for (int i = bmp.Length-1; i >= 0; i--) pixels[i] = bmp[i];
+				    byte* pixels = (byte*)(pixbuffer.Pixels.ToPointer());
+				    for (int i = bmp.Length-3; i >= 0; i -= 3)
+				    {
+				       pixels[i] = bmp[i + 2];
+				       pixels[i + 1] = bmp[i + 1];
+				       pixels[i + 2] = bmp[i];
+				    }
 				}
+				
 				Gdk.Pixbuf result = pixbuffer;
+				
 
 				// return the pixel data as a Pixbuf object in compressed format
 				return(result);
@@ -226,9 +233,9 @@ namespace sluggish.utilities.gtk
 		    }
 		    if (recreate)
 		    {
-		        img.Pixbuf = createPixbuf(width, height);
-		    }
-		    
+		        img.Pixbuf = createPixbuf(width, height);	
+		        Console.WriteLine("dimensions: " + width.ToString() + "x" + height.ToString());
+		    }		    
 			img.Pixbuf = setBitmap(bmp, img.Pixbuf);
 		}
 
