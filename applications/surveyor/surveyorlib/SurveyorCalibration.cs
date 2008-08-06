@@ -29,6 +29,13 @@ namespace surveyor.vision
         public const int dots_across = 20;
         public const int dot_radius_percent = 30;    
     
+        /// <summary>
+        /// use canny algorithm to find edges
+        /// </summary>
+        /// <param name="bmp"></param>
+        /// <param name="edge_detector"></param>
+        /// <param name="dots"></param>
+        /// <param name="edges_bmp"></param>
         private static void DetectEdges(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
                                         ref hypergraph dots,
                                         ref Bitmap edges_bmp)
@@ -447,7 +454,7 @@ namespace surveyor.vision
         }
         
         /// <summary>
-        /// shows the grid fitted to the calibration pattern
+        /// shows the grid fitted to the calibration dots
         /// </summary>
         /// <param name="bmp">raw image</param>
         /// <param name="dots">detected dots on the grid</param>
@@ -488,6 +495,12 @@ namespace surveyor.vision
             BitmapArrayConversions.updatebitmap_unsafe(img, output_bmp);
         }
 
+        /// <summary>
+        /// shows the difference between an ideal grid and the actually detected grid
+        /// </summary>
+        /// <param name="bmp"></param>
+        /// <param name="grid"></param>
+        /// <param name="output_bmp"></param>
         private static void ShowIdealGridDiff(Bitmap bmp,
                                               CalibrationDot[,] grid,
                                               ref Bitmap output_bmp)
@@ -553,7 +566,7 @@ namespace surveyor.vision
 
 
         /// <summary>
-        /// puts the given dots into a grid for easy lookup
+        /// puts the detected dots into a grid for easy lookup
         /// </summary>
         /// <param name="dots">detected calibration dots</param>
         /// <returns>grid object</returns>
@@ -591,7 +604,14 @@ namespace surveyor.vision
             return (grid);
         }
 
-        
+        /// <summary>
+        /// returns an ideal grid with perfectly regular spacing
+        /// </summary>
+        /// <param name="grid"></param>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <returns>
+        /// </returns>
         private static grid2D GetIdealGrid(CalibrationDot[,] grid,
                                            int image_width, int image_height)
         {
@@ -821,6 +841,68 @@ namespace surveyor.vision
             return(ideal_grid);
         }
         
+        /// <summary>
+        /// is the given set of connected dots valid ?
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="tollerance_degrees"></param>
+        /// <returns>
+        /// </returns>
+        private static bool ValidGrid(hypergraph graph,
+                                      int image_width, int image_height,
+                                      int tollerance_degrees)
+        {
+            bool is_valid = true;
+            
+            int tx = image_width / 3;
+            int bx = image_width - tx;
+            int ty = image_height / 3;
+            int by = image_height - tx;
+            
+            int i = 0;
+            while ((i < graph.Nodes.Count) && (is_valid))
+            {
+                CalibrationDot n = (CalibrationDot)graph.Nodes[i];
+                if ((n.x > tx) && (n.x < bx) &&
+                    (n.y > ty) && (n.y < by))
+                {
+                    int j = 0;
+                    while ((j < n.Links.Count) && (is_valid))
+                    {
+                        CalibrationLink link = (CalibrationLink)n.Links[j];
+                        double dx = ((CalibrationDot)link.From).x - n.x;
+                        double dy = ((CalibrationDot)link.From).y - n.y;
+                        double dist = Math.Sqrt(dx*dx + dy*dy);
+                        if (dist > 0)
+                        {
+                            double angle = Math.Asin(dx / dist);
+                            if (dy < 0) angle = (Math.PI * 2) - angle;
+                            angle = angle / Math.PI * 180;
+                            if (angle < 0) angle += 360;
+                            
+                            bool within_tollerance = false;
+                            if (angle > 360 - tollerance_degrees) within_tollerance = true;
+                            if (angle < tollerance_degrees) within_tollerance = true;
+                            if ((angle > 180 - tollerance_degrees) &&
+                                (angle < 180 + tollerance_degrees)) within_tollerance = true;
+                            if ((angle > 90 - tollerance_degrees) &&
+                                (angle < 90 + tollerance_degrees)) within_tollerance = true;
+                            if ((angle > 270 - tollerance_degrees) &&
+                                (angle < 270 + tollerance_degrees)) within_tollerance = true;
+                                
+                            is_valid = within_tollerance;
+                        }
+                        j++;
+                    }
+                }
+                i++;
+            }
+            
+            return(is_valid);
+        }
+        
                 
         public static hypergraph DetectDots(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
                                             ref Bitmap detected_dots,
@@ -870,21 +952,25 @@ namespace surveyor.vision
 
                                 if (dots.Links.Count > minimum_links)
                                 {
-                                    ShowLinkedDots(bmp, dots, search_regions, ref linked_dots);
-                                
-                                    // assign a grid coordinate to each dot
-                                    ApplyGrid(dots, centre_dots);
+                                    int tollerance_degrees = 10;
+                                    if (ValidGrid(dots, bmp.Width, bmp.Height, tollerance_degrees))
+                                    {                                
+                                        ShowLinkedDots(bmp, dots, search_regions, ref linked_dots);
                                     
-                                    // put the dots into a 2D grid for convenient lookup
-                                    CalibrationDot[,] grid = CreateGrid(dots);
+                                        // assign a grid coordinate to each dot
+                                        ApplyGrid(dots, centre_dots);
+                                        
+                                        // put the dots into a 2D grid for convenient lookup
+                                        CalibrationDot[,] grid = CreateGrid(dots);
 
-                                    if (grid != null)
-                                    {
-                                        grid2D ideal_grid = GetIdealGrid(grid, bmp.Width, bmp.Height);
-                                        
-                                        ShowIdealGrid(bmp, ideal_grid, grid, ref grd);
-                                        ShowIdealGridDiff(bmp, grid, ref grid_diff);
-                                        
+                                        if (grid != null)
+                                        {
+                                            grid2D ideal_grid = GetIdealGrid(grid, bmp.Width, bmp.Height);
+                                            
+                                            ShowIdealGrid(bmp, ideal_grid, grid, ref grd);
+                                            ShowIdealGridDiff(bmp, grid, ref grid_diff);
+                                            
+                                        }
                                     }
                                 }
                             }

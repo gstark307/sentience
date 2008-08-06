@@ -39,6 +39,13 @@ namespace surveyor.vision
         // whether to show the left or right image during calibration
         public bool show_left_image;
         public Bitmap calibration_pattern;
+        
+        // what type of image should be displayed
+        public const int DISPLAY_RAW = 0;
+        public const int DISPLAY_CALIBRATION_DOTS = 1;
+        public const int DISPLAY_CALIBRATION_GRID = 2;
+        public const int DISPLAY_CALIBRATION_DIFF = 3;
+        public int display_type = DISPLAY_CALIBRATION_GRID;
                 
         #region "constructors"
         
