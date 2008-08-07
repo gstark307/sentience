@@ -28,7 +28,7 @@ namespace surveyor.vision
     {
         public const int dots_across = 20;
         public const int dot_radius_percent = 30;    
-    
+            
         /// <summary>
         /// use canny algorithm to find edges
         /// </summary>
@@ -565,6 +565,138 @@ namespace surveyor.vision
         }
 
 
+        private static void ShowRectifiedImage(Bitmap bmp,
+                                               float centre_of_distortion_x,
+                                               float centre_of_distortion_y,
+                                               polynomial distortion_curve,
+                                               ref Bitmap rectified)
+        {
+            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+            BitmapArrayConversions.updatebitmap(bmp, img);
+            byte[] img_rectified = (byte[])img.Clone();
+            
+            if (distortion_curve != null)
+            {
+                int[] calibration_map = null;
+                int[,,] calibration_map_inverse = null;
+                
+                updateCalibrationMap(
+                    bmp.Width, bmp.Height, distortion_curve,
+                    1, 0, 
+                    centre_of_distortion_x,centre_of_distortion_y,
+                    ref calibration_map, ref calibration_map_inverse);
+                    
+                int n = 0;
+                for (int i = 0; i < img.Length; i+=3, n++)
+                {
+                    int index = calibration_map[n]*3;
+                    for (int col = 0; col < 3; col++)
+                        img_rectified[i+col] = img[index+col];
+                }
+            }
+                        
+            if (rectified == null)
+                rectified = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified);
+        }
+        
+        #region "creating calibration lookup tables, used to rectify whole images"
+
+        private static void rotatePoint(double x, double y, double ang,
+                                        ref double rotated_x, ref double rotated_y)
+        {
+            double hyp;
+            rotated_x = x;
+            rotated_y = y;
+
+            if (ang != 0)
+            {
+                hyp = Math.Sqrt((x * x) + (y * y));
+                if (hyp > 0)
+                {
+                    double rot_angle = Math.Acos(y / hyp);
+                    if (x < 0) rot_angle = (Math.PI * 2) - rot_angle;
+                    double new_angle = ang + rot_angle;
+                    rotated_x = hyp * Math.Sin(new_angle);
+                    rotated_y = hyp * Math.Cos(new_angle);
+                }
+            }
+        }
+
+        /// <summary>
+        /// update the calibration lookup table, which maps pixels
+        /// in the rectified image into the original image
+        /// </summary>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="curve">polynomial curve describing the lens distortion</param>
+        /// <param name="scale"></param>
+        /// <param name="rotation"></param>
+        /// <param name="centre_of_distortion_x"></param>
+        /// <param name="centre_of_distortion_y"></param>
+        /// <param name="calibration_map"></param>
+        /// <param name="calibration_map_inverse"></param>
+        public static void updateCalibrationMap(int image_width,
+                                                int image_height,
+                                                polynomial curve,
+                                                float scale,
+                                                float rotation,
+                                                float centre_of_distortion_x,
+                                                float centre_of_distortion_y,
+                                                ref int[] calibration_map,
+                                                ref int[, ,] calibration_map_inverse)
+        {
+            int half_width = image_width / 2;
+            int half_height = image_height / 2;
+            calibration_map = new int[image_width * image_height];
+            calibration_map_inverse = new int[image_width, image_height, 2];
+            for (int x = 0; x < image_width; x++)
+            {
+                float dx = x - centre_of_distortion_x;
+
+                for (int y = 0; y < image_height; y++)
+                {
+                    float dy = y - centre_of_distortion_y;
+
+                    float radial_dist_rectified = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                    if (radial_dist_rectified >= 0.01f)
+                    {
+                        double radial_dist_original = curve.RegVal(radial_dist_rectified);
+                        if (radial_dist_original > 0)
+                        {
+                            double ratio = radial_dist_original / radial_dist_rectified;
+                            float x2 = (float)Math.Round(centre_of_distortion_x + (dx * ratio));
+                            x2 = (x2 - (image_width / 2)) * scale;
+                            float y2 = (float)Math.Round(centre_of_distortion_y + (dy * ratio));
+                            y2 = (y2 - (image_height / 2)) * scale;
+
+                            // apply rotation
+                            double x3 = x2, y3 = y2;
+                            rotatePoint(x2, y2, -rotation, ref x3, ref y3);
+
+                            x3 += half_width;
+                            y3 += half_height;
+
+                            if (((int)x3 > -1) && ((int)x3 < image_width) &&
+                                ((int)y3 > -1) && ((int)y3 < image_height))
+                            {
+                                int n = (y * image_width) + x;
+                                int n2 = ((int)y3 * image_width) + (int)x3;
+
+                                calibration_map[n] = n2;
+                                calibration_map_inverse[(int)x3, (int)y3, 0] = x;
+                                calibration_map_inverse[(int)x3, (int)y3, 1] = y;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
+        
+
+
         /// <summary>
         /// puts the detected dots into a grid for easy lookup
         /// </summary>
@@ -905,10 +1037,12 @@ namespace surveyor.vision
         
                 
         public static hypergraph DetectDots(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
+                                            CalibrationSurvey survey,
                                             ref Bitmap detected_dots,
                                             ref Bitmap linked_dots,
                                             ref Bitmap grd,
-                                            ref Bitmap grid_diff)
+                                            ref Bitmap grid_diff,
+                                            ref Bitmap rectified)
         {
             const int minimum_links = (dots_across * (dots_across/2)) / 2;
             hypergraph dots = null;
@@ -969,6 +1103,10 @@ namespace surveyor.vision
                                             
                                             ShowIdealGrid(bmp, ideal_grid, grid, ref grd);
                                             ShowIdealGridDiff(bmp, grid, ref grid_diff);
+                                            
+                                            survey.Update(bmp.Width, bmp.Height, grid);
+                                            
+                                            ShowRectifiedImage(bmp, survey.centre_of_distortion_x, survey.centre_of_distortion_y, survey.best_fit_curve, ref rectified);
                                             
                                         }
                                     }

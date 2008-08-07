@@ -97,7 +97,7 @@ namespace surveyor.vision
             return(result);
         }
 
-        private void DisplayImage(Gtk.Image img, Bitmap default_image)
+        private void DisplayImage(Gtk.Image img, Bitmap default_image, bool is_left)
         {
             Bitmap disp_image = null;
             
@@ -107,10 +107,25 @@ namespace surveyor.vision
                 case DISPLAY_CALIBRATION_DOTS: { disp_image = edges; break; }
                 case DISPLAY_CALIBRATION_GRID: { disp_image = linked_dots; break; }
                 case DISPLAY_CALIBRATION_DIFF: { disp_image = grid_diff; break; }
+                case DISPLAY_RECTIFIED: { if (is_left) disp_image = rectified[0]; else disp_image = rectified[1]; break; }
             }
             
             if ((calibration_pattern == null) || (disp_image == null))
                 disp_image = default_image;
+                
+            if (calibration_pattern == null)
+            {
+                if (is_left)
+                {
+                    if (calibration_map[0] != null)
+                        disp_image = rectified[0];
+                }
+                else
+                {
+                    if (calibration_map[1] != null)
+                        disp_image = rectified[1];
+                }                
+            }
         
             GtkBitmap.setBitmap(disp_image, img);
         }
@@ -138,32 +153,7 @@ namespace surveyor.vision
                 }
                 else
                 {
-                    DisplayImage(display_image[0], left_image);
-                    
-                    /*
-                    if ((calibration_pattern != null) && (edges != null))
-                        GtkBitmap.setBitmap(edges, display_image[0]);
-                    else
-                        GtkBitmap.setBitmap(left_image, display_image[0]);
-                    */
-                    
-                    /*
-                    if ((calibration_pattern != null) && (linked_dots != null))
-                        GtkBitmap.setBitmap(linked_dots, display_image[0]);
-                    else
-                        GtkBitmap.setBitmap(left_image, display_image[0]);
-                    */
-/*
-                    if ((calibration_pattern != null) && (grid != null))
-                        GtkBitmap.setBitmap(grid, display_image[0]);
-                    else
-                        GtkBitmap.setBitmap(left_image, display_image[0]);
-
-                    if ((calibration_pattern != null) && (grid_diff != null))
-                        GtkBitmap.setBitmap(grid_diff, display_image[0], ref buffer);
-                    else
-                        GtkBitmap.setBitmap(left_image, display_image[0], ref buffer);
-                        */
+                    DisplayImage(display_image[0], left_image, true);
                 }
             }
             
@@ -182,27 +172,7 @@ namespace surveyor.vision
                 }
                 else
                 {
-                    DisplayImage(display_image[1], right_image);
-                
-                    /*
-                    if ((calibration_pattern != null) && (linked_dots != null))
-                        GtkBitmap.setBitmap(linked_dots, display_image[1]);
-                    else
-                        GtkBitmap.setBitmap(right_image, display_image[1]);
-                    */
-
-/*
-                    if ((calibration_pattern != null) && (grid != null))
-                        GtkBitmap.setBitmap(grid, display_image[1]);
-                    else
-                        GtkBitmap.setBitmap(right_image, display_image[1]);
-
-                    if ((calibration_pattern != null) && (grid_diff != null))
-                        GtkBitmap.setBitmap(grid_diff, display_image[1], ref buffer);
-                    else
-                        GtkBitmap.setBitmap(right_image, display_image[1], ref buffer);
-                        
-                    */
+                    DisplayImage(display_image[1], right_image, false);
                 }
 
                 // Here we need to update the GUI after receiving the right camera image

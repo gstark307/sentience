@@ -1,21 +1,18 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/surveyorstereo/surveyorstereo.mds">
   <Files>
     <File name="Welcome" />
-    <File name="../surveyorlib/SurveyorCalibration.cs" line="954" column="34" />
-    <File name="../surveyorlib/calibration/CameraCalibration.cs" line="1280" column="13" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="37" column="40" />
-    <File name="../surveyorlib/GtkBitmap.cs" line="240" column="4" />
-    <File name="MainWindow.cs" line="112" column="13" />
-    <File name="Main.cs" line="37" column="2" />
-    <File name="../surveyorlib/BitmapArrayConversions.cs" line="104" column="1" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="108" column="67" />
+    <File name="../surveyorlib/SurveyorCalibration.cs" line="647" column="16" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="180" column="61" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="125" column="52" />
+    <File name="MainWindow.cs" line="115" column="29" />
+    <File name="../surveyorlib/calibration/CalibrationSurvey.cs" line="99" column="29" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="surveyorlib" expanded="True">
           <Node name="calibration" expanded="True" />
-          <Node name="SurveyorCalibration.cs" selected="True" />
+          <Node name="SurveyorVisionStereoGtk.cs" selected="True" />
         </Node>
         <Node name="surveyorstereo" expanded="True" />
       </Node>
@@ -28,7 +25,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/calibration/CameraCalibration.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/SurveyorVisionStereoGtk.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

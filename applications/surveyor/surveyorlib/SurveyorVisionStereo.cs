@@ -40,11 +40,19 @@ namespace surveyor.vision
         public bool show_left_image;
         public Bitmap calibration_pattern;
         
+        public CalibrationSurvey[] calibration_survey;
+        public int[][] calibration_map;
+        public int[][,,] calibration_map_inverse;
+        
+        // rectified images
+        public Bitmap[] rectified;
+        
         // what type of image should be displayed
         public const int DISPLAY_RAW = 0;
         public const int DISPLAY_CALIBRATION_DOTS = 1;
         public const int DISPLAY_CALIBRATION_GRID = 2;
         public const int DISPLAY_CALIBRATION_DIFF = 3;
+        public const int DISPLAY_RECTIFIED = 4;
         public int display_type = DISPLAY_CALIBRATION_GRID;
                 
         #region "constructors"
@@ -72,6 +80,14 @@ namespace surveyor.vision
             port_number[0] = port_number_left;
             port_number[1] = port_number_right;
             
+            calibration_survey = new CalibrationSurvey[2];
+            calibration_map = new int[2][];
+            calibration_map_inverse = new int[2][,,];
+            calibration_survey[0] = new CalibrationSurvey();
+            calibration_survey[1] = new CalibrationSurvey();
+            
+            rectified = new Bitmap[2];
+            
             // delete and previously recorded images
             string[] victims = Directory.GetFiles(".", "raw*.jpg");
             if (victims != null)
@@ -82,6 +98,53 @@ namespace surveyor.vision
         }
         
         #endregion
+        
+        /// <summary>
+        /// rectifies the given images
+        /// </summary>
+        /// <param name="left_image">left image bitmap</param>
+        /// <param name="right_image">right image bitmap</param>
+        protected void RectifyImages(Bitmap left_image, Bitmap right_image)
+        {
+            for (int cam = 0; cam < 2; cam++)
+            {
+                Bitmap bmp = left_image;
+                if (cam == 1) bmp = right_image;
+                
+                if (calibration_survey[cam] != null)
+                {
+                    polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
+                    if (distortion_curve != null)
+                    {
+                        if (calibration_map[cam] == null)
+                        {
+                            SurveyorCalibration.updateCalibrationMap(
+                                bmp.Width, bmp.Height, distortion_curve,
+                                1, 0, 
+                                calibration_survey[cam].centre_of_distortion_x,calibration_survey[cam].centre_of_distortion_y,
+                                ref calibration_map[cam], ref calibration_map_inverse[cam]);
+                        }
+                        
+                        byte[] img = new byte[bmp.Width * bmp.Height * 3];
+                        BitmapArrayConversions.updatebitmap(bmp, img);
+                        byte[] img_rectified = (byte[])img.Clone();                        
+                    
+                        int n = 0;
+                        int[] map = calibration_map[cam];
+                        for (int i = 0; i < img.Length; i+=3, n++)
+                        {
+                            int index = map[n]*3;
+                            for (int col = 0; col < 3; col++)
+                                img_rectified[i+col] = img[index+col];
+                        }
+                        
+                        if (rectified[cam] == null)
+                            rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
+                    }
+                }
+            }
+        }
         
         #region "callbacks"
 
@@ -108,10 +171,12 @@ namespace surveyor.vision
                     {
                         hypergraph dots = null;
                         if (!show_left_image)
-                            dots = SurveyorCalibration.DetectDots(left, ref edge_detector, ref edges, ref linked_dots, ref grid, ref grid_diff);
+                            dots = SurveyorCalibration.DetectDots(left, ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
                         else
-                            dots = SurveyorCalibration.DetectDots(right, ref edge_detector, ref edges, ref linked_dots, ref grid, ref grid_diff);
+                            dots = SurveyorCalibration.DetectDots(right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
                     }
+                    
+                    RectifyImages(left, right);
                                                             
                     Process(left, right);
                     

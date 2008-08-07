@@ -107,7 +107,8 @@ public partial class MainWindow: Gtk.Window
         {
             ShowDotPattern(dest_img);
             stereo_camera.display_image[window_index] = dest_img;
-            stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_CALIBRATION_DIFF;
+            //stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_CALIBRATION_DIFF;
+            stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_RECTIFIED;
         }
         else
         {
