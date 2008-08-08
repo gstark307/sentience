@@ -4,7 +4,7 @@
     <images-root-path>..</images-root-path>
     <target-gtk-version>2.12.0</target-gtk-version>
   </configuration>
-  <widget class="Gtk.Window" id="MainWindow" design-size="429 300">
+  <widget class="Gtk.Window" id="MainWindow" design-size="528 300">
     <action-group name="New Action Group" />
     <action-group name="Default">
       <action id="FileAction">
@@ -138,6 +138,23 @@
               <packing>
                 <property name="Position">2</property>
                 <property name="AutoSize">True</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="Gtk.Button" id="cmdCalibrateFocus">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Type">TextOnly</property>
+                <property name="Label" translatable="yes">Calibrate Focus</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnCmdCalibrateFocusClicked" />
+              </widget>
+              <packing>
+                <property name="PackType">End</property>
+                <property name="Position">3</property>
+                <property name="AutoSize">True</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
               </packing>
             </child>
           </widget>

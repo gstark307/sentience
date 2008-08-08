@@ -130,4 +130,30 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.show_left_image = true;
         Calibrate(chkCalibrateRight.Active);
     }   
+
+    private void ShowMessage(string message_str)
+    {
+        Gtk.MessageDialog md = 
+            new MessageDialog (this,
+                               DialogFlags.DestroyWithParent,
+    	                       MessageType.Info, 
+                               ButtonsType.Close, 
+                               message_str);
+        this.GdkWindow.ProcessUpdates(true);
+        md.Run();
+        md.Destroy();
+    }
+
+    protected virtual void OnCmdCalibrateFocusClicked (object sender, System.EventArgs e)
+    {
+        if (stereo_camera.CalibrateFocus())
+        {
+            stereo_camera.Save("calibration.xml");
+            ShowMessage("Calibration complete");
+        }
+        else
+        {
+            ShowMessage("Please individually calibrate left and right cameras before the calibrating the focus");
+        }
+    }
 }

@@ -38,6 +38,8 @@ public partial class MainWindow {
     
     private Gtk.CheckButton chkCalibrateRight;
     
+    private Gtk.Button cmdCalibrateFocus;
+    
     protected virtual void Build() {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
@@ -132,16 +134,28 @@ public partial class MainWindow {
         this.hbox2.Add(this.chkCalibrateRight);
         Gtk.Box.BoxChild w10 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkCalibrateRight]));
         w10.Position = 2;
-        this.vbox1.Add(this.hbox2);
-        Gtk.Box.BoxChild w11 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox2]));
-        w11.Position = 2;
+        // Container child hbox2.Gtk.Box+BoxChild
+        this.cmdCalibrateFocus = new Gtk.Button();
+        this.cmdCalibrateFocus.CanFocus = true;
+        this.cmdCalibrateFocus.Name = "cmdCalibrateFocus";
+        this.cmdCalibrateFocus.UseUnderline = true;
+        this.cmdCalibrateFocus.Label = Mono.Unix.Catalog.GetString("Calibrate Focus");
+        this.hbox2.Add(this.cmdCalibrateFocus);
+        Gtk.Box.BoxChild w11 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdCalibrateFocus]));
+        w11.PackType = ((Gtk.PackType)(1));
+        w11.Position = 3;
         w11.Expand = false;
         w11.Fill = false;
+        this.vbox1.Add(this.hbox2);
+        Gtk.Box.BoxChild w12 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox2]));
+        w12.Position = 2;
+        w12.Expand = false;
+        w12.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
         }
-        this.DefaultWidth = 429;
+        this.DefaultWidth = 528;
         this.DefaultHeight = 300;
         this.Show();
         this.DeleteEvent += new Gtk.DeleteEventHandler(this.OnDeleteEvent);
@@ -150,5 +164,6 @@ public partial class MainWindow {
         this.chkRecord.Clicked += new System.EventHandler(this.OnChkRecordClicked);
         this.chkCalibrate.Clicked += new System.EventHandler(this.OnChkCalibrateClicked);
         this.chkCalibrateRight.Clicked += new System.EventHandler(this.OnChkCalibrateRightClicked);
+        this.cmdCalibrateFocus.Clicked += new System.EventHandler(this.OnCmdCalibrateFocusClicked);
     }
 }

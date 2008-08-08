@@ -599,6 +599,80 @@ namespace surveyor.vision
                 rectified = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified);
         }
+
+        #region "focal length calibration"
+        
+        /// <summary>
+        /// Calculate offsets from observing a distant object
+        /// Here the rays of light from the object to the camera are
+        /// nearly parallel, having less than one pixel of disparity
+        /// </summary>
+        /// <param name="rectified_left">left rectified image</param>
+        /// <param name="rectified_right">right rectified image</param>
+        /// <param name="best_offset_x"></param>
+        /// <param name="best_offset_y"></param>
+        /// <param name="rotation">relative rotation of the right image to the left</param>
+        public static void UpdateOffsets(Bitmap rectified_left, Bitmap rectified_right,
+                                         ref int best_offset_x,
+                                         ref int best_offset_y,
+                                         ref float rotation)
+        {
+            byte[][] rectified = new byte[2][];
+            rectified[0] = new byte[rectified_left.Width * rectified_left.Height * 3];
+            rectified[1] = new byte[rectified_right.Width * rectified_right.Height * 3];
+            
+            BitmapArrayConversions.updatebitmap(rectified_left, rectified[0]);
+            BitmapArrayConversions.updatebitmap(rectified_right, rectified[1]);
+            
+            // search window to compare between the two images
+            int tx = rectified_right.Width * 40 / 100;
+            int bx = rectified_right.Width - 1 - tx;
+            int ty = rectified_right.Height * 40 / 100;
+            int by = rectified_right.Height - 1 - tx;
+            
+            int w = rectified_left.Width;
+            
+            int horizontal_search = (rectified_right.Width - 1 - bx) / 3;
+            int vertical_search = 2;
+            int step_size = (bx - tx) / 30;
+            if (step_size < 2) step_size = 2;
+
+            long min_diff = long.MaxValue;            
+            for (int offset_y = ty - vertical_search; offset_y < ty + vertical_search; offset_y++)
+            {
+                for (int offset_x = tx; offset_x < tx + horizontal_search; offset_x++)
+                {
+                    long diff = 0;
+                    for (int x_right = offset_x; x_right < offset_x + bx - tx; x_right += step_size)
+                    {
+                        int x_left = tx + x_right - offset_x;
+                        for (int y_right = offset_y; y_right < offset_y + by - ty; y_right += step_size)
+                        {
+                            int y_left = ty + y_right - offset_y;
+                            
+                            int n1 = ((y_left * w) + x_left) * 3;
+                            int n2 = ((y_right * w) + x_right) * 3;
+                            
+                            for (int col = 0; col < 3; col++)
+                            {
+                                int col_diff = rectified[1][n2+col] - rectified[0][n1+col];
+                                diff += (col_diff * col_diff);
+                            }
+                        }
+                    }
+                    
+                    if (diff < min_diff)
+                    {
+                        min_diff = diff;
+                        best_offset_x = offset_x - tx;
+                        best_offset_y = offset_y - ty;
+                    }
+                }
+            }
+            
+        }
+        
+        #endregion
         
         #region "creating calibration lookup tables, used to rectify whole images"
 
