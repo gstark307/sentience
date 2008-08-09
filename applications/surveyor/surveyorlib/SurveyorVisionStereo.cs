@@ -40,7 +40,7 @@ namespace surveyor.vision
         public float focal_length_pixels;
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.SIMPLE;
+        public int stereo_algorithm_type = StereoVision.CANNY;
         
         // whether to record raw camera images
         public bool Record;
@@ -71,6 +71,7 @@ namespace surveyor.vision
         public const int DISPLAY_CALIBRATION_DIFF = 3;
         public const int DISPLAY_RECTIFIED = 4;
         public const int DISPLAY_STEREO_SIMPLE = 5;
+        public const int DISPLAY_DIFFERENCE = 6;
         public int display_type = DISPLAY_CALIBRATION_GRID;
                 
         #region "constructors"
@@ -683,6 +684,7 @@ namespace surveyor.vision
         protected Bitmap linked_dots;
         protected Bitmap grid;
         protected Bitmap grid_diff;
+        protected Bitmap raw_difference;
         private EdgeDetectorCanny edge_detector;
         
         protected Bitmap DetectEdges(Bitmap bmp, EdgeDetectorCanny edge_detector,
@@ -710,6 +712,66 @@ namespace surveyor.vision
        
         protected virtual void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
+        }
+
+        protected void UpdateRawDifference(Bitmap left_image, Bitmap right_image)
+        {
+            if (raw_difference == null)
+            {
+                raw_difference = new Bitmap(left_image.Width, left_image.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);    
+            }
+            else
+            {
+                if ((raw_difference.Width != left_image.Width) ||
+                    (raw_difference.Height != left_image.Height))
+                {
+                    raw_difference = new Bitmap(left_image.Width, left_image.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);    
+                }
+            }
+
+            byte[] left_img = new byte[left_image.Width * left_image.Height * 3];
+            byte[] right_img = new byte[left_image.Width * left_image.Height * 3];
+
+            BitmapArrayConversions.updatebitmap(left_image, left_img);
+            BitmapArrayConversions.updatebitmap(right_image, right_img);
+            
+            byte[] raw_difference_img = new byte[left_image.Width * left_image.Height * 3];
+            int n = 0;
+            int cam = 0;
+            int w = left_image.Width;
+            int h = left_image.Height;
+            for (int y = 0; y < h; y++)
+            {
+                cam = y % 2;
+                for (int x = 0; x < w; x++)
+                {
+                    if (cam == 0)
+                    {
+                        for (int col = 0; col < 3; col++)
+                            raw_difference_img[n+col] = left_img[n+col];
+                    }
+                    else
+                    {
+                        int xx = x + (int)offset_x;
+                        int yy = y + (int)offset_y;
+                        if ((xx > -1) && (xx < w) &&
+                            (yy > -1) && (yy < h))
+                        {
+                            int n2 = ((yy * w) + xx) * 3; 
+                            for (int col = 0; col < 3; col++)
+                                raw_difference_img[n+col] = right_img[n2+col];
+                        }
+                        else
+                        {
+                            for (int col = 0; col < 3; col++)
+                                raw_difference_img[n+col] = left_img[n+col];
+                        }
+                    }
+                    cam = 1 - cam;
+                    n += 3;
+                }
+            }
+            BitmapArrayConversions.updatebitmap_unsafe(raw_difference_img, raw_difference);
         }
 
         #endregion
@@ -742,6 +804,32 @@ namespace surveyor.vision
                             
                         break;
                     }
+                    case StereoVision.CONTOURS:
+                    {
+                        if (correspondence == null)
+                            correspondence = new StereoVisionContours();
+                            
+                        if (correspondence.algorithm_type != StereoVision.CONTOURS)
+                            correspondence = new StereoVisionContours();
+                            
+                        correspondence.Update(rectified[0], rectified[1],
+                                              offset_x, offset_y);
+                        
+                        break;
+                    }
+                    case StereoVision.CANNY:
+                    {
+                        if (correspondence == null)
+                            correspondence = new StereoVisionCanny();
+                            
+                        if (correspondence.algorithm_type != StereoVision.CANNY)
+                            correspondence = new StereoVisionCanny();
+                            
+                        correspondence.Update(rectified[0], rectified[1],
+                                              offset_x, offset_y);
+                        
+                        break;
+                    }
                 }
                 
                 correspondence.Show(ref stereo_features);
@@ -754,6 +842,8 @@ namespace surveyor.vision
 
         public virtual void Process(Bitmap left_image, Bitmap right_image)
         {
+            //if (display_type == DISPLAY_DIFFERENCE) 
+            UpdateRawDifference(left_image, right_image);
             DisplayImages(left_image, right_image);
             StereoCorrespondence();
         }

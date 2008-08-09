@@ -30,6 +30,8 @@ namespace surveyor.vision
     public class StereoVision
     {
         public const int SIMPLE = 0;
+        public const int CONTOURS = 1;
+        public const int CANNY = 2;
     
         public int algorithm_type;
     
