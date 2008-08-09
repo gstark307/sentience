@@ -40,6 +40,7 @@ namespace surveyor.vision
         public float focal_length_pixels;
         public float baseline_mm = 100;
         public float fov_degrees = 90;
+        public int stereo_algorithm_type = StereoVision.SIMPLE;
         
         // whether to record raw camera images
         public bool Record;
@@ -69,6 +70,7 @@ namespace surveyor.vision
         public const int DISPLAY_CALIBRATION_GRID = 2;
         public const int DISPLAY_CALIBRATION_DIFF = 3;
         public const int DISPLAY_RECTIFIED = 4;
+        public const int DISPLAY_STEREO_SIMPLE = 5;
         public int display_type = DISPLAY_CALIBRATION_GRID;
                 
         #region "constructors"
@@ -712,11 +714,48 @@ namespace surveyor.vision
 
         #endregion
         
+        #region "stereo correspondence"
+        
+        protected StereoVision correspondence;
+        protected Bitmap stereo_features;
+        
+        /// <summary>
+        /// perform stereo correspondence between the two images
+        /// </summary>
+        protected void StereoCorrespondence()
+        {
+            if ((rectified[0] != null) && 
+                (rectified[1] != null))
+            {
+                switch(stereo_algorithm_type)
+                {
+                    case StereoVision.SIMPLE:
+                    {                      
+                        if (correspondence == null)
+                            correspondence = new StereoVisionSimple();
+                            
+                        if (correspondence.algorithm_type != StereoVision.SIMPLE)
+                            correspondence = new StereoVisionSimple();
+                            
+                        correspondence.Update(rectified[0], rectified[1],
+                                              -offset_x, offset_y);
+                            
+                        break;
+                    }
+                }
+                
+                correspondence.Show(ref stereo_features);
+            }
+        }
+        
+        #endregion
+        
         #region "process images"
 
         public virtual void Process(Bitmap left_image, Bitmap right_image)
         {
             DisplayImages(left_image, right_image);
+            StereoCorrespondence();
         }
         
         #endregion

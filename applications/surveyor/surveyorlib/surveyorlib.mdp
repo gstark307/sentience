@@ -38,6 +38,10 @@
     <File name="xml.cs" subtype="Code" buildaction="Compile" />
     <File name="calibration/geometry.cs" subtype="Code" buildaction="Compile" />
     <File name="calibration/CalibrationSurvey.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence" subtype="Directory" buildaction="Compile" />
+    <File name="correspondence/StereoVision.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence/StereoVisionSimple.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence/StereoFeature.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

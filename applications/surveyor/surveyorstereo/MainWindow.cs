@@ -154,8 +154,10 @@ public partial class MainWindow: Gtk.Window
     protected virtual void OnCmdCalibrateFocusClicked (object sender, System.EventArgs e)
     {
         // stop the cameras in order avoid thread collisions
-        stereo_camera.Stop();        
-        System.Threading.Thread.Sleep(500);
+        stereo_camera.Stop();    
+        
+        for (int i = 0; i < 100; i++)
+            System.Threading.Thread.Sleep(5);
         
         if (stereo_camera.CalibrateFocus())
         {

@@ -2,18 +2,18 @@
   <Files>
     <File name="Welcome" />
     <File name="../surveyorlib/SurveyorCalibration.cs" line="1278" column="1" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="180" column="42" />
-    <File name="MainWindow.cs" line="153" column="10" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="180" column="1" />
+    <File name="MainWindow.cs" line="153" column="1" />
     <File name="../surveyorlib/calibration/CalibrationSurvey.cs" line="99" column="29" />
     <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="64" column="38" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="surveyorlib" expanded="True" />
-        <Node name="surveyorstereo" expanded="True">
-          <Node name="MainWindow.cs" selected="True" />
+        <Node name="surveyorlib" expanded="True">
+          <Node name="New Folder" selected="True" />
         </Node>
+        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
