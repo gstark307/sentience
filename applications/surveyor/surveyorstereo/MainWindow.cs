@@ -19,6 +19,7 @@
 
 using System;
 using System.Drawing;
+using System.Threading;
 using Gtk;
 using surveyor.vision;
 using sluggish.utilities;
@@ -29,6 +30,7 @@ public partial class MainWindow: Gtk.Window
     int image_width = 320;
     int image_height = 256;
     string stereo_camera_IP = "169.254.0.10";
+    string calibration_filename = "calibration.xml";
          
     public SurveyorVisionStereoGtk stereo_camera;
     
@@ -48,6 +50,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
+        stereo_camera.Load(calibration_filename);
         stereo_camera.Run();
         
         //leftimage.Pixbuf.Pixels. = Gdk.Pixbuf.FromPixdata(
@@ -104,11 +107,12 @@ public partial class MainWindow: Gtk.Window
         }
     
         if (Active)
-        {
+        {            
             ShowDotPattern(dest_img);
             stereo_camera.display_image[window_index] = dest_img;
             //stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_CALIBRATION_DIFF;
             stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_RECTIFIED;
+            stereo_camera.ResetCalibration(1 - window_index);
         }
         else
         {
@@ -133,6 +137,8 @@ public partial class MainWindow: Gtk.Window
 
     private void ShowMessage(string message_str)
     {
+        Console.WriteLine(message_str);
+        /*
         Gtk.MessageDialog md = 
             new MessageDialog (this,
                                DialogFlags.DestroyWithParent,
@@ -142,18 +148,27 @@ public partial class MainWindow: Gtk.Window
         this.GdkWindow.ProcessUpdates(true);
         md.Run();
         md.Destroy();
+        */
     }
 
     protected virtual void OnCmdCalibrateFocusClicked (object sender, System.EventArgs e)
     {
+        // stop the cameras in order avoid thread collisions
+        stereo_camera.Stop();        
+        System.Threading.Thread.Sleep(500);
+        
         if (stereo_camera.CalibrateFocus())
         {
-            stereo_camera.Save("calibration.xml");
+            stereo_camera.Save(calibration_filename);
+            
             ShowMessage("Calibration complete");
         }
         else
         {
             ShowMessage("Please individually calibrate left and right cameras before the calibrating the focus");
         }
+        
+        // restart the cameras
+        stereo_camera.Run();
     }
 }

@@ -613,8 +613,8 @@ namespace surveyor.vision
         /// <param name="best_offset_y"></param>
         /// <param name="rotation">relative rotation of the right image to the left</param>
         public static void UpdateOffsets(Bitmap rectified_left, Bitmap rectified_right,
-                                         ref int best_offset_x,
-                                         ref int best_offset_y,
+                                         ref float best_offset_x,
+                                         ref float best_offset_y,
                                          ref float rotation)
         {
             byte[][] rectified = new byte[2][];
@@ -625,30 +625,32 @@ namespace surveyor.vision
             BitmapArrayConversions.updatebitmap(rectified_right, rectified[1]);
             
             // search window to compare between the two images
-            int tx = rectified_right.Width * 40 / 100;
+            int tx = rectified_right.Width * 10 / 100;
             int bx = rectified_right.Width - 1 - tx;
-            int ty = rectified_right.Height * 40 / 100;
-            int by = rectified_right.Height - 1 - tx;
+            int ty = rectified_right.Height * 10 / 100;
+            int by = rectified_right.Height - 1 - ty;
             
             int w = rectified_left.Width;
+            int attention_box_width = bx - tx;
+            int attention_box_height = by - ty;
             
-            int horizontal_search = (rectified_right.Width - 1 - bx) / 3;
-            int vertical_search = 2;
-            int step_size = (bx - tx) / 30;
-            if (step_size < 2) step_size = 2;
+            int horizontal_search = (rectified_right.Width - 1 - bx);
+            int vertical_search = (rectified_right.Height - 1 - by) / 2;
+            int step_size = attention_box_width / 50;
+            if (step_size < 1) step_size = 1;
 
-            long min_diff = long.MaxValue;            
-            for (int offset_y = ty - vertical_search; offset_y < ty + vertical_search; offset_y++)
+            ulong min_diff = ulong.MaxValue;          
+            for (int offset_y = -vertical_search; offset_y <= vertical_search; offset_y++)
             {
-                for (int offset_x = tx; offset_x < tx + horizontal_search; offset_x++)
+                for (int offset_x = -horizontal_search; offset_x <= horizontal_search; offset_x++)
                 {
-                    long diff = 0;
-                    for (int x_right = offset_x; x_right < offset_x + bx - tx; x_right += step_size)
+                    ulong diff = 0;
+                    for (int x_right = tx + offset_x; x_right < tx + offset_x + attention_box_width; x_right += step_size)
                     {
-                        int x_left = tx + x_right - offset_x;
-                        for (int y_right = offset_y; y_right < offset_y + by - ty; y_right += step_size)
+                        int x_left = x_right - offset_x;
+                        for (int y_right = ty + offset_y; y_right < ty + offset_y + attention_box_height; y_right += step_size)
                         {
-                            int y_left = ty + y_right - offset_y;
+                            int y_left = y_right - offset_y;
                             
                             int n1 = ((y_left * w) + x_left) * 3;
                             int n2 = ((y_right * w) + x_right) * 3;
@@ -656,7 +658,7 @@ namespace surveyor.vision
                             for (int col = 0; col < 3; col++)
                             {
                                 int col_diff = rectified[1][n2+col] - rectified[0][n1+col];
-                                diff += (col_diff * col_diff);
+                                diff += (ulong)(col_diff * col_diff);
                             }
                         }
                     }
@@ -664,8 +666,8 @@ namespace surveyor.vision
                     if (diff < min_diff)
                     {
                         min_diff = diff;
-                        best_offset_x = offset_x - tx;
-                        best_offset_y = offset_y - ty;
+                        best_offset_x = offset_x;
+                        best_offset_y = offset_y;
                     }
                 }
             }

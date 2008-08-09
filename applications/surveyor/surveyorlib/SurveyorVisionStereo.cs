@@ -34,6 +34,9 @@ namespace surveyor.vision
         public int fps = 10;
 
         public string device_name = "Surveyor stereo camera";
+        public string part_number;
+        public string serial_number;
+        public int image_width, image_height;
         public float focal_length_pixels;
         public float baseline_mm = 100;
         public float fov_degrees = 90;
@@ -52,7 +55,7 @@ namespace surveyor.vision
 
         // offsets when observing objects at
         // long distance (less than one pixel disparity)
-        public int offset_x=0, offset_y=0;
+        public float offset_x=0, offset_y=0;
         
         // rotation of the right camera relative to the left
         public float rotation = 0;
@@ -119,6 +122,8 @@ namespace surveyor.vision
         /// return an Xml document containing camera calibration parameters
         /// </summary>
         /// <param name="device_name"></param>
+        /// <param name="part_number"></param>
+        /// <param name="serial_number"></param>
         /// <param name="focal_length_pixels"></param>
         /// <param name="baseline_mm"></param>
         /// <param name="fov_degrees"></param>
@@ -127,6 +132,7 @@ namespace surveyor.vision
         /// <param name="lens_distortion_curve"></param>
         /// <param name="centre_of_distortion_x"></param>
         /// <param name="centre_of_distortion_y"></param>
+        /// <param name="minimum_rms_error"></param>
         /// <param name="rotation"></param>
         /// <param name="scale"></param>
         /// <param name="offset_x"></param>
@@ -134,12 +140,15 @@ namespace surveyor.vision
         /// <returns></returns>
         private static XmlDocument getXmlDocument(
             string device_name,
+            string part_number,
+            string serial_number,
             float focal_length_pixels,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
             polynomial[] lens_distortion_curve,
             float[] centre_of_distortion_x, float[] centre_of_distortion_y,
+            float[] minimum_rms_error,
             float rotation, float scale,
             float offset_x, float offset_y)
         {
@@ -153,17 +162,20 @@ namespace surveyor.vision
             XmlNode commentnode = doc.CreateComment("Sentience 3D Perception System");
             doc.AppendChild(commentnode);
 
-            XmlElement nodeCalibration = doc.CreateElement("SurveyorCorporation");
+            XmlElement nodeCalibration = doc.CreateElement("Sentience");
             doc.AppendChild(nodeCalibration);
 
             XmlElement elem = getXml(doc, nodeCalibration,
                 device_name,
+                part_number,
+                serial_number,
                 focal_length_pixels,
                 baseline_mm,
                 fov_degrees,
                 image_width, image_height,
                 lens_distortion_curve,
                 centre_of_distortion_x, centre_of_distortion_y,
+                minimum_rms_error,
                 rotation, scale,
                 offset_x, offset_y);
             doc.DocumentElement.AppendChild(elem);
@@ -186,22 +198,27 @@ namespace surveyor.vision
                 polynomial[] lens_distortion_curve = new polynomial[2];
                 float[] centre_of_distortion_x = new float[2];
                 float[] centre_of_distortion_y = new float[2];
+                float[] minimum_rms_error = new float[2];
                 for (int cam = 0; cam < 2; cam++)
                 {
                     lens_distortion_curve[cam] = calibration_survey[cam].best_fit_curve;
                     centre_of_distortion_x[cam] = calibration_survey[cam].centre_of_distortion_x;
                     centre_of_distortion_y[cam] = calibration_survey[cam].centre_of_distortion_y;
+                    minimum_rms_error[cam] = (float)calibration_survey[cam].minimum_rms_error;
                 }
             
                 XmlDocument doc =
                     getXmlDocument(
                         device_name,
+                        part_number,
+                        serial_number,
                         focal_length_pixels,
                         baseline_mm,
                         fov_degrees,
                         image_width, image_height,
                         lens_distortion_curve,
                         centre_of_distortion_x, centre_of_distortion_y,
+                        minimum_rms_error,
                         rotation, scale,
                         offset_x, offset_y);
 
@@ -212,12 +229,15 @@ namespace surveyor.vision
         private static XmlElement getXml(
             XmlDocument doc, XmlElement parent,
             string device_name,
+            string part_number,
+            string serial_number,
             float focal_length_pixels,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
             polynomial[] lens_distortion_curve,
             float[] centre_of_distortion_x, float[] centre_of_distortion_y,
+            float[] minimum_rms_error,
             float rotation, float scale,
             float offset_x, float offset_y)
         {
@@ -234,6 +254,18 @@ namespace surveyor.vision
                 xml.AddTextElement(doc, nodeStereoCamera, "DeviceName", device_name);
             }
 
+            xml.AddComment(doc, nodeStereoCamera, "Supplier of the camera device");
+            xml.AddTextElement(doc, nodeStereoCamera, "SupplierName", "Surveyor Corporation");
+
+            xml.AddComment(doc, nodeStereoCamera, "Part number of the camera device");
+            xml.AddTextElement(doc, nodeStereoCamera, "PartNumber", part_number);
+
+            xml.AddComment(doc, nodeStereoCamera, "Serial number of the camera device");
+            xml.AddTextElement(doc, nodeStereoCamera, "SerialNumber", serial_number);
+
+            xml.AddComment(doc, nodeStereoCamera, "Dimensions of the images in pixels");
+            xml.AddTextElement(doc, nodeStereoCamera, "ImageDimensions", Convert.ToString(image_width) + "x" + Convert.ToString(image_height));
+
             xml.AddComment(doc, nodeStereoCamera, "Focal length in pixels");
             xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthPixels", Convert.ToString(focal_length_pixels, format));
 
@@ -245,24 +277,21 @@ namespace surveyor.vision
             XmlElement nodeCalibration = doc.CreateElement("Calibration");
             nodeStereoCamera.AppendChild(nodeCalibration);
 
-            string offsets = Convert.ToString(offset_x, format) + "," +
+            string offsets = Convert.ToString(offset_x, format) + " " +
                              Convert.ToString(offset_y, format);
             xml.AddComment(doc, nodeCalibration, "Image offsets in pixels due to small missalignment from parallel");
             xml.AddTextElement(doc, nodeCalibration, "Offsets", offsets);
 
-            xml.AddComment(doc, nodeCalibration, "Scaling factor");
-            xml.AddTextElement(doc, nodeCalibration, "Scale", Convert.ToString(scale));
-
             xml.AddComment(doc, nodeCalibration, "Rotation of the right image relative to the left in degrees");
-            xml.AddTextElement(doc, nodeCalibration, "RelativeRotationDegrees", Convert.ToString(rotation / (float)Math.PI * 180.0f));
+            xml.AddTextElement(doc, nodeCalibration, "RelativeRotationDegrees", Convert.ToString(rotation / (float)Math.PI * 180.0f, format));
 
             for (int cam = 0; cam < lens_distortion_curve.Length; cam++)
             {
                 XmlElement elem = getCameraXml(
                     doc, fov_degrees,
-                    image_width, image_height,
                     lens_distortion_curve[cam],
-                    centre_of_distortion_x[cam], centre_of_distortion_y[cam]);
+                    centre_of_distortion_x[cam], centre_of_distortion_y[cam],
+                    minimum_rms_error[cam]);
                 nodeCalibration.AppendChild(elem);
             }
 
@@ -275,18 +304,17 @@ namespace surveyor.vision
         /// </summary>
         /// <param name="doc"></param>
         /// <param name="fov_degrees"></param>
-        /// <param name="image_width"></param>
-        /// <param name="image_height"></param>
         /// <param name="lens_distortion_curve"></param>
         /// <param name="centre_of_distortion_x"></param>
         /// <param name="centre_of_distortion_y"></param>
+        /// <param name="minimum_rms_error"></param>
         /// <returns></returns>
         private static XmlElement getCameraXml(
             XmlDocument doc,
             float fov_degrees,
-            int image_width, int image_height,
             polynomial lens_distortion_curve,
-            float centre_of_distortion_x, float centre_of_distortion_y)
+            float centre_of_distortion_x, float centre_of_distortion_y,
+            float minimum_rms_error)
         {
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
@@ -298,7 +326,7 @@ namespace surveyor.vision
                 for (int i = 0; i <= degree; i++)
                 {
                     coefficients += Convert.ToString(lens_distortion_curve.Coeff(i), format);
-                    if (i < degree) coefficients += ",";
+                    if (i < degree) coefficients += " ";
                 }
             }
             else coefficients = "0,0,0";
@@ -307,20 +335,165 @@ namespace surveyor.vision
             doc.DocumentElement.AppendChild(elem);
             xml.AddComment(doc, elem, "Horizontal field of view of the camera in degrees");
             xml.AddTextElement(doc, elem, "FieldOfViewDegrees", Convert.ToString(fov_degrees, format));
-            xml.AddComment(doc, elem, "Image dimensions in pixels");
-            xml.AddTextElement(doc, elem, "ImageDimensions", Convert.ToString(image_width, format) + "," + Convert.ToString(image_height, format));
             xml.AddComment(doc, elem, "The centre of distortion in pixels");
-            xml.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion_x, format) + "," + Convert.ToString(centre_of_distortion_y, format));
+            xml.AddTextElement(doc, elem, "CentreOfDistortion", Convert.ToString(centre_of_distortion_x, format) + " " + Convert.ToString(centre_of_distortion_y, format));
             xml.AddComment(doc, elem, "Polynomial coefficients used to describe the camera lens distortion");
             xml.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
             xml.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
-            xml.AddTextElement(doc, elem, "RMSerror", Convert.ToString(lens_distortion_curve.GetRMSerror(), format));
+            xml.AddTextElement(doc, elem, "RMSerror", Convert.ToString(minimum_rms_error, format));
 
             return (elem);
         }
 
-
         #endregion        
+
+        #region "loading calibration data from xml"
+
+        /// <summary>
+        /// load camera calibration parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void Load(string filename)
+        {
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+                int cameraIndex = -1;
+                LoadFromXml(xnodDE, 0, ref cameraIndex);
+
+                // trigger calculation of the calibration maps
+                // by resetting them to null
+                calibration_map[0] = null;
+                calibration_map[1] = null;
+
+                // close the reader
+                xtr.Close();
+            }
+        }
+
+        /// <summary>
+        /// reset the calibration for left or right camera
+        /// </summary>
+        /// <param name="camera_index">index number of the camera</param>
+        public void ResetCalibration(int camera_index)
+        {
+            calibration_survey[camera_index].Reset();
+            calibration_map[camera_index] = null;
+        }
+
+        /// <summary>
+        /// parse an xml node to extract camera calibration parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(XmlNode xnod, int level, ref int camera_index)
+        {
+            IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
+
+            if (xnod.Name == "Camera")
+            {
+                camera_index++;
+                calibration_survey[camera_index] = new CalibrationSurvey();
+            }
+            
+            if (xnod.Name == "DeviceName")
+            {
+                device_name = xnod.InnerText;
+            }
+
+            if (xnod.Name == "PartNumber")
+            {
+                part_number = xnod.InnerText;
+            }
+
+            if (xnod.Name == "SerialNumber")
+            {
+                serial_number = xnod.InnerText;
+            }
+
+            if (xnod.Name == "Offsets")
+            {
+                string[] offsets = xnod.InnerText.Split(' ');
+                offset_x = Convert.ToSingle(offsets[0], format);
+                offset_y = Convert.ToSingle(offsets[1], format);
+            }
+
+            if (xnod.Name == "FocalLengthPixels")
+            {
+                focal_length_pixels = Convert.ToSingle(xnod.InnerText, format);
+            }
+
+            if (xnod.Name == "BaselineMillimetres")
+            {
+                baseline_mm = Convert.ToSingle(xnod.InnerText, format);
+            }
+                        
+            if (xnod.Name == "FieldOfViewDegrees")
+                fov_degrees = Convert.ToSingle(xnod.InnerText, format);
+
+            if (xnod.Name == "ImageDimensions")
+            {
+                string[] dimStr = xnod.InnerText.Split('x');
+                image_width = Convert.ToInt32(dimStr[0]);
+                image_height = Convert.ToInt32(dimStr[1]);
+            }
+
+            if (xnod.Name == "CentreOfDistortion")
+            {
+                string[] centreStr = xnod.InnerText.Split(' ');                
+                calibration_survey[camera_index].centre_of_distortion_x =
+                    Convert.ToSingle(centreStr[0], format);
+                calibration_survey[camera_index].centre_of_distortion_y =
+                    Convert.ToSingle(centreStr[1], format);
+            }
+
+            if (xnod.Name == "DistortionCoefficients")
+            {
+                if (xnod.InnerText != "")
+                {
+                    string[] coeffStr = xnod.InnerText.Split(' ');
+                    calibration_survey[camera_index].best_fit_curve = new polynomial();
+                    calibration_survey[camera_index].best_fit_curve.SetDegree(coeffStr.Length - 1);
+                    for (int i = 0; i < coeffStr.Length; i++)
+                        calibration_survey[camera_index].best_fit_curve.SetCoeff(i, Convert.ToSingle(coeffStr[i], format));
+                }
+            }
+
+            if (xnod.Name == "RelativeRotationDegrees")
+            {
+                rotation = Convert.ToSingle(xnod.InnerText, format) / 180.0f * (float)Math.PI;
+            }
+
+            if (xnod.Name == "RMSerror")
+            {
+                calibration_survey[camera_index].minimum_rms_error = Convert.ToSingle(xnod.InnerText, format);
+            }
+
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                XmlNode xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1, ref camera_index);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+
+
+        #endregion
 
         public bool CalibrateFocus()
         {
@@ -404,6 +577,9 @@ namespace surveyor.vision
                 {
                     Bitmap left = istate[0].current_frame;
                     Bitmap right = istate[1].current_frame;
+
+                    image_width = left.Width;
+                    image_height = left.Height;
                     
                     busy_processing = true;
 
@@ -415,7 +591,7 @@ namespace surveyor.vision
                         else
                             dots = SurveyorCalibration.DetectDots(right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
                     }
-                    
+
                     RectifyImages(left, right);
                                                             
                     Process(left, right);
