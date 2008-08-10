@@ -53,6 +53,8 @@ namespace surveyor.vision
 		public bool waiting_for_reply;
 
         public string image_request_command ="I";
+        public string request_320_256 = "b";
+        public string request_640_512 = "c";
         
         public int image_width, image_height;
         public Bitmap current_frame;
@@ -429,11 +431,19 @@ namespace surveyor.vision
 
         public void RequestFrame()
         {            
-            //m_clientSocket..EndReceive(receive_async);
-            
-            //Console.WriteLine("Request " + DateTime.Now.ToString());
             Send(image_request_command);
-            //WaitForData();
+        }
+
+        public void RequestResolution640x512()
+        {            
+            Send(request_640_512);
+            waiting_for_reply = false;
+        }
+
+        public void RequestResolution320x256()
+        {            
+            Send(request_320_256);
+            waiting_for_reply = false;
         }
         
         /// <summary>

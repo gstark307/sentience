@@ -25,14 +25,16 @@ using sluggish.utilities;
 namespace surveyor.vision
 {
     public class StereoVisionCanny : StereoVision
-    {
+    {        
         private EdgeDetectorCanny[] edge_detector;
         private byte[][] edge_img;
         public int vertical_compression = 4;
-        public int max_edges_per_row = 5;
-        public int matching_threshold = 5000;
-        public int max_disparity = 25;
-        const int compare_radius = 2;
+        public int max_edges_per_row = 6;
+        private int matching_threshold = 10000;
+        public int minimum_variance_percent = 5;
+        public int max_disparity = 35;
+        const int compare_radius = 4;
+        private int mean_variance;
     
         public StereoVisionCanny()
         {
@@ -44,22 +46,69 @@ namespace surveyor.vision
         
         private void Supress(List<int> edges, List<int> edges_x, int max_edges, EdgeDetectorCanny detector)
         {
+        
             while (edges.Count > max_edges)
             {
                 int min_index = 0;
                 int min_magnitude = int.MaxValue;
                 for (int i = edges.Count-1; i >= 0; i--)
                 {
-                    if (detector.magnitude[edges[i]] < min_magnitude)
+                    int idx = edges[i];
+                    //Console.WriteLine("idx: " + idx.ToString() + "  " + detector.magnitude.Length.ToString()); 
+                    if (detector.magnitude[idx] < min_magnitude)
                     {
-                        min_magnitude = detector.magnitude[edges[i]];
+                        min_magnitude = detector.magnitude[idx];
                         min_index = i;
                     }
                 }
                 edges.RemoveAt(min_index);
                 edges_x.RemoveAt(min_index);
             }
+            
         }
+
+        /// <summary>
+        /// remove low variance edge features, because we may have difficulty in matching these
+        /// </summary>
+        /// <param name="edges"></param>
+        /// <param name="edges_x"></param>
+        /// <param name="bmp"></param>
+        /// <param name="minimum_variance"></param>
+        private void SupressLowVariance(List<int> edges, List<int> edges_x, 
+                                        byte[] bmp, int minimum_variance,
+                                        ref int current_mean_variance,
+                                        ref int mean_variance_hits)
+        {
+            int pixels = bmp.Length;
+            
+            for (int i = edges.Count-1; i >= 0; i--)
+            {
+                int n = edges[i];
+                
+                if ((n - compare_radius > -1) && (n + compare_radius < pixels))
+                {                
+                    int variance = 0;
+                    for (int x = -compare_radius; x < 0; x++)
+                    {
+                        int nn1 = n + x;
+                        int nn2 = n - x;
+                        int diff = bmp[nn1] - bmp[nn2];
+                        diff += bmp[nn1] - bmp[n + compare_radius + x];
+                        variance += diff * diff;
+                    }
+                    
+                    current_mean_variance += variance;
+                    mean_variance_hits++;
+                    
+                    if (variance < minimum_variance)
+                    {
+                        edges.RemoveAt(i);
+                        edges_x.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// returns a measure of the similarity of two points
@@ -99,7 +148,9 @@ namespace surveyor.vision
                                  List<int> left_edges, List<int> left_edges_x,
                                  List<int> right_edges, List<int> right_edges_x, 
                                  int max_edges,
-                                 int matching_threshold)
+                                 int matching_threshold,
+                                 ref int current_mean_variance,
+                                 ref int mean_variance_hits)
         {
             int pixels = image_width * image_height;
             int max_disparity_pixels = image_width * max_disparity / 100;
@@ -107,6 +158,11 @@ namespace surveyor.vision
             // limit the number of edges
             Supress(left_edges, left_edges_x, max_edges, edge_detector[0]);
             Supress(right_edges, right_edges_x, max_edges, edge_detector[1]);
+            
+            // remove low variance features
+            int minimum_variance = matching_threshold * minimum_variance_percent / 100;
+            SupressLowVariance(left_edges, left_edges_x, edge_img[0], minimum_variance, ref current_mean_variance, ref mean_variance_hits);
+            SupressLowVariance(right_edges, right_edges_x, edge_img[1], minimum_variance, ref current_mean_variance, ref mean_variance_hits);
             
             for (int i = 0; i < left_edges.Count; i++)
             {
@@ -128,6 +184,8 @@ namespace surveyor.vision
         private void Match(int max_edges_per_row, int matching_threshold,
                            int calibration_offset_x, int calibration_offset_y)
         {
+            int current_mean_variance = 0;
+            int mean_variance_hits = 0;
             features.Clear();
             int offset = calibration_offset_x + ((calibration_offset_y / vertical_compression) * image_width);
             int n1 = 0;
@@ -160,7 +218,14 @@ namespace surveyor.vision
                     n2++;
                 }
                 
-                CompareRows(y * vertical_compression, left_edges, left_edges_x, right_edges, right_edges_x, max_edges_per_row, matching_threshold);
+                CompareRows(y * vertical_compression, left_edges, left_edges_x, right_edges, right_edges_x, max_edges_per_row, matching_threshold, 
+                            ref current_mean_variance, ref mean_variance_hits);
+            }
+            
+            if (mean_variance_hits > 0)
+            {
+                current_mean_variance /= mean_variance_hits;
+                matching_threshold = current_mean_variance * 100 / minimum_variance_percent;
             }
         }
 

@@ -40,7 +40,7 @@ namespace surveyor.vision
         public float focal_length_pixels;
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.CANNY;
+        public int stereo_algorithm_type = StereoVision.SIMPLE2;
         
         // whether to record raw camera images
         public bool Record;
@@ -798,6 +798,19 @@ namespace surveyor.vision
                             
                         if (correspondence.algorithm_type != StereoVision.SIMPLE)
                             correspondence = new StereoVisionSimple();
+                            
+                        correspondence.Update(rectified[0], rectified[1],
+                                              -offset_x, offset_y);
+                            
+                        break;
+                    }
+                    case StereoVision.SIMPLE2:
+                    {                      
+                        if (correspondence == null)
+                            correspondence = new StereoVisionSimple2();
+                            
+                        if (correspondence.algorithm_type != StereoVision.SIMPLE2)
+                            correspondence = new StereoVisionSimple2();
                             
                         correspondence.Update(rectified[0], rectified[1],
                                               -offset_x, offset_y);

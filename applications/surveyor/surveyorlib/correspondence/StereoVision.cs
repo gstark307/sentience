@@ -32,6 +32,7 @@ namespace surveyor.vision
         public const int SIMPLE = 0;
         public const int CONTOURS = 1;
         public const int CANNY = 2;
+        public const int SIMPLE2 = 3;
     
         public int algorithm_type;
     

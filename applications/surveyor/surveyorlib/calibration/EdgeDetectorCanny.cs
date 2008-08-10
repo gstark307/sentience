@@ -106,11 +106,11 @@ namespace sluggish.utilities
         private void readLuminance()
         {
             byte[] pixels = sourceImage;
-            int offset = data.Length - 1;
+            int offset = pixels.Length - 1;
             if (pixels.Length == width * height * 3)
             {
                 int n = (width * height) - 1;
-                for (int i = data.Length - 2; i >= 0; i -= 3)
+                for (int i = pixels.Length - 2; i >= 0; i -= 3)
                 {
                     int r = pixels[offset--] & 0xff;
                     int g = pixels[offset--] & 0xff;

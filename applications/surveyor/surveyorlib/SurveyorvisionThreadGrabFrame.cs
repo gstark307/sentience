@@ -72,6 +72,7 @@ namespace surveyor.vision
                         if (diff.TotalMilliseconds > 1000 / state.fps)
                         {                
                             data_last_requested = DateTime.Now;
+                            //state.RequestResolution640x512();
                             state.RequestFrame();                            
                         }
                         break;
@@ -83,6 +84,7 @@ namespace surveyor.vision
                         if (state.synchronisation_pulse)
                         {
                             state.synchronisation_pulse = false;
+                            //state.RequestResolution640x512();
                             state.RequestFrame();
                             //Console.WriteLine("grab " + DateTime.Now.ToString());
                         }
