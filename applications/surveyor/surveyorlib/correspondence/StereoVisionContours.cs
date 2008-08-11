@@ -1,5 +1,5 @@
 /*
-    Sentience 3D Perception System
+    contour based stereo
     Copyright (C) 2000-2007 Bob Mottram
     fuzzgun@gmail.com
 

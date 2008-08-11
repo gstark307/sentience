@@ -45,9 +45,8 @@
     <File name="correspondence/StereoVisionContours.cs" subtype="Code" buildaction="Compile" />
     <File name="correspondence/StereoVisionContoursImage.cs" subtype="Code" buildaction="Compile" />
     <File name="probabilities.cs" subtype="Code" buildaction="Compile" />
-    <File name="correspondence/StereoVisionCanny.cs" subtype="Code" buildaction="Compile" />
     <File name="calibration/EdgeDetectorHaar.cs" subtype="Code" buildaction="Compile" />
-    <File name="correspondence/StereoVisionSimple2.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence/StereoVisionSimpleColour.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

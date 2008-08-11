@@ -40,7 +40,7 @@ namespace surveyor.vision
         public float focal_length_pixels;
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.SIMPLE2;
+        public int stereo_algorithm_type = StereoVision.SIMPLE;
         
         // whether to record raw camera images
         public bool Record;
@@ -804,14 +804,14 @@ namespace surveyor.vision
                             
                         break;
                     }
-                    case StereoVision.SIMPLE2:
-                    {                      
+                    case StereoVision.SIMPLE_COLOUR:
+                    {
                         if (correspondence == null)
-                            correspondence = new StereoVisionSimple2();
+                            correspondence = new StereoVisionSimpleColour();
                             
-                        if (correspondence.algorithm_type != StereoVision.SIMPLE2)
-                            correspondence = new StereoVisionSimple2();
-                            
+                        if (correspondence.algorithm_type != StereoVision.SIMPLE_COLOUR)
+                            correspondence = new StereoVisionSimpleColour();
+
                         correspondence.Update(rectified[0], rectified[1],
                                               -offset_x, offset_y);
                             
@@ -824,19 +824,6 @@ namespace surveyor.vision
                             
                         if (correspondence.algorithm_type != StereoVision.CONTOURS)
                             correspondence = new StereoVisionContours();
-                            
-                        correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y);
-                        
-                        break;
-                    }
-                    case StereoVision.CANNY:
-                    {
-                        if (correspondence == null)
-                            correspondence = new StereoVisionCanny();
-                            
-                        if (correspondence.algorithm_type != StereoVision.CANNY)
-                            correspondence = new StereoVisionCanny();
                             
                         correspondence.Update(rectified[0], rectified[1],
                                               offset_x, offset_y);

@@ -1,5 +1,5 @@
 /*
-    base class for stereo vision based on canny edges
+    simple stereo vision using both luminence and colour
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 

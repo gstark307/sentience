@@ -1,5 +1,5 @@
 /*
-    Sentience 3D Perception System
+    image used for contour stereo
     Copyright (C) 2000-2007 Bob Mottram
     fuzzgun@gmail.com
 

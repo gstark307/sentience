@@ -29,10 +29,9 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVision
     {
-        public const int SIMPLE = 0;
-        public const int CONTOURS = 1;
-        public const int CANNY = 2;
-        public const int SIMPLE2 = 3;
+        public const int SIMPLE = 0;        
+        public const int SIMPLE_COLOUR = 1;
+        public const int CONTOURS = 2;
     
         public int algorithm_type;
     
@@ -93,6 +92,94 @@ namespace surveyor.vision
             
             Update(img[0], img[1], rectified_left.Width, rectified_left.Height,
                    calibration_offset_x, calibration_offset_y);
+        }
+
+        /// <summary>
+        /// convert the given colour image to mono
+        /// </summary>
+        /// <param name="img_colour"></param>
+        /// <param name="img_width"></param>
+        /// <param name="img_height"></param>
+        /// <param name="conversion_type">method for converting to mono</param>
+        /// <returns></returns>
+        protected void monoImage(byte[] img_colour, int img_width, int img_height,
+                                 int conversion_type, ref byte[] output)
+        {
+            byte[] mono_image = null;
+            if (output == null)
+            {
+                mono_image = new byte[img_width * img_height];
+            }
+            else
+            {
+                if (output.Length == img_width * img_height)
+                    mono_image = output;
+                else
+                    mono_image = new byte[img_width * img_height];
+            }
+
+            if (img_colour.Length == mono_image.Length)
+            {
+                for (int i = 0; i < mono_image.Length; i++)
+                    mono_image[i] = img_colour[i];
+            }
+            else
+            {
+                int n = 0;
+                short tot = 0;
+                float luminence = 0;
+
+                for (int i = 0; i < img_width * img_height * 3; i += 3)
+                {
+                    switch (conversion_type)
+                    {
+                        case 0: // magnitude
+                            {
+                                tot = 0;
+                                for (int col = 0; col < 3; col++)
+                                {
+                                    tot += img_colour[i + col];
+                                }
+                                mono_image[n] = (byte)(tot * 0.3333f);
+                                break;
+                            }
+                        case 1: // luminance
+                            {
+                                luminence = ((img_colour[i + 2] * 299) +
+                                             (img_colour[i + 1] * 587) +
+                                             (img_colour[i] * 114)) * 0.001f;
+                                //if (luminence > 255) luminence = 255;
+                                mono_image[n] = (byte)luminence;
+                                break;
+                            }
+                        case 2: // hue
+                            {
+                                int r = img_colour[i + 2];
+                                int g = img_colour[i + 1];
+                                int b = img_colour[i];
+                                
+                                int hue = 0;
+                                int min = 255;
+                                if ((r < g) && (r < b)) min = r;
+                                if ((g < r) && (g < b)) min = g;
+                                if ((b < g) && (b < r)) min = b;
+                                
+                                if ((r > g) && (r > b) && (r - min > 0))
+                                    hue = (60 * (g - b) / (r - min)) % 360; 
+                                if ((b > g) && (b > r) && (b - min > 0))
+                                    hue = (60 * (b - r) / (b - min)) + 120;
+                                if ((g > b) && (g > r) && (g - min > 0))
+                                    hue = (60 * (r - g) / (g - min)) + 240;
+                                hue = hue * 255 / 360;
+                                
+                                mono_image[n] = (byte)hue;                            
+                                break;
+                            }
+                    }
+                    n++;
+                }
+            }
+            output = mono_image;
         }
         
         /// <summary>
