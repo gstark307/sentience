@@ -49,7 +49,7 @@ namespace surveyor.vision
         /// centre y coordinate of the circle <see cref="System.Single"/>
         /// </param>
         /// <param name="radius">
-        /// radius of teh circle <see cref="System.Single"/>
+        /// radius of the circle <see cref="System.Single"/>
         /// </param>
         /// <param name="circumference_steps">
         /// number of steps to use when drawing the circle <see cref="System.Int32"/>

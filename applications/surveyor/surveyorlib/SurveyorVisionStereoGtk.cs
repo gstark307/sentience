@@ -118,7 +118,12 @@ namespace surveyor.vision
                 if (is_left)
                 {
                     if (calibration_map[0] != null)
-                        disp_image = rectified[0];
+                    {
+                        if (stereo_features == null)
+                            disp_image = rectified[0];
+                        else
+                            disp_image = stereo_features;
+                    }
                 }
                 else
                 {
@@ -194,10 +199,12 @@ namespace surveyor.vision
         
         #region "process images"
         
+        /*
         public override void Process(Bitmap left_image, Bitmap right_image)
         {
             DisplayImages(left_image, right_image);
         }
+        */
         
         #endregion
 

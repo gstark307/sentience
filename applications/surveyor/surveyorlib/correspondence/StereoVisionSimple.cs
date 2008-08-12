@@ -55,47 +55,73 @@ namespace surveyor.vision
         public int inhibition_radius_percent = 5;
                 
         // buffers        
-        private byte[] left_bmp_mono;
-        private byte[] right_bmp_mono;
-        private List<int>[] left_row_features;
-        private List<int>[] right_row_features;
-        private int[] row_buffer;
+        protected byte[] left_bmp_mono;
+        protected byte[] right_bmp_mono;
+        protected List<int>[] left_row_features;
+        protected List<int>[] right_row_features;
+        protected int[] row_buffer;
     
         public StereoVisionSimple()
         {
             algorithm_type = SIMPLE;
         }
         
-        private void GetRowFeatures(int start_index, byte[] bmp,
-                                    int[] SSD, 
-                                    int summation_radius,
-                                    int inhibition_radius,
-                                    int minimum_response,
-                                    List<int> row_features)
+        /// <summary>
+        /// updates sum of squared difference values, based upon luminence image
+        /// </summary>
+        /// <param name="start_index">starting pixel index for the row</param>
+        /// <param name="bmp">luminence image</param>
+        /// <param name="SSD">row buffer in which to store the values</param>
+        /// <param name="summation_radius">summing radius</param>
+        protected void UpdateSSD(int start_index, byte[] bmp,
+                                 int[] SSD, 
+                                 int summation_radius)
         {
-            row_features.Clear();
-            
             // clear the buffer
             for (int x = SSD.Length-1; x >= 0; x--) SSD[x] = 0;
         
             // calculate the sum of squared differences for each pixel
             // along the row
+            int diff1, diff2, diff3;
             int n = start_index + SSD.Length - 1 - summation_radius;
             for (int x = SSD.Length - 1 - summation_radius; x >= 0; x--,n--)
             {
                 for (int r = summation_radius; r > 0; r--)
                 {
-                    int diff = bmp[n] - bmp[n+r];
-                    diff *= diff;
+                    diff1 = bmp[n] - bmp[n+r];
+                    diff1 *= diff1;
+                    if (n+r-image_width > -1)
+                    {
+                        diff2 = bmp[n] - bmp[n+r-image_width];
+                        diff2 *= diff2;
+                    }
+                    else diff2=0;
+                    if (n+r+image_width< bmp.Length)
+                    {
+                        diff3 = bmp[n] - bmp[n+r+image_width];
+                        diff3 *= diff3;
+                    }
+                    else diff3=0;
+                    int diff = diff1 + diff2 + diff3;
                     SSD[x] += diff;
                     SSD[x+r] += diff;
                 }                
             }
-            
+        }
+        
+        /// <summary>
+        /// performs non-maximal supression on the given row of SSD values
+        /// </summary>
+        /// <param name="SSD">squared difference values for the row</param>
+        /// <param name="inhibition_radius">radius for local competition</param>
+        protected void NonMaximalSuppression(int[] SSD, int inhibition_radius,
+                                             int min_response)
+        {
             // perform non-maximal supression            
             for (int x = 0; x < SSD.Length - inhibition_radius; x++)
             {
-                if (SSD[x] < minimum_response) SSD[x] = 0;
+                //Console.WriteLine(SSD[x]);
+                if (SSD[x] < min_response) SSD[x] = 0;
                 int v = SSD[x];                
                 if (v > 0)
                 {
@@ -113,12 +139,37 @@ namespace surveyor.vision
                     }
                 }
             }
+        }
+                        
+        /// <summary>
+        /// returns a set of features for the given row
+        /// </summary>
+        /// <param name="start_index">starting pixel index for the row</param>
+        /// <param name="bmp_mono">luminence image data</param>
+        /// <param name="bmp_colour">hue image data</param>
+        /// <param name="SSD">buffer used to store squared differences values</param>
+        /// <param name="summation_radius">radius used for summing differences</param>
+        /// <param name="inhibition_radius">radius used for non maximal supression</param>
+        /// <param name="minimum_response">minimum SSD value</param>
+        /// <param name="row_features">returned feature x coordinates and SSD values</param>
+        protected void GetRowFeatures(int start_index, byte[] bmp,
+                                      int[] SSD, 
+                                      int summation_radius,
+                                      int inhibition_radius,
+                                      int minimum_response,
+                                      List<int> row_features)
+        {
+            row_features.Clear();
             
+            UpdateSSD(start_index, bmp, SSD, summation_radius);
+
+            NonMaximalSuppression(SSD, inhibition_radius, minimum_response);
+
             // store the features
             for (int x = SSD.Length-1-inhibition_radius; x >= 0; x--)
             {
                 if (SSD[x] > 0)
-                {
+                {                
                     row_features.Add(x);
                     row_features.Add(SSD[x]);
                 }
@@ -133,8 +184,8 @@ namespace surveyor.vision
         /// <returns>
         /// sum of squared differences
         /// </returns>
-        private int similarity(int n1, int n2, 
-                               byte[] left_bmp, byte[] right_bmp)
+        protected int similarity(int n1, int n2, 
+                                 byte[] left_bmp, byte[] right_bmp)
         {
             int result = 0;            
             int hits = 0;
@@ -160,12 +211,12 @@ namespace surveyor.vision
             return(result);
         }
         
-        private void MatchFeatures(int y, 
-                                   List<int> left_row_features, 
-                                   List<int> right_row_features,
-                                   float calibration_offset_x,
-                                   float calibration_offset_y,
-                                   byte[] left_bmp, byte[] right_bmp)
+        protected void MatchFeatures(int y, 
+                                     List<int> left_row_features, 
+                                     List<int> right_row_features,
+                                     float calibration_offset_x,
+                                     float calibration_offset_y,
+                                     byte[] left_bmp, byte[] right_bmp)
         {
             int max_disparity_pixels = image_width * max_disparity / 100;
             
@@ -289,7 +340,7 @@ namespace surveyor.vision
                                minimum_response,
                                right_row_features[yy]);
 
-                // test                               
+                // test                
                 //for (int i = 0; i <  left_row_features[yy].Count; i += 2)
                 //    features.Add(new StereoFeature(left_row_features[yy][i], y, 5));
                 //for (int i = 0; i <  right_row_features[yy].Count; i += 2)

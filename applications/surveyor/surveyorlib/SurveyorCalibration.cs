@@ -1247,7 +1247,7 @@ namespace surveyor.vision
             float dot_spacing = image_width / dots_across;
             int dots_down = (int)(image_height / dot_spacing);
 
-            // calculate teh radius of each dot in pixels
+            // calculate the radius of each dot in pixels
             float radius = dot_spacing * 0.5f * dot_radius_percent / 100; 
             
             // draw black dots

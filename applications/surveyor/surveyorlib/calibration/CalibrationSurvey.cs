@@ -36,7 +36,7 @@ namespace surveyor.vision
         // number of updates completed so far
         private int survey_updates;
         
-        // after this number of updates test to find teh minimum rms error
+        // after this number of updates test to find the minimum rms error
         public int test_interval = 10;
         
         // best results

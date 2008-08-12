@@ -40,7 +40,7 @@ namespace surveyor.vision
         public float focal_length_pixels;
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.SIMPLE;
+        public int stereo_algorithm_type = StereoVision.SIMPLE_COLOUR;
         
         // whether to record raw camera images
         public bool Record;
@@ -596,7 +596,7 @@ namespace surveyor.vision
                     }
 
                     RectifyImages(left, right);
-                                                            
+                                         
                     Process(left, right);
                     
                     // save images to file
@@ -786,9 +786,11 @@ namespace surveyor.vision
         /// </summary>
         protected void StereoCorrespondence()
         {
+        
             if ((rectified[0] != null) && 
                 (rectified[1] != null))
             {
+            
                 switch(stereo_algorithm_type)
                 {
                     case StereoVision.SIMPLE:
@@ -841,7 +843,7 @@ namespace surveyor.vision
         #region "process images"
 
         public virtual void Process(Bitmap left_image, Bitmap right_image)
-        {
+        {        
             //if (display_type == DISPLAY_DIFFERENCE) 
             UpdateRawDifference(left_image, right_image);
             DisplayImages(left_image, right_image);

@@ -202,7 +202,7 @@ namespace surveyor.vision
         }
         
         public virtual void Show(ref Bitmap output)
-        {
+        {        
             byte[] output_img = (byte[])img[0].Clone();
             if (output == null)
                 output = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
