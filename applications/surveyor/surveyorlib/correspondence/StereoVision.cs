@@ -41,6 +41,9 @@ namespace surveyor.vision
         // determines the size of stereo features displayed as dots
         public float feature_scale = 0.2f;
         
+        // convert the image to mono befure calling the main update routine
+        protected bool convert_to_mono;
+        
         protected int image_width, image_height;
         protected byte[][] img = new byte[2][];        
 
@@ -89,6 +92,12 @@ namespace surveyor.vision
             
             BitmapArrayConversions.updatebitmap(rectified_left, img[0]);
             BitmapArrayConversions.updatebitmap(rectified_right, img[1]);
+            
+            if (convert_to_mono)
+            {
+               monoImage(img[0], image_width, image_height, 1, ref img[0]);
+               monoImage(img[1], image_width, image_height, 1, ref img[1]);
+            }
             
             Update(img[0], img[1], rectified_left.Width, rectified_left.Height,
                    calibration_offset_x, calibration_offset_y);
@@ -192,18 +201,35 @@ namespace surveyor.vision
         public virtual void Show(byte[] left_bmp, int image_width, int image_height,
                                  byte[] output_bmp)
         {
-            Buffer.BlockCopy(left_bmp, 0, output_bmp, 0, left_bmp.Length);
+            if (left_bmp.Length == output_bmp.Length)
+            {
+                Buffer.BlockCopy(left_bmp, 0, output_bmp, 0, left_bmp.Length);
+            }
+            else
+            {
+                if (left_bmp.Length == output_bmp.Length/3);
+                {
+                    int n = 0;
+                    for (int i = 0; i < output_bmp.Length; i+=3, n++)
+                    {
+                        for (int col=0;col<3;col++)
+                            output_bmp[i+col] = left_bmp[n];
+                    }
+                    
+                }
+            }
             
             for (int i = 0; i < features.Count; i++)
             {
                 StereoFeature f = features[i];
-                drawing.drawSpot(output_bmp, image_width, image_height, (int)f.x, (int)f.y, (int)(f.disparity*feature_scale), 0, 255, 0);
+                //drawing.drawSpot(output_bmp, image_width, image_height, (int)f.x, (int)f.y, (int)(f.disparity*feature_scale), 0, 255, 0);
+                drawing.drawSpotBlended(output_bmp, image_width, image_height, (int)f.x, (int)f.y, (int)(f.disparity*feature_scale), 100, 255, 100);
             }
         }
         
         public virtual void Show(ref Bitmap output)
-        {        
-            byte[] output_img = (byte[])img[0].Clone();
+        {
+            byte[] output_img = new byte[image_width * image_height  * 3];
             if (output == null)
                 output = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             Show(img[0], image_width, image_height, output_img);            

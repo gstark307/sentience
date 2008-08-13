@@ -124,11 +124,12 @@ namespace surveyor.vision
         public StereoVisionContours()
         {
             algorithm_type = CONTOURS;
+            convert_to_mono = true;
             
             required_features = MAX_POINT_FEATURES; ///return all detected features by default
 
-            /// maximum disparity 20% of image width
-            max_disparity = 20;
+            /// maximum disparity 30% of image width
+            max_disparity = 30;
         }
 
         #endregion
@@ -724,7 +725,17 @@ namespace surveyor.vision
 
         public override void Show(ref Bitmap output)
         {
-            byte[] output_img = (byte[])img[0].Clone();
+            byte[] output_img = null;
+            
+            if (img[0].Length == image_width * image_height * 3)
+            {
+                output_img = new byte[image_width*image_height];
+            }
+            else
+            {
+                output_img = new byte[image_width*image_height*3];
+            }
+            
             if (output == null)
                 output = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 
@@ -748,14 +759,20 @@ namespace surveyor.vision
                 int disparity_map_width = disparity_map.Length;
                 int disparity_map_height = disparity_map[0].Length;
 
+Console.WriteLine("pixels : " + img.Length.ToString());
+Console.WriteLine("pixels2: " + (wdth*hght*3).ToString() + " " + wdth.ToString() + "x" + hght.ToString());
+
+
                 int max_disp = max_disparity * (wdth / step_size) / 100;
                 int n = 0;
                 for (int y = 0; y < hght; y++)
                 {
                     int yy = y / (vertical_compression * disparity_map_compression);
+                    //int yy = y * (disparity_map_height*vertical_compression) / hght;
                     for (int x = 0; x < wdth; x++)
                     {
                         int xx = x / (step_size * disparity_map_compression);
+                        //int xx = x * disparity_map_width / wdth;
                         float disp = 0;
 
                         if ((xx < disparity_map_width) &&
@@ -772,9 +789,12 @@ namespace surveyor.vision
                         //    disp = average_disparity_map[xx, yy] * 255 / (average_disparity_hits[xx,yy] * max_disp);
 
                         if (disp < threshold) disp = 0;
-                        img[n] = (byte)disp;
-                        img[n + 1] = (byte)disp;
-                        img[n + 2] = (byte)disp;
+                        if (n+2 < img.Length)
+                        {
+                            img[n] = (byte)disp;
+                            img[n + 1] = (byte)disp;
+                            img[n + 2] = (byte)disp;
+                        }
                         n += 3;
                     }
                 }

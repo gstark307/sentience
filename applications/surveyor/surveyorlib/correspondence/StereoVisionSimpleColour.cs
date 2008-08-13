@@ -45,7 +45,7 @@ namespace surveyor.vision
         public StereoVisionSimpleColour()
         {
             algorithm_type = SIMPLE_COLOUR;
-            matching_threshold *= 2;
+            matching_threshold *= 4;
         }
         
         
@@ -67,40 +67,31 @@ namespace surveyor.vision
             int hits = 0;
             int pixels = left_bmp.Length;
             int diff1, diff2, diff3, d0, d1;
+            int max = pixels - image_width;
             
             for (int x = -compare_radius; x <= compare_radius; x++)
             {
                 int nn1 = n1 + x;
                 int nn2 = n2 + x;
-                if ((nn1 > -1) && (nn2 > -1) &&
-                    (nn1 < pixels) && (nn2 < pixels))
+                if ((nn1 >= image_width) && (nn2 >= image_width) &&
+                    (nn1 < max) && (nn2 < max))
                 {
                     d0 = 0;
                     d1 = 0;
 
                     diff1 = left_bmp[nn1] - right_bmp[nn2];  
-                    d0 += diff1 * diff1;
-                    
-                    if (nn1-image_width > -1)
-                    {
-                        diff2 = left_bmp[nn1-image_width] - right_bmp[nn2 - image_width];  
-                        d0 += diff2 * diff2;
+                    d0 += diff1 * diff1;                    
+                    diff2 = left_bmp[nn1-image_width] - right_bmp[nn2 - image_width];  
+                    d0 += diff2 * diff2;
+                    diff3 = left_bmp[nn1+image_width] - right_bmp[nn2 + image_width];
+                    d0 += diff3 * diff3;
 
-                        diff2 = left_bmp_colour[nn1-image_width] - right_bmp_colour[nn2 - image_width];
-                        d1 += diff2 * diff2;
-                    }
-                    
+                    diff2 = left_bmp_colour[nn1-image_width] - right_bmp_colour[nn2 - image_width];
+                    d1 += diff2 * diff2;
                     diff1 = left_bmp_colour[nn1] - right_bmp_colour[nn2];                      
                     d1 += diff1 * diff1;
-                    
-                    if (nn1+image_width < left_bmp.Length)
-                    {
-                        diff3 = left_bmp[nn1+image_width] - right_bmp[nn2 + image_width];
-                        d0 += diff3 * diff3;
-                        
-                        diff3 = left_bmp_colour[nn1+image_width] - right_bmp_colour[nn2 + image_width];
-                        d1 += diff3 * diff3;
-                    }
+                    diff3 = left_bmp_colour[nn1+image_width] - right_bmp_colour[nn2 + image_width];
+                    d1 += diff3 * diff3;
                     
                     result += (int)((d0 * 3 + d1) * 0.25f);
                 }

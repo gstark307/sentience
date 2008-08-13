@@ -40,7 +40,7 @@ namespace surveyor.vision
         public float focal_length_pixels;
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.SIMPLE_COLOUR;
+        public int stereo_algorithm_type = StereoVision.SIMPLE;
         
         // whether to record raw camera images
         public bool Record;

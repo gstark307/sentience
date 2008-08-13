@@ -64,6 +64,7 @@ namespace surveyor.vision
         public StereoVisionSimple()
         {
             algorithm_type = SIMPLE;
+            convert_to_mono = true;
         }
         
         /// <summary>

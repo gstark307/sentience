@@ -498,11 +498,49 @@ namespace sluggish.utilities
         }
 
 
-        public static void drawSpot(Byte[] img, int img_width, int img_height,
+        public static void drawSpot(byte[] img, int img_width, int img_height,
                                     int x, int y, int radius, int r, int g, int b)
         {
             for (int rr = 1; rr <= radius; rr++)
                 drawCircle(img, img_width, img_height, x, y, rr, r, g, b, 1);
+        }
+
+        public static void drawSpotBlended(byte[] img, int img_width, int img_height,
+                                           float x, float y, float radius, int r, int g, int b)
+        {
+            int tx = (int)(x - radius);
+            int bx = (int)(x + radius);
+            int ty = (int)(y - radius);
+            int by = (int)(y + radius);
+            
+            if ((tx > -1) && (ty > -1) &&
+                (bx < img_width) && (by < img_height))
+            {
+                float radius_sqr = radius * radius;
+                for (int xx = tx; xx <= bx; xx++)
+                {
+                    float dx = x - xx;
+                    dx *= dx;
+                    for (int yy = ty; yy <= by; yy++)
+                    {
+                        float dy = y - yy;
+                        dy *= dy;
+                        
+                        if (dx + dy < radius_sqr)
+                        {
+                            if (((xx % 2 == 0) && (yy % 2 == 0)) ||
+                                ((xx % 2 == 1) && (yy % 2 == 1)))
+                            {
+                                int n = ((yy * img_width) + xx) * 3;
+                                
+                                img[n+2] = (byte)r;
+                                img[n+1] = (byte)g;
+                                img[n] = (byte)b;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         #endregion
