@@ -38,6 +38,12 @@ namespace surveyor.vision
         // stereo features detected
         public List<StereoFeature> features;
         
+        /// <remarks>
+        /// max disparity as a percentage of image width
+        /// in the range 1-100
+        /// </remarks>
+        public int max_disparity = 30;        
+        
         // determines the size of stereo features displayed as dots
         public float feature_scale = 0.2f;
         
@@ -50,6 +56,39 @@ namespace surveyor.vision
         public StereoVision()
         {
             features = new List<StereoFeature>();
+        }
+
+        /// <summary>
+        /// returns the distance for the given stereo disparity
+        /// </summary>
+        /// <param name="disparity_pixels">disparity in pixels</param>
+        /// <param name="focal_length_mm">focal length in millimetres</param>
+        /// <param name="sensor_pixels_per_mm">number of pixels per millimetre on the sensor chip</param>
+        /// <param name="baseline_mm">distance between cameras in millimetres</param>
+        /// <returns>range in millimetres</returns>        
+        public static float DisparityToDistance(float disparity_pixels,
+                                                float focal_length_mm,
+                                                float sensor_pixels_per_mm,
+                                                float baseline_mm)
+        {
+            float focal_length_pixels = focal_length_mm * sensor_pixels_per_mm;
+            float distance_mm = baseline_mm * focal_length_pixels / disparity_pixels;
+            return(distance_mm);
+        }
+
+        /// <summary>
+        /// returns the distance for the given stereo disparity
+        /// </summary>
+        /// <param name="disparity_pixels">disparity in pixels</param>
+        /// <param name="focal_length_pixels">focal length in pixels</param>
+        /// <param name="baseline_mm">distance between cameras in millimetres</param>
+        /// <returns>range in millimetres</returns>        
+        public static float DisparityToDistance(float disparity_pixels,
+                                                float focal_length_pixels,
+                                                float baseline_mm)
+        {
+            float distance_mm = baseline_mm * focal_length_pixels / disparity_pixels;
+            return(distance_mm);
         }
     
         /// <summary>

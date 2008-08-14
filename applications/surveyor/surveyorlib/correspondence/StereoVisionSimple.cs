@@ -29,9 +29,6 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVisionSimple : StereoVision
     {
-        // maximum disparity as a percentage of the image width
-        public int max_disparity = 30;
-        
         // maximum sum of squared differences threshold
         // used when matching left and right images
         public int matching_threshold = 50000;

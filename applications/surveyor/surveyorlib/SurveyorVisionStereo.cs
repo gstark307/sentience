@@ -37,7 +37,9 @@ namespace surveyor.vision
         public string part_number;
         public string serial_number;
         public int image_width, image_height;
-        public float focal_length_pixels;
+        public float focal_length_pixels = 1105.2f;
+        public float focal_length_mm = 3.6f;    // 90 degree FOV lens
+        public float pixels_per_mm = 307;       // density of pixels on the sensor
         public float baseline_mm = 100;
         public float fov_degrees = 90;
         public int stereo_algorithm_type = StereoVision.SIMPLE;
@@ -128,6 +130,7 @@ namespace surveyor.vision
         /// <param name="part_number"></param>
         /// <param name="serial_number"></param>
         /// <param name="focal_length_pixels"></param>
+        /// <param name="focal_length_mm"></param>
         /// <param name="baseline_mm"></param>
         /// <param name="fov_degrees"></param>
         /// <param name="image_width"></param>
@@ -146,6 +149,7 @@ namespace surveyor.vision
             string part_number,
             string serial_number,
             float focal_length_pixels,
+            float focal_length_mm,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
@@ -173,6 +177,7 @@ namespace surveyor.vision
                 part_number,
                 serial_number,
                 focal_length_pixels,
+                focal_length_mm,
                 baseline_mm,
                 fov_degrees,
                 image_width, image_height,
@@ -215,7 +220,8 @@ namespace surveyor.vision
                         device_name,
                         part_number,
                         serial_number,
-                        focal_length_pixels,
+                        focal_length_mm,
+                        pixels_per_mm,
                         baseline_mm,
                         fov_degrees,
                         image_width, image_height,
@@ -234,7 +240,8 @@ namespace surveyor.vision
             string device_name,
             string part_number,
             string serial_number,
-            float focal_length_pixels,
+            float focal_length_mm,
+            float pixels_per_mm,
             float baseline_mm,
             float fov_degrees,
             int image_width, int image_height,
@@ -269,8 +276,11 @@ namespace surveyor.vision
             xml.AddComment(doc, nodeStereoCamera, "Dimensions of the images in pixels");
             xml.AddTextElement(doc, nodeStereoCamera, "ImageDimensions", Convert.ToString(image_width) + "x" + Convert.ToString(image_height));
 
-            xml.AddComment(doc, nodeStereoCamera, "Focal length in pixels");
-            xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthPixels", Convert.ToString(focal_length_pixels, format));
+            xml.AddComment(doc, nodeStereoCamera, "Focal length in millimetres");
+            xml.AddTextElement(doc, nodeStereoCamera, "FocalLengthMillimetres", Convert.ToString(focal_length_mm, format));
+
+            xml.AddComment(doc, nodeStereoCamera, "Sensor density in pixels per millimetre");
+            xml.AddTextElement(doc, nodeStereoCamera, "SensorDensityPixelsPerMillimetre", Convert.ToString(pixels_per_mm, format));
 
             xml.AddComment(doc, nodeStereoCamera, "Camera baseline distance in millimetres");
             xml.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline_mm, format));
@@ -432,9 +442,15 @@ namespace surveyor.vision
                 offset_y = Convert.ToSingle(offsets[1], format);
             }
 
-            if (xnod.Name == "FocalLengthPixels")
+            if (xnod.Name == "FocalLengthMillimetres")
             {
-                focal_length_pixels = Convert.ToSingle(xnod.InnerText, format);
+                focal_length_mm = Convert.ToSingle(xnod.InnerText, format);
+            }
+
+            if (xnod.Name == "SensorDensityPixelsPerMillimetre")
+            {
+                pixels_per_mm = Convert.ToSingle(xnod.InnerText, format);
+                focal_length_pixels = focal_length_mm * pixels_per_mm;
             }
 
             if (xnod.Name == "BaselineMillimetres")

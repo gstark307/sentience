@@ -53,12 +53,6 @@ namespace surveyor.vision
         /// </remarks>
         public int required_features;
 
-        /// <remarks>
-        /// max disparity as a percentage of image width
-        /// in the range 1-100
-        /// </remarks>
-        public int max_disparity;
-
         ///attention map
         public bool[,] attention_map;
 
@@ -127,9 +121,6 @@ namespace surveyor.vision
             convert_to_mono = true;
             
             required_features = MAX_POINT_FEATURES; ///return all detected features by default
-
-            /// maximum disparity 30% of image width
-            max_disparity = 30;
         }
 
         #endregion

@@ -600,18 +600,19 @@ namespace surveyor.vision
             BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified);
         }
 
-        #region "focal length calibration"
+        #region "camera offsets calibration"
         
         /// <summary>
         /// Calculate offsets from observing a distant object
-        /// Here the rays of light from the object to the camera are
-        /// nearly parallel, having less than one pixel of disparity
+        /// Here the rays of light from the object to the camera ideally
+        /// should be parallel, but in practice there is always some
+        /// small missalignment which is measured here as an x and y offset in pixels
         /// </summary>
         /// <param name="rectified_left">left rectified image</param>
         /// <param name="rectified_right">right rectified image</param>
-        /// <param name="best_offset_x"></param>
-        /// <param name="best_offset_y"></param>
-        /// <param name="rotation">relative rotation of the right image to the left</param>
+        /// <param name="best_offset_x">returned x offset in pixels</param>
+        /// <param name="best_offset_y">returned y offset in pixels</param>
+        /// <param name="rotation">relative rotation of the right image to the left in radians</param>
         public static void UpdateOffsets(Bitmap rectified_left, Bitmap rectified_right,
                                          ref float best_offset_x,
                                          ref float best_offset_y,
