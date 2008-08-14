@@ -514,7 +514,7 @@ namespace surveyor.vision
 
         #endregion
 
-        public bool CalibrateFocus()
+        public bool CalibrateCameraAlignment()
         {
             bool done = false;
             if (rectified != null)

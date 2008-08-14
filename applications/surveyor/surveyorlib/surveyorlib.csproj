@@ -39,11 +39,32 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="BitmapArrayConversions.cs" />
+    <Compile Include="calibration\CalibrationDot.cs" />
+    <Compile Include="calibration\CalibrationLink.cs" />
+    <Compile Include="calibration\CalibrationSurvey.cs" />
+    <Compile Include="calibration\drawing.cs" />
+    <Compile Include="calibration\EdgeDetector.cs" />
+    <Compile Include="calibration\EdgeDetectorCanny.cs" />
+    <Compile Include="calibration\EdgeDetectorHaar.cs" />
+    <Compile Include="calibration\geometry.cs" />
+    <Compile Include="calibration\Grid2D.cs" />
+    <Compile Include="calibration\Hypergraph.cs" />
+    <Compile Include="calibration\polygon.cs" />
+    <Compile Include="calibration\polynomial.cs" />
+    <Compile Include="correspondence\StereoFeature.cs" />
+    <Compile Include="correspondence\StereoVision.cs" />
+    <Compile Include="correspondence\StereoVisionContours.cs" />
+    <Compile Include="correspondence\StereoVisionContoursImage.cs" />
+    <Compile Include="correspondence\StereoVisionSimple.cs" />
+    <Compile Include="correspondence\StereoVisionSimpleColour.cs" />
+    <Compile Include="probabilities.cs" />
+    <Compile Include="SurveyorCalibration.cs" />
     <Compile Include="SurveyorVisionClient.cs" />
     <Compile Include="SurveyorVisionStereo.cs" />
     <Compile Include="SurveyorVisionStereoWin.cs" />
     <Compile Include="SurveyorvisionThreadGrabFrame.cs" />
     <Compile Include="SurveyorVisionThreadGrabFrameMulti.cs" />
+    <Compile Include="xml.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

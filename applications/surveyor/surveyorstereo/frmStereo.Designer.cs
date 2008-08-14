@@ -33,6 +33,11 @@ namespace surveyorstereo
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.calibrateLeftCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.calibrateRightCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.calibrateCameraAlignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.recordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -41,7 +46,8 @@ namespace surveyorstereo
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.toolsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(610, 24);
@@ -59,8 +65,9 @@ namespace surveyorstereo
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.closeToolStripMenuItem.Text = "Close";
+            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
             // picLeftImage
             // 
@@ -79,6 +86,45 @@ namespace surveyorstereo
             this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picRightImage.TabIndex = 2;
             this.picRightImage.TabStop = false;
+            // 
+            // toolsToolStripMenuItem
+            // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.calibrateLeftCameraToolStripMenuItem,
+            this.calibrateRightCameraToolStripMenuItem,
+            this.calibrateCameraAlignmentToolStripMenuItem,
+            this.recordToolStripMenuItem});
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+            this.toolsToolStripMenuItem.Text = "Tools";
+            // 
+            // calibrateLeftCameraToolStripMenuItem
+            // 
+            this.calibrateLeftCameraToolStripMenuItem.Name = "calibrateLeftCameraToolStripMenuItem";
+            this.calibrateLeftCameraToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.calibrateLeftCameraToolStripMenuItem.Text = "Calibrate Left Camera";
+            this.calibrateLeftCameraToolStripMenuItem.Click += new System.EventHandler(this.calibrateLeftCameraToolStripMenuItem_Click);
+            // 
+            // calibrateRightCameraToolStripMenuItem
+            // 
+            this.calibrateRightCameraToolStripMenuItem.Name = "calibrateRightCameraToolStripMenuItem";
+            this.calibrateRightCameraToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.calibrateRightCameraToolStripMenuItem.Text = "Calibrate Right Camera";
+            this.calibrateRightCameraToolStripMenuItem.Click += new System.EventHandler(this.calibrateRightCameraToolStripMenuItem_Click);
+            // 
+            // calibrateCameraAlignmentToolStripMenuItem
+            // 
+            this.calibrateCameraAlignmentToolStripMenuItem.Name = "calibrateCameraAlignmentToolStripMenuItem";
+            this.calibrateCameraAlignmentToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.calibrateCameraAlignmentToolStripMenuItem.Text = "Calibrate Camera alignment";
+            this.calibrateCameraAlignmentToolStripMenuItem.Click += new System.EventHandler(this.calibrateCameraAlignmentToolStripMenuItem_Click);
+            // 
+            // recordToolStripMenuItem
+            // 
+            this.recordToolStripMenuItem.Name = "recordToolStripMenuItem";
+            this.recordToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.recordToolStripMenuItem.Text = "Record";
+            this.recordToolStripMenuItem.Click += new System.EventHandler(this.recordToolStripMenuItem_Click);
             // 
             // frmStereo
             // 
@@ -110,6 +156,11 @@ namespace surveyorstereo
         private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
         private System.Windows.Forms.PictureBox picLeftImage;
         private System.Windows.Forms.PictureBox picRightImage;
+        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem calibrateLeftCameraToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem calibrateRightCameraToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem calibrateCameraAlignmentToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem recordToolStripMenuItem;
     }
 }
 

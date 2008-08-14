@@ -160,7 +160,7 @@ public partial class MainWindow: Gtk.Window
         for (int i = 0; i < 100; i++)
             System.Threading.Thread.Sleep(5);
         
-        if (stereo_camera.CalibrateFocus())
+        if (stereo_camera.CalibrateCameraAlignment())
         {
             stereo_camera.Save(calibration_filename);
             

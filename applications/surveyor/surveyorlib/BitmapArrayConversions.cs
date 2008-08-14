@@ -108,6 +108,7 @@ namespace sluggish.utilities
             }
             else
             {
+                
                 // Lock bitmap and retrieve bitmap pixel data pointer
                 bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
                 int currStride = bmpData.Stride;

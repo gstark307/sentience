@@ -22,6 +22,7 @@ using System.Threading;
 using System.Drawing;
 using System.ComponentModel;
 using System.Windows.Forms;
+using sluggish.utilities;
 
 namespace surveyor.vision
 {
@@ -52,52 +53,142 @@ namespace surveyor.vision
 
         // images used for display
         public PictureBox[] display_image;
+        public PictureBox calibration_image;
         public Form window;
+        private byte[] buffer = null;
+
+        private Bitmap OverlayImage(Bitmap bmp, Bitmap overlay, int overlay_width)
+        {
+            Bitmap result = (Bitmap)bmp.Clone();
+            byte[] image_data = new byte[result.Width * result.Height * 3];
+            BitmapArrayConversions.updatebitmap(result, image_data);
+
+            byte[] overlay_data = new byte[overlay.Width * overlay.Height * 3];
+            BitmapArrayConversions.updatebitmap(overlay, overlay_data);
+
+            int overlay_height = overlay.Height * overlay_width / overlay.Width;
+
+            for (int y = 0; y < overlay_height; y++)
+            {
+                int yy = y * overlay.Height / overlay_height;
+                for (int x = 0; x < overlay_width; x++)
+                {
+                    int xx = x * overlay.Width / overlay_width;
+                    int n1 = ((yy * overlay.Width) + xx) * 3;
+                    int n2 = ((y * result.Width) + x) * 3;
+                    for (int col = 0; col < 3; col++)
+                        image_data[n2 + col] = overlay_data[n1 + col];
+                }
+            }
+
+            BitmapArrayConversions.updatebitmap_unsafe(image_data, result);
+            return (result);
+        }
+
+
+        private void DisplayImage(Bitmap img, Bitmap default_image, bool is_left)
+        {
+            Bitmap disp_image = null;
+
+            switch (display_type)
+            {
+                case DISPLAY_RAW: { disp_image = default_image; break; }
+                case DISPLAY_CALIBRATION_DOTS: { disp_image = edges; break; }
+                case DISPLAY_CALIBRATION_GRID: { disp_image = linked_dots; break; }
+                case DISPLAY_CALIBRATION_DIFF: { disp_image = grid_diff; break; }
+                case DISPLAY_RECTIFIED: { if (is_left) disp_image = rectified[0]; else disp_image = rectified[1]; break; }
+            }
+
+            if ((calibration_pattern == null) || (disp_image == null))
+                disp_image = default_image;
+
+            if (calibration_pattern == null)
+            {
+                if (is_left)
+                {
+                    if (calibration_map[0] != null)
+                    {
+                        if (stereo_features == null)
+                            disp_image = rectified[0];
+                        else
+                            disp_image = stereo_features;
+                    }
+                }
+                else
+                {
+                    if (calibration_map[1] != null)
+                        disp_image = rectified[1];
+                }
+            }
+
+            byte[] image_data = new byte[disp_image.Width * disp_image.Height * 3];
+            BitmapArrayConversions.updatebitmap(disp_image, image_data);
+            BitmapArrayConversions.updatebitmap_unsafe(image_data, img);
+        }
+
+
 
         protected override void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
             if (display_image[0] != null)
             {
-                display_image[0].Image = left_image;
+                if (display_image[0].Image == null)
+                    display_image[0].Image = (Bitmap)left_image.Clone();
 
-                try
+                if ((show_left_image) &&
+                    (calibration_pattern != null))
                 {
-                    window.Invoke((MethodInvoker)delegate
-                    {
-                        display_image[0].Refresh();
-                    });
+                    DisplayImage((Bitmap)display_image[0].Image, calibration_pattern, true);
                 }
-                catch
+                else
                 {
+                    DisplayImage((Bitmap)display_image[0].Image, left_image, true);
                 }
+
             }
 
             if (display_image[1] != null)
             {
-                display_image[1].Image = left_image;
+                if (display_image[1].Image == null)
+                    display_image[1].Image = (Bitmap)right_image.Clone();
 
-                try
+                if ((!show_left_image) &&
+                    (calibration_pattern != null))
                 {
-                    window.Invoke((MethodInvoker)delegate
-                    {
-                        display_image[1].Refresh();
-                    });
+                    DisplayImage((Bitmap)display_image[1].Image, calibration_pattern, false);
                 }
-                catch
+                else
                 {
+                    DisplayImage((Bitmap)display_image[1].Image, right_image, false);
                 }
             }
 
+
+            try
+            {
+                window.Invoke((MethodInvoker)delegate
+                {
+                    display_image[0].Refresh();
+                    display_image[1].Refresh();
+                });
+            }
+            catch
+            {
+            }
+            
         }
+
 
         #endregion
 
         #region "process images"
 
+        /*
         public override void Process(Bitmap left_image, Bitmap right_image)
         {
             DisplayImages(left_image, right_image);
         }
+         */
 
         #endregion
 
