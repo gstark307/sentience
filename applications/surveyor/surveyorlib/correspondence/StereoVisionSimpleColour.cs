@@ -1,5 +1,6 @@
 /*
-    
+    simple stereo correspondence based on luminence and colour matching
+    The performance of this algorithm is not much better than luminence only
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 

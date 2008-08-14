@@ -108,6 +108,13 @@ namespace surveyor.vision
             this.image_height = image_height;
         }
 
+        /// <summary>
+        /// main update for stereo correspondence
+        /// </summary>
+        /// <param name="rectified_left">left image bitmap object</param>
+        /// <param name="rectified_right">right image bitmap object</param>
+        /// <param name="calibration_offset_x">horizontal offset from calibration, correcting for non-parallel alignment of the cameras</param>
+        /// <param name="calibration_offset_y">vertical offset from calibration, correcting for non-parallel alignment of the cameras</param>
         public void Update(Bitmap rectified_left, Bitmap rectified_right,
                            float calibration_offset_x, float calibration_offset_y)
         {
@@ -145,11 +152,10 @@ namespace surveyor.vision
         /// <summary>
         /// convert the given colour image to mono
         /// </summary>
-        /// <param name="img_colour"></param>
-        /// <param name="img_width"></param>
-        /// <param name="img_height"></param>
+        /// <param name="img_colour">colour image data</param>
+        /// <param name="img_width">image width</param>
+        /// <param name="img_height">image height</param>
         /// <param name="conversion_type">method for converting to mono</param>
-        /// <returns></returns>
         protected void monoImage(byte[] img_colour, int img_width, int img_height,
                                  int conversion_type, ref byte[] output)
         {
@@ -266,6 +272,10 @@ namespace surveyor.vision
             }
         }
         
+        /// <summary>
+        /// show stereo features or depth map
+        /// </summary>
+        /// <param name="output">bitmap object into which to insert the image</param>
         public virtual void Show(ref Bitmap output)
         {
             byte[] output_img = new byte[image_width * image_height  * 3];
