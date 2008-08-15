@@ -67,50 +67,17 @@ namespace surveyor.vision
             algorithm_type = SIMPLE;
             convert_to_mono = true;
         }
-        
-        /// <summary>
-        /// updates sum of squared difference values, based upon luminence image
-        /// </summary>
-        /// <param name="start_index">starting pixel index for the row</param>
-        /// <param name="bmp">luminence image</param>
-        /// <param name="SSD">row buffer in which to store the values</param>
-        /// <param name="summation_radius">summing radius</param>
-        protected void UpdateSSD(int start_index, byte[] bmp,
-                                 int[] SSD, 
-                                 int summation_radius)
-        {
-            // clear the buffer
-            for (int x = SSD.Length-1; x >= 0; x--) SSD[x] = 0;
-        
-            // calculate the sum of squared differences for each pixel
-            // along the row
-            int diff1, diff2, diff3;
-            int n = start_index + SSD.Length - 1 - summation_radius;
-            for (int x = SSD.Length - 1 - summation_radius; x >= 0; x--,n--)
-            {
-                for (int r = summation_radius; r > 0; r--)
-                {
-                    diff1 = bmp[n] - bmp[n+r];
-                    diff1 *= diff1;
-                    if (n+r-image_width > -1)
-                    {
-                        diff2 = bmp[n] - bmp[n+r-image_width];
-                        diff2 *= diff2;
-                    }
-                    else diff2=0;
-                    if (n+r+image_width< bmp.Length)
-                    {
-                        diff3 = bmp[n] - bmp[n+r+image_width];
-                        diff3 *= diff3;
-                    }
-                    else diff3=0;
-                    int diff = diff1 + diff2 + diff3;
-                    SSD[x] += diff;
-                    SSD[x+r] += diff;
-                }                
-            }
-        }
 
+		/// <summary>
+		/// returns the minimum sum of squared differences for a 3x3
+		/// pixel region, similar to Moravec's operator 
+		/// </summary>
+		/// <see cref="http://www.cim.mcgill.ca/~dparks/CornerDetector/mainMoravec.htm"/>
+		/// <param name="index">centre pixel index</param>
+		/// <param name="bmp">mono image data</param>
+		/// <param name="image_width">width of the image</param>
+		/// <param name="gradient_direction">best responding gradient direction.  This helps to improve matching performance</param>
+		/// <returns>minimum sum of squared differences</returns>
         protected int minSSD(int index, byte[] bmp, int image_width, ref int gradient_direction)
 		{
 			int min = int.MaxValue;
@@ -120,12 +87,14 @@ namespace surveyor.vision
             if ((index > image_width*3) &&
 			    (index < pixels - (image_width*3)))
 			{			
+				// try each direction
 				for (int offset_x = -1; offset_x <= 1; offset_x++)
 				{
 	  			    for (int offset_y = -1; offset_y <= 1; offset_y++)
 				    {
 						if (!((offset_x==0) && (offset_y==0)))
 						{
+							// compare to a 3x3 region
 							int ssd = 0;
 							for (int x = -1; x <= 1; x++)
 							{
@@ -139,10 +108,18 @@ namespace surveyor.vision
 									ssd += diff*diff;
 								}
 							}
+							
+							// less is more!
 							if (ssd < min)
 							{
 								min = ssd;
 								gradient_direction = direction;
+								if (min == 0)
+								{
+									// abandon ship
+									offset_x = 2; 
+									offset_y = 2;
+								}
 							}
 						}
 						direction++;
@@ -160,7 +137,7 @@ namespace surveyor.vision
         /// <param name="SSD">row buffer in which to store the values</param>
         /// <param name="gradient_direction">local gradient direction at each point along the row</param>
         /// <param name="summation_radius">summing radius</param>
-        protected void UpdateSSD2(int start_index, byte[] bmp,
+        protected void UpdateSSD(int start_index, byte[] bmp,
                                  int[] SSD, int[] gradient_direction,
                                  int summation_radius)
         {
@@ -187,6 +164,7 @@ namespace surveyor.vision
         /// </summary>
         /// <param name="SSD">squared difference values for the row</param>
         /// <param name="inhibition_radius">radius for local competition</param>
+        /// <param name="min_response">minimum response value</param>
         protected void NonMaximalSuppression(int[] SSD, int inhibition_radius,
                                              int min_response)
         {
@@ -235,7 +213,7 @@ namespace surveyor.vision
         {
             row_features.Clear();
             
-            UpdateSSD2(start_index, bmp, SSD, gradient_direction, summation_radius);
+            UpdateSSD(start_index, bmp, SSD, gradient_direction, summation_radius);
 
             NonMaximalSuppression(SSD, inhibition_radius, minimum_response);
 
