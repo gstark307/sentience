@@ -57,10 +57,14 @@ namespace surveyor.vision
         // buffers        
         protected byte[] left_bmp_mono;
         protected byte[] right_bmp_mono;
+        protected byte[] left_bmp_mono2;
+        protected byte[] right_bmp_mono2;		
         protected List<int>[] left_row_features;
         protected List<int>[] right_row_features;
         protected int[] row_buffer;
 		protected int[] row_buffer2;
+		protected int[] row_buffer3;
+		protected int[] row_buffer4;
     
         public StereoVisionSimple()
         {
@@ -78,14 +82,16 @@ namespace surveyor.vision
 		/// <param name="image_width">width of the image</param>
 		/// <param name="gradient_direction">best responding gradient direction.  This helps to improve matching performance</param>
 		/// <returns>minimum sum of squared differences</returns>
-        protected int minSSD(int index, byte[] bmp, int image_width, ref int gradient_direction)
+        protected int minSSD(int index, 
+		                     byte[] bmp, int image_width, 
+		                     ref int gradient_direction)
 		{
 			int min = int.MaxValue;
 			int pixels = bmp.Length;
 			int direction = 0;
 			
-            if ((index > image_width*3) &&
-			    (index < pixels - (image_width*3)))
+            if ((index > image_width*4) &&
+			    (index < pixels - (image_width*4)))
 			{			
 				// try each direction
 				for (int offset_x = -1; offset_x <= 1; offset_x++)
@@ -137,7 +143,7 @@ namespace surveyor.vision
         /// <param name="SSD">row buffer in which to store the values</param>
         /// <param name="gradient_direction">local gradient direction at each point along the row</param>
         /// <param name="summation_radius">summing radius</param>
-        protected void UpdateSSD(int start_index, byte[] bmp,
+        protected void UpdateSSD(int start_index, byte[] bmp, int image_width,
                                  int[] SSD, int[] gradient_direction,
                                  int summation_radius)
         {
@@ -204,8 +210,10 @@ namespace surveyor.vision
         /// <param name="inhibition_radius">radius used for non maximal supression</param>
         /// <param name="minimum_response">minimum SSD value</param>
         /// <param name="row_features">returned feature x coordinates and SSD values</param>
-        protected void GetRowFeatures(int start_index, byte[] bmp,
+        protected void GetRowFeatures(int start_index, byte[] bmp, 
+		                              int start_index2, byte[] bmp2,
                                       int[] SSD, int[] gradient_direction,
+		                              int[] SSD2, int[] gradient_direction2,
                                       int summation_radius,
                                       int inhibition_radius,
                                       int minimum_response,
@@ -213,10 +221,21 @@ namespace surveyor.vision
         {
             row_features.Clear();
             
-            UpdateSSD(start_index, bmp, SSD, gradient_direction, summation_radius);
+            UpdateSSD(start_index, bmp, image_width, SSD, gradient_direction, summation_radius);
+            UpdateSSD(start_index2, bmp2, image_width/2, SSD2, gradient_direction2, summation_radius);
 
-            NonMaximalSuppression(SSD, inhibition_radius, minimum_response);
-
+			// combine results on multiple scales
+			int x2 = 0;
+            for (int x = 0; x < SSD2.Length; x++, x2 += 2)
+			{
+				int v = SSD2[x];
+		        SSD[x2] += v;
+				SSD[x2+1] += v;
+			}
+			
+			NonMaximalSuppression(SSD, inhibition_radius, minimum_response);
+            //NonMaximalSuppression(SSD2, inhibition_radius, minimum_response);
+			
             // store the features
             for (int x = SSD.Length-1-inhibition_radius; x >= 0; x--)
             {
@@ -341,7 +360,35 @@ namespace surveyor.vision
                 }
             }
         }
-    
+
+		/// <summary>
+		/// downsamples the given image to half its original size
+		/// </summary>
+		/// <param name="img">mono image data</param>
+		/// <param name="img_width">width of the image</param>
+		/// <param name="img_height">height of the image</param>
+		/// <param name="downsampled">downsampled image</param>
+        protected void DownSample(byte[] img, int img_width, int img_height,
+		                          ref byte[] downsampled)
+		{
+			int width = img_width / 2;
+			int height = img_height / 2;
+			if (downsampled == null) downsampled = new byte[width * height];
+			int n1 = 0;
+			for (int y = 0; y < img_height; y += 2)
+			{
+				int n2 = y * img_width;
+				for (int x = 0; x < img_width; x += 2)
+				{
+					float intensity = 
+						(img[n2] + img[n2+1] + 
+					     img[n2 + img_width] + img[n2 + img_width + 1]) * 0.25f;
+					downsampled[n1] = (byte)intensity;
+					n1++;
+				}
+			}
+		}
+		
         /// <summary>
         /// update stereo correspondence
         /// </summary>
@@ -378,6 +425,10 @@ namespace surveyor.vision
             {
                 row_buffer = new int[image_width];
 				row_buffer2 = new int[image_width];
+				row_buffer3 = new int[image_width/2];
+				row_buffer4 = new int[image_width/2];
+				left_bmp_mono2 = null;
+				right_bmp_mono2 = null;
                 left_row_features = new List<int>[image_height / vertical_compression];
                 right_row_features = new List<int>[image_height / vertical_compression];
                 
@@ -387,6 +438,10 @@ namespace surveyor.vision
                     right_row_features[y] = new List<int>();
                 }
             }
+			
+			// downsample the images to half their original size
+			DownSample(left_bmp_mono, image_width, image_height, ref left_bmp_mono2);
+			DownSample(right_bmp_mono, image_width, image_height, ref right_bmp_mono2);
             
             int inhibition_radius = image_width * inhibition_radius_percent / 100;
             int n = 0;
@@ -395,12 +450,19 @@ namespace surveyor.vision
                 int yy = y / vertical_compression;
                 if ((y > 4) && (y < image_height-5))
 				{
-	                GetRowFeatures(n, left_bmp_mono, row_buffer, row_buffer2, 
+					int n2 = (y/2) * (image_width/2);
+	                GetRowFeatures(n, left_bmp_mono, 
+					               n2, left_bmp_mono2, 
+					               row_buffer, row_buffer2, 
+					               row_buffer3, row_buffer4,
 	                               summation_radius, inhibition_radius,
 	                               minimum_response,
 	                               left_row_features[yy]);
 	                
-	                GetRowFeatures(n, right_bmp_mono, row_buffer, row_buffer2,
+	                GetRowFeatures(n, right_bmp_mono, 
+					               n2, right_bmp_mono2, 
+					               row_buffer, row_buffer2,
+					               row_buffer3, row_buffer4,
 	                               summation_radius, inhibition_radius,
 	                               minimum_response,
 	                               right_row_features[yy]);

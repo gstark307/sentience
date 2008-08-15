@@ -275,6 +275,10 @@ namespace surveyor.vision
                         right_row_features[y] = new List<int>();
                     }
                 }
+				
+  			    // downsample the images to half their original size
+			    DownSample(left_bmp_mono, image_width, image_height, ref left_bmp_mono2);
+			    DownSample(right_bmp_mono, image_width, image_height, ref right_bmp_mono2);				
                 
                 int inhibition_radius = image_width * inhibition_radius_percent / 100;
                 int inhibition_radius_colour = image_width * inhibition_radius_colour_percent / 100;
@@ -282,14 +286,21 @@ namespace surveyor.vision
                 int n = image_width * vertical_compression;
                 for (int y = vertical_compression; y < image_height-vertical_compression; y+=vertical_compression)
                 {
+					int n2 = (y/2) * (image_width/2);
                     int yy = y / vertical_compression;
 
-                    GetRowFeatures(n, left_bmp_mono, row_buffer, row_buffer2,
+                    GetRowFeatures(n, left_bmp_mono,
+					               n2, left_bmp_mono2, 
+					               row_buffer, row_buffer2,
+					               row_buffer3, row_buffer4,
                                    summation_radius, inhibition_radius,
                                    minimum_response,
                                    left_row_features[yy]);
                     
-                    GetRowFeatures(n, right_bmp_mono, row_buffer, row_buffer2,
+                    GetRowFeatures(n, right_bmp_mono, 
+					               n2, right_bmp_mono2,
+					               row_buffer, row_buffer2,
+					               row_buffer3, row_buffer4,
                                    summation_radius, inhibition_radius,
                                    minimum_response,
                                    right_row_features[yy]);
