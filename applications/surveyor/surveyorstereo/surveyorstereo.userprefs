@@ -11,7 +11,7 @@
     <File name="../surveyorlib/correspondence/StereoVisionContours.cs" line="337" column="1" />
     <File name="../surveyorlib/correspondence/StereoVisionContoursImage.cs" line="38" column="1" />
     <File name="../surveyorlib/probabilities.cs" line="99" column="38" />
-    <File name="../surveyorlib/correspondence/StereoVisionSimpleColour.cs" line="242" column="30" />
+    <File name="../surveyorlib/correspondence/StereoVisionSimpleColour.cs" line="4" column="14" />
     <File name="../surveyorlib/correspondence/StereoVision.cs" line="1" column="1" />
     <File name="../surveyorlib/calibration/polygon.cs" line="52" column="26" />
     <File name="../surveyorlib/calibration/EdgeDetectorCanny.cs" line="1" column="1" />
@@ -26,14 +26,10 @@
             <Node name="StereoVisionSimpleColour.cs" selected="True" />
           </Node>
         </Node>
-        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
       <Node expanded="True" />
-    </ViewMemento>
-    <ViewMemento id="MonoDevelop.NUnit.TestPad">
-      <Node />
     </ViewMemento>
   </Views>
   <Properties>

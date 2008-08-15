@@ -284,12 +284,12 @@ namespace surveyor.vision
                 {
                     int yy = y / vertical_compression;
 
-                    GetRowFeatures(n, left_bmp_mono, row_buffer, 
+                    GetRowFeatures(n, left_bmp_mono, row_buffer, row_buffer2,
                                    summation_radius, inhibition_radius,
                                    minimum_response,
                                    left_row_features[yy]);
                     
-                    GetRowFeatures(n, right_bmp_mono, row_buffer, 
+                    GetRowFeatures(n, right_bmp_mono, row_buffer, row_buffer2,
                                    summation_radius, inhibition_radius,
                                    minimum_response,
                                    right_row_features[yy]);
