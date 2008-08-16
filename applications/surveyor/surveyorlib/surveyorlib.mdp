@@ -47,6 +47,10 @@
     <File name="probabilities.cs" subtype="Code" buildaction="Compile" />
     <File name="calibration/EdgeDetectorHaar.cs" subtype="Code" buildaction="Compile" />
     <File name="correspondence/StereoVisionSimpleColour.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence/FAST.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence/FASTline.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence/FASTcorner.cs" subtype="Code" buildaction="Compile" />
+    <File name="correspondence/StereoVisionGeometric.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

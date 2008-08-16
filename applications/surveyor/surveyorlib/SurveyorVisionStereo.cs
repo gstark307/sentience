@@ -848,6 +848,19 @@ namespace surveyor.vision
                         
                         break;
                     }
+                    case StereoVision.GEOMETRIC:
+                    {
+                        if (correspondence == null)
+                            correspondence = new StereoVisionGeometric();
+                            
+                        if (correspondence.algorithm_type != StereoVision.GEOMETRIC)
+                            correspondence = new StereoVisionGeometric();
+
+                        correspondence.Update(rectified[0], rectified[1],
+                                              offset_x, offset_y);
+                        
+                        break;
+                    }
                 }
                 
                 correspondence.Show(ref stereo_features);
@@ -861,7 +874,7 @@ namespace surveyor.vision
         public virtual void Process(Bitmap left_image, Bitmap right_image)
         {        
             //if (display_type == DISPLAY_DIFFERENCE) 
-            UpdateRawDifference(left_image, right_image);
+            //UpdateRawDifference(left_image, right_image);
             DisplayImages(left_image, right_image);
             StereoCorrespondence();
         }

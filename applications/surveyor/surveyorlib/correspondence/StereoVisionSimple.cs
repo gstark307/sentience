@@ -30,13 +30,15 @@ namespace surveyor.vision
     public class StereoVisionSimple : StereoVision
     {
 		// matching threshold used to kill off stragglers
-        public int similarity_threshold_percent = 50;		
+        public int similarity_threshold_percent = 50;
 		
         // absolute maximum sum of squared differences threshold
         // used when matching left and right images
         public int matching_threshold = 900000;
         
-        // radius in pixels to use when evaluating match quality
+        // radius to use when evaluating match quality
+		// this is a percentage of the possible disparity value
+		// so that bold claims (big disparities) require bold evidence
         public int compare_radius = 100;
         
         // we don't need to sample every row to get
@@ -226,7 +228,6 @@ namespace surveyor.vision
 			}
 			
 			NonMaximalSuppression(SSD, inhibition_radius, minimum_response);
-            //NonMaximalSuppression(SSD2, inhibition_radius, minimum_response);
 			
             // store the features
             for (int x = SSD.Length-1-inhibition_radius; x >= 0; x--)
@@ -425,7 +426,7 @@ namespace surveyor.vision
 				}
 			}
 		}
-		
+
         /// <summary>
         /// update stereo correspondence
         /// </summary>
@@ -436,6 +437,24 @@ namespace surveyor.vision
         /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
         /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
         public override void Update(byte[] left_bmp, byte[] right_bmp,
+                                    int image_width, int image_height,
+                                    float calibration_offset_x, float calibration_offset_y)
+        {
+			UpdateSimple(left_bmp, right_bmp,
+			             image_width, image_height,
+			             calibration_offset_x, calibration_offset_y);
+		}
+		
+        /// <summary>
+        /// update stereo correspondence
+        /// </summary>
+        /// <param name="left_bmp">rectified left image data</param>
+        /// <param name="right_bmp">rectified right_image_data</param>
+        /// <param name="image_width">width of the image</param>
+        /// <param name="image_height">height of the image</param>
+        /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
+        /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
+        protected void UpdateSimple(byte[] left_bmp, byte[] right_bmp,
                                     int image_width, int image_height,
                                     float calibration_offset_x, float calibration_offset_y)
         {

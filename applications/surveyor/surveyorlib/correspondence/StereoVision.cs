@@ -32,6 +32,7 @@ namespace surveyor.vision
         public const int SIMPLE = 0;        
         public const int SIMPLE_COLOUR = 1;
         public const int CONTOURS = 2;
+		public const int GEOMETRIC = 3;
     
         public int algorithm_type;
     
@@ -267,7 +268,6 @@ namespace surveyor.vision
             for (int i = 0; i < features.Count; i++)
             {
                 StereoFeature f = features[i];
-                //drawing.drawSpot(output_bmp, image_width, image_height, (int)f.x, (int)f.y, (int)(f.disparity*feature_scale), 0, 255, 0);
                 drawing.drawSpotBlended(output_bmp, image_width, image_height, (int)f.x, (int)f.y, (int)(f.disparity*feature_scale), 100, 255, 100);
             }
         }
