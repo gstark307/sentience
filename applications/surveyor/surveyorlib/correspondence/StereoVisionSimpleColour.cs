@@ -32,12 +32,9 @@ namespace surveyor.vision
     {
         public int minimum_response_colour = 45;
         
-        // radius in pixels to use for sum of squared differences
-        public int summation_radius_colour = 15;
-        
         // inhibition radius for non-maximal supression
         // as a percentage of the image width
-        public int inhibition_radius_colour_percent = 15;
+        public int inhibition_radius_colour_percent = 2;
 
         // buffers
         private byte[] left_bmp_colour;
@@ -47,6 +44,8 @@ namespace surveyor.vision
         {
             algorithm_type = SIMPLE_COLOUR;
             matching_threshold *= 4;
+			convert_to_mono = false;
+			similarity_threshold_percent = 70;
         }
         
         
@@ -250,9 +249,16 @@ namespace surveyor.vision
                 monoImage(left_bmp, image_width, image_height, 2, ref left_bmp_colour);
                 monoImage(right_bmp, image_width, image_height, 2, ref right_bmp_colour);
 
+				// create mono image buffers
+                if (left_bmp_mono == null)
+				{
+					left_bmp_mono = new byte[2][];
+					right_bmp_mono = new byte[2][];
+			    }
+				
                 // get luminence images
-                monoImage(left_bmp, image_width, image_height, 1, ref left_bmp_mono);
-                monoImage(right_bmp, image_width, image_height, 1, ref right_bmp_mono);
+                monoImage(left_bmp, image_width, image_height, 1, ref left_bmp_mono[0]);
+                monoImage(right_bmp, image_width, image_height, 1, ref right_bmp_mono[0]);
                 
                 // create some buffers
                 bool create_buffers = false;
@@ -265,7 +271,11 @@ namespace surveyor.vision
                 }
                 if (create_buffers)
                 {
-                    row_buffer = new int[image_width];
+				    row_buffer = new int[4][];
+                    row_buffer[0] = new int[image_width];
+				    row_buffer[1] = new int[image_width];
+				    row_buffer[2] = new int[image_width/2];
+				    row_buffer[3] = new int[image_width/2];
                     left_row_features = new List<int>[image_height / vertical_compression];
                     right_row_features = new List<int>[image_height / vertical_compression];
                     
@@ -277,8 +287,8 @@ namespace surveyor.vision
                 }
 				
   			    // downsample the images to half their original size
-			    DownSample(left_bmp_mono, image_width, image_height, ref left_bmp_mono2);
-			    DownSample(right_bmp_mono, image_width, image_height, ref right_bmp_mono2);				
+			    DownSample(left_bmp_mono[0], image_width, image_height, ref left_bmp_mono[1]);
+			    DownSample(right_bmp_mono[0], image_width, image_height, ref right_bmp_mono[1]);				
                 
                 int inhibition_radius = image_width * inhibition_radius_percent / 100;
                 int inhibition_radius_colour = image_width * inhibition_radius_colour_percent / 100;
@@ -289,19 +299,19 @@ namespace surveyor.vision
 					int n2 = (y/2) * (image_width/2);
                     int yy = y / vertical_compression;
 
-                    GetRowFeatures(n, left_bmp_mono,
-					               n2, left_bmp_mono2, 
-					               row_buffer, row_buffer2,
-					               row_buffer3, row_buffer4,
-                                   summation_radius, inhibition_radius,
+                    GetRowFeatures(n, left_bmp_mono[0],
+					               n2, left_bmp_mono[1], 
+					               row_buffer[0], row_buffer[1],
+					               row_buffer[2], row_buffer[3],
+                                   inhibition_radius,
                                    minimum_response,
                                    left_row_features[yy]);
                     
-                    GetRowFeatures(n, right_bmp_mono, 
-					               n2, right_bmp_mono2,
-					               row_buffer, row_buffer2,
-					               row_buffer3, row_buffer4,
-                                   summation_radius, inhibition_radius,
+                    GetRowFeatures(n, right_bmp_mono[0], 
+					               n2, right_bmp_mono[1],
+					               row_buffer[0], row_buffer[1],
+					               row_buffer[2], row_buffer[3],
+                                   inhibition_radius,
                                    minimum_response,
                                    right_row_features[yy]);
 
@@ -314,12 +324,15 @@ namespace surveyor.vision
                     n += (image_width * vertical_compression);
                 }
 
+  			    // perform some vertical suppression
+			    VerticalSuppression(left_row_features,3);
+			    VerticalSuppression(right_row_features,3);
 
                 Match(left_row_features, right_row_features,
                       calibration_offset_x, calibration_offset_y,
-                      left_bmp_mono, right_bmp_mono,
+                      left_bmp_mono[0], right_bmp_mono[0],
                       left_bmp_colour, right_bmp_colour,
-                      40);
+                      similarity_threshold_percent);
 
             }
             else Console.WriteLine("You must supply colour images");
