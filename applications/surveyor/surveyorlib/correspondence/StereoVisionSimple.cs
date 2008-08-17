@@ -51,7 +51,7 @@ namespace surveyor.vision
         
         // inhibition radius for non-maximal supression
         // along each row as a percentage of the image width
-        public int inhibition_radius_percent = 2;
+        public int inhibition_radius_percent = 3;
                 
         // luminence images at two scales (full size and half size)      
         protected byte[][] left_bmp_mono;
@@ -257,10 +257,11 @@ namespace surveyor.vision
             int result = 0;            
             int hits = 0;
             int pixels = left_bmp.Length;
-            int radius = possible_disparity * compare_radius / 100;
-			if (radius < 2) radius = 2;
+            int horizontal_radius = possible_disparity * compare_radius / 100;
+			if (horizontal_radius < 2) horizontal_radius = 2;
+			int vertical_radius = 2;
 			
-            for (int x = -radius; x <= radius; x++)
+            for (int x = -horizontal_radius; x <= horizontal_radius; x++)
             {
                 int nn1 = n1 + x;
                 int nn2 = n2 + x;
@@ -277,6 +278,50 @@ namespace surveyor.vision
                     break;
                 }
             }
+
+			if (result < int.MaxValue)
+			{
+	            for (int y = -vertical_radius; y <= vertical_radius; y++)
+	            {
+					int offset = y * image_width;
+	                int nn1 = n1 + offset;
+	                int nn2 = n2 + offset;
+	                if ((nn1 > -1) && (nn2 > -1) &&
+	                    (nn1 < pixels) && (nn2 < pixels))
+	                {
+	                    int nn3 = n1 + horizontal_radius + offset;
+	                    int nn4 = n2 + horizontal_radius + offset;
+  	                    if ((nn3 > -1) && (nn4 > -1) &&
+	                        (nn3 < pixels) && (nn4 < pixels))
+	                    {
+	                        int nn5 = n1 - horizontal_radius + offset;
+	                        int nn6 = n2 - horizontal_radius + offset;
+  	                        if ((nn3 > -1) && (nn4 > -1) &&
+	                            (nn3 < pixels) && (nn4 < pixels))
+	                        {
+	                            int diff = left_bmp[nn1] - right_bmp[nn2];  
+	                            result += diff * diff;
+	                            diff = left_bmp[nn3] - right_bmp[nn4];  
+	                            result += diff * diff;
+	                            diff = left_bmp[nn5] - right_bmp[nn6];  
+	                            result += diff * diff;
+						        hits++;
+							}
+						}
+		                else
+		                {
+		                    result = int.MaxValue;
+		                    break;
+		                }
+	                }
+	                else
+	                {
+	                    result = int.MaxValue;
+	                    break;
+	                }
+	            }
+			}
+			
 			if (hits > 0) result /= hits;
             
             return(result);
