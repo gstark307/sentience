@@ -1,10 +1,9 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/surveyorstereo/surveyorstereo.mds">
   <Files>
     <File name="Welcome" />
-    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="262" column="27" />
+    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="261" column="1" />
     <File name="../surveyorlib/correspondence/StereoVisionGeometric.cs" line="79" column="1" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="48" column="28" />
-    <File name="../surveyorlib/correspondence/StereoVision.cs" line="49" column="43" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="445" column="29" />
     <File name="MainWindow.cs" line="3" column="35" />
   </Files>
   <Views>
@@ -19,6 +18,9 @@
     </ViewMemento>
     <ViewMemento id="ClassPad">
       <Node expanded="True" />
+    </ViewMemento>
+    <ViewMemento id="MonoDevelop.NUnit.TestPad">
+      <Node />
     </ViewMemento>
   </Views>
   <Properties>

@@ -122,8 +122,8 @@ namespace surveyor.vision
         /// <param name="right_bmp">right image</param>
         /// <param name="threshold_percent">threshold used to remove probably bad matches, in gthe range 0-100</param>        
         protected void MatchFeatures(int y, 
-                                     List<int> left_row_features, 
-                                     List<int> right_row_features,
+                                     List<float> left_row_features, 
+                                     List<float> right_row_features,
                                      float calibration_offset_x,
                                      float calibration_offset_y,
                                      byte[] left_bmp, byte[] right_bmp,
@@ -132,26 +132,26 @@ namespace surveyor.vision
         {
             int max_disparity_pixels = image_width * max_disparity / 100;
             
-            List<int> candidate_matches = new List<int>();
+            List<float> candidate_matches = new List<float>();
             int average_similarity = 0;
             int hits = 0;
 
             for (int i = 0; i < left_row_features.Count; i += 2)
             {
-                int x_left = left_row_features[i];
+                float x_left = left_row_features[i];
                 int min_variance = int.MaxValue;
-                int best_disparity = 0;
+                float best_disparity = 0;
                 int best_index = -1;
                 for (int j = 0; j < right_row_features.Count; j += 2)
                 {
-                    int x_right = right_row_features[j];
+                    float x_right = right_row_features[j];
 
-                    int disparity = x_left - x_right + (int)calibration_offset_x;
+                    float disparity = x_left - x_right + (int)calibration_offset_x;
                     if ((disparity >= 0) && (disparity < max_disparity_pixels))
                     {
                     
-                        int n1 = (y * image_width) + x_left;
-                        int n2 = ((y+(int)calibration_offset_y) * image_width) + x_right;
+                        int n1 = (y * image_width) + (int)x_left;
+                        int n2 = ((y+(int)calibration_offset_y) * image_width) + (int)x_right;
                         
                         int v = similarity(n1, n2, left_bmp, right_bmp,
                                            left_bmp_colour, right_bmp_colour);
@@ -184,8 +184,8 @@ namespace surveyor.vision
                 {
                     if (candidate_matches[i] < threshold)
                     {
-                        int x_left = candidate_matches[i+1];
-                        int disparity = candidate_matches[i+2];
+                        float x_left = candidate_matches[i+1];
+                        float disparity = candidate_matches[i+2];
                         features.Add(new StereoFeature(x_left, y, disparity));
                     }
                 }
@@ -202,8 +202,8 @@ namespace surveyor.vision
         /// <param name="left_bmp">left image</param>
         /// <param name="right_bmp">right image</param>
         /// <param name="threshold_percent">threshold used to remove probably bad matches, in gthe range 0-100</param>        
-        private void Match(List<int>[] left_row_features,
-                           List<int>[] right_row_features,
+        private void Match(List<float>[] left_row_features,
+                           List<float>[] right_row_features,
                            float calibration_offset_x, float calibration_offset_y,
                            byte[] left_bmp, byte[] right_bmp,
                            byte[] left_bmp_colour, byte[] right_bmp_colour,
@@ -276,13 +276,14 @@ namespace surveyor.vision
 				    row_buffer[1] = new int[image_width];
 				    row_buffer[2] = new int[image_width/2];
 				    row_buffer[3] = new int[image_width/2];
-                    left_row_features = new List<int>[image_height / vertical_compression];
-                    right_row_features = new List<int>[image_height / vertical_compression];
+				    row_buffer[4] = new int[image_width];
+                    left_row_features = new List<float>[image_height / vertical_compression];
+                    right_row_features = new List<float>[image_height / vertical_compression];
                     
                     for (int y = 0; y < image_height / vertical_compression; y++)
                     {
-                        left_row_features[y] = new List<int>();
-                        right_row_features[y] = new List<int>();
+                        left_row_features[y] = new List<float>();
+                        right_row_features[y] = new List<float>();
                     }
                 }
 				
@@ -303,6 +304,7 @@ namespace surveyor.vision
 					               n2, left_bmp_mono[1], 
 					               row_buffer[0], row_buffer[1],
 					               row_buffer[2], row_buffer[3],
+					               row_buffer[4],
                                    inhibition_radius,
                                    minimum_response,
                                    left_row_features[yy]);
@@ -311,6 +313,7 @@ namespace surveyor.vision
 					               n2, right_bmp_mono[1],
 					               row_buffer[0], row_buffer[1],
 					               row_buffer[2], row_buffer[3],
+                                   row_buffer[4],
                                    inhibition_radius,
                                    minimum_response,
                                    right_row_features[yy]);
