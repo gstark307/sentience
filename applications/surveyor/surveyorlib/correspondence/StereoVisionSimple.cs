@@ -256,20 +256,23 @@ namespace surveyor.vision
         {
             int result = 0;            
             int hits = 0;
-            int pixels = left_bmp.Length;
+            int pixels = left_bmp.Length - image_width;
             int horizontal_radius = possible_disparity * compare_radius / 100;
-			if (horizontal_radius < 2) horizontal_radius = 2;
-			int vertical_radius = 2;
-			
+			if (horizontal_radius < 2) horizontal_radius = 2;			
+
+			// calculate an average pixel intensity value
+			// for the left and right search areas
+			int left_average_intensity = 0;
+			int right_average_intensity = 0;				
             for (int x = -horizontal_radius; x <= horizontal_radius; x++)
             {
                 int nn1 = n1 + x;
                 int nn2 = n2 + x;
-                if ((nn1 > -1) && (nn2 > -1) &&
+                if ((nn1 > image_width) && (nn2 > image_width) &&
                     (nn1 < pixels) && (nn2 < pixels))
                 {
-                    int diff = left_bmp[nn1] - right_bmp[nn2];  
-                    result += diff * diff;
+                    left_average_intensity += left_bmp[nn1];
+					right_average_intensity += right_bmp[nn2];  
 					hits++;
                 }
                 else
@@ -278,41 +281,32 @@ namespace surveyor.vision
                     break;
                 }
             }
-
-			if (result < int.MaxValue)
+			
+			// compare pixels in the left and right search regions and calculate
+			// a sum of squared differences
+			// note that we also compensate for difference in average pixel intensity
+			if ((hits > 0) && (result < int.MaxValue))
 			{
-	            for (int y = -vertical_radius; y <= vertical_radius; y++)
+				left_average_intensity /= hits;
+				right_average_intensity /= hits;
+				int relative_intensity_difference = right_average_intensity - left_average_intensity;
+				
+			    hits = 0;
+			
+	            for (int x = -horizontal_radius; x <= horizontal_radius; x++)
 	            {
-					int offset = y * image_width;
-	                int nn1 = n1 + offset;
-	                int nn2 = n2 + offset;
-	                if ((nn1 > -1) && (nn2 > -1) &&
+	                int nn1 = n1 + x;
+	                int nn2 = n2 + x;
+	                if ((nn1 > image_width) && (nn2 > image_width) &&
 	                    (nn1 < pixels) && (nn2 < pixels))
 	                {
-	                    int nn3 = n1 + horizontal_radius + offset;
-	                    int nn4 = n2 + horizontal_radius + offset;
-  	                    if ((nn3 > -1) && (nn4 > -1) &&
-	                        (nn3 < pixels) && (nn4 < pixels))
-	                    {
-	                        int nn5 = n1 - horizontal_radius + offset;
-	                        int nn6 = n2 - horizontal_radius + offset;
-  	                        if ((nn3 > -1) && (nn4 > -1) &&
-	                            (nn3 < pixels) && (nn4 < pixels))
-	                        {
-	                            int diff = left_bmp[nn1] - right_bmp[nn2];  
-	                            result += diff * diff;
-	                            diff = left_bmp[nn3] - right_bmp[nn4];  
-	                            result += diff * diff;
-	                            diff = left_bmp[nn5] - right_bmp[nn6];  
-	                            result += diff * diff;
-						        hits++;
-							}
-						}
-		                else
-		                {
-		                    result = int.MaxValue;
-		                    break;
-		                }
+	                    int diff = left_bmp[nn1] - (right_bmp[nn2] - relative_intensity_difference);  
+	                    result += diff * diff;
+	                    diff = left_bmp[nn1-image_width] - (right_bmp[nn2-image_width] - relative_intensity_difference);  
+	                    result += diff * diff;
+	                    diff = left_bmp[nn1+image_width] - (right_bmp[nn2+image_width] - relative_intensity_difference);  
+	                    result += diff * diff;
+						hits++;
 	                }
 	                else
 	                {
@@ -423,51 +417,6 @@ namespace surveyor.vision
 					     img[n2 + img_width] + img[n2 + img_width + 1]) * 0.25f;
 					downsampled[n1] = (byte)intensity;
 					n1++;
-				}
-			}
-		}
-		
-		/// <summary>
-		/// Performs some vertical suppression between rows
-		/// For each row of features we examine the subsequent row of features.
-		/// If a feature exists at a similar horizontal position (x coordinate)
-		/// and if it has a significantly larger sum of squared differences value
-		/// then we remove the weaker feature
-		/// </summary>
-		/// <param name="features">lists storing the features detected on each row</param>
-		/// <param name="horizontal_radius">horizontal distance within which features on successive rows will be compared</param>
-		protected void VerticalSuppression(List<int>[] features,
-		                                   int horizontal_radius)
-		{
-			for (int y = 0; y < features.Length-1; y++)
-			{
-				// examine each feature on the row
-				for (int f1 = features[y].Count-3; f1 >= 0 ; f1 -= 3)
-				{
-					int x1 = features[y][f1];
-					int max_response = features[y][f1 + 1] * 2;
-					
-					// check all features on the subsequent row
-				    for (int f2 = features[y+1].Count-3; f2 >= 0; f2 -= 3)
-				    {
-					    int x2 = features[y+1][f2];
-						int horizontal_diff = x2 - x1;
-						
-						// compare the horizontal position of the two features
-						if ((horizontal_diff > -horizontal_radius) &&
-						    (horizontal_diff < horizontal_radius))
-						{
-							// does this feature have a sum of squared differences
-							// response greater than the maximum ?
-						    if (features[y+1][f2 + 1] > max_response)
-							{
-								// remove this weak feature
-								features[y+1].RemoveAt(f2 + 2);
-								features[y+1].RemoveAt(f2 + 1);
-								features[y+1].RemoveAt(f2);
-							}
-						}
-					}
 				}
 			}
 		}
@@ -585,10 +534,6 @@ namespace surveyor.vision
                 n += (image_width * vertical_compression);
             }
 			
-			// perform some vertical suppression
-			VerticalSuppression(left_row_features,3);
-			VerticalSuppression(right_row_features,3);
-
             for (int y_left = 0; y_left < left_row_features.Length; y_left++)
             {
                 int y_right = y_left + (int)calibration_offset_y;

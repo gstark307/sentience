@@ -324,10 +324,6 @@ namespace surveyor.vision
                     n += (image_width * vertical_compression);
                 }
 
-  			    // perform some vertical suppression
-			    VerticalSuppression(left_row_features,3);
-			    VerticalSuppression(right_row_features,3);
-
                 Match(left_row_features, right_row_features,
                       calibration_offset_x, calibration_offset_y,
                       left_bmp_mono[0], right_bmp_mono[0],
