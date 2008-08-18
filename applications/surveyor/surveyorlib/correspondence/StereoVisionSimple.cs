@@ -53,7 +53,7 @@ namespace surveyor.vision
         // along each row as a percentage of the image width
         public int inhibition_radius_percent = 3;
         
-        protected const int ideal_number_of_features = 100;
+        protected const int ideal_number_of_features = 1000;
                 
         // luminence images at two scales (full size and half size)      
         protected byte[][] left_bmp_mono;
@@ -575,8 +575,8 @@ namespace surveyor.vision
             // adaptation of the minimum response to try
             // to maintain a reasonable number of stereo features
             if ((features.Count < ideal_number_of_features * 90 / 100) &&
-                (minimum_response > 1000))
-                minimum_response -= 10;
+                (minimum_response > 700))
+                minimum_response -= 50;
             if (features.Count > ideal_number_of_features * 110 / 100)
                 minimum_response += 10;
             

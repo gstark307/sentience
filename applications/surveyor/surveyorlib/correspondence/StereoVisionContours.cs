@@ -750,10 +750,6 @@ namespace surveyor.vision
                 int disparity_map_width = disparity_map.Length;
                 int disparity_map_height = disparity_map[0].Length;
 
-Console.WriteLine("pixels : " + img.Length.ToString());
-Console.WriteLine("pixels2: " + (wdth*hght*3).ToString() + " " + wdth.ToString() + "x" + hght.ToString());
-
-
                 int max_disp = max_disparity * (wdth / step_size) / 100;
                 int n = 0;
                 for (int y = 0; y < hght; y++)
