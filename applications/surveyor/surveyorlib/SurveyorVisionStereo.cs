@@ -42,7 +42,7 @@ namespace surveyor.vision
         public float pixels_per_mm = 307;       // density of pixels on the sensor
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.SIMPLE;
+        public int stereo_algorithm_type = StereoVision.DENSE;
         
         // whether to record raw camera images
         public bool Record;
@@ -621,6 +621,11 @@ namespace surveyor.vision
                         RecordFrameNumber++;
                         left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                         right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                        if ((rectified[0] != null) && (rectified[0] != null))
+                        {
+                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                        }
                     }
                     
                     busy_processing = false;
@@ -855,6 +860,19 @@ namespace surveyor.vision
                             
                         if (correspondence.algorithm_type != StereoVision.GEOMETRIC)
                             correspondence = new StereoVisionGeometric();
+
+                        correspondence.Update(rectified[0], rectified[1],
+                                              offset_x, offset_y);
+                        
+                        break;
+                    }
+                    case StereoVision.DENSE:
+                    {
+                        if (correspondence == null)
+                            correspondence = new StereoVisionDense();
+                            
+                        if (correspondence.algorithm_type != StereoVision.DENSE)
+                            correspondence = new StereoVisionDense();
 
                         correspondence.Update(rectified[0], rectified[1],
                                               offset_x, offset_y);

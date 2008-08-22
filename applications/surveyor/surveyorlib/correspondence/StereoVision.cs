@@ -31,8 +31,9 @@ namespace surveyor.vision
     {
         public const int SIMPLE = 0;        
         public const int SIMPLE_COLOUR = 1;
-        public const int CONTOURS = 2;
-		public const int GEOMETRIC = 3;
+		public const int DENSE = 2;
+        public const int CONTOURS = 3;
+		public const int GEOMETRIC = 4;
     
         public int algorithm_type;
     
@@ -43,7 +44,7 @@ namespace surveyor.vision
         /// max disparity as a percentage of image width
         /// in the range 1-100
         /// </remarks>
-        public int max_disparity = 30;        
+        public int max_disparity = 20;        
         
         // determines the size of stereo features displayed as dots
         public float feature_scale = 0.2f;
