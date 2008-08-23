@@ -44,7 +44,7 @@ namespace surveyor.vision
         /// max disparity as a percentage of image width
         /// in the range 1-100
         /// </remarks>
-        public int max_disparity = 20;        
+        public int max_disparity = 30;        
         
         // determines the size of stereo features displayed as dots
         public float feature_scale = 0.2f;

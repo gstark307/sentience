@@ -30,14 +30,14 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVisionDense : StereoVision
     {
-        public double max_difference = 10000000000;
-        public double min_difference = 1000;
+        public double max_difference = 1000000000;
+        public double min_difference = 2000;
         public double a = 20;
         public double[] frequency = { 0.02, 0.04 };
         public int vertical_compression = 4;
-        public int minimum_intensity = 40;
-        public int no_of_masks = 10;
-        public int position_search_radius = 10;
+        public int minimum_intensity = 30;
+        public int no_of_masks = 4;
+        public int position_search_radius = 20;
 
         public byte[] disparity_map;
 
@@ -440,15 +440,20 @@ namespace surveyor.vision
             int diff, ssd = 1;
             int n1 = (left_y * image_width) + left_x - radius;
             int n2 = (right_y * image_width) + right_x - radius;
-            if ((n1 >-1) && (n2 > -1) &&
+            if ((n1 > image_width) && (n2 > image_width) &&
                 (n1 + radius*2 < left_img.Length) &&
                 (n2 + radius*2 < right_img.Length))
             {
+                int hits = 0;
                 for (int x = (radius*2)-1; x >= 0; x--, n1++, n2++)
                 {
                     diff = left_img[n1] - right_img[n2];
                     ssd += diff * diff;
+                    diff = left_img[n1-image_width] - right_img[n2-image_width];
+                    ssd += diff * diff;
+                    hits++;
                 }
+                if (hits > 0) ssd /= hits;
             }
             else ssd = int.MaxValue;
             return(ssd);
@@ -488,7 +493,7 @@ namespace surveyor.vision
                         if (x2 > position_search_radius)
                         {
                             posn_diff = 1 + PointSimilarity1D(y, y2, left_img, right_img, disparity.Length,
-                                                              x, x2, position_search_radius);
+                                                              x, x2, 1 + (position_search_radius*d/max_disparity_pixels));
                                                               
                             v = 0;
                             for (b = no_of_banks-1; b >= 0; b--)
@@ -526,7 +531,7 @@ namespace surveyor.vision
                         if (x2 > position_search_radius)
                         {
                             posn_diff = 1 + PointSimilarity1D(y, y2, left_img, right_img, disparity.Length,
-                                                              x2, x, position_search_radius);
+                                                              x2, x, 1 + (position_search_radius*d/max_disparity_pixels));
                                                               
                             v = 0;
                             for (b = no_of_banks-1; b >= 0; b--)
@@ -681,7 +686,7 @@ namespace surveyor.vision
                                 for (int x = 0; x < image_width; x++, n += 3)
                                 {
                                     byte disp = (byte)(disparity[x] * 255 / max_disparity_pixels);
-                                    if (disp > 200) disp = 0;
+                                    if (disp > 240) disp = 0;
                                     disparity_map[n] = disp;
                                     disparity_map[n + 1] = disp;
                                     disparity_map[n + 2] = disp;
