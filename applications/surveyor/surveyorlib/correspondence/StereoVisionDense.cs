@@ -26,19 +26,38 @@ using sluggish.utilities;
 namespace surveyor.vision
 {
     /// <summary>
-    /// contour based stereo correspondence algorithm
+    /// dense stereo correspondence based upon 1D gabor filtering and anticorrelation
     /// </summary>
     public class StereoVisionDense : StereoVision
     {
+        // maximum sum of squared differences value
         public double max_difference = 1000000000;
+        
+        // minimum sum of squared differences value
         public double min_difference = 2000;
+        
+        // defines the size of gabor filters
         public double a = 20;
+        
+        // frequencies used to create gabor filters
         public double[] frequency = { 0.02, 0.04 };
+        
+        // we don't need to match each image row to get a reasonable depth map
+        // sub-sampling from the vertical resolution helps to speed things up 
         public int vertical_compression = 4;
+        
+        // minimum intensity for stereo matching in the 0-255 range
+        // Dark pixels are often not worth attempting to match
+        // because they are heavily corrupted by noise
         public int minimum_intensity = 30;
+        
+        // number of phase offsets of the gabor filter
         public int no_of_masks = 4;
+        
+        // position disparity maximum window size in pixels
         public int position_search_radius = 20;
 
+        // disparity map image
         public byte[] disparity_map;
 
         #region "constructors"
@@ -729,7 +748,7 @@ namespace surveyor.vision
 
             const int min_phase_degrees = -90;
             const int max_phase_degrees = 90;
-            double b = a * 30 / 100;
+            double b = a * 50 / 100;
 
             MatchImages(left_bmp, right_bmp, wdth, hght,
                         no_of_masks, a, b,
