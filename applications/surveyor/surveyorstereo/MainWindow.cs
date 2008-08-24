@@ -28,7 +28,7 @@ using sluggish.utilities.gtk;
 public partial class MainWindow: Gtk.Window
 {
     int image_width = 320;
-    int image_height = 256;
+    int image_height = 240;
     string stereo_camera_IP = "169.254.0.10";
     string calibration_filename = "calibration.xml";
          
@@ -174,4 +174,16 @@ public partial class MainWindow: Gtk.Window
         // restart the cameras
         stereo_camera.Run();
     }
+
+    protected virtual void OnCmdSimpleStereoClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.stereo_algorithm_type = StereoVision.SIMPLE;
+    }
+
+    protected virtual void OnCmdDenseStereoClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.stereo_algorithm_type = StereoVision.DENSE;
+    }
+
+
 }

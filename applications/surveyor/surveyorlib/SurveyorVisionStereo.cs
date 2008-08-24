@@ -827,32 +827,6 @@ namespace surveyor.vision
                             
                         break;
                     }
-                    case StereoVision.SIMPLE_COLOUR:
-                    {
-                        if (correspondence == null)
-                            correspondence = new StereoVisionSimpleColour();
-                            
-                        if (correspondence.algorithm_type != StereoVision.SIMPLE_COLOUR)
-                            correspondence = new StereoVisionSimpleColour();
-
-                        correspondence.Update(rectified[0], rectified[1],
-                                              -offset_x, offset_y);
-                            
-                        break;
-                    }
-                    case StereoVision.CONTOURS:
-                    {
-                        if (correspondence == null)
-                            correspondence = new StereoVisionContours();
-                            
-                        if (correspondence.algorithm_type != StereoVision.CONTOURS)
-                            correspondence = new StereoVisionContours();
-                            
-                        correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y);
-                        
-                        break;
-                    }
                     case StereoVision.GEOMETRIC:
                     {
                         if (correspondence == null)

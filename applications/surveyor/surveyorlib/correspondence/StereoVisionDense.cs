@@ -84,8 +84,8 @@ namespace surveyor.vision
         /// <param name="img_height"></param>
         /// <param name="conversion_type">method for converting to mono</param>
         /// <returns></returns>
-        private static unsafe byte[] monoImage(byte[] img_colour, int img_width, int img_height,
-                                              int conversion_type, byte[] output)
+        private static byte[] monoImage(byte[] img_colour, int img_width, int img_height,
+                                        int conversion_type, byte[] output)
         {
             byte[] mono_image = null;
             if (output == null)
@@ -111,37 +111,30 @@ namespace surveyor.vision
                 short tot = 0;
                 int luminence = 0;
 
-                //fixed (byte* unsafe_mono_image = mono_image)
+                for (int i = 0; i < img_width * img_height * 3; i += 3)
                 {
-                    //fixed (byte* unsafe_img_colour = img_colour)
+                    switch (conversion_type)
                     {
-                        for (int i = 0; i < img_width * img_height * 3; i += 3)
-                        {
-                            switch (conversion_type)
+                        case 0: // magnitude
                             {
-                                case 0: // magnitude
-                                    {
-                                        tot = 0;
-                                        for (int col = 0; col < 3; col++)
-                                        {
-                                            tot += img_colour[i + col];
-                                        }
-                                        mono_image[n] = (byte)(tot / 3);
-                                        break;
-                                    }
-                                case 1: // luminance
-                                    {
-                                        luminence = ((img_colour[i + 2] * 299) +
-                                                     (img_colour[i + 1] * 587) +
-                                                     (img_colour[i] * 114)) / 1000;
-                                        //if (luminence > 255) luminence = 255;
-                                        mono_image[n] = (byte)luminence;
-                                        break;
-                                    }
+                                tot = 0;
+                                for (int col = 0; col < 3; col++)
+                                {
+                                    tot += img_colour[i + col];
+                                }
+                                mono_image[n] = (byte)(tot / 3);
+                                break;
                             }
-                            n++;
-                        }
+                        case 1: // luminance
+                            {
+                                luminence = ((img_colour[i + 2] * 299) +
+                                             (img_colour[i + 1] * 587) +
+                                             (img_colour[i] * 114)) / 1000;
+                                mono_image[n] = (byte)luminence;
+                                break;
+                            }
                     }
+                    n++;
                 }
             }
             return (mono_image);
@@ -164,6 +157,72 @@ namespace surveyor.vision
         #region "gabor filters"
 
 
+        #region "these functions are unused, but might be useful for 2D gabor filtering or visualisation"
+
+        /// <summary>
+        /// returns a 2D mask for a gabor filter
+        /// </summary>
+        /// <see cref="http://mplab.ucsd.edu/tutorials/pdfs/gabor.pdf"/>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="frequency"></param>
+        /// <param name="phase_degrees"></param>
+        /// <param name="orientation_degrees"></param>
+        /// <param name="mean"></param>
+        /// <returns>2D mask</returns>
+        private static double[,] GaborFilter(double a, double b, 
+                                            double frequency, 
+                                            double phase_degrees, 
+                                            double orientation_degrees,
+                                            ref double mean)
+        {
+            double orientation = orientation_degrees * Math.PI / 180f;
+            double phase = phase_degrees * Math.PI / 180f;
+            int size;
+            if (a > b)
+                size = (int)a;
+            else
+                size = (int)b;
+            size *= 2;
+            size++;
+
+            double[,] weight = new double[size, size];
+            double[,] mask = new double[size, size];
+
+            int xx = 0;
+            for (int x = -size/2; x <= size / 2; x++) 
+            {
+                int yy = 0;
+                for (int y = -size/2; y <= size / 2; y++) 
+                {
+                    double radius = Math.Sqrt(x * x + y * y);
+                    double theta = Math.Atan2(y, x);
+
+                    double xp = x * Math.Cos(orientation) + y * Math.Sin(orientation);
+                    double yp = y * Math.Cos(orientation) - x * Math.Sin(orientation);
+                    double v = Math.Exp((-1 * Math.PI * (xp * xp / a / a + yp * yp / b / b)));
+                    weight[xx, yy] = v;
+                    mask[xx, yy] = v * Math.Sin(phase + (2 * Math.PI * frequency * radius * Math.Cos(theta - orientation)));
+                    yy++;
+                }
+                xx++;
+            }
+  
+            //calculate mean
+            double sum = 0;
+            double weightSum = 0;
+            for (int c = 0; c < size; c++) 
+            {
+                for (int d = 0; d < size; d++) 
+                {
+                    sum += mask[c, d];
+                    weightSum += weight[c, d];
+                }
+            }
+            mean = sum / weightSum;
+            return (mask);
+        }
+        
         public static void ShowGaborFilter(byte[] img, int image_width, int image_height,
                                            int tx, int ty, int bx, int by,
                                            double a, double b, double frequency, 
@@ -243,6 +302,8 @@ namespace surveyor.vision
             }
             return (filters);
         }
+        
+        #endregion
 
         /// <summary>
         /// creates a bank of 1D gabor filters
@@ -279,69 +340,6 @@ namespace surveyor.vision
             return (filters);
         }
 
-        /// <summary>
-        /// returns a 2D mask for a gabor filter
-        /// </summary>
-        /// <see cref="http://mplab.ucsd.edu/tutorials/pdfs/gabor.pdf"/>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <param name="frequency"></param>
-        /// <param name="phase_degrees"></param>
-        /// <param name="orientation_degrees"></param>
-        /// <param name="mean"></param>
-        /// <returns>2D mask</returns>
-        private static double[,] GaborFilter(double a, double b, 
-                                            double frequency, 
-                                            double phase_degrees, 
-                                            double orientation_degrees,
-                                            ref double mean)
-        {
-            double orientation = orientation_degrees * Math.PI / 180f;
-            double phase = phase_degrees * Math.PI / 180f;
-            int size;
-            if (a > b)
-                size = (int)a;
-            else
-                size = (int)b;
-            size *= 2;
-            size++;
-
-            double[,] weight = new double[size, size];
-            double[,] mask = new double[size, size];
-
-            int xx = 0;
-            for (int x = -size/2; x <= size / 2; x++) 
-            {
-                int yy = 0;
-                for (int y = -size/2; y <= size / 2; y++) 
-                {
-                    double radius = Math.Sqrt(x * x + y * y);
-                    double theta = Math.Atan2(y, x);
-
-                    double xp = x * Math.Cos(orientation) + y * Math.Sin(orientation);
-                    double yp = y * Math.Cos(orientation) - x * Math.Sin(orientation);
-                    double v = Math.Exp((-1 * Math.PI * (xp * xp / a / a + yp * yp / b / b)));
-                    weight[xx, yy] = v;
-                    mask[xx, yy] = v * Math.Sin(phase + (2 * Math.PI * frequency * radius * Math.Cos(theta - orientation)));
-                    yy++;
-                }
-                xx++;
-            }
-  
-            //calculate mean
-            double sum = 0;
-            double weightSum = 0;
-            for (int c = 0; c < size; c++) 
-            {
-                for (int d = 0; d < size; d++) 
-                {
-                    sum += mask[c, d];
-                    weightSum += weight[c, d];
-                }
-            }
-            mean = sum / weightSum;
-            return (mask);
-        }
 
         /// <summary>
         /// returns a 1D mask for a gabor filter

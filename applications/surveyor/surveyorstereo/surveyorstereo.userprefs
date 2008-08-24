@@ -2,19 +2,19 @@
   <Files>
     <File name="Welcome" />
     <File name="../surveyorlib/correspondence/StereoVisionGeometric.cs" line="79" column="1" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="28" column="2" />
-    <File name="MainWindow.cs" line="10" column="1" />
-    <File name="../surveyorlib/correspondence/StereoVisionDense.cs" line="18" column="3" />
-    <File name="../surveyorlib/correspondence/StereoVision.cs" line="46" column="23" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="831" column="22" />
+    <File name="MainWindow.cs" line="179" column="6" />
+    <File name="../surveyorlib/correspondence/StereoVisionDense.cs" line="19" column="1" />
+    <File name="../surveyorlib/correspondence/StereoVision.cs" line="35" column="5" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="surveyorlib" expanded="True">
-          <Node name="correspondence" expanded="True">
-            <Node name="StereoVisionDense.cs" selected="True" />
-          </Node>
+          <Node name="correspondence" expanded="True" />
+          <Node name="SurveyorVisionStereo.cs" selected="True" />
         </Node>
+        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -25,7 +25,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/correspondence/StereoVisionDense.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/SurveyorVisionStereo.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

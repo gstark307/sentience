@@ -40,6 +40,12 @@ public partial class MainWindow {
     
     private Gtk.Button cmdCalibrateFocus;
     
+    private Gtk.HBox hbox3;
+    
+    private Gtk.Button cmdSimpleStereo;
+    
+    private Gtk.Button cmdDenseStereo;
+    
     protected virtual void Build() {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
@@ -68,7 +74,6 @@ public partial class MainWindow {
         this.WindowPosition = ((Gtk.WindowPosition)(4));
         // Container child MainWindow.Gtk.Container+ContainerChild
         this.vbox1 = new Gtk.VBox();
-        this.vbox1.Name = "vbox1";
         this.vbox1.Spacing = 6;
         // Container child vbox1.Gtk.Box+BoxChild
         w1.AddUiFromString("<ui><menubar name='menubar1'><menu action='FileAction'><menuitem action='ExitAction'/></menu><menu action='ToolsAction'><menuitem action='RecordImagesAction'/></menu></menubar></ui>");
@@ -151,6 +156,38 @@ public partial class MainWindow {
         w12.Position = 2;
         w12.Expand = false;
         w12.Fill = false;
+        // Container child vbox1.Gtk.Box+BoxChild
+        this.hbox3 = new Gtk.HBox();
+        this.hbox3.Name = "hbox3";
+        this.hbox3.Spacing = 6;
+        // Container child hbox3.Gtk.Box+BoxChild
+        this.cmdSimpleStereo = new Gtk.Button();
+        this.cmdSimpleStereo.CanFocus = true;
+        this.cmdSimpleStereo.Name = "cmdSimpleStereo";
+        this.cmdSimpleStereo.UseUnderline = true;
+        this.cmdSimpleStereo.Label = Mono.Unix.Catalog.GetString("Simple Stereo");
+        this.hbox3.Add(this.cmdSimpleStereo);
+        Gtk.Box.BoxChild w13 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
+        w13.Position = 0;
+        w13.Expand = false;
+        w13.Fill = false;
+        // Container child hbox3.Gtk.Box+BoxChild
+        this.cmdDenseStereo = new Gtk.Button();
+        this.cmdDenseStereo.CanFocus = true;
+        this.cmdDenseStereo.Name = "cmdDenseStereo";
+        this.cmdDenseStereo.UseUnderline = true;
+        this.cmdDenseStereo.Label = Mono.Unix.Catalog.GetString("Dense Stereo");
+        this.hbox3.Add(this.cmdDenseStereo);
+        Gtk.Box.BoxChild w14 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
+        w14.Position = 1;
+        w14.Expand = false;
+        w14.Fill = false;
+        this.vbox1.Add(this.hbox3);
+        Gtk.Box.BoxChild w15 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
+        w15.PackType = ((Gtk.PackType)(1));
+        w15.Position = 3;
+        w15.Expand = false;
+        w15.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
@@ -165,5 +202,7 @@ public partial class MainWindow {
         this.chkCalibrate.Clicked += new System.EventHandler(this.OnChkCalibrateClicked);
         this.chkCalibrateRight.Clicked += new System.EventHandler(this.OnChkCalibrateRightClicked);
         this.cmdCalibrateFocus.Clicked += new System.EventHandler(this.OnCmdCalibrateFocusClicked);
+        this.cmdSimpleStereo.Clicked += new System.EventHandler(this.OnCmdSimpleStereoClicked);
+        this.cmdDenseStereo.Clicked += new System.EventHandler(this.OnCmdDenseStereoClicked);
     }
 }
