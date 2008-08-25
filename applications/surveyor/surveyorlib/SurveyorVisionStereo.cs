@@ -42,7 +42,7 @@ namespace surveyor.vision
         public float pixels_per_mm = 307;       // density of pixels on the sensor
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.DENSE;
+        public int stereo_algorithm_type = StereoVision.SIMPLE;
         
         // whether to record raw camera images
         public bool Record;
@@ -580,7 +580,7 @@ namespace surveyor.vision
         
         #region "callbacks"
 
-        private bool busy_processing;
+        protected bool busy_processing;
 
         /// <summary>
         /// both images have arrived and are awaiting processing
@@ -592,16 +592,16 @@ namespace surveyor.vision
             if ((istate[0].current_frame != null) && 
                 (istate[1].current_frame != null))
             {
+
+                Bitmap left = istate[0].current_frame;
+                Bitmap right = istate[1].current_frame;
+
+                image_width = left.Width;
+                image_height = left.Height;
+                
                 if (!busy_processing)
                 {
-                    Bitmap left = istate[0].current_frame;
-                    Bitmap right = istate[1].current_frame;
-
-                    image_width = left.Width;
-                    image_height = left.Height;
-                    
                     busy_processing = true;
-
                     if (calibration_pattern != null)
                     {
                         hypergraph dots = null;
@@ -750,13 +750,15 @@ namespace surveyor.vision
                 }
             }
 
-            byte[] left_img = new byte[left_image.Width * left_image.Height * 3];
-            byte[] right_img = new byte[left_image.Width * left_image.Height * 3];
+            int pixels = left_image.Width * left_image.Height * 3;
+
+            byte[] left_img = new byte[pixels];
+            byte[] right_img = new byte[pixels];
 
             BitmapArrayConversions.updatebitmap(left_image, left_img);
             BitmapArrayConversions.updatebitmap(right_image, right_img);
             
-            byte[] raw_difference_img = new byte[left_image.Width * left_image.Height * 3];
+            byte[] raw_difference_img = new byte[pixels];
             int n = 0;
             int cam = 0;
             int w = left_image.Width;
@@ -860,7 +862,7 @@ namespace surveyor.vision
         }
         
         #endregion
-        
+       
         #region "process images"
 
         public virtual void Process(Bitmap left_image, Bitmap right_image)

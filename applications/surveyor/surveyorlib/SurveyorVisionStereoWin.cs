@@ -57,6 +57,7 @@ namespace surveyor.vision
         public Form window;
         private byte[] buffer = null;
 
+/*
         private Bitmap OverlayImage(Bitmap bmp, Bitmap overlay, int overlay_width)
         {
             Bitmap result = (Bitmap)bmp.Clone();
@@ -84,7 +85,7 @@ namespace surveyor.vision
             BitmapArrayConversions.updatebitmap_unsafe(image_data, result);
             return (result);
         }
-
+*/
 
         private void DisplayImage(Bitmap img, Bitmap default_image, bool is_left)
         {
@@ -126,8 +127,6 @@ namespace surveyor.vision
             BitmapArrayConversions.updatebitmap_unsafe(image_data, img);
         }
 
-
-
         protected override void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
             if (display_image[0] != null)
@@ -138,7 +137,7 @@ namespace surveyor.vision
                 if ((show_left_image) &&
                     (calibration_pattern != null))
                 {
-                    DisplayImage((Bitmap)display_image[0].Image, calibration_pattern, true);
+                    display_image[0].Image = calibration_pattern;
                 }
                 else
                 {
@@ -155,25 +154,40 @@ namespace surveyor.vision
                 if ((!show_left_image) &&
                     (calibration_pattern != null))
                 {
-                    DisplayImage((Bitmap)display_image[1].Image, calibration_pattern, false);
+                    display_image[1].Image = calibration_pattern;
                 }
                 else
                 {
                     DisplayImage((Bitmap)display_image[1].Image, right_image, false);
                 }
-            }
 
-
-            try
-            {
-                window.Invoke((MethodInvoker)delegate
+                try
                 {
-                    display_image[0].Refresh();
-                    display_image[1].Refresh();
-                });
-            }
-            catch
-            {
+                    window.Invoke((MethodInvoker)delegate
+                    {
+                        bool success = false;
+                        DateTime start_time = DateTime.Now;
+                        int time_elapsed_mS = 0;
+                        while ((!success) && (time_elapsed_mS < 500))
+                        {
+                            try
+                            {
+                                display_image[0].Refresh();
+                                display_image[1].Refresh();
+                                success = true;
+                            }
+                            catch
+                            {
+                                System.Threading.Thread.Sleep(5);
+                                TimeSpan diff = DateTime.Now.Subtract(start_time);
+                                time_elapsed_mS = (int)diff.TotalMilliseconds;
+                            }
+                        }
+                    });
+                }
+                catch
+                {
+                }
             }
             
         }

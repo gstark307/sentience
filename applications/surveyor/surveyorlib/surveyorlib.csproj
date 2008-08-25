@@ -51,12 +51,14 @@
     <Compile Include="calibration\Hypergraph.cs" />
     <Compile Include="calibration\polygon.cs" />
     <Compile Include="calibration\polynomial.cs" />
+    <Compile Include="correspondence\FAST.cs" />
+    <Compile Include="correspondence\FASTcorner.cs" />
+    <Compile Include="correspondence\FASTline.cs" />
     <Compile Include="correspondence\StereoFeature.cs" />
     <Compile Include="correspondence\StereoVision.cs" />
-    <Compile Include="correspondence\StereoVisionContours.cs" />
-    <Compile Include="correspondence\StereoVisionContoursImage.cs" />
+    <Compile Include="correspondence\StereoVisionDense.cs" />
+    <Compile Include="correspondence\StereoVisionGeometric.cs" />
     <Compile Include="correspondence\StereoVisionSimple.cs" />
-    <Compile Include="correspondence\StereoVisionSimpleColour.cs" />
     <Compile Include="probabilities.cs" />
     <Compile Include="SurveyorCalibration.cs" />
     <Compile Include="SurveyorVisionClient.cs" />

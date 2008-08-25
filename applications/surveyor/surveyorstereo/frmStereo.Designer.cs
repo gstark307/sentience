@@ -31,13 +31,16 @@ namespace surveyorstereo
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.picLeftImage = new System.Windows.Forms.PictureBox();
-            this.picRightImage = new System.Windows.Forms.PictureBox();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrateLeftCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrateRightCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrateCameraAlignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.recordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.picLeftImage = new System.Windows.Forms.PictureBox();
+            this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.algorithmToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.simpleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.denseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -47,7 +50,8 @@ namespace surveyorstereo
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.toolsToolStripMenuItem});
+            this.toolsToolStripMenuItem,
+            this.algorithmToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(610, 24);
@@ -65,27 +69,9 @@ namespace surveyorstereo
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
-            // 
-            // picLeftImage
-            // 
-            this.picLeftImage.Location = new System.Drawing.Point(12, 27);
-            this.picLeftImage.Name = "picLeftImage";
-            this.picLeftImage.Size = new System.Drawing.Size(281, 198);
-            this.picLeftImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picLeftImage.TabIndex = 1;
-            this.picLeftImage.TabStop = false;
-            // 
-            // picRightImage
-            // 
-            this.picRightImage.Location = new System.Drawing.Point(316, 27);
-            this.picRightImage.Name = "picRightImage";
-            this.picRightImage.Size = new System.Drawing.Size(281, 198);
-            this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.picRightImage.TabIndex = 2;
-            this.picRightImage.TabStop = false;
             // 
             // toolsToolStripMenuItem
             // 
@@ -126,6 +112,47 @@ namespace surveyorstereo
             this.recordToolStripMenuItem.Text = "Record";
             this.recordToolStripMenuItem.Click += new System.EventHandler(this.recordToolStripMenuItem_Click);
             // 
+            // picLeftImage
+            // 
+            this.picLeftImage.Location = new System.Drawing.Point(12, 27);
+            this.picLeftImage.Name = "picLeftImage";
+            this.picLeftImage.Size = new System.Drawing.Size(281, 198);
+            this.picLeftImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picLeftImage.TabIndex = 1;
+            this.picLeftImage.TabStop = false;
+            // 
+            // picRightImage
+            // 
+            this.picRightImage.Location = new System.Drawing.Point(316, 27);
+            this.picRightImage.Name = "picRightImage";
+            this.picRightImage.Size = new System.Drawing.Size(281, 198);
+            this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picRightImage.TabIndex = 2;
+            this.picRightImage.TabStop = false;
+            // 
+            // algorithmToolStripMenuItem
+            // 
+            this.algorithmToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.simpleToolStripMenuItem,
+            this.denseToolStripMenuItem});
+            this.algorithmToolStripMenuItem.Name = "algorithmToolStripMenuItem";
+            this.algorithmToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
+            this.algorithmToolStripMenuItem.Text = "Algorithm";
+            // 
+            // simpleToolStripMenuItem
+            // 
+            this.simpleToolStripMenuItem.Name = "simpleToolStripMenuItem";
+            this.simpleToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.simpleToolStripMenuItem.Text = "Simple";
+            this.simpleToolStripMenuItem.Click += new System.EventHandler(this.simpleToolStripMenuItem_Click);
+            // 
+            // denseToolStripMenuItem
+            // 
+            this.denseToolStripMenuItem.Name = "denseToolStripMenuItem";
+            this.denseToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.denseToolStripMenuItem.Text = "Dense";
+            this.denseToolStripMenuItem.Click += new System.EventHandler(this.denseToolStripMenuItem_Click);
+            // 
             // frmStereo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -161,6 +188,9 @@ namespace surveyorstereo
         private System.Windows.Forms.ToolStripMenuItem calibrateRightCameraToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem calibrateCameraAlignmentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem recordToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem algorithmToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem simpleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem denseToolStripMenuItem;
     }
 }
 

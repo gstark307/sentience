@@ -13,7 +13,7 @@ namespace surveyorstereo
     public partial class frmStereo : Form
     {
         int image_width = 320;
-        int image_height = 256;
+        int image_height = 240;
         string stereo_camera_IP = "169.254.0.10";
         string calibration_filename = "calibration.xml";
         SurveyorVisionStereoWin stereo_camera;
@@ -21,13 +21,28 @@ namespace surveyorstereo
         public frmStereo()
         {
             InitializeComponent();
+            Init();
+        }
 
+        public void Init()
+        {
             stereo_camera = new SurveyorVisionStereoWin(stereo_camera_IP, 10001, 10002);
             stereo_camera.window = this;
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;
             stereo_camera.Load(calibration_filename);
             stereo_camera.Run();
+
+            if (stereo_camera.stereo_algorithm_type == StereoVision.SIMPLE)
+            {
+                denseToolStripMenuItem.Checked = false;
+                simpleToolStripMenuItem.Checked = true;
+            }
+            else
+            {
+                denseToolStripMenuItem.Checked = true;
+                simpleToolStripMenuItem.Checked = false;
+            }
         }
 
         private void frmStereo_FormClosing(object sender, FormClosingEventArgs e)
@@ -73,19 +88,10 @@ namespace surveyorstereo
             stereo_camera.Record = !stereo_camera.Record;
         }
 
-        private void ShowDotPattern(PictureBox dest_img)
+        private Bitmap ShowDotPattern()
         {
             stereo_camera.calibration_pattern = SurveyorCalibration.CreateDotPattern(image_width, image_height, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
-            if (dest_img.Image == null)
-            {
-                dest_img.Image = (Bitmap)stereo_camera.calibration_pattern;
-            }
-            else
-            {
-                byte[] bmp = new byte[image_width * image_height * 3];
-                BitmapArrayConversions.updatebitmap(stereo_camera.calibration_pattern, bmp);
-                BitmapArrayConversions.updatebitmap_unsafe(bmp, (Bitmap)dest_img.Image);
-            }
+            return ((Bitmap)stereo_camera.calibration_pattern);
         }
 
         private void Calibrate(bool Active)
@@ -105,12 +111,12 @@ namespace surveyorstereo
 
             if (Active)
             {
-                ShowDotPattern(dest_img);
-                stereo_camera.display_image[window_index] = dest_img;
-                //stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_CALIBRATION_DIFF;
+                Bitmap bmp = ShowDotPattern();
+                dest_img.Image = bmp;
                 stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_RECTIFIED;
-                //stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_DIFFERENCE;
                 stereo_camera.ResetCalibration(1 - window_index);
+                stereo_camera.display_image[window_index] = dest_img;
+                
             }
             else
             {
@@ -162,6 +168,29 @@ namespace surveyorstereo
 
             // restart the cameras
             stereo_camera.Run();
+        }
+
+        private void frmStereo_Load(object sender, EventArgs e)
+        {
+            //Init();
+        }
+
+        private void timUpdate_Tick(object sender, EventArgs e)
+        {
+        }
+
+        private void simpleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            stereo_camera.stereo_algorithm_type = StereoVision.SIMPLE;
+            denseToolStripMenuItem.Checked = false;
+            simpleToolStripMenuItem.Checked = true;
+        }
+
+        private void denseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            stereo_camera.stereo_algorithm_type = StereoVision.DENSE;
+            denseToolStripMenuItem.Checked = true;
+            simpleToolStripMenuItem.Checked = false;
         }
 
     }

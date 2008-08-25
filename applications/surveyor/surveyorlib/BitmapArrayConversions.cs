@@ -37,8 +37,10 @@ namespace sluggish.utilities
         /// </summary>
         /// <param name="imageData">Array to be inserted</param>
         /// <param name="bmp">Destination bitmap object</param>
-        public static unsafe void updatebitmap_unsafe(byte[] imageData, Bitmap bmp)
+        public static unsafe bool updatebitmap_unsafe(byte[] imageData, Bitmap bmp)
         {
+            bool success = true;
+
             // get the number of bytes per pixel
             int bytes_per_pixel = 3;
             if (bmp.PixelFormat == System.Drawing.Imaging.PixelFormat.Format8bppIndexed)
@@ -87,8 +89,10 @@ namespace sluggish.utilities
             }
             catch //(Exception ex)
             {
+                success = false;
                 //MessageBox.Show("updatebitmap1/" + ex.Message);
             }
+            return(success);
         }
 
 
@@ -111,41 +115,44 @@ namespace sluggish.utilities
                 
                 // Lock bitmap and retrieve bitmap pixel data pointer
                 bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                int currStride = bmpData.Stride;
-
-                // fix the bitmap data in place whilst processing as the garbage collector may move it
-                fixed (byte* pimageData = imageData)
+                if (bmpData != null)
                 {
-                    // Copy the bitmap to the image data
-                    byte* dst = (byte*)bmpData.Scan0;
-                    byte* src = (byte*)pimageData;
+                    int currStride = bmpData.Stride;
 
-                    if (currStride != bmp.Width * 3)
-                    {                        
-                        // uneven stride length
-                        //long real_length = currStride * bmp.Height;
-                        long n = 0;
-                        long w = bmp.Width * 3;
-                        for (int y = 0; y < bmp.Height; y++)
+                    // fix the bitmap data in place whilst processing as the garbage collector may move it
+                    fixed (byte* pimageData = imageData)
+                    {
+                        // Copy the bitmap to the image data
+                        byte* dst = (byte*)bmpData.Scan0;
+                        byte* src = (byte*)pimageData;
+
+                        if (currStride != bmp.Width * 3)
                         {
-                            long n1 = (y * bmp.Width) * 3;
-                            for (int x = 0; x < currStride; x++)
+                            // uneven stride length
+                            //long real_length = currStride * bmp.Height;
+                            long n = 0;
+                            long w = bmp.Width * 3;
+                            for (int y = 0; y < bmp.Height; y++)
                             {
-                                if (x < w) src[n1] = dst[n];
-                                n++;
-                                n1++;
+                                long n1 = (y * bmp.Width) * 3;
+                                for (int x = 0; x < currStride; x++)
+                                {
+                                    if (x < w) src[n1] = dst[n];
+                                    n++;
+                                    n1++;
+                                }
                             }
                         }
+                        else
+                        {
+                            // even stride length
+                            for (int i = 0; i < imageData.Length; i++)
+                                *src++ = *dst++;
+                        }
                     }
-                    else
-                    {
-                        // even stride length
-                        for (int i = 0; i < imageData.Length; i++)
-                            *src++ = *dst++;
-                    }
-                }
 
-                bmp.UnlockBits(bmpData);
+                    bmp.UnlockBits(bmpData);
+                }
             }
         }
 
