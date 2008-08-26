@@ -556,23 +556,33 @@ namespace surveyor.vision
                                 calibration_survey[cam].centre_of_distortion_x,calibration_survey[cam].centre_of_distortion_y,
                                 ref calibration_map[cam], ref calibration_map_inverse[cam]);
                         }
-                        
-                        byte[] img = new byte[bmp.Width * bmp.Height * 3];
-                        BitmapArrayConversions.updatebitmap(bmp, img);
-                        byte[] img_rectified = (byte[])img.Clone();                        
-                    
-                        int n = 0;
-                        int[] map = calibration_map[cam];
-                        for (int i = 0; i < img.Length; i+=3, n++)
+
+                        byte[] img = null;
+                        try
                         {
-                            int index = map[n]*3;
-                            for (int col = 0; col < 3; col++)
-                                img_rectified[i+col] = img[index+col];
+                            img = new byte[bmp.Width * bmp.Height * 3];
                         }
-                        
-                        if (rectified[cam] == null)
-                            rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                        BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
+                        catch
+                        {
+                        }
+                        if (img != null)
+                        {
+                            BitmapArrayConversions.updatebitmap(bmp, img);
+                            byte[] img_rectified = (byte[])img.Clone();
+
+                            int n = 0;
+                            int[] map = calibration_map[cam];
+                            for (int i = 0; i < img.Length; i += 3, n++)
+                            {
+                                int index = map[n] * 3;
+                                for (int col = 0; col < 3; col++)
+                                    img_rectified[i + col] = img[index + col];
+                            }
+
+                            if (rectified[cam] == null)
+                                rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                            BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
+                        }
                     }
                 }
             }
@@ -681,9 +691,8 @@ namespace surveyor.vision
                     camera[cam].StopStream();
                     camera[cam].Stop();
                 }
-
-                
-            }            
+                if (sync_thread != null) sync_thread.Abort();
+            }
         }
         
         #endregion

@@ -144,6 +144,32 @@ namespace surveyor.vision
                     DisplayImage((Bitmap)display_image[0].Image, left_image, true);
                 }
 
+                try
+                {
+                    window.Invoke((MethodInvoker)delegate
+                    {
+                        bool success = false;
+                        DateTime start_time = DateTime.Now;
+                        int time_elapsed_mS = 0;
+                        while ((!success) && (time_elapsed_mS < 500))
+                        {
+                            try
+                            {
+                                display_image[0].Refresh();
+                                success = true;
+                            }
+                            catch
+                            {
+                                System.Threading.Thread.Sleep(5);
+                                TimeSpan diff = DateTime.Now.Subtract(start_time);
+                                time_elapsed_mS = (int)diff.TotalMilliseconds;
+                            }
+                        }
+                    });
+                }
+                catch
+                {
+                }
             }
 
             if (display_image[1] != null)
@@ -172,7 +198,6 @@ namespace surveyor.vision
                         {
                             try
                             {
-                                display_image[0].Refresh();
                                 display_image[1].Refresh();
                                 success = true;
                             }

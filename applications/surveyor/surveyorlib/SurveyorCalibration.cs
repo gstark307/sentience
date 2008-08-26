@@ -47,36 +47,47 @@ namespace surveyor.vision
             edge_detector.automatic_thresholds = true;
             edge_detector.connected_sets_only = true;
             byte[] edges_data = edge_detector.Update(image_data, bmp.Width, bmp.Height);
-            
-            edges_data = edge_detector.GetConnectedSetsImage(image_data, 10, bmp.Width / SurveyorCalibration.dots_across * 3, true, ref dots);
 
-            // locate the red centre dot
-            int max_redness = 0;
-            CalibrationDot centre_dot = null;
-            for (int i = 0; i < dots.Nodes.Count; i++)
+            bool connected_sets_ok = false;
+            try
             {
-                CalibrationDot dot = (CalibrationDot)dots.Nodes[i];
-                int n = (((int)dot.y * bmp.Width) + (int)dot.x) * 3;
-                if ((n > 3) && (n < image_data.Length-4))
-                {                
-                    int r = image_data[n + 2] + image_data[n + 2 + 3] + image_data[n + 2 - 3];
-                    int g = image_data[n + 1] + image_data[n + 1 + 3] + image_data[n + 1 - 3];
-                    int b = image_data[n] + image_data[n + 3] + image_data[n - 3];
-                    
-                    int redness = (r * 2) - g - b;
-                    if (redness > max_redness)
+                edges_data = edge_detector.GetConnectedSetsImage(image_data, 10, bmp.Width / SurveyorCalibration.dots_across * 3, true, ref dots);
+                connected_sets_ok = true;
+            }
+            catch
+            {
+            }
+
+            if (connected_sets_ok)
+            {
+                // locate the red centre dot
+                int max_redness = 0;
+                CalibrationDot centre_dot = null;
+                for (int i = 0; i < dots.Nodes.Count; i++)
+                {
+                    CalibrationDot dot = (CalibrationDot)dots.Nodes[i];
+                    int n = (((int)dot.y * bmp.Width) + (int)dot.x) * 3;
+                    if ((n > 3) && (n < image_data.Length - 4))
                     {
-                        max_redness = redness;
-                        centre_dot = dot;
+                        int r = image_data[n + 2] + image_data[n + 2 + 3] + image_data[n + 2 - 3];
+                        int g = image_data[n + 1] + image_data[n + 1 + 3] + image_data[n + 1 - 3];
+                        int b = image_data[n] + image_data[n + 3] + image_data[n - 3];
+
+                        int redness = (r * 2) - g - b;
+                        if (redness > max_redness)
+                        {
+                            max_redness = redness;
+                            centre_dot = dot;
+                        }
                     }
                 }
-            }
-            if (centre_dot != null) centre_dot.centre = true;
+                if (centre_dot != null) centre_dot.centre = true;
 
-            if (edges_bmp == null)
-                edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                
-            BitmapArrayConversions.updatebitmap_unsafe(edges_data, edges_bmp);
+                if (edges_bmp == null)
+                    edges_bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+                BitmapArrayConversions.updatebitmap_unsafe(edges_data, edges_bmp);
+            }
         }
         
         /// <summary>

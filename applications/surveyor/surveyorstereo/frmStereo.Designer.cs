@@ -36,11 +36,11 @@ namespace surveyorstereo
             this.calibrateRightCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrateCameraAlignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.recordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.picLeftImage = new System.Windows.Forms.PictureBox();
-            this.picRightImage = new System.Windows.Forms.PictureBox();
             this.algorithmToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.simpleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.denseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.picLeftImage = new System.Windows.Forms.PictureBox();
+            this.picRightImage = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -112,6 +112,29 @@ namespace surveyorstereo
             this.recordToolStripMenuItem.Text = "Record";
             this.recordToolStripMenuItem.Click += new System.EventHandler(this.recordToolStripMenuItem_Click);
             // 
+            // algorithmToolStripMenuItem
+            // 
+            this.algorithmToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.simpleToolStripMenuItem,
+            this.denseToolStripMenuItem});
+            this.algorithmToolStripMenuItem.Name = "algorithmToolStripMenuItem";
+            this.algorithmToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
+            this.algorithmToolStripMenuItem.Text = "Algorithm";
+            // 
+            // simpleToolStripMenuItem
+            // 
+            this.simpleToolStripMenuItem.Name = "simpleToolStripMenuItem";
+            this.simpleToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.simpleToolStripMenuItem.Text = "Simple";
+            this.simpleToolStripMenuItem.Click += new System.EventHandler(this.simpleToolStripMenuItem_Click);
+            // 
+            // denseToolStripMenuItem
+            // 
+            this.denseToolStripMenuItem.Name = "denseToolStripMenuItem";
+            this.denseToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.denseToolStripMenuItem.Text = "Dense";
+            this.denseToolStripMenuItem.Click += new System.EventHandler(this.denseToolStripMenuItem_Click);
+            // 
             // picLeftImage
             // 
             this.picLeftImage.Location = new System.Drawing.Point(12, 27);
@@ -129,29 +152,6 @@ namespace surveyorstereo
             this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picRightImage.TabIndex = 2;
             this.picRightImage.TabStop = false;
-            // 
-            // algorithmToolStripMenuItem
-            // 
-            this.algorithmToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.simpleToolStripMenuItem,
-            this.denseToolStripMenuItem});
-            this.algorithmToolStripMenuItem.Name = "algorithmToolStripMenuItem";
-            this.algorithmToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
-            this.algorithmToolStripMenuItem.Text = "Algorithm";
-            // 
-            // simpleToolStripMenuItem
-            // 
-            this.simpleToolStripMenuItem.Name = "simpleToolStripMenuItem";
-            this.simpleToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.simpleToolStripMenuItem.Text = "Simple";
-            this.simpleToolStripMenuItem.Click += new System.EventHandler(this.simpleToolStripMenuItem_Click);
-            // 
-            // denseToolStripMenuItem
-            // 
-            this.denseToolStripMenuItem.Name = "denseToolStripMenuItem";
-            this.denseToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.denseToolStripMenuItem.Text = "Dense";
-            this.denseToolStripMenuItem.Click += new System.EventHandler(this.denseToolStripMenuItem_Click);
             // 
             // frmStereo
             // 

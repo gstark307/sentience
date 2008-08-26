@@ -21,6 +21,10 @@ namespace surveyorstereo
         public frmStereo()
         {
             InitializeComponent();
+
+            picLeftImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
             Init();
         }
 
@@ -116,7 +120,6 @@ namespace surveyorstereo
                 stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_RECTIFIED;
                 stereo_camera.ResetCalibration(1 - window_index);
                 stereo_camera.display_image[window_index] = dest_img;
-                
             }
             else
             {
@@ -168,15 +171,6 @@ namespace surveyorstereo
 
             // restart the cameras
             stereo_camera.Run();
-        }
-
-        private void frmStereo_Load(object sender, EventArgs e)
-        {
-            //Init();
-        }
-
-        private void timUpdate_Tick(object sender, EventArgs e)
-        {
         }
 
         private void simpleToolStripMenuItem_Click(object sender, EventArgs e)
