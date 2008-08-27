@@ -133,6 +133,9 @@ namespace surveyorstereo
         private void calibrateLeftCameraToolStripMenuItem_Click(object sender, EventArgs e)
         {
             calibrateLeftCameraToolStripMenuItem.Checked = !calibrateLeftCameraToolStripMenuItem.Checked;
+            if ((calibrateLeftCameraToolStripMenuItem.Checked) &&
+                (calibrateRightCameraToolStripMenuItem.Checked))
+                calibrateRightCameraToolStripMenuItem.Checked = false;
             stereo_camera.show_left_image = false;
             Calibrate(calibrateLeftCameraToolStripMenuItem.Checked);
         }
@@ -140,6 +143,9 @@ namespace surveyorstereo
         private void calibrateRightCameraToolStripMenuItem_Click(object sender, EventArgs e)
         {
             calibrateRightCameraToolStripMenuItem.Checked = !calibrateRightCameraToolStripMenuItem.Checked;
+            if ((calibrateRightCameraToolStripMenuItem.Checked) &&
+                (calibrateLeftCameraToolStripMenuItem.Checked))
+                calibrateLeftCameraToolStripMenuItem.Checked = false;
             stereo_camera.show_left_image = true;
             Calibrate(calibrateRightCameraToolStripMenuItem.Checked);
         }
