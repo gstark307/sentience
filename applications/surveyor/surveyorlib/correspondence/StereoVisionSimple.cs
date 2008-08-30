@@ -69,7 +69,6 @@ namespace surveyor.vision
         public StereoVisionSimple()
         {
             algorithm_type = SIMPLE;
-            convert_to_mono = true;
         }
 
 		/// <summary>
@@ -448,17 +447,21 @@ namespace surveyor.vision
         /// <summary>
         /// update stereo correspondence
         /// </summary>
+        /// <param name="left_bmp_colour">rectified left image data</param>
+        /// <param name="right_bmp_colour">rectified right_image_data</param>
         /// <param name="left_bmp">rectified left image data</param>
         /// <param name="right_bmp">rectified right_image_data</param>
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
         /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
-        public override void Update(byte[] left_bmp, byte[] right_bmp,
+        public override void Update(byte[] left_bmp_colour, byte[] right_bmp_colour,
+		                            byte[] left_bmp, byte[] right_bmp,
                                     int image_width, int image_height,
                                     float calibration_offset_x, float calibration_offset_y)
         {
-			UpdateSimple(left_bmp, right_bmp,
+			UpdateSimple(left_bmp_colour, right_bmp_colour,
+			             left_bmp, right_bmp,
 			             image_width, image_height,
 			             calibration_offset_x, calibration_offset_y);
 		}
@@ -466,13 +469,16 @@ namespace surveyor.vision
         /// <summary>
         /// update stereo correspondence
         /// </summary>
+        /// <param name="left_bmp_colour">rectified left image data</param>
+        /// <param name="right_bmp_colour">rectified right_image_data</param>
         /// <param name="left_bmp">rectified left image data</param>
         /// <param name="right_bmp">rectified right_image_data</param>
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
         /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
-        protected void UpdateSimple(byte[] left_bmp, byte[] right_bmp,
+        protected void UpdateSimple(byte[] left_bmp_colour, byte[] right_bmp_colour,
+		                            byte[] left_bmp, byte[] right_bmp,
                                     int image_width, int image_height,
                                     float calibration_offset_x, float calibration_offset_y)
         {
@@ -480,7 +486,6 @@ namespace surveyor.vision
         
             this.image_width = image_width;
             this.image_height = image_height;            
-            int bytes_per_pixel = left_bmp.Length / image_width * image_height;
             
 			// create mono image buffers
             if (left_bmp_mono == null)
@@ -489,17 +494,8 @@ namespace surveyor.vision
 				right_bmp_mono = new byte[2][];
 		    }			
 			
-            // convert images to mono
-            if (bytes_per_pixel > 1)
-            {
-                monoImage(left_bmp, image_width, image_height, 1, ref left_bmp_mono[0]);
-                monoImage(right_bmp, image_width, image_height, 1, ref right_bmp_mono[0]);
-            }
-            else
-            {
-                left_bmp_mono[0] = left_bmp;
-                right_bmp_mono[0] = right_bmp;
-            }
+            left_bmp_mono[0] = left_bmp;
+            right_bmp_mono[0] = right_bmp;
             
             // create some buffers
             if (left_row_features == null)

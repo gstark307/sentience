@@ -20,7 +20,7 @@
 using System;
 using System.Drawing;
 using System.IO;
-using System.Collections;
+using System.Collections.Generic;
 using sluggish.utilities;
 
 namespace surveyor.vision
@@ -59,7 +59,7 @@ namespace surveyor.vision
 
         // disparity map image
         public byte[] disparity_map;
-
+		
         #region "constructors"
 
         /// <summary>
@@ -69,7 +69,6 @@ namespace surveyor.vision
         public StereoVisionDense()
         {
             algorithm_type = DENSE;
-            convert_to_mono = true;
         }
 
         #endregion
@@ -582,7 +581,8 @@ namespace surveyor.vision
                                        int calibration_offset_y,
                                        int vertical_compression,
                                        int position_search_radius,
-                                       int minimum_intensity)
+                                       int minimum_intensity,
+		                               List<StereoFeature> features)
         {
             // load images
             Bitmap left_bmp = (Bitmap)Bitmap.FromFile(left_filename);
@@ -610,6 +610,7 @@ namespace surveyor.vision
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,
+			            features,
                         disparity_map);
 
             Bitmap disparity_bmp = new Bitmap(left_bmp.Width, left_bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -641,9 +642,13 @@ namespace surveyor.vision
                                         int vertical_compression,
                                         int position_search_radius,
                                         int minimum_intensity,
+		                                List<StereoFeature> features,
                                         byte[] disparity_map)
         {
+			features.Clear();
+			
             int max_disparity_pixels = max_disparity * image_width / 100;
+			int max_disparity_pixels_limit =max_disparity_pixels * 90/100;
             bool initialise = false;
             if (left == null)
                 initialise = true;
@@ -702,12 +707,23 @@ namespace surveyor.vision
                                 n = (y + yy) * image_width * 3;
                                 for (int x = 0; x < image_width; x++, n += 3)
                                 {
-                                    byte disp = (byte)(disparity[x] * 255 / max_disparity_pixels);
-                                    if (disp > 240) disp = 0;
-                                    disparity_map[n] = disp;
-                                    disparity_map[n + 1] = disp;
-                                    disparity_map[n + 2] = disp;
-
+									int disparity_pixels = disparity[x];
+									if ((disparity_pixels > 0) &&
+									    (disparity_pixels < max_disparity_pixels_limit))
+									{
+							            features.Add(new StereoFeature(x, y,disparity_pixels));
+										
+	                                    byte disp = (byte)(disparity_pixels * 255 / max_disparity_pixels);
+	                                    disparity_map[n] = disp;
+	                                    disparity_map[n + 1] = disp;
+	                                    disparity_map[n + 2] = disp;
+									}
+									else
+									{
+	                                    disparity_map[n] = 0;
+	                                    disparity_map[n + 1] = 0;
+	                                    disparity_map[n + 2] = 0;
+									}
                                 }
                             }
                         }
@@ -724,13 +740,16 @@ namespace surveyor.vision
         /// <summary>
         /// main update routine for contour based stereo correspondence
         /// </summary>
+        /// <param name="left_bmp_colour">rectified left image data</param>
+        /// <param name="right_bmp_colour">rectified right image data</param>
         /// <param name="left_bmp">rectified left image data</param>
         /// <param name="right_bmp">rectified right image data</param>
         /// <param name="wdth">width of the images</param>
         /// <param name="hght">height of the images</param>
         /// <param name="calibration_offset_x">calibration offset to counter for any small vergence angle between the cameras</param>
         /// <param name="calibration_offset_y">calibration offset to counter for any small vergence angle between the cameras</param>
-        public override void Update(byte[] left_bmp, byte[] right_bmp,
+        public override void Update(byte[] left_bmp_colour, byte[] right_bmp_colour,
+		                            byte[] left_bmp, byte[] right_bmp,
                                     int wdth, int hght,
                                     float calibration_offset_x, float calibration_offset_y)
         {
@@ -758,6 +777,7 @@ namespace surveyor.vision
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,
+			            features,			            
                         disparity_map);
         }
 

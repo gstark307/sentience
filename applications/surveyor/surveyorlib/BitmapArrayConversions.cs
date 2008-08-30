@@ -102,7 +102,7 @@ namespace sluggish.utilities
         /// </summary>
         /// <param name="bmp">bitmap object</param>
         /// <param name="imageData">Destination Array</param>
-        public static unsafe void updatebitmap(Bitmap bmp, byte[] imageData)
+        public static unsafe bool updatebitmap(Bitmap bmp, byte[] imageData)
         {
             BitmapData bmpData = null;
 
@@ -114,7 +114,13 @@ namespace sluggish.utilities
             {
                 
                 // Lock bitmap and retrieve bitmap pixel data pointer
-                bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+				try
+				{
+                    bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+				}
+				catch
+				{
+				}
                 if (bmpData != null)
                 {
                     int currStride = bmpData.Stride;
@@ -154,6 +160,10 @@ namespace sluggish.utilities
                     bmp.UnlockBits(bmpData);
                 }
             }
+			if (bmpData != null)
+				return(true);
+			else
+				return(false);
         }
 
         /// <summary>

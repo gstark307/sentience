@@ -132,7 +132,8 @@ namespace surveyor.vision
                 }                
             }
         
-            GtkBitmap.setBitmap(disp_image, img);
+			if ((img != null) && (disp_image != null))
+                GtkBitmap.setBitmap(disp_image, img);
         }
     
         /// <summary>
@@ -194,17 +195,6 @@ namespace surveyor.vision
             }
             
         }
-        
-        #endregion
-        
-        #region "process images"
-        
-        /*
-        public override void Process(Bitmap left_image, Bitmap right_image)
-        {
-            DisplayImages(left_image, right_image);
-        }
-        */
         
         #endregion
 

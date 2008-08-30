@@ -49,7 +49,6 @@ namespace surveyor.vision
         public StereoVisionGeometric()
         {
             algorithm_type = GEOMETRIC;
-			convert_to_mono = true;
 			feature_scale = 0.4f;
         }
 		
@@ -155,21 +154,24 @@ namespace surveyor.vision
         /// <summary>
         /// update stereo correspondence
         /// </summary>
+        /// <param name="left_bmp_colour">rectified left colour image data</param>
+        /// <param name="right_bmp_colour">rectified right colour image_data</param>
         /// <param name="left_bmp">rectified left colour image data</param>
         /// <param name="right_bmp">rectified right colour image_data</param>
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
         /// <param name="calibration_offset_y">offset calculated during camera calibration</param>		
-        public override void Update(byte[] left_bmp, byte[] right_bmp,
+        public override void Update(byte[] left_bmp_colour, byte[] right_bmp_colour,
+		                            byte[] left_bmp, byte[] right_bmp,
                                     int image_width, int image_height,
                                     float calibration_offset_x, float calibration_offset_y)
         {
 			// update sparse stereo features
-			UpdateSimple(left_bmp, right_bmp,
+			UpdateSimple(left_bmp_colour, right_bmp_colour,
+			             left_bmp, right_bmp,
 			             image_width, image_height,
-			             calibration_offset_x, calibration_offset_y);
-			
+			             calibration_offset_x, calibration_offset_y);			
 			
             // extract FAST corner features from the left image
             FASTcorner[] corners_all = FAST.fast_corner_detect_9(left_bmp_mono[0], image_width, image_height, FAST_feature_threshold);

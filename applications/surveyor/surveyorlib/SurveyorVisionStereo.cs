@@ -235,6 +235,29 @@ namespace surveyor.vision
             }
         }
 
+		/// <summary>
+		/// returns stereo camera parameters as an xml document
+		/// </summary>
+		/// <param name="doc"></param>
+		/// <param name="parent"></param>
+		/// <param name="device_name">camera device name</param>
+		/// <param name="part_number">camera device part number</param>
+		/// <param name="serial_number">camera device serial number</param>
+		/// <param name="focal_length_mm">camera focal length in millimetres</param>
+		/// <param name="pixels_per_mm">number of pixels per millimetre, from the image sensor size/resolution</param>
+		/// <param name="baseline_mm">stereo baseline in millimetres</param>
+		/// <param name="fov_degrees">camera field of view in degrees</param>
+		/// <param name="image_width">camera image width in pixels</param>
+		/// <param name="image_height">camera image height in pixels</param>
+		/// <param name="lens_distortion_curve">polynomial describing the lens distortion curve</param>
+		/// <param name="centre_of_distortion_x">x coordinate of the centre of distortion within the image in pixels</param>
+		/// <param name="centre_of_distortion_y">y coordinate of the centre of distortion within the image in pixels</param>
+		/// <param name="minimum_rms_error">polynomial curve fitting</param>
+		/// <param name="rotation">rotation of the right image relative to the left in degrees</param>
+		/// <param name="scale"></param>
+		/// <param name="offset_x">offset from parallel alignment in pixels in the horizontal axis</param>
+		/// <param name="offset_y">offset from parallel alignment in pixels in the vertical axis</param>
+		/// <returns></returns>
         private static XmlElement getXml(
             XmlDocument doc, XmlElement parent,
             string device_name,
@@ -316,11 +339,11 @@ namespace surveyor.vision
         /// return an xml element containing camera calibration parameters
         /// </summary>
         /// <param name="doc"></param>
-        /// <param name="fov_degrees"></param>
-        /// <param name="lens_distortion_curve"></param>
-        /// <param name="centre_of_distortion_x"></param>
-        /// <param name="centre_of_distortion_y"></param>
-        /// <param name="minimum_rms_error"></param>
+        /// <param name="fov_degrees">field of view in degrees</param>
+        /// <param name="lens_distortion_curve">polynomial describing the lens distortion</param>
+        /// <param name="centre_of_distortion_x">x coordinate of the centre of distortion within the image in pixels</param>
+        /// <param name="centre_of_distortion_y">y coordinate of the centre of distortion within the image in pixels</param>
+        /// <param name="minimum_rms_error">minimum curve fitting error in pixels</param>
         /// <returns></returns>
         private static XmlElement getCameraXml(
             XmlDocument doc,
@@ -365,7 +388,7 @@ namespace surveyor.vision
         /// <summary>
         /// load camera calibration parameters from file
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="filename">filename to load from</param>
         public void Load(string filename)
         {
             if (File.Exists(filename))
@@ -514,6 +537,13 @@ namespace surveyor.vision
 
         #endregion
 
+		/// <summary>
+		/// Calculates horizontal and vertical offsets which are the
+		/// result of the cameras not being perfectly aligned in parallel
+		/// </summary>
+		/// <returns>
+		/// true if offsets were calculated successfully
+		/// </returns>
         public bool CalibrateCameraAlignment()
         {
             bool done = false;
@@ -522,10 +552,9 @@ namespace surveyor.vision
                 if ((rectified[0] != null) &&
                     (rectified[1] != null))
                 {
-                    SurveyorCalibration.UpdateOffsets(rectified[0], rectified[1],
-                                                      ref offset_x, ref offset_y,
-                                                      ref rotation);
-                    done = true;
+                    done = SurveyorCalibration.UpdateOffsets(rectified[0], rectified[1],
+                                                             ref offset_x, ref offset_y,
+                                                             ref rotation);
                 }
             }
             return(done);
@@ -543,7 +572,7 @@ namespace surveyor.vision
                 Bitmap bmp = left_image;
                 if (cam == 1) bmp = right_image;
                 
-                if (calibration_survey[cam] != null)
+                if ((calibration_survey[cam] != null) && (bmp != null))
                 {
                     polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
                     if (distortion_curve != null)
@@ -877,7 +906,7 @@ namespace surveyor.vision
         public virtual void Process(Bitmap left_image, Bitmap right_image)
         {        
             //if (display_type == DISPLAY_DIFFERENCE) 
-            //UpdateRawDifference(left_image, right_image);
+            //    UpdateRawDifference(left_image, right_image);
             DisplayImages(left_image, right_image);
             StereoCorrespondence();
         }

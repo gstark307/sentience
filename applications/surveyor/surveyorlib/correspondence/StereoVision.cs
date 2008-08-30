@@ -46,12 +46,9 @@ namespace surveyor.vision
         
         // determines the size of stereo features displayed as dots
         public float feature_scale = 0.2f;
-        
-        // convert the image to mono befure calling the main update routine
-        protected bool convert_to_mono;
-        
+                
         protected int image_width, image_height;
-        protected byte[][] img = new byte[2][];        
+        protected byte[][] img = new byte[4][];        
 
         public StereoVision()
         {
@@ -94,19 +91,40 @@ namespace surveyor.vision
         /// <summary>
         /// update stereo correspondence
         /// </summary>
+        /// <param name="left_bmp_colour">rectified left image data</param>
+        /// <param name="right_bmp_colour">rectified right_image_data</param>
         /// <param name="left_bmp">rectified left image data</param>
         /// <param name="right_bmp">rectified right_image_data</param>
         /// <param name="image_width">width of the image</param>
         /// <param name="image_height">height of the image</param>
         /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
         /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
-        public virtual void Update(byte[] left_bmp, byte[] right_bmp,
+        public virtual void Update(byte[] left_bmp_colour, byte[] right_bmp_colour,
+		                           byte[] left_bmp, byte[] right_bmp,
                                    int image_width, int image_height,
                                    float calibration_offset_x, float calibration_offset_y)
         {
             this.image_width = image_width;
             this.image_height = image_height;
         }
+		
+		/// <summary>
+		/// update the colours of stereo features
+		/// </summary>
+		/// <param name="left_img_colour">left colour image</param>
+		/// <param name="right_img_colour">right colour image</param>
+		private void UpdateFeatureColours(byte[] left_img_colour, byte[] right_img_colour)
+		{
+			for (int f = 0; f < features.Count; f++)
+			{
+				StereoFeature feature = features[f];
+				int n = (((int)feature.y * image_width) + (int)feature.x) * 3;
+				
+				feature.colour = new byte[3];
+				for (int col = 0; col < 3; col++)					
+				    feature.colour[col] = left_img_colour[n+col]; 
+			}
+		}
 
         /// <summary>
         /// main update for stereo correspondence
@@ -124,29 +142,30 @@ namespace surveyor.vision
             
             if (img[0] == null)
             {
-                img[0] = new byte[pixels];
-                img[1] = new byte[pixels];
+				for (int i = 0; i < 4; i++)
+                    img[i] = new byte[pixels];
             }
             else
             {
                 if (img[0].Length != pixels)
                 {
-                    img[0] = new byte[pixels];
-                    img[1] = new byte[pixels];
+					for (int i = 0; i < 4; i++)
+                        img[i] = new byte[pixels];
                 }
             }
             
             BitmapArrayConversions.updatebitmap(rectified_left, img[0]);
             BitmapArrayConversions.updatebitmap(rectified_right, img[1]);
+             
+            monoImage(img[0], image_width, image_height, 1, ref img[2]);
+            monoImage(img[1], image_width, image_height, 1, ref img[3]);
             
-            if (convert_to_mono)
-            {
-               monoImage(img[0], image_width, image_height, 1, ref img[0]);
-               monoImage(img[1], image_width, image_height, 1, ref img[1]);
-            }
-            
-            Update(img[0], img[1], rectified_left.Width, rectified_left.Height,
+            Update(img[0], img[1], 
+			       img[2], img[3],
+			       rectified_left.Width, rectified_left.Height,
                    calibration_offset_x, calibration_offset_y);
+			
+			UpdateFeatureColours(img[0], img[1]);
         }
 
         /// <summary>

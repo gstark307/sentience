@@ -34,11 +34,11 @@ public partial class MainWindow {
     
     private Gtk.CheckButton chkRecord;
     
-    private Gtk.CheckButton chkCalibrate;
+    private Gtk.CheckButton chkCalibrateLeft;
     
     private Gtk.CheckButton chkCalibrateRight;
     
-    private Gtk.Button cmdCalibrateFocus;
+    private Gtk.Button cmdCalibrateAlignment;
     
     private Gtk.HBox hbox3;
     
@@ -74,6 +74,7 @@ public partial class MainWindow {
         this.WindowPosition = ((Gtk.WindowPosition)(4));
         // Container child MainWindow.Gtk.Container+ContainerChild
         this.vbox1 = new Gtk.VBox();
+        this.vbox1.Name = "vbox1";
         this.vbox1.Spacing = 6;
         // Container child vbox1.Gtk.Box+BoxChild
         w1.AddUiFromString("<ui><menubar name='menubar1'><menu action='FileAction'><menuitem action='ExitAction'/></menu><menu action='ToolsAction'><menuitem action='RecordImagesAction'/></menu></menubar></ui>");
@@ -120,14 +121,14 @@ public partial class MainWindow {
         Gtk.Box.BoxChild w8 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkRecord]));
         w8.Position = 0;
         // Container child hbox2.Gtk.Box+BoxChild
-        this.chkCalibrate = new Gtk.CheckButton();
-        this.chkCalibrate.CanFocus = true;
-        this.chkCalibrate.Name = "chkCalibrate";
-        this.chkCalibrate.Label = Mono.Unix.Catalog.GetString("Calibrate left camera");
-        this.chkCalibrate.DrawIndicator = true;
-        this.chkCalibrate.UseUnderline = true;
-        this.hbox2.Add(this.chkCalibrate);
-        Gtk.Box.BoxChild w9 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkCalibrate]));
+        this.chkCalibrateLeft = new Gtk.CheckButton();
+        this.chkCalibrateLeft.CanFocus = true;
+        this.chkCalibrateLeft.Name = "chkCalibrateLeft";
+        this.chkCalibrateLeft.Label = Mono.Unix.Catalog.GetString("Calibrate left camera");
+        this.chkCalibrateLeft.DrawIndicator = true;
+        this.chkCalibrateLeft.UseUnderline = true;
+        this.hbox2.Add(this.chkCalibrateLeft);
+        Gtk.Box.BoxChild w9 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkCalibrateLeft]));
         w9.Position = 1;
         // Container child hbox2.Gtk.Box+BoxChild
         this.chkCalibrateRight = new Gtk.CheckButton();
@@ -140,13 +141,13 @@ public partial class MainWindow {
         Gtk.Box.BoxChild w10 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkCalibrateRight]));
         w10.Position = 2;
         // Container child hbox2.Gtk.Box+BoxChild
-        this.cmdCalibrateFocus = new Gtk.Button();
-        this.cmdCalibrateFocus.CanFocus = true;
-        this.cmdCalibrateFocus.Name = "cmdCalibrateFocus";
-        this.cmdCalibrateFocus.UseUnderline = true;
-        this.cmdCalibrateFocus.Label = Mono.Unix.Catalog.GetString("Calibrate Focus");
-        this.hbox2.Add(this.cmdCalibrateFocus);
-        Gtk.Box.BoxChild w11 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdCalibrateFocus]));
+        this.cmdCalibrateAlignment = new Gtk.Button();
+        this.cmdCalibrateAlignment.CanFocus = true;
+        this.cmdCalibrateAlignment.Name = "cmdCalibrateAlignment";
+        this.cmdCalibrateAlignment.UseUnderline = true;
+        this.cmdCalibrateAlignment.Label = Mono.Unix.Catalog.GetString("Calibrate Alignment");
+        this.hbox2.Add(this.cmdCalibrateAlignment);
+        Gtk.Box.BoxChild w11 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdCalibrateAlignment]));
         w11.PackType = ((Gtk.PackType)(1));
         w11.Position = 3;
         w11.Expand = false;
@@ -192,16 +193,16 @@ public partial class MainWindow {
         if ((this.Child != null)) {
             this.Child.ShowAll();
         }
-        this.DefaultWidth = 528;
+        this.DefaultWidth = 558;
         this.DefaultHeight = 300;
         this.Show();
         this.DeleteEvent += new Gtk.DeleteEventHandler(this.OnDeleteEvent);
         this.ExitAction.Activated += new System.EventHandler(this.OnExitActionActivated);
         this.RecordImagesAction.Activated += new System.EventHandler(this.OnRecordImagesActionActivated);
         this.chkRecord.Clicked += new System.EventHandler(this.OnChkRecordClicked);
-        this.chkCalibrate.Clicked += new System.EventHandler(this.OnChkCalibrateClicked);
+        this.chkCalibrateLeft.Clicked += new System.EventHandler(this.OnChkCalibrateLeftClicked);
         this.chkCalibrateRight.Clicked += new System.EventHandler(this.OnChkCalibrateRightClicked);
-        this.cmdCalibrateFocus.Clicked += new System.EventHandler(this.OnCmdCalibrateFocusClicked);
+        this.cmdCalibrateAlignment.Clicked += new System.EventHandler(this.OnCmdCalibrateAlignmentClicked);
         this.cmdSimpleStereo.Clicked += new System.EventHandler(this.OnCmdSimpleStereoClicked);
         this.cmdDenseStereo.Clicked += new System.EventHandler(this.OnCmdDenseStereoClicked);
     }

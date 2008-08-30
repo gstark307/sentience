@@ -52,9 +52,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.display_image[1] = rightimage;
         stereo_camera.Load(calibration_filename);
         stereo_camera.Run();
-        
-        //leftimage.Pixbuf.Pixels. = Gdk.Pixbuf.FromPixdata(
-    }
+    }	
     
     private void CloseForm()
     {
@@ -114,6 +112,15 @@ public partial class MainWindow: Gtk.Window
             stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_RECTIFIED;
             //stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_DIFFERENCE;
             stereo_camera.ResetCalibration(1 - window_index);
+			
+			if (!stereo_camera.show_left_image)
+			{
+		        chkCalibrateRight.Active = false;
+			}
+			else
+			{
+		        chkCalibrateLeft.Active = false;
+			}
         }
         else
         {
@@ -122,12 +129,13 @@ public partial class MainWindow: Gtk.Window
             stereo_camera.display_image[1] = rightimage;
             stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_RAW;
         }
+				
     }
 
-    protected virtual void OnChkCalibrateClicked (object sender, System.EventArgs e)
+    protected virtual void OnChkCalibrateLeftClicked (object sender, System.EventArgs e)
     {
         stereo_camera.show_left_image = false;
-        Calibrate(chkCalibrate.Active);
+        Calibrate(chkCalibrateLeft.Active);
     }
 
     protected virtual void OnChkCalibrateRightClicked (object sender, System.EventArgs e)
@@ -152,14 +160,8 @@ public partial class MainWindow: Gtk.Window
         */
     }
 
-    protected virtual void OnCmdCalibrateFocusClicked (object sender, System.EventArgs e)
+    protected virtual void OnCmdCalibrateAlignmentClicked (object sender, System.EventArgs e)
     {
-        // stop the cameras in order avoid thread collisions
-        stereo_camera.Stop();    
-        
-        for (int i = 0; i < 100; i++)
-            System.Threading.Thread.Sleep(5);
-        
         if (stereo_camera.CalibrateCameraAlignment())
         {
             stereo_camera.Save(calibration_filename);
@@ -168,11 +170,8 @@ public partial class MainWindow: Gtk.Window
         }
         else
         {
-            ShowMessage("Please individually calibrate left and right cameras before the calibrating the focus");
+            ShowMessage("Please individually calibrate left and right cameras before the calibrating the alignment");
         }
-        
-        // restart the cameras
-        stereo_camera.Run();
     }
 
     protected virtual void OnCmdSimpleStereoClicked (object sender, System.EventArgs e)

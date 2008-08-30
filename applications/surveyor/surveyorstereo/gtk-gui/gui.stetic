@@ -4,7 +4,7 @@
     <images-root-path>..</images-root-path>
     <target-gtk-version>2.12.0</target-gtk-version>
   </configuration>
-  <widget class="Gtk.Window" id="MainWindow" design-size="528 300">
+  <widget class="Gtk.Window" id="MainWindow" design-size="558 300">
     <action-group name="Default">
       <action id="FileAction">
         <property name="Type">Action</property>
@@ -111,14 +111,14 @@
               </packing>
             </child>
             <child>
-              <widget class="Gtk.CheckButton" id="chkCalibrate">
+              <widget class="Gtk.CheckButton" id="chkCalibrateLeft">
                 <property name="MemberName" />
                 <property name="CanFocus">True</property>
                 <property name="Label" translatable="yes">Calibrate left camera</property>
                 <property name="DrawIndicator">True</property>
                 <property name="HasLabel">True</property>
                 <property name="UseUnderline">True</property>
-                <signal name="Clicked" handler="OnChkCalibrateClicked" />
+                <signal name="Clicked" handler="OnChkCalibrateLeftClicked" />
               </widget>
               <packing>
                 <property name="Position">1</property>
@@ -141,13 +141,13 @@
               </packing>
             </child>
             <child>
-              <widget class="Gtk.Button" id="cmdCalibrateFocus">
+              <widget class="Gtk.Button" id="cmdCalibrateAlignment">
                 <property name="MemberName" />
                 <property name="CanFocus">True</property>
                 <property name="Type">TextOnly</property>
-                <property name="Label" translatable="yes">Calibrate Focus</property>
+                <property name="Label" translatable="yes">Calibrate Alignment</property>
                 <property name="UseUnderline">True</property>
-                <signal name="Clicked" handler="OnCmdCalibrateFocusClicked" />
+                <signal name="Clicked" handler="OnCmdCalibrateAlignmentClicked" />
               </widget>
               <packing>
                 <property name="PackType">End</property>

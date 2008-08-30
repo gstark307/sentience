@@ -624,66 +624,76 @@ namespace surveyor.vision
         /// <param name="best_offset_x">returned x offset in pixels</param>
         /// <param name="best_offset_y">returned y offset in pixels</param>
         /// <param name="rotation">relative rotation of the right image to the left in radians</param>
-        public static void UpdateOffsets(Bitmap rectified_left, Bitmap rectified_right,
+        public static bool UpdateOffsets(Bitmap rectified_left, Bitmap rectified_right,
                                          ref float best_offset_x,
                                          ref float best_offset_y,
                                          ref float rotation)
         {
+			bool success = false;
+			
             byte[][] rectified = new byte[2][];
             rectified[0] = new byte[rectified_left.Width * rectified_left.Height * 3];
             rectified[1] = new byte[rectified_right.Width * rectified_right.Height * 3];
             
-            BitmapArrayConversions.updatebitmap(rectified_left, rectified[0]);
-            BitmapArrayConversions.updatebitmap(rectified_right, rectified[1]);
-            
-            // search window to compare between the two images
-            int tx = rectified_right.Width * 10 / 100;
-            int bx = rectified_right.Width - 1 - tx;
-            int ty = rectified_right.Height * 10 / 100;
-            int by = rectified_right.Height - 1 - ty;
-            
-            int w = rectified_left.Width;
-            int attention_box_width = bx - tx;
-            int attention_box_height = by - ty;
-            
-            int horizontal_search = (rectified_right.Width - 1 - bx);
-            int vertical_search = (rectified_right.Height - 1 - by) / 2;
-            int step_size = attention_box_width / 50;
-            if (step_size < 1) step_size = 1;
+			int tries = 0;
+			while ((!success) && (tries++ < 10))
+			{
+	            bool r1 = BitmapArrayConversions.updatebitmap(rectified_left, rectified[0]);
+	            bool r2 = BitmapArrayConversions.updatebitmap(rectified_right, rectified[1]);
+				
+				if (r1 && r2)
+				{     
+					success = true;
+		            // search window to compare between the two images
+		            int tx = rectified_right.Width * 10 / 100;
+		            int bx = rectified_right.Width - 1 - tx;
+		            int ty = rectified_right.Height * 10 / 100;
+		            int by = rectified_right.Height - 1 - ty;
+		            
+		            int w = rectified_left.Width;
+		            int attention_box_width = bx - tx;
+		            int attention_box_height = by - ty;
+		            
+		            int horizontal_search = (rectified_right.Width - 1 - bx);
+		            int vertical_search = (rectified_right.Height - 1 - by) / 2;
+		            int step_size = attention_box_width / 50;
+		            if (step_size < 1) step_size = 1;
 
-            ulong min_diff = ulong.MaxValue;          
-            for (int offset_y = -vertical_search; offset_y <= vertical_search; offset_y++)
-            {
-                for (int offset_x = -horizontal_search; offset_x <= horizontal_search; offset_x++)
-                {
-                    ulong diff = 0;
-                    for (int x_right = tx + offset_x; x_right < tx + offset_x + attention_box_width; x_right += step_size)
-                    {
-                        int x_left = x_right - offset_x;
-                        for (int y_right = ty + offset_y; y_right < ty + offset_y + attention_box_height; y_right += step_size)
-                        {
-                            int y_left = y_right - offset_y;
-                            
-                            int n1 = ((y_left * w) + x_left) * 3;
-                            int n2 = ((y_right * w) + x_right) * 3;
-                            
-                            for (int col = 0; col < 3; col++)
-                            {
-                                int col_diff = rectified[1][n2+col] - rectified[0][n1+col];
-                                diff += (ulong)(col_diff * col_diff);
-                            }
-                        }
-                    }
-                    
-                    if (diff < min_diff)
-                    {
-                        min_diff = diff;
-                        best_offset_x = offset_x;
-                        best_offset_y = offset_y;
-                    }
-                }
-            }
-            
+		            ulong min_diff = ulong.MaxValue;          
+		            for (int offset_y = -vertical_search; offset_y <= vertical_search; offset_y++)
+		            {
+		                for (int offset_x = -horizontal_search; offset_x <= horizontal_search; offset_x++)
+		                {
+		                    ulong diff = 0;
+		                    for (int x_right = tx + offset_x; x_right < tx + offset_x + attention_box_width; x_right += step_size)
+		                    {
+		                        int x_left = x_right - offset_x;
+		                        for (int y_right = ty + offset_y; y_right < ty + offset_y + attention_box_height; y_right += step_size)
+		                        {
+		                            int y_left = y_right - offset_y;
+		                            
+		                            int n1 = ((y_left * w) + x_left) * 3;
+		                            int n2 = ((y_right * w) + x_right) * 3;
+		                            
+		                            for (int col = 0; col < 3; col++)
+		                            {
+		                                int col_diff = rectified[1][n2+col] - rectified[0][n1+col];
+		                                diff += (ulong)(col_diff * col_diff);
+		                            }
+		                        }
+		                    }
+		                    
+		                    if (diff < min_diff)
+		                    {
+		                        min_diff = diff;
+		                        best_offset_x = offset_x;
+		                        best_offset_y = offset_y;
+		                    }
+		                }
+		            }
+				}
+			}
+			return(success);
         }
         
         #endregion
