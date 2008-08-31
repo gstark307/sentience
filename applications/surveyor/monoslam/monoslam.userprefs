@@ -1,0 +1,34 @@
+﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/monoslam/monoslam.mds">
+  <Files>
+    <File name="models_wideangle.cs" line="26" column="20" />
+    <File name="robot.cs" line="105" column="30" />
+    <File name="monoSLAM.cs" line="1039" column="68" />
+    <File name="monoslaminterface.cs" line="24" column="20" />
+    <File name="nonoverlappingregion.cs" line="26" column="20" />
+    <File name="threeDdraw.cs" line="25" column="20" />
+    <File name="widecamera.cs" line="26" column="20" />
+    <File name="model_creators.cs" line="26" column="11" />
+    <File name="drawing.cs" line="46" column="14" />
+    <File name="../scenelib/Sim_Or_Rob.cs" line="61" column="45" />
+    <File name="../scenelib/SceneLib.cs" line="892" column="21" />
+  </Files>
+  <Views>
+    <ViewMemento id="ProjectPad">
+      <Node expanded="True">
+        <Node name="monoslam" expanded="True" />
+        <Node name="scenelib" expanded="True">
+          <Node name="SceneLib.cs" selected="True" />
+        </Node>
+      </Node>
+    </ViewMemento>
+    <ViewMemento id="ClassPad">
+      <Node expanded="True">
+        <Node name="scenelib" expanded="True" />
+      </Node>
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/scenelib/SceneLib.cs" />
+    <Property key="ActiveConfiguration" value="Debug" />
+  </Properties>
+</UserCombinePreferences>

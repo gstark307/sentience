@@ -1,0 +1,33 @@
+﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/scenelib/scenelib.mds">
+  <Files>
+    <File name="ellipses.cs" line="303" column="32" />
+    <File name="feature.cs" line="475" column="15" />
+    <File name="scene_single.cs" line="750" column="15" />
+    <File name="SceneLib.cs" line="122" column="15" />
+    <File name="settings.cs" line="447" column="11" />
+    <File name="Sim_Or_Rob.cs" line="80" column="1" />
+    <File name="cholesky.cs" line="261" column="14" />
+    <File name="classRotation.cs" line="594" column="15" />
+    <File name="init_feature.cs" line="148" column="11" />
+    <File name="internal_measurement.cs" line="93" column="15" />
+    <File name="kalman.cs" line="211" column="15" />
+    <File name="quaternion.cs" line="372" column="15" />
+    <File name="SVD.cs" line="266" column="15" />
+  </Files>
+  <Views>
+    <ViewMemento id="ProjectPad">
+      <Node expanded="True">
+        <Node name="scenelib" expanded="True">
+          <Node name="cholesky.cs" selected="True" />
+        </Node>
+      </Node>
+    </ViewMemento>
+    <ViewMemento id="ClassPad">
+      <Node expanded="True" />
+    </ViewMemento>
+  </Views>
+  <Properties>
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/scenelib/cholesky.cs" />
+    <Property key="ActiveConfiguration" value="Debug" />
+  </Properties>
+</UserCombinePreferences>

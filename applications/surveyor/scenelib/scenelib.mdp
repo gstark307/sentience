@@ -1,0 +1,51 @@
+<Project name="scenelib" fileversion="2.0" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Debug" assembly="scenelib" />
+      <Build debugmode="True" target="Library" />
+      <Execution runwithwarnings="True" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Release" assemblyKeyFile="." assembly="scenelib" />
+      <Build debugmode="False" target="Library" />
+      <Execution runwithwarnings="True" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <Contents>
+    <File name="MyClass.cs" subtype="Code" buildaction="Compile" />
+    <File name="angleaxis.cs" subtype="Code" buildaction="Compile" />
+    <File name="AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
+    <File name="cholesky.cs" subtype="Code" buildaction="Compile" />
+    <File name="classRotation.cs" subtype="Code" buildaction="Compile" />
+    <File name="diagmatrix.cs" subtype="Code" buildaction="Compile" />
+    <File name="ellipses.cs" subtype="Code" buildaction="Compile" />
+    <File name="feature.cs" subtype="Code" buildaction="Compile" />
+    <File name="identifier.cs" subtype="Code" buildaction="Compile" />
+    <File name="init_feature.cs" subtype="Code" buildaction="Compile" />
+    <File name="internal_measurement.cs" subtype="Code" buildaction="Compile" />
+    <File name="kalman.cs" subtype="Code" buildaction="Compile" />
+    <File name="LICENCE.txt" subtype="Code" buildaction="Nothing" />
+    <File name="lineseg3D.cs" subtype="Code" buildaction="Compile" />
+    <File name="MatrixFixed.cs" subtype="Code" buildaction="Compile" />
+    <File name="models_base.cs" subtype="Code" buildaction="Compile" />
+    <File name="netlib.cs" subtype="Code" buildaction="Compile" />
+    <File name="point3D.cs" subtype="Code" buildaction="Compile" />
+    <File name="QR.cs" subtype="Code" buildaction="Compile" />
+    <File name="quaternion.cs" subtype="Code" buildaction="Compile" />
+    <File name="rotationmatrix.cs" subtype="Code" buildaction="Compile" />
+    <File name="scenelib.mdp" subtype="Code" buildaction="Nothing" />
+    <File name="scenelib.mds" subtype="Code" buildaction="Nothing" />
+    <File name="SceneLib.cs" subtype="Code" buildaction="Compile" />
+    <File name="SceneLib.suo" subtype="Code" buildaction="Nothing" />
+    <File name="scene_single.cs" subtype="Code" buildaction="Compile" />
+    <File name="settings.cs" subtype="Code" buildaction="Compile" />
+    <File name="Sim_Or_Rob.cs" subtype="Code" buildaction="Compile" />
+    <File name="SVD.cs" subtype="Code" buildaction="Compile" />
+    <File name="vector.cs" subtype="Code" buildaction="Compile" />
+  </Contents>
+  <References>
+    <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  </References>
+</Project>

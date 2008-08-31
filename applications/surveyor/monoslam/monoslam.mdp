@@ -1,0 +1,36 @@
+<Project name="monoslam" fileversion="2.0" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Debug" assembly="monoslam" />
+      <Build debugmode="True" target="Library" />
+      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Release" assembly="monoslam" />
+      <Build debugmode="False" target="Library" />
+      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <Contents>
+    <File name="." subtype="Directory" buildaction="Compile" />
+    <File name="AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
+    <File name="model_creators.cs" subtype="Code" buildaction="Compile" />
+    <File name="models_impulse.cs" subtype="Code" buildaction="Compile" />
+    <File name="models_wideangle.cs" subtype="Code" buildaction="Compile" />
+    <File name="models_zeroorder.cs" subtype="Code" buildaction="Compile" />
+    <File name="monoSLAM.cs" subtype="Code" buildaction="Compile" />
+    <File name="monoslaminterface.cs" subtype="Code" buildaction="Compile" />
+    <File name="nonoverlappingregion.cs" subtype="Code" buildaction="Compile" />
+    <File name="robot.cs" subtype="Code" buildaction="Compile" />
+    <File name="threeDdraw.cs" subtype="Code" buildaction="Compile" />
+    <File name="widecamera.cs" subtype="Code" buildaction="Compile" />
+    <File name="drawing.cs" subtype="Code" buildaction="Compile" />
+  </Contents>
+  <References>
+    <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference type="Project" localcopy="True" refto="scenelib" />
+    <ProjectReference type="Gac" localcopy="True" refto="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  </References>
+</Project>

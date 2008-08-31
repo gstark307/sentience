@@ -1,0 +1,20 @@
+<Combine name="monoslam" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="monoslam" configuration="Debug" />
+      <Entry build="True" name="scenelib" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="monoslam" configuration="Release" />
+      <Entry build="True" name="scenelib" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="monoslam" single="True">
+    <Execute type="None" entry="monoslam" />
+    <Execute type="None" entry="scenelib" />
+  </StartMode>
+  <Entries>
+    <Entry filename="monoslam.mdp" />
+    <Entry filename="../scenelib/scenelib.mdp" />
+  </Entries>
+</Combine>
