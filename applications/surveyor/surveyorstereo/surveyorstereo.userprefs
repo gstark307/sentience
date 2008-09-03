@@ -2,29 +2,32 @@
   <Files>
     <File name="Welcome" />
     <File name="MainWindow.cs" line="53" column="13" />
-    <File name="../surveyorlib/BitmapArrayConversions.cs" line="105" column="33" />
+    <File name="../surveyorlib/BitmapArrayConversions.cs" line="242" column="1" />
     <File name="../surveyorlib/SurveyorCalibration.cs" line="627" column="41" />
     <File name="../surveyorlib/SurveyorVisionStereo.cs" line="7" column="52" />
     <File name="../surveyorlib/correspondence/StereoVision.cs" line="10" column="1" />
     <File name="../surveyorlib/correspondence/StereoFeature.cs" line="27" column="31" />
-    <File name="../surveyorlib/SurveyorVisionClient.cs" line="96" column="31" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="133" column="14" />
+    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="446" column="13" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="surveyorlib" expanded="True">
-          <Node name="correspondence" expanded="True" />
-          <Node name="SurveyorVisionStereoGtk.cs" selected="True" />
+          <Node name="correspondence" expanded="True">
+            <Node name="StereoVisionSimple.cs" selected="True" />
+          </Node>
         </Node>
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
       <Node expanded="True" />
     </ViewMemento>
+    <ViewMemento id="MonoDevelop.NUnit.TestPad">
+      <Node />
+    </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/SurveyorVisionStereoGtk.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/correspondence/StereoVisionSimple.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

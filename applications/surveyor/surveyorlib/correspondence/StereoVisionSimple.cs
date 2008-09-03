@@ -34,7 +34,7 @@ namespace surveyor.vision
 		
         // absolute maximum sum of squared differences threshold
         // used when matching left and right images
-        public int matching_threshold = 90000000;
+        public int matching_threshold = 15000;
         
         // radius to use when evaluating match quality
 		// this is a percentage of the possible disparity value
@@ -344,6 +344,16 @@ namespace surveyor.vision
             return(result);
         }
         
+        internal class possible_match
+        {
+            public int feature_index_left;
+            public int feature_index_right;
+            public float ssd;
+            public float probability_left;
+            public float probability_right;
+            public float disparity;
+        }
+        
         protected void MatchFeatures(int y, 
                                      List<float> left_row_features, 
                                      List<float> right_row_features,
@@ -353,18 +363,17 @@ namespace surveyor.vision
         {
             int max_disparity_pixels = image_width * max_disparity / 100;
             
-            List<float> candidate_matches = new List<float>();
-            int average_similarity = 0;
-            int hits = 0;
-
-            for (int i = 0; i < left_row_features.Count; i += 3)
+            List<possible_match>[] match_probabilities_left = new List<possible_match>[left_row_features.Count/3];
+            List<possible_match>[] match_probabilities_right = new List<possible_match>[right_row_features.Count/3];
+            
+            // get matching probabilities
+            int ii = 0;
+            for (int i = 0; i < left_row_features.Count; i += 3, ii++)
             {
+                int jj = 0;
                 float x_left = left_row_features[i];
 				int direction_left = (int)left_row_features[i + 2];
-                int min_variance = int.MaxValue;
-                float best_disparity = 0;
-                int best_index = -1;
-                for (int j = 0; j < right_row_features.Count; j += 3)
+                for (int j = 0; j < right_row_features.Count; j += 3, jj++)
                 {
                     float x_right = right_row_features[j];
 
@@ -378,38 +387,103 @@ namespace surveyor.vision
 	                        int n2 = ((y+(int)calibration_offset_y) * image_width) + (int)x_right;
 	                        
 	                        int v = similarity(n1, n2, (int)disparity, left_bmp, right_bmp);
-	                        if ((v < matching_threshold) &&
-	                            (v < min_variance))
+	                        if ((v > 0) && (v < matching_threshold))
 	                        {
-	                            min_variance = v;
-	                            best_disparity = disparity;
-	                            best_index = j;
+                                possible_match match =  new possible_match();
+                                match.feature_index_left = ii;
+                                match.feature_index_right = jj;
+                                match.ssd = v;
+                                match.probability_left = v;
+                                match.probability_right = v;
+                                match.disparity = disparity;
+
+	                            if (match_probabilities_left[ii] == null)
+	                                match_probabilities_left[ii] = new List<possible_match>();
+                                match_probabilities_left[ii].Add(match);
+
+	                            if (match_probabilities_right[jj] == null)
+	                                match_probabilities_right[jj] = new List<possible_match>();
+                                match_probabilities_right[jj].Add(match);
 	                        }
 						}
                     }
                 }
-                if (best_disparity > 0)
+            }
+
+            // update probabilities for left to right search
+            for (int i = 0; i < match_probabilities_left.Length; i++)
+            {
+                if (match_probabilities_left[i] != null)
                 {
-                    candidate_matches.Add(min_variance);
-                    candidate_matches.Add(x_left);
-                    candidate_matches.Add(best_disparity);                            
+                    // total SSD
+                    float tot_ssd = 0;
+                    for (int j = match_probabilities_left[i].Count - 1; j >= 0; j--)
+                        tot_ssd += match_probabilities_left[i][j].probability_left;
 
-                    average_similarity += min_variance;
-                    hits++;
+                    // convert SSD values to probabilities
+                    if (tot_ssd > 0)
+                        for (int j = match_probabilities_left[i].Count - 1; j >= 0; j--)
+                            match_probabilities_left[i][j].probability_left = 1.0f - (match_probabilities_left[i][j].probability_left / tot_ssd);
+                }
+            }
+            
+            // update probabilities for right to left search
+            for (int i = 0; i < match_probabilities_right.Length; i++)
+            {
+                if (match_probabilities_right[i] != null)
+                {
+                    // total SSD
+                    float tot_ssd = 0;
+                    for (int j = match_probabilities_right[i].Count - 1; j >= 0; j--)
+                        tot_ssd += match_probabilities_right[i][j].probability_right;
 
+                    // convert SSD values to probabilities
+                    if (tot_ssd > 0)
+                        for (int j = match_probabilities_right[i].Count - 1; j >= 0; j--)
+                            match_probabilities_right[i][j].probability_right = 1.0f - (match_probabilities_right[i][j].probability_right / tot_ssd);
+                }
+            }
+            
+            int hits = 0;
+            float average_score = 0;            
+
+            // combine probabilities from left to right and right to left search
+            float[] prob  = new float[match_probabilities_left.Length];
+            float[] disp  = new float[match_probabilities_left.Length];
+            for (int i = 0; i < match_probabilities_left.Length; i++)
+            {
+                if (match_probabilities_left[i] != null)
+                {
+                    float best_score = matching_threshold;
+                    float disparity= 0;
+                    for (int j = match_probabilities_left[i].Count - 1; j >= 0; j--)
+                    {
+                        possible_match match = match_probabilities_left[i][j];
+                        float probability = match.probability_left * match.probability_right;
+                        float score = match.ssd * (1.0f - probability);
+                        if ((score > 0) && (score < best_score))
+                        {
+                            best_score = score;
+                            disparity = match.disparity;
+                        }
+                    }
+                    prob[i] = best_score;
+                    disp[i] = disparity;
+                    average_score += best_score;
+                    hits++;                        
                 }
             }
             
             if (hits > 0)
             {            
-                average_similarity /= hits;
-                int threshold = average_similarity * similarity_threshold_percent / 100;
-                for (int i = 0; i < candidate_matches.Count; i += 3)
+                average_score /= hits;
+                float threshold = average_score * similarity_threshold_percent / 100;
+                for (int i = 0; i < prob.Length; i++)
                 {
-                    if (candidate_matches[i] < threshold)
+                    if ((prob[i] < threshold) && (disp[i] > 0))
                     {
-                        float x_left = candidate_matches[i+1];
-                        float disparity = candidate_matches[i+2];
+                        float x_left = left_row_features[i*3];
+                        float disparity = disp[i];
                         features.Add(new StereoFeature(x_left, y, disparity));
                     }
                 }
