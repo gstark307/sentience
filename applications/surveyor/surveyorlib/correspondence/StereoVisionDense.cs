@@ -405,7 +405,7 @@ namespace surveyor.vision
                                        bool clear,
                                        bool anticorrelated)
         {
-            int bank, x, f, offset_x, intensity, n2;
+            int bank, x, f, offset_x, n2;
             
             // clear the result
             if (clear)
@@ -490,7 +490,7 @@ namespace surveyor.vision
             int no_of_banks = left.Length;
             int d, b, posn_diff, best_disparity, x2;
             int y2 = y+calibration_offset_y;
-            double v, d1, max, best_diff;
+            double v, d1, max;
 
             int start_x = image_width/2;
             int end_x = left[0].Length - 1;
@@ -500,7 +500,6 @@ namespace surveyor.vision
                 if (left_img[(y * image_width) + x] > minimum_intensity)
                 {                
                     best_disparity = 0;
-                    best_diff = max_difference;
 
                     max = min_difference;
                     for (d = 0; d < max_disparity_pixels; d++)
@@ -538,7 +537,6 @@ namespace surveyor.vision
                 if (right_img[(y * image_width) + x] > minimum_intensity)
                 {
                     best_disparity = 0;
-                    best_diff = max_difference;
 
                     max = min_difference;
                     for (d = 0; d < max_disparity_pixels; d++)

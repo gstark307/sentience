@@ -7,7 +7,7 @@
     <File name="../surveyorlib/SurveyorVisionStereo.cs" line="7" column="52" />
     <File name="../surveyorlib/correspondence/StereoVision.cs" line="10" column="1" />
     <File name="../surveyorlib/correspondence/StereoFeature.cs" line="27" column="31" />
-    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="446" column="13" />
+    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="467" column="41" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">

@@ -271,7 +271,7 @@ namespace surveyor.vision
             }
             else
             {
-                if (left_bmp.Length == output_bmp.Length/3);
+                if (left_bmp.Length == output_bmp.Length/3)
                 {
                     int n = 0;
                     for (int i = 0; i < output_bmp.Length; i+=3, n++)

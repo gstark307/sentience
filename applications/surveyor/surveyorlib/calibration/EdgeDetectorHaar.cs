@@ -181,15 +181,13 @@ namespace sluggish.utilities
         public unsafe void GetMeanHighLow(int[] histogram,
                                                  ref int MeanLow, ref int MeanHigh)
         {
-            int Tmin = 0;
-            int Tmax = 0;
             int MinVariance = int.MaxValue;  // some large figure
             int currMeanLow, currMeanHigh, VarianceLow, VarianceHigh;
 
             int LowHits = 0;
             int HighHits = 0;
-            int BestLowHits = 0;
-            int BestHighHits = 0;
+            //int BestLowHits = 0;
+            //int BestHighHits = 0;
             int histlength = histogram.Length - 1;
             MeanLow = 0;
             MeanHigh = 0;
@@ -251,17 +249,12 @@ namespace sluggish.utilities
                     if (Variance < MinVariance)
                     {
                         MinVariance = Variance;
-                        Tmin = level;
                         MeanLow = currMeanLow;
                         MeanHigh = currMeanHigh;
-                        BestLowHits = LowHits;
-                        BestHighHits = HighHits;
                     }
                     if (Variance == MinVariance)
                     {
-                        Tmax = level;
                         MeanHigh = currMeanHigh;
-                        BestHighHits = HighHits;
                     }
                 }
             }

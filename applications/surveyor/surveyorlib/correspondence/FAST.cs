@@ -5145,7 +5145,7 @@ namespace surveyor.vision
 			}
 			else
 			{
-                if (background.Length == bmp.Length/3);
+                if (background.Length == bmp.Length/3)
                 {
                     int n = 0;
                     for (int i = 0; i < bmp.Length; i+=3, n++)

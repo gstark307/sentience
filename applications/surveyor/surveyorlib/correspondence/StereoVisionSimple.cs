@@ -34,7 +34,7 @@ namespace surveyor.vision
 		
         // absolute maximum sum of squared differences threshold
         // used when matching left and right images
-        public int matching_threshold = 15000;
+        public int matching_threshold = 10000;
         
         // radius to use when evaluating match quality
 		// this is a percentage of the possible disparity value
@@ -149,7 +149,6 @@ namespace surveyor.vision
         
             // calculate the sum of squared differences for each pixel
             // along the row
-            int diff0, diff1, diff2, diff3;
             int n = start_index + SSD.Length - 2;
             for (int x = SSD.Length - 2; x > 0; x--,n--)
             {
@@ -344,13 +343,27 @@ namespace surveyor.vision
             return(result);
         }
         
+        /// <summary>
+        /// this class stores info about a possible stereo match
+        /// </summary>
         internal class possible_match
         {
+            // index number of the feature in the left image
             public int feature_index_left;
+            
+            // index number of the feature in the right image
             public int feature_index_right;
+            
+            // sum of squared differences
             public float ssd;
+            
+            // probability of match when scanning features from left to right
             public float probability_left;
+            
+            // probability of match when scanning features from right to left
             public float probability_right;
+            
+            // disparity for this match
             public float disparity;
         }
         
@@ -460,12 +473,14 @@ namespace surveyor.vision
                     {
                         possible_match match = match_probabilities_left[i][j];
                         float probability = match.probability_left * match.probability_right;
-                        float score = match.ssd * (1.0f - probability);
-                        if ((score > 0) && (score < best_score))
-                        {
-                            best_score = score;
-                            disparity = match.disparity;
-                        }
+
+                            float score = match.ssd * (1.0f - probability);
+                            if ((score > 0) && (score < best_score))
+                            {
+                                best_score = score;
+                                disparity = match.disparity;
+                            }
+                        
                     }
                     prob[i] = best_score;
                     disp[i] = disparity;
@@ -649,7 +664,6 @@ namespace surveyor.vision
                 minimum_response -= 50;
             if (features.Count > ideal_number_of_features * 110 / 100)
                 minimum_response += 10;
-            
 
         }
 
