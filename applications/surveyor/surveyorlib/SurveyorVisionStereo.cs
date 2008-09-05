@@ -31,6 +31,7 @@ namespace surveyor.vision
         private SurveyorVisionClient[] camera;
         private string host;
         private int[] port_number;
+        private int broadcast_port_number;
         public int fps = 10;
 
         public string device_name = "Surveyor stereo camera";
@@ -43,6 +44,7 @@ namespace surveyor.vision
         public float baseline_mm = 100;
         public float fov_degrees = 90;
         public int stereo_algorithm_type = StereoVision.SIMPLE;
+        private bool broadcasting;
         
         // whether to record raw camera images
         public bool Record;
@@ -84,9 +86,11 @@ namespace surveyor.vision
         /// <param name="host">host name or IP address</param>
         /// <param name="port_number_left">port number for the left camera</param>
         /// <param name="port_number_right">port number for the right camera</param>
+        /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         public SurveyorVisionStereo(string host,
                                     int port_number_left,
-                                    int port_number_right)
+                                    int port_number_right,
+                                    int broadcast_port)
         {
             this.host = host;
             
@@ -100,6 +104,8 @@ namespace surveyor.vision
             port_number = new int[2];
             port_number[0] = port_number_left;
             port_number[1] = port_number_right;
+            
+            broadcast_port_number = broadcast_port;
             
             calibration_survey = new CalibrationSurvey[2];
             calibration_map = new int[2][];
@@ -120,7 +126,6 @@ namespace surveyor.vision
         
         #endregion
         
-
         #region "saving calibration data as Xml"
 
         /// <summary>
@@ -893,8 +898,11 @@ namespace surveyor.vision
                         break;
                     }
                 }
-                
+
                 correspondence.Show(ref stereo_features);
+                
+                if (!broadcasting)
+                    broadcasting = correspondence.StartService(broadcast_port_number);
             }
         }
         

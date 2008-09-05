@@ -46,7 +46,7 @@ public partial class MainWindow: Gtk.Window
         GtkBitmap.setBitmap(left_bmp, leftimage);
         GtkBitmap.setBitmap(right_bmp, rightimage);
         
-        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002);
+        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002, 10010);
         stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;

@@ -69,6 +69,7 @@ namespace surveyor.vision
         public StereoVisionSimple()
         {
             algorithm_type = SIMPLE;
+            BroadcastStereoFeatureColours = false;
         }
 
 		/// <summary>

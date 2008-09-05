@@ -50,6 +50,7 @@ namespace surveyor.vision
         {
             algorithm_type = GEOMETRIC;
 			feature_scale = 0.4f;
+			BroadcastStereoFeatureColours = true;
         }
 		
 		

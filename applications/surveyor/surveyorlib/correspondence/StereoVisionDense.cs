@@ -69,6 +69,7 @@ namespace surveyor.vision
         public StereoVisionDense()
         {
             algorithm_type = DENSE;
+            BroadcastStereoFeatureColours = true;
         }
 
         #endregion

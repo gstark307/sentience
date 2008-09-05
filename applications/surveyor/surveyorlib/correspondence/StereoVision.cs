@@ -18,8 +18,14 @@
 */
 
 using System;
+using System.IO;
 using System.Drawing;
+using System.Collections;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Runtime.InteropServices;
 using sluggish.utilities;
 
 namespace surveyor.vision
@@ -156,16 +162,25 @@ namespace surveyor.vision
             
             BitmapArrayConversions.updatebitmap(rectified_left, img[0]);
             BitmapArrayConversions.updatebitmap(rectified_right, img[1]);
-             
+            
+            // convert colour images to mono
             monoImage(img[0], image_width, image_height, 1, ref img[2]);
             monoImage(img[1], image_width, image_height, 1, ref img[3]);
             
+            // main stereo correspondence routine
             Update(img[0], img[1], 
 			       img[2], img[3],
 			       rectified_left.Width, rectified_left.Height,
                    calibration_offset_x, calibration_offset_y);
 			
-			UpdateFeatureColours(img[0], img[1]);
+			if (BroadcastStereoFeatureColours)
+			{
+			    // assign a colour to each feature
+			    UpdateFeatureColours(img[0], img[1]);
+			}
+			
+			// send stereo features to connected clients
+			BroadcastStereoFeatures();			
         }
 
         /// <summary>
@@ -302,6 +317,429 @@ namespace surveyor.vision
             Show(img[0], image_width, image_height, output_img);            
             BitmapArrayConversions.updatebitmap_unsafe(output_img, output);
         }
+        
+        
+        #region "broadcasting stereo features to other applications"
+
+        // include colour information when broadcasting
+        protected bool BroadcastStereoFeatureColours;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BroadcastStereoFeatureColour
+        {
+	        public float x;         // 4 bytes
+	        public float y;         // 4 bytes
+	        public float disparity; // 4 bytes
+	        public byte r, g, b;    // 3 bytes
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BroadcastStereoFeature
+        {
+	        public float x;         // 4 bytes
+	        public float y;         // 4 bytes
+	        public float disparity; // 4 bytes
+        }
+
+        /// <summary>
+        /// serialize any object
+        /// </summary>
+        /// <param name="anything"></param>
+        /// <returns>byte array containing serialized data</returns>
+        private byte[] RawSerialize(object anything)
+        {
+        	int rawsize = Marshal.SizeOf(anything);
+        	byte[] rawdata = new byte[rawsize];
+        	GCHandle handle = GCHandle.Alloc(rawdata, GCHandleType.Pinned);
+        	Marshal.StructureToPtr(anything, handle.AddrOfPinnedObject(), false);
+        	handle.Free();
+        	return(rawdata);
+        }
+        
+        /// <summary>
+        /// returns stereo feature data as a byte array suitable for broadcasting
+        /// </summary>
+        /// <returns>byte array containing stereo feature data</returns>
+        private byte[] SerializedStereoFeatures()
+        {
+            byte[] serialized = null;
+            if (features != null)
+            {
+                if (BroadcastStereoFeatureColours)
+                {
+                    // include colour data in the broadcast
+                    BroadcastStereoFeatureColour[] data = new BroadcastStereoFeatureColour[features.Count];
+                    for (int i = 0; i < features.Count; i++)
+                    {
+                        data[i].x = features[i].x;
+                        data[i].y = features[i].y;
+                        data[i].disparity = features[i].disparity;
+                        data[i].r = features[i].colour[0];
+                        data[i].g = features[i].colour[1];
+                        data[i].b = features[i].colour[2];
+                    }
+                    serialized = RawSerialize(data);
+                }
+                else
+                {
+                    // broadcast only the basics for each stereo feature
+                    BroadcastStereoFeature[] data = new BroadcastStereoFeature[features.Count];
+                    for (int i = 0; i < features.Count; i++)
+                    {
+                        data[i].x = features[i].x;
+                        data[i].y = features[i].y;
+                        data[i].disparity = features[i].disparity;
+                    }
+                    serialized = RawSerialize(data);
+                }
+            }
+            return(serialized);
+        }
+
+        #region "sockets stuff"
+
+        private const int DATA_BUFFER_SIZE = 4096;
+
+        private delegate void UpdateClientListCallback();
+        private AsyncCallback pfnWorkerCallBack;
+        private Socket m_mainSocket;
+        public bool ServiceRunning;
+
+        private ArrayList m_workerSocketList =
+                ArrayList.Synchronized(new System.Collections.ArrayList());
+
+        // total number of clients connected
+        private int m_clientCount = 0;
+
+        /// <summary>
+        /// start the service listening for clients on the given port number
+        /// </summary>
+        /// <param name="PortNumber">port number</param>		
+        public bool StartService(int PortNumber)
+        {
+            if (PortNumber >= 1024)
+            {
+			    string IPaddress = GetIP();
+			    return(StartService(IPaddress, PortNumber));
+			}
+			else
+			{
+			    Console.WriteLine("broadcast port should be >= 1024");
+			    return(false);
+			}			
+		}
+		
+        /// <summary>
+        /// start the service listening for clients on the given port number
+        /// </summary>
+        /// <param name="IPaddress">IP address to listen on</param>		
+        /// <param name="PortNumber">port number</param>		
+        public bool StartService(string IPaddress, int PortNumber)
+        {
+            bool success = true;
+            ServiceRunning = false;
+			
+			if (PortNumber < 1024)
+			{
+				Console.WriteLine("Port number is too low.  Try something >= 1024");
+			}
+			else
+			{
+	            try
+	            {
+	                // Create the listening socket...
+	                m_mainSocket = new Socket(AddressFamily.InterNetwork,
+	                    SocketType.Stream,
+	                    ProtocolType.Tcp);
+	                IPEndPoint ipLocal = new IPEndPoint(IPAddress.Parse(IPaddress), PortNumber);
+
+	                Console.WriteLine("Stereo feature broadcast running on " + ipLocal.ToString());
+
+	                // Bind to local IP Address...
+	                m_mainSocket.Bind(ipLocal);
+					
+	                // Start listening...
+	                m_mainSocket.Listen(4);
+					
+	                // Create the call back for any client connections...
+	                m_mainSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
+
+	                ServiceRunning = true;
+	            }
+	            catch (SocketException se)
+	            {
+	                success = false;
+	                Console.WriteLine("Failed to start stereo feature service: " + se.Message);
+					Console.WriteLine("Check your firewall or iptables");
+					Console.WriteLine("Try:  sudo iptables -A INPUT -p tcp --dport " + PortNumber.ToString() + " -j ACCEPT");
+	            }
+			}
+            return (success);
+        }
+
+        /// <summary>
+        /// This is the call back function, which will be invoked when a client is connected 
+        /// </summary>
+        /// <param name="asyn"></param>
+        private void OnClientConnect(IAsyncResult asyn)
+        {
+            try
+            {
+                // Here we complete/end the BeginAccept() asynchronous call
+                // by calling EndAccept() - which returns the reference to
+                // a new Socket object
+                Socket workerSocket = m_mainSocket.EndAccept(asyn);
+
+                // Now increment the client count for this client 
+                // in a thread safe manner
+                Interlocked.Increment(ref m_clientCount);
+
+                // Add the workerSocket reference to our ArrayList
+                m_workerSocketList.Add(workerSocket);
+
+                // Let the worker Socket do the further processing for the 
+                // just connected client
+                WaitForData(workerSocket, m_clientCount);
+
+                // Since the main Socket is now free, it can go back and wait for
+                // other clients who are attempting to connect
+                m_mainSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
+
+                Console.WriteLine("Client number " + m_clientCount.ToString()  + " connected at " + DateTime.Now.ToString());
+            }
+            catch (ObjectDisposedException)
+            {
+                System.Diagnostics.Debugger.Log(0, "1", "\n OnClientConnection: Socket has been closed\n");
+            }
+            catch (SocketException se)
+            {
+                Console.WriteLine(se.Message);
+            }
+
+        }
+
+        internal class SocketPacket
+        {
+            // Constructor which takes a Socket and a client number
+            public SocketPacket(System.Net.Sockets.Socket socket, int clientNumber)
+            {
+                m_currentSocket = socket;
+                m_clientNumber = clientNumber;
+            }
+
+            public System.Net.Sockets.Socket m_currentSocket;
+
+            public int m_clientNumber;
+
+            // Buffer to store the data sent by the client
+            public byte[] dataBuffer = new byte[DATA_BUFFER_SIZE];
+        }
+
+        /// <summary>
+        /// Start waiting for data from the client
+        /// </summary>
+        /// <param name="soc"></param>
+        /// <param name="clientNumber"></param>
+        private void WaitForData(System.Net.Sockets.Socket soc, int clientNumber)
+        {			
+            try
+            {
+                if (pfnWorkerCallBack == null)
+                {
+                    // Specify the call back function which is to be 
+                    // invoked when there is any write activity by the 
+                    // connected client
+                    pfnWorkerCallBack = new AsyncCallback(OnDataReceived);
+                }
+                SocketPacket theSocPkt = new SocketPacket(soc, clientNumber);
+
+                soc.BeginReceive(theSocPkt.dataBuffer, 0,
+                    theSocPkt.dataBuffer.Length,
+                    SocketFlags.None,
+                    pfnWorkerCallBack,
+                    theSocPkt);
+            }
+            catch (SocketException se)
+            {
+                Console.WriteLine(se.Message);
+            }
+        }
+		
+		// list of client connection numbers
+		private ArrayList active_clients;
+		
+
+        /// <summary>
+        /// This the call back function which will be invoked when the socket
+        /// detects any client writing of data on the stream
+        /// </summary>
+        /// <param name="asyn"></param>
+        private void OnDataReceived(IAsyncResult asyn)
+        {
+        }
+
+        /// <summary>
+        /// sends stereo features to all connected clients
+        /// </summary>
+        protected void BroadcastStereoFeatures()
+        {
+            if (m_workerSocketList != null)
+            {
+                if (m_workerSocketList.Count > 0)
+                {
+                    try
+                    {
+                        byte[] StereoData = SerializedStereoFeatures();
+                        Socket workerSocket = null;
+                        for (int i = 0; i < m_workerSocketList.Count; i++)
+                        {
+                            workerSocket = (Socket)m_workerSocketList[i];
+                            if (workerSocket != null)
+                            {
+                                if (workerSocket.Connected)
+                                {
+                                    workerSocket.Send(StereoData);
+                                }
+                            }
+                        }
+                    }
+                    catch (SocketException se)
+                    {
+                        Console.WriteLine("Error broadcasting stereo feature data to all clients: " + se.Message);
+                    }
+                }
+            }
+        }
+
+        public void StopService()
+        {
+            CloseSockets();
+            ServiceRunning = false;
+        }
+
+        /// <summary>
+        /// get the local IP address
+        /// </summary>
+        /// <returns></returns>
+        private string GetIP()
+        {
+			string[] localIP = new string[3];
+			localIP[0] = "";  // this slot is for 127.x.x.x addresses
+			localIP[1] = "";  // this slot is for 192.168.x.x addresses
+			localIP[2] = "";  // this is for any other address
+			
+            String strHostName = Dns.GetHostName();
+
+            // Find host by name
+            IPHostEntry iphostentry = Dns.GetHostEntry(strHostName);
+
+            // Grab the first IP addresses
+			int i = 0;
+			while ((i < iphostentry.AddressList.Length) && (localIP[2] == ""))
+            {
+			    IPAddress ipaddress = iphostentry.AddressList[i];
+                string IPStr = ipaddress.ToString();
+                if (!IPStr.Contains(":"))
+                {
+                    if (!IPStr.StartsWith("0."))
+                    {
+                        if (IPStr.StartsWith("127."))
+                        {
+                            localIP[0] = IPStr;
+                        }
+                        else
+                        {
+                            if (IPStr.StartsWith("192."))
+                                localIP[1] = IPStr;
+                            else
+                                localIP[2] = IPStr;
+                        }
+                    }
+                }
+				i++;
+            }
+			
+			// pick the widest available network
+			string IPaddress = "";
+			i = 2;
+			while ((i >= 0) && (IPaddress == ""))
+			{
+				if (localIP[i] != "") IPaddress = localIP[i];
+				i--;
+			}
+			
+            return(IPaddress);
+        }
+
+        /// <summary>
+        /// closes all sockets
+        /// </summary>
+        private void CloseSockets()
+        {
+            if (m_mainSocket != null)
+            {
+                m_mainSocket.Close();
+            }
+            Socket workerSocket = null;
+            for (int i = 0; i < m_workerSocketList.Count; i++)
+            {
+                workerSocket = (Socket)m_workerSocketList[i];
+                if (workerSocket != null)
+                {
+                    workerSocket.Close();
+                    workerSocket = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// returns a list of connected clients
+        /// </summary>
+        /// <returns>list of clients</returns>
+        public string[] GetClientList()
+        {
+            string[] clients = null;
+            if (m_workerSocketList.Count > 0)
+            {
+                ArrayList connected_clients = new ArrayList();
+                for (int i = 0; i < m_workerSocketList.Count; i++)
+                {
+                    string clientKey = Convert.ToString(i + 1);
+                    Socket workerSocket = (Socket)m_workerSocketList[i];
+                    if (workerSocket != null)
+                    {
+                        if (workerSocket.Connected)
+                        {
+                            connected_clients.Add(clientKey);
+                        }
+                    }
+                }
+                if (connected_clients.Count > 0)
+                {
+                    clients = new string[connected_clients.Count];
+                    for (int i = 0; i < connected_clients.Count; i++)
+                        clients[i] = (string)connected_clients[i];
+                }
+            }
+            return (clients);
+        }
+
+        #endregion
+        
+        #region "platform specific code"
+
+        /// <summary>
+        /// Method to detect if runtime platform is a MS Windows or not 
+        /// </summary>
+        protected bool IsWindows()
+        {
+            return Path.DirectorySeparatorChar == '\\';
+        }
+
+        #endregion        
+        
+        #endregion
+        
         
     }
 }

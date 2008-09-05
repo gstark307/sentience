@@ -39,9 +39,11 @@ namespace surveyor.vision
         /// <param name="host">host name or IP address</param>
         /// <param name="port_number_left">port number for the left camera</param>
         /// <param name="port_number_right">port number for the right camera</param>
+        /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         public SurveyorVisionStereoGtk(string host,
                                        int port_number_left,
-                                       int port_number_right) : base (host, port_number_left, port_number_right)
+                                       int port_number_right,
+                                       int broadcast_port) : base (host, port_number_left, port_number_right, broadcast_port)
         {
             display_image = new Gtk.Image[2];
         }

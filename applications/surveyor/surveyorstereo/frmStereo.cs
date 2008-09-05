@@ -30,7 +30,7 @@ namespace surveyorstereo
 
         public void Init()
         {
-            stereo_camera = new SurveyorVisionStereoWin(stereo_camera_IP, 10001, 10002);
+            stereo_camera = new SurveyorVisionStereoWin(stereo_camera_IP, 10001, 10002, 10010);
             stereo_camera.window = this;
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;
