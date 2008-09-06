@@ -323,6 +323,9 @@ namespace surveyor.vision
 
         // include colour information when broadcasting
         protected bool BroadcastStereoFeatureColours;
+        
+        // max number of features to broadcast to other applications
+        public int maximum_broadcast_features = 200;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct BroadcastStereoFeatureColour
@@ -363,34 +366,48 @@ namespace surveyor.vision
         private byte[] SerializedStereoFeatures()
         {
             byte[] serialized = null;
+            int n = 0;
             if (features != null)
-            {
+            {                
                 if (BroadcastStereoFeatureColours)
                 {
                     // include colour data in the broadcast
-                    BroadcastStereoFeatureColour[] data = new BroadcastStereoFeatureColour[features.Count];
                     for (int i = 0; i < features.Count; i++)
                     {
-                        data[i].x = features[i].x;
-                        data[i].y = features[i].y;
-                        data[i].disparity = features[i].disparity;
-                        data[i].r = features[i].colour[0];
-                        data[i].g = features[i].colour[1];
-                        data[i].b = features[i].colour[2];
+                        BroadcastStereoFeatureColour data = new BroadcastStereoFeatureColour();
+                        data.x = features[i].x;
+                        data.y = features[i].y;
+                        data.disparity = features[i].disparity;
+                        data.r = features[i].colour[0];
+                        data.g = features[i].colour[1];
+                        data.b = features[i].colour[2];
+                        byte[] serial_data = RawSerialize(data);
+                        if (serialized == null) serialized = new byte[features.Count * serial_data.Length];
+                        for (int j = 0; j < serial_data.Length; j++, n++)
+                            serialized[n] = serial_data[j];
                     }
-                    serialized = RawSerialize(data);
+                    
                 }
                 else
                 {
                     // broadcast only the basics for each stereo feature
-                    BroadcastStereoFeature[] data = new BroadcastStereoFeature[features.Count];
-                    for (int i = 0; i < features.Count; i++)
+                    int max = features.Count;
+                    if (max > maximum_broadcast_features) max = maximum_broadcast_features;
+                    Random rnd = new Random();
+                    for (int i = 0; i < max; i++)
                     {
-                        data[i].x = features[i].x;
-                        data[i].y = features[i].y;
-                        data[i].disparity = features[i].disparity;
+                        int ii = i;
+                        if (max > maximum_broadcast_features)
+                            ii = rnd.Next(features.Count-1);
+                        BroadcastStereoFeature data = new BroadcastStereoFeature();
+                        data.x = features[ii].x;
+                        data.y = features[ii].y;
+                        data.disparity = features[ii].disparity;
+                        byte[] serial_data = RawSerialize(data);
+                        if (serialized == null) serialized = new byte[max * serial_data.Length];
+                        for (int j = 0; j < serial_data.Length; j++, n++)
+                            serialized[n] = serial_data[j];
                     }
-                    serialized = RawSerialize(data);
                 }
             }
             return(serialized);
@@ -583,13 +600,15 @@ namespace surveyor.vision
         /// </summary>
         protected void BroadcastStereoFeatures()
         {
+        
             if (m_workerSocketList != null)
-            {
+            {            
                 if (m_workerSocketList.Count > 0)
                 {
+                Console.WriteLine("test");
+                    byte[] StereoData = SerializedStereoFeatures();                    
                     try
-                    {
-                        byte[] StereoData = SerializedStereoFeatures();
+                    {                    
                         Socket workerSocket = null;
                         for (int i = 0; i < m_workerSocketList.Count; i++)
                         {
@@ -598,6 +617,7 @@ namespace surveyor.vision
                             {
                                 if (workerSocket.Connected)
                                 {
+                                    Console.WriteLine("sending " + StereoData.Length.ToString() + " bytes");
                                     workerSocket.Send(StereoData);
                                 }
                             }

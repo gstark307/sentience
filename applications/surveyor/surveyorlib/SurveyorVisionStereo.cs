@@ -44,6 +44,7 @@ namespace surveyor.vision
         public float baseline_mm = 100;
         public float fov_degrees = 90;
         public int stereo_algorithm_type = StereoVision.SIMPLE;
+        private int prev_stereo_algorithm_type;
         private bool broadcasting;
         
         // whether to record raw camera images
@@ -855,7 +856,15 @@ namespace surveyor.vision
             if ((rectified[0] != null) && 
                 (rectified[1] != null))
             {
-            
+                if (correspondence != null)
+                {
+                    if ((broadcasting) && (stereo_algorithm_type != prev_stereo_algorithm_type))
+                    {
+                        correspondence.StopService();
+                        broadcasting = false;
+                    }
+                }
+
                 switch(stereo_algorithm_type)
                 {
                     case StereoVision.SIMPLE:
@@ -900,10 +909,12 @@ namespace surveyor.vision
                 }
 
                 correspondence.Show(ref stereo_features);
-                
+                                
                 if (!broadcasting)
                     broadcasting = correspondence.StartService(broadcast_port_number);
-            }
+                    
+                prev_stereo_algorithm_type = stereo_algorithm_type;
+            }            
         }
         
         #endregion

@@ -1,0 +1,16 @@
+<Combine name="stereoclient" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="stereoclient" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="stereoclient" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="stereoclient" single="True">
+    <Execute type="None" entry="stereoclient" />
+  </StartMode>
+  <Entries>
+    <Entry filename="stereoclient.mdp" />
+  </Entries>
+</Combine>

@@ -1,26 +1,27 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/surveyorstereo/surveyorstereo.mds">
   <Files>
     <File name="Welcome" />
-    <File name="MainWindow.cs" line="54" column="29" />
+    <File name="MainWindow.cs" line="184" column="23" />
     <File name="../surveyorlib/BitmapArrayConversions.cs" line="9" column="40" />
     <File name="../surveyorlib/SurveyorCalibration.cs" line="955" column="27" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="905" column="85" />
-    <File name="../surveyorlib/correspondence/StereoVision.cs" line="458" column="48" />
-    <File name="../surveyorlib/correspondence/StereoFeature.cs" line="27" column="31" />
-    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="71" column="37" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="903" column="1" />
+    <File name="../surveyorlib/correspondence/StereoVision.cs" line="423" column="21" />
+    <File name="../surveyorlib/correspondence/StereoFeature.cs" line="1" column="1" />
+    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="162" column="1" />
     <File name="../surveyorlib/calibration/EdgeDetectorHaar.cs" line="295" column="10" />
     <File name="../surveyorlib/calibration/EdgeDetectorCanny.cs" line="943" column="29" />
     <File name="../surveyorlib/calibration/geometry.cs" line="177" column="19" />
     <File name="../surveyorlib/calibration/Grid2D.cs" line="760" column="10" />
     <File name="../surveyorlib/correspondence/FAST.cs" line="5148" column="55" />
     <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="43" column="52" />
+    <File name="../surveyorlib/correspondence/StereoVisionDense.cs" line="661" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="surveyorlib" expanded="True">
           <Node name="correspondence" expanded="True">
-            <Node name="StereoVision.cs" selected="True" />
+            <Node name="StereoVisionSimple.cs" selected="True" />
           </Node>
         </Node>
         <Node name="surveyorstereo" expanded="True" />
@@ -34,7 +35,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/correspondence/StereoVision.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/correspondence/StereoVisionSimple.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>
