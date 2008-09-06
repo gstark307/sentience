@@ -2,9 +2,9 @@
   <Files>
     <File name="Welcome" />
     <File name="Main.cs" line="26" column="2" />
-    <File name="commandline.cs" line="23" column="29" />
-    <File name="StereoVisionClient.cs" line="338" column="1" />
-    <File name="StereoFeature.cs" line="16" column="16" />
+    <File name="commandline.cs" line="19" column="1" />
+    <File name="StereoVisionClient.cs" line="2" column="82" />
+    <File name="StereoFeature.cs" line="1" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
