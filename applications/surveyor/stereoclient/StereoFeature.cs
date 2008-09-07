@@ -36,5 +36,13 @@ namespace surveyor.vision
             this.y = y;
             this.disparity = disparity;
         }
+
+        public void SetColour(byte r, byte g, byte b)
+        {
+            colour = new byte[3];
+            colour[0] = r;
+            colour[1] = g;
+            colour[2] = b;
+        }
     }
 }

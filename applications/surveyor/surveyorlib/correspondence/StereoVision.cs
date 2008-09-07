@@ -334,6 +334,7 @@ namespace surveyor.vision
 	        public float y;         // 4 bytes
 	        public float disparity; // 4 bytes
 	        public byte r, g, b;    // 3 bytes
+            public byte pack;       // 1 byte
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -366,9 +367,11 @@ namespace surveyor.vision
         private byte[] SerializedStereoFeatures()
         {
             byte[] serialized = null;
-            int n = 0;
+            
             if (features != null)
-            {                
+            {
+                int n = 0;
+
                 // limit the maximum number of features broadcast
                 int max = features.Count;
                 if (max > maximum_broadcast_features) max = maximum_broadcast_features;
@@ -380,7 +383,7 @@ namespace surveyor.vision
                     for (int i = 0; i < max; i++)
                     {
                         int ii = i;
-                        if (max > maximum_broadcast_features)
+                        if (features.Count > maximum_broadcast_features)
                             ii = rnd.Next(features.Count-1);
 
                         BroadcastStereoFeatureColour data = new BroadcastStereoFeatureColour();
@@ -403,7 +406,7 @@ namespace surveyor.vision
                     for (int i = 0; i < max; i++)
                     {
                         int ii = i;
-                        if (max > maximum_broadcast_features)
+                        if (features.Count > maximum_broadcast_features)
                             ii = rnd.Next(features.Count-1);
 
                         BroadcastStereoFeature data = new BroadcastStereoFeature();
@@ -428,9 +431,7 @@ namespace surveyor.vision
         private AsyncCallback pfnWorkerCallBack;
         private Socket m_mainSocket;
         public bool ServiceRunning;
-
-        private ArrayList m_workerSocketList =
-                ArrayList.Synchronized(new System.Collections.ArrayList());
+        private ArrayList m_workerSocketList;
 
         // total number of clients connected
         private int m_clientCount = 0;
@@ -469,7 +470,9 @@ namespace surveyor.vision
 			}
 			else
 			{
-	            try
+                m_workerSocketList = ArrayList.Synchronized(new System.Collections.ArrayList()); 
+                
+                try
 	            {
 	                // Create the listening socket...
 	                m_mainSocket = new Socket(AddressFamily.InterNetwork,
@@ -600,6 +603,8 @@ namespace surveyor.vision
         /// <param name="asyn"></param>
         private void OnDataReceived(IAsyncResult asyn)
         {
+            SocketPacket socketData = (SocketPacket)asyn.AsyncState;
+            WaitForData(socketData.m_currentSocket, socketData.m_clientNumber);
         }
 
         /// <summary>
@@ -610,7 +615,7 @@ namespace surveyor.vision
         
             if (m_workerSocketList != null)
             {            
-                Console.WriteLine("socks: " + m_workerSocketList.Count.ToString());
+                //Console.WriteLine("socks: " + m_workerSocketList.Count.ToString());
                 if (m_workerSocketList.Count > 0)
                 {                
                     byte[] StereoData = SerializedStereoFeatures();                    

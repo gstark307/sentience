@@ -208,7 +208,7 @@ namespace surveyor.vision
             {
                 SocketPacket theSockId = (SocketPacket)asyn.AsyncState;
                 int iRx = theSockId.thisSocket.EndReceive(asyn);
-                Console.WriteLine("Received1 " + (iRx + 1).ToString() + " bytes");
+                //Console.WriteLine("Received1 " + (iRx + 1).ToString() + " bytes");
                 Receive(theSockId.dataBuffer, iRx + 1);
                 Console.WriteLine("Received " + (iRx + 1).ToString() + " bytes");
                 WaitForData();
@@ -297,20 +297,34 @@ namespace surveyor.vision
         
         #region "receiving data"
 
+        // indicates whether data is currently being received
         private bool receive_busy;
-                                
+        
+        /// <summary>
+        /// turns a byte array into an array of floats containing position and disparity of the stereo feature
+        /// </summary>
+        /// <param name="stereo_data">received data</param>
+        /// <param name="no_of_bytes">received number of bytes</param>
+        /// <returns>float array containing stereo feature parameters</returns>
         private float[] ReadData(byte[] stereo_data, int no_of_bytes)
         {
             float[] data = new float[no_of_bytes / 4];
             for (int i = 0; i < data.Length; i++)
                 data[i] = BitConverter.ToSingle(stereo_data, i*4);
 	        return(data);
-        } 
+        }
 
+        /// <summary>
+        /// turns a byte array into an array of floats containing position, disparity and colour of the stereo feature
+        /// </summary>
+        /// <param name="stereo_data">received data</param>
+        /// <param name="no_of_bytes">received number of bytes</param>
+        /// <param name="data">returned position and disparity as an array of floats</param>
+        /// <param name="colour">returned colour for each stereo feature as an array of bytes</param>
         private void ReadDataColour(byte[] stereo_data, int no_of_bytes,
                                     ref float[] data, ref byte[] colour)
         {
-            const int bytes_per_feature = (4 * 3) + 3;
+            const int bytes_per_feature = 4 * 4;
             int no_of_features = no_of_bytes / bytes_per_feature;
             data = new float[no_of_features * 3];
             colour = new byte[data.Length];
@@ -319,24 +333,31 @@ namespace surveyor.vision
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    data[n] = BitConverter.ToSingle(stereo_data, (i*bytes_per_feature) + (4 * j));
-                    colour[n] = stereo_data[(i*bytes_per_feature) + (4 * 3) + j];
+                    int offset = (i * bytes_per_feature) + (4 * j);
+                    data[n] = BitConverter.ToSingle(stereo_data, offset);
+                    colour[n] = stereo_data[(i * bytes_per_feature) + (4 * 3) + j];
                     n++;
                 }
             }
-        } 
+        }
 
+        /// <summary>
+        /// receive incoming stereo feature data and turn it into a list of stereo feature objects
+        /// </summary>
+        /// <param name="data">received data</param>
+        /// <param name="no_of_bytes">received number of bytes</param>
         private void Receive(byte[] data, int no_of_bytes)
         {
             if ((data.Length > 1) && (!receive_busy))
             {
                 receive_busy = true;
                 
+                // create a list to store the features
                 List<StereoFeature> new_features = new List<StereoFeature>();
                 
                 if (!ColourFeatures)
                 {
-                
+                    // stereo features with no colour information
                     float[] feats = ReadData(data, no_of_bytes);
                     for (int i = 0; i < feats.Length; i += 3)
                     {
@@ -348,21 +369,17 @@ namespace surveyor.vision
                 }
                 else
                 {
+                    // stereo features with colour information
                     float[] feats = null;
                     byte[] colour = null; 
-                    Console.WriteLine("test1");
                     ReadDataColour(data, no_of_bytes, ref feats, ref colour);
-                    Console.WriteLine("test2");
                     for (int i = 0; i < feats.Length; i += 3)
                     {
                         StereoFeature f = 
                             new StereoFeature(feats[i], feats[i + 1], feats[i + 2]);
-                        f.colour[0] = colour[i];
-                        f.colour[1] = colour[i + 1];
-                        f.colour[2] = colour[i + 2];
+                        f.SetColour(colour[i], colour[i + 1], colour[i + 2]);
                         new_features.Add(f);
                     }
-                    
                 }
                 features = new_features;
                 FeaturesArrived(features);
@@ -379,7 +396,7 @@ namespace surveyor.vision
         {
             for (int i = 0; i < features.Count; i++)
             {
-                Console.WriteLine("x: " + features[i].x.ToString() + "  y: " + features[i].y.ToString() + "  disparity: " + features[i].disparity.ToString());
+                Console.WriteLine("x: " + features[i].x.ToString() + "  y: " + features[i].y.ToString() + "  disparity: " + features[i].disparity.ToString() + "  red:" + features[i].colour[0].ToString() + "  green:" + features[i].colour[1].ToString() + "  blue:" + features[i].colour[2].ToString());
             }
         }
         

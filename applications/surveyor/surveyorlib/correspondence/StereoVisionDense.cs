@@ -30,6 +30,11 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVisionDense : StereoVision
     {
+        // Select rows at random from which to obtain disparities
+        // this helps to reduce processing time
+        // If this value is set to zero then all rows of the image are considered
+        public int random_rows = 5;
+
         // maximum sum of squared differences value
         public double max_difference = 1000000000;
         
@@ -581,6 +586,7 @@ namespace surveyor.vision
                                        int vertical_compression,
                                        int position_search_radius,
                                        int minimum_intensity,
+                                       int random_rows,
 		                               List<StereoFeature> features)
         {
             // load images
@@ -609,6 +615,7 @@ namespace surveyor.vision
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,
+                        random_rows,
 			            features,
                         disparity_map);
 
@@ -641,6 +648,7 @@ namespace surveyor.vision
                                         int vertical_compression,
                                         int position_search_radius,
                                         int minimum_intensity,
+                                        int random_rows,
 		                                List<StereoFeature> features,
                                         byte[] disparity_map)
         {
@@ -684,10 +692,24 @@ namespace surveyor.vision
                 int[] disparity = new int[image_width];
                 int border = masks[0].Length / 2;
 
+                Random rnd = new Random();
                 int n;
-                int compressed_y = 0;
-                for (int y = 0; y < image_height; y += vertical_compression)
+                int y = 0;
+                int max_itterations = image_height / vertical_compression;
+                int itteration = 0;
+                while (itteration < max_itterations)
                 {
+                    if (random_rows > 0)
+                    {
+                        y = rnd.Next((image_height / vertical_compression) - 1) * vertical_compression;
+                        if (itteration >= random_rows - 1) itteration = max_itterations;
+                    }
+                    else
+                    {
+                        y = itteration * vertical_compression;
+                    }
+
+                    int compressed_y = y / vertical_compression;
                     int y_right = y + calibration_offset_y;
                     
                     if ((y_right > -1) && (y_right < image_height))
@@ -710,7 +732,7 @@ namespace surveyor.vision
 									if ((disparity_pixels > 0) &&
 									    (disparity_pixels < max_disparity_pixels_limit))
 									{
-							            features.Add(new StereoFeature(x, y,disparity_pixels));
+							            features.Add(new StereoFeature(x, y, disparity_pixels));
 										
 	                                    byte disp = (byte)(disparity_pixels * 255 / max_disparity_pixels);
 	                                    disparity_map[n] = disp;
@@ -727,7 +749,8 @@ namespace surveyor.vision
                             }
                         }
                     }
-                    compressed_y++;
+
+                    itteration++;
                 }
             }
         }
@@ -776,7 +799,8 @@ namespace surveyor.vision
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,
-			            features,			            
+                        random_rows,
+			            features,            
                         disparity_map);
         }
 
@@ -826,7 +850,6 @@ namespace surveyor.vision
         }
 
         #endregion
-
 
     }
 
