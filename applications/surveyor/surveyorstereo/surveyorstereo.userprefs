@@ -5,9 +5,9 @@
     <File name="../surveyorlib/BitmapArrayConversions.cs" line="9" column="40" />
     <File name="../surveyorlib/SurveyorCalibration.cs" line="955" column="27" />
     <File name="../surveyorlib/SurveyorVisionStereo.cs" line="903" column="1" />
-    <File name="../surveyorlib/correspondence/StereoVision.cs" line="423" column="21" />
+    <File name="../surveyorlib/correspondence/StereoVision.cs" line="185" column="1" />
     <File name="../surveyorlib/correspondence/StereoFeature.cs" line="1" column="1" />
-    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="162" column="1" />
+    <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="670" column="1" />
     <File name="../surveyorlib/calibration/EdgeDetectorHaar.cs" line="295" column="10" />
     <File name="../surveyorlib/calibration/EdgeDetectorCanny.cs" line="943" column="29" />
     <File name="../surveyorlib/calibration/geometry.cs" line="177" column="19" />
@@ -21,10 +21,9 @@
       <Node expanded="True">
         <Node name="surveyorlib" expanded="True">
           <Node name="correspondence" expanded="True">
-            <Node name="StereoVisionSimple.cs" selected="True" />
+            <Node name="StereoVision.cs" selected="True" />
           </Node>
         </Node>
-        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
@@ -35,7 +34,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/correspondence/StereoVisionSimple.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/correspondence/StereoVision.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

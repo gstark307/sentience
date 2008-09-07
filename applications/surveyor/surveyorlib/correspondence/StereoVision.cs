@@ -180,7 +180,7 @@ namespace surveyor.vision
 			}
 			
 			// send stereo features to connected clients
-			BroadcastStereoFeatures();			
+			BroadcastStereoFeatures();
         }
 
         /// <summary>
@@ -369,20 +369,29 @@ namespace surveyor.vision
             int n = 0;
             if (features != null)
             {                
+                // limit the maximum number of features broadcast
+                int max = features.Count;
+                if (max > maximum_broadcast_features) max = maximum_broadcast_features;
+                Random rnd = new Random();
+
                 if (BroadcastStereoFeatureColours)
                 {
                     // include colour data in the broadcast
-                    for (int i = 0; i < features.Count; i++)
+                    for (int i = 0; i < max; i++)
                     {
+                        int ii = i;
+                        if (max > maximum_broadcast_features)
+                            ii = rnd.Next(features.Count-1);
+
                         BroadcastStereoFeatureColour data = new BroadcastStereoFeatureColour();
-                        data.x = features[i].x;
-                        data.y = features[i].y;
-                        data.disparity = features[i].disparity;
-                        data.r = features[i].colour[0];
-                        data.g = features[i].colour[1];
-                        data.b = features[i].colour[2];
+                        data.x = features[ii].x;
+                        data.y = features[ii].y;
+                        data.disparity = features[ii].disparity;
+                        data.r = features[ii].colour[0];
+                        data.g = features[ii].colour[1];
+                        data.b = features[ii].colour[2];
                         byte[] serial_data = RawSerialize(data);
-                        if (serialized == null) serialized = new byte[features.Count * serial_data.Length];
+                        if (serialized == null) serialized = new byte[max * serial_data.Length];
                         for (int j = 0; j < serial_data.Length; j++, n++)
                             serialized[n] = serial_data[j];
                     }
@@ -391,14 +400,12 @@ namespace surveyor.vision
                 else
                 {
                     // broadcast only the basics for each stereo feature
-                    int max = features.Count;
-                    if (max > maximum_broadcast_features) max = maximum_broadcast_features;
-                    Random rnd = new Random();
                     for (int i = 0; i < max; i++)
                     {
                         int ii = i;
                         if (max > maximum_broadcast_features)
                             ii = rnd.Next(features.Count-1);
+
                         BroadcastStereoFeature data = new BroadcastStereoFeature();
                         data.x = features[ii].x;
                         data.y = features[ii].y;
@@ -603,14 +610,14 @@ namespace surveyor.vision
         
             if (m_workerSocketList != null)
             {            
+                Console.WriteLine("socks: " + m_workerSocketList.Count.ToString());
                 if (m_workerSocketList.Count > 0)
-                {
-                Console.WriteLine("test");
+                {                
                     byte[] StereoData = SerializedStereoFeatures();                    
                     try
                     {                    
                         Socket workerSocket = null;
-                        for (int i = 0; i < m_workerSocketList.Count; i++)
+                        for (int i = m_workerSocketList.Count-1; i >= 0; i--)
                         {
                             workerSocket = (Socket)m_workerSocketList[i];
                             if (workerSocket != null)
@@ -619,6 +626,12 @@ namespace surveyor.vision
                                 {
                                     Console.WriteLine("sending " + StereoData.Length.ToString() + " bytes");
                                     workerSocket.Send(StereoData);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Client " + (i+1).ToString() + " disconnected");
+                                    workerSocket.Close();
+                                    m_workerSocketList.RemoveAt(i);
                                 }
                             }
                         }

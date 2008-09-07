@@ -1,5 +1,5 @@
 /*
-    Example client object connecting to a server broadcasting stereo feature data
+    Example client object connecting to a server to receive stereo feature data
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 
@@ -27,6 +27,9 @@ using System.Runtime.InteropServices;
 
 namespace surveyor.vision
 {
+    /// <summary>
+    /// base class for receiving stereo feature data
+    /// </summary>
     public class StereoVisionClient
     {
         public bool ServiceRunning;
@@ -205,6 +208,7 @@ namespace surveyor.vision
             {
                 SocketPacket theSockId = (SocketPacket)asyn.AsyncState;
                 int iRx = theSockId.thisSocket.EndReceive(asyn);
+                Console.WriteLine("Received1 " + (iRx + 1).ToString() + " bytes");
                 Receive(theSockId.dataBuffer, iRx + 1);
                 Console.WriteLine("Received " + (iRx + 1).ToString() + " bytes");
                 WaitForData();
@@ -292,6 +296,8 @@ namespace surveyor.vision
         #endregion
         
         #region "receiving data"
+
+        private bool receive_busy;
                                 
         private float[] ReadData(byte[] stereo_data, int no_of_bytes)
         {
@@ -305,10 +311,11 @@ namespace surveyor.vision
                                     ref float[] data, ref byte[] colour)
         {
             const int bytes_per_feature = (4 * 3) + 3;
-            data = new float[no_of_bytes * 3 / bytes_per_feature];
+            int no_of_features = no_of_bytes / bytes_per_feature;
+            data = new float[no_of_features * 3];
             colour = new byte[data.Length];
             int n = 0;
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 0; i < no_of_features; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
@@ -321,8 +328,10 @@ namespace surveyor.vision
 
         private void Receive(byte[] data, int no_of_bytes)
         {
-            if (data.Length > 1)
+            if ((data.Length > 1) && (!receive_busy))
             {
+                receive_busy = true;
+                
                 List<StereoFeature> new_features = new List<StereoFeature>();
                 
                 if (!ColourFeatures)
@@ -340,8 +349,10 @@ namespace surveyor.vision
                 else
                 {
                     float[] feats = null;
-                    byte[] colour = null;                    
+                    byte[] colour = null; 
+                    Console.WriteLine("test1");
                     ReadDataColour(data, no_of_bytes, ref feats, ref colour);
+                    Console.WriteLine("test2");
                     for (int i = 0; i < feats.Length; i += 3)
                     {
                         StereoFeature f = 
@@ -355,10 +366,16 @@ namespace surveyor.vision
                 }
                 features = new_features;
                 FeaturesArrived(features);
+                receive_busy = false;
             }
         }
         
-        public void FeaturesArrived(List<StereoFeature> features)
+        /// <summary>
+        /// You can override this method and insert whatever code is needed
+        /// to process the stereo features
+        /// </summary>
+        /// <param name="features">list of stereo features</param>
+        public virtual void FeaturesArrived(List<StereoFeature> features)
         {
             for (int i = 0; i < features.Count; i++)
             {
