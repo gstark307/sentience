@@ -36,7 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="commandline.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Main.cs" />
     <Compile Include="AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
