@@ -394,7 +394,11 @@ namespace surveyor.vision
                         data.g = features[ii].colour[1];
                         data.b = features[ii].colour[2];
                         byte[] serial_data = RawSerialize(data);
-                        if (serialized == null) serialized = new byte[max * serial_data.Length];
+                        if (serialized == null)
+                        {
+                            serialized = new byte[(max * serial_data.Length) + 1];
+                            serialized[n++] = 1; // first byte indicates colour info
+                        }
                         for (int j = 0; j < serial_data.Length; j++, n++)
                             serialized[n] = serial_data[j];
                     }
@@ -414,7 +418,11 @@ namespace surveyor.vision
                         data.y = features[ii].y;
                         data.disparity = features[ii].disparity;
                         byte[] serial_data = RawSerialize(data);
-                        if (serialized == null) serialized = new byte[max * serial_data.Length];
+                        if (serialized == null)
+                        {
+                            serialized = new byte[(max * serial_data.Length) + 1];
+                            serialized[n++] = 0;  // first byte indicates no colour info
+                        }
                         for (int j = 0; j < serial_data.Length; j++, n++)
                             serialized[n] = serial_data[j];
                     }

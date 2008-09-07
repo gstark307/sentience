@@ -33,7 +33,7 @@ namespace surveyor.vision
     public class StereoVisionClient
     {
         public bool ServiceRunning;
-        public bool ColourFeatures = false;
+        private bool ColourFeatures;
         public List<StereoFeature> features;
 
         #region "constructors"
@@ -308,9 +308,9 @@ namespace surveyor.vision
         /// <returns>float array containing stereo feature parameters</returns>
         private float[] ReadData(byte[] stereo_data, int no_of_bytes)
         {
-            float[] data = new float[no_of_bytes / 4];
+            float[] data = new float[(no_of_bytes-1) / 4];
             for (int i = 0; i < data.Length; i++)
-                data[i] = BitConverter.ToSingle(stereo_data, i*4);
+                data[i] = BitConverter.ToSingle(stereo_data, (i*4) + 1);
 	        return(data);
         }
 
@@ -333,9 +333,9 @@ namespace surveyor.vision
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    int offset = (i * bytes_per_feature) + (4 * j);
+                    int offset = (i * bytes_per_feature) + (4 * j) + 1;
                     data[n] = BitConverter.ToSingle(stereo_data, offset);
-                    colour[n] = stereo_data[(i * bytes_per_feature) + (4 * 3) + j];
+                    colour[n] = stereo_data[(i * bytes_per_feature) + (4 * 3) + j + 1];
                     n++;
                 }
             }
@@ -354,6 +354,13 @@ namespace surveyor.vision
                 
                 // create a list to store the features
                 List<StereoFeature> new_features = new List<StereoFeature>();
+                
+                // read the first byte, which determines whether
+                // the stereo features have colour info or not
+                if (data[0] == 1)
+                    ColourFeatures = true;
+                else
+                    ColourFeatures = false;
                 
                 if (!ColourFeatures)
                 {
