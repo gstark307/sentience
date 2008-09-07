@@ -46,6 +46,13 @@ namespace stereoclient
                 else
                 {
                     StereoVisionClient client = new StereoVisionClient();
+
+                    string colour_str = commandline.GetParameterValue("colour", parameters);
+                    if (colour_str != "")
+                        client.ColourFeatures = true;
+                    else
+                        client.ColourFeatures = false;
+                    
                     client.Connect(server, Convert.ToInt32(port_str));
                     while (client.IsConnected())
                     {
@@ -67,6 +74,7 @@ namespace stereoclient
 
             ValidParameters.Add("server");
             ValidParameters.Add("port");
+            ValidParameters.Add("colour");
 
             return (ValidParameters);
         }

@@ -146,31 +146,34 @@ namespace surveyor.vision
                     DisplayImage((Bitmap)display_image[0].Image, left_image, true);
                 }
 
-                try
+                if (window != null)
                 {
-                    window.Invoke((MethodInvoker)delegate
+                    try
                     {
-                        bool success = false;
-                        DateTime start_time = DateTime.Now;
-                        int time_elapsed_mS = 0;
-                        while ((!success) && (time_elapsed_mS < 500))
+                        window.Invoke((MethodInvoker)delegate
                         {
-                            try
+                            bool success = false;
+                            DateTime start_time = DateTime.Now;
+                            int time_elapsed_mS = 0;
+                            while ((!success) && (time_elapsed_mS < 500))
                             {
-                                display_image[0].Refresh();
-                                success = true;
+                                try
+                                {
+                                    display_image[0].Refresh();
+                                    success = true;
+                                }
+                                catch
+                                {
+                                    System.Threading.Thread.Sleep(5);
+                                    TimeSpan diff = DateTime.Now.Subtract(start_time);
+                                    time_elapsed_mS = (int)diff.TotalMilliseconds;
+                                }
                             }
-                            catch
-                            {
-                                System.Threading.Thread.Sleep(5);
-                                TimeSpan diff = DateTime.Now.Subtract(start_time);
-                                time_elapsed_mS = (int)diff.TotalMilliseconds;
-                            }
-                        }
-                    });
-                }
-                catch
-                {
+                        });
+                    }
+                    catch
+                    {
+                    }
                 }
             }
 
@@ -189,31 +192,34 @@ namespace surveyor.vision
                     DisplayImage((Bitmap)display_image[1].Image, right_image, false);
                 }
 
-                try
+                if (window != null)
                 {
-                    window.Invoke((MethodInvoker)delegate
+                    try
                     {
-                        bool success = false;
-                        DateTime start_time = DateTime.Now;
-                        int time_elapsed_mS = 0;
-                        while ((!success) && (time_elapsed_mS < 500))
+                        window.Invoke((MethodInvoker)delegate
                         {
-                            try
+                            bool success = false;
+                            DateTime start_time = DateTime.Now;
+                            int time_elapsed_mS = 0;
+                            while ((!success) && (time_elapsed_mS < 500))
                             {
-                                display_image[1].Refresh();
-                                success = true;
+                                try
+                                {
+                                    display_image[1].Refresh();
+                                    success = true;
+                                }
+                                catch
+                                {
+                                    System.Threading.Thread.Sleep(5);
+                                    TimeSpan diff = DateTime.Now.Subtract(start_time);
+                                    time_elapsed_mS = (int)diff.TotalMilliseconds;
+                                }
                             }
-                            catch
-                            {
-                                System.Threading.Thread.Sleep(5);
-                                TimeSpan diff = DateTime.Now.Subtract(start_time);
-                                time_elapsed_mS = (int)diff.TotalMilliseconds;
-                            }
-                        }
-                    });
-                }
-                catch
-                {
+                        });
+                    }
+                    catch
+                    {
+                    }
                 }
             }
             

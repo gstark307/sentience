@@ -629,7 +629,7 @@ namespace surveyor.vision
                             {
                                 if (workerSocket.Connected)
                                 {
-                                    Console.WriteLine("sending " + StereoData.Length.ToString() + " bytes");
+                                    //Console.WriteLine("sending " + StereoData.Length.ToString() + " bytes");
                                     workerSocket.Send(StereoData);
                                 }
                                 else

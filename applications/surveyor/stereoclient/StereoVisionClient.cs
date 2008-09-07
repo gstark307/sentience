@@ -33,7 +33,7 @@ namespace surveyor.vision
     public class StereoVisionClient
     {
         public bool ServiceRunning;
-        public bool ColourFeatures = true;
+        public bool ColourFeatures = false;
         public List<StereoFeature> features;
 
         #region "constructors"
@@ -396,7 +396,10 @@ namespace surveyor.vision
         {
             for (int i = 0; i < features.Count; i++)
             {
-                Console.WriteLine("x: " + features[i].x.ToString() + "  y: " + features[i].y.ToString() + "  disparity: " + features[i].disparity.ToString() + "  red:" + features[i].colour[0].ToString() + "  green:" + features[i].colour[1].ToString() + "  blue:" + features[i].colour[2].ToString());
+                if (features[i].colour != null)
+                    Console.WriteLine("x: " + features[i].x.ToString() + "  y: " + features[i].y.ToString() + "  disparity: " + features[i].disparity.ToString() + "  red:" + features[i].colour[0].ToString() + "  green:" + features[i].colour[1].ToString() + "  blue:" + features[i].colour[2].ToString());
+                else
+                    Console.WriteLine("x: " + features[i].x.ToString() + "  y: " + features[i].y.ToString() + "  disparity: " + features[i].disparity.ToString());
             }
         }
         
