@@ -218,6 +218,7 @@ namespace surveyorstereo
             Bitmap bmp = SurveyorCalibration.CreateDotPattern(1000, image_height * 1000 / image_width, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
             SaveFileDialog save_calibration_pattern = new SaveFileDialog();
 
+            save_calibration_pattern.Title = "Save calibration pattern image";
             save_calibration_pattern.Filter = "Bitmap files (*.bmp)|*.bmp|All files (*.*)|*.*";
             save_calibration_pattern.FilterIndex = 1;
             save_calibration_pattern.RestoreDirectory = true;
@@ -234,6 +235,7 @@ namespace surveyorstereo
             {
                 SaveFileDialog save_calibration_file = new SaveFileDialog();
 
+                save_calibration_file.Title = "Save file containing calibration settings";
                 save_calibration_file.Filter = "Xml files (*.xml)|*.xml";
                 save_calibration_file.FilterIndex = 1;
                 save_calibration_file.RestoreDirectory = true;

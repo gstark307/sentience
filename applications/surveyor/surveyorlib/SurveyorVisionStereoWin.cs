@@ -58,6 +58,7 @@ namespace surveyor.vision
         public PictureBox calibration_image;
         public Form window;
         private byte[] buffer = null;
+        private double prev_minimum_rms_error;
 
 /*
         private Bitmap OverlayImage(Bitmap bmp, Bitmap overlay, int overlay_width)
@@ -140,6 +141,18 @@ namespace surveyor.vision
                     (calibration_pattern != null))
                 {
                     display_image[0].Image = calibration_pattern;
+
+                    if (calibration_survey != null)
+                    {
+                        CalibrationSurvey survey = calibration_survey[1];
+                        if (survey != null)
+                        {
+                            if ((survey.minimum_rms_error < 3) &&
+                                ((prev_minimum_rms_error >= 3) || (prev_minimum_rms_error == 0)))
+                                BeepSound.Play("beep.wav");
+                            prev_minimum_rms_error = survey.minimum_rms_error;
+                        }
+                    }
                 }
                 else
                 {
@@ -186,6 +199,18 @@ namespace surveyor.vision
                     (calibration_pattern != null))
                 {
                     display_image[1].Image = calibration_pattern;
+
+                    if (calibration_survey != null)
+                    {
+                        CalibrationSurvey survey = calibration_survey[0];
+                        if (survey != null)
+                        {
+                            if ((survey.minimum_rms_error < 3) &&
+                                ((prev_minimum_rms_error >= 3) || (prev_minimum_rms_error == 0)))
+                                BeepSound.Play("beep.wav");
+                            prev_minimum_rms_error = survey.minimum_rms_error;
+                        }
+                    }
                 }
                 else
                 {

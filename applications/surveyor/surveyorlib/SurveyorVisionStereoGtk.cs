@@ -183,8 +183,8 @@ namespace surveyor.vision
                         CalibrationSurvey survey = calibration_survey[1];
                         if (survey != null)
                         {
-                            if ((survey.minimum_rms_error < 2) &&
-                                (prev_minimum_rms_error >= 2))
+                            if ((survey.minimum_rms_error < 3) &&
+                                ((prev_minimum_rms_error >= 3) || (prev_minimum_rms_error == 0)))
                                 PlaySound("beep.wav");
                             prev_minimum_rms_error = survey.minimum_rms_error;
                         }
@@ -215,8 +215,8 @@ namespace surveyor.vision
                         CalibrationSurvey survey = calibration_survey[0];
                         if (survey != null)
                         {
-                            if ((survey.minimum_rms_error < 2) &&
-                                (prev_minimum_rms_error >= 2))
+                            if ((survey.minimum_rms_error < 3) &&
+                                ((prev_minimum_rms_error >= 3) || (prev_minimum_rms_error == 0)))
                                 PlaySound("beep.wav");
                             prev_minimum_rms_error = survey.minimum_rms_error;
                         }

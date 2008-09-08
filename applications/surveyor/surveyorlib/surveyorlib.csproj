@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="BeepSound.cs" />
     <Compile Include="BitmapArrayConversions.cs" />
     <Compile Include="calibration\CalibrationDot.cs" />
     <Compile Include="calibration\CalibrationLink.cs" />
