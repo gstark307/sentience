@@ -35,11 +35,16 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVision
     {
+        // the type of stereo correspondence algorithm being used
         public const int SIMPLE = 0;        
 		public const int DENSE = 1;
 		public const int GEOMETRIC = 2;
-    
         public int algorithm_type;
+
+        // if true this performs stereo correspondence calculations
+        // only when other applications are connected and ready to
+        // receive the results
+        public bool UpdateWhenClientsConnected;
     
         // stereo features detected
         public List<StereoFeature> features;
@@ -141,46 +146,50 @@ namespace surveyor.vision
         /// <param name="calibration_offset_y">vertical offset from calibration, correcting for non-parallel alignment of the cameras</param>
         public void Update(Bitmap rectified_left, Bitmap rectified_right,
                            float calibration_offset_x, float calibration_offset_y)
-        {
-            image_width = rectified_left.Width;
-            image_height = rectified_left.Height;
-            int pixels = image_width * image_height * 3;
-            
-            if (img[0] == null)
+        {            
+            if ((!UpdateWhenClientsConnected) ||
+                ((UpdateWhenClientsConnected) && (m_workerSocketList.Count > 0)))
             {
-				for (int i = 0; i < 4; i++)
-                    img[i] = new byte[pixels];
-            }
-            else
-            {
-                if (img[0].Length != pixels)
+                image_width = rectified_left.Width;
+                image_height = rectified_left.Height;
+                int pixels = image_width * image_height * 3;
+
+                if (img[0] == null)
                 {
-					for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 4; i++)
                         img[i] = new byte[pixels];
                 }
+                else
+                {
+                    if (img[0].Length != pixels)
+                    {
+                        for (int i = 0; i < 4; i++)
+                            img[i] = new byte[pixels];
+                    }
+                }
+
+                BitmapArrayConversions.updatebitmap(rectified_left, img[0]);
+                BitmapArrayConversions.updatebitmap(rectified_right, img[1]);
+
+                // convert colour images to mono
+                monoImage(img[0], image_width, image_height, 1, ref img[2]);
+                monoImage(img[1], image_width, image_height, 1, ref img[3]);
+
+                // main stereo correspondence routine
+                Update(img[0], img[1],
+                       img[2], img[3],
+                       rectified_left.Width, rectified_left.Height,
+                       calibration_offset_x, calibration_offset_y);
+
+                if (BroadcastStereoFeatureColours)
+                {
+                    // assign a colour to each feature
+                    UpdateFeatureColours(img[0], img[1]);
+                }
+
+                // send stereo features to connected clients
+                BroadcastStereoFeatures();
             }
-            
-            BitmapArrayConversions.updatebitmap(rectified_left, img[0]);
-            BitmapArrayConversions.updatebitmap(rectified_right, img[1]);
-            
-            // convert colour images to mono
-            monoImage(img[0], image_width, image_height, 1, ref img[2]);
-            monoImage(img[1], image_width, image_height, 1, ref img[3]);
-            
-            // main stereo correspondence routine
-            Update(img[0], img[1], 
-			       img[2], img[3],
-			       rectified_left.Width, rectified_left.Height,
-                   calibration_offset_x, calibration_offset_y);
-			
-			if (BroadcastStereoFeatureColours)
-			{
-			    // assign a colour to each feature
-			    UpdateFeatureColours(img[0], img[1]);
-			}
-			
-			// send stereo features to connected clients
-			BroadcastStereoFeatures();
         }
 
         /// <summary>
@@ -439,7 +448,7 @@ namespace surveyor.vision
         private AsyncCallback pfnWorkerCallBack;
         private Socket m_mainSocket;
         public bool ServiceRunning;
-        private ArrayList m_workerSocketList;
+        private ArrayList m_workerSocketList = ArrayList.Synchronized(new System.Collections.ArrayList()); 
 
         // total number of clients connected
         private int m_clientCount = 0;
@@ -510,6 +519,18 @@ namespace surveyor.vision
 	            }
 			}
             return (success);
+        }
+
+        /// <summary>
+        /// returns the number of connected client applications
+        /// </summary>
+        /// <returns>number of clients</returns>
+        public int GetNoOfClients()
+        {
+            if (m_workerSocketList == null)
+                return (0);
+            else
+                return (m_workerSocketList.Count);
         }
 
         /// <summary>

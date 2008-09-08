@@ -65,6 +65,11 @@ namespace surveyor.vision
         
         // rotation of the right camera relative to the left
         public float rotation = 0;
+
+        // if true this performs stereo correspondence calculations
+        // only when other applications are connected and ready to
+        // receive the results
+        public bool UpdateWhenClientsConnected;
         
         // rectified images
         public Bitmap[] rectified;
@@ -573,50 +578,61 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>
         protected void RectifyImages(Bitmap left_image, Bitmap right_image)
         {
-            for (int cam = 0; cam < 2; cam++)
+            bool proceed = false;
+            if (correspondence != null)
             {
-                Bitmap bmp = left_image;
-                if (cam == 1) bmp = right_image;
-                
-                if ((calibration_survey[cam] != null) && (bmp != null))
+                if ((!UpdateWhenClientsConnected) ||
+                    ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
+                    proceed = true;
+            }
+
+            if (proceed)
+            {
+                for (int cam = 0; cam < 2; cam++)
                 {
-                    polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
-                    if (distortion_curve != null)
+                    Bitmap bmp = left_image;
+                    if (cam == 1) bmp = right_image;
+
+                    if ((calibration_survey[cam] != null) && (bmp != null))
                     {
-                        if (calibration_map[cam] == null)
+                        polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
+                        if (distortion_curve != null)
                         {
-                            SurveyorCalibration.updateCalibrationMap(
-                                bmp.Width, bmp.Height, distortion_curve,
-                                1, 0, 
-                                calibration_survey[cam].centre_of_distortion_x,calibration_survey[cam].centre_of_distortion_y,
-                                ref calibration_map[cam], ref calibration_map_inverse[cam]);
-                        }
-
-                        byte[] img = null;
-                        try
-                        {
-                            img = new byte[bmp.Width * bmp.Height * 3];
-                        }
-                        catch
-                        {
-                        }
-                        if (img != null)
-                        {
-                            BitmapArrayConversions.updatebitmap(bmp, img);
-                            byte[] img_rectified = (byte[])img.Clone();
-
-                            int n = 0;
-                            int[] map = calibration_map[cam];
-                            for (int i = 0; i < img.Length; i += 3, n++)
+                            if (calibration_map[cam] == null)
                             {
-                                int index = map[n] * 3;
-                                for (int col = 0; col < 3; col++)
-                                    img_rectified[i + col] = img[index + col];
+                                SurveyorCalibration.updateCalibrationMap(
+                                    bmp.Width, bmp.Height, distortion_curve,
+                                    1, 0,
+                                    calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+                                    ref calibration_map[cam], ref calibration_map_inverse[cam]);
                             }
 
-                            if (rectified[cam] == null)
-                                rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                            BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
+                            byte[] img = null;
+                            try
+                            {
+                                img = new byte[bmp.Width * bmp.Height * 3];
+                            }
+                            catch
+                            {
+                            }
+                            if (img != null)
+                            {
+                                BitmapArrayConversions.updatebitmap(bmp, img);
+                                byte[] img_rectified = (byte[])img.Clone();
+
+                                int n = 0;
+                                int[] map = calibration_map[cam];
+                                for (int i = 0; i < img.Length; i += 3, n++)
+                                {
+                                    int index = map[n] * 3;
+                                    for (int col = 0; col < 3; col++)
+                                        img_rectified[i + col] = img[index + col];
+                                }
+
+                                if (rectified[cam] == null)
+                                    rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                                BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
+                            }
                         }
                     }
                 }
@@ -633,6 +649,15 @@ namespace surveyor.vision
         /// <param name="state"></param>
         private void FrameGrabCallback(object state)
         {
+            if (correspondence != null)
+            {
+                if ((!UpdateWhenClientsConnected) ||
+                    ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
+                    grab_frames.Pause = false;
+                else
+                    grab_frames.Pause = true;
+            }
+
             SurveyorVisionClient[] istate = (SurveyorVisionClient[])state;
             if ((istate[0].current_frame != null) && 
                 (istate[1].current_frame != null))
@@ -680,7 +705,8 @@ namespace surveyor.vision
         #endregion
         
         #region "starting and stopping"
-        
+
+        private SurveyorVisionThreadGrabFrameMulti grab_frames;
         private Thread sync_thread;
         public bool Running;
         
@@ -707,7 +733,7 @@ namespace surveyor.vision
             if (cameras_started)
             {
                 // create a thread to send the master pulse
-                SurveyorVisionThreadGrabFrameMulti grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallback), camera);        
+                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallback), camera);        
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
                 sync_thread.Start();   
@@ -852,69 +878,73 @@ namespace surveyor.vision
         /// </summary>
         protected void StereoCorrespondence()
         {
+            bool images_rectified = false;
+            if ((rectified[0] != null) && (rectified[1] != null)) images_rectified = true;
         
-            if ((rectified[0] != null) && 
-                (rectified[1] != null))
+            if (correspondence != null)
             {
-                if (correspondence != null)
+                if ((broadcasting) && (stereo_algorithm_type != prev_stereo_algorithm_type))
                 {
-                    if ((broadcasting) && (stereo_algorithm_type != prev_stereo_algorithm_type))
-                    {
-                        correspondence.StopService();
-                        broadcasting = false;
-                    }
+                    correspondence.StopService();
+                    broadcasting = false;
                 }
+            }
 
-                switch(stereo_algorithm_type)
-                {
-                    case StereoVision.SIMPLE:
-                    {                      
-                        if (correspondence == null)
-                            correspondence = new StereoVisionSimple();
-                            
-                        if (correspondence.algorithm_type != StereoVision.SIMPLE)
-                            correspondence = new StereoVisionSimple();
-                            
+            switch(stereo_algorithm_type)
+            {
+                case StereoVision.SIMPLE:
+                {                      
+                    if (correspondence == null)
+                        correspondence = new StereoVisionSimple();
+                        
+                    if (correspondence.algorithm_type != StereoVision.SIMPLE)
+                        correspondence = new StereoVisionSimple();                        
+
+                    if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],
                                               -offset_x, offset_y);
-                            
-                        break;
-                    }
-                    case StereoVision.GEOMETRIC:
-                    {
-                        if (correspondence == null)
-                            correspondence = new StereoVisionGeometric();
-                            
-                        if (correspondence.algorithm_type != StereoVision.GEOMETRIC)
-                            correspondence = new StereoVisionGeometric();
-
-                        correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y);
                         
-                        break;
-                    }
-                    case StereoVision.DENSE:
-                    {
-                        if (correspondence == null)
-                            correspondence = new StereoVisionDense();
-                            
-                        if (correspondence.algorithm_type != StereoVision.DENSE)
-                            correspondence = new StereoVisionDense();
-
-                        correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y);
-                        
-                        break;
-                    }
+                    break;
                 }
+                case StereoVision.GEOMETRIC:
+                {
+                    if (correspondence == null)
+                        correspondence = new StereoVisionGeometric();
+                        
+                    if (correspondence.algorithm_type != StereoVision.GEOMETRIC)
+                        correspondence = new StereoVisionGeometric();
 
-                correspondence.Show(ref stereo_features);
-                                
-                if (!broadcasting)
-                    broadcasting = correspondence.StartService(broadcast_port_number);
+                    if (images_rectified)
+                        correspondence.Update(rectified[0], rectified[1],
+                                              offset_x, offset_y);
                     
-                prev_stereo_algorithm_type = stereo_algorithm_type;
-            }            
+                    break;
+                }
+                case StereoVision.DENSE:
+                {
+                    if (correspondence == null)
+                        correspondence = new StereoVisionDense();
+                        
+                    if (correspondence.algorithm_type != StereoVision.DENSE)
+                        correspondence = new StereoVisionDense();
+
+                    if (images_rectified)
+                        correspondence.Update(rectified[0], rectified[1],
+                                              offset_x, offset_y);
+                    
+                    break;
+                }
+            }
+
+            if (images_rectified)
+                correspondence.Show(ref stereo_features);
+
+            correspondence.UpdateWhenClientsConnected = UpdateWhenClientsConnected;
+                            
+            if (!broadcasting)
+                broadcasting = correspondence.StartService(broadcast_port_number);
+                
+            prev_stereo_algorithm_type = stereo_algorithm_type;
         }
         
         #endregion

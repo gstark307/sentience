@@ -33,6 +33,7 @@ namespace surveyor.vision
     {
         private WaitCallback _callback;
         private object _data;
+        public bool Pause;
 
         /// <summary>
         /// constructor
@@ -64,47 +65,55 @@ namespace surveyor.vision
             DateTime data_last_requested = DateTime.Now;
             while (state[0].Streaming)
             {
-                TimeSpan diff = DateTime.Now.Subtract(data_last_requested);
-                if (diff.TotalMilliseconds > time_step_mS)
-                {                
-                    data_last_requested = DateTime.Now;
-                    
-                    // clear the frame arrived flags on all cameras
-                    for (int cam = 0; cam < state.Length; cam++)
-                        state[cam].frame_arrived = false;
+                if (!Pause)
+                {
+                    TimeSpan diff = DateTime.Now.Subtract(data_last_requested);
+                    if (diff.TotalMilliseconds > time_step_mS)
+                    {
+                        data_last_requested = DateTime.Now;
 
-                    // initiate master pulse
-                    for (int cam = 0; cam < state.Length; cam++)
-                        state[cam].synchronisation_pulse = true;
-                        
-                    // wait for frames to arrive
-                    DateTime start_waiting = DateTime.Now;
-                    bool all_frames_arrived = false;
-                    while (state[0].Streaming)
-                    {       
-                        // check all cameras
-                        all_frames_arrived = true; 
+                        // clear the frame arrived flags on all cameras
                         for (int cam = 0; cam < state.Length; cam++)
+                            state[cam].frame_arrived = false;
+
+                        // initiate master pulse
+                        for (int cam = 0; cam < state.Length; cam++)
+                            state[cam].synchronisation_pulse = true;
+
+                        // wait for frames to arrive
+                        DateTime start_waiting = DateTime.Now;
+                        bool all_frames_arrived = false;
+                        while (state[0].Streaming)
                         {
-                            if (!state[cam].frame_arrived)
+                            // check all cameras
+                            all_frames_arrived = true;
+                            for (int cam = 0; cam < state.Length; cam++)
                             {
-                                all_frames_arrived = false;
-                                break;
+                                if (!state[cam].frame_arrived)
+                                {
+                                    all_frames_arrived = false;
+                                    break;
+                                }
                             }
+
+                            // is our patience exhausted ?
+                            TimeSpan elapsed = DateTime.Now.Subtract(start_waiting);
+                            if (elapsed.TotalMilliseconds > time_step_mS - 20)
+                                break;
+
+                            Thread.Sleep(10);
                         }
-                        
-                        // is our patience exhausted ?
-                        TimeSpan elapsed = DateTime.Now.Subtract(start_waiting);
-                        if (elapsed.TotalMilliseconds > time_step_mS - 20)
-                            break;
-                                                
-                        Thread.Sleep(10);
+
+                        // announce that all frames have arrived
+                        if (all_frames_arrived) _callback(_data);
+
+                        //Console.WriteLine("pulse " + DateTime.Now.ToString());
                     }
-                    
-                    // announce that all frames have arrived
-                    if (all_frames_arrived) _callback(_data);
-                    
-                    //Console.WriteLine("pulse " + DateTime.Now.ToString());
+                }
+                else
+                {
+                    Thread.Sleep(40);
+                    _callback(_data);
                 }
                 Thread.Sleep(10);                
             }
