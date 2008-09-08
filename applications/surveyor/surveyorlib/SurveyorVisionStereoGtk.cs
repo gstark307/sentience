@@ -21,6 +21,7 @@ using System;
 using System.Threading;
 using System.Drawing;
 using Gdk;
+using Gnome;
 using sluggish.utilities;
 using sluggish.utilities.gtk;
 
@@ -50,6 +51,20 @@ namespace surveyor.vision
         
         #endregion
     
+        #region "beeping"
+        
+        /// <summary>
+        /// plays a sound
+        /// </summary>
+        /// <param name="sound_filename"></param>
+        private void PlaySound(string sound_filename)
+        {
+            Gnome.Sound.Init("localhost");
+            Gnome.Sound.Play(sound_filename);
+        }
+        
+        #endregion
+    
         #region "displaying images"
     
         // images used for display
@@ -59,6 +74,10 @@ namespace surveyor.vision
         public Gtk.Image calibration_image;
         public Gtk.Window calibration_window;
         private byte[] buffer = null;
+        
+        // previous error when calibrating
+        // this is used to trigger a beep
+        private double prev_minimum_rms_error;
 
         /// <summary>
         /// refreshes the GUI images
@@ -158,6 +177,19 @@ namespace surveyor.vision
                     catch
                     {
                     }
+                    
+                    if (calibration_survey != null)
+                    {
+                        CalibrationSurvey survey = calibration_survey[1];
+                        if (survey != null)
+                        {
+                            if ((survey.minimum_rms_error < 2) &&
+                                (prev_minimum_rms_error >= 2))
+                                PlaySound("beep.wav");
+                            prev_minimum_rms_error = survey.minimum_rms_error;
+                        }
+                    }
+                                       
                 }
                 else
                 {
@@ -176,6 +208,18 @@ namespace surveyor.vision
                     }
                     catch
                     {
+                    }
+
+                    if (calibration_survey != null)
+                    {
+                        CalibrationSurvey survey = calibration_survey[0];
+                        if (survey != null)
+                        {
+                            if ((survey.minimum_rms_error < 2) &&
+                                (prev_minimum_rms_error >= 2))
+                                PlaySound("beep.wav");
+                            prev_minimum_rms_error = survey.minimum_rms_error;
+                        }
                     }
                 }
                 else

@@ -185,66 +185,39 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.stereo_algorithm_type = StereoVision.DENSE;
     }
 
+    /// <summary>
+    /// saves the calibration settings file to the desktop
+    /// </summary>
     private void SaveCalibrationFile()
     {
-        FileChooserDialog fc = 
-            new FileChooserDialog("Save calibration file",
-                                  this,
-                                  FileChooserAction.Save,
-                                  "Cancel", ResponseType.Cancel,
-                                  "Save", ResponseType.Ok);
-
-        int resp = fc.Run();
-        fc.Filter = new Gtk.FileFilter();
-        fc.Filter.AddPattern("Xml files (*.xml)|*.xml");
-        fc.Hide();
-        if (resp == (int)ResponseType.Ok)
+        string desktop_path = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        string filename = desktop_path + "/calibration.xml";
+        if (calibration_filename != filename)
         {
-            if ((fc.Filename != null) && (fc.Filename != ""))
-            {
-                if (calibration_filename != fc.Filename)
-                {
-                    if (File.Exists(fc.Filename)) File.Delete(fc.Filename);
-                    File.Copy(calibration_filename, fc.Filename);
-                }
-            }
+            if (File.Exists(filename)) File.Delete(filename);
+            File.Copy(calibration_filename, filename);            
         }
-        fc.Destroy();
     }
 
+    /// <summary>
+    /// saves the calibration image to the desktop so that it may be easily printed
+    /// </summary>
     private void SaveCalibrationImage()
     {
-        FileChooserDialog fc = 
-            new FileChooserDialog("Save calibration image",
-                                  this,
-                                  FileChooserAction.Save,
-                                  "Cancel", ResponseType.Cancel,
-                                  "Save", ResponseType.Ok);
-
-        fc.Filter = new Gtk.FileFilter();
-        fc.Filter.AddPattern("Bitmap files (*.bmp)|*.bmp");
-        int resp = fc.Run();
-        fc.Hide();
-        if (resp == (int)ResponseType.Ok)
-        {
-            if ((fc.Filename != null) && (fc.Filename != ""))
-            {
-                Bitmap bmp = SurveyorCalibration.CreateDotPattern(1000, image_height * 1000 / image_width, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
-                bmp.Save(fc.Filename, System.Drawing.Imaging.ImageFormat.Bmp);
-            }
-        }
-        fc.Destroy();
-    }
-
-
-    protected virtual void OnCmdSaveCalibrationClicked (object sender, System.EventArgs e)
-    {
-        SaveCalibrationFile();
+        string desktop_path = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        string filename = desktop_path + "/calibration_pattern.bmp";
+        Bitmap bmp = SurveyorCalibration.CreateDotPattern(1000, image_height * 1000 / image_width, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
+        bmp.Save(filename, System.Drawing.Imaging.ImageFormat.Bmp);        
     }
 
     protected virtual void OnCmdSaveCalibrationImageClicked (object sender, System.EventArgs e)
     {
         SaveCalibrationImage();
+    }
+
+    protected virtual void OnCmdSaveCalibrationClicked (object sender, System.EventArgs e)
+    {
+        SaveCalibrationFile();
     }
 
 }
