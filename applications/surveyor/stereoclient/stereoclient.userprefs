@@ -3,7 +3,7 @@
     <File name="Welcome" />
     <File name="Main.cs" line="65" column="10" />
     <File name="commandline.cs" line="19" column="1" />
-    <File name="StereoVisionClient.cs" line="357" column="17" />
+    <File name="StereoVisionClient.cs" line="354" column="17" />
     <File name="StereoFeature.cs" line="1" column="1" />
   </Files>
   <Views>
