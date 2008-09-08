@@ -41,10 +41,10 @@ namespace surveyor.vision
 		public const int GEOMETRIC = 2;
         public int algorithm_type;
 
-        // if true this performs stereo correspondence calculations
-        // only when other applications are connected and ready to
-        // receive the results
-        public bool UpdateWhenClientsConnected;
+        // Select rows at random from which to obtain disparities
+        // this helps to reduce processing time
+        // If this value is set to zero then all rows of the image are considered
+        public int random_rows;
     
         // stereo features detected
         public List<StereoFeature> features;
@@ -147,9 +147,6 @@ namespace surveyor.vision
         public void Update(Bitmap rectified_left, Bitmap rectified_right,
                            float calibration_offset_x, float calibration_offset_y)
         {            
-            if ((!UpdateWhenClientsConnected) ||
-                ((UpdateWhenClientsConnected) && (m_workerSocketList.Count > 0)))
-            {
                 image_width = rectified_left.Width;
                 image_height = rectified_left.Height;
                 int pixels = image_width * image_height * 3;
@@ -189,7 +186,6 @@ namespace surveyor.vision
 
                 // send stereo features to connected clients
                 BroadcastStereoFeatures();
-            }
         }
 
         /// <summary>

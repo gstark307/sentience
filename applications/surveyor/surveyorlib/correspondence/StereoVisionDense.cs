@@ -30,11 +30,6 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVisionDense : StereoVision
     {
-        // Select rows at random from which to obtain disparities
-        // this helps to reduce processing time
-        // If this value is set to zero then all rows of the image are considered
-        public int random_rows = 5;
-
         // maximum sum of squared differences value
         public double max_difference = 1000000000;
         

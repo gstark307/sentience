@@ -1,4 +1,24 @@
+/*
+    Surveyor stereo camera
+    Copyright (C) 2008 Bob Mottram
+    fuzzgun@gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -191,6 +211,39 @@ namespace surveyorstereo
             stereo_camera.stereo_algorithm_type = StereoVision.DENSE;
             denseToolStripMenuItem.Checked = true;
             simpleToolStripMenuItem.Checked = false;
+        }
+
+        private void saveCalibrationPatternToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap bmp = SurveyorCalibration.CreateDotPattern(1000, image_height * 1000 / image_width, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
+            SaveFileDialog save_calibration_pattern = new SaveFileDialog();
+
+            save_calibration_pattern.Filter = "Bitmap files (*.bmp)|*.bmp|All files (*.*)|*.*";
+            save_calibration_pattern.FilterIndex = 1;
+            save_calibration_pattern.RestoreDirectory = true;
+
+            if (save_calibration_pattern.ShowDialog() == DialogResult.OK)
+            {
+                bmp.Save(save_calibration_pattern.FileName);
+            }
+        }
+
+        private void saveCalibrationFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (File.Exists(calibration_filename))
+            {
+                SaveFileDialog save_calibration_file = new SaveFileDialog();
+
+                save_calibration_file.Filter = "Xml files (*.xml)|*.xml";
+                save_calibration_file.FilterIndex = 1;
+                save_calibration_file.RestoreDirectory = true;
+
+                if (save_calibration_file.ShowDialog() == DialogResult.OK)
+                {
+                    if (calibration_filename != save_calibration_file.FileName)
+                        File.Copy(calibration_filename, save_calibration_file.FileName);
+                }
+            }
         }
 
     }

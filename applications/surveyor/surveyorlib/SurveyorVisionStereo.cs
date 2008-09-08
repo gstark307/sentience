@@ -74,6 +74,11 @@ namespace surveyor.vision
         // rectified images
         public Bitmap[] rectified;
         
+        // Select rows at random from which to obtain disparities
+        // this helps to reduce processing time
+        // If this value is set to zero then all rows of the image are considered
+        public int random_rows;
+        
         // what type of image should be displayed
         public const int DISPLAY_RAW = 0;
         public const int DISPLAY_CALIBRATION_DOTS = 1;
@@ -578,61 +583,50 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>
         protected void RectifyImages(Bitmap left_image, Bitmap right_image)
         {
-            bool proceed = false;
-            if (correspondence != null)
+            for (int cam = 0; cam < 2; cam++)
             {
-                if ((!UpdateWhenClientsConnected) ||
-                    ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
-                    proceed = true;
-            }
+                Bitmap bmp = left_image;
+                if (cam == 1) bmp = right_image;
 
-            if (proceed)
-            {
-                for (int cam = 0; cam < 2; cam++)
+                if ((calibration_survey[cam] != null) && (bmp != null))
                 {
-                    Bitmap bmp = left_image;
-                    if (cam == 1) bmp = right_image;
-
-                    if ((calibration_survey[cam] != null) && (bmp != null))
+                    polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
+                    if (distortion_curve != null)
                     {
-                        polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
-                        if (distortion_curve != null)
+                        if (calibration_map[cam] == null)
                         {
-                            if (calibration_map[cam] == null)
+                            SurveyorCalibration.updateCalibrationMap(
+                                bmp.Width, bmp.Height, distortion_curve,
+                                1, 0,
+                                calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+                                ref calibration_map[cam], ref calibration_map_inverse[cam]);
+                        }
+
+                        byte[] img = null;
+                        try
+                        {
+                            img = new byte[bmp.Width * bmp.Height * 3];
+                        }
+                        catch
+                        {
+                        }
+                        if (img != null)
+                        {
+                            BitmapArrayConversions.updatebitmap(bmp, img);
+                            byte[] img_rectified = (byte[])img.Clone();
+
+                            int n = 0;
+                            int[] map = calibration_map[cam];
+                            for (int i = 0; i < img.Length; i += 3, n++)
                             {
-                                SurveyorCalibration.updateCalibrationMap(
-                                    bmp.Width, bmp.Height, distortion_curve,
-                                    1, 0,
-                                    calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
-                                    ref calibration_map[cam], ref calibration_map_inverse[cam]);
+                                int index = map[n] * 3;
+                                for (int col = 0; col < 3; col++)
+                                    img_rectified[i + col] = img[index + col];
                             }
 
-                            byte[] img = null;
-                            try
-                            {
-                                img = new byte[bmp.Width * bmp.Height * 3];
-                            }
-                            catch
-                            {
-                            }
-                            if (img != null)
-                            {
-                                BitmapArrayConversions.updatebitmap(bmp, img);
-                                byte[] img_rectified = (byte[])img.Clone();
-
-                                int n = 0;
-                                int[] map = calibration_map[cam];
-                                for (int i = 0; i < img.Length; i += 3, n++)
-                                {
-                                    int index = map[n] * 3;
-                                    for (int col = 0; col < 3; col++)
-                                        img_rectified[i + col] = img[index + col];
-                                }
-
-                                if (rectified[cam] == null)
-                                    rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                                BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
-                            }
+                            if (rectified[cam] == null)
+                                rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                            BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
                         }
                     }
                 }
@@ -649,6 +643,7 @@ namespace surveyor.vision
         /// <param name="state"></param>
         private void FrameGrabCallback(object state)
         {
+            // pause or resume grabbing frames from the cameras
             if (correspondence != null)
             {
                 if ((!UpdateWhenClientsConnected) ||
@@ -936,11 +931,11 @@ namespace surveyor.vision
                 }
             }
 
+            correspondence.random_rows = random_rows;
+
             if (images_rectified)
                 correspondence.Show(ref stereo_features);
 
-            correspondence.UpdateWhenClientsConnected = UpdateWhenClientsConnected;
-                            
             if (!broadcasting)
                 broadcasting = correspondence.StartService(broadcast_port_number);
                 

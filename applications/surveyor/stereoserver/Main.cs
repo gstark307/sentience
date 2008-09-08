@@ -117,6 +117,7 @@ namespace stereoserver
             stereo_camera.Load(calibration_filename);
             stereo_camera.stereo_algorithm_type = stereo_algorithm_type;
             stereo_camera.UpdateWhenClientsConnected = true;
+            stereo_camera.random_rows = 5;
             
             return (stereo_camera);
         }

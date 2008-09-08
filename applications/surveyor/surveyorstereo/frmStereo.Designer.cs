@@ -41,6 +41,8 @@ namespace surveyorstereo
             this.denseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.saveCalibrationPatternToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveCalibrationFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -61,6 +63,8 @@ namespace surveyorstereo
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveCalibrationFileToolStripMenuItem,
+            this.saveCalibrationPatternToolStripMenuItem,
             this.closeToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -69,7 +73,7 @@ namespace surveyorstereo
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
@@ -153,6 +157,20 @@ namespace surveyorstereo
             this.picRightImage.TabIndex = 2;
             this.picRightImage.TabStop = false;
             // 
+            // saveCalibrationPatternToolStripMenuItem
+            // 
+            this.saveCalibrationPatternToolStripMenuItem.Name = "saveCalibrationPatternToolStripMenuItem";
+            this.saveCalibrationPatternToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.saveCalibrationPatternToolStripMenuItem.Text = "Save calibration image";
+            this.saveCalibrationPatternToolStripMenuItem.Click += new System.EventHandler(this.saveCalibrationPatternToolStripMenuItem_Click);
+            // 
+            // saveCalibrationFileToolStripMenuItem
+            // 
+            this.saveCalibrationFileToolStripMenuItem.Name = "saveCalibrationFileToolStripMenuItem";
+            this.saveCalibrationFileToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.saveCalibrationFileToolStripMenuItem.Text = "Save calibration file";
+            this.saveCalibrationFileToolStripMenuItem.Click += new System.EventHandler(this.saveCalibrationFileToolStripMenuItem_Click);
+            // 
             // frmStereo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -191,6 +209,8 @@ namespace surveyorstereo
         private System.Windows.Forms.ToolStripMenuItem algorithmToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem simpleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem denseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveCalibrationPatternToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveCalibrationFileToolStripMenuItem;
     }
 }
 
