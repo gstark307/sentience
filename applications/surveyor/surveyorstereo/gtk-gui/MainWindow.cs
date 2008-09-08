@@ -46,26 +46,30 @@ public partial class MainWindow {
     
     private Gtk.Button cmdDenseStereo;
     
+    private Gtk.Button cmdSaveCalibration;
+    
+    private Gtk.Button cmdSaveCalibrationImage;
+    
     protected virtual void Build() {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
         Gtk.UIManager w1 = new Gtk.UIManager();
-        Gtk.ActionGroup w2 = new Gtk.ActionGroup("New Action Group");
-        w1.InsertActionGroup(w2, 0);
-        Gtk.ActionGroup w3 = new Gtk.ActionGroup("Default");
+        Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");
         this.FileAction = new Gtk.Action("FileAction", Mono.Unix.Catalog.GetString("File"), null, null);
         this.FileAction.ShortLabel = Mono.Unix.Catalog.GetString("File");
-        w3.Add(this.FileAction, null);
+        w2.Add(this.FileAction, null);
         this.ExitAction = new Gtk.Action("ExitAction", Mono.Unix.Catalog.GetString("Exit"), null, "gtk-stop");
         this.ExitAction.ShortLabel = Mono.Unix.Catalog.GetString("Exit");
-        w3.Add(this.ExitAction, null);
+        w2.Add(this.ExitAction, null);
         this.ToolsAction = new Gtk.Action("ToolsAction", Mono.Unix.Catalog.GetString("Tools"), null, null);
         this.ToolsAction.ShortLabel = Mono.Unix.Catalog.GetString("Tools");
-        w3.Add(this.ToolsAction, null);
+        w2.Add(this.ToolsAction, null);
         this.RecordImagesAction = new Gtk.ToggleAction("RecordImagesAction", Mono.Unix.Catalog.GetString("Record images"), null, null);
         this.RecordImagesAction.Active = true;
         this.RecordImagesAction.ShortLabel = Mono.Unix.Catalog.GetString("Record images");
-        w3.Add(this.RecordImagesAction, null);
+        w2.Add(this.RecordImagesAction, null);
+        w1.InsertActionGroup(w2, 0);
+        Gtk.ActionGroup w3 = new Gtk.ActionGroup("New Action Group");
         w1.InsertActionGroup(w3, 1);
         this.AddAccelGroup(w1.AccelGroup);
         this.CanFocus = true;
@@ -183,12 +187,34 @@ public partial class MainWindow {
         w14.Position = 1;
         w14.Expand = false;
         w14.Fill = false;
-        this.vbox1.Add(this.hbox3);
-        Gtk.Box.BoxChild w15 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
-        w15.PackType = ((Gtk.PackType)(1));
+        // Container child hbox3.Gtk.Box+BoxChild
+        this.cmdSaveCalibration = new Gtk.Button();
+        this.cmdSaveCalibration.CanFocus = true;
+        this.cmdSaveCalibration.Name = "cmdSaveCalibration";
+        this.cmdSaveCalibration.UseUnderline = true;
+        this.cmdSaveCalibration.Label = Mono.Unix.Catalog.GetString("Save calibration file");
+        this.hbox3.Add(this.cmdSaveCalibration);
+        Gtk.Box.BoxChild w15 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
         w15.Position = 3;
         w15.Expand = false;
         w15.Fill = false;
+        // Container child hbox3.Gtk.Box+BoxChild
+        this.cmdSaveCalibrationImage = new Gtk.Button();
+        this.cmdSaveCalibrationImage.CanFocus = true;
+        this.cmdSaveCalibrationImage.Name = "cmdSaveCalibrationImage";
+        this.cmdSaveCalibrationImage.UseUnderline = true;
+        this.cmdSaveCalibrationImage.Label = Mono.Unix.Catalog.GetString("Save calibration image");
+        this.hbox3.Add(this.cmdSaveCalibrationImage);
+        Gtk.Box.BoxChild w16 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
+        w16.Position = 4;
+        w16.Expand = false;
+        w16.Fill = false;
+        this.vbox1.Add(this.hbox3);
+        Gtk.Box.BoxChild w17 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
+        w17.PackType = ((Gtk.PackType)(1));
+        w17.Position = 3;
+        w17.Expand = false;
+        w17.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
@@ -205,5 +231,7 @@ public partial class MainWindow {
         this.cmdCalibrateAlignment.Clicked += new System.EventHandler(this.OnCmdCalibrateAlignmentClicked);
         this.cmdSimpleStereo.Clicked += new System.EventHandler(this.OnCmdSimpleStereoClicked);
         this.cmdDenseStereo.Clicked += new System.EventHandler(this.OnCmdDenseStereoClicked);
+        this.cmdSaveCalibration.Clicked += new System.EventHandler(this.OnCmdSaveCalibrationClicked);
+        this.cmdSaveCalibrationImage.Clicked += new System.EventHandler(this.OnCmdSaveCalibrationImageClicked);
     }
 }

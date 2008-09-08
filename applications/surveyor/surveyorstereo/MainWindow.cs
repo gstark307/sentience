@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.IO;
 using System.Drawing;
 using System.Threading;
 using Gtk;
@@ -184,5 +185,66 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.stereo_algorithm_type = StereoVision.DENSE;
     }
 
+    private void SaveCalibrationFile()
+    {
+        FileChooserDialog fc = 
+            new FileChooserDialog("Save calibration file",
+                                  this,
+                                  FileChooserAction.Save,
+                                  "Cancel", ResponseType.Cancel,
+                                  "Save", ResponseType.Ok);
+
+        int resp = fc.Run();
+        fc.Filter = new Gtk.FileFilter();
+        fc.Filter.AddPattern("Xml files (*.xml)|*.xml");
+        fc.Hide();
+        if (resp == (int)ResponseType.Ok)
+        {
+            if ((fc.Filename != null) && (fc.Filename != ""))
+            {
+                if (calibration_filename != fc.Filename)
+                {
+                    if (File.Exists(fc.Filename)) File.Delete(fc.Filename);
+                    File.Copy(calibration_filename, fc.Filename);
+                }
+            }
+        }
+        fc.Destroy();
+    }
+
+    private void SaveCalibrationImage()
+    {
+        FileChooserDialog fc = 
+            new FileChooserDialog("Save calibration image",
+                                  this,
+                                  FileChooserAction.Save,
+                                  "Cancel", ResponseType.Cancel,
+                                  "Save", ResponseType.Ok);
+
+        fc.Filter = new Gtk.FileFilter();
+        fc.Filter.AddPattern("Bitmap files (*.bmp)|*.bmp");
+        int resp = fc.Run();
+        fc.Hide();
+        if (resp == (int)ResponseType.Ok)
+        {
+            if ((fc.Filename != null) && (fc.Filename != ""))
+            {
+                Bitmap bmp = SurveyorCalibration.CreateDotPattern(1000, image_height * 1000 / image_width, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
+                bmp.Save(fc.Filename, System.Drawing.Imaging.ImageFormat.Bmp);
+            }
+        }
+        fc.Destroy();
+    }
+
+
+    protected virtual void OnCmdSaveCalibrationClicked (object sender, System.EventArgs e)
+    {
+        SaveCalibrationFile();
+    }
+
+    protected virtual void OnCmdSaveCalibrationImageClicked (object sender, System.EventArgs e)
+    {
+        SaveCalibrationImage();
+    }
 
 }
