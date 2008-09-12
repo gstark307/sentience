@@ -4,7 +4,7 @@
     <File name="MainWindow.cs" line="223" column="2" />
     <File name="../surveyorlib/BitmapArrayConversions.cs" line="9" column="40" />
     <File name="../surveyorlib/SurveyorCalibration.cs" line="955" column="27" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="58" column="1" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="58" column="16" />
     <File name="../surveyorlib/correspondence/StereoVision.cs" line="185" column="1" />
     <File name="../surveyorlib/correspondence/StereoFeature.cs" line="1" column="1" />
     <File name="../surveyorlib/correspondence/StereoVisionSimple.cs" line="670" column="1" />
@@ -13,15 +13,16 @@
     <File name="../surveyorlib/calibration/geometry.cs" line="177" column="19" />
     <File name="../surveyorlib/calibration/Grid2D.cs" line="760" column="10" />
     <File name="../surveyorlib/correspondence/FAST.cs" line="5148" column="55" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="5" column="1" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="80" column="42" />
     <File name="../surveyorlib/correspondence/StereoVisionDense.cs" line="661" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="surveyorlib" expanded="True">
-          <Node name="SurveyorVisionStereoGtk.cs" selected="True" />
+          <Node name="correspondence" expanded="True" />
         </Node>
+        <Node name="surveyorstereo" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">

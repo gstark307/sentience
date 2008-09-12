@@ -51,6 +51,10 @@
     <File name="correspondence/StereoVisionDense.cs" subtype="Code" buildaction="Compile" />
     <File name="SurveyorVisionStereoWin.cs" subtype="Code" buildaction="Compile" />
     <File name="BeepSound.cs" subtype="Code" buildaction="Compile" />
+    <File name="WebcamVisionStereoGtk.cs" subtype="Code" buildaction="Compile" />
+    <File name="WebcamVisionStereo.cs" subtype="Code" buildaction="Compile" />
+    <File name="BaseVisionStereo.cs" subtype="Code" buildaction="Compile" />
+    <File name="WebcamVisionThreadGrabFrameMulti.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

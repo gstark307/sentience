@@ -1,0 +1,25 @@
+<Combine name="webcamstereo" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="Packages" configuration="" />
+      <Entry build="True" name="surveyorlib" configuration="Debug" />
+      <Entry build="True" name="webcamstereo" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="Packages" configuration="" />
+      <Entry build="True" name="surveyorlib" configuration="Release" />
+      <Entry build="True" name="webcamstereo" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="webcamstereo" single="True">
+    <Execute type="None" entry="webcamstereo" />
+    <Execute type="None" entry="Packages" />
+    <Execute type="None" entry="surveyorlib" />
+    <Execute type="None" entry="webcamstereo" />
+  </StartMode>
+  <Entries>
+    <Entry filename="Packages.mdse" />
+    <Entry filename="../surveyorlib/surveyorlib.mdp" />
+    <Entry filename="webcamstereo.mdp" />
+  </Entries>
+</Combine>
