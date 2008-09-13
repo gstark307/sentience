@@ -1,5 +1,5 @@
 /*
-    
+    Thread used to grab frames from webcams
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 
@@ -62,7 +62,7 @@ namespace surveyor.vision
         private void Update(WebcamVisionStereo state)
         {   
             DateTime reference_time = new DateTime(2000, 1, 1);
-            int time_step_mS = 1000 / state.fps;
+            int time_step_mS = (int)(1000 / state.fps);
 
             // calculate the phase offset, relative to some reference time in the ancient past
             TimeSpan reference_diff = DateTime.Now.Subtract(reference_time);
@@ -72,14 +72,14 @@ namespace surveyor.vision
             {
                 // calculate the phase offset
                 reference_diff = DateTime.Now.Subtract(reference_time);
-                phase = (int)(reference_diff.TotalMilliseconds % time_step_mS);
+                phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
 
                 Thread.Sleep(20);
             }
         
             while(state.Running)
             {
-                time_step_mS = 1000 / state.fps;
+                time_step_mS = (int)(1000 / state.fps);
                                 
                 DateTime last_called = DateTime.Now;
                 
@@ -92,33 +92,38 @@ namespace surveyor.vision
                         {
                             // calculate the phase offset
                             reference_diff = DateTime.Now.Subtract(reference_time);
-                            phase = (int)(reference_diff.TotalMilliseconds % time_step_mS);
+                            phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
 
                             Thread.Sleep(20);
                         }
                     }
                 
                     // grab images
-                    state.Grab();
+                    if (state.active_camera) 
+                        state.Grab();
+                    else
+                        Thread.Sleep(20);
                     _callback(_data);
                     
                     // calculate the phase offset, relative to some reference time in the ancient past
                     reference_diff = DateTime.Now.Subtract(reference_time);
-                    phase = (int)(reference_diff.TotalMilliseconds % time_step_mS);
+                    phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
 
                     while ((phase < state.phase_degrees) && 
                            (state.Running))
                     {
                         // calculate the phase offset
                         reference_diff = DateTime.Now.Subtract(reference_time);
-                        phase = (int)(reference_diff.TotalMilliseconds % time_step_mS);
+                        phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
 
                         Thread.Sleep(20);
                     }
                 }
                 else
                 {
-                    Thread.Sleep(40);
+                    for (int i = 0; i < 100; i++)                    
+                        Thread.Sleep(5);
+                        
                     _callback(_data);
                 }
                 

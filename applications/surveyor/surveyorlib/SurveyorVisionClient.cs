@@ -47,7 +47,7 @@ namespace surveyor.vision
 		public bool frame_arrived;
 		
 		// desired frames per second
-		public int fps = 5;
+		public float fps = 5;
 		
 		// are we waiting for an image to be returned ?
 		public bool waiting_for_reply;

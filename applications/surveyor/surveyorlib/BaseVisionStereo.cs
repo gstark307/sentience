@@ -29,7 +29,7 @@ namespace surveyor.vision
     public class BaseVisionStereo
     {
         protected int broadcast_port_number;
-        public int fps = 10;
+        public float fps = 10;
         public int phase_degrees;
 
         public string device_name;
@@ -45,8 +45,11 @@ namespace surveyor.vision
         protected int prev_stereo_algorithm_type;
         protected bool broadcasting;
         
+        public BaseVisionStereo next_camera;
+        public bool active_camera = true;
+        
         // whether to record raw camera images
-        public bool Record;
+        public bool Record;        
         public ulong RecordFrameNumber;
         
         // whether to show the left or right image during calibration
@@ -97,7 +100,7 @@ namespace surveyor.vision
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
         /// <param name="phase_degrees">frame capture phase offset</param>
-        public BaseVisionStereo(int broadcast_port, int fps, int phase_degrees)
+        public BaseVisionStereo(int broadcast_port, float fps, int phase_degrees)
         {
             this.fps = fps;
             this.phase_degrees = phase_degrees;
@@ -118,6 +121,143 @@ namespace surveyor.vision
             {
                 for (int v = 0; v < victims.Length; v++)
                     File.Delete(victims[v]);
+            }
+        }
+        
+        #endregion
+        
+        #region "automatic exposure adjustment"
+        
+        private float[] intensity_histogram = new float[256];
+        public int exposure_deadband = 10;
+        
+        /// <summary>
+        /// calculate mean light value from intensity histogram
+        /// </summary>
+        /// <param name="histogram">histogram data</param>
+        private unsafe float GetMeanLight(float[] histogram)
+        {
+            float MeanDark=0, MeanLight=0;
+            float MinVariance = 999999;  // some large figure
+            float currMeanDark, currMeanLight, VarianceDark, VarianceLight;
+
+            float DarkHits = 0;
+            float LightHits = 0;
+            int histlength = histogram.Length;
+
+            // calculate squared magnitudes
+            // this avoids unnecessary multiplications later on
+            float[] histogram_squared_magnitude = new float[histogram.Length];
+            for (int i = 0; i < histogram.Length; i++)
+                histogram_squared_magnitude[i] = histogram[i] * histogram[i];
+
+            //const float threshold_increment = 0.25f;
+            const int max_grey_levels = 255;
+
+            int h, bucket;
+            float magnitude_sqr, Variance, divisor;
+
+            fixed (float* unsafe_histogram = histogram_squared_magnitude)
+            {
+                // evaluate all possible thresholds
+                for (int grey_level = max_grey_levels - 1; grey_level >= 0; grey_level--)
+                {
+                    // compute mean and variance for this threshold
+                    // in a struggle between light and darkness
+                    DarkHits = 0;
+                    LightHits = 0;
+                    currMeanDark = 0;
+                    currMeanLight = 0;
+                    VarianceDark = 0;
+                    VarianceLight = 0;
+
+                    bucket = grey_level;
+                    for (h = histlength - 1; h >= 0; h--)
+                    {
+                        magnitude_sqr = unsafe_histogram[h];
+                        if (h < bucket)
+                        {
+                            currMeanDark += h * magnitude_sqr;
+                            VarianceDark += (bucket - h) * magnitude_sqr;
+                            DarkHits += magnitude_sqr;
+                        }
+                        else
+                        {
+                            currMeanLight += h * magnitude_sqr;
+                            VarianceLight += (bucket - h) * magnitude_sqr;
+                            LightHits += magnitude_sqr;
+                        }
+                    }
+
+                    // compute means
+                    if (DarkHits > 0)
+                    {
+                        // rescale into 0-255 range
+                        divisor = DarkHits * histlength;
+                        currMeanDark = currMeanDark * 255 / divisor;
+                        VarianceDark = VarianceDark * 255 / divisor;
+                    }
+                    if (LightHits > 0)
+                    {
+                        // rescale into 0-255 range
+                        divisor = LightHits * histlength;
+                        currMeanLight = currMeanLight * 255 / divisor;
+                        VarianceLight = VarianceLight * 255 / divisor;
+                    }
+
+                    Variance = VarianceDark + VarianceLight;
+                    if (Variance < 0) Variance = -Variance;
+
+                    if (Variance < MinVariance)
+                    {
+                        MinVariance = Variance;
+                        MeanDark = currMeanDark;
+                        MeanLight = currMeanLight;
+                    }
+                    if ((int)(Variance * 1000) == (int)(MinVariance * 1000))
+                    {
+                        MeanLight = currMeanLight;
+                    }
+                }
+            }
+            return(MeanLight);
+        }
+                
+        protected void AutoExposure(byte[] left_img, byte[] right_img)
+        {        
+            const int ideal_mean_light = 200;
+            
+            if ((left_img != null) && (right_img != null))
+            {
+                // clear the histogram
+                for (int i = intensity_histogram.Length-1; i >= 0; i--)
+                    intensity_histogram[i] = 0;
+                
+                // update the histogram
+                int sampling_step = left_img.Length / (3*300);
+                if (sampling_step < 3) sampling_step = 3;
+                
+                for (int i = left_img.Length-1; i >= 0; i -= sampling_step)
+                    intensity_histogram[left_img[i]]++;
+                for (int i = right_img.Length-1; i >= 0; i -= sampling_step)
+                    intensity_histogram[right_img[i]]++;
+                    
+                float MeanLight = GetMeanLight(intensity_histogram);
+                int diff = (int)(MeanLight - ideal_mean_light);
+                int adjust = diff / 5;
+                if (adjust == 0)
+                {
+                    if (diff > 0) 
+                        adjust = 1;
+                    else
+                        adjust = -1;
+                }
+                if ((MeanLight > ideal_mean_light + exposure_deadband) ||
+                    (MeanLight < ideal_mean_light - exposure_deadband))
+                    exposure -= adjust;
+                
+                if (exposure > 100) exposure = 100;
+                if (exposure < 1) exposure = 1;
             }
         }
         
@@ -569,6 +709,8 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>
         protected void RectifyImages(Bitmap left_image, Bitmap right_image)
         {
+            byte[][] img_rectified = new byte[2][];
+        
             for (int cam = 0; cam < 2; cam++)
             {
                 Bitmap bmp = left_image;
@@ -599,7 +741,7 @@ namespace surveyor.vision
                         if (img != null)
                         {
                             BitmapArrayConversions.updatebitmap(bmp, img);
-                            byte[] img_rectified = (byte[])img.Clone();
+                            img_rectified[cam] = (byte[])img.Clone();
 
                             int n = 0;
                             int[] map = calibration_map[cam];
@@ -607,16 +749,19 @@ namespace surveyor.vision
                             {
                                 int index = map[n] * 3;
                                 for (int col = 0; col < 3; col++)
-                                    img_rectified[i + col] = img[index + col];
+                                    img_rectified[cam][i + col] = img[index + col];
                             }
 
                             if (rectified[cam] == null)
                                 rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                            BitmapArrayConversions.updatebitmap_unsafe(img_rectified, rectified[cam]);
+                            BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
                         }
                     }
                 }
             }
+            
+            // adjust exposure
+            AutoExposure(img_rectified[0], img_rectified[1]);
         }
         
         
@@ -833,6 +978,18 @@ namespace surveyor.vision
         {        
             DisplayImages(left_image, right_image);
             StereoCorrespondence();
+        }
+        
+        #endregion
+        
+        #region "pause and resume"
+        
+        public virtual void Pause()
+        {
+        }
+        
+        public virtual void Resume()
+        {
         }
         
         #endregion

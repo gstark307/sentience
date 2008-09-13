@@ -47,7 +47,7 @@ namespace surveyor.vision
                                     int port_number_left,
                                     int port_number_right,
                                     int broadcast_port,
-                                    int fps,
+                                    float fps,
                                     int phase_degrees) : base(broadcast_port, fps, phase_degrees)
         {
             device_name = "Surveyor stereo camera";

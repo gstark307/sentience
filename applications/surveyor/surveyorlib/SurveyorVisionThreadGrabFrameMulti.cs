@@ -60,7 +60,7 @@ namespace surveyor.vision
         /// <param name="state">vision state</param>
         private void Update(SurveyorVisionClient[] state)
         {
-            int time_step_mS = 1000 / state[0].fps;
+            int time_step_mS = (int)(1000 / state[0].fps);
         
             DateTime data_last_requested = DateTime.Now;
             while (state[0].Streaming)

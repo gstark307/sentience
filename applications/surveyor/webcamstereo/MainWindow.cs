@@ -30,9 +30,12 @@ public partial class MainWindow: Gtk.Window
 {
     int image_width = 320;
     int image_height = 240;
-    string left_camera_device = "/dev/video1";
-    string right_camera_device = "/dev/video2";
+    string left_camera_device = "/dev/video3";
+    string right_camera_device = "/dev/video4";
     string calibration_filename = "calibration.xml";
+    int broadcast_port = 10010;
+    int fps = 1;
+    int phase_degrees = 180;
          
     public WebcamVisionStereoGtk stereo_camera;
     
@@ -48,7 +51,7 @@ public partial class MainWindow: Gtk.Window
         GtkBitmap.setBitmap(left_bmp, leftimage);
         GtkBitmap.setBitmap(right_bmp, rightimage);
         
-        stereo_camera = new WebcamVisionStereoGtk(left_camera_device, right_camera_device, 10010);
+        stereo_camera = new WebcamVisionStereoGtk(left_camera_device, right_camera_device, broadcast_port, fps, phase_degrees);
         stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;

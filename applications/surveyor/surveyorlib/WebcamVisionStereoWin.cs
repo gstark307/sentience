@@ -44,7 +44,7 @@ namespace surveyor.vision
         public WebcamVisionStereoWin(string left_camera_device,
                                      string right_camera_device,
                                      int broadcast_port,
-                                     int fps,
+                                     float fps,
                                      int phase_degrees)
             : base(left_camera_device, right_camera_device, broadcast_port, fps, phase_degrees)
         {

@@ -42,23 +42,31 @@ namespace stereoserver
             int image_width = 320;
             int image_height = 240;
             int broadcast_port = 10010;
+            int broadcast_port2 = 10011;
             int stereo_algorithm_type = StereoVision.SIMPLE;
-            int fps = 1;
+            float fps = 1;
             int phase_degrees = 0;
             
             BaseVisionStereo stereo_camera = null;
+            BaseVisionStereo stereo_camera2 = null;
 
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
 
+            bool record = false;
+            if (commandline.GetParameterValue("record", parameters) != "")
+                record = true;
+
             string left_device = commandline.GetParameterValue("leftdevice", parameters);
             string right_device = commandline.GetParameterValue("rightdevice", parameters);
+            string left_device2 = commandline.GetParameterValue("leftdevice2", parameters);
+            string right_device2 = commandline.GetParameterValue("rightdevice2", parameters);
             
             string fps_str = commandline.GetParameterValue("fps", parameters);
-            if (fps_str != "") fps = Convert.ToInt32(fps_str);
+            if (fps_str != "") fps = Convert.ToSingle(fps_str);
 
             string phase_str = commandline.GetParameterValue("phase", parameters);
-            if (phase_str != "") fps = Convert.ToInt32(phase_str);
+            if (phase_str != "") phase_degrees = Convert.ToInt32(phase_str);
 
             string width_str = commandline.GetParameterValue("width", parameters);
             if (width_str != "") image_width = Convert.ToInt32(width_str);
@@ -77,6 +85,9 @@ namespace stereoserver
 
             string broadcast_port_str = commandline.GetParameterValue("broadcastport", parameters);
             if (broadcast_port_str != "") broadcast_port = Convert.ToInt32(broadcast_port_str);
+
+            broadcast_port_str = commandline.GetParameterValue("broadcastport2", parameters);
+            if (broadcast_port_str != "") broadcast_port2 = Convert.ToInt32(broadcast_port_str);
 
             string algorithm_str = commandline.GetParameterValue("algorithm", parameters);
             if (algorithm_str != "")
@@ -103,10 +114,24 @@ namespace stereoserver
                         // surveyor stereo camera
                         stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps, phase_degrees);
                     else
+                    {
                         // webcam based stereo camera
                         stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps, phase_degrees);
+                        if ((left_device2 != "") && (right_device2 != ""))
+                            stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps, phase_degrees);
+                    }
                         
+                    stereo_camera.Record = record;
                     stereo_camera.Run();
+                    if (stereo_camera2 != null)
+                    {
+                        stereo_camera.next_camera = stereo_camera2;
+                        stereo_camera2.next_camera = stereo_camera;
+                        stereo_camera.active_camera = true;
+                        stereo_camera2.active_camera = false;
+                        stereo_camera2.Record = record;
+                        stereo_camera2.Run();
+                    }
                     while (stereo_camera.Running)
                     {
                         System.Threading.Thread.Sleep(20);
@@ -122,7 +147,7 @@ namespace stereoserver
                                                     int left_port, int right_port,
                                                     int broadcast_port,
                                                     int stereo_algorithm_type,
-                                                    int fps,
+                                                    float fps,
                                                     int phase_degrees)
         {
             SurveyorVisionStereoWin stereo_camera =
@@ -152,7 +177,7 @@ namespace stereoserver
             int image_width, int image_height,
             int broadcast_port,
             int stereo_algorithm_type,
-            int fps,
+            float fps,
             int phase_degrees)
         {
             WebcamVisionStereoWin stereo_camera =
@@ -194,9 +219,15 @@ namespace stereoserver
             ValidParameters.Add("rightport");
             ValidParameters.Add("leftdevice");
             ValidParameters.Add("rightdevice");
+            ValidParameters.Add("leftdevice2");
+            ValidParameters.Add("rightdevice2");
             ValidParameters.Add("broadcastport");
+            ValidParameters.Add("broadcastport2");
             ValidParameters.Add("algorithm");
             ValidParameters.Add("calibration");
+            ValidParameters.Add("record");
+            ValidParameters.Add("fps");
+            ValidParameters.Add("phase");
 
             return (ValidParameters);
         }

@@ -1,9 +1,15 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/stereoclient/stereoclient.mds">
   <Files>
     <File name="Welcome" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="7" column="15" />
+    <File name="../surveyorlib/WebcamVisionStereoGtk.cs" line="35" column="17" />
+    <File name="../surveyorlib/WebcamVisionStereo.cs" line="84" column="13" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="103" column="1" />
+    <File name="../surveyorlib/BaseVisionStereo.cs" line="79" column="1" />
+    <File name="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" line="66" column="14" />
     <File name="Main.cs" line="65" column="10" />
     <File name="commandline.cs" line="19" column="1" />
-    <File name="StereoVisionClient.cs" line="361" column="43" />
+    <File name="StereoVisionClient.cs" line="366" column="18" />
     <File name="StereoFeature.cs" line="1" column="1" />
   </Files>
   <Views>

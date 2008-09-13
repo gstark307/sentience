@@ -1,5 +1,5 @@
 /*
-    Stereo vision for Surveyor robots
+    Stereo vision using webcams
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 
@@ -45,7 +45,7 @@ namespace surveyor.vision
         public WebcamVisionStereo(string left_camera_device,
                                   string right_camera_device,
                                   int broadcast_port,
-                                  int fps,
+                                  float fps,
                                   int phase_degrees) : base (broadcast_port, fps, phase_degrees)
         {
             device_name = "Webcam stereo camera";
@@ -53,6 +53,22 @@ namespace surveyor.vision
             camera_device = new string[2];
             camera_device[0] = left_camera_device;
             camera_device[1] = right_camera_device;
+        }
+        
+        #endregion
+
+        #region "pause and resume"
+
+        public override void Pause()
+        {
+            if (grab_frames != null)
+                grab_frames.Pause = true;
+        }
+        
+        public override void Resume()
+        {
+            if (grab_frames != null)
+                grab_frames.Pause = false;
         }
         
         #endregion
@@ -77,14 +93,26 @@ namespace surveyor.vision
         /// </summary>
         public virtual void Grab()
         {
-            string command_str;
+            string filename = "capture";
             
-            command_str = "fswebcam -d " + camera_device[0] + "," + camera_device[1];
+            string identifier = "";
+            for (int cam = 0; cam < 2; cam++)
+            {
+                char[] ch = camera_device[cam].ToCharArray();            
+                for (int i = 0; i < ch.Length; i++)
+                {
+                    if ((ch[i] >= '0') && (ch[i] <= '9'))
+                        identifier += ch[i];
+                }
+            }
+            filename += identifier;
+            
+            string command_str = "fswebcam -d " + camera_device[0] + "," + camera_device[1];
             command_str += " -r " + image_width.ToString() + "x" + image_height.ToString();
             command_str += " --no-banner";
             command_str += " -S " + skip_frames.ToString();
             if (exposure > 0) command_str += " -s brightness=" + exposure.ToString() + "%";
-            command_str += " --save capture_.jpg";
+            command_str += " --save " + filename + "_.jpg";
             
             Console.WriteLine("");
             Console.WriteLine("");
@@ -92,17 +120,17 @@ namespace surveyor.vision
             Console.WriteLine("");
             Console.WriteLine("");
             
-            string left_image_filename = "capture_0.jpg";
-            string right_image_filename = "capture_1.jpg";
+            string left_image_filename = filename + "_0.jpg";
+            string right_image_filename = filename + "_1.jpg";
             
             // delete any existing images
             for (int cam = 0; cam < 2; cam++)
             {
-                if (File.Exists("capture_" + cam.ToString() + ".jpg"))
+                if (File.Exists(filename + "_" + cam.ToString() + ".jpg"))
                 {
                     try
                     {
-                        File.Delete("capture_" + cam.ToString() + ".jpg");
+                        File.Delete(filename + "_" + cam.ToString() + ".jpg");
                     }
                     catch
                     {
@@ -129,14 +157,16 @@ namespace surveyor.vision
             }
             else
             {
-                proc.WaitForExit();
+                //proc.WaitForExit();
                 proc.Close();          
 
                 // wait for the file to appear
                 const int timeout_secs = 10;
                 DateTime start_time = DateTime.Now;
                 int seconds_elapsed = 0;
-                while ((!File.Exists(right_image_filename)) &&
+                Thread.Sleep(20);
+                while ((!File.Exists(left_image_filename)) &&
+                       (!File.Exists(right_image_filename)) &&
                        (seconds_elapsed < timeout_secs))
                 {
                     System.Threading.Thread.Sleep(50);
@@ -152,7 +182,14 @@ namespace surveyor.vision
                     
                     for (int cam = 0; cam < 2; cam++)
                     {
-                        bmp[cam] = (Bitmap)Bitmap.FromFile("capture_" + cam.ToString() + ".jpg");                        
+                        try
+                        {
+                            bmp[cam] = (Bitmap)Bitmap.FromFile(filename + "_" + cam.ToString() + ".jpg");
+                        }
+                        catch
+                        {
+                            bmp[cam] = null;
+                        }
                         if (bmp[cam] == null) break;
                         
                         image_width = bmp[cam].Width;
@@ -180,12 +217,12 @@ namespace surveyor.vision
                         if (Record)
                         {
                             RecordFrameNumber++;
-                            bmp[0].Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                            bmp[1].Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            bmp[0].Save("raw" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            bmp[1].Save("raw" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             if ((rectified[0] != null) && (rectified[0] != null))
                             {
-                                rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                                rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                                rectified[0].Save("rectified" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                                rectified[1].Save("rectified" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             }
                         }
                     }
@@ -194,6 +231,13 @@ namespace surveyor.vision
 
             }
             
+            if (next_camera != null)
+            {
+                active_camera = false;
+                Pause();
+                next_camera.active_camera = true;
+                next_camera.Resume();
+            }            
         }
         
         #endregion
