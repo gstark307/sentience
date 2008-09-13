@@ -35,7 +35,7 @@
     <action-group name="New Action Group" />
     <property name="MemberName" />
     <property name="CanFocus">True</property>
-    <property name="Title" translatable="yes">Surveyor SVS</property>
+    <property name="Title" translatable="yes">Webcam SVS</property>
     <property name="WindowPosition">CenterOnParent</property>
     <signal name="DeleteEvent" handler="OnDeleteEvent" />
     <child>

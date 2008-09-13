@@ -1,5 +1,5 @@
 /*
-    Stereo vision for Surveyor robots
+    Stereo vision for webcams
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 
@@ -29,26 +29,24 @@ namespace surveyor.vision
     /// <summary>
     /// stereo vision object which displays images using Winforms
     /// </summary>
-    public class SurveyorVisionStereoWin : SurveyorVisionStereo
+    public class WebcamVisionStereoWin : WebcamVisionStereo
     {
         #region "constructors"
 
         /// <summary>
         /// constructor
         /// </summary>
-        /// <param name="host">host name or IP address</param>
-        /// <param name="port_number_left">port number for the left camera</param>
-        /// <param name="port_number_right">port number for the right camera</param>
+        /// <param name="left_camera_device">device name for the left camera</param>
+        /// <param name="right_camera_device">device name for the rigt camera</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
         /// <param name="phase_degrees">frame capture phase offset</param>
-        public SurveyorVisionStereoWin(string host,
-                                       int port_number_left,
-                                       int port_number_right,
-                                       int broadcast_port,
-                                       int fps,
-                                       int phase_degrees)
-            : base(host, port_number_left, port_number_right, broadcast_port, fps, phase_degrees)
+        public WebcamVisionStereoWin(string left_camera_device,
+                                     string right_camera_device,
+                                     int broadcast_port,
+                                     int fps,
+                                     int phase_degrees)
+            : base(left_camera_device, right_camera_device, broadcast_port, fps, phase_degrees)
         {
             display_image = new PictureBox[2];
         }
@@ -259,12 +257,6 @@ namespace surveyor.vision
 
         #region "process images"
 
-        /*
-        public override void Process(Bitmap left_image, Bitmap right_image)
-        {
-            DisplayImages(left_image, right_image);
-        }
-         */
 
         #endregion
 

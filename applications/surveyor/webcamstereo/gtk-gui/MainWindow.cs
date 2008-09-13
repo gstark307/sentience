@@ -54,27 +54,27 @@ public partial class MainWindow {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
         Gtk.UIManager w1 = new Gtk.UIManager();
-        Gtk.ActionGroup w2 = new Gtk.ActionGroup("New Action Group");
-        w1.InsertActionGroup(w2, 0);
-        Gtk.ActionGroup w3 = new Gtk.ActionGroup("Default");
+        Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");
         this.FileAction = new Gtk.Action("FileAction", Mono.Unix.Catalog.GetString("File"), null, null);
         this.FileAction.ShortLabel = Mono.Unix.Catalog.GetString("File");
-        w3.Add(this.FileAction, null);
+        w2.Add(this.FileAction, null);
         this.ExitAction = new Gtk.Action("ExitAction", Mono.Unix.Catalog.GetString("Exit"), null, "gtk-stop");
         this.ExitAction.ShortLabel = Mono.Unix.Catalog.GetString("Exit");
-        w3.Add(this.ExitAction, null);
+        w2.Add(this.ExitAction, null);
         this.ToolsAction = new Gtk.Action("ToolsAction", Mono.Unix.Catalog.GetString("Tools"), null, null);
         this.ToolsAction.ShortLabel = Mono.Unix.Catalog.GetString("Tools");
-        w3.Add(this.ToolsAction, null);
+        w2.Add(this.ToolsAction, null);
         this.RecordImagesAction = new Gtk.ToggleAction("RecordImagesAction", Mono.Unix.Catalog.GetString("Record images"), null, null);
         this.RecordImagesAction.Active = true;
         this.RecordImagesAction.ShortLabel = Mono.Unix.Catalog.GetString("Record images");
-        w3.Add(this.RecordImagesAction, null);
+        w2.Add(this.RecordImagesAction, null);
+        w1.InsertActionGroup(w2, 0);
+        Gtk.ActionGroup w3 = new Gtk.ActionGroup("New Action Group");
         w1.InsertActionGroup(w3, 1);
         this.AddAccelGroup(w1.AccelGroup);
         this.CanFocus = true;
         this.Name = "MainWindow";
-        this.Title = Mono.Unix.Catalog.GetString("Surveyor SVS");
+        this.Title = Mono.Unix.Catalog.GetString("Webcam SVS");
         this.WindowPosition = ((Gtk.WindowPosition)(4));
         // Container child MainWindow.Gtk.Container+ContainerChild
         this.vbox1 = new Gtk.VBox();

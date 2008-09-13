@@ -1,14 +1,24 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/stereoserver/stereoserver.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="145" column="2" />
+    <File name="Main.cs" line="29" column="1" />
     <File name="../surveyorlib/correspondence/StereoVision.cs" line="57" column="1" />
+    <File name="../surveyorlib/WebcamVisionStereoGtk.cs" line="170" column="9" />
+    <File name="../surveyorlib/WebcamVisionStereo.cs" line="64" column="21" />
+    <File name="../surveyorlib/BaseVisionStereo.cs" line="100" column="1" />
+    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="36" column="9" />
+    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="87" column="38" />
+    <File name="../surveyorlib/SurveyorVisionStereoWin.cs" line="1" column="1" />
+    <File name="../surveyorlib/WebcamVisionStereoWin.cs" line="133" column="1" />
+    <File name="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" line="96" column="1" />
+    <File name="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" line="118" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="stereoserver" expanded="True">
-          <Node name="Main.cs" selected="True" />
+        <Node name="stereoserver" expanded="True" />
+        <Node name="surveyorlib" expanded="True">
+          <Node name="WebcamVisionThreadGrabFrameMulti.cs" selected="True" />
         </Node>
       </Node>
     </ViewMemento>
@@ -20,7 +30,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/stereoserver/Main.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

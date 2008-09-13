@@ -30,8 +30,8 @@ public partial class MainWindow: Gtk.Window
 {
     int image_width = 320;
     int image_height = 240;
-    string left_camera_device = "/dev/video0";
-    string right_camera_device = "/dev/video1";
+    string left_camera_device = "/dev/video1";
+    string right_camera_device = "/dev/video2";
     string calibration_filename = "calibration.xml";
          
     public WebcamVisionStereoGtk stereo_camera;
@@ -53,6 +53,8 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
         stereo_camera.Load(calibration_filename);
+        stereo_camera.image_width = image_width;
+        stereo_camera.image_height = image_height;        
         stereo_camera.Run();
     }	
     

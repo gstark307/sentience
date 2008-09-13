@@ -32,19 +32,33 @@ namespace stereoserver
     class MainClass
     {
         static void Main(string[] args)
-        {
-            int image_width = 320;
-            int image_height = 240;
+        {            
+            // default settings for the surveyor stereo camera
             string stereo_camera_IP = "169.254.0.10";
             string calibration_filename = "calibration.xml";
             int left_port = 10001;
             int right_port = 10002;
+                        
+            int image_width = 320;
+            int image_height = 240;
             int broadcast_port = 10010;
             int stereo_algorithm_type = StereoVision.SIMPLE;
-            SurveyorVisionStereoWin stereo_camera = null;
+            int fps = 1;
+            int phase_degrees = 0;
+            
+            BaseVisionStereo stereo_camera = null;
 
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
+
+            string left_device = commandline.GetParameterValue("leftdevice", parameters);
+            string right_device = commandline.GetParameterValue("rightdevice", parameters);
+            
+            string fps_str = commandline.GetParameterValue("fps", parameters);
+            if (fps_str != "") fps = Convert.ToInt32(fps_str);
+
+            string phase_str = commandline.GetParameterValue("phase", parameters);
+            if (phase_str != "") fps = Convert.ToInt32(phase_str);
 
             string width_str = commandline.GetParameterValue("width", parameters);
             if (width_str != "") image_width = Convert.ToInt32(width_str);
@@ -85,12 +99,19 @@ namespace stereoserver
                 }
                 else
                 {
-                    stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type);
+                    if ((left_device == "") || (left_device == null))
+                        // surveyor stereo camera
+                        stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps, phase_degrees);
+                    else
+                        // webcam based stereo camera
+                        stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps, phase_degrees);
+                        
                     stereo_camera.Run();
                     while (stereo_camera.Running)
                     {
                         System.Threading.Thread.Sleep(20);
                     }
+
                 }
             }
         }
@@ -100,10 +121,12 @@ namespace stereoserver
                                                     int image_width, int image_height,
                                                     int left_port, int right_port,
                                                     int broadcast_port,
-                                                    int stereo_algorithm_type)
+                                                    int stereo_algorithm_type,
+                                                    int fps,
+                                                    int phase_degrees)
         {
             SurveyorVisionStereoWin stereo_camera =
-                new SurveyorVisionStereoWin(stereo_camera_IP, left_port, right_port, broadcast_port);
+                new SurveyorVisionStereoWin(stereo_camera_IP, left_port, right_port, broadcast_port, fps, phase_degrees);
 
             PictureBox picLeftImage = new PictureBox();
             PictureBox picRightImage = new PictureBox();
@@ -115,6 +138,40 @@ namespace stereoserver
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;
             stereo_camera.Load(calibration_filename);
+            stereo_camera.stereo_algorithm_type = stereo_algorithm_type;
+            stereo_camera.UpdateWhenClientsConnected = true;
+            stereo_camera.random_rows = 5;
+            
+            return (stereo_camera);
+        }
+
+        private static WebcamVisionStereoWin Init(
+            string left_camera_device,
+            string right_camera_device,
+            string calibration_filename,
+            int image_width, int image_height,
+            int broadcast_port,
+            int stereo_algorithm_type,
+            int fps,
+            int phase_degrees)
+        {
+            WebcamVisionStereoWin stereo_camera =
+                new WebcamVisionStereoWin(
+                    left_camera_device, right_camera_device,
+                    broadcast_port, fps, phase_degrees);
+
+            PictureBox picLeftImage = new PictureBox();
+            PictureBox picRightImage = new PictureBox();
+
+            picLeftImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            stereo_camera.window = null;
+            stereo_camera.display_image[0] = picLeftImage;
+            stereo_camera.display_image[1] = picRightImage;
+            stereo_camera.Load(calibration_filename);
+            stereo_camera.image_width = image_width;
+            stereo_camera.image_height = image_height;
             stereo_camera.stereo_algorithm_type = stereo_algorithm_type;
             stereo_camera.UpdateWhenClientsConnected = true;
             stereo_camera.random_rows = 5;
@@ -135,6 +192,8 @@ namespace stereoserver
             ValidParameters.Add("server");
             ValidParameters.Add("leftport");
             ValidParameters.Add("rightport");
+            ValidParameters.Add("leftdevice");
+            ValidParameters.Add("rightdevice");
             ValidParameters.Add("broadcastport");
             ValidParameters.Add("algorithm");
             ValidParameters.Add("calibration");

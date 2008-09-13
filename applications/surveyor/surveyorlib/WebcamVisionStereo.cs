@@ -40,9 +40,13 @@ namespace surveyor.vision
         /// <param name="left_camera_device">device name of the left camera (eg. /dev/video0)</param>
         /// <param name="right_camera_device">device name of the left camera (eg. /dev/video1)</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
+        /// <param name="fps">ideal frames per second</param>
+        /// <param name="phase_degrees">frame capture phase offset</param>
         public WebcamVisionStereo(string left_camera_device,
                                   string right_camera_device,
-                                  int broadcast_port) : base (broadcast_port)
+                                  int broadcast_port,
+                                  int fps,
+                                  int phase_degrees) : base (broadcast_port, fps, phase_degrees)
         {
             device_name = "Webcam stereo camera";
             
@@ -71,7 +75,7 @@ namespace surveyor.vision
         /// <summary>
         /// grab a images using the fswebcam utility
         /// </summary>
-        public void GrabFswebcam()
+        public virtual void Grab()
         {
             string command_str;
             
@@ -81,6 +85,12 @@ namespace surveyor.vision
             command_str += " -S " + skip_frames.ToString();
             if (exposure > 0) command_str += " -s brightness=" + exposure.ToString() + "%";
             command_str += " --save capture_.jpg";
+            
+            Console.WriteLine("");
+            Console.WriteLine("");
+            Console.WriteLine(command_str);
+            Console.WriteLine("");
+            Console.WriteLine("");
             
             string left_image_filename = "capture_0.jpg";
             string right_image_filename = "capture_1.jpg";

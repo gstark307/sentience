@@ -41,9 +41,13 @@ namespace surveyor.vision
         /// <param name="port_number_left">port number for the left camera</param>
         /// <param name="port_number_right">port number for the right camera</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
+        /// <param name="fps">ideal frames per second</param>
+        /// <param name="phase_degrees">frame capture phase offset</param>
         public WebcamVisionStereoGtk(string left_camera_device,
                                      string right_camera_device,
-                                     int broadcast_port) : base (left_camera_device, right_camera_device, broadcast_port)
+                                     int broadcast_port,
+                                     int fps,
+                                     int phase_degrees) : base (left_camera_device, right_camera_device, broadcast_port, fps, phase_degrees)
         {
             display_image = new Gtk.Image[2];
         }
@@ -229,7 +233,8 @@ namespace surveyor.vision
                 // Here we need to update the GUI after receiving the right camera image
                 // Since we're running in a separate thread from the GUI we have to
                 // call it in a special way
-                RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
+                if (window != null)
+                    RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
             }
             
             if (window != null)

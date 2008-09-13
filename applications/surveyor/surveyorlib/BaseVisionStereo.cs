@@ -30,6 +30,7 @@ namespace surveyor.vision
     {
         protected int broadcast_port_number;
         public int fps = 10;
+        public int phase_degrees;
 
         public string device_name;
         public string part_number;
@@ -76,7 +77,7 @@ namespace surveyor.vision
         // If this value is set to zero then all rows of the image are considered
         public int random_rows;
         
-        public int exposure;
+        public int exposure = 50;
         
         // what type of image should be displayed
         public const int DISPLAY_RAW = 0;
@@ -94,8 +95,13 @@ namespace surveyor.vision
         /// constructor
         /// </summary>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
-        public BaseVisionStereo(int broadcast_port)
+        /// <param name="fps">ideal frames per second</param>
+        /// <param name="phase_degrees">frame capture phase offset</param>
+        public BaseVisionStereo(int broadcast_port, int fps, int phase_degrees)
         {
+            this.fps = fps;
+            this.phase_degrees = phase_degrees;
+        
             broadcast_port_number = broadcast_port;
             
             calibration_survey = new CalibrationSurvey[2];

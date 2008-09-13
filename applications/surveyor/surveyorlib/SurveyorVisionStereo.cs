@@ -41,10 +41,14 @@ namespace surveyor.vision
         /// <param name="port_number_left">port number for the left camera</param>
         /// <param name="port_number_right">port number for the right camera</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
+        /// <param name="fps">ideal frames per second</param>
+        /// <param name="phase_degrees">frame capture phase offset</param>
         public SurveyorVisionStereo(string host,
                                     int port_number_left,
                                     int port_number_right,
-                                    int broadcast_port) : base(broadcast_port)
+                                    int broadcast_port,
+                                    int fps,
+                                    int phase_degrees) : base(broadcast_port, fps, phase_degrees)
         {
             device_name = "Surveyor stereo camera";
             this.host = host;

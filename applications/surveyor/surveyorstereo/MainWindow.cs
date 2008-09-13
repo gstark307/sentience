@@ -32,6 +32,8 @@ public partial class MainWindow: Gtk.Window
     int image_height = 240;
     string stereo_camera_IP = "169.254.0.10";
     string calibration_filename = "calibration.xml";
+    int fps = 10;
+    int phase_degrees = 0;
          
     public SurveyorVisionStereoGtk stereo_camera;
     
@@ -47,7 +49,7 @@ public partial class MainWindow: Gtk.Window
         GtkBitmap.setBitmap(left_bmp, leftimage);
         GtkBitmap.setBitmap(right_bmp, rightimage);
         
-        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002, 10010);
+        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002, 10010, fps, phase_degrees);
         stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
