@@ -37,6 +37,12 @@ namespace surveyorstereo
         string stereo_camera_IP = "169.254.0.10";
         string calibration_filename = "calibration.xml";
         SurveyorVisionStereoWin stereo_camera;
+        int left_port = 10001;
+        int right_port = 10002;
+        int broadcast_port = 10010;
+        int fps = 10;
+        string temporary_files_path = "";
+        string recorded_images_path = "";
 
         public frmStereo()
         {
@@ -50,7 +56,9 @@ namespace surveyorstereo
 
         public void Init()
         {
-            stereo_camera = new SurveyorVisionStereoWin(stereo_camera_IP, 10001, 10002, 10010);
+            stereo_camera = new SurveyorVisionStereoWin(stereo_camera_IP, left_port, right_port, broadcast_port, fps);
+            stereo_camera.temporary_files_path = temporary_files_path;
+            stereo_camera.recorded_images_path = recorded_images_path;
             stereo_camera.window = this;
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;

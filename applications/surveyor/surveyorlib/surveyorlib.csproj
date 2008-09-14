@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="BaseVisionStereo.cs" />
     <Compile Include="BeepSound.cs" />
     <Compile Include="BitmapArrayConversions.cs" />
     <Compile Include="calibration\CalibrationDot.cs" />
@@ -67,6 +68,9 @@
     <Compile Include="SurveyorVisionStereoWin.cs" />
     <Compile Include="SurveyorvisionThreadGrabFrame.cs" />
     <Compile Include="SurveyorVisionThreadGrabFrameMulti.cs" />
+    <Compile Include="WebcamVisionStereo.cs" />
+    <Compile Include="WebcamVisionStereoWin.cs" />
+    <Compile Include="WebcamVisionThreadGrabFrameMulti.cs" />
     <Compile Include="xml.cs" />
   </ItemGroup>
   <ItemGroup>
