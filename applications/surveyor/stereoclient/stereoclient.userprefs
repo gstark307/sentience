@@ -15,7 +15,9 @@
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="stereoclient" expanded="True" selected="True" />
+        <Node name="stereoclient" expanded="True">
+          <Node name="StereoVisionClient.cs" selected="True" />
+        </Node>
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
