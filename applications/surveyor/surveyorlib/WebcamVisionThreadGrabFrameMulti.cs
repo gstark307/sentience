@@ -99,25 +99,29 @@ namespace surveyor.vision
                     }
                 
                     // grab images
-                    if (state.active_camera) 
-                        state.Grab();
-                    else
-                        Thread.Sleep(20);
-                    _callback(_data);
-                    
-                    // calculate the phase offset, relative to some reference time in the ancient past
-                    reference_diff = DateTime.Now.Subtract(reference_time);
-                    phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
-
-                    while ((phase < state.phase_degrees) && 
-                           (state.Running))
+                    if (state.active_camera)
                     {
-                        // calculate the phase offset
+                        state.Grab();
+                        _callback(_data);    
+
+                        // calculate the phase offset, relative to some reference time in the ancient past
                         reference_diff = DateTime.Now.Subtract(reference_time);
                         phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
 
-                        Thread.Sleep(20);
+                        while ((phase < state.phase_degrees) && 
+                               (state.Running))
+                        {
+                            // calculate the phase offset
+                            reference_diff = DateTime.Now.Subtract(reference_time);
+                            phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
+
+                            Thread.Sleep(20);
+                        }
                     }
+                    else
+                    {
+                        Thread.Sleep(20);
+                    }                    
                 }
                 else
                 {

@@ -9,7 +9,7 @@
     <Configuration name="Release" ctype="DotNetProjectConfiguration">
       <Output directory="bin/Release" assembly="stereoserver" />
       <Build debugmode="False" target="Exe" />
-      <Execution runwithwarnings="True" commandlineparameters="-algorithm dense -calibration /home/motters/develop/sentience/applications/surveyor/surveyorstereo/bin/Debug/calibration.xml" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
+      <Execution runwithwarnings="True" commandlineparameters="-leftdevice /dev/video1 -rightdevice /dev/video2 -leftdevice2 /dev/video3 -rightdevice2 /dev/video4 -algorithm dense -calibration /home/motters/develop/sentience/applications/surveyor/surveyorstereo/bin/Debug/calibration.xml" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
       <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
   </Configurations>

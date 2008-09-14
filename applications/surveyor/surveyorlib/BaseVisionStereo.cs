@@ -900,7 +900,7 @@ namespace surveyor.vision
         /// perform stereo correspondence between the two images
         /// </summary>
         protected void StereoCorrespondence()
-        {
+        {        
             bool images_rectified = false;
             if ((rectified[0] != null) && (rectified[1] != null)) images_rectified = true;
         
@@ -962,7 +962,13 @@ namespace surveyor.vision
             correspondence.random_rows = random_rows;
 
             if (images_rectified)
+            {
                 correspondence.Show(ref stereo_features);
+            }
+            else
+            {
+                Console.WriteLine("Warning: Images not rectified");
+            }
 
             if (!broadcasting)
                 broadcasting = correspondence.StartService(broadcast_port_number);

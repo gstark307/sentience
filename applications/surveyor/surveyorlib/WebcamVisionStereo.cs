@@ -107,18 +107,18 @@ namespace surveyor.vision
             }
             filename += identifier;
             
-            string command_str = "fswebcam -d " + camera_device[0] + "," + camera_device[1];
+            string command_str = "fswebcam -q -d " + camera_device[0] + "," + camera_device[1];
             command_str += " -r " + image_width.ToString() + "x" + image_height.ToString();
             command_str += " --no-banner";
             command_str += " -S " + skip_frames.ToString();
             if (exposure > 0) command_str += " -s brightness=" + exposure.ToString() + "%";
             command_str += " --save " + filename + "_.jpg";
             
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine(command_str);
-            Console.WriteLine("");
-            Console.WriteLine("");
+            //Console.WriteLine("");
+            //Console.WriteLine("");
+            //Console.WriteLine(command_str);
+            //Console.WriteLine("");
+            //Console.WriteLine("");
             
             string left_image_filename = filename + "_0.jpg";
             string right_image_filename = filename + "_1.jpg";
@@ -164,9 +164,8 @@ namespace surveyor.vision
                 const int timeout_secs = 10;
                 DateTime start_time = DateTime.Now;
                 int seconds_elapsed = 0;
-                Thread.Sleep(20);
-                while ((!File.Exists(left_image_filename)) &&
-                       (!File.Exists(right_image_filename)) &&
+                while (((!File.Exists(left_image_filename)) ||
+                        (!File.Exists(right_image_filename))) &&
                        (seconds_elapsed < timeout_secs))
                 {
                     System.Threading.Thread.Sleep(50);
@@ -226,7 +225,19 @@ namespace surveyor.vision
                             }
                         }
                     }
+                    else
+                    {
+                        for (int i = 0; i < 2; i++)
+                            if (bmp[i] == null) Console.WriteLine("Warning: Did not acquire image from " + camera_device[i]);
+                    }
 
+                }
+                else
+                {
+                    if (!File.Exists(left_image_filename))
+                        Console.WriteLine("File not found " + left_image_filename);
+                    if (!File.Exists(right_image_filename))
+                        Console.WriteLine("File not found " + right_image_filename);                        
                 }
 
             }

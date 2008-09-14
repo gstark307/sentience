@@ -257,16 +257,6 @@ namespace surveyor.vision
 
         #endregion
 
-        #region "process images"
-
-        /*
-        public override void Process(Bitmap left_image, Bitmap right_image)
-        {
-            DisplayImages(left_image, right_image);
-        }
-         */
-
-        #endregion
 
     }
 }

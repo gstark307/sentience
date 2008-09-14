@@ -128,6 +128,10 @@ namespace surveyor.vision
                     
                     busy_processing = false;
                 }
+                else
+                {
+                    Console.WriteLine("busy");
+                }
             }
         }
 
