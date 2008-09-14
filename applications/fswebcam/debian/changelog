@@ -1,0 +1,24 @@
+fswebcam (20070108-1) unstable; urgency=low
+
+  * Updated for latest release.
+
+ -- Philip Heron <phil@firestorm.cx>  Mon, 08 Jan 2006 08:38:00 +0000
+
+fswebcam (20061210-1) unstable; urgency=low
+
+  * Updated for new release.
+
+ -- Philip Heron <phil@firestorm.cx>  Sun, 10 Dec 2006 20:11:15 +0000
+
+fswebcam (20060604-1) unstable; urgency=low
+
+  * Cleaned up Debian scripts.
+
+ -- Philip Heron <phil@firestorm.cx>  Sun,  4 Jun 2006 12:31:41 +0100
+
+fswebcam (20060424-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Philip Heron <phil@firestorm.cx>  Fri, 19 May 2006 20:55:41 +0100
+

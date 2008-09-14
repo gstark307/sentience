@@ -1,0 +1,13 @@
+Source: fswebcam
+Section: graphics
+Priority: optional
+Maintainer: Philip Heron <phil@firestorm.cx>
+Build-Depends: debhelper (>= 4.0.0), libgd2-dev
+Standards-Version: 3.6.1
+
+Package: fswebcam
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Tiny and flexible webcam program
+ A tiny and flexible webcam program for capturing images from a V4L1/V4L2
+ device, and overlaying a caption or image.
