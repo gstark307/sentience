@@ -47,8 +47,7 @@ namespace surveyor.vision
                                        int port_number_left,
                                        int port_number_right,
                                        int broadcast_port,
-                                       float fps,
-                                       int phase_degrees) : base (host, port_number_left, port_number_right, broadcast_port, fps, phase_degrees)
+                                       float fps) : base (host, port_number_left, port_number_right, broadcast_port, fps)
         {
             display_image = new Gtk.Image[2];
         }

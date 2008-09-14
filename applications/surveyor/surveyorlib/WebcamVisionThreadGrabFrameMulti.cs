@@ -34,7 +34,6 @@ namespace surveyor.vision
         private WaitCallback _callback;
         private object _data;
         public bool Pause;
-        private bool prev_Pause;
 
         /// <summary>
         /// constructor
@@ -61,21 +60,7 @@ namespace surveyor.vision
         /// <param name="state">vision state</param>
         private void Update(WebcamVisionStereo state)
         {   
-            DateTime reference_time = new DateTime(2000, 1, 1);
             int time_step_mS = (int)(1000 / state.fps);
-
-            // calculate the phase offset, relative to some reference time in the ancient past
-            TimeSpan reference_diff = DateTime.Now.Subtract(reference_time);
-            int phase = (int)(reference_diff.TotalMilliseconds % time_step_mS);
-
-            while ((state.Running) && (!Pause) && (phase < state.phase_degrees)) 
-            {
-                // calculate the phase offset
-                reference_diff = DateTime.Now.Subtract(reference_time);
-                phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
-
-                Thread.Sleep(20);
-            }
         
             while(state.Running)
             {
@@ -85,36 +70,21 @@ namespace surveyor.vision
                 
                 if (!Pause)
                 {
-                    if (prev_Pause)
-                    {
-                        // wait for the correct phase
-                        while ((state.Running) && (phase < state.phase_degrees)) 
-                        {
-                            // calculate the phase offset
-                            reference_diff = DateTime.Now.Subtract(reference_time);
-                            phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
-
-                            Thread.Sleep(20);
-                        }
-                    }
-                
                     // grab images
                     if (state.active_camera)
                     {
+                        DateTime start_time = DateTime.Now;
+                    
                         state.Grab();
                         _callback(_data);    
 
                         // calculate the phase offset, relative to some reference time in the ancient past
-                        reference_diff = DateTime.Now.Subtract(reference_time);
-                        phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
+                        TimeSpan diff = DateTime.Now.Subtract(start_time);
 
-                        while ((phase < state.phase_degrees) && 
+                        while ((diff.TotalMilliseconds < time_step_mS) && 
                                (state.Running))
                         {
-                            // calculate the phase offset
-                            reference_diff = DateTime.Now.Subtract(reference_time);
-                            phase = (int)(reference_diff.TotalMilliseconds % time_step_mS) * 360 / time_step_mS;
-
+                            diff = DateTime.Now.Subtract(start_time);
                             Thread.Sleep(20);
                         }
                     }
@@ -131,7 +101,6 @@ namespace surveyor.vision
                     _callback(_data);
                 }
                 
-                prev_Pause = Pause;
             }
         }
     }

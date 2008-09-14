@@ -30,7 +30,6 @@ namespace surveyor.vision
     {
         protected int broadcast_port_number;
         public float fps = 10;
-        public int phase_degrees;
 
         public string device_name;
         public string part_number;
@@ -91,7 +90,13 @@ namespace surveyor.vision
         public const int DISPLAY_STEREO_SIMPLE = 5;
         public const int DISPLAY_DIFFERENCE = 6;
         public int display_type = DISPLAY_CALIBRATION_GRID;
-                
+        
+        // path where any temporary files will be stored
+        public string temporary_files_path;
+        
+        // path where recorded images will be stored
+        public string recorded_images_path;
+        
         #region "constructors"
         
         /// <summary>
@@ -99,11 +104,9 @@ namespace surveyor.vision
         /// </summary>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
-        /// <param name="phase_degrees">frame capture phase offset</param>
-        public BaseVisionStereo(int broadcast_port, float fps, int phase_degrees)
+        public BaseVisionStereo(int broadcast_port, float fps)
         {
             this.fps = fps;
-            this.phase_degrees = phase_degrees;
         
             broadcast_port_number = broadcast_port;
             

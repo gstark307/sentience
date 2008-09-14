@@ -31,6 +31,40 @@ namespace stereoserver
 {
     class MainClass
     {
+        /// <summary>
+        /// stereo camera server 
+        /// </summary>
+        /// <example>
+        /// use with a Surveyor stereo vision system
+        ///    stereoserver -server 169.254.0.10 
+        ///                 -algorithm dense 
+        ///                 -calibration calibration.xml 
+        ///                 -width 320 -height 240 
+        ///                 -broadcastport 10010
+        ///                 -fps 10
+        /// use with a webcam based stereo camera:
+        ///    stereoserver -leftdevice /dev/video1 
+        ///                 -rightdevice /dev/video2 
+        ///                 -algorithm dense 
+        ///                 -calibration calibration.xml 
+        ///                 -width 320 -height 240 
+        ///                 -ramdisk /home/myusername/ramdisk
+        ///                 -record /home/myusername/recordedimages
+        ///                 -broadcastport 10010
+        /// use with two stereo cameras (based on webcams):
+        ///    stereoserver -leftdevice /dev/video1 
+        ///                 -rightdevice /dev/video2 
+        ///                 -leftdevice2 /dev/video3 
+        ///                 -rightdevice2 /dev/video4 
+        ///                 -algorithm dense 
+        ///                 -calibration calibration.xml 
+        ///                 -width 320 -height 240 
+        ///                 -ramdisk /home/myusername/ramdisk
+        ///                 -record /home/myusername/recordedimages
+        ///                 -broadcastport 10010
+        ///                 -broadcastport2 10011
+        /// </example>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {            
             // default settings for the surveyor stereo camera
@@ -44,8 +78,7 @@ namespace stereoserver
             int broadcast_port = 10010;
             int broadcast_port2 = 10011;
             int stereo_algorithm_type = StereoVision.SIMPLE;
-            float fps = 1;
-            int phase_degrees = 0;
+            float fps = 4;
             
             BaseVisionStereo stereo_camera = null;
             BaseVisionStereo stereo_camera2 = null;
@@ -54,19 +87,31 @@ namespace stereoserver
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
 
             bool record = false;
-            if (commandline.GetParameterValue("record", parameters) != "")
+            string record_path = commandline.GetParameterValue("record", parameters);
+            if (record_path != "")
+            {
                 record = true;
+                if (record_path.ToLower() == "true") record_path = "";
+            }
+                
+            // You may want to have temporary images written to a ram disk
+            // rather than thrashing the hard disk.
+            // To create a ram disk:
+            //     mkdir /home/myusername/ramdisk
+            //     sudo mount -t tmpfs none /home/myusername/ramdisk -o size=10m
+            string ramdisk = commandline.GetParameterValue("ramdisk", parameters);
 
+            // device names for the left and right camera (primary stereo camera)
             string left_device = commandline.GetParameterValue("leftdevice", parameters);
             string right_device = commandline.GetParameterValue("rightdevice", parameters);
+            
+            // device names for the left and right camera (secondary stereo camera)
             string left_device2 = commandline.GetParameterValue("leftdevice2", parameters);
             string right_device2 = commandline.GetParameterValue("rightdevice2", parameters);
             
+            // ideal frames per second
             string fps_str = commandline.GetParameterValue("fps", parameters);
             if (fps_str != "") fps = Convert.ToSingle(fps_str);
-
-            string phase_str = commandline.GetParameterValue("phase", parameters);
-            if (phase_str != "") phase_degrees = Convert.ToInt32(phase_str);
 
             string width_str = commandline.GetParameterValue("width", parameters);
             if (width_str != "") image_width = Convert.ToInt32(width_str);
@@ -112,16 +157,18 @@ namespace stereoserver
                 {
                     if ((left_device == "") || (left_device == null))
                         // surveyor stereo camera
-                        stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps, phase_degrees);
+                        stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps);
                     else
                     {
                         // webcam based stereo camera
-                        stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps, phase_degrees);
+                        stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps);
                         if ((left_device2 != "") && (right_device2 != ""))
-                            stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps, phase_degrees);
+                            stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps);
                     }
                         
                     stereo_camera.Record = record;
+                    stereo_camera.temporary_files_path = ramdisk;
+                    stereo_camera.recorded_images_path = record_path;
                     stereo_camera.Run();
                     if (stereo_camera2 != null)
                     {
@@ -130,6 +177,8 @@ namespace stereoserver
                         stereo_camera.active_camera = true;
                         stereo_camera2.active_camera = false;
                         stereo_camera2.Record = record;
+                        stereo_camera2.temporary_files_path = ramdisk;
+                        stereo_camera2.recorded_images_path = record_path;
                         stereo_camera2.Run();
                     }
                     while (stereo_camera.Running)
@@ -147,11 +196,10 @@ namespace stereoserver
                                                     int left_port, int right_port,
                                                     int broadcast_port,
                                                     int stereo_algorithm_type,
-                                                    float fps,
-                                                    int phase_degrees)
+                                                    float fps)
         {
             SurveyorVisionStereoWin stereo_camera =
-                new SurveyorVisionStereoWin(stereo_camera_IP, left_port, right_port, broadcast_port, fps, phase_degrees);
+                new SurveyorVisionStereoWin(stereo_camera_IP, left_port, right_port, broadcast_port, fps);
 
             PictureBox picLeftImage = new PictureBox();
             PictureBox picRightImage = new PictureBox();
@@ -177,13 +225,12 @@ namespace stereoserver
             int image_width, int image_height,
             int broadcast_port,
             int stereo_algorithm_type,
-            float fps,
-            int phase_degrees)
+            float fps)
         {
             WebcamVisionStereoWin stereo_camera =
                 new WebcamVisionStereoWin(
                     left_camera_device, right_camera_device,
-                    broadcast_port, fps, phase_degrees);
+                    broadcast_port, fps);
 
             PictureBox picLeftImage = new PictureBox();
             PictureBox picRightImage = new PictureBox();
@@ -227,7 +274,7 @@ namespace stereoserver
             ValidParameters.Add("calibration");
             ValidParameters.Add("record");
             ValidParameters.Add("fps");
-            ValidParameters.Add("phase");
+            ValidParameters.Add("ramdisk");
 
             return (ValidParameters);
         }

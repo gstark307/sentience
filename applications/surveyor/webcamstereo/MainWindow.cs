@@ -34,8 +34,9 @@ public partial class MainWindow: Gtk.Window
     string right_camera_device = "/dev/video4";
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
-    int fps = 1;
-    int phase_degrees = 180;
+    int fps = 2;
+    string temporary_files_path = "";
+    string recorded_images_path = "";
          
     public WebcamVisionStereoGtk stereo_camera;
     
@@ -51,7 +52,9 @@ public partial class MainWindow: Gtk.Window
         GtkBitmap.setBitmap(left_bmp, leftimage);
         GtkBitmap.setBitmap(right_bmp, rightimage);
         
-        stereo_camera = new WebcamVisionStereoGtk(left_camera_device, right_camera_device, broadcast_port, fps, phase_degrees);
+        stereo_camera = new WebcamVisionStereoGtk(left_camera_device, right_camera_device, broadcast_port, fps);
+        stereo_camera.temporary_files_path = temporary_files_path;
+        stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;

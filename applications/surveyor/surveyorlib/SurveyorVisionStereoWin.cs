@@ -41,14 +41,12 @@ namespace surveyor.vision
         /// <param name="port_number_right">port number for the right camera</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
-        /// <param name="phase_degrees">frame capture phase offset</param>
         public SurveyorVisionStereoWin(string host,
                                        int port_number_left,
                                        int port_number_right,
                                        int broadcast_port,
-                                       float fps,
-                                       int phase_degrees)
-            : base(host, port_number_left, port_number_right, broadcast_port, fps, phase_degrees)
+                                       float fps)
+            : base(host, port_number_left, port_number_right, broadcast_port, fps)
         {
             display_image = new PictureBox[2];
         }

@@ -40,13 +40,11 @@ namespace surveyor.vision
         /// <param name="right_camera_device">device name for the rigt camera</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
-        /// <param name="phase_degrees">frame capture phase offset</param>
         public WebcamVisionStereoWin(string left_camera_device,
                                      string right_camera_device,
                                      int broadcast_port,
-                                     float fps,
-                                     int phase_degrees)
-            : base(left_camera_device, right_camera_device, broadcast_port, fps, phase_degrees)
+                                     float fps)
+            : base(left_camera_device, right_camera_device, broadcast_port, fps)
         {
             display_image = new PictureBox[2];
         }

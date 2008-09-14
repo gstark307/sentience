@@ -41,12 +41,10 @@ namespace surveyor.vision
         /// <param name="right_camera_device">device name of the left camera (eg. /dev/video1)</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
-        /// <param name="phase_degrees">frame capture phase offset</param>
         public WebcamVisionStereo(string left_camera_device,
                                   string right_camera_device,
                                   int broadcast_port,
-                                  float fps,
-                                  int phase_degrees) : base (broadcast_port, fps, phase_degrees)
+                                  float fps) : base (broadcast_port, fps)
         {
             device_name = "Webcam stereo camera";
             
@@ -95,6 +93,20 @@ namespace surveyor.vision
         {
             string filename = "capture";
             
+            // append temporary files path if specified
+            if ((temporary_files_path != null) &&
+                (temporary_files_path != ""))
+            {
+                if (temporary_files_path.EndsWith("/"))
+                    filename = temporary_files_path + filename;
+                else
+                    filename = temporary_files_path + "/" + filename;
+            }
+            
+            // Extract numbers from the camera device names
+            // This is ised to uniquely identify devices so that
+            // potentially more than one stereo camera could be running
+            // at the same time
             string identifier = "";
             for (int cam = 0; cam < 2; cam++)
             {
@@ -215,13 +227,23 @@ namespace surveyor.vision
                         // save images to file
                         if (Record)
                         {
+                            string path = "";
+                            if ((recorded_images_path != null) &&
+                                (recorded_images_path != ""))
+                            {
+                                if (recorded_images_path.EndsWith("/"))
+                                    path = recorded_images_path;
+                                else
+                                    path = recorded_images_path + "/";
+                            }
+                        
                             RecordFrameNumber++;
-                            bmp[0].Save("raw" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                            bmp[1].Save("raw" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            bmp[0].Save(path + "raw" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            bmp[1].Save(path + "raw" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             if ((rectified[0] != null) && (rectified[0] != null))
                             {
-                                rectified[0].Save("rectified" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                                rectified[1].Save("rectified" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                                rectified[0].Save(path + "rectified" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                                rectified[1].Save(path + "rectified" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             }
                         }
                     }
