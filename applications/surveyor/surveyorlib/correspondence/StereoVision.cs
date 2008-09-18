@@ -35,6 +35,8 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVision
     {
+        public BaseVisionStereo vision;
+
         // the type of stereo correspondence algorithm being used
         public const int SIMPLE = 0;        
 		public const int DENSE = 1;
@@ -57,7 +59,7 @@ namespace surveyor.vision
         
         // determines the size of stereo features displayed as dots
         public float feature_scale = 0.2f;
-                
+
         protected int image_width, image_height;
         protected byte[][] img = new byte[4][];        
 
@@ -617,10 +619,6 @@ namespace surveyor.vision
             }
         }
 		
-		// list of client connection numbers
-		private ArrayList active_clients;
-		
-
         /// <summary>
         /// This the call back function which will be invoked when the socket
         /// detects any client writing of data on the stream
@@ -628,8 +626,44 @@ namespace surveyor.vision
         /// <param name="asyn"></param>
         private void OnDataReceived(IAsyncResult asyn)
         {
-            SocketPacket socketData = (SocketPacket)asyn.AsyncState;
-            WaitForData(socketData.m_currentSocket, socketData.m_clientNumber);
+            SocketPacket theSockId = (SocketPacket)asyn.AsyncState;
+            int iRx = theSockId.m_currentSocket.EndReceive(asyn);
+            char[] chars = new char[iRx + 1];
+            System.Text.Decoder d = System.Text.Encoding.UTF8.GetDecoder();
+            d.GetChars(theSockId.dataBuffer, 0, iRx, chars, 0);
+            System.String szData = new System.String(chars);
+
+            // switch the recording of images on or off
+            if (szData.StartsWith("Record"))
+            {
+                bool valid_path = false;
+                if (szData.Contains(" "))
+                {
+                    string[] parts = szData.Split(' ');
+                    if (parts.Length > 1)
+                    {
+                        if ((parts[1].ToLower() != "false") &&
+                            (parts[1].ToLower() != "off"))
+                        {
+                            if (Directory.Exists(parts[1]))
+                            {
+                                // start recording
+                                if (vision != null) vision.Record = true;
+                                valid_path = true;
+                            }
+                        }
+                    }
+                }
+
+                if (!valid_path)
+                {
+                    // stop recording
+                    if (vision != null) vision.Record = false;
+                }
+            }
+
+            WaitForData(theSockId.m_currentSocket, theSockId.m_clientNumber);
+
         }
 
         /// <summary>

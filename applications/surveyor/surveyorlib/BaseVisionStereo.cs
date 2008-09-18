@@ -962,6 +962,7 @@ namespace surveyor.vision
                 }
             }
 
+            correspondence.vision = this;
             correspondence.random_rows = random_rows;
 
             if (images_rectified)
