@@ -1,24 +1,29 @@
 ﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/stereoserver/stereoserver.mds">
   <Files>
     <File name="Welcome" />
-    <File name="Main.cs" line="14" column="49" />
-    <File name="../surveyorlib/correspondence/StereoVision.cs" line="153" column="1" />
-    <File name="../surveyorlib/BaseVisionStereo.cs" line="33" column="1" />
-    <File name="../surveyorlib/SurveyorVisionStereoWin.cs" line="49" column="1" />
-    <File name="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" line="37" column="1" />
-    <File name="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" line="87" column="22" />
-    <File name="../surveyorlib/WebcamVisionStereo.cs" line="63" column="1" />
-    <File name="../surveyorlib/SurveyorVisionClient.cs" line="50" column="15" />
     <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="34" column="6" />
+    <File name="../surveyorlib/WebcamVisionStereoGtk.cs" line="35" column="17" />
+    <File name="../surveyorlib/WebcamVisionStereo.cs" line="84" column="1" />
     <File name="../surveyorlib/SurveyorVisionStereo.cs" line="50" column="10" />
+    <File name="../surveyorlib/BaseVisionStereo.cs" line="33" column="1" />
+    <File name="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" line="37" column="1" />
+    <File name="../../../../robotbridgeware/DeviceServers/other/BridgewareServer_PhidgetsInterfaceKit/Program.cs" line="62" column="1" />
+    <File name="../../../../robotbridgeware/DeviceServers/servocontrol/BridgewareServer_PhidgetsServo/Program.cs" line="111" column="1" />
+    <File name="../../../../robotbridgeware/DeviceServers/motorcontrol/BridgewareServer_PhidgetsMC/Program.cs" line="1" column="1" />
+    <File name="../../../../robotbridgeware/Clients/JoystickControl/Program.cs" line="3" column="1" />
+    <File name="../../../../robotbridgeware/DeviceServers/servocontrol/BridgewareServer_PhidgetsServo/commandline.cs" line="35" column="26" />
+    <File name="Main.cs" line="179" column="22" />
+    <File name="../surveyorlib/correspondence/StereoVision.cs" line="665" column="29" />
+    <File name="../surveyorlib/SurveyorVisionStereoWin.cs" line="49" column="1" />
+    <File name="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" line="87" column="22" />
+    <File name="../surveyorlib/SurveyorVisionClient.cs" line="51" column="3" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
-        <Node name="Packages" expanded="True">
-          <Node name="Linux Binaries" selected="True" />
+        <Node name="stereoserver" expanded="True">
+          <Node name="Main.cs" selected="True" />
         </Node>
-        <Node name="stereoserver" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">

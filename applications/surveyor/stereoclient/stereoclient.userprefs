@@ -7,16 +7,21 @@
     <File name="../surveyorlib/SurveyorVisionStereo.cs" line="103" column="1" />
     <File name="../surveyorlib/BaseVisionStereo.cs" line="79" column="1" />
     <File name="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" line="66" column="1" />
-    <File name="Main.cs" line="65" column="10" />
-    <File name="commandline.cs" line="19" column="1" />
-    <File name="StereoVisionClient.cs" line="36" column="37" />
+    <File name="../../../../robotbridgeware/DeviceServers/other/BridgewareServer_PhidgetsInterfaceKit/Program.cs" line="62" column="1" />
+    <File name="../../../../robotbridgeware/DeviceServers/servocontrol/BridgewareServer_PhidgetsServo/Program.cs" line="111" column="1" />
+    <File name="../../../../robotbridgeware/DeviceServers/motorcontrol/BridgewareServer_PhidgetsMC/Program.cs" line="1" column="1" />
+    <File name="../../../../robotbridgeware/Clients/JoystickControl/Program.cs" line="3" column="1" />
+    <File name="../../../../robotbridgeware/DeviceServers/servocontrol/BridgewareServer_PhidgetsServo/commandline.cs" line="28" column="1" />
+    <File name="Main.cs" line="53" column="1" />
+    <File name="commandline.cs" line="1" column="1" />
+    <File name="StereoVisionClient.cs" line="13" column="21" />
     <File name="StereoFeature.cs" line="1" column="1" />
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
       <Node expanded="True">
         <Node name="stereoclient" expanded="True">
-          <Node name="StereoVisionClient.cs" selected="True" />
+          <Node name="Main.cs" selected="True" />
         </Node>
       </Node>
     </ViewMemento>
@@ -28,7 +33,7 @@
     </ViewMemento>
   </Views>
   <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/stereoclient/StereoVisionClient.cs" />
+    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/stereoclient/Main.cs" />
     <Property key="ActiveConfiguration" value="Debug" />
   </Properties>
 </UserCombinePreferences>

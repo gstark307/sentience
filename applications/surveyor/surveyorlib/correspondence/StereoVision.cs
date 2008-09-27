@@ -645,12 +645,36 @@ namespace surveyor.vision
                         if ((parts[1].ToLower() != "false") &&
                             (parts[1].ToLower() != "off"))
                         {
-                            if (Directory.Exists(parts[1]))
+                            string directory_str = "";
+                            char[] ch = parts[1].ToCharArray();
+                            for (int i = 0; i < ch.Length; i++)
+                            {
+                                if ((ch[i] != 10) &&
+                                    (ch[i] != 13) &&
+                                    (ch[i] != 0))
+                                    directory_str += ch[i];
+                            }
+                            
+                            if (directory_str.Contains("/"))
+                            {
+                                if (!directory_str.EndsWith("/"))
+                                    directory_str += "/";
+                            }
+                        
+                            if (Directory.Exists(directory_str))
                             {
                                 // start recording
-                                if (vision != null) vision.Record = true;
+                                if (vision != null)
+                                {
+                                    Console.WriteLine("Start recording images in " + parts[1]);
+                                    vision.Record = true;
+                                    vision.recorded_images_path = directory_str;
+                                }
+                                else Console.WriteLine("No vision object");
                                 valid_path = true;
+                                
                             }
+                            else Console.WriteLine("Directory " + directory_str + " not found");
                         }
                     }
                 }
@@ -658,6 +682,7 @@ namespace surveyor.vision
                 if (!valid_path)
                 {
                     // stop recording
+                    Console.WriteLine("Stop recording images");
                     if (vision != null) vision.Record = false;
                 }
             }

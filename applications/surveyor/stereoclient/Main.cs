@@ -31,28 +31,31 @@ namespace stereoclient
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
 
+            string record_path = commandline.GetParameterValue("record", parameters);
             string server = commandline.GetParameterValue("server", parameters);
-            if (server == "")
+            string port_str = commandline.GetParameterValue("port", parameters);
+            if (port_str == "")
             {
-                Console.WriteLine("Please specify a server");
+                Console.WriteLine("Please specify a port number");
             }
             else
             {
-                string port_str = commandline.GetParameterValue("port", parameters);
-                if (port_str == "")
-                {
-                    Console.WriteLine("Please specify a port number");
-                }
+                StereoVisionClient client = new StereoVisionClient();
+                
+                if (server == "")
+                    client.Connect(Convert.ToInt32(port_str));
                 else
-                {
-                    StereoVisionClient client = new StereoVisionClient();
                     client.Connect(server, Convert.ToInt32(port_str));
-                    while (client.IsConnected())
-                    {
-                        System.Threading.Thread.Sleep(50);
-                    }
+
+                // request to record images                    
+                if (record_path != "")
+                    client.StartRecordingImages(record_path);
+                    
+                while (client.IsConnected())
+                {
+                    System.Threading.Thread.Sleep(50);
                 }
-            }
+            }           
         
         }
         
@@ -67,6 +70,7 @@ namespace stereoclient
 
             ValidParameters.Add("server");
             ValidParameters.Add("port");
+            ValidParameters.Add("record");
 
             return (ValidParameters);
         }

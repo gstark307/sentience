@@ -295,6 +295,53 @@ namespace surveyor.vision
         
         #endregion
         
+        #region "sending data"
+        
+        /// <summary>
+        /// sends a message to the stereo vision server
+        /// requesting that images be saved to the given path
+        /// </summary>
+        /// <param name="path">
+        /// A <see cref="System.String"/>
+        /// </param>
+        public void StartRecordingImages(string path)
+        {
+            Send("Record " + path);
+        }
+
+        /// <summary>
+        /// sends a message to the server requesting that no images be saved
+        /// </summary>
+        public void StopRecordingImages()
+        {
+            Send("Record");
+        }
+        
+        /// <summary>
+        /// send a message to the stereo vision server
+        /// </summary>
+        /// <param name="msg">message to be sent</param>
+        protected void Send(string msg)
+		{
+            if (m_clientSocket != null)
+            {
+    			try
+    			{
+                    // New code to send strings
+                    NetworkStream networkStream = new NetworkStream(m_clientSocket);
+                    System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(networkStream);
+                    streamWriter.WriteLine(msg);
+                    streamWriter.Flush();
+    			}
+    			catch(SocketException se)
+    			{
+    				Console.WriteLine(se.Message);
+    			}
+			}
+		}
+                
+        #endregion
+        
         #region "receiving data"
 
         // indicates whether data is currently being received

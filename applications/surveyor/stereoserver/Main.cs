@@ -154,38 +154,65 @@ namespace stereoserver
                     Console.WriteLine("The calibration file " + calibration_filename + " could not be found");
                 }
                 else
-                {
+                {                
+                    // ensure that a server for the same stereo camera isn't already running
+                    bool is_ip_camera;
+                    bool mutex_ok;
+                    System.Threading.Mutex m = null;
+                    
                     if ((left_device == "") || (left_device == null))
-                        // surveyor stereo camera
-                        stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps);
+                    {
+                        m = new System.Threading.Mutex(true, "stereoserver " + stereo_camera_IP, out mutex_ok);
+                        is_ip_camera = true;
+                    }
                     else
                     {
-                        // webcam based stereo camera
-                        stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps);
-                        if ((left_device2 != "") && (right_device2 != ""))
-                            stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps);
+                        m = new System.Threading.Mutex(true, "stereoserver " + left_device + " " + right_device, out mutex_ok);
+                        is_ip_camera = false;
                     }
-                        
-                    stereo_camera.Record = record;
-                    stereo_camera.temporary_files_path = ramdisk;
-                    stereo_camera.recorded_images_path = record_path;
-                    stereo_camera.Run();
-                    if (stereo_camera2 != null)
+                    
+                    if (!mutex_ok)
                     {
-                        stereo_camera.next_camera = stereo_camera2;
-                        stereo_camera2.next_camera = stereo_camera;
-                        stereo_camera.active_camera = true;
-                        stereo_camera2.active_camera = false;
-                        stereo_camera2.Record = record;
-                        stereo_camera2.temporary_files_path = ramdisk;
-                        stereo_camera2.recorded_images_path = record_path;
-                        stereo_camera2.Run();
+                        Console.WriteLine("A server for this stereo camera is already running");
                     }
-                    while (stereo_camera.Running)
+                    else
                     {
-                        System.Threading.Thread.Sleep(20);
+                        if (is_ip_camera)
+                        {
+                            // surveyor stereo camera
+                            stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps);
+                        }
+                        else
+                        {
+                            // webcam based stereo camera
+                            stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps);
+                            if ((left_device2 != "") && (right_device2 != ""))
+                                stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps);
+                        }
+                            
+                        stereo_camera.Record = record;
+                        stereo_camera.temporary_files_path = ramdisk;
+                        stereo_camera.recorded_images_path = record_path;
+                        stereo_camera.Run();
+                        if (stereo_camera2 != null)
+                        {
+                            stereo_camera.next_camera = stereo_camera2;
+                            stereo_camera2.next_camera = stereo_camera;
+                            stereo_camera.active_camera = true;
+                            stereo_camera2.active_camera = false;
+                            stereo_camera2.Record = record;
+                            stereo_camera2.temporary_files_path = ramdisk;
+                            stereo_camera2.recorded_images_path = record_path;
+                            stereo_camera2.Run();
+                        }
+                        while (stereo_camera.Running)
+                        {
+                            System.Threading.Thread.Sleep(20);
+                        }
+                    
+                        // keeping the dream alive
+                        GC.KeepAlive(m);
                     }
-
                 }
             }
         }
