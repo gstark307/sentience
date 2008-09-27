@@ -1,4 +1,4 @@
-<Combine name="stereoserver" fileversion="2.0">
+<Combine name="stereoserver" fileversion="2.0" outputpath="../../../../robotbridgeware/bin">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="CombineConfiguration">
       <Entry build="True" name="stereoserver" configuration="Debug" />

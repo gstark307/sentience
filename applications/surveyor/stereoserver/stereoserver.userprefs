@@ -20,10 +20,8 @@
   </Files>
   <Views>
     <ViewMemento id="ProjectPad">
-      <Node expanded="True">
-        <Node name="stereoserver" expanded="True">
-          <Node name="Main.cs" selected="True" />
-        </Node>
+      <Node expanded="True" selected="True">
+        <Node name="stereoserver" expanded="True" />
       </Node>
     </ViewMemento>
     <ViewMemento id="ClassPad">
