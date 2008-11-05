@@ -1,69 +1,16 @@
-<?xml version="1.0"?>
-<UserCombinePreferences filename="/home/motters/develop/sentience/applications/mapping/mapping.mds">
-  <Files>
-    <File filename="Welcome" />
-    <File filename="./frmMapping.cs" />
-    <File filename="./frmMapping.Designer.cs" />
-    <File filename="./Program.cs" />
-    <File filename="../../selfopt/Properties/AssemblyInfo.cs" />
-    <File filename="./Main.cs" />
-    <File filename="../../selfopt/selfopt.cs" />
-    <File filename="./LICENCE.txt" />
-    <File filename="../../selfopt/selfoptInstance.cs" />
-    <File filename="../../selfopt/selfoptParameter.cs" />
-    <File filename="./MainWindow.cs" />
-    <File filename="./frmSimulation.cs" />
-    <File filename="../../sentcore/sentience_stereo.cs" />
-    <File filename="../../sentcore/scanMatching.cs" />
-    <File filename="../../sentcore/stereoModel.cs" />
-    <File filename="../../sentcore/stereoHead.cs" />
-    <File filename="../../sentcore/stereoFeatures.cs" />
-    <File filename="../../sentcore/stereoCorrespondence.cs" />
-    <File filename="../../sentcore/specialMath.cs" />
-    <File filename="../../sentcore/simulationPathSegment.cs" />
-    <File filename="../../sentcore/simulation.cs" />
-    <File filename="../../sentcore/sentienceTracking.cs" />
-    <File filename="../../sentcore/sentienceRadar.cs" />
-    <File filename="../../sentcore/sentience_stereo_interface.cs" />
-    <File filename="../../sentcore/pos3D.cs" />
-    <File filename="../../sentcore/occupancygridCell.cs" />
-    <File filename="../../sentcore/occupancygridMultiHypothesis.cs" />
-    <File filename="../../sentcore/motionModel.cs" />
-    <File filename="../../utilities/image.cs" />
-    <File filename="../../utilities/ArrayConversions.cs" />
-    <File filename="../../sentcore/classimage.cs" />
-  </Files>
-  <Views>
-    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ProjectPad">
-      <TreeView>
-        <Node expanded="True">
-          <Node name="sentcore" expanded="True">
-            <Node name="classimage.cs" expanded="False" selected="True" />
-          </Node>
-          <Node name="utilities" expanded="True" />
-        </Node>
-      </TreeView>
-    </ViewMemento>
-    <ViewMemento Id="MonoDevelop.Ide.Gui.Pads.ClassPad">
-      <TreeView>
-        <Node expanded="True" />
-      </TreeView>
-    </ViewMemento>
-    <ViewMemento Id="MonoQuery.DatabasePad">
-      <TreeView>
-        <Node expanded="False" />
-      </TreeView>
-    </ViewMemento>
-    <ViewMemento Id="MonoDevelop.NUnit.TestPad">
-      <TreeView>
-        <Node expanded="False" />
-      </TreeView>
-    </ViewMemento>
-  </Views>
-  <Properties>
-    <Properties>
-      <Property key="ActiveWindow" value="/home/motters/develop/sentience/sentcore/classimage.cs" />
-      <Property key="ActiveConfiguration" value="Debug" />
-    </Properties>
-  </Properties>
-</UserCombinePreferences>
+﻿<Properties>
+  <MonoDevelop.Ide.Workbench ActiveDocument="Welcome" ctype="Workbench">
+    <Files>
+      <File FileName="Welcome" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True" />
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
+</Properties>
