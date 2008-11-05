@@ -63,6 +63,8 @@
     <File name="Mono.SIMD/Vector8us.cs" subtype="Code" buildaction="Compile" />
     <File name="Mono.SIMD/Vector16b.cs" subtype="Code" buildaction="Compile" />
     <File name="Mono.SIMD/Vector16sb.cs" subtype="Code" buildaction="Compile" />
+    <File name="unittests/tests_occupancygrid.cs" subtype="Code" buildaction="Compile" />
+    <File name="unittests/tests_pos3D.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Project" localcopy="True" refto="memcompressor" />
@@ -71,5 +73,6 @@
     <ProjectReference type="Project" localcopy="True" refto="pathplanner" />
     <ProjectReference type="Project" localcopy="True" refto="utilities" />
     <ProjectReference type="Project" localcopy="True" refto="FASTcorners" />
+    <ProjectReference type="Gac" localcopy="True" refto="nunit.framework, Version=2.2.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" />
   </References>
 </Project>

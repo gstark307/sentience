@@ -180,10 +180,12 @@ namespace sentience.core
         /// <param name="mean_variance">average colour variance of this grid cell</param>
         /// <returns>probability value</returns>
         public unsafe float GetProbability(particlePose pose, 
-                                    int x, int y, int z, 
-                                    bool returnLogOdds,
-                                    float[] colour, 
-                                    ref float mean_variance)
+                                           int x, 
+                                           int y, 
+                                           int z, 
+                                           bool returnLogOdds,
+                                           float[] colour, 
+                                           ref float mean_variance)
         {
             int col, p, i, hits = 0;
             float probabilityLogOdds = 0;
@@ -338,7 +340,7 @@ namespace sentience.core
             {
                 // create a new distilled particle
                 distilled[z] = new particleGridCellBase();
-                distilled[z].colour = new Byte[3];
+                distilled[z].colour = new byte[3];
                 initialised = true;
             }
 
@@ -351,7 +353,7 @@ namespace sentience.core
                 if (initialised)
                     distilled[z].colour[col] = hypothesis.colour[col];
                 else
-                    distilled[z].colour[col] = (Byte)((hypothesis.colour[col] +
+                    distilled[z].colour[col] = (byte)((hypothesis.colour[col] +
                                                    distilled[z].colour[col]) / 2);
             }
         }
@@ -370,6 +372,10 @@ namespace sentience.core
 
         #region "constructors/initialisation"
 
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="vertical_dimension_cells">vertical dimension of the grid in cells</param>
         public occupancygridCellMultiHypothesis(int vertical_dimension_cells)
         {
             //occupied = false;
@@ -379,4 +385,4 @@ namespace sentience.core
 
         #endregion
     }
-}
+}

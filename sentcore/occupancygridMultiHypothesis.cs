@@ -1,6 +1,6 @@
 /*
     A multiple hypothesis occupancy grid, based upon distributed particle SLAM
-    Copyright (C) 2000-2007 Bob Mottram
+    Copyright (C) 2000-2008 Bob Mottram
     fuzzgun@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -91,9 +91,17 @@ namespace sentience.core
         /// initialise the grid
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
+        /// <param name="dimension_cells_vertical">number of cells in the vertical axis</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        private void init(int dimension_cells, int dimension_cells_vertical, int cellSize_mm, 
-                          int localisationRadius_mm, int maxMappingRange_mm, float vacancyWeighting)
+        /// <param name="localisationRadius_mm">radius in millimetres used during localisation within the grid</param>
+        /// <param name="maxMappingRange_mm">maximum range in millimetres used during mapping</param>
+        /// <param name="vacancyWeighting">weighting applied to the vacancy model in the range 0.0 - 1.0</param>
+        private void init(int dimension_cells, 
+                          int dimension_cells_vertical, 
+                          int cellSize_mm, 
+                          int localisationRadius_mm, 
+                          int maxMappingRange_mm, 
+                          float vacancyWeighting)
         {
             this.dimension_cells = dimension_cells;
             this.dimension_cells_vertical = dimension_cells_vertical;
@@ -123,10 +131,18 @@ namespace sentience.core
         /// constructor
         /// </summary>
         /// <param name="dimension_cells">number of cells across</param>
+        /// <param name="dimension_cells_vertical">number of cells in the vertical axis</param>
         /// <param name="cellSize_mm">size of each grid cell in millimetres</param>
-        public occupancygridMultiHypothesis(int dimension_cells, int dimension_cells_vertical, 
-                                            int cellSize_mm, int localisationRadius_mm, int maxMappingRange_mm, float vacancyWeighting)
-            : base(0, 0,0)
+        /// <param name="localisationRadius_mm">radius in millimetres used during localisation within the grid</param>
+        /// <param name="maxMappingRange_mm">maximum range in millimetres used during mapping</param>
+        /// <param name="vacancyWeighting">weighting applied to the vacancy model in the range 0.0 - 1.0</param>
+        public occupancygridMultiHypothesis(int dimension_cells, 
+                                            int dimension_cells_vertical, 
+                                            int cellSize_mm, 
+                                            int localisationRadius_mm, 
+                                            int maxMappingRange_mm, 
+                                            float vacancyWeighting)
+            : base(0, 0, 0)
         {
             init(dimension_cells, dimension_cells_vertical, cellSize_mm, localisationRadius_mm, maxMappingRange_mm, vacancyWeighting);
         }
@@ -140,7 +156,8 @@ namespace sentience.core
         /// </summary>
         /// <param name="centre_x_mm">centre x position in millimetres</param>
         /// <param name="centre_y_mm">centre y position in millimetres</param>
-        public void SetCentrePosition(float centre_x_mm, float centre_y_mm)
+        public void SetCentrePosition(float centre_x_mm, 
+                                      float centre_y_mm)
         {
             x = centre_x_mm;
             y = centre_y_mm;
@@ -389,7 +406,7 @@ namespace sentience.core
         private float matchingProbability(int x_cell, int y_cell, int z_cell,
                                           particlePose origin,
                                           float sensormodel_probability,
-                                          Byte[] colour)
+                                          byte[] colour)
         {
             float value = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
             float colour_variance = 0;
@@ -440,9 +457,11 @@ namespace sentience.core
         /// <param name="rightcam_y">y position of the right camera in millimetres</param>
         /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
         /// <returns>matching probability, expressed as log odds</returns>
-        public float Insert(evidenceRay ray, particlePose origin,
+        public float Insert(evidenceRay ray, 
+                            particlePose origin,
                             rayModelLookup sensormodel_lookup,
-                            pos3D left_camera_location, pos3D right_camera_location,
+                            pos3D left_camera_location, 
+                            pos3D right_camera_location,
                             bool localiseOnly)
         {
             // some constants to aid readability
@@ -776,8 +795,12 @@ namespace sentience.core
         /// <param name="colour">show grid cell colour, or just occupancy values</param>
         /// <param name="scalegrid">show a grid overlay which gives some idea of scale</param>
         public void Show(int view_type, 
-                         Byte[] img, int width, int height, particlePose pose, 
-                         bool colour, bool scalegrid)
+                         byte[] img, 
+                         int width, 
+                         int height, 
+                         particlePose pose, 
+                         bool colour, 
+                         bool scalegrid)
         {
             switch(view_type)
             {
@@ -839,13 +862,17 @@ namespace sentience.core
         /// <param name="height">height of the image</param>
         /// <param name="pose">best available robot pose hypothesis</param>
         /// <param name="leftSide">view from the left side or the right</param>
-        private void ShowSide(Byte[] img, int width, int height, particlePose pose, bool leftSide)
+        private void ShowSide(byte[] img, 
+                              int width, 
+                              int height, 
+                              particlePose pose, 
+                              bool leftSide)
         {
             float[] mean_colour = new float[3];
 
             // clear the image
             for (int i = 0; i < width * height * 3; i++)
-                img[i] = (Byte)255;
+                img[i] = (byte)255;
 
             // show the left or right half of the grid
             int start_x = 0;
@@ -891,7 +918,7 @@ namespace sentience.core
                                                 {
                                                     int n = ((yy * width) + x) * 3;
                                                     for (int col = 0; col < 3; col++)
-                                                        img[n + 2 - col] = (Byte)mean_colour[col];
+                                                        img[n + 2 - col] = (byte)mean_colour[col];
                                                 }
                                             }
                                         }
@@ -912,7 +939,10 @@ namespace sentience.core
         /// <param name="width">width in pixels</param>
         /// <param name="height">height in pixels</param>
         /// <param name="pose">best pose hypothesis from which the map is observed</param>
-        private void Show(Byte[] img, int width, int height, particlePose pose)
+        private void Show(byte[] img, 
+                          int width, 
+                          int height, 
+                          particlePose pose)
         {
             float[] mean_colour = new float[3];
 
@@ -932,7 +962,7 @@ namespace sentience.core
                     {
                         // terra incognita
                         for (int c = 0; c < 3; c++)
-                            img[n + c] = (Byte)255; 
+                            img[n + c] = (byte)255; 
                     }
                     else
                     {
@@ -947,22 +977,22 @@ namespace sentience.core
                                 if (prob > 0.5f)
                                 {
                                     if (prob > 0.7f)
-                                        img[n + c] = (Byte)0;  // occupied
+                                        img[n + c] = (byte)0;  // occupied
                                     else
-                                        img[n + c] = (Byte)100;  // occupied
+                                        img[n + c] = (byte)100;  // occupied
                                 }
                                 else
                                 {
                                     if (prob < 0.3f)
-                                        img[n + c] = (Byte)230;  // vacant
+                                        img[n + c] = (byte)230;  // vacant
                                     else
-                                        img[n + c] = (Byte)200;  // vacant
+                                        img[n + c] = (byte)200;  // vacant
                                 }
                         }
                         else
                         {
                             for (int c = 0; c < 3; c++)
-                                img[n + c] = (Byte)255; // terra incognita
+                                img[n + c] = (byte)255; // terra incognita
                         }
                     }
                 }
@@ -975,7 +1005,9 @@ namespace sentience.core
         /// <param name="img">image in which to insert the data</param>
         /// <param name="width">width of the image</param>
         /// <param name="height">height of the image</param>
-        private void ShowNavigable(Byte[] img, int width, int height)
+        private void ShowNavigable(byte[] img, 
+                                   int width, 
+                                   int height)
         {
             // clear the image
             for (int i = 0; i < img.Length; i++)
@@ -994,7 +1026,7 @@ namespace sentience.core
 
                         if (navigable_space[cell_x][cell_y])
                             for (int c = 0; c < 3; c++)
-                                img[n + c] = (Byte)255;
+                                img[n + c] = (byte)255;
                     }
                 }
             }
@@ -1008,7 +1040,10 @@ namespace sentience.core
         /// <param name="width">width of the image</param>
         /// <param name="height">height of the image</param>
         /// <param name="pose">best available robot pose hypothesis</param>
-        private void ShowColour(Byte[] img, int width, int height, particlePose pose)
+        private void ShowColour(byte[] img, 
+                                int width, 
+                                int height, 
+                                particlePose pose)
         {
             float[] mean_colour = new float[3];
 
@@ -1024,7 +1059,7 @@ namespace sentience.core
                     if (cell[cell_x][cell_y] == null)
                     {
                         for (int c = 0; c < 3; c++)
-                            img[n + c] = (Byte)255; // terra incognita
+                            img[n + c] = (byte)255; // terra incognita
                     }
                     else
                     {
@@ -1039,26 +1074,26 @@ namespace sentience.core
                                 for (int c = 0; c < 3; c++)
                                     if (prob > 0.6f)
                                     {
-                                        img[n + 2 - c] = (Byte)mean_colour[c];  // occupied
+                                        img[n + 2 - c] = (byte)mean_colour[c];  // occupied
                                     }
                                     else
                                     {
                                         if (prob < 0.3f)
-                                            img[n + c] = (Byte)200;
+                                            img[n + c] = (byte)200;
                                         else
-                                            img[n + c] = (Byte)255;
+                                            img[n + c] = (byte)255;
                                     }
                             }
                             else
                             {
                                 for (int c = 0; c < 3; c++)
-                                    img[n + c] = (Byte)255;
+                                    img[n + c] = (byte)255;
                             }
                         }
                         else
                         {
                             for (int c = 0; c < 3; c++)
-                                img[n + c] = (Byte)255; // terra incognita
+                                img[n + c] = (byte)255; // terra incognita
                         }
                     }
                 }
@@ -1074,7 +1109,8 @@ namespace sentience.core
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="pose">best available pose</param>
-        public void Save(String filename, particlePose pose)
+        public void Save(string filename, 
+                         particlePose pose)
         {
             FileStream fp = new FileStream(filename, FileMode.Create);
             BinaryWriter binfile = new BinaryWriter(fp);
@@ -1088,7 +1124,8 @@ namespace sentience.core
         /// </summary>
         /// <param name="binfile"></param>
         /// <param name="pose"></param>
-        public void Save(BinaryWriter binfile, particlePose pose)
+        public void Save(BinaryWriter binfile, 
+                         particlePose pose)
         {
             SaveTile(binfile, pose, dimension_cells / 2, dimension_cells / 2, dimension_cells);
         }
@@ -1098,7 +1135,7 @@ namespace sentience.core
         /// </summary>
         /// <param name="pose"></param>
         /// <returns></returns>
-        public Byte[] Save(particlePose pose)
+        public byte[] Save(particlePose pose)
         {
             return(SaveTile(pose, dimension_cells / 2, dimension_cells / 2, dimension_cells));
         }
@@ -1114,7 +1151,8 @@ namespace sentience.core
         /// <param name="width_cells">width of the tile in grid cells</param>
         public void SaveTile(BinaryWriter binfile,
                              particlePose pose, 
-                             int centre_x, int centre_y, 
+                             int centre_x, 
+                             int centre_y, 
                              int width_cells)
         {
             // write the whole thing to disk in one go
@@ -1132,8 +1170,9 @@ namespace sentience.core
         /// <param name="centre_y">centre of the tile in grid cells</param>
         /// <param name="width_cells">width of the tile in grid cells</param>
         /// <returns>byte array containing the data</returns>
-        public Byte[] SaveTile(particlePose pose,
-                               int centre_x, int centre_y,
+        public byte[] SaveTile(particlePose pose,
+                               int centre_x, 
+                               int centre_y,
                                int width_cells)
         {
             ArrayList data = new ArrayList();
@@ -1169,7 +1208,7 @@ namespace sentience.core
             by++;
 
             // write the bounding box dimensions to file
-            Byte[] intbytes = BitConverter.GetBytes(tx);
+            byte[] intbytes = BitConverter.GetBytes(tx);
             for (int i = 0; i < intbytes.Length; i++)
                 data.Add(intbytes[i]);
             intbytes = BitConverter.GetBytes(ty);
@@ -1203,9 +1242,9 @@ namespace sentience.core
             }
 
             // convert the binary index to a byte array for later storage
-            Byte[] indexBytes = ArrayConversions.ToByteArray(binary_index);
-            for (int i = 0; i < indexBytes.Length; i++)
-                data.Add(indexBytes[i]);            
+            byte[] indexbytes = ArrayConversions.ToByteArray(binary_index);
+            for (int i = 0; i < indexbytes.Length; i++)
+                data.Add(indexbytes[i]);            
 
             // dummy variables needed by GetProbability
             float[] colour = new float[3];
@@ -1213,7 +1252,7 @@ namespace sentience.core
             if (occupied_cells > 0)
             {
                 float[] occupancy = new float[occupied_cells * dimension_cells_vertical];
-                Byte[] colourData = new Byte[occupied_cells * dimension_cells_vertical * 3];
+                byte[] colourData = new byte[occupied_cells * dimension_cells_vertical * 3];
                 float mean_variance = 0;
 
                 n = 0;
@@ -1231,7 +1270,7 @@ namespace sentience.core
                                 occupancy[index] = prob;
                                 if (prob != occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE)
                                     for (int col = 0; col < 3; col++)
-                                        colourData[(index * 3) + col] = (Byte)colour[col];
+                                        colourData[(index * 3) + col] = (byte)colour[col];
                             }
                             n++;
                         }
@@ -1239,13 +1278,13 @@ namespace sentience.core
                 }
 
                 // store the occupancy and colour data as byte arrays
-                Byte[] occupancyBytes = ArrayConversions.ToByteArray(occupancy);
-                for (int i = 0; i < occupancyBytes.Length; i++)
-                    data.Add(occupancyBytes[i]);
+                byte[] occupancybytes = ArrayConversions.ToByteArray(occupancy);
+                for (int i = 0; i < occupancybytes.Length; i++)
+                    data.Add(occupancybytes[i]);
                 for (int i = 0; i < colourData.Length; i++)
                     data.Add(colourData[i]);            
             }
-            Byte[] result = (Byte[])data.ToArray(typeof(Byte));
+            byte[] result = (byte[])data.ToArray(typeof(byte));
             return(result);
         }
 
@@ -1254,7 +1293,7 @@ namespace sentience.core
         /// load an entire grid from a single file
         /// </summary>
         /// <param name="filename"></param>
-        public void Load(String filename)
+        public void Load(string filename)
         {
             FileStream fp = new FileStream(filename, FileMode.Open);
             BinaryReader binfile = new BinaryReader(fp);
@@ -1280,7 +1319,7 @@ namespace sentience.core
         /// load an entire grid from the given byte array
         /// </summary>
         /// <param name="data"></param>
-        public void Load(Byte[] data)
+        public void Load(byte[] data)
         {
             navigable_space = new bool[dimension_cells][];
             for (int i = 0; i < dimension_cells; i++)
@@ -1295,12 +1334,12 @@ namespace sentience.core
         /// <param name="binfile"></param>
         public void LoadTile(BinaryReader binfile)
         {
-            Byte[] data = new Byte[binfile.BaseStream.Length];
+            byte[] data = new byte[binfile.BaseStream.Length];
             binfile.Read(data,0,data.Length);
             LoadTile(data);
         }
 
-        public void LoadTile(Byte[] data)
+        public void LoadTile(byte[] data)
         {
             // read the bounding box
             int array_index = 0;
@@ -1319,7 +1358,7 @@ namespace sentience.core
             int no_of_bits = w1 * w2;
             int no_of_bytes = no_of_bits / 8;
             if (no_of_bytes * 8 < no_of_bits) no_of_bytes++;
-            Byte[] indexData = new Byte[no_of_bytes];
+            byte[] indexData = new byte[no_of_bytes];
             for (int i = 0; i < no_of_bytes; i++)
                 indexData[i] = data[array_index + i];
             bool[] binary_index = ArrayConversions.ToBooleanArray(indexData);
@@ -1346,7 +1385,7 @@ namespace sentience.core
 
                 // read occupancy values
                 no_of_bytes = occupied_cells * dimension_cells_vertical * float_bytes;
-                Byte[] occupancyData = new Byte[no_of_bytes];
+                byte[] occupancyData = new byte[no_of_bytes];
                 for (int i = 0; i < no_of_bytes; i++)
                     occupancyData[i] = data[array_index + i];
                 array_index += no_of_bytes;
@@ -1354,7 +1393,7 @@ namespace sentience.core
 
                 // read colour values
                 no_of_bytes = occupied_cells * dimension_cells_vertical * 3;
-                Byte[] colourData = new Byte[no_of_bytes];
+                byte[] colourData = new byte[no_of_bytes];
                 for (int i = 0; i < no_of_bytes; i++)
                     colourData[i] = data[array_index + i];
                 array_index += no_of_bytes;
@@ -1381,7 +1420,7 @@ namespace sentience.core
                                     distilled[z].probabilityLogOdds = probLogOdds;
 
                                     // set the colour
-                                    distilled[z].colour = new Byte[3];
+                                    distilled[z].colour = new byte[3];
 
                                     for (int col = 0; col < 3; col++)
                                         distilled[z].colour[col] = colourData[(index * 3) + col];
@@ -1409,7 +1448,8 @@ namespace sentience.core
         /// </summary>
         /// <param name="filename">name of the file to save as</param>
         /// <param name="pose">best available pose</param>
-        public void ExportToIFrIT(String filename, particlePose pose)
+        public void ExportToIFrIT(string filename, 
+                                  particlePose pose)
         {
             ExportToIFrIT(filename, pose, dimension_cells / 2, dimension_cells / 2, dimension_cells);
         }
@@ -1422,7 +1462,7 @@ namespace sentience.core
         /// <param name="centre_x">centre of the tile in grid cells</param>
         /// <param name="centre_y">centre of the tile in grid cells</param>
         /// <param name="width_cells">width of the tile in grid cells</param>
-        public void ExportToIFrIT(String filename,
+        public void ExportToIFrIT(string filename,
                                   particlePose pose,
                                   int centre_x, int centre_y,
                                   int width_cells)
@@ -1482,7 +1522,7 @@ namespace sentience.core
             if (occupied_cells > 0)
             {
                 // add bounding box information
-                String bounding_box = Convert.ToString(tx) + " " + 
+                string bounding_box = Convert.ToString(tx) + " " + 
                                       Convert.ToString(ty) + " " +
                                       Convert.ToString(tz) + " " +
                                       Convert.ToString(bx) + " " + 
@@ -1514,7 +1554,7 @@ namespace sentience.core
                                             // get the colour of the grid cell as a floating point value
                                             float colour_value = int.Parse(colours.GetHexFromRGB((int)colour[0], (int)colour[1], (int)colour[2]), NumberStyles.HexNumber);
 
-                                            String particleStr = Convert.ToString(x) + " " +
+                                            string particleStr = Convert.ToString(x) + " " +
                                                                  Convert.ToString(y) + " " +
                                                                  Convert.ToString(z) + " " +
                                                                  Convert.ToString(prob) + " " +
@@ -1548,7 +1588,7 @@ namespace sentience.core
                         oWrite.WriteLine(Convert.ToString(particles.Count));
                         oWrite.WriteLine(bounding_box);
                         for (int p = 0; p < particles.Count; p++)
-                            oWrite.WriteLine((String)particles[p]);
+                            oWrite.WriteLine((string)particles[p]);
                         oWrite.Close();
                     }
                 }
@@ -1560,4 +1600,4 @@ namespace sentience.core
         #endregion
     }
 
-}
+}

@@ -81,7 +81,8 @@ namespace sentience.core
         /// </summary>
         /// <param name="path"></param>
         /// <param name="increment">increment of 1 or -1</param>
-        private void incrementPathChildren(particlePath path, int increment)
+        private void incrementPathChildren(particlePath path, 
+                                           int increment)
         {
             path.total_children += increment;
             particlePath p = path;
@@ -98,7 +99,9 @@ namespace sentience.core
         /// <param name="parent">parent path from which this originates</param>
         /// <param name="path_ID">unique ID for this path</param>
         /// <param name="grid_dimension_cells">dimension of the grid</param>
-        public particlePath(particlePath parent, UInt32 path_ID, int grid_dimension_cells)
+        public particlePath(particlePath parent, 
+                            UInt32 path_ID, 
+                            int grid_dimension_cells)
         {
             ID = path_ID;
             parent.current_pose.no_of_children++;
@@ -127,8 +130,12 @@ namespace sentience.core
         /// <param name="time_step">time step</param>
         /// <param name="path_ID">ID number for the path</param>
         /// <param name="grid_dimension_cells">occupancy grid dimension</param>
-        public particlePath(float x, float y, float pan,
-                            int max_length, UInt32 time_step, UInt32 path_ID,
+        public particlePath(float x, 
+                            float y, 
+                            float pan,
+                            int max_length, 
+                            UInt32 time_step, 
+                            UInt32 path_ID,
                             int grid_dimension_cells)
         {
             ID = path_ID;
@@ -233,8 +240,11 @@ namespace sentience.core
         /// </summary>
         /// <param name="x">x coordinate of the grid cell</param>
         /// <param name="y">y coordinate of the grid cell</param>
+        /// <param name="z">z coordinate of the grid cell</param>
         /// <returns>Occupancy hypotheses</returns>
-        public List<particleGridCell> GetHypotheses(int x, int y, int z)
+        public List<particleGridCell> GetHypotheses(int x, 
+                                                    int y, 
+                                                    int z)
         {
             int xx = x - map_cache_tx;
             if ((xx > -1) && (xx < map_cache_width_cells))
@@ -457,22 +467,31 @@ namespace sentience.core
         /// <summary>
         /// show the path
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="r"></param>
-        /// <param name="g"></param>
-        /// <param name="b"></param>
-        /// <param name="min_x_mm"></param>
-        /// <param name="min_y_mm"></param>
-        /// <param name="max_x_mm"></param>
-        /// <param name="max_y_mm"></param>
-        /// <param name="clearBackground"></param>
-        public void Show(Byte[] img, int width, int height,
-                             int r, int g, int b, int line_thickness,
-                             float min_x_mm, float min_y_mm,
-                             float max_x_mm, float max_y_mm,
-                             bool clearBackground, UInt32 root_time_step)
+        /// <param name="img">image data</param>
+        /// <param name="width">width of the image</param>
+        /// <param name="height">height of the image</param>
+        /// <param name="r">red</param>
+        /// <param name="g">green</param>
+        /// <param name="b">blue</param>
+        /// <param name="min_x_mm">minimum x coordinate of the window within which to show the path</param>
+        /// <param name="min_y_mm">minimum y coordinate of the window within which to show the path</param>
+        /// <param name="max_x_mm">maximum x coordinate of the window within which to show the path</param>
+        /// <param name="max_y_mm">maximum y coordinate of the window within which to show the path</param>
+        /// <param name="clearBackground">whether to clear the image before drawing the path</param>
+        /// <param name="root_time_step">time step at which to begin drawing the path</param>
+        public void Show(byte[] img, 
+                         int width, 
+                         int height,
+                         int r, 
+                         int g, 
+                         int b, 
+                         int line_thickness,
+                         float min_x_mm, 
+                         float min_y_mm,
+                         float max_x_mm, 
+                         float max_y_mm,
+                         bool clearBackground, 
+                         UInt32 root_time_step)
         {
             if (clearBackground)
             {
@@ -537,7 +556,8 @@ namespace sentience.core
         /// <param name="doc"></param>
         /// <param name="parent"></param>
         /// <returns></returns>
-        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        public XmlElement getXml(XmlDocument doc, 
+                                 XmlElement parent)
         {
             XmlElement nodePath = doc.CreateElement("RobotPath");
             parent.AppendChild(nodePath);
@@ -629,14 +649,15 @@ namespace sentience.core
         /// </summary>
         /// <param name="xnod"></param>
         /// <param name="level"></param>
-        public void LoadFromXml(XmlNode xnod, int level)
+        public void LoadFromXml(XmlNode xnod, 
+                                int level)
         {
             XmlNode xnodWorking;
 
             if (xnod.Name == "Pose")
             {
                 IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
-                String[] poseStr = xnod.InnerText.Split(',');
+                string[] poseStr = xnod.InnerText.Split(',');
                 particlePose new_pose = new particlePose(Convert.ToSingle(poseStr[0], format),
                                                          Convert.ToSingle(poseStr[1], format),
                                                          Convert.ToSingle(poseStr[2], format)*(float)Math.PI/180.0f, null);
@@ -662,4 +683,4 @@ namespace sentience.core
         #endregion
 
     }
-}
+}
