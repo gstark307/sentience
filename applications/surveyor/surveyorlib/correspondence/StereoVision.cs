@@ -700,32 +700,35 @@ namespace surveyor.vision
             {            
                 if (m_workerSocketList.Count > 0)
                 {                
-                    byte[] StereoData = SerializedStereoFeatures();                    
-                    try
-                    {                    
-                        Socket workerSocket = null;
-                        for (int i = m_workerSocketList.Count-1; i >= 0; i--)
-                        {
-                            workerSocket = (Socket)m_workerSocketList[i];
-                            if (workerSocket != null)
-                            {
-                                if (workerSocket.Connected)
-                                {
-                                    //Console.WriteLine("sending " + StereoData.Length.ToString() + " bytes");
-                                    workerSocket.Send(StereoData);
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Client " + (i+1).ToString() + " disconnected");
-                                    workerSocket.Close();
-                                    m_workerSocketList.RemoveAt(i);
-                                }
-                            }
-                        }
-                    }
-                    catch (SocketException se)
-                    {
-                        Console.WriteLine("Error broadcasting stereo feature data to all clients: " + se.Message);
+                    byte[] StereoData = SerializedStereoFeatures();  
+                    if (StereoData != null)
+                    {                  
+	                    try
+	                    {                    
+	                        Socket workerSocket = null;
+	                        for (int i = m_workerSocketList.Count-1; i >= 0; i--)
+	                        {
+	                            workerSocket = (Socket)m_workerSocketList[i];
+	                            if (workerSocket != null)
+	                            {
+	                                if (workerSocket.Connected)
+	                                {
+	                                    //Console.WriteLine("sending " + StereoData.Length.ToString() + " bytes");
+	                                    workerSocket.Send(StereoData);
+	                                }
+	                                else
+	                                {
+	                                    Console.WriteLine("Client " + (i+1).ToString() + " disconnected");
+	                                    workerSocket.Close();
+	                                    m_workerSocketList.RemoveAt(i);
+	                                }
+	                            }
+	                        }
+	                    }
+	                    catch (SocketException se)
+	                    {
+	                        Console.WriteLine("Error broadcasting stereo feature data to all clients: " + se.Message);
+	                    }
                     }
                 }
             }
