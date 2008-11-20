@@ -142,6 +142,9 @@ namespace stereoserver
                 if (algorithm_str == "dense") stereo_algorithm_type = StereoVision.DENSE;
             }
 
+            // a file which if present pauses frame capture
+            string pause_file = commandline.GetParameterValue("pause", parameters);
+
             calibration_filename = commandline.GetParameterValue("calibration", parameters);
             if (calibration_filename == "")
             {
@@ -185,9 +188,9 @@ namespace stereoserver
                         else
                         {
                             // webcam based stereo camera
-                            stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps);
+                            stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps, pause_file);
                             if ((left_device2 != "") && (right_device2 != ""))
-                                stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps);
+                                stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps, pause_file);
                         }
                             
                         stereo_camera.Record = record;
@@ -252,7 +255,8 @@ namespace stereoserver
             int image_width, int image_height,
             int broadcast_port,
             int stereo_algorithm_type,
-            float fps)
+            float fps,
+            string pause_file)
         {
             WebcamVisionStereoWin stereo_camera =
                 new WebcamVisionStereoWin(
@@ -274,6 +278,7 @@ namespace stereoserver
             stereo_camera.stereo_algorithm_type = stereo_algorithm_type;
             stereo_camera.UpdateWhenClientsConnected = true;
             stereo_camera.random_rows = 5;
+            stereo_camera.SetPauseFile(pause_file);
             
             return (stereo_camera);
         }
@@ -302,6 +307,7 @@ namespace stereoserver
             ValidParameters.Add("record");
             ValidParameters.Add("fps");
             ValidParameters.Add("ramdisk");
+            ValidParameters.Add("pause");
 
             return (ValidParameters);
         }

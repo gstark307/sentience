@@ -107,6 +107,13 @@ namespace sentience.core.tests
             int tilt = (int)Math.Round(RadiansToDegrees(rotated.tilt));
 		    Assert.AreEqual(35, tilt, "tilt positive");
 
+   		    point.pan = 0;
+   		    point.tilt = 0;
+		    point.roll = DegreesToRadians(2);
+   		    pos3D rolled = point.rotate(0, 0, DegreesToRadians(-20));
+            int roll = (int)Math.Round(RadiansToDegrees(rotated.roll));
+		    Assert.AreEqual(-18, roll, "roll negative");
+
 		    //Console.WriteLine("x = " + rotated.x.ToString());
 		    //Console.WriteLine("y = " + rotated.y.ToString());
 		}

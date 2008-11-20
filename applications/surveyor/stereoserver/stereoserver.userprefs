@@ -1,38 +1,32 @@
-﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/stereoserver/stereoserver.mds">
-  <Files>
-    <File name="Welcome" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="34" column="6" />
-    <File name="../surveyorlib/WebcamVisionStereoGtk.cs" line="35" column="17" />
-    <File name="../surveyorlib/WebcamVisionStereo.cs" line="84" column="1" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="50" column="10" />
-    <File name="../surveyorlib/BaseVisionStereo.cs" line="33" column="1" />
-    <File name="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" line="37" column="1" />
-    <File name="../../../../robotbridgeware/DeviceServers/other/BridgewareServer_PhidgetsInterfaceKit/Program.cs" line="62" column="1" />
-    <File name="../../../../robotbridgeware/DeviceServers/servocontrol/BridgewareServer_PhidgetsServo/Program.cs" line="111" column="1" />
-    <File name="../../../../robotbridgeware/DeviceServers/motorcontrol/BridgewareServer_PhidgetsMC/Program.cs" line="1" column="1" />
-    <File name="../../../../robotbridgeware/Clients/JoystickControl/Program.cs" line="3" column="1" />
-    <File name="../../../../robotbridgeware/DeviceServers/servocontrol/BridgewareServer_PhidgetsServo/commandline.cs" line="35" column="26" />
-    <File name="Main.cs" line="179" column="22" />
-    <File name="../surveyorlib/correspondence/StereoVision.cs" line="665" column="29" />
-    <File name="../surveyorlib/SurveyorVisionStereoWin.cs" line="49" column="1" />
-    <File name="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" line="87" column="22" />
-    <File name="../surveyorlib/SurveyorVisionClient.cs" line="51" column="3" />
-  </Files>
-  <Views>
-    <ViewMemento id="ProjectPad">
-      <Node expanded="True" selected="True">
-        <Node name="stereoserver" expanded="True" />
-      </Node>
-    </ViewMemento>
-    <ViewMemento id="ClassPad">
-      <Node expanded="True" />
-    </ViewMemento>
-    <ViewMemento id="MonoDevelop.NUnit.TestPad">
-      <Node />
-    </ViewMemento>
-  </Views>
-  <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/stereoserver/Main.cs" />
-    <Property key="ActiveConfiguration" value="Debug" />
-  </Properties>
-</UserCombinePreferences>
+﻿<Properties>
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/WebcamVisionStereo.cs" ctype="Workbench">
+    <Files>
+      <File FileName="Welcome" />
+      <File FileName="Main.cs" Line="154" Column="14" />
+      <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="169" Column="43" />
+      <File FileName="../surveyorlib/WebcamVisionStereo.cs" Line="134" Column="92" />
+      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="79" Column="1" />
+      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="43" Column="58" />
+      <File FileName="../surveyorlib/WebcamVisionStereoGtk.cs" Line="45" Column="34" />
+      <File FileName="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" Line="82" Column="1" />
+      <File FileName="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" Line="86" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="stereoserver" expanded="True" />
+          <Node name="surveyorlib" expanded="True">
+            <Node name="WebcamVisionStereo.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
+</Properties>

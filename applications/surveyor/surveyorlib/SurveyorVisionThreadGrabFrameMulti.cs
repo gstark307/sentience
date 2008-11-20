@@ -34,6 +34,9 @@ namespace surveyor.vision
         private WaitCallback _callback;
         private object _data;
         public bool Pause;
+        
+        // use the existance of this file to pause or resume frame capture
+        public string PauseFile;
 
         /// <summary>
         /// constructor
@@ -65,6 +68,18 @@ namespace surveyor.vision
             DateTime data_last_requested = DateTime.Now;
             while (state[0].Streaming)
             {
+                // If a cartain file exists then initiate pause
+                // This provides a very simple mechanism for other programs
+                // to start or stop the server
+                if ((PauseFile != null) &&
+                    (PauseFile != ""))
+                {
+	                if (File.Exists(PauseFile)) 
+	                    Pause = true;
+	                else
+	                    Pause = false;
+                }
+            
                 if (!Pause)
                 {
                     TimeSpan diff = DateTime.Now.Subtract(data_last_requested);

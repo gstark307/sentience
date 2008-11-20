@@ -1,39 +1,23 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/particlePath.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/unittests/tests_pos3D.cs" ctype="Workbench">
     <Files>
       <File FileName="Welcome" />
       <File FileName="../../sentcore/particlePose.cs" Line="316" Column="61" />
       <File FileName="../../sentcore/occupancygridMultiHypothesis.cs" Line="153" Column="1" />
-      <File FileName="../../sentcore/unittests/tests_pos3D.cs" Line="100" Column="7" />
+      <File FileName="../../sentcore/unittests/tests_pos3D.cs" Line="110" Column="24" />
       <File FileName="../../sentcore/pos3D.cs" Line="132" Column="10" />
       <File FileName="../../sentcore/occupancygridCell.cs" Line="1" Column="2" />
       <File FileName="../../sentcore/particlePath.cs" Line="28" Column="25" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="sentcore" expanded="True">
-            <Node name="particlePath.cs" selected="True" />
-          </Node>
-          <Node name="stereocorrespondence" expanded="True" />
-        </State>
+        <State expanded="True" />
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True">
-          <Node name="sentcore" expanded="True">
-            <Node name="sentience" expanded="True">
-              <Node name="core" expanded="True">
-                <Node name="tests" expanded="True">
-                  <Node name="tests_occupancygrid" expanded="True" selected="True" />
-                  <Node name="tests_pos3D" expanded="True" />
-                </Node>
-              </Node>
-            </Node>
-          </Node>
-        </State>
+        <State expanded="True" />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

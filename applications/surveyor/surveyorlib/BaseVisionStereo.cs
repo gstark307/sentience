@@ -1002,6 +1002,14 @@ namespace surveyor.vision
         {
         }
         
+        public virtual void SetPauseFile(string filename)
+        {
+        }
+
+        public virtual void ClearPauseFile()
+        {
+        }
+        
         #endregion
         
     }

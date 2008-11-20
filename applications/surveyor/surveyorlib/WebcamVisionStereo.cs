@@ -69,6 +69,18 @@ namespace surveyor.vision
                 grab_frames.Pause = false;
         }
         
+        public override void SetPauseFile(string filename)
+        {
+            if (grab_frames != null)
+                grab_frames.PauseFile = filename;
+        }
+
+        public override void ClearPauseFile()
+        {
+            if (grab_frames != null)
+                grab_frames.PauseFile = null;
+        }
+                
         #endregion
 
         #region "callbacks"

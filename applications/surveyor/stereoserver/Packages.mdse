@@ -1,11 +1,1 @@
-<CombineEntry name="Packages" fileversion="2.0" ctype="PackagingProject">
-  <Packages>
-    <Package name="Linux Binaries">
-      <Builder rootEntry="stereoserver.mds" targetFile="stereoserver-linux.tar.gz" platform="Linux" ctype="BinariesZipPackageBuilder">
-        <ChildEntries>
-          <Entry>stereoserver.mdp</Entry>
-        </ChildEntries>
-      </Builder>
-    </Package>
-  </Packages>
-</CombineEntry>
+<CombineEntry name="Packages" fileversion="2.0" ctype="PackagingProject" />
