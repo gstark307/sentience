@@ -11,6 +11,8 @@
 #include "config.h"
 #endif
 
+#define TRY_V4L2_FIRST 1
+
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -94,8 +96,12 @@ int src_open(src_t *src, char *source)
 	}
 	
 	/* Check if it's a source name. */
-	i = 0;
-	while(src_mod[i])
+	if (TRY_V4L2_FIRST > -1)
+  	        i = 0;
+  	else
+  	        i = 1;
+  	        
+	while((src_mod[i]) && (i >= 0))
 	{
 		if(!strcasecmp(s, src_mod[i]->name))
 		{
@@ -113,7 +119,10 @@ int src_open(src_t *src, char *source)
 			return(0);
 		}
 		
-		i++;
+		if (TRY_V4L2_FIRST > -1)
+        		i++;
+        	else
+        	        i--;
 	}
 	
 	/* No source type was specified. If the name is that of a file or
@@ -124,10 +133,15 @@ int src_open(src_t *src, char *source)
 		return(-1);
 	}
 	
-	i = 0;
+	
+	if (TRY_V4L2_FIRST > -1)
+  	        i = 0;
+  	else
+  	        i = 1;
+  	        
 	src->source = s;
 	
-	while(src_mod[i])
+	while((src_mod[i]) && (i >= 0))
 	{
 		int r = src_mod[i]->flags;
 		
@@ -145,7 +159,10 @@ int src_open(src_t *src, char *source)
 			if(r != -2) return(r);
 		}
 		
-		i++;
+		if (TRY_V4L2_FIRST > -1)
+        		i++;
+        	else
+        	        i--;
 	}
 	
 	ERROR("Unable to find a source module that can read %s.", source);

@@ -20,13 +20,13 @@
 #define PACKAGE_NAME "fswebcam"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fswebcam 20080912"
+#define PACKAGE_STRING "fswebcam 20070108"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fswebcam"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "20080912"
+#define PACKAGE_VERSION "20070108"
 
 /* Allow capture of 2^32 frames */
 /* #undef USE_32BIT_BUFFER */
