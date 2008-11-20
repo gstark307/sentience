@@ -1,8 +1,9 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Main.cs" ctype="Workbench">
     <Files>
       <File FileName="Welcome" />
-      <File FileName="Main.cs" Line="202" Column="26" />
+      <File FileName="../../RTstereo/GUI/cameraSettings.cs" Line="103" Column="1" />
+      <File FileName="Main.cs" Line="211" Column="31" />
       <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="1007" Column="10" />
       <File FileName="../surveyorlib/WebcamVisionStereo.cs" Line="72" Column="42" />
       <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="79" Column="1" />
@@ -10,16 +11,15 @@
       <File FileName="../surveyorlib/WebcamVisionStereoGtk.cs" Line="77" Column="1" />
       <File FileName="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" Line="82" Column="1" />
       <File FileName="../surveyorlib/correspondence/StereoVision.cs" Line="711" Column="56" />
-      <File FileName="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" Line="85" Column="1" />
+      <File FileName="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" Line="105" Column="22" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="stereoserver" expanded="True" />
-          <Node name="surveyorlib" expanded="True">
-            <Node name="correspondence" expanded="True" />
-            <Node name="WebcamVisionThreadGrabFrameMulti.cs" selected="True" />
+          <Node name="stereoserver" expanded="True">
+            <Node name="Main.cs" selected="True" />
           </Node>
+          <Node name="surveyorlib" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

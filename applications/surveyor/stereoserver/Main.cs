@@ -197,7 +197,7 @@ namespace stereoserver
                         stereo_camera.temporary_files_path = ramdisk;
                         stereo_camera.recorded_images_path = record_path;                        
                         stereo_camera.Run();
-                        stereo_camera.SetPauseFile(pause_file);
+                        //stereo_camera.SetPauseFile(pause_file);
                         if (stereo_camera2 != null)
                         {
                             stereo_camera.next_camera = stereo_camera2;
@@ -208,7 +208,7 @@ namespace stereoserver
                             stereo_camera2.temporary_files_path = ramdisk;
                             stereo_camera2.recorded_images_path = record_path;                            
                             stereo_camera2.Run();
-                            stereo_camera2.SetPauseFile(pause_file);
+                            //stereo_camera2.SetPauseFile(pause_file);
                         }
                         while (stereo_camera.Running)
                         {
