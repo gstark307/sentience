@@ -31,6 +31,7 @@ namespace surveyor.vision
     {
         protected string[] camera_device;
         public int skip_frames = 2;
+        protected string PauseFile;
                 
         #region "constructors"
         
@@ -71,12 +72,14 @@ namespace surveyor.vision
         
         public override void SetPauseFile(string filename)
         {
+            PauseFile = filename;
             if (grab_frames != null)
                 grab_frames.PauseFile = filename;
         }
 
         public override void ClearPauseFile()
         {
+            PauseFile = "";
             if (grab_frames != null)
                 grab_frames.PauseFile = null;
         }
@@ -297,6 +300,7 @@ namespace surveyor.vision
             {
                 // create a thread to send the master pulse
                 grab_frames = new WebcamVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallback), this);        
+                grab_frames.PauseFile = PauseFile;
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
                 Running = true;

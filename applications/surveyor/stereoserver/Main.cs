@@ -133,6 +133,8 @@ namespace stereoserver
 
             broadcast_port_str = commandline.GetParameterValue("broadcastport2", parameters);
             if (broadcast_port_str != "") broadcast_port2 = Convert.ToInt32(broadcast_port_str);
+            
+            string force = commandline.GetParameterValue("force", parameters);
 
             string algorithm_str = commandline.GetParameterValue("algorithm", parameters);
             if (algorithm_str != "")
@@ -174,7 +176,7 @@ namespace stereoserver
                         is_ip_camera = false;
                     }
                     
-                    if (!mutex_ok)
+                    if ((!mutex_ok) && (force == ""))
                     {
                         Console.WriteLine("A server for this stereo camera is already running");
                     }
@@ -195,9 +197,9 @@ namespace stereoserver
                             
                         stereo_camera.Record = record;
                         stereo_camera.temporary_files_path = ramdisk;
-                        stereo_camera.recorded_images_path = record_path;                        
-                        stereo_camera.Run();
-                        //stereo_camera.SetPauseFile(pause_file);
+                        stereo_camera.recorded_images_path = record_path;                                                
+                        stereo_camera.SetPauseFile(pause_file);
+                        stereo_camera.Run();                        
                         if (stereo_camera2 != null)
                         {
                             stereo_camera.next_camera = stereo_camera2;
@@ -206,9 +208,9 @@ namespace stereoserver
                             stereo_camera2.active_camera = false;
                             stereo_camera2.Record = record;
                             stereo_camera2.temporary_files_path = ramdisk;
-                            stereo_camera2.recorded_images_path = record_path;                            
-                            stereo_camera2.Run();
-                            //stereo_camera2.SetPauseFile(pause_file);
+                            stereo_camera2.recorded_images_path = record_path;
+                            stereo_camera2.SetPauseFile(pause_file);
+                            stereo_camera2.Run();                            
                         }
                         while (stereo_camera.Running)
                         {
@@ -310,6 +312,7 @@ namespace stereoserver
             ValidParameters.Add("fps");
             ValidParameters.Add("ramdisk");
             ValidParameters.Add("pause");
+            ValidParameters.Add("force");
 
             return (ValidParameters);
         }

@@ -64,24 +64,13 @@ namespace surveyor.vision
         private void Update(WebcamVisionStereo state)
         {   
             int time_step_mS = (int)(1000 / state.fps);
+            bool grabbed = false;
         
             while(state.Running)
             {
                 time_step_mS = (int)(1000 / state.fps);
                                 
                 DateTime last_called = DateTime.Now;
-
-                // If a cartain file exists then initiate pause
-                // This provides a very simple mechanism for other programs
-                // to start or stop the server
-                if ((PauseFile != null) &&
-                    (PauseFile != ""))
-                {
-	                if (File.Exists(PauseFile)) 
-	                    Pause = true;
-	                else
-	                    Pause = false;
-                }
                 
                 if (!Pause)
                 {
@@ -91,7 +80,8 @@ namespace surveyor.vision
                         DateTime start_time = DateTime.Now;
                     
                         state.Grab();
-                        _callback(_data);    
+                        _callback(_data);
+                        grabbed = true;
 
                         // calculate the phase offset, relative to some reference time in the ancient past
                         TimeSpan diff = DateTime.Now.Subtract(start_time);
@@ -114,6 +104,18 @@ namespace surveyor.vision
                         Thread.Sleep(5);
                         
                     _callback(_data);
+                }
+                
+                if (grabbed)
+                {
+	                if ((PauseFile != null) &&
+	                    (PauseFile != ""))
+	                {
+		                if (File.Exists(PauseFile))
+		                    Pause = true;
+		                else
+		                    Pause = false;
+	                }
                 }
                 
             }
