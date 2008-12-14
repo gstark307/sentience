@@ -11,7 +11,7 @@
 #include "config.h"
 #endif
 
-#define TRY_V4L2_FIRST 1
+#define TRY_V4L2_FIRST 0
 
 #include <stdlib.h>
 #include <time.h>
@@ -134,7 +134,7 @@ int src_open(src_t *src, char *source)
 	}
 	
 	
-	if (TRY_V4L2_FIRST > -1)
+	if (TRY_V4L2_FIRST > 0)
   	        i = 0;
   	else
   	        i = 1;
@@ -159,7 +159,7 @@ int src_open(src_t *src, char *source)
 			if(r != -2) return(r);
 		}
 		
-		if (TRY_V4L2_FIRST > -1)
+		if (TRY_V4L2_FIRST > 0)
         		i++;
         	else
         	        i--;
