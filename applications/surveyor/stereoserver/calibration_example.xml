@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--Sentience 3D Perception System-->
+<Sentience>
+  <StereoCamera>
+    <!--Name of the camera device-->
+    <DeviceName>Webcam stereo camera</DeviceName>
+    <!--Supplier of the camera device-->
+    <SupplierName>Surveyor Corporation</SupplierName>
+    <!--Part number of the camera device-->
+    <PartNumber>
+    </PartNumber>
+    <!--Serial number of the camera device-->
+    <SerialNumber>
+    </SerialNumber>
+    <!--Dimensions of the images in pixels-->
+    <ImageDimensions>320x240</ImageDimensions>
+    <!--Focal length in millimetres-->
+    <FocalLengthMillimetres>3.6</FocalLengthMillimetres>
+    <!--Sensor density in pixels per millimetre-->
+    <SensorDensityPixelsPerMillimetre>307</SensorDensityPixelsPerMillimetre>
+    <!--Camera baseline distance in millimetres-->
+    <BaselineMillimetres>100</BaselineMillimetres>
+    <!--Calibration Data-->
+    <Calibration>
+      <!--Image offsets in pixels due to small missalignment from parallel-->
+      <Offsets>-8 12</Offsets>
+      <!--Rotation of the right image relative to the left in degrees-->
+      <RelativeRotationDegrees>0</RelativeRotationDegrees>
+      <Camera>
+        <!--Horizontal field of view of the camera in degrees-->
+        <FieldOfViewDegrees>90</FieldOfViewDegrees>
+        <!--The centre of distortion in pixels-->
+        <CentreOfDistortion>163.5 120.5</CentreOfDistortion>
+        <!--Polynomial coefficients used to describe the camera lens distortion-->
+        <DistortionCoefficients>0 1.05184847123845 -0.000307246644476046 -3.38895642413671E-06</DistortionCoefficients>
+        <!--The minimum RMS error between the distortion curve and plotted points-->
+        <RMSerror>2.098183</RMSerror>
+      </Camera>
+      <Camera>
+        <!--Horizontal field of view of the camera in degrees-->
+        <FieldOfViewDegrees>90</FieldOfViewDegrees>
+        <!--The centre of distortion in pixels-->
+        <CentreOfDistortion>163.5 117</CentreOfDistortion>
+        <!--Polynomial coefficients used to describe the camera lens distortion-->
+        <DistortionCoefficients>0 1.0808397207261 -0.000615570828874875 -2.27714904050599E-06</DistortionCoefficients>
+        <!--The minimum RMS error between the distortion curve and plotted points-->
+        <RMSerror>2.578423</RMSerror>
+      </Camera>
+    </Calibration>
+  </StereoCamera>
+</Sentience>
