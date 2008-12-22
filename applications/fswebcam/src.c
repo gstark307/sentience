@@ -11,7 +11,7 @@
 #include "config.h"
 #endif
 
-#define TRY_V4L2_FIRST 0
+#define TRY_V4L2_FIRST 1
 
 #include <stdlib.h>
 #include <time.h>
