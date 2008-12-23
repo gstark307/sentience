@@ -67,10 +67,6 @@ namespace sluggish.winwebcam
         // image border
         public int border_tx, border_ty, border_bx, border_by;
 
-#if DEBUG
-        // Allow you to "Connect to remote graph" from GraphEdit
-        DsROTEntry m_rot = null;
-#endif
         #endregion
 
         #region "APIs"
@@ -125,14 +121,20 @@ namespace sluggish.winwebcam
 
             try
             {
+                DateTime start_time = DateTime.Now;
+
                 // Set up the capture graph using still image capture
                 Active = SetupGraph(capDevices[iDeviceNum], iWidth, iHeight, (short)(bytes_per_pixel * 8), hControl, still_image_capture);
+
+                TimeSpan diff = DateTime.Now.Subtract(start_time);
+                //Console.WriteLine("SetupGraph time: " + diff.TotalMilliseconds.ToString() + " mS");
 
                 // tell the callback to ignore new images
                 m_PictureReady = new ManualResetEvent(false);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 //Dispose();
                 //throw;
             }
@@ -141,12 +143,6 @@ namespace sluggish.winwebcam
         /// <summary> release everything. </summary>
         public void Dispose()
         {
-#if DEBUG
-            if (m_rot != null)
-            {
-                m_rot.Dispose();
-            }
-#endif
             CloseInterfaces();
             if (m_PictureReady != null)
             {
@@ -193,9 +189,10 @@ namespace sluggish.winwebcam
                     }
 
                     // Start waiting
-                    if (!m_PictureReady.WaitOne(200, false))
+                    if (!m_PictureReady.WaitOne(500, false))
                     {
                         //throw new Exception("Timeout waiting to get picture");
+                        //Console.WriteLine("Timeout");
                     }
                 }
                 catch
@@ -207,8 +204,8 @@ namespace sluggish.winwebcam
 
                 if (m_ipBuffer != IntPtr.Zero)
                 {
-                    //if (lastFrame != null)
-                    //lastFrame.Dispose();
+                    if (lastFrame != null)
+                        lastFrame.Dispose();
 
                     // store the last frame as a bitmap
                     if (update_bitmap)
@@ -220,10 +217,11 @@ namespace sluggish.winwebcam
 
                         grabbed_frame.RotateFlip(RotateFlipType.RotateNoneFlipY);
                         lastFrame = grabbed_frame;
+                        m_ip = m_ipBuffer;
                     }
                 }
             }
-            m_ip = m_ipBuffer;
+            //m_ip = m_ipBuffer;
             return (grabbed_frame);
         }
 
@@ -315,6 +313,7 @@ namespace sluggish.winwebcam
             {
                 m_iVidConfig.Set(VideoProcAmpProperty.ColorEnable, 1, VideoProcAmpFlags.Manual);
                 m_iVidConfig.Set(VideoProcAmpProperty.Saturation, value, VideoProcAmpFlags.Manual);
+                m_iVidConfig.Set(VideoProcAmpProperty.Brightness, value, VideoProcAmpFlags.Manual);
             }
             if (m_iCamConfig != null)
             {
@@ -324,10 +323,18 @@ namespace sluggish.winwebcam
 
         public void SetExposureAuto()
         {
-            if (m_iCamConfig != null)
+            if (m_iVidConfig != null)
             {
                 m_iVidConfig.Set(VideoProcAmpProperty.ColorEnable, 1, VideoProcAmpFlags.Auto);
+                m_iVidConfig.Set(VideoProcAmpProperty.Brightness, 0, VideoProcAmpFlags.Auto);
                 m_iVidConfig.Set(VideoProcAmpProperty.Saturation, 0, VideoProcAmpFlags.Auto);
+                m_iVidConfig.Set(VideoProcAmpProperty.Gain, 0, VideoProcAmpFlags.Auto);
+                m_iVidConfig.Set(VideoProcAmpProperty.WhiteBalance, 0, VideoProcAmpFlags.Auto);
+                m_iVidConfig.Set(VideoProcAmpProperty.Hue, 0, VideoProcAmpFlags.Auto);
+                m_iVidConfig.Set(VideoProcAmpProperty.Gamma, 0, VideoProcAmpFlags.Auto);
+            }
+            if (m_iCamConfig != null)
+            {
                 m_iCamConfig.Set(CameraControlProperty.Exposure, 0, CameraControlFlags.Auto);
             }
         }
@@ -362,7 +369,7 @@ namespace sluggish.winwebcam
             try
             {
 #if DEBUG
-                m_rot = new DsROTEntry(m_FilterGraph);
+                //m_rot = new DsROTEntry(m_FilterGraph);
 #endif
                 // add the video input device
                 hr = m_FilterGraph.AddSourceFilterForMoniker(dev.Mon, null, dev.Name, out capFilter);
@@ -467,6 +474,8 @@ namespace sluggish.winwebcam
                 hr = m_FilterGraph.AddFilter(baseGrabFlt, "Ds.NET Grabber");
                 DsError.ThrowExceptionForHR(hr);
 
+                DateTime start_time = DateTime.Now;
+
                 if (m_VidControl == null)
                 {
                     // Connect the Still pin to the sample grabber
@@ -497,6 +506,10 @@ namespace sluggish.winwebcam
                     }
                 }
 
+                TimeSpan diff = DateTime.Now.Subtract(start_time);
+                //Console.WriteLine("FilterGraph connect time: " + diff.TotalMilliseconds.ToString() + " mS");
+                start_time = DateTime.Now;
+
                 if (graph_connected)
                 {
                     // Learn the video properties
@@ -510,6 +523,9 @@ namespace sluggish.winwebcam
 
                     GetInterfaces();
                 }
+                
+                diff = DateTime.Now.Subtract(start_time);
+                //Console.WriteLine("ConfigVideoWindow time: " + diff.TotalMilliseconds.ToString() + " mS");
             }
             finally
             {
@@ -588,8 +604,33 @@ namespace sluggish.winwebcam
             }
         }
 
-        #endregion
+        /// <summary>
+        /// Stop video streaming
+        /// </summary>
+        /// <returns></returns>
+        public bool Stop()
+        {
+            if (!paused)
+            {
+                int hr;
 
+                try
+                {
+                    if (m_FilterGraph != null)
+                    {
+                        IMediaControl mediaCtrl = m_FilterGraph as IMediaControl;
+                        hr = mediaCtrl.StopWhenReady();
+                        paused = true;
+                    }
+                }
+                catch
+                {
+                }
+            }
+            return (paused);
+        }
+
+        #endregion
 
         private void SaveSizeInfo(ISampleGrabber sampGrabber)
         {

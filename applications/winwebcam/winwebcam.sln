@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C# Express 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "winwebcam", "winwebcam.csproj", "{57B3F94F-7343-4E8C-A4DF-400D7C0E574C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectShowLib", "DirectShowNET\src\DirectShowLib.csproj", "{CE009BFA-5EF6-4153-B2A1-2FA79698A9AE}"
