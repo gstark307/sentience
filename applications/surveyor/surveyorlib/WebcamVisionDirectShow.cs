@@ -1,5 +1,5 @@
 ﻿/*
-    winwebcam: a Windows utility for grabbing images from webcams
+    functions for grabbing images using DirectShow
     Copyright (C) 2008 Bob Mottram
     fuzzgun@gmail.com
 
@@ -29,35 +29,75 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 
-namespace sluggish.winwebcam
+namespace surveyor.vision
 {
-    public class wincamera
+    public class WebcamVisionDirectShow
     {
+        public string camera_devices = "0";
+        public int image_width = 640;
+        public int image_height = 480;
+        public int initial_frames = 3;
+        public string output_filename = "capture.jpg";
+        public int exposure = 0;
+        public int no_of_cameras = 1;
 
-        public static void Update(
-            string camera_devices,
-            int image_width,
-            int image_height,
-            int initial_frames,
-            string output_filename,
-            int exposure,
-            int no_of_captures,
-            int capture_interval_mS)
+        protected int start_camera_index = 0;
+        protected string output_format;
+        protected int[] directshow_filter_index;
+        protected WebcamVisionDirectShowCapture[] cam;
+        protected int[] camera_filter_index;
+        protected IntPtr[] m_ip;
+        protected PictureBox[] preview;
+
+        public string left_image_filename;
+        public string right_image_filename;
+
+        /// <summary>
+        /// destructor
+        /// </summary>
+        ~WebcamVisionDirectShow()
         {
-            int[] directshow_filter_index = GetFilterIndexes();
+            if (cam != null) Close();
+        }
+
+        /// <summary>
+        /// opens camera devices
+        /// </summary>
+        public void Open()
+        {
+            Initialise();
+        }
+
+        public void Open(int device_index)
+        {
+            camera_devices = device_index.ToString();
+
+            Initialise();
+        }
+
+        public void Open(int device_index0, int device_index1)
+        {
+            camera_devices = device_index0.ToString() + "," + device_index1.ToString();
+
+            Initialise();
+        }
+
+        protected void Initialise()
+        {
+            directshow_filter_index = GetFilterIndexes();
 
             if (directshow_filter_index != null)
             {
-                Capture[] cam = new Capture[directshow_filter_index.Length];
-                int[] camera_filter_index = new int[directshow_filter_index.Length];
-                IntPtr[] m_ip = new IntPtr[directshow_filter_index.Length];
-                PictureBox[] preview = new PictureBox[directshow_filter_index.Length];
+                cam = new WebcamVisionDirectShowCapture[directshow_filter_index.Length];
+                camera_filter_index = new int[directshow_filter_index.Length];
+                m_ip = new IntPtr[directshow_filter_index.Length];
+                preview = new PictureBox[directshow_filter_index.Length];
 
                 bool auto_exposure = false;
                 if (exposure <= 0) auto_exposure = true;
 
                 // get the devices
-                int no_of_cameras = 1;
+                no_of_cameras = 1;
                 if (camera_devices.Contains(","))
                 {
                     string[] str = camera_devices.Split(',');
@@ -75,126 +115,75 @@ namespace sluggish.winwebcam
                     m_ip[0] = IntPtr.Zero;
                 }
 
+                output_format = "jpg";
+                if (output_filename.Contains("."))
+                {
+                    string[] str = output_filename.Split('.');
+                    output_filename = str[0];
+                    output_format = str[1];
+                }
 
-                Update(cam, preview, m_ip, no_of_cameras, image_width, image_height, directshow_filter_index, camera_filter_index, initial_frames, output_filename, exposure, auto_exposure, no_of_captures, capture_interval_mS);
+                // create camera objects
+                for (int i = no_of_cameras - 1; i >= 0; i--)
+                {
+                    preview[i] = new PictureBox();
+                    StartCamera(image_width, image_height, ref cam, directshow_filter_index, camera_filter_index, ref preview, i, exposure, auto_exposure);
+                }
             }
         }
 
-        private static void Update(
-            Capture[] cam,
-            PictureBox[] preview,
-            IntPtr[] m_ip,
-            int no_of_cameras,
-            int image_width,
-            int image_height,
-            int[] directshow_filter_index,
-            int[] camera_filter_index,
-            int initial_frames,
-            string output_filename,
-            int exposure,
-            bool auto_exposure,
-            int no_of_captures,
-            int capture_interval_mS)
+        /// <summary>
+        /// closes camera devices
+        /// </summary>
+        public void Close()
         {
-            DateTime start_time = DateTime.Now;
-
-            string output_format = "jpg";
-            if (output_filename.Contains("."))
+            if (cam != null)
             {
-                string[] str = output_filename.Split('.');
-                output_filename = str[0];
-                output_format = str[1];
+                // dispose camera objects
+                for (int i = 0; i < no_of_cameras; i++)
+                    if (cam[i] != null) cam[i].Dispose();
+                cam = null;
             }
+        }
 
-            // create camera objects
-            for (int i = no_of_cameras-1; i >= 0; i--)
+        /// <summary>
+        /// grabs images from the cameras
+        /// </summary>
+        public void Grab()
+        {
+            if (cam != null)
             {
-                preview[i] = new PictureBox();
-                StartCamera(image_width, image_height, ref cam, directshow_filter_index, camera_filter_index, ref preview, i, exposure, auto_exposure);
-            }
-
-            TimeSpan setup_time = DateTime.Now.Subtract(start_time);
-#if SHOW_TIMING 
-            Console.WriteLine("Setup time: " + setup_time.TotalMilliseconds.ToString() + " mS");
-#endif
-
-            ulong prev_itt = 0;
-            ulong itteration = 0;
-            start_time = DateTime.Now;
-            bool finished = false;
-            int start_camera_index = 0;
-            while (!finished)
-            {
-                Console.Write(".");
                 if (no_of_cameras > 1)
                 {
-                    //for (int i = 0; i < no_of_cameras - 1; i += 2)
-                    {
-                        string filename = output_filename;
-                        if (no_of_captures != 1) filename += itteration + "_";
-                        if (no_of_cameras > 2) filename += start_camera_index.ToString() + (start_camera_index + 1).ToString() + "_";
-                        CaptureFrames(cam[start_camera_index], cam[start_camera_index + 1], initial_frames, filename, output_format, m_ip[start_camera_index], m_ip[start_camera_index + 1]);
-                    }
+                    string filename = output_filename;
+                    if (no_of_cameras > 2) filename += start_camera_index.ToString() + (start_camera_index + 1).ToString() + "_";
+                    CaptureFrames(cam[start_camera_index], cam[start_camera_index + 1], initial_frames, filename, output_format, m_ip[start_camera_index], m_ip[start_camera_index + 1], ref left_image_filename, ref right_image_filename);
+
                     start_camera_index += 2;
                     if (start_camera_index >= no_of_cameras) start_camera_index = 0;
                 }
                 else
                 {
                     string filename = output_filename;
-                    if (no_of_captures != 1) filename += itteration + "_";
                     CaptureFrame(cam[0], initial_frames, filename, output_format, m_ip[0]);
                 }
 
-                itteration++;
-                if ((no_of_captures > 0) &&
-                    (itteration >= (ulong)no_of_captures))
-                {
-                    finished = true;
-                }
-                else
-                {
-                    //for (int i = 0; i < 50; i++) Thread.Sleep(2);
-
-                    // wait for a while
-                    ulong itt = prev_itt;
-                    while (itt <= prev_itt)
-                    {
-                        TimeSpan diff = DateTime.Now.Subtract(start_time);
-                        itt = (ulong)(diff.TotalMilliseconds / capture_interval_mS);
-                        Thread.Sleep(5);
-                    }
-                    prev_itt = itt;
-                }
             }
-            Console.WriteLine("");
-
-            TimeSpan capture_time = DateTime.Now.Subtract(start_time);
-#if SHOW_CAPTURE_TIME
-            Console.WriteLine("Capture time: " + capture_time.TotalMilliseconds.ToString() + " mS");
-#endif
-            start_time = DateTime.Now;
-
-            // dispose camera objects
-            for (int i = 0; i < no_of_cameras; i++)
-                if (cam[i] != null) cam[i].Dispose();
-
-            TimeSpan close_time = DateTime.Now.Subtract(start_time);
-#if SHOW_TIMING
-            Console.WriteLine("Close time: " + close_time.TotalMilliseconds.ToString() + " mS");
-#endif
-        }
+        }  
 
         /// <summary>
         /// grabs frames from two cameras
         /// </summary>
-        private static void CaptureFrames(
-            Capture cam0,
-            Capture cam1,
+        protected static void CaptureFrames(
+            WebcamVisionDirectShowCapture cam0,
+            WebcamVisionDirectShowCapture cam1,
             int initial_frames,
             string output_filename,
             string output_format,
             IntPtr m_ip0,
-            IntPtr m_ip1)
+            IntPtr m_ip1,
+            ref string left_image_filename,
+            ref string right_image_filename)
         {
             const int step_size = 5; // when checking if frames are blank
 
@@ -216,7 +205,7 @@ namespace sluggish.winwebcam
 
                 for (int i = 0; i < 2; i++)
                 {
-                    Capture cam = cam0;
+                    WebcamVisionDirectShowCapture cam = cam0;
                     if (i > 0) cam = cam1;
 
                     // start rolling the cameras
@@ -265,7 +254,7 @@ namespace sluggish.winwebcam
                             if (!is_blank1) break;
                         }
                     }
-                } );
+                });
 
                 if ((grabbed_image0 != null) &&
                     (grabbed_image1 != null))
@@ -275,13 +264,23 @@ namespace sluggish.winwebcam
                     if (output_format == "bmp") format = System.Drawing.Imaging.ImageFormat.Bmp;
                     if (output_format == "png") format = System.Drawing.Imaging.ImageFormat.Png;
                     if (output_format == "gif") format = System.Drawing.Imaging.ImageFormat.Gif;
-                    grabbed_image0.Save(output_filename + "0." + output_format, format);
-                    grabbed_image1.Save(output_filename + "1." + output_format, format);
+                    left_image_filename = output_filename + "0." + output_format;
+                    right_image_filename = output_filename + "1." + output_format;
+                    try
+                    {
+                        grabbed_image0.Save(left_image_filename, format);
+                        grabbed_image1.Save(right_image_filename, format);
+                    }
+                    catch
+                    {
+                        left_image_filename = "";
+                        right_image_filename = "";
+                    }
                 }
 
                 for (int i = 0; i < 2; i++)
                 {
-                    Capture cam = cam0;
+                    WebcamVisionDirectShowCapture cam = cam0;
                     if (i > 0) cam = cam1;
 
                     // stop the camera
@@ -293,8 +292,8 @@ namespace sluggish.winwebcam
         /// <summary>
         /// grabs a frame from the camera
         /// </summary>
-        private static void CaptureFrame(
-            Capture cam,
+        protected static void CaptureFrame(
+            WebcamVisionDirectShowCapture cam,
             int initial_frames,
             string output_filename,
             string output_format,
@@ -341,10 +340,10 @@ namespace sluggish.winwebcam
             }
         }
 
-        private static void StartCamera(
+        protected static void StartCamera(
             int image_width,
             int image_height,
-            ref Capture[] cam,
+            ref WebcamVisionDirectShowCapture[] cam,
             int[] directshow_filter_index,
             int[] camera_filter_index,
             ref PictureBox[] preview,
@@ -352,7 +351,7 @@ namespace sluggish.winwebcam
             int exposure,
             bool auto_exposure)
         {
-            cam[index] = new Capture(directshow_filter_index[camera_filter_index[index]], image_width, image_height, preview[index], true);
+            cam[index] = new WebcamVisionDirectShowCapture(directshow_filter_index[camera_filter_index[index]], image_width, image_height, preview[index], true);
             if (cam[index] != null)
             {
                 if (!cam[index].Active)
@@ -364,7 +363,7 @@ namespace sluggish.winwebcam
                     cam[index].Dispose();
 
                     // then try again
-                    cam[index] = new Capture(directshow_filter_index[camera_filter_index[index]], image_width, image_height, preview[index], false);
+                    cam[index] = new WebcamVisionDirectShowCapture(directshow_filter_index[camera_filter_index[index]], image_width, image_height, preview[index], false);
                 }
 
                 if (cam[index] != null)
@@ -380,11 +379,11 @@ namespace sluggish.winwebcam
             }
         }
 
-        private static int[] GetFilterIndexes()
+        protected static int[] GetFilterIndexes()
         {
             List<int> filter_indexes = new List<int>();
 
-            string[] filter_names = Capture.GetDeviceNames();
+            string[] filter_names = WebcamVisionDirectShowCapture.GetDeviceNames();
             if (filter_names != null)
             {
                 for (int i = 0; i < filter_names.Length; i++)
@@ -408,12 +407,12 @@ namespace sluggish.winwebcam
         }
 
         /// <summary>
-        /// is teh given bitmap a blank frame ?
+        /// is the given bitmap a blank frame ?
         /// </summary>
         /// <param name="bmp">bitmap object</param>
         /// <param name="step_size">sampling step size</param>
         /// <returns>true if blank</returns>
-        private static bool IsBlankFrame(Bitmap bmp, int step_size)
+        protected static bool IsBlankFrame(Bitmap bmp, int step_size)
         {
             bool is_blank = true;
             if (bmp != null)

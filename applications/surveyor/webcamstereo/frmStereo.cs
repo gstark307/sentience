@@ -28,15 +28,18 @@ using System.Windows.Forms;
 using surveyor.vision;
 using sluggish.utilities;
 
-namespace surveyorstereo
+namespace surveyor.vision
 {
-    public partial class frmStereo : Form
+    public partial class frmStereo : FormStereo
     {
         int image_width = 320;
         int image_height = 240;
         string stereo_camera_IP = "169.254.0.10";
         string calibration_filename = "calibration.xml";
-        SurveyorVisionStereoWin stereo_camera;
+        int left_camera_device_index = 1;
+        int right_camera_device_index = 3;
+        WebcamVisionStereoWin stereo_camera;
+        int frames_per_sec = 1;
 
         public frmStereo()
         {
@@ -50,7 +53,7 @@ namespace surveyorstereo
 
         public void Init()
         {
-            stereo_camera = new SurveyorVisionStereoWin(stereo_camera_IP, 10001, 10002, 10010);
+            stereo_camera = new WebcamVisionStereoWin(left_camera_device_index.ToString(), right_camera_device_index.ToString(), 10010, frames_per_sec);
             stereo_camera.window = this;
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;
@@ -246,6 +249,24 @@ namespace surveyorstereo
                         File.Copy(calibration_filename, save_calibration_file.FileName);
                 }
             }
+        }
+
+        /// <summary>
+        /// updates left image
+        /// </summary>
+        /// <param name="left"></param>
+        public override void UpdateLeftImage(PictureBox left)
+        {
+            picLeftImage.Image = left.Image;
+        }
+
+        /// <summary>
+        /// updates right image
+        /// </summary>
+        /// <param name="right"></param>
+        public override void UpdateRightImage(PictureBox right)
+        {
+            picRightImage.Image = right.Image;
         }
 
     }

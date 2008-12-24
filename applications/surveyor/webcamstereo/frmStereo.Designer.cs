@@ -1,6 +1,6 @@
-namespace surveyorstereo
+namespace surveyor.vision
 {
-    partial class frmStereo
+    partial class frmStereo : FormStereo
     {
         /// <summary>
         /// Required designer variable.

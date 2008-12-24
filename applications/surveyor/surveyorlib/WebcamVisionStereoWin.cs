@@ -18,6 +18,8 @@
 */
 
 using System;
+using System.IO;
+using System.Diagnostics;
 using System.Threading;
 using System.Drawing;
 using System.ComponentModel;
@@ -56,7 +58,7 @@ namespace surveyor.vision
         // images used for display
         public PictureBox[] display_image;
         public PictureBox calibration_image;
-        public Form window;
+        public FormStereo window;
         private byte[] buffer = null;
         private double prev_minimum_rms_error;
 
@@ -161,6 +163,8 @@ namespace surveyor.vision
 
                 if (window != null)
                 {
+                    //window.UpdateLeftImage(display_image[0]);
+                    
                     try
                     {
                         window.Invoke((MethodInvoker)delegate
@@ -187,6 +191,7 @@ namespace surveyor.vision
                     catch
                     {
                     }
+                    
                 }
             }
 
@@ -219,6 +224,9 @@ namespace surveyor.vision
 
                 if (window != null)
                 {
+                    //window.UpdateRightImage(display_image[1]);
+
+                    
                     try
                     {
                         window.Invoke((MethodInvoker)delegate
@@ -245,6 +253,7 @@ namespace surveyor.vision
                     catch
                     {
                     }
+                    
                 }
             }
             
@@ -257,6 +266,189 @@ namespace surveyor.vision
 
 
         #endregion
+
+        #region "grabbing images"
+
+        WebcamVisionDirectShow dsCameras;
+
+        /// <summary>
+        /// grab a images using DirectShow
+        /// </summary>
+        public override void Grab()
+        {
+            string filename = "capture";
+
+            // append temporary files path if specified
+            if ((temporary_files_path != null) &&
+                (temporary_files_path != ""))
+            {
+                if (temporary_files_path.EndsWith("\\"))
+                    filename = temporary_files_path + filename;
+                else
+                    filename = temporary_files_path + "\\" + filename;
+            }
+
+            // Extract numbers from the camera device names
+            // This is ised to uniquely identify devices so that
+            // potentially more than one stereo camera could be running
+            // at the same time
+            string identifier = "";
+            for (int cam = 0; cam < 2; cam++)
+            {
+                char[] ch = camera_device[cam].ToCharArray();
+                for (int i = 0; i < ch.Length; i++)
+                {
+                    if ((ch[i] >= '0') && (ch[i] <= '9'))
+                        identifier += ch[i];
+                }
+            }
+            filename += identifier;
+
+            if (dsCameras == null)
+            {
+                dsCameras = new WebcamVisionDirectShow();
+                dsCameras.camera_devices = camera_device[0] + "," + camera_device[1];
+                dsCameras.image_width = image_width;
+                dsCameras.image_height = image_height;
+                dsCameras.Open();
+            }
+
+            if (dsCameras.left_image_filename != null)
+            {
+                // delete any existing images
+                if (File.Exists(dsCameras.left_image_filename))
+                {
+                    try
+                    {
+                        File.Delete(dsCameras.left_image_filename);
+                    }
+                    catch
+                    {
+                    }
+                }
+                if (File.Exists(dsCameras.right_image_filename))
+                {
+                    try
+                    {
+                        File.Delete(dsCameras.right_image_filename);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+
+            // acquire new images
+            dsCameras.Grab();
+
+            if (dsCameras.left_image_filename != null)
+            {
+                // wait for the file to appear
+                const int timeout_mS = 500;
+                DateTime start_time = DateTime.Now;
+                int seconds_elapsed = 0;
+                while (((!File.Exists(dsCameras.left_image_filename)) ||
+                        (!File.Exists(dsCameras.right_image_filename))) &&
+                       (seconds_elapsed < timeout_mS))
+                {
+                    System.Threading.Thread.Sleep(50);
+                    TimeSpan diff = DateTime.Now.Subtract(start_time);
+                    seconds_elapsed = (int)diff.TotalMilliseconds;
+                }
+
+                if ((File.Exists(dsCameras.left_image_filename)) &&
+                    (File.Exists(dsCameras.right_image_filename)))
+                {
+                    // grab the data from the captured images
+                    Bitmap[] bmp = new Bitmap[2];
+
+                    for (int cam = 0; cam < 2; cam++)
+                    {
+                        try
+                        {
+                            if (cam == 0)
+                                bmp[cam] = (Bitmap)Bitmap.FromFile(dsCameras.left_image_filename);
+                            else
+                                bmp[cam] = (Bitmap)Bitmap.FromFile(dsCameras.right_image_filename);
+                        }
+                        catch
+                        {
+                            bmp[cam] = null;
+                        }
+                        if (bmp[cam] == null) break;
+
+                        image_width = bmp[cam].Width;
+                        image_height = bmp[cam].Height;
+
+                        byte[] raw_image_data = new byte[image_width * image_height * 3];
+                        BitmapArrayConversions.updatebitmap(bmp[cam], raw_image_data);
+                    }
+
+                    if ((bmp[0] != null) && (bmp[1] != null))
+                    {
+                        if (calibration_pattern != null)
+                        {
+                            if (!show_left_image)
+                                SurveyorCalibration.DetectDots(bmp[0], ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
+                            else
+                                SurveyorCalibration.DetectDots(bmp[1], ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
+                        }
+
+                        RectifyImages(bmp[0], bmp[1]);
+
+                        Process(bmp[0], bmp[1]);
+
+                        // save images to file
+                        if (Record)
+                        {
+                            string path = "";
+                            if ((recorded_images_path != null) &&
+                                (recorded_images_path != ""))
+                            {
+                                if (recorded_images_path.EndsWith("\\"))
+                                    path = recorded_images_path;
+                                else
+                                    path = recorded_images_path + "\\";
+                            }
+
+                            RecordFrameNumber++;
+                            bmp[0].Save(path + "raw" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            bmp[1].Save(path + "raw" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            if ((rectified[0] != null) && (rectified[0] != null))
+                            {
+                                rectified[0].Save(path + "rectified" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                                rectified[1].Save(path + "rectified" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < 2; i++)
+                            if (bmp[i] == null) Console.WriteLine("Warning: Did not acquire image from " + camera_device[i]);
+                    }
+
+                }
+                else
+                {
+                    if (!File.Exists(dsCameras.left_image_filename))
+                        Console.WriteLine("File not found " + dsCameras.left_image_filename);
+                    if (!File.Exists(dsCameras.right_image_filename))
+                        Console.WriteLine("File not found " + dsCameras.right_image_filename);
+                }
+
+            }
+
+            if (next_camera != null)
+            {
+                active_camera = false;
+                Pause();
+                next_camera.active_camera = true;
+                next_camera.Resume();
+            }
+        }
+
+        #endregion
+
 
     }
 }

@@ -86,7 +86,7 @@ namespace sluggish.winwebcam
                 string no_of_captures_str = commandline.GetParameterValue("cap", parameters);
                 if (no_of_captures_str != "") no_of_captures = Convert.ToInt32(no_of_captures_str);
 
-                int capture_interval_mS = 1000;
+                int capture_interval_mS = 500;
                 string capture_interval_mS_str = commandline.GetParameterValue("delay", parameters);
                 if (capture_interval_mS_str != "") capture_interval_mS = Convert.ToInt32(capture_interval_mS_str);
 
@@ -115,6 +115,7 @@ namespace sluggish.winwebcam
             ValidParameters.Add("save");
             ValidParameters.Add("cap");
             ValidParameters.Add("delay");
+            ValidParameters.Add("port");
             return (ValidParameters);
         }
 
@@ -141,6 +142,7 @@ namespace sluggish.winwebcam
             Console.WriteLine("         -save <filename to save the captured image as>");
             Console.WriteLine("         -cap <number of sets of images to capture (0 = inifinite)>");
             Console.WriteLine("         -delay <time between captures in mS>");
+            Console.WriteLine("         -port <port number>");
         }
 
         #endregion

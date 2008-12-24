@@ -88,7 +88,7 @@ namespace surveyor.vision
 
         #region "callbacks"
         
-        private void FrameGrabCallback(object state)
+        protected void FrameGrabCallback(object state)
         {
             // pause or resume grabbing frames from the cameras
             if (correspondence != null)
@@ -292,7 +292,7 @@ namespace surveyor.vision
         
         #region "starting and stopping"
 
-        private WebcamVisionThreadGrabFrameMulti grab_frames;
+        protected WebcamVisionThreadGrabFrameMulti grab_frames;
 
         public override void Run()
         {
