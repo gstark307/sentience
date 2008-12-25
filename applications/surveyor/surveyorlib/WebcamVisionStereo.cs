@@ -110,13 +110,10 @@ namespace surveyor.vision
             }
         }
 
-        /// <summary>
-        /// grab a images using the fswebcam utility
-        /// </summary>
-        public virtual void Grab()
+        protected void GrabLinux()
         {
             string filename = "capture";
-            
+
             // append temporary files path if specified
             if ((temporary_files_path != null) &&
                 (temporary_files_path != ""))
@@ -126,7 +123,7 @@ namespace surveyor.vision
                 else
                     filename = temporary_files_path + "/" + filename;
             }
-            
+
             // Extract numbers from the camera device names
             // This is ised to uniquely identify devices so that
             // potentially more than one stereo camera could be running
@@ -134,7 +131,7 @@ namespace surveyor.vision
             string identifier = "";
             for (int cam = 0; cam < 2; cam++)
             {
-                char[] ch = camera_device[cam].ToCharArray();            
+                char[] ch = camera_device[cam].ToCharArray();
                 for (int i = 0; i < ch.Length; i++)
                 {
                     if ((ch[i] >= '0') && (ch[i] <= '9'))
@@ -142,23 +139,23 @@ namespace surveyor.vision
                 }
             }
             filename += identifier;
-            
+
             string command_str = "fswebcam -q -d " + camera_device[0] + "," + camera_device[1];
             command_str += " -r " + image_width.ToString() + "x" + image_height.ToString();
             command_str += " --no-banner";
             command_str += " -S " + skip_frames.ToString();
             if (exposure > 0) command_str += " -s brightness=" + exposure.ToString() + "%";
             command_str += " --save " + filename + "_.jpg";
-            
+
             //Console.WriteLine("");
             //Console.WriteLine("");
             //Console.WriteLine(command_str);
             //Console.WriteLine("");
             //Console.WriteLine("");
-            
+
             string left_image_filename = filename + "_0.jpg";
             string right_image_filename = filename + "_1.jpg";
-            
+
             // delete any existing images
             for (int cam = 0; cam < 2; cam++)
             {
@@ -173,7 +170,7 @@ namespace surveyor.vision
                     }
                 }
             }
-            
+
             bool command_succeeded = false;
             Process proc = new Process();
             proc.EnableRaisingEvents = false;
@@ -194,7 +191,7 @@ namespace surveyor.vision
             else
             {
                 //proc.WaitForExit();
-                proc.Close();          
+                proc.Close();
 
                 // wait for the file to appear
                 const int timeout_secs = 10;
@@ -214,7 +211,7 @@ namespace surveyor.vision
                 {
                     // grab the data from the captured images
                     Bitmap[] bmp = new Bitmap[2];
-                    
+
                     for (int cam = 0; cam < 2; cam++)
                     {
                         try
@@ -226,14 +223,14 @@ namespace surveyor.vision
                             bmp[cam] = null;
                         }
                         if (bmp[cam] == null) break;
-                        
+
                         image_width = bmp[cam].Width;
                         image_height = bmp[cam].Height;
-                        
+
                         byte[] raw_image_data = new byte[image_width * image_height * 3];
                         BitmapArrayConversions.updatebitmap(bmp[cam], raw_image_data);
                     }
-                    
+
                     if ((bmp[0] != null) && (bmp[1] != null))
                     {
                         if (calibration_pattern != null)
@@ -245,9 +242,9 @@ namespace surveyor.vision
                         }
 
                         RectifyImages(bmp[0], bmp[1]);
-                                             
+
                         Process(bmp[0], bmp[1]);
-                        
+
                         // save images to file
                         if (Record)
                         {
@@ -260,7 +257,7 @@ namespace surveyor.vision
                                 else
                                     path = recorded_images_path + "/";
                             }
-                        
+
                             RecordFrameNumber++;
                             bmp[0].Save(path + "raw" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             bmp[1].Save(path + "raw" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -283,18 +280,26 @@ namespace surveyor.vision
                     if (!File.Exists(left_image_filename))
                         Console.WriteLine("File not found " + left_image_filename + ".");
                     if (!File.Exists(right_image_filename))
-                        Console.WriteLine("File not found " + right_image_filename + ".");                        
+                        Console.WriteLine("File not found " + right_image_filename + ".");
                 }
 
             }
-            
+
             if (next_camera != null)
             {
                 active_camera = false;
                 Pause();
                 next_camera.active_camera = true;
                 next_camera.Resume();
-            }            
+            }
+        }
+
+        /// <summary>
+        /// grab a images using the fswebcam utility
+        /// </summary>
+        public virtual void Grab()
+        {
+            GrabLinux();
         }
         
         #endregion

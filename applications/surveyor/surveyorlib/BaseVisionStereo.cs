@@ -30,7 +30,6 @@ namespace surveyor.vision
     {
         protected int broadcast_port_number;
         public float fps = 10;
-        public float phase; // frame capture phase offset in the range 0.0 - 1.0
         public int stereo_camera_index = 0;
         public bool endless_thread = true;
         public int wait_for_grab_mS = 500;

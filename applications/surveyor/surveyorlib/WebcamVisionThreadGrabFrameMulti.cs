@@ -84,40 +84,29 @@ namespace surveyor.vision
                     {
                         DateTime start_time = DateTime.Now;
 
-                        Thread.Sleep(20);
-
                         state.Grab();
                         _callback(_data);
                         grabbed = true;
 
-                        // calculate the phase offset, relative to some reference time in the ancient past
-                        //TimeSpan reference_diff = start_time.Subtract(reference_time);
-                        //double reference_phase = reference_diff.TotalMilliseconds / time_step_mS;
-                        //long reference_phase2 = (int)reference_phase;
-                        //if (reference_phase2 > reference_phase) reference_phase2 -= 1;
-
-                        // phase error
-                        double phase_error_mS = 0; // (state.phase * time_step_mS) - (reference_phase - reference_phase2);
-
                         TimeSpan diff = DateTime.Now.Subtract(start_time);
 
-                        while ((diff.TotalMilliseconds < time_step_mS + phase_error_mS) &&
+                        while ((diff.TotalMilliseconds < time_step_mS) &&
                                (state.Running))
                         {
                             diff = DateTime.Now.Subtract(start_time);
-                            Thread.Sleep(2);
+                            Thread.Sleep(10);
                         }
 
                     }
                     else
                     {
-                        Thread.Sleep(20);
+                        Thread.Sleep(10);
                     }
                 }
                 else
                 {
-                    for (int i = 0; i < 100; i++)
-                        Thread.Sleep(5);
+                    //for (int i = 0; i < 100; i++)
+                    //    Thread.Sleep(5);
 
                     _callback(_data);
                 }

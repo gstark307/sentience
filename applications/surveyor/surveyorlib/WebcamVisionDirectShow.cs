@@ -41,6 +41,7 @@ namespace surveyor.vision
         public int exposure = 0;
         public int no_of_cameras = 1;
         public int stereo_camera_index = -1;
+        public bool save_images = false;
 
         protected int start_camera_index = 0;
         protected string output_format;
@@ -50,8 +51,17 @@ namespace surveyor.vision
         protected IntPtr[] m_ip;
         protected PictureBox[] preview;
 
+        // filenames which images were saved to
         public string left_image_filename;
         public string right_image_filename;
+
+        // bitmaps captured
+        public Bitmap left_image_bitmap;
+        public Bitmap right_image_bitmap;
+
+        // times when images were captured
+        public DateTime left_image_capture;
+        public DateTime right_image_capture;
 
         /// <summary>
         /// destructor
@@ -159,7 +169,20 @@ namespace surveyor.vision
                     string filename = output_filename;
                     if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
                     if (no_of_cameras > 2) filename += start_camera_index.ToString() + (start_camera_index + 1).ToString() + "_";
-                    CaptureFrames(cam[start_camera_index], cam[start_camera_index + 1], initial_frames, filename, output_format, m_ip[start_camera_index], m_ip[start_camera_index + 1], ref left_image_filename, ref right_image_filename);
+                    CaptureFrames(
+                        cam[start_camera_index], 
+                        cam[start_camera_index + 1], 
+                        initial_frames, filename, 
+                        output_format, 
+                        m_ip[start_camera_index], 
+                        m_ip[start_camera_index + 1], 
+                        save_images,
+                        ref left_image_filename, 
+                        ref right_image_filename, 
+                        ref left_image_bitmap, 
+                        ref right_image_bitmap,
+                        ref left_image_capture,
+                        ref right_image_capture);
 
                     start_camera_index += 2;
                     if (start_camera_index >= no_of_cameras) start_camera_index = 0;
@@ -185,10 +208,17 @@ namespace surveyor.vision
             string output_format,
             IntPtr m_ip0,
             IntPtr m_ip1,
+            bool save_images,
             ref string left_image_filename,
-            ref string right_image_filename)
+            ref string right_image_filename,
+            ref Bitmap left_image_bitmap,
+            ref Bitmap right_image_bitmap,
+            ref DateTime left_image_capture,
+            ref DateTime right_image_capture)
         {
             const int step_size = 5; // when checking if frames are blank
+            left_image_bitmap = null;
+            right_image_bitmap = null;
 
             if ((cam0 != null) && (cam1 != null))
             {
@@ -223,6 +253,8 @@ namespace surveyor.vision
                 Bitmap grabbed_image1 = null;
                 bool is_blank0 = true;
                 bool is_blank1 = true;
+                DateTime left_image_cap = DateTime.Now;
+                DateTime right_image_cap = DateTime.Now;
                 Parallel.For(0, 2, delegate(int j)
                 {
                     for (int i = 0; i < initial_frames + 1; i++)
@@ -238,6 +270,7 @@ namespace surveyor.vision
                             }
                              */
 
+                            left_image_cap = DateTime.Now;
                             grabbed_image0 = cam0.Grab(ref m_ip0, true);
                             is_blank0 = IsBlankFrame(grabbed_image0, step_size);
                             if (!is_blank0) break;
@@ -252,12 +285,16 @@ namespace surveyor.vision
                             }
                              */
 
+                            right_image_cap = DateTime.Now;
                             grabbed_image1 = cam1.Grab(ref m_ip1, true);
                             is_blank1 = IsBlankFrame(grabbed_image1, step_size);
                             if (!is_blank1) break;
                         }
                     }
                 });
+
+                left_image_capture = left_image_cap;
+                right_image_capture = right_image_cap;
 
                 if ((grabbed_image0 != null) &&
                     (grabbed_image1 != null))
@@ -267,12 +304,17 @@ namespace surveyor.vision
                     if (output_format == "bmp") format = System.Drawing.Imaging.ImageFormat.Bmp;
                     if (output_format == "png") format = System.Drawing.Imaging.ImageFormat.Png;
                     if (output_format == "gif") format = System.Drawing.Imaging.ImageFormat.Gif;
+                    left_image_bitmap = grabbed_image0;
+                    right_image_bitmap = grabbed_image1; 
                     left_image_filename = output_filename + "0." + output_format;
                     right_image_filename = output_filename + "1." + output_format;
                     try
                     {
-                        grabbed_image0.Save(left_image_filename, format);
-                        grabbed_image1.Save(right_image_filename, format);
+                        if (save_images)
+                        {
+                            grabbed_image0.Save(left_image_filename, format);
+                            grabbed_image1.Save(right_image_filename, format);
+                        }
                     }
                     catch
                     {

@@ -210,7 +210,6 @@ namespace stereoserver
                         stereo_camera.temporary_files_path = ramdisk;
                         stereo_camera.recorded_images_path = record_path;                                                
                         stereo_camera.SetPauseFile(pause_file);
-                        stereo_camera.phase = 0.0f;
                         stereo_camera.stereo_camera_index = -1;
                         stereo_camera.Run();                        
                         if (stereo_camera2 != null)
@@ -221,7 +220,6 @@ namespace stereoserver
                             stereo_camera2.stereo_camera_index = 1;
                             stereo_camera.active_camera = true;
                             stereo_camera2.active_camera = false;
-                            stereo_camera2.phase = 0.5f;
                             stereo_camera2.Record = record;
                             stereo_camera2.temporary_files_path = ramdisk;
                             stereo_camera2.recorded_images_path = record_path;
