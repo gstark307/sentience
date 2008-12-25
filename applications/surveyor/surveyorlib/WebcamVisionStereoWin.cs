@@ -58,7 +58,7 @@ namespace surveyor.vision
         // images used for display
         public PictureBox[] display_image;
         public PictureBox calibration_image;
-        public FormStereo window;
+        public Form window;
         private byte[] buffer = null;
         private double prev_minimum_rms_error;
 
@@ -165,6 +165,7 @@ namespace surveyor.vision
                 {
                     //window.UpdateLeftImage(display_image[0]);
                     
+                    
                     try
                     {
                         window.Invoke((MethodInvoker)delegate
@@ -253,6 +254,7 @@ namespace surveyor.vision
                     catch
                     {
                     }
+                     
                     
                 }
             }

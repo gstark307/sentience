@@ -1,4 +1,4 @@
-﻿namespace surveyorlib
+﻿namespace surveyor.vision
 {
     partial class FormStereo
     {

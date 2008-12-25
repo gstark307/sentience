@@ -25,12 +25,13 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 using surveyor.vision;
 using sluggish.utilities;
 
 namespace surveyor.vision
 {
-    public partial class frmStereo : FormStereo
+    public partial class frmStereo : Form
     {
         int image_width = 320;
         int image_height = 240;
@@ -46,12 +47,10 @@ namespace surveyor.vision
             InitializeComponent();
 
             picLeftImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-
-            Init();
+            picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);            
         }
 
-        public void Init()
+        private void InitCameras()
         {
             stereo_camera = new WebcamVisionStereoWin(left_camera_device_index.ToString(), right_camera_device_index.ToString(), 10010, frames_per_sec);
             stereo_camera.window = this;
@@ -59,6 +58,11 @@ namespace surveyor.vision
             stereo_camera.display_image[1] = picRightImage;
             stereo_camera.Load(calibration_filename);
             stereo_camera.Run();
+        }
+
+        public void Init()
+        {
+            InitCameras();
 
             if (stereo_camera.stereo_algorithm_type == StereoVision.SIMPLE)
             {
@@ -96,7 +100,7 @@ namespace surveyor.vision
 
         private void frmStereo_ResizeEnd(object sender, EventArgs e)
         {
-            //ResizeControls();
+            ResizeControls();
         }
 
         private void frmStereo_SizeChanged(object sender, EventArgs e)
@@ -251,6 +255,12 @@ namespace surveyor.vision
             }
         }
 
+        private void frmStereo_Load(object sender, EventArgs e)
+        {
+            Init();
+        }
+
+        /*
         /// <summary>
         /// updates left image
         /// </summary>
@@ -268,6 +278,7 @@ namespace surveyor.vision
         {
             picRightImage.Image = right.Image;
         }
+         */
 
     }
 }

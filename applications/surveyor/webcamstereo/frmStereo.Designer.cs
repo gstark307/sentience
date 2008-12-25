@@ -1,6 +1,6 @@
 namespace surveyor.vision
 {
-    partial class frmStereo : FormStereo
+    partial class frmStereo
     {
         /// <summary>
         /// Required designer variable.
@@ -30,6 +30,8 @@ namespace surveyor.vision
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveCalibrationFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveCalibrationPatternToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrateLeftCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -41,8 +43,6 @@ namespace surveyor.vision
             this.denseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
-            this.saveCalibrationPatternToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveCalibrationFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -70,10 +70,24 @@ namespace surveyor.vision
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
+            // saveCalibrationFileToolStripMenuItem
+            // 
+            this.saveCalibrationFileToolStripMenuItem.Name = "saveCalibrationFileToolStripMenuItem";
+            this.saveCalibrationFileToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.saveCalibrationFileToolStripMenuItem.Text = "Save calibration file";
+            this.saveCalibrationFileToolStripMenuItem.Click += new System.EventHandler(this.saveCalibrationFileToolStripMenuItem_Click);
+            // 
+            // saveCalibrationPatternToolStripMenuItem
+            // 
+            this.saveCalibrationPatternToolStripMenuItem.Name = "saveCalibrationPatternToolStripMenuItem";
+            this.saveCalibrationPatternToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.saveCalibrationPatternToolStripMenuItem.Text = "Save calibration image";
+            this.saveCalibrationPatternToolStripMenuItem.Click += new System.EventHandler(this.saveCalibrationPatternToolStripMenuItem_Click);
+            // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
@@ -157,20 +171,6 @@ namespace surveyor.vision
             this.picRightImage.TabIndex = 2;
             this.picRightImage.TabStop = false;
             // 
-            // saveCalibrationPatternToolStripMenuItem
-            // 
-            this.saveCalibrationPatternToolStripMenuItem.Name = "saveCalibrationPatternToolStripMenuItem";
-            this.saveCalibrationPatternToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
-            this.saveCalibrationPatternToolStripMenuItem.Text = "Save calibration image";
-            this.saveCalibrationPatternToolStripMenuItem.Click += new System.EventHandler(this.saveCalibrationPatternToolStripMenuItem_Click);
-            // 
-            // saveCalibrationFileToolStripMenuItem
-            // 
-            this.saveCalibrationFileToolStripMenuItem.Name = "saveCalibrationFileToolStripMenuItem";
-            this.saveCalibrationFileToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
-            this.saveCalibrationFileToolStripMenuItem.Text = "Save calibration file";
-            this.saveCalibrationFileToolStripMenuItem.Click += new System.EventHandler(this.saveCalibrationFileToolStripMenuItem_Click);
-            // 
             // frmStereo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -182,6 +182,7 @@ namespace surveyor.vision
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmStereo";
             this.Text = "Surveyor Stereo Vision Test";
+            this.Load += new System.EventHandler(this.frmStereo_Load);
             this.SizeChanged += new System.EventHandler(this.frmStereo_SizeChanged);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmStereo_FormClosing);
             this.ResizeEnd += new System.EventHandler(this.frmStereo_ResizeEnd);

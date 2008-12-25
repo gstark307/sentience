@@ -62,62 +62,60 @@ namespace surveyor.vision
         /// </summary>
         /// <param name="state">vision state</param>
         private void Update(WebcamVisionStereo state)
-        {   
+        {
             int time_step_mS = (int)(1000 / state.fps);
             bool grabbed = false;
-        
-            while(state.Running)
+
+            time_step_mS = (int)(1000 / state.fps);
+
+            DateTime last_called = DateTime.Now;
+
+            if (!Pause)
             {
-                time_step_mS = (int)(1000 / state.fps);
-                                
-                DateTime last_called = DateTime.Now;
-                
-                if (!Pause)
+                // grab images
+                if (state.active_camera)
                 {
-                    // grab images
-                    if (state.active_camera)
-                    {
-                        DateTime start_time = DateTime.Now;
-                    
-                        state.Grab();
-                        _callback(_data);
-                        grabbed = true;
+                    DateTime start_time = DateTime.Now;
 
-                        // calculate the phase offset, relative to some reference time in the ancient past
-                        TimeSpan diff = DateTime.Now.Subtract(start_time);
+                    state.Grab();
+                    _callback(_data);
+                    grabbed = true;
 
-                        while ((diff.TotalMilliseconds < time_step_mS) && 
-                               (state.Running))
-                        {
-                            diff = DateTime.Now.Subtract(start_time);
-                            Thread.Sleep(20);
-                        }
-                    }
-                    else
+                    // calculate the phase offset, relative to some reference time in the ancient past
+
+                    TimeSpan diff = DateTime.Now.Subtract(start_time);
+
+                    while ((diff.TotalMilliseconds < time_step_mS) &&
+                           (state.Running))
                     {
+                        diff = DateTime.Now.Subtract(start_time);
                         Thread.Sleep(20);
-                    }                    
+                    }
+
                 }
                 else
                 {
-                    for (int i = 0; i < 100; i++)                    
-                        Thread.Sleep(5);
-                        
-                    _callback(_data);
+                    Thread.Sleep(20);
                 }
-                
-                if (grabbed)
+            }
+            else
+            {
+                for (int i = 0; i < 100; i++)
+                    Thread.Sleep(5);
+
+                _callback(_data);
+            }
+
+            if (grabbed)
+            {
+                if ((PauseFile != null) &&
+                    (PauseFile != ""))
                 {
-	                if ((PauseFile != null) &&
-	                    (PauseFile != ""))
-	                {
-		                if (File.Exists(PauseFile))
-		                    Pause = true;
-		                else
-		                    Pause = false;
-	                }
+                    if (File.Exists(PauseFile))
+                        Pause = true;
+                    else
+                        Pause = false;
                 }
-                
             }
         }
     }

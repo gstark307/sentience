@@ -88,8 +88,9 @@ namespace surveyor.vision
 
         #region "callbacks"
         
-        protected void FrameGrabCallback(object state)
+        protected virtual void FrameGrabCallback(object state)
         {
+            
             // pause or resume grabbing frames from the cameras
             if (correspondence != null)
             {
@@ -99,6 +100,11 @@ namespace surveyor.vision
                 else
                     grab_frames.Pause = true;
             }
+
+            sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
+            sync_thread.Priority = ThreadPriority.Normal;
+            sync_thread.IsBackground = true;
+            sync_thread.Start();
         }
 
         /// <summary>
@@ -303,6 +309,7 @@ namespace surveyor.vision
                 grab_frames.PauseFile = PauseFile;
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
+                sync_thread.IsBackground = true;
                 Running = true;
                 sync_thread.Start();                
                 Console.WriteLine("Stereo camera active");
