@@ -47,7 +47,8 @@ namespace sluggish.utilities
         private float[] yConv;
         private float[] xGradient;
         private float[] yGradient;
-        private int[] edge_pixel_index;
+
+        private int[] edge_pixel_index;
         private float[] edge_magnitude;
 
         #region "constructors"

@@ -84,12 +84,6 @@
     <Compile Include="correspondence\StereoVisionDense.cs" />
     <Compile Include="correspondence\StereoVisionGeometric.cs" />
     <Compile Include="correspondence\StereoVisionSimple.cs" />
-    <Compile Include="FormStereo.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FormStereo.Designer.cs">
-      <DependentUpon>FormStereo.cs</DependentUpon>
-    </Compile>
     <Compile Include="parallel.cs" />
     <Compile Include="probabilities.cs" />
     <Compile Include="SurveyorCalibration.cs" />

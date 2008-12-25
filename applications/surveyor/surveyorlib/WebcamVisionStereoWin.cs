@@ -315,6 +315,7 @@ namespace surveyor.vision
                 dsCameras.Open();
             }
 
+            /*
             if (dsCameras.left_image_filename != null)
             {
                 // delete any existing images
@@ -339,23 +340,27 @@ namespace surveyor.vision
                     }
                 }
             }
+            */
+
+            // set the camera index
+            dsCameras.stereo_camera_index = stereo_camera_index;
 
             // acquire new images
             dsCameras.Grab();
 
-            if (dsCameras.left_image_filename != null)
+            if ((dsCameras.left_image_filename != null) &&
+                (dsCameras.left_image_filename != ""))
             {
                 // wait for the file to appear
-                const int timeout_mS = 500;
                 DateTime start_time = DateTime.Now;
-                int seconds_elapsed = 0;
+                int time_elapsed = 0;
                 while (((!File.Exists(dsCameras.left_image_filename)) ||
                         (!File.Exists(dsCameras.right_image_filename))) &&
-                       (seconds_elapsed < timeout_mS))
+                       (time_elapsed < wait_for_grab_mS))
                 {
                     System.Threading.Thread.Sleep(50);
                     TimeSpan diff = DateTime.Now.Subtract(start_time);
-                    seconds_elapsed = (int)diff.TotalMilliseconds;
+                    time_elapsed = (int)diff.TotalMilliseconds;
                 }
 
                 if ((File.Exists(dsCameras.left_image_filename)) &&
@@ -433,9 +438,9 @@ namespace surveyor.vision
                 else
                 {
                     if (!File.Exists(dsCameras.left_image_filename))
-                        Console.WriteLine("File not found " + dsCameras.left_image_filename);
+                        Console.WriteLine("File not found " + dsCameras.left_image_filename + ".");
                     if (!File.Exists(dsCameras.right_image_filename))
-                        Console.WriteLine("File not found " + dsCameras.right_image_filename);
+                        Console.WriteLine("File not found " + dsCameras.right_image_filename + ".");
                 }
 
             }

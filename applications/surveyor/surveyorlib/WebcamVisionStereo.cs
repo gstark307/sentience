@@ -31,7 +31,7 @@ namespace surveyor.vision
     {
         protected string[] camera_device;
         public int skip_frames = 2;
-        protected string PauseFile;
+        protected string PauseFile;        
                 
         #region "constructors"
         
@@ -91,7 +91,7 @@ namespace surveyor.vision
         protected virtual void FrameGrabCallback(object state)
         {
             
-            // pause or resume grabbing frames from the cameras
+            // pause or resume grabbing frames from the cameras            
             if (correspondence != null)
             {
                 if ((!UpdateWhenClientsConnected) ||
@@ -101,10 +101,13 @@ namespace surveyor.vision
                     grab_frames.Pause = true;
             }
 
-            sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
-            sync_thread.Priority = ThreadPriority.Normal;
-            sync_thread.IsBackground = true;
-            sync_thread.Start();
+            if (!endless_thread)
+            {
+                sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
+                sync_thread.Priority = ThreadPriority.Normal;
+                sync_thread.IsBackground = true;
+                sync_thread.Start();
+            }
         }
 
         /// <summary>
@@ -278,9 +281,9 @@ namespace surveyor.vision
                 else
                 {
                     if (!File.Exists(left_image_filename))
-                        Console.WriteLine("File not found " + left_image_filename);
+                        Console.WriteLine("File not found " + left_image_filename + ".");
                     if (!File.Exists(right_image_filename))
-                        Console.WriteLine("File not found " + right_image_filename);                        
+                        Console.WriteLine("File not found " + right_image_filename + ".");                        
                 }
 
             }
@@ -305,7 +308,7 @@ namespace surveyor.vision
             if (!Running)
             {
                 // create a thread to send the master pulse
-                grab_frames = new WebcamVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallback), this);        
+                grab_frames = new WebcamVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallback), this, endless_thread);        
                 grab_frames.PauseFile = PauseFile;
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;

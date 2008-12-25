@@ -40,6 +40,7 @@ namespace surveyor.vision
         public string output_filename = "capture.jpg";
         public int exposure = 0;
         public int no_of_cameras = 1;
+        public int stereo_camera_index = -1;
 
         protected int start_camera_index = 0;
         protected string output_format;
@@ -156,6 +157,7 @@ namespace surveyor.vision
                 if (no_of_cameras > 1)
                 {
                     string filename = output_filename;
+                    if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
                     if (no_of_cameras > 2) filename += start_camera_index.ToString() + (start_camera_index + 1).ToString() + "_";
                     CaptureFrames(cam[start_camera_index], cam[start_camera_index + 1], initial_frames, filename, output_format, m_ip[start_camera_index], m_ip[start_camera_index + 1], ref left_image_filename, ref right_image_filename);
 
@@ -165,6 +167,7 @@ namespace surveyor.vision
                 else
                 {
                     string filename = output_filename;
+                    if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
                     CaptureFrame(cam[0], initial_frames, filename, output_format, m_ip[0]);
                 }
 

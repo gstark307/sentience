@@ -57,6 +57,7 @@ namespace surveyor.vision
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;
             stereo_camera.Load(calibration_filename);
+            stereo_camera.endless_thread = false;
             stereo_camera.Run();
         }
 

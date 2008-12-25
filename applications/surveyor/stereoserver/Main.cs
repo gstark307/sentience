@@ -70,6 +70,7 @@ namespace stereoserver
             // default settings for the surveyor stereo camera
             string stereo_camera_IP = "169.254.0.10";
             string calibration_filename = "calibration.xml";
+            string calibration_filename2 = "calibration2.xml";
             int left_port = 10001;
             int right_port = 10002;
                         
@@ -78,7 +79,7 @@ namespace stereoserver
             int broadcast_port = 10010;
             int broadcast_port2 = 10011;
             int stereo_algorithm_type = StereoVision.SIMPLE;
-            float fps = 4;
+            float fps = 1.0f;
             
             BaseVisionStereo stereo_camera = null;
             BaseVisionStereo stereo_camera2 = null;
@@ -148,6 +149,7 @@ namespace stereoserver
             string pause_file = commandline.GetParameterValue("pause", parameters);
 
             calibration_filename = commandline.GetParameterValue("calibration", parameters);
+            calibration_filename2 = commandline.GetParameterValue("calibration2", parameters);
             if (calibration_filename == "")
             {
                 Console.WriteLine("You must supply a calibration file");
@@ -192,20 +194,34 @@ namespace stereoserver
                             // webcam based stereo camera
                             stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps, pause_file);
                             if ((left_device2 != "") && (right_device2 != ""))
-                                stereo_camera2 = Init(left_device2, right_device2, calibration_filename, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps, pause_file);
+                            {
+                                if (calibration_filename2 == "")
+                                {
+                                    Console.WriteLine("No calibration file found for the second stereo camera");
+                                }
+                                else
+                                {
+                                    stereo_camera2 = Init(left_device2, right_device2, calibration_filename2, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps, pause_file);
+                                }
+                            }
                         }
                             
                         stereo_camera.Record = record;
                         stereo_camera.temporary_files_path = ramdisk;
                         stereo_camera.recorded_images_path = record_path;                                                
                         stereo_camera.SetPauseFile(pause_file);
+                        stereo_camera.phase = 0.0f;
+                        stereo_camera.stereo_camera_index = -1;
                         stereo_camera.Run();                        
                         if (stereo_camera2 != null)
                         {
                             stereo_camera.next_camera = stereo_camera2;
                             stereo_camera2.next_camera = stereo_camera;
+                            stereo_camera.stereo_camera_index = 0;
+                            stereo_camera2.stereo_camera_index = 1;
                             stereo_camera.active_camera = true;
                             stereo_camera2.active_camera = false;
+                            stereo_camera2.phase = 0.5f;
                             stereo_camera2.Record = record;
                             stereo_camera2.temporary_files_path = ramdisk;
                             stereo_camera2.recorded_images_path = record_path;
@@ -280,7 +296,7 @@ namespace stereoserver
             stereo_camera.image_width = image_width;
             stereo_camera.image_height = image_height;
             stereo_camera.stereo_algorithm_type = stereo_algorithm_type;
-            stereo_camera.UpdateWhenClientsConnected = true;
+            stereo_camera.UpdateWhenClientsConnected = false; // true;
             stereo_camera.random_rows = 5;
             stereo_camera.SetPauseFile(pause_file);
             
@@ -308,6 +324,7 @@ namespace stereoserver
             ValidParameters.Add("broadcastport2");
             ValidParameters.Add("algorithm");
             ValidParameters.Add("calibration");
+            ValidParameters.Add("calibration2");
             ValidParameters.Add("record");
             ValidParameters.Add("fps");
             ValidParameters.Add("ramdisk");

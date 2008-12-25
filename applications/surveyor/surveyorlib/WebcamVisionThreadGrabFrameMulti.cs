@@ -34,6 +34,7 @@ namespace surveyor.vision
         private WaitCallback _callback;
         private object _data;
         public bool Pause;
+        public bool _loop;
         
         // use the existance of this file to pause or resume frame capture
         public string PauseFile;        
@@ -41,11 +42,12 @@ namespace surveyor.vision
         /// <summary>
         /// constructor
         /// </summary>
-        public WebcamVisionThreadGrabFrameMulti(WaitCallback callback, object data)
+        public WebcamVisionThreadGrabFrameMulti(WaitCallback callback, object data, bool loop)
         {
             if (callback == null) throw new ArgumentNullException("callback");
             _callback = callback;
             _data = data;
+            _loop = loop;
         }
 
         /// <summary>
@@ -63,6 +65,7 @@ namespace surveyor.vision
         /// <param name="state">vision state</param>
         private void Update(WebcamVisionStereo state)
         {
+            DateTime reference_time = new DateTime(2008, 1, 1);
             int time_step_mS = (int)(1000 / state.fps);
             bool grabbed = false;
 
@@ -70,52 +73,70 @@ namespace surveyor.vision
 
             DateTime last_called = DateTime.Now;
 
-            if (!Pause)
+            bool looping = true;
+            while (looping)
             {
-                // grab images
-                if (state.active_camera)
+
+                if (!Pause)
                 {
-                    DateTime start_time = DateTime.Now;
-
-                    state.Grab();
-                    _callback(_data);
-                    grabbed = true;
-
-                    // calculate the phase offset, relative to some reference time in the ancient past
-
-                    TimeSpan diff = DateTime.Now.Subtract(start_time);
-
-                    while ((diff.TotalMilliseconds < time_step_mS) &&
-                           (state.Running))
+                    // grab images
+                    if (state.active_camera)
                     {
-                        diff = DateTime.Now.Subtract(start_time);
+                        DateTime start_time = DateTime.Now;
+
+                        Thread.Sleep(20);
+
+                        state.Grab();
+                        _callback(_data);
+                        grabbed = true;
+
+                        // calculate the phase offset, relative to some reference time in the ancient past
+                        //TimeSpan reference_diff = start_time.Subtract(reference_time);
+                        //double reference_phase = reference_diff.TotalMilliseconds / time_step_mS;
+                        //long reference_phase2 = (int)reference_phase;
+                        //if (reference_phase2 > reference_phase) reference_phase2 -= 1;
+
+                        // phase error
+                        double phase_error_mS = 0; // (state.phase * time_step_mS) - (reference_phase - reference_phase2);
+
+                        TimeSpan diff = DateTime.Now.Subtract(start_time);
+
+                        while ((diff.TotalMilliseconds < time_step_mS + phase_error_mS) &&
+                               (state.Running))
+                        {
+                            diff = DateTime.Now.Subtract(start_time);
+                            Thread.Sleep(2);
+                        }
+
+                    }
+                    else
+                    {
                         Thread.Sleep(20);
                     }
-
                 }
                 else
                 {
-                    Thread.Sleep(20);
+                    for (int i = 0; i < 100; i++)
+                        Thread.Sleep(5);
+
+                    _callback(_data);
                 }
-            }
-            else
-            {
-                for (int i = 0; i < 100; i++)
-                    Thread.Sleep(5);
 
-                _callback(_data);
-            }
-
-            if (grabbed)
-            {
-                if ((PauseFile != null) &&
-                    (PauseFile != ""))
+                if (grabbed)
                 {
-                    if (File.Exists(PauseFile))
-                        Pause = true;
-                    else
-                        Pause = false;
+                    if ((PauseFile != null) &&
+                        (PauseFile != ""))
+                    {
+                        if (File.Exists(PauseFile))
+                            Pause = true;
+                        else
+                            Pause = false;
+                    }
                 }
+
+                // break out
+                if (((_loop) && (!state.Running)) ||
+                    (!_loop)) looping = false;
             }
         }
     }
