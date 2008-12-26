@@ -228,7 +228,7 @@ namespace stereoserver
                         }
                         while (stereo_camera.Running)
                         {
-                            System.Threading.Thread.Sleep(20);
+                            System.Threading.Thread.Sleep(1000);
                         }
                     
                         // keeping the dream alive
@@ -294,7 +294,7 @@ namespace stereoserver
             stereo_camera.image_width = image_width;
             stereo_camera.image_height = image_height;
             stereo_camera.stereo_algorithm_type = stereo_algorithm_type;
-            stereo_camera.UpdateWhenClientsConnected = false; // true;
+            stereo_camera.UpdateWhenClientsConnected = true;
             stereo_camera.random_rows = 5;
             stereo_camera.SetPauseFile(pause_file);
             

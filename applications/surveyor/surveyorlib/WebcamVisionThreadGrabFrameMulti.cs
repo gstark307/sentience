@@ -106,7 +106,7 @@ namespace surveyor.vision
                 else
                 {
                     //for (int i = 0; i < 100; i++)
-                    //    Thread.Sleep(5);
+                        Thread.Sleep(5);
 
                     _callback(_data);
                 }
