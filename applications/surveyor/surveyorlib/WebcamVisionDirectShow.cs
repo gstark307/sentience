@@ -34,11 +34,12 @@ namespace surveyor.vision
     public class WebcamVisionDirectShow
     {
         public string camera_devices = "0";
-        public int image_width = 640;
-        public int image_height = 480;
+        public int image_width = 320;
+        public int image_height = 240;
         public int initial_frames = 3;
         public string output_filename = "capture.jpg";
-        public int exposure = 0;
+        public float exposure = 100;    // in the range 0 - 100
+        public int max_exposure = 650;  // set this to the maximum exposure value for the camera
         public int no_of_cameras = 1;
         public int stereo_camera_index = -1;
         public bool save_images = false;
@@ -105,7 +106,8 @@ namespace surveyor.vision
                 preview = new PictureBox[directshow_filter_index.Length];
 
                 bool auto_exposure = false;
-                if (exposure <= 0) auto_exposure = true;
+                //if (exposure <= 0) 
+                    //auto_exposure = true;
 
                 // get the devices
                 no_of_cameras = 1;
@@ -138,7 +140,7 @@ namespace surveyor.vision
                 for (int i = no_of_cameras - 1; i >= 0; i--)
                 {
                     preview[i] = new PictureBox();
-                    StartCamera(image_width, image_height, ref cam, directshow_filter_index, camera_filter_index, ref preview, i, exposure, auto_exposure);
+                    StartCamera(image_width, image_height, ref cam, directshow_filter_index, camera_filter_index, ref preview, i, exposure, max_exposure, auto_exposure);
                 }
             }
         }
@@ -177,6 +179,7 @@ namespace surveyor.vision
                         m_ip[start_camera_index], 
                         m_ip[start_camera_index + 1], 
                         save_images,
+                        (int)(exposure * max_exposure / 100),
                         ref left_image_filename, 
                         ref right_image_filename, 
                         ref left_image_bitmap, 
@@ -191,7 +194,7 @@ namespace surveyor.vision
                 {
                     string filename = output_filename;
                     if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
-                    CaptureFrame(cam[0], initial_frames, filename, output_format, m_ip[0]);
+                    CaptureFrame(cam[0], initial_frames, filename, output_format, m_ip[0], (int)(exposure * max_exposure / 100));
                 }
 
             }
@@ -209,6 +212,7 @@ namespace surveyor.vision
             IntPtr m_ip0,
             IntPtr m_ip1,
             bool save_images,
+            int exposure,
             ref string left_image_filename,
             ref string right_image_filename,
             ref Bitmap left_image_bitmap,
@@ -271,6 +275,7 @@ namespace surveyor.vision
                              */
 
                             left_image_cap = DateTime.Now;
+                            cam0.SetExposure(exposure);
                             grabbed_image0 = cam0.Grab(ref m_ip0, true);
                             is_blank0 = IsBlankFrame(grabbed_image0, step_size);
                             if (!is_blank0) break;
@@ -286,6 +291,7 @@ namespace surveyor.vision
                              */
 
                             right_image_cap = DateTime.Now;
+                            cam1.SetExposure(exposure);
                             grabbed_image1 = cam1.Grab(ref m_ip1, true);
                             is_blank1 = IsBlankFrame(grabbed_image1, step_size);
                             if (!is_blank1) break;
@@ -342,7 +348,8 @@ namespace surveyor.vision
             int initial_frames,
             string output_filename,
             string output_format,
-            IntPtr m_ip)
+            IntPtr m_ip,
+            int exposure)
         {
             if (cam != null)
             {
@@ -369,6 +376,7 @@ namespace surveyor.vision
                         m_ip = IntPtr.Zero;
                     }
                 }
+                cam.SetExposure(exposure);
                 Bitmap grabbed_image = cam.Grab(ref m_ip, true);
                 if (grabbed_image != null)
                 {
@@ -393,7 +401,8 @@ namespace surveyor.vision
             int[] camera_filter_index,
             ref PictureBox[] preview,
             int index,
-            int exposure,
+            float exposure,
+            int max_exposure,
             bool auto_exposure)
         {
             cam[index] = new WebcamVisionDirectShowCapture(directshow_filter_index[camera_filter_index[index]], image_width, image_height, preview[index], true);
@@ -417,7 +426,7 @@ namespace surveyor.vision
                     if (auto_exposure)
                         cam[index].SetExposureAuto();
                     else
-                        cam[index].SetExposure(exposure);
+                        cam[index].SetExposure((int)(exposure*max_exposure/100));
 
                     cam[index].Stop();
                 }

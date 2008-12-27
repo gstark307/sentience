@@ -34,6 +34,8 @@ namespace surveyor.vision
         public bool endless_thread = true;
         public int wait_for_grab_mS = 500;
 
+        public int max_exposure = 650;
+
         public string device_name;
         public string part_number;
         public string serial_number;
@@ -82,7 +84,8 @@ namespace surveyor.vision
         // If this value is set to zero then all rows of the image are considered
         public int random_rows;
         
-        public int exposure = 50;
+        public float exposure = 50;
+        public float exposure_gain = 1.0f / 50.0f;  // rate at which exposure is changed
         
         // what type of image should be displayed
         public const int DISPLAY_RAW = 0;
@@ -250,7 +253,7 @@ namespace surveyor.vision
                     
                 float MeanLight = GetMeanLight(intensity_histogram);
                 int diff = (int)(MeanLight - ideal_mean_light);
-                int adjust = diff / 5;
+                float adjust = diff * exposure_gain;
                 if (adjust == 0)
                 {
                     if (diff > 0) 
@@ -761,6 +764,15 @@ namespace surveyor.vision
                             if (rectified[cam] == null)
                                 rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                             BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
+                        }
+                    }
+                    else
+                    {
+                        byte[] img = new byte[bmp.Width * bmp.Height * 3];
+                        if (img != null)
+                        {
+                            BitmapArrayConversions.updatebitmap(bmp, img);
+                            img_rectified[cam] = (byte[])img.Clone();
                         }
                     }
                 }

@@ -627,63 +627,77 @@ namespace surveyor.vision
         private void OnDataReceived(IAsyncResult asyn)
         {
             SocketPacket theSockId = (SocketPacket)asyn.AsyncState;
-            int iRx = theSockId.m_currentSocket.EndReceive(asyn);
-            char[] chars = new char[iRx + 1];
-            System.Text.Decoder d = System.Text.Encoding.UTF8.GetDecoder();
-            d.GetChars(theSockId.dataBuffer, 0, iRx, chars, 0);
-            System.String szData = new System.String(chars);
-
-            // switch the recording of images on or off
-            if (szData.StartsWith("Record"))
+            int iRx = 0;
+            bool success = false;
+            try
             {
-                bool valid_path = false;
-                if (szData.Contains(" "))
+                iRx = theSockId.m_currentSocket.EndReceive(asyn);
+                success = true;
+            }
+            catch
+            {
+            }
+
+            if (success)
+            {
+
+                char[] chars = new char[iRx + 1];
+                System.Text.Decoder d = System.Text.Encoding.UTF8.GetDecoder();
+                d.GetChars(theSockId.dataBuffer, 0, iRx, chars, 0);
+                System.String szData = new System.String(chars);
+
+                // switch the recording of images on or off
+                if (szData.StartsWith("Record"))
                 {
-                    string[] parts = szData.Split(' ');
-                    if (parts.Length > 1)
+                    bool valid_path = false;
+                    if (szData.Contains(" "))
                     {
-                        if ((parts[1].ToLower() != "false") &&
-                            (parts[1].ToLower() != "off"))
+                        string[] parts = szData.Split(' ');
+                        if (parts.Length > 1)
                         {
-                            string directory_str = "";
-                            char[] ch = parts[1].ToCharArray();
-                            for (int i = 0; i < ch.Length; i++)
+                            if ((parts[1].ToLower() != "false") &&
+                                (parts[1].ToLower() != "off"))
                             {
-                                if ((ch[i] != 10) &&
-                                    (ch[i] != 13) &&
-                                    (ch[i] != 0))
-                                    directory_str += ch[i];
-                            }
-                            
-                            if (directory_str.Contains("/"))
-                            {
-                                if (!directory_str.EndsWith("/"))
-                                    directory_str += "/";
-                            }
-                        
-                            if (Directory.Exists(directory_str))
-                            {
-                                // start recording
-                                if (vision != null)
+                                string directory_str = "";
+                                char[] ch = parts[1].ToCharArray();
+                                for (int i = 0; i < ch.Length; i++)
                                 {
-                                    Console.WriteLine("Start recording images in " + parts[1]);
-                                    vision.Record = true;
-                                    vision.recorded_images_path = directory_str;
+                                    if ((ch[i] != 10) &&
+                                        (ch[i] != 13) &&
+                                        (ch[i] != 0))
+                                        directory_str += ch[i];
                                 }
-                                else Console.WriteLine("No vision object");
-                                valid_path = true;
-                                
+
+                                if (directory_str.Contains("/"))
+                                {
+                                    if (!directory_str.EndsWith("/"))
+                                        directory_str += "/";
+                                }
+
+                                if (Directory.Exists(directory_str))
+                                {
+                                    // start recording
+                                    if (vision != null)
+                                    {
+                                        Console.WriteLine("Start recording images in " + parts[1]);
+                                        vision.Record = true;
+                                        vision.recorded_images_path = directory_str;
+                                    }
+                                    else Console.WriteLine("No vision object");
+                                    valid_path = true;
+
+                                }
+                                else Console.WriteLine("Directory " + directory_str + " not found");
                             }
-                            else Console.WriteLine("Directory " + directory_str + " not found");
                         }
                     }
-                }
 
-                if (!valid_path)
-                {
-                    // stop recording
-                    Console.WriteLine("Stop recording images");
-                    if (vision != null) vision.Record = false;
+                    if (!valid_path)
+                    {
+                        // stop recording
+                        Console.WriteLine("Stop recording images");
+                        if (vision != null) vision.Record = false;
+                    }
                 }
             }
 

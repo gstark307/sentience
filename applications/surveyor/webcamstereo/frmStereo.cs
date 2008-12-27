@@ -37,8 +37,8 @@ namespace surveyor.vision
         int image_height = 240;
         string stereo_camera_IP = "169.254.0.10";
         string calibration_filename = "calibration.xml";
-        int left_camera_device_index = 1;
-        int right_camera_device_index = 3;
+        int left_camera_device_index = 0;
+        int right_camera_device_index = 2;
         WebcamVisionStereoWin stereo_camera;
         int frames_per_sec = 1;
 
@@ -57,6 +57,8 @@ namespace surveyor.vision
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;
             stereo_camera.Load(calibration_filename);
+            stereo_camera.image_width = image_width;
+            stereo_camera.image_height = image_height;
             stereo_camera.endless_thread = false;
             stereo_camera.Run();
         }

@@ -312,9 +312,7 @@ namespace surveyor.vision
         {
             if (m_iVidConfig != null)
             {
-                m_iVidConfig.Set(VideoProcAmpProperty.ColorEnable, 1, VideoProcAmpFlags.Manual);
-                m_iVidConfig.Set(VideoProcAmpProperty.Saturation, value, VideoProcAmpFlags.Manual);
-                m_iVidConfig.Set(VideoProcAmpProperty.Brightness, value, VideoProcAmpFlags.Manual);
+                //m_iVidConfig.Set(VideoProcAmpProperty.Brightness, value, VideoProcAmpFlags.Manual);
             }
             if (m_iCamConfig != null)
             {
@@ -326,13 +324,9 @@ namespace surveyor.vision
         {
             if (m_iVidConfig != null)
             {
-                m_iVidConfig.Set(VideoProcAmpProperty.ColorEnable, 1, VideoProcAmpFlags.Auto);
-                m_iVidConfig.Set(VideoProcAmpProperty.Brightness, 0, VideoProcAmpFlags.Auto);
-                m_iVidConfig.Set(VideoProcAmpProperty.Saturation, 0, VideoProcAmpFlags.Auto);
-                m_iVidConfig.Set(VideoProcAmpProperty.Gain, 0, VideoProcAmpFlags.Auto);
-                m_iVidConfig.Set(VideoProcAmpProperty.WhiteBalance, 0, VideoProcAmpFlags.Auto);
-                m_iVidConfig.Set(VideoProcAmpProperty.Hue, 0, VideoProcAmpFlags.Auto);
-                m_iVidConfig.Set(VideoProcAmpProperty.Gamma, 0, VideoProcAmpFlags.Auto);
+                //m_iVidConfig.Set(VideoProcAmpProperty.Brightness, 0, VideoProcAmpFlags.Auto);
+                //m_iVidConfig.Set(VideoProcAmpProperty.Gain, 0, VideoProcAmpFlags.Auto);
+                //m_iVidConfig.Set(VideoProcAmpProperty.WhiteBalance, 0, VideoProcAmpFlags.Auto);
             }
             if (m_iCamConfig != null)
             {
@@ -788,7 +782,13 @@ namespace surveyor.vision
 
             if (m_FilterGraph != null)
             {
-                Marshal.ReleaseComObject(m_FilterGraph);
+                try
+                {
+                    //Marshal.ReleaseComObject(m_FilterGraph);
+                }
+                catch
+                {
+                }
                 m_FilterGraph = null;
             }
 

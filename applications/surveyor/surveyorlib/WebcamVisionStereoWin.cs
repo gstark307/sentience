@@ -307,8 +307,11 @@ namespace surveyor.vision
             {
                 dsCameras = new WebcamVisionDirectShow();
                 dsCameras.camera_devices = camera_device[0] + "," + camera_device[1];
-                dsCameras.image_width = image_width;
-                dsCameras.image_height = image_height;
+                if (image_width > 0)
+                {
+                    dsCameras.image_width = image_width;
+                    dsCameras.image_height = image_height;
+                }
                 dsCameras.Open();
             }
 
@@ -344,6 +347,8 @@ namespace surveyor.vision
 
             // acquire new images
             dsCameras.Grab();
+            dsCameras.exposure = exposure;
+            dsCameras.max_exposure = max_exposure;
 
             if ((dsCameras.left_image_bitmap != null) &&
                 (dsCameras.right_image_bitmap != null))
