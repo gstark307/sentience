@@ -34,6 +34,9 @@ namespace surveyor.vision
         public bool endless_thread = true;
         public int wait_for_grab_mS = 500;
 
+        // rectification can be switched off
+        public bool dissable_rectification;
+
         // on Windows use media control pause or not
         public bool use_media_pause = true;
 
@@ -725,60 +728,83 @@ namespace surveyor.vision
         protected void RectifyImages(Bitmap left_image, Bitmap right_image)
         {
             byte[][] img_rectified = new byte[2][];
-        
-            for (int cam = 0; cam < 2; cam++)
+
+            if (dissable_rectification)
             {
-                Bitmap bmp = left_image;
-                if (cam == 1) bmp = right_image;
-
-                if ((calibration_survey[cam] != null) && (bmp != null))
+                // if rectification is dissabled make the rectified image teh same as the raw image
+                for (int cam = 0; cam < 2; cam++)
                 {
-                    polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
-                    if (distortion_curve != null)
+                    Bitmap bmp = left_image;
+                    if (cam == 1) bmp = right_image;
+
+                    byte[] img = new byte[bmp.Width * bmp.Height * 3];
+                    if (img != null)
                     {
-                        if (calibration_map[cam] == null)
-                        {
-                            SurveyorCalibration.updateCalibrationMap(
-                                bmp.Width, bmp.Height, distortion_curve,
-                                1, 0,
-                                calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
-                                ref calibration_map[cam], ref calibration_map_inverse[cam]);
-                        }
+                        BitmapArrayConversions.updatebitmap(bmp, img);
+                        img_rectified[cam] = (byte[])img.Clone();
+                        if (rectified[cam] == null)
+                            rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
+                    }
+                }
+            }
+            else
+            {
 
-                        byte[] img = null;
-                        try
-                        {
-                            img = new byte[bmp.Width * bmp.Height * 3];
-                        }
-                        catch
-                        {
-                        }
-                        if (img != null)
-                        {
-                            BitmapArrayConversions.updatebitmap(bmp, img);
-                            img_rectified[cam] = (byte[])img.Clone();
+                for (int cam = 0; cam < 2; cam++)
+                {
+                    Bitmap bmp = left_image;
+                    if (cam == 1) bmp = right_image;
 
-                            int n = 0;
-                            int[] map = calibration_map[cam];
-                            for (int i = 0; i < img.Length; i += 3, n++)
+                    if ((calibration_survey[cam] != null) && (bmp != null))
+                    {
+                        polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
+                        if (distortion_curve != null)
+                        {
+                            if (calibration_map[cam] == null)
                             {
-                                int index = map[n] * 3;
-                                for (int col = 0; col < 3; col++)
-                                    img_rectified[cam][i + col] = img[index + col];
+                                SurveyorCalibration.updateCalibrationMap(
+                                    bmp.Width, bmp.Height, distortion_curve,
+                                    1, 0,
+                                    calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+                                    ref calibration_map[cam], ref calibration_map_inverse[cam]);
                             }
 
-                            if (rectified[cam] == null)
-                                rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                            BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
+                            byte[] img = null;
+                            try
+                            {
+                                img = new byte[bmp.Width * bmp.Height * 3];
+                            }
+                            catch
+                            {
+                            }
+                            if (img != null)
+                            {
+                                BitmapArrayConversions.updatebitmap(bmp, img);
+                                img_rectified[cam] = (byte[])img.Clone();
+
+                                int n = 0;
+                                int[] map = calibration_map[cam];
+                                for (int i = 0; i < img.Length; i += 3, n++)
+                                {
+                                    int index = map[n] * 3;
+                                    for (int col = 0; col < 3; col++)
+                                        img_rectified[cam][i + col] = img[index + col];
+                                }
+
+                                if (rectified[cam] == null)
+                                    rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                                BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
+                            }
                         }
-                    }
-                    else
-                    {
-                        byte[] img = new byte[bmp.Width * bmp.Height * 3];
-                        if (img != null)
+                        else
                         {
-                            BitmapArrayConversions.updatebitmap(bmp, img);
-                            img_rectified[cam] = (byte[])img.Clone();
+                            byte[] img = new byte[bmp.Width * bmp.Height * 3];
+                            if (img != null)
+                            {
+                                BitmapArrayConversions.updatebitmap(bmp, img);
+                                img_rectified[cam] = (byte[])img.Clone();
+                            }
                         }
                     }
                 }

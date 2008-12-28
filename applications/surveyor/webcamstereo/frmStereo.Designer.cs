@@ -43,6 +43,7 @@ namespace surveyor.vision
             this.denseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
+            this.dissableRectificationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -97,7 +98,8 @@ namespace surveyor.vision
             this.calibrateLeftCameraToolStripMenuItem,
             this.calibrateRightCameraToolStripMenuItem,
             this.calibrateCameraAlignmentToolStripMenuItem,
-            this.recordToolStripMenuItem});
+            this.recordToolStripMenuItem,
+            this.dissableRectificationToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -142,14 +144,14 @@ namespace surveyor.vision
             // simpleToolStripMenuItem
             // 
             this.simpleToolStripMenuItem.Name = "simpleToolStripMenuItem";
-            this.simpleToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.simpleToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.simpleToolStripMenuItem.Text = "Simple";
             this.simpleToolStripMenuItem.Click += new System.EventHandler(this.simpleToolStripMenuItem_Click);
             // 
             // denseToolStripMenuItem
             // 
             this.denseToolStripMenuItem.Name = "denseToolStripMenuItem";
-            this.denseToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.denseToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.denseToolStripMenuItem.Text = "Dense";
             this.denseToolStripMenuItem.Click += new System.EventHandler(this.denseToolStripMenuItem_Click);
             // 
@@ -170,6 +172,13 @@ namespace surveyor.vision
             this.picRightImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picRightImage.TabIndex = 2;
             this.picRightImage.TabStop = false;
+            // 
+            // dissableRectificationToolStripMenuItem
+            // 
+            this.dissableRectificationToolStripMenuItem.Name = "dissableRectificationToolStripMenuItem";
+            this.dissableRectificationToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.dissableRectificationToolStripMenuItem.Text = "Dissable rectification";
+            this.dissableRectificationToolStripMenuItem.Click += new System.EventHandler(this.dissableRectificationToolStripMenuItem_Click);
             // 
             // frmStereo
             // 
@@ -212,6 +221,7 @@ namespace surveyor.vision
         private System.Windows.Forms.ToolStripMenuItem denseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveCalibrationPatternToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveCalibrationFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dissableRectificationToolStripMenuItem;
     }
 }
 

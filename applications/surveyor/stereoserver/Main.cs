@@ -151,7 +151,11 @@ namespace stereoserver
             bool use_media_pause = false;
             string use_media_pause_str = commandline.GetParameterValue("mediapause", parameters);
             if (use_media_pause_str != "") use_media_pause = true;
-            
+
+            bool dissable_rectification = false;
+            string dissable_rectification_str = commandline.GetParameterValue("norectify", parameters);
+            if (dissable_rectification_str != "") dissable_rectification = true;
+
             string force = commandline.GetParameterValue("force", parameters);
 
             string algorithm_str = commandline.GetParameterValue("algorithm", parameters);
@@ -230,6 +234,7 @@ namespace stereoserver
                         stereo_camera.stereo_camera_index = -1;
                         stereo_camera.min_exposure = min_exposure;
                         stereo_camera.max_exposure = max_exposure;
+                        stereo_camera.dissable_rectification = dissable_rectification;
                         stereo_camera.use_media_pause = use_media_pause;
                         stereo_camera.Run();                        
                         if (stereo_camera2 != null)
@@ -241,6 +246,7 @@ namespace stereoserver
                             stereo_camera2.min_exposure = min_exposure;
                             stereo_camera2.max_exposure = max_exposure;
                             stereo_camera2.use_media_pause = use_media_pause;
+                            stereo_camera2.dissable_rectification = dissable_rectification;
                             stereo_camera.active_camera = true;
                             stereo_camera2.active_camera = false;
                             stereo_camera2.Record = record;
@@ -354,6 +360,7 @@ namespace stereoserver
             ValidParameters.Add("minexposure");
             ValidParameters.Add("maxexposure");
             ValidParameters.Add("mediapause");
+            ValidParameters.Add("norectify");
 
             return (ValidParameters);
         }

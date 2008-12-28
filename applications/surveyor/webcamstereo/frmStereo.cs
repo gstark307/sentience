@@ -42,13 +42,13 @@ namespace surveyor.vision
         WebcamVisionStereoWin stereo_camera;
         int frames_per_sec = 1;
         bool use_pause = true;
+        bool dissable_rectification = true;
+        int min_exposure = 0;
 
-        // exposure range for Quickcam Pro 9000
-        //int min_exposure = 0;
+        // exposure range for Quickcam Pro 9000        
         //int max_exposure = -13;
 
         // exposure range for Creative Webcam NX Ultra
-        int min_exposure = 0;
         int max_exposure = 650;
 
         public frmStereo()
@@ -56,7 +56,8 @@ namespace surveyor.vision
             InitializeComponent();
 
             picLeftImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);            
+            picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            dissableRectificationToolStripMenuItem.Checked = dissable_rectification;
         }
 
         private void InitCameras()
@@ -72,6 +73,7 @@ namespace surveyor.vision
             stereo_camera.max_exposure = max_exposure;
             stereo_camera.use_media_pause = use_pause;
             stereo_camera.endless_thread = false;
+            stereo_camera.dissable_rectification = dissable_rectification;
             stereo_camera.Run();
         }
 
@@ -273,6 +275,12 @@ namespace surveyor.vision
         private void frmStereo_Load(object sender, EventArgs e)
         {
             Init();
+        }
+
+        private void dissableRectificationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            dissable_rectification = dissableRectificationToolStripMenuItem.Checked;
+            stereo_camera.dissable_rectification = dissable_rectification;
         }
 
         /*
