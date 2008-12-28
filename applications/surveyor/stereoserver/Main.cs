@@ -134,6 +134,23 @@ namespace stereoserver
 
             broadcast_port_str = commandline.GetParameterValue("broadcastport2", parameters);
             if (broadcast_port_str != "") broadcast_port2 = Convert.ToInt32(broadcast_port_str);
+
+            // minimum exposure value for the camera
+            // this varies from one webcam to the next
+            int min_exposure = 0;
+            string min_exposure_str = commandline.GetParameterValue("minexposure", parameters);
+            if (min_exposure_str != "") min_exposure = Convert.ToInt32(min_exposure_str);
+
+            // maximum exposure value for the camera
+            // this varies from one webcam to the next, and can even be a negative value
+            int max_exposure = 650;
+            string max_exposure_str = commandline.GetParameterValue("maxexposure", parameters);
+            if (max_exposure_str != "") max_exposure = Convert.ToInt32(max_exposure_str);
+
+            // on windows systems use pause on the media control rather than stop
+            bool use_media_pause = false;
+            string use_media_pause_str = commandline.GetParameterValue("mediapause", parameters);
+            if (use_media_pause_str != "") use_media_pause = true;
             
             string force = commandline.GetParameterValue("force", parameters);
 
@@ -211,6 +228,9 @@ namespace stereoserver
                         stereo_camera.recorded_images_path = record_path;                                                
                         stereo_camera.SetPauseFile(pause_file);
                         stereo_camera.stereo_camera_index = -1;
+                        stereo_camera.min_exposure = min_exposure;
+                        stereo_camera.max_exposure = max_exposure;
+                        stereo_camera.use_media_pause = use_media_pause;
                         stereo_camera.Run();                        
                         if (stereo_camera2 != null)
                         {
@@ -218,6 +238,9 @@ namespace stereoserver
                             stereo_camera2.next_camera = stereo_camera;
                             stereo_camera.stereo_camera_index = 0;
                             stereo_camera2.stereo_camera_index = 1;
+                            stereo_camera2.min_exposure = min_exposure;
+                            stereo_camera2.max_exposure = max_exposure;
+                            stereo_camera2.use_media_pause = use_media_pause;
                             stereo_camera.active_camera = true;
                             stereo_camera2.active_camera = false;
                             stereo_camera2.Record = record;
@@ -328,6 +351,9 @@ namespace stereoserver
             ValidParameters.Add("ramdisk");
             ValidParameters.Add("pause");
             ValidParameters.Add("force");
+            ValidParameters.Add("minexposure");
+            ValidParameters.Add("maxexposure");
+            ValidParameters.Add("mediapause");
 
             return (ValidParameters);
         }

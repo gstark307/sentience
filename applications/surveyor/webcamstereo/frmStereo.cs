@@ -37,10 +37,19 @@ namespace surveyor.vision
         int image_height = 240;
         string stereo_camera_IP = "169.254.0.10";
         string calibration_filename = "calibration.xml";
-        int left_camera_device_index = 0;
-        int right_camera_device_index = 2;
+        int left_camera_device_index = 1;
+        int right_camera_device_index = 0;
         WebcamVisionStereoWin stereo_camera;
         int frames_per_sec = 1;
+        bool use_pause = true;
+
+        // exposure range for Quickcam Pro 9000
+        //int min_exposure = 0;
+        //int max_exposure = -13;
+
+        // exposure range for Creative Webcam NX Ultra
+        int min_exposure = 0;
+        int max_exposure = 650;
 
         public frmStereo()
         {
@@ -59,6 +68,9 @@ namespace surveyor.vision
             stereo_camera.Load(calibration_filename);
             stereo_camera.image_width = image_width;
             stereo_camera.image_height = image_height;
+            stereo_camera.min_exposure = min_exposure;
+            stereo_camera.max_exposure = max_exposure;
+            stereo_camera.use_media_pause = use_pause;
             stereo_camera.endless_thread = false;
             stereo_camera.Run();
         }

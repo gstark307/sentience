@@ -216,7 +216,13 @@ namespace surveyor.vision
                         else
                             grabbed_frame = new Bitmap(m_videoWidth, m_videoHeight, m_stride, PixelFormat.Format24bppRgb, m_ipBuffer);
 
-                        grabbed_frame.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                        try
+                        {
+                            grabbed_frame.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                        }
+                        catch
+                        {
+                        }
                         lastFrame = grabbed_frame;
                         m_ip = m_ipBuffer;
                     }

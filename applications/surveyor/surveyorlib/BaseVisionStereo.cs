@@ -34,7 +34,13 @@ namespace surveyor.vision
         public bool endless_thread = true;
         public int wait_for_grab_mS = 500;
 
+        // on Windows use media control pause or not
+        public bool use_media_pause = true;
+
+        // these values are completely arbitrary and specific to the camera model
+        // You can use AMcap on Windows to find out what the range of exposure values is
         public int max_exposure = 650;
+        public int min_exposure = 0;
 
         public string device_name;
         public string part_number;

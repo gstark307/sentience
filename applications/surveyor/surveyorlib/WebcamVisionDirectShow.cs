@@ -39,6 +39,7 @@ namespace surveyor.vision
         public int initial_frames = 3;
         public string output_filename = "capture.jpg";
         public float exposure = 100;    // in the range 0 - 100
+        public int min_exposure = 0;    // set this to the minimum exposure value for the camera
         public int max_exposure = 650;  // set this to the maximum exposure value for the camera
         public int no_of_cameras = 1;
         public int stereo_camera_index = -1;
@@ -51,6 +52,9 @@ namespace surveyor.vision
         protected int[] camera_filter_index;
         protected IntPtr[] m_ip;
         protected PictureBox[] preview;
+
+        //use pause rather than stop command on the media control
+        public bool use_pause = true;
 
         // filenames which images were saved to
         public string left_image_filename;
@@ -140,7 +144,7 @@ namespace surveyor.vision
                 for (int i = no_of_cameras - 1; i >= 0; i--)
                 {
                     preview[i] = new PictureBox();
-                    StartCamera(image_width, image_height, ref cam, directshow_filter_index, camera_filter_index, ref preview, i, exposure, max_exposure, auto_exposure);
+                    StartCamera(image_width, image_height, ref cam, directshow_filter_index, camera_filter_index, ref preview, i, exposure, min_exposure, max_exposure, auto_exposure, use_pause);
                 }
             }
         }
@@ -179,7 +183,8 @@ namespace surveyor.vision
                         m_ip[start_camera_index], 
                         m_ip[start_camera_index + 1], 
                         save_images,
-                        (int)(exposure * max_exposure / 100),
+                        min_exposure + (int)(exposure * (max_exposure - min_exposure) / 100),
+                        use_pause,
                         ref left_image_filename, 
                         ref right_image_filename, 
                         ref left_image_bitmap, 
@@ -194,7 +199,7 @@ namespace surveyor.vision
                 {
                     string filename = output_filename;
                     if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
-                    CaptureFrame(cam[0], initial_frames, filename, output_format, m_ip[0], (int)(exposure * max_exposure / 100));
+                    CaptureFrame(cam[0], initial_frames, filename, output_format, m_ip[0], min_exposure + (int)(exposure * (max_exposure - min_exposure) / 100), use_pause);
                 }
 
             }
@@ -213,6 +218,7 @@ namespace surveyor.vision
             IntPtr m_ip1,
             bool save_images,
             int exposure,
+            bool use_pause,
             ref string left_image_filename,
             ref string right_image_filename,
             ref Bitmap left_image_bitmap,
@@ -278,7 +284,7 @@ namespace surveyor.vision
                             cam0.SetExposure(exposure);
                             grabbed_image0 = cam0.Grab(ref m_ip0, true);
                             is_blank0 = IsBlankFrame(grabbed_image0, step_size);
-                            if (!is_blank0) break;
+                            if ((!is_blank0) && (i > 1)) break;
                         }
                         else
                         {
@@ -294,7 +300,7 @@ namespace surveyor.vision
                             cam1.SetExposure(exposure);
                             grabbed_image1 = cam1.Grab(ref m_ip1, true);
                             is_blank1 = IsBlankFrame(grabbed_image1, step_size);
-                            if (!is_blank1) break;
+                            if ((!is_blank0) && (i > 1)) break;
                         }
                     }
                 });
@@ -335,7 +341,10 @@ namespace surveyor.vision
                     if (i > 0) cam = cam1;
 
                     // stop the camera
-                    cam.Stop();
+                    if (use_pause)
+                        cam.Pause();
+                    else
+                        cam.Stop();
                 }
             }
         }
@@ -349,7 +358,8 @@ namespace surveyor.vision
             string output_filename,
             string output_format,
             IntPtr m_ip,
-            int exposure)
+            int exposure,
+            bool use_pause)
         {
             if (cam != null)
             {
@@ -389,7 +399,10 @@ namespace surveyor.vision
                 }
 
                 // stop the camera
-                cam.Stop();
+                if (use_pause)
+                    cam.Pause();
+                else
+                    cam.Stop();
             }
         }
 
@@ -402,8 +415,10 @@ namespace surveyor.vision
             ref PictureBox[] preview,
             int index,
             float exposure,
+            int min_exposure,
             int max_exposure,
-            bool auto_exposure)
+            bool auto_exposure,
+            bool use_pause)
         {
             cam[index] = new WebcamVisionDirectShowCapture(directshow_filter_index[camera_filter_index[index]], image_width, image_height, preview[index], true);
             if (cam[index] != null)
@@ -426,9 +441,12 @@ namespace surveyor.vision
                     if (auto_exposure)
                         cam[index].SetExposureAuto();
                     else
-                        cam[index].SetExposure((int)(exposure*max_exposure/100));
+                        cam[index].SetExposure(min_exposure + (int)(exposure*(max_exposure - min_exposure)/100));
 
-                    cam[index].Stop();
+                    if (use_pause)
+                        cam[index].Pause();
+                    else
+                        cam[index].Stop();
                 }
             }
         }

@@ -345,9 +345,17 @@ namespace surveyor.vision
             // set the camera index
             dsCameras.stereo_camera_index = stereo_camera_index;
 
+            // whether to use pause or stop on the media control
+            dsCameras.use_pause = use_media_pause;
+
             // acquire new images
             dsCameras.Grab();
+
+            // set exposure
             dsCameras.exposure = exposure;
+
+            // define exposure range for the camera
+            dsCameras.min_exposure = min_exposure;
             dsCameras.max_exposure = max_exposure;
 
             if ((dsCameras.left_image_bitmap != null) &&
