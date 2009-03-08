@@ -31,13 +31,9 @@ namespace sentience.core
     /// <summary>
     /// two dimensional grid storing multiple occupancy hypotheses
     /// </summary>
-    public sealed class occupancygridMultiHypothesis : pos3D
+    public sealed class occupancygridMultiHypothesis : occupancygridBase
     {
         #region "variables"
-
-        // lookup table for log odds calculations
-        private const int LOG_ODDS_LOOKUP_LEVELS = 1000;
-        private float[] LogOdds;
 
         // random number generator
         private MersenneTwister rnd = new MersenneTwister(100);
@@ -45,37 +41,11 @@ namespace sentience.core
         // list grid cells which need to be cleared of garbage
         private List<occupancygridCellMultiHypothesis> garbage;
 
-        // a quick lookup table for gaussian values
-        private float[] gaussianLookup;
-
-        // the number of cells across in the (xy) plane
-        public int dimension_cells;
-
-        // the number of cells in the vertical (z) axis
-        public int dimension_cells_vertical;
-
-        // size of each grid cell (voxel) in millimetres
-        public int cellSize_mm;
-
-        // when localising search a wider area than when mapping
-        public int localisation_search_cells = 1;
-
         // the total number of hypotheses (particles) within the grid
         public int total_valid_hypotheses = 0;
 
         // the total amount of garbage awaiting collection
         public int total_garbage_hypotheses = 0;
-
-        // the maximum range of features to insert into the grid
-        private int max_mapping_range_cells;
-
-        // a weight value used to define how aggressively the
-        // carving out of space using the vacancy function works
-        public float vacancy_weighting = 2.0f;
-
-        // take some shortcuts to speed things up
-        // this sacrifices some detail, but for most grid cell sizes is fine
-        public bool TurboMode = true;
 
         // cells of the grid
         occupancygridCellMultiHypothesis[][] cell;
@@ -142,85 +112,8 @@ namespace sentience.core
                                             int localisationRadius_mm, 
                                             int maxMappingRange_mm, 
                                             float vacancyWeighting)
-            : base(0, 0, 0)
         {
             init(dimension_cells, dimension_cells_vertical, cellSize_mm, localisationRadius_mm, maxMappingRange_mm, vacancyWeighting);
-        }
-
-        #endregion
-
-        #region "setting the position of the grid"
-
-        /// <summary>
-        /// set the absolute position of the centre of the occupancy grid
-        /// </summary>
-        /// <param name="centre_x_mm">centre x position in millimetres</param>
-        /// <param name="centre_y_mm">centre y position in millimetres</param>
-        public void SetCentrePosition(float centre_x_mm, 
-                                      float centre_y_mm)
-        {
-            x = centre_x_mm;
-            y = centre_y_mm;
-        }
-
-        #endregion
-
-        #region "sensor model"
-
-        private float[] vacancy_model_lookup;
-
-        /// <summary>
-        /// creates a loouk table for the cacancy part of the ray model
-        /// This avoids having to run slow Exp functions
-        /// </summary>
-        /// <param name="min_vacancy_probability"></param>
-        /// <param name="max_vacancy_probability"></param>
-        /// <param name="levels"></param>
-        private void CreateVacancyModelLookup(float min_vacancy_probability, 
-                                              float max_vacancy_probability,
-                                              int levels)
-        {
-            vacancy_model_lookup = new float[levels];
-            for (int i = 0; i < levels; i++)
-            {
-                float fraction = i / (float)levels;
-                vacancy_model_lookup[i] = 
-                    vacancyFunction(fraction, levels, 
-                                    min_vacancy_probability, max_vacancy_probability);
-            }
-        }
-
-        /// <summary>
-        /// function for vacancy within the sensor model
-        /// </summary>
-        /// <param name="fraction">fractional distance along the vacancy part of the ray model</param>
-        /// <param name="steps"></param>
-        /// <returns></returns>
-        private float vacancyFunction(float fraction, int steps,
-                                      float min_vacancy_probability, 
-                                      float max_vacancy_probability)
-        {
-            float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
-                         (float)Math.Exp(-(fraction * fraction)));
-            return (prob);
-        }
-
-        /// <summary>
-        /// vacancy part of the ray model
-        /// </summary>
-        /// <param name="fraction"></param>
-        /// <param name="steps"></param>
-        /// <returns></returns>
-        private float vacancyFunction(float fraction, int steps)
-        {
-            if (vacancy_model_lookup == null)
-            {
-                float min_vacancy_probability = 0.1f;
-                float max_vacancy_probability = vacancy_weighting;
-                CreateVacancyModelLookup(min_vacancy_probability, max_vacancy_probability, 1000);
-            }
-            float prob = vacancy_model_lookup[(int)(fraction * (vacancy_model_lookup.Length-1))];
-            return (0.5f - (prob / steps));
         }
 
         #endregion
@@ -363,52 +256,21 @@ namespace sentience.core
         #region "calculating the matching probability"
 
         /// <summary>
-        /// returns a measure of the difference between two colours
-        /// </summary>
-        /// <param name="colour1">the first colour</param>
-        /// <param name="colour2">the second colour</param>
-        /// <returns>difference between the two colours</returns>
-        private float getColourDifference(byte[] colour1, float[] colour2)
-        {
-            // note that relative colour values are used, since comparing absolute RGB
-            // values is a road to nowhere
-            float colour_difference = 0;
-            for (int col = 0; col < 3; col++)
-            {
-                int col2 = col + 1;
-                if (col2 > 2) col2 -= 3;
-                int col3 = col + 2;
-                if (col3 > 2) col3 -= 3;
-
-                float c1 = (colour1[col] * 2) - colour1[col2] - colour1[col3];
-                if (c1 < 0) c1 = 0;
-
-                float c2 = (int)((colour2[col] * 2) - colour2[col2] - colour2[col3]);
-                if (c2 < 0) c2 = 0;
-
-                colour_difference += Math.Abs(c1 - c2);
-            }
-            //colour_difference /= (6 * 255.0f);
-            colour_difference *= 0.0006535947712418f;
-
-            return (colour_difference);
-        }
-
-        /// <summary>
         /// returns the localisation probability
         /// </summary>
         /// <param name="x_cell">x grid coordinate</param>
         /// <param name="y_cell">y grid coordinate</param>
         /// <param name="origin">pose of the robot</param>
-        /// <param name="sensorModelProbability">probability value from a specific point in the ray, taken from the sensor model</param>
+        /// <param name="sensormodel_probability">probability value from a specific point in the ray, taken from the sensor model</param>
         /// <param name="colour">colour of the localisation ray</param>
         /// <returns>log odds probability of there being a match between the ray and the grid</returns>
-        private float matchingProbability(int x_cell, int y_cell, int z_cell,
-                                          particlePose origin,
-                                          float sensormodel_probability,
-                                          byte[] colour)
+        private float matchingProbability(
+            int x_cell, int y_cell, int z_cell,
+            particlePose origin,
+            float sensormodel_probability,
+            byte[] colour)
         {
-            float value = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
+            float prob_log_odds = occupancygridCellMultiHypothesis.NO_OCCUPANCY_EVIDENCE;
             float colour_variance = 0;
 
             // localise using this grid cell
@@ -433,9 +295,9 @@ namespace sentience.core
                 float colour_probability = 1.0f  - colour_difference;
 
                 // localisation matching probability, expressed as log odds
-                value = LogOdds[(int)(occupancy_probability * colour_probability * LOG_ODDS_LOOKUP_LEVELS)];
+                prob_log_odds = LogOdds[(int)(occupancy_probability * colour_probability * LOG_ODDS_LOOKUP_LEVELS)];
             }
-            return (value);
+            return (prob_log_odds);
         }
 
         #endregion

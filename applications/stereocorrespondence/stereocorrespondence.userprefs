@@ -1,37 +1,30 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/unittests/tests_parallel.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
     <Files>
       <File FileName="Welcome" />
       <File FileName="../../sentcore/unittests/tests_pos3D.cs" Line="24" Column="31" />
       <File FileName="../../sentcore/pos3D.cs" Line="138" Column="26" />
       <File FileName="../../sentcore/occupancygridMultiHypothesis.cs" Line="1" Column="1" />
       <File FileName="../../sentcore/particleGridCell.cs" Line="25" Column="25" />
-      <File FileName="../../sentcore/unittests/tests_parallel.cs" Line="25" Column="2" />
+      <File FileName="../../sentcore/unittests/tests_parallel.cs" Line="48" Column="1" />
       <File FileName="../../sentcore/unittests/tests_occupancygrid.cs" Line="18" Column="3" />
       <File FileName="../../sentcore/calibration.cs" Line="1" Column="1" />
       <File FileName="../../sentcore/particlePath.cs" Line="3" Column="23" />
+      <File FileName="MainWindow.cs" Line="219" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True" />
+        <State expanded="True">
+          <Node name="stereocorrespondence" expanded="True">
+            <Node name="MainWindow.cs" selected="True" />
+          </Node>
+        </State>
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True">
-          <Node name="sentcore" expanded="True">
-            <Node name="sentience" expanded="True">
-              <Node name="core" expanded="True">
-                <Node name="tests" expanded="True" selected="True">
-                  <Node name="tests_occupancygrid" expanded="True" />
-                  <Node name="tests_parallel" expanded="True" />
-                  <Node name="tests_pos3D" expanded="True" />
-                </Node>
-              </Node>
-            </Node>
-          </Node>
-        </State>
+        <State expanded="True" />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

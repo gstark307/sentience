@@ -104,7 +104,7 @@ namespace mapping {
         private Gtk.Image imgRobotPath;
         
         protected virtual void Build() {
-            Stetic.Gui.Initialize();
+            Stetic.Gui.Initialize(this);
             // Widget mapping.MainWindow
             Gtk.UIManager w1 = new Gtk.UIManager();
             Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");

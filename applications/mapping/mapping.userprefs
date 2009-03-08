@@ -1,13 +1,28 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="Welcome" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/occupancygridSimple.cs" ctype="Workbench">
     <Files>
       <File FileName="Welcome" />
+      <File FileName="Main.cs" Line="1" Column="1" />
+      <File FileName="frmSimulation.cs" Line="158" Column="7" />
+      <File FileName="../../sentcore/OdometryData.cs" Line="21" Column="34" />
+      <File FileName="../../sentcore/occupancygridMultiHypothesis.cs" Line="325" Column="55" />
+      <File FileName="../../sentcore/occupancygridSimple.cs" Line="139" Column="41" />
+      <File FileName="../../sentcore/occupancygridCell.cs" Line="362" Column="1" />
+      <File FileName="../../sentcore/occupancygridBase.cs" Line="57" Column="18" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True" />
+        <State expanded="True">
+          <Node name="mapping" expanded="True" />
+          <Node name="sentcore" expanded="True">
+            <Node name="occupancygridSimple.cs" selected="True" />
+          </Node>
+        </State>
       </Pad>
       <Pad Id="ClassPad">
+        <State expanded="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
         <State expanded="True" />
       </Pad>
     </Pads>

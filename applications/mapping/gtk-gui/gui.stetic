@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <stetic-interface>
   <configuration>
-    <images-root-path>../</images-root-path>
-    <target-gtk-version>2.10.0</target-gtk-version>
+    <images-root-path>..</images-root-path>
+    <target-gtk-version>2.12.1</target-gtk-version>
   </configuration>
   <widget class="Gtk.Window" id="mapping.MainWindow" design-size="793 485">
     <action-group name="Default">

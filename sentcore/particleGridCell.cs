@@ -30,7 +30,7 @@ namespace sentience.core
     public class particleGridCellBase
     {
         // observed colour
-        public Byte[] colour;
+        public byte[] colour;
 
         // probability of occupancy, taken from the sensor model and stored as log odds
         public float probabilityLogOdds;
@@ -70,9 +70,11 @@ namespace sentience.core
         /// <param name="probability">probability assigned to this cell</param>
         /// <param name="pose">the pose from which this cell was observed</param>
         /// <param name="colour">the colour of this cell</param>
-        public particleGridCell(int x, int y, int z, 
-                                float probability, particlePose pose,
-                                Byte[] colour)
+        public particleGridCell(
+            int x, int y, int z, 
+            float probability, 
+            particlePose pose,
+            byte[] colour)
         {
             this.x = (short)x;
             this.y = (short)y;

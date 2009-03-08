@@ -44,7 +44,7 @@ namespace mapping {
         private Gtk.Image imgOccupancyGrid;
         
         protected virtual void Build() {
-            Stetic.Gui.Initialize();
+            Stetic.Gui.Initialize(this);
             // Widget mapping.frmSimulation
             Gtk.UIManager w1 = new Gtk.UIManager();
             Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");

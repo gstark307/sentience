@@ -67,6 +67,9 @@
     <File name="unittests/tests_pos3D.cs" subtype="Code" buildaction="Compile" />
     <File name="parallel.cs" subtype="Code" buildaction="Compile" />
     <File name="unittests/tests_parallel.cs" subtype="Code" buildaction="Compile" />
+    <File name="OdometryData.cs" subtype="Code" buildaction="Compile" />
+    <File name="occupancygridSimple.cs" subtype="Code" buildaction="Compile" />
+    <File name="occupancygridBase.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Project" localcopy="True" refto="memcompressor" />
