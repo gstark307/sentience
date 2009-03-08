@@ -77,7 +77,7 @@ namespace sentience.core
             return (sum);
         }
 
-        public pos3D rotate(float pan, float tilt, float roll)
+        public pos3D rotate_old(float pan, float tilt, float roll)
         {
             float hyp;
             pos3D rotated = new pos3D(x,y,z);
@@ -130,6 +130,59 @@ namespace sentience.core
             rotated.roll = this.roll + roll;
             return (rotated);
         }
+
+        /// <summary>
+        /// rotates this position, using Y forward convention
+        /// </summary>
+        /// <param name="pan">pan angle in radians</param>
+        /// <param name="tilt">tilt angle in radians</param>
+        /// <param name="roll">roll angle in radians</param>
+        /// <returns>rotated position</returns>                
+        public pos3D rotate(float pan, float tilt, float roll)
+        {
+            float x2 = x;
+            float y2 = y;
+            float z2 = z;
+            
+            float x3 = x;
+            float y3 = y;
+            float z3 = z;
+
+            // Rotation about the y axis
+            if (roll != 0)
+            {
+                float roll2 = roll + (float)Math.PI;
+                x3 = (float)((Math.Cos(roll2) * x2) + (Math.Sin(roll2) * z2));
+                z3 = (float)(-(Math.Sin(roll) * x2) + (Math.Cos(roll) * z2));
+                x2 = x3;
+                z2 = z3;
+            }
+
+            // Rotatation about the x axis
+            if (tilt != 0)
+            {
+                float tilt2 = tilt;
+                z3 = (float)((Math.Cos(tilt2) * y2) - (Math.Sin(tilt2) * z2));
+                y3 = (float)((Math.Sin(tilt2) * y2) + (Math.Cos(tilt2) * z2));
+                y2 = y3;
+                z2 = z3;
+            }
+                                    
+            // Rotation about the z axis: 
+            if (pan != 0)
+            {                
+                float pan2 = pan + (float)Math.PI;
+                x3 = (float)((Math.Cos(pan2) * x2) - (Math.Sin(pan2) * y2));
+                y3 = (float)((Math.Sin(pan) * x2) + (Math.Cos(pan) * y2));                 
+            }
+
+            pos3D rotated = new pos3D(x3, y3, z3);
+            rotated.pan = this.pan + pan;
+            rotated.tilt = this.tilt + tilt;
+            rotated.roll = this.roll + roll;
+            return (rotated);
+        }
+        
 
         /// <summary>
         /// return a translated version of the point
@@ -227,4 +280,5 @@ namespace sentience.core
         #endregion
 
     }
+
 }

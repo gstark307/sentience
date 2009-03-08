@@ -1,6 +1,6 @@
 /*
     Sentience 3D Perception System
-    Copyright (C) 2000-2007 Bob Mottram
+    Copyright (C) 2009 Bob Mottram
     fuzzgun@gmail.com
 
     This program is free software: you can redistribute it and/or modify
