@@ -446,5 +446,539 @@ namespace sentience.core
 
         #endregion        
 		
+		#region "adding a new observation as a set of stereo rays"
+
+        /// <summary>
+        /// add an observation taken from this pose
+        /// </summary>
+        /// <param name="stereo_rays">list of ray objects in this observation</param>
+        /// <param name="rob">robot object</param>
+        /// <param name="LocalGrid">occupancy grid into which to insert the observation</param>
+        /// <param name="localiseOnly">if true does not add any mapping particles (pure localisation)</param>
+        /// <returns>localisation matching score</returns>
+        public float AddObservation(
+            List<evidenceRay>[] stereo_rays,
+            robot rob, 
+            bool localiseOnly)
+        {
+            // clear the localisation score
+            float localisation_score = NO_OCCUPANCY_EVIDENCE;
+
+            // get the positions of the head and cameras for this pose
+            pos3D head_location = new pos3D(0,0,0);
+            pos3D[] camera_centre_location = new pos3D[rob.head.no_of_stereo_cameras];
+            pos3D[] left_camera_location = new pos3D[rob.head.no_of_stereo_cameras];
+            pos3D[] right_camera_location = new pos3D[rob.head.no_of_stereo_cameras];
+            calculateCameraPositions(rob, ref head_location,
+                                     ref camera_centre_location,
+                                     ref left_camera_location,
+                                     ref right_camera_location);
+            
+            // itterate for each stereo camera
+            int cam = stereo_rays.Length - 1;
+            while (cam >= 0)
+            {
+                // itterate through each ray
+                int r = stereo_rays[cam].Count - 1;
+                while (r >= 0)
+                {
+                    // observed ray.  Note that this is in an egocentric
+                    // coordinate frame relative to the head of the robot
+                    evidenceRay ray = stereo_rays[cam][r];
+
+                    // translate and rotate this ray appropriately for the pose
+                    evidenceRay trial_ray = ray.trialPose(camera_centre_location[cam].pan, 
+                                                          camera_centre_location[cam].x, 
+                                                          camera_centre_location[cam].y);
+
+                    // update the grid cells for this ray and update the
+                    // localisation score accordingly
+                    float score =
+                        Insert(trial_ray, 
+                               rob.head.sensormodel[cam],
+                               left_camera_location[cam], 
+                               right_camera_location[cam],
+                               localiseOnly);
+                    if (score != NO_OCCUPANCY_EVIDENCE)
+                        if (localisation_score != NO_OCCUPANCY_EVIDENCE)
+                            localisation_score += score;
+                        else
+                            localisation_score = score;
+                    r--;
+                }
+                cam--;
+            }
+
+            return (localisation_score);
+        }
+
+        #endregion
+		
+        #region "exporting grid data to third party visualisation programs"
+
+        /// <summary>
+        /// export the occupancy grid data to IFrIT basic particle file format for visualisation
+        /// </summary>
+        /// <param name="filename">name of the file to save as</param>
+        public void ExportToIFrIT(string filename)
+        {
+            ExportToIFrIT(filename, dimension_cells / 2, dimension_cells / 2, dimension_cells);
+        }
+
+        /// <summary>
+        /// export the occupancy grid data to IFrIT basic particle file format for visualisation
+        /// </summary>
+        /// <param name="filename">name of the file to save as</param>
+        /// <param name="pose">best available pose</param>
+        /// <param name="centre_x">centre of the tile in grid cells</param>
+        /// <param name="centre_y">centre of the tile in grid cells</param>
+        /// <param name="width_cells">width of the tile in grid cells</param>
+        public void ExportToIFrIT(string filename,
+                                  int centre_x, int centre_y,
+                                  int width_cells)
+        {
+            float threshold = 0.5f;
+            int half_width_cells = width_cells / 2;
+
+            int tx = centre_x + half_width_cells;
+            int ty = centre_y + half_width_cells;
+            int tz = width_cells;
+            int bx = centre_x - half_width_cells;
+            int by = centre_y - half_width_cells;
+            int bz = 0;
+
+            // get the bounding region within which there are actice grid cells
+            int occupied_cells = 0;
+            for (int x = centre_x - half_width_cells; x <= centre_x + half_width_cells; x++)
+            {
+                if ((x >= 0) && (x < dimension_cells))
+                {
+                    for (int y = centre_y - half_width_cells; y <= centre_y + half_width_cells; y++)
+                    {
+                        if ((y >= 0) && (y < dimension_cells))
+                        {
+                            if (cell[x][y] != null)
+                            {
+                                for (int z = 0; z < dimension_cells_vertical; z++)
+                                {
+                                    float prob = cell[x][y][z].probabilityLogOdds;
+
+                                    if (prob != NO_OCCUPANCY_EVIDENCE)
+                                    {
+                                        occupied_cells++;
+                                        if (x < tx) tx = x;
+                                        if (y < ty) ty = y;
+                                        if (z < tz) tz = z;
+                                        if (x > bx) bx = x;
+                                        if (y > by) by = y;
+                                        if (z > bz) bz = z;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            bx++;
+            by++;
+
+            if (occupied_cells > 0)
+            {
+                // add bounding box information
+                string bounding_box = Convert.ToString(tx) + " " + 
+                                      Convert.ToString(ty) + " " +
+                                      Convert.ToString(tz) + " " +
+                                      Convert.ToString(bx) + " " + 
+                                      Convert.ToString(by) + " " +
+                                      Convert.ToString(bz) + " X Y Z";
+
+                List<string> particles = new List<string>();
+
+                for (int y = ty; y < by; y++)
+                {
+                    for (int x = tx; x < bx; x++)
+                    {
+                        if (cell[x][y] != null)
+                        {
+                            for (int z = 0; z < dimension_cells_vertical; z++)
+                            {
+                                if (cell[x][y][z] != null)
+                                {
+                                    float prob = cell[x][y][z].probabilityLogOdds;
+                                    
+                                    if (prob != NO_OCCUPANCY_EVIDENCE)
+                                    {
+                                        prob = probabilities.LogOddsToProbability(prob);
+                                        if (prob > threshold)  // probably occupied space
+                                        {
+                                            // get the colour of the grid cell as a floating point value
+                                            float colour_value = int.Parse(colours.GetHexFromRGB((int)cell[x][y][z].colour[0], (int)cell[x][y][z].colour[1], (int)cell[x][y][z].colour[2]), NumberStyles.HexNumber);
+
+                                            string particleStr = Convert.ToString(x) + " " +
+                                                                 Convert.ToString(y) + " " +
+                                                                 Convert.ToString(z) + " " +
+                                                                 Convert.ToString(prob) + " " +
+                                                                 Convert.ToString(colour_value);
+                                            particles.Add(particleStr);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+
+                // write the text file
+                if (particles.Count > 0)
+                {
+                    StreamWriter oWrite = null;
+                    bool allowWrite = true;
+
+                    try
+                    {
+                        oWrite = File.CreateText(filename);
+                    }
+                    catch
+                    {
+                        allowWrite = false;
+                    }
+
+                    if (allowWrite)
+                    {
+                        oWrite.WriteLine(Convert.ToString(particles.Count));
+                        oWrite.WriteLine(bounding_box);
+                        for (int p = 0; p < particles.Count; p++)
+                            oWrite.WriteLine(particles[p]);
+                        oWrite.Close();
+                    }
+                }
+
+            }
+        }
+
+
+        #endregion
+		
+
+        #region "saving and loading"
+
+        /// <summary>
+        /// save the entire grid to file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void Save(string filename)
+        {
+            FileStream fp = new FileStream(filename, FileMode.Create);
+            BinaryWriter binfile = new BinaryWriter(fp);
+            Save(binfile);
+            binfile.Close();
+            fp.Close();
+        }
+
+        /// <summary>
+        /// save the entire grid to a single file
+        /// </summary>
+        /// <param name="binfile"></param>
+        public void Save(BinaryWriter binfile)
+        {
+            SaveTile(binfile, dimension_cells / 2, dimension_cells / 2, dimension_cells);
+        }
+
+        /// <summary>
+        /// save the entire grid as a byte array, suitable for subsequent compression
+        /// </summary>
+        /// <returns></returns>
+        public byte[] Save()
+        {
+            return(SaveTile(dimension_cells / 2, dimension_cells / 2, dimension_cells));
+        }
+
+        /// <summary>
+        /// save the occupancy grid data to file as a tile
+        /// it is expected that multiple tiles will be saved per grid
+        /// </summary>
+        /// <param name="binfile">file to write to</param>
+        /// <param name="centre_x">centre of the tile in grid cells</param>
+        /// <param name="centre_y">centre of the tile in grid cells</param>
+        /// <param name="width_cells">width of the tile in grid cells</param>
+        public void SaveTile(BinaryWriter binfile,
+                             int centre_x, 
+                             int centre_y, 
+                             int width_cells)
+        {
+            // write the whole thing to disk in one go
+            binfile.Write(SaveTile(centre_x, centre_y, width_cells));
+        }
+
+        /// <summary>
+        /// save the occupancy grid data to file as a tile
+        /// it is expected that multiple tiles will be saved per grid
+        /// This returns a byte array, which may subsequently be 
+        /// compressed as a zip file for extra storage efficiency
+        /// </summary>
+        /// <param name="centre_x">centre of the tile in grid cells</param>
+        /// <param name="centre_y">centre of the tile in grid cells</param>
+        /// <param name="width_cells">width of the tile in grid cells</param>
+        /// <returns>byte array containing the data</returns>
+        public byte[] SaveTile(
+            int centre_x, 
+            int centre_y,
+            int width_cells)
+        {
+            ArrayList data = new ArrayList();
+
+            int half_width_cells = width_cells / 2;
+
+            int tx = centre_x + half_width_cells;
+            int ty = centre_y + half_width_cells;
+            int bx = centre_x - half_width_cells;
+            int by = centre_y - half_width_cells;
+
+            // get the bounding region within which there are actice grid cells
+            for (int x = centre_x - half_width_cells; x <= centre_x + half_width_cells; x++)
+            {
+                if ((x >= 0) && (x < dimension_cells))
+                {
+                    for (int y = centre_y - half_width_cells; y <= centre_y + half_width_cells; y++)
+                    {
+                        if ((y >= 0) && (y < dimension_cells))
+                        {
+                            if (cell[x][y] != null)
+                            {
+                                if (x < tx) tx = x;
+                                if (y < ty) ty = y;
+                                if (x > bx) bx = x;
+                                if (y > by) by = y;
+                            }
+                        }
+                    }
+                }
+            }
+            bx++;
+            by++;
+
+            // write the bounding box dimensions to file
+            byte[] intbytes = BitConverter.GetBytes(tx);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
+            intbytes = BitConverter.GetBytes(ty);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
+            intbytes = BitConverter.GetBytes(bx);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
+            intbytes = BitConverter.GetBytes(by);
+            for (int i = 0; i < intbytes.Length; i++)
+                data.Add(intbytes[i]);
+
+            // create a binary index
+            int w1 = bx - tx;
+            int w2 = by - ty;
+            bool[] binary_index = new bool[w1 * w2];
+
+            int n = 0;
+            int occupied_cells = 0;
+            for (int y = ty; y < by; y++)
+            {
+                for (int x = tx; x < bx; x++)
+                {
+                    if (cell[x][y] != null)
+                    {
+                        occupied_cells++;
+                        binary_index[n] = true;
+                    }
+                    n++;
+                }
+            }
+
+            // convert the binary index to a byte array for later storage
+            byte[] indexbytes = ArrayConversions.ToByteArray(binary_index);
+            for (int i = 0; i < indexbytes.Length; i++)
+                data.Add(indexbytes[i]);            
+
+            if (occupied_cells > 0)
+            {
+                float[] occupancy = new float[occupied_cells * dimension_cells_vertical];
+                byte[] colourData = new byte[occupied_cells * dimension_cells_vertical * 3];
+                float mean_variance = 0;
+
+                n = 0;
+                for (int y = ty; y < by; y++)
+                {
+                    for (int x = tx; x < bx; x++)
+                    {
+                        if (cell[x][y] != null)
+                        {
+                            for (int z = 0; z < dimension_cells_vertical; z++)
+                            {
+                                if (cell[x][y][z] != null)
+                                {
+                                    float prob = probabilities.LogOddsToProbability(cell[x][y][z].probabilityLogOdds);
+                                    int index = (n * dimension_cells_vertical) + z;
+                                    occupancy[index] = prob;
+                                    if (prob != NO_OCCUPANCY_EVIDENCE)
+                                        for (int col = 0; col < 3; col++)
+                                            colourData[(index * 3) + col] = (byte)cell[x][y][z].colour[col];
+                                }
+                            }
+                            n++;
+                        }
+                    }
+                }
+
+                // store the occupancy and colour data as byte arrays
+                byte[] occupancybytes = ArrayConversions.ToByteArray(occupancy);
+                for (int i = 0; i < occupancybytes.Length; i++)
+                    data.Add(occupancybytes[i]);
+                for (int i = 0; i < colourData.Length; i++)
+                    data.Add(colourData[i]);            
+            }
+            byte[] result = (byte[])data.ToArray(typeof(byte));
+            return(result);
+        }
+
+
+        /// <summary>
+        /// load an entire grid from a single file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void Load(string filename)
+        {
+            FileStream fp = new FileStream(filename, FileMode.Open);
+            BinaryReader binfile = new BinaryReader(fp);
+            Load(binfile);
+            binfile.Close();
+            fp.Close();
+        }
+
+        /// <summary>
+        /// load an entire grid from a single file
+        /// </summary>
+        /// <param name="binfile"></param>
+        public void Load(BinaryReader binfile)
+        {
+            LoadTile(binfile);
+        }
+
+        /// <summary>
+        /// load an entire grid from the given byte array
+        /// </summary>
+        /// <param name="data"></param>
+        public void Load(byte[] data)
+        {
+            LoadTile(data);
+        }
+
+        /// <summary>
+        /// load tile data from file
+        /// </summary>
+        /// <param name="binfile"></param>
+        public void LoadTile(BinaryReader binfile)
+        {
+            byte[] data = new byte[binfile.BaseStream.Length];
+            binfile.Read(data,0,data.Length);
+            LoadTile(data);
+        }
+
+        public void LoadTile(byte[] data)
+        {
+            // read the bounding box
+            int array_index = 0;
+            const int int32_bytes = 4;
+            int tx = BitConverter.ToInt32(data, 0);
+            int ty = BitConverter.ToInt32(data, int32_bytes);
+            int bx = BitConverter.ToInt32(data, int32_bytes * 2);
+            int by = BitConverter.ToInt32(data, int32_bytes * 3);
+            array_index = int32_bytes * 4;
+
+            // dimensions of the box
+            int w1 = bx - tx;
+            int w2 = by - ty;
+
+            //Read binary index as a byte array
+            int no_of_bits = w1 * w2;
+            int no_of_bytes = no_of_bits / 8;
+            if (no_of_bytes * 8 < no_of_bits) no_of_bytes++;
+            byte[] indexData = new byte[no_of_bytes];
+            for (int i = 0; i < no_of_bytes; i++)
+                indexData[i] = data[array_index + i];
+            bool[] binary_index = ArrayConversions.ToBooleanArray(indexData);
+            array_index += no_of_bytes;
+
+            int n = 0;
+            int occupied_cells = 0;
+            for (int y = ty; y < by; y++)
+            {
+                for (int x = tx; x < bx; x++)
+                {
+                    if (binary_index[n])
+                    {
+                        cell[x][y] = new particleGridCellBase[dimension_cells_vertical];
+                        occupied_cells++;
+                    }
+                    n++;
+                }
+            }
+
+            if (occupied_cells > 0)
+            {
+                const int float_bytes = 4;
+
+                // read occupancy values
+                no_of_bytes = occupied_cells * dimension_cells_vertical * float_bytes;
+                byte[] occupancyData = new byte[no_of_bytes];
+                for (int i = 0; i < no_of_bytes; i++)
+                    occupancyData[i] = data[array_index + i];
+                array_index += no_of_bytes;
+                float[] occupancy = ArrayConversions.ToFloatArray(occupancyData);
+
+                // read colour values
+                no_of_bytes = occupied_cells * dimension_cells_vertical * 3;
+                byte[] colourData = new byte[no_of_bytes];
+                for (int i = 0; i < no_of_bytes; i++)
+                    colourData[i] = data[array_index + i];
+                array_index += no_of_bytes;
+
+                // insert the data into the grid
+                n = 0;
+                for (int y = ty; y < by; y++)
+                {
+                    for (int x = tx; x < bx; x++)
+                    {
+                        if (cell[x][y] != null)
+                        {
+                            cell[x][y] = new particleGridCellBase[dimension_cells_vertical];
+                            for (int z = 0; z < dimension_cells_vertical; z++)
+                            {
+                                // set the probability value
+                                int index = (n * dimension_cells_vertical) + z;
+                                float probLogOdds = probabilities.LogOdds(occupancy[index]);
+                                if (probLogOdds != NO_OCCUPANCY_EVIDENCE)
+                                {
+                                    // create a distilled grid particle
+                                    cell[x][y][z] = new particleGridCellBase();                                
+
+                                    cell[x][y][z].probabilityLogOdds = probLogOdds;
+
+                                    // set the colour
+                                    cell[x][y][z].colour = new byte[3];
+
+                                    for (int col = 0; col < 3; col++)
+                                        cell[x][y][z].colour[col] = colourData[(index * 3) + col];
+                                }
+                            }
+
+                            n++;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        #endregion
+
+		
 	}
 }

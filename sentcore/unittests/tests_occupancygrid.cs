@@ -24,11 +24,64 @@ using sentience.core;
 namespace sentience.core.tests
 {
 	[TestFixture()]
-	public class tests_occupancygrid
+	public class tests_occupancygrid_simple
 	{
-		
 		[Test()]
-		public void TestGridCreation()
+		public void InsertRays()
+		{
+		    int dimension_cells = 50;
+		    int dimension_cells_vertical = 30;
+		    int cellSize_mm = 50;
+		    int localisationRadius_mm = 1000;
+		    int maxMappingRange_mm = 5000;
+		    float vacancyWeighting = 0;
+		    
+		    occupancygridSimple grid = 
+		        new occupancygridSimple(
+		            dimension_cells,
+		            dimension_cells_vertical,
+		            cellSize_mm,
+		            localisationRadius_mm,
+		            maxMappingRange_mm,
+		            vacancyWeighting);
+		    
+		    Assert.AreNotEqual(grid, null, "object occupancygridSimple was not created");
+		    
+		    robot observer = new robot(1, robot.MAPPING_SIMPLE);
+		    Assert.AreNotEqual(observer, null, "robot object was not created");
+		
+		    
+		}	
+	
+		[Test()]
+		public void GridCreation()
+		{
+		    int dimension_cells = 50;
+		    int dimension_cells_vertical = 30;
+		    int cellSize_mm = 50;
+		    int localisationRadius_mm = 1000;
+		    int maxMappingRange_mm = 5000;
+		    float vacancyWeighting = 0;
+		    
+		    occupancygridSimple grid = 
+		        new occupancygridSimple(
+		            dimension_cells,
+		            dimension_cells_vertical,
+		            cellSize_mm,
+		            localisationRadius_mm,
+		            maxMappingRange_mm,
+		            vacancyWeighting);
+		    
+		    Assert.AreNotEqual(grid, null, "object occupancygridSimple was not created");
+		
+		}
+	}
+	
+	[TestFixture()]
+	public class tests_occupancygrid_multi_hypothesis
+	{		
+		[Test()]
+		public void GridCreation()
 		{
 		    int dimension_cells = 50;
 		    int dimension_cells_vertical = 30;

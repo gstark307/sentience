@@ -1,21 +1,24 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/occupancygridSimple.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/unittests/tests_occupancygrid.cs" ctype="Workbench">
     <Files>
       <File FileName="Welcome" />
       <File FileName="Main.cs" Line="1" Column="1" />
       <File FileName="frmSimulation.cs" Line="158" Column="7" />
       <File FileName="../../sentcore/OdometryData.cs" Line="21" Column="34" />
       <File FileName="../../sentcore/occupancygridMultiHypothesis.cs" Line="325" Column="55" />
-      <File FileName="../../sentcore/occupancygridSimple.cs" Line="139" Column="41" />
+      <File FileName="../../sentcore/occupancygridSimple.cs" Line="977" Column="10" />
       <File FileName="../../sentcore/occupancygridCell.cs" Line="362" Column="1" />
       <File FileName="../../sentcore/occupancygridBase.cs" Line="57" Column="18" />
+      <File FileName="../../sentcore/robot.cs" Line="1747" Column="14" />
+      <File FileName="../../sentcore/unittests/tests_occupancygrid.cs" Line="46" Column="33" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="mapping" expanded="True" />
           <Node name="sentcore" expanded="True">
-            <Node name="occupancygridSimple.cs" selected="True" />
+            <Node name="unittests" expanded="True">
+              <Node name="tests_occupancygrid.cs" selected="True" />
+            </Node>
           </Node>
         </State>
       </Pad>
@@ -23,7 +26,17 @@
         <State expanded="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True" />
+        <State expanded="True" selected="True">
+          <Node name="sentcore" expanded="True">
+            <Node name="sentience" expanded="True">
+              <Node name="core" expanded="True">
+                <Node name="tests" expanded="True">
+                  <Node name="tests_occupancygrid_simple" expanded="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

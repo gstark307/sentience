@@ -34,7 +34,7 @@ namespace robotDesigner
         String defaultPath = System.Windows.Forms.Application.StartupPath + "\\";
 
         // robot object
-        robot rob = new robot(1);
+        robot rob = new robot(1, robot.MAPPING_DPSLAM);
 
         // whether the grid cell size has changed
         bool cellSizeChanged = false;
@@ -100,7 +100,7 @@ namespace robotDesigner
                 txtHeadHeightFromGround.Text = Convert.ToString(rob.head.z);
                 txtHeadPositionLeft.Text = Convert.ToString(rob.head.x);
                 txtHeadPositionForward.Text = Convert.ToString(rob.head.y);
-                txtNoOfCameras.Text = Convert.ToString(rob.head.no_of_cameras);
+                txtNoOfCameras.Text = Convert.ToString(rob.head.no_of_stereo_cameras);
                 cmbCameraOrientation.SelectedIndex = rob.CameraOrientation;
 
                 txtGridLevels.Text = Convert.ToString(rob.LocalGridLevels);
@@ -121,9 +121,9 @@ namespace robotDesigner
         public void update()
         {
             int no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);            
-            robot new_rob = new robot(no_of_cameras);
+            robot new_rob = new robot(no_of_cameras, robot.MAPPING_DPSLAM);
 
-            for (int i = 0; i < rob.head.no_of_cameras; i++)
+            for (int i = 0; i < rob.head.no_of_stereo_cameras; i++)
             {
                 new_rob.head.calibration[i] = rob.head.calibration[i];
                 new_rob.head.sensormodel[i] = rob.head.sensormodel[i];
@@ -146,7 +146,7 @@ namespace robotDesigner
             rob.CountsPerRev = Convert.ToInt32(txtCountsPerRev.Text);
             rob.MotorNoLoadSpeedRPM = Convert.ToSingle(txtMotorNoLoadSpeedRPM.Text);
             rob.MotorTorqueKgMm = Convert.ToSingle(txtMotorTorque.Text);
-            for (int i = 0; i < rob.head.no_of_cameras; i++)
+            for (int i = 0; i < rob.head.no_of_stereo_cameras; i++)
             {
                 rob.head.calibration[i].baseline = Convert.ToSingle(txtCameraBaseline.Text);
                 rob.head.calibration[i].leftcam.camera_FOV_degrees = Convert.ToSingle(txtCameraFOV.Text);
@@ -159,7 +159,7 @@ namespace robotDesigner
             rob.head.x = Convert.ToSingle(txtHeadPositionLeft.Text);
             rob.head.y = Convert.ToSingle(txtHeadPositionForward.Text);
             rob.head.z = Convert.ToSingle(txtHeadHeightFromGround.Text);
-            rob.head.no_of_cameras = Convert.ToInt32(txtNoOfCameras.Text);
+            rob.head.no_of_stereo_cameras = Convert.ToInt32(txtNoOfCameras.Text);
             rob.CameraOrientation = Convert.ToInt32(cmbCameraOrientation.SelectedIndex);
 
             rob.LocalGridCellSize_mm = Convert.ToSingle(txtGridCellDimension.Text);

@@ -53,6 +53,10 @@ namespace sentience.core
         public long benchmark_garbage_collection;
         public long benchmark_prediction;
         public long benchmark_concurrency;
+        
+        public const int MAPPING_DPSLAM = 0;
+        public const int MAPPING_SIMPLE = 1;
+        public int mapping_type;
 
         #endregion
 
@@ -216,11 +220,12 @@ namespace sentience.core
         {
         }
 
-        public robot(int no_of_stereo_cameras)
+        public robot(int no_of_stereo_cameras, int mapping_type)
             : base(0, 0, 0)
         {            
             init(no_of_stereo_cameras, 
-                 rays_per_stereo_camera);
+                 rays_per_stereo_camera,
+                 mapping_type);
             //initDualCam();
         }
 
@@ -280,10 +285,13 @@ namespace sentience.core
         /// </summary>
         /// <param name="no_of_stereo_cameras">the number of stereo cameras on the robot (not the total number of cameras)</param>
         /// <param name="rays_per_stereo_camera">the number of rays which will be thrown from each stereo camera per time step</param>
+        /// <param name="mapping_type">the type of mapping to be used</param>
         private void init(int no_of_stereo_cameras, 
-                          int rays_per_stereo_camera)
+                          int rays_per_stereo_camera,
+                          int mapping_type)
         {
             this.no_of_stereo_cameras = no_of_stereo_cameras;
+            this.mapping_type = mapping_type;
 
             // head and shoulders
             head = new stereoHead(no_of_stereo_cameras);
@@ -300,13 +308,20 @@ namespace sentience.core
 			for (int i = 0; i < no_of_stereo_cameras; i++)
                 correspondence[i] = new stereoCorrespondence(inverseSensorModel.no_of_stereo_features);
 
-            // add local occupancy grids
-            LocalGrid = new occupancygridMultiHypothesis[mapping_threads];
-            for (int i = 0; i < mapping_threads; i++) createLocalGrid(i);
-
-            // create a motion model for each possible grid
-            motion = new motionModel[mapping_threads];
-            for (int i = 0; i < mapping_threads; i++) motion[i] = new motionModel(this, LocalGrid[i], 100 * (i+1));
+            if (mapping_type == MAPPING_DPSLAM)
+            {
+	            // add local occupancy grids
+	            LocalGrid = new occupancygridMultiHypothesis[mapping_threads];
+	            for (int i = 0; i < mapping_threads; i++) createLocalGrid(i);
+	
+	            // create a motion model for each possible grid
+	            motion = new motionModel[mapping_threads];
+	            for (int i = 0; i < mapping_threads; i++) motion[i] = new motionModel(this, LocalGrid[i], 100 * (i+1));
+            }
+            
+            if (mapping_type == MAPPING_SIMPLE)
+            {
+            }
 
             // a list of places where the robot might work or make observations
             worksites = new kmlZone();
@@ -384,10 +399,11 @@ namespace sentience.core
         /// <param name="fullres_right">right image data</param>
         /// <param name="bytes_per_pixel">number of bytes per pixel</param>
         /// <returns></returns>
-        public float loadRectifiedImages(int stereo_cam_index, 
-                                         Byte[] fullres_left, 
-                                         Byte[] fullres_right, 
-                                         int bytes_per_pixel)
+        public float loadRectifiedImages(
+            int stereo_cam_index, 
+            byte[] fullres_left, 
+            byte[] fullres_right, 
+            int bytes_per_pixel)
         {
             // set the required number of stereo features
             correspondence[stereo_cam_index].setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
@@ -404,10 +420,11 @@ namespace sentience.core
         /// <param name="fullres_right">right image data</param>
         /// <param name="bytes_per_pixel">number of bytes per pixel</param>
         /// <returns></returns>
-        public float loadRawImages(int stereo_cam_index, 
-                                   Byte[] fullres_left, 
-                                   Byte[] fullres_right, 
-                                   int bytes_per_pixel)
+        public float loadRawImages(
+            int stereo_cam_index, 
+            byte[] fullres_left, 
+            byte[] fullres_right, 
+            int bytes_per_pixel)
         {
             correspondence[stereo_cam_index].setRequiredFeatures(inverseSensorModel.no_of_stereo_features);
 
@@ -892,6 +909,22 @@ namespace sentience.core
             return (mean_variance);
         }
 
+        public List<evidenceRay>[] GetRays(List<byte[]> images)
+        {
+            if (images != null)
+            {                
+                // load stereo images
+                loadImages(images);
+
+                // create an observation as a set of rays from the stereo correspondence results
+                List<evidenceRay>[] stereo_rays = new List<evidenceRay>[head.no_of_stereo_cameras];
+                for (int cam = 0; cam < head.no_of_stereo_cameras; cam++)
+                    stereo_rays[cam] = inverseSensorModel.createObservation(head, cam);
+                    
+                return(stereo_rays);
+            }
+            else return(null);
+        }
 
         /// <summary>
         /// update the state of the robot using a list of images from its stereo camera/s
@@ -1335,6 +1368,9 @@ namespace sentience.core
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");
             nodeRobot.AppendChild(nodeOccupancyGrid);
 
+            xml.AddComment(doc, nodeOccupancyGrid, "The type of grid mapping");
+            xml.AddTextElement(doc, nodeOccupancyGrid, "MappingType", Convert.ToString(mapping_type));
+
             xml.AddComment(doc, nodeOccupancyGrid, "The number of scales used within the local grid");
             xml.AddTextElement(doc, nodeOccupancyGrid, "LocalGridLevels", Convert.ToString(LocalGridLevels));
 
@@ -1607,10 +1643,15 @@ namespace sentience.core
                 CameraOrientation = Convert.ToInt32(xnod.InnerText);
             }
 
+            if (xnod.Name == "MappingType")
+            {
+                mapping_type = Convert.ToInt32(xnod.InnerText);
+            }
+
             if (xnod.Name == "NoOfStereoCameras")
             {
                 int no_of_cameras = Convert.ToInt32(xnod.InnerText);
-                init(no_of_cameras, rays_per_stereo_camera);
+                init(no_of_cameras, rays_per_stereo_camera, mapping_type);
             }
 
             if (xnod.Name == "EnableScanMatching")

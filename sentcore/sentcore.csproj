@@ -1,4 +1,5 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -68,21 +69,23 @@
     <Compile Include="ThreadMappingUpdate.cs" />
     <Compile Include="ThreadStereoCorrespondence.cs" />
     <Compile Include="ThreadStereoCorrespondenceState.cs" />
+    <Compile Include="occupancygridBase.cs" />
+    <Compile Include="occupancygridSimple.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LICENCE.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FASTcorners\FASTcorners.csproj">
-      <Project>{37F539C1-BAD3-4C42-A665-6CA932951A75}</Project>
+      <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
       <Name>FASTcorners</Name>
     </ProjectReference>
     <ProjectReference Include="..\pathplanner\pathplanner.csproj">
-      <Project>{00157781-7254-481B-8229-58E18AEF65F9}</Project>
+      <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
       <Name>pathplanner</Name>
     </ProjectReference>
     <ProjectReference Include="..\utilities\utilities.csproj">
-      <Project>{3028A130-2D88-4581-B9F9-D840FA39875D}</Project>
+      <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
       <Name>utilities</Name>
     </ProjectReference>
   </ItemGroup>
