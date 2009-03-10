@@ -1,4 +1,5 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -43,7 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\utilities\utilities.csproj">
-      <Project>{3028A130-2D88-4581-B9F9-D840FA39875D}</Project>
+      <Project>{37F539C1-BAD3-4C42-A665-6CA932951A75}</Project>
       <Name>utilities</Name>
     </ProjectReference>
   </ItemGroup>

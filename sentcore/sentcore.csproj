@@ -4,97 +4,127 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</ProjectGuid>
+    <ProjectGuid>{C52357E0-3E32-4690-9F0B-696352412DB6}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ClassLibrary1</RootNamespace>
     <AssemblyName>sentcore</AssemblyName>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Execution>
+      <Execution />
+    </Execution>
+    <ConsolePause>false</ConsolePause>
+    <Build>
+      <Build />
+    </Build>
+    <Output>
+      <Output />
+    </Output>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Execution>
+      <Execution />
+    </Execution>
+    <ConsolePause>false</ConsolePause>
+    <Build>
+      <Build />
+    </Build>
+    <Output>
+      <Output />
+    </Output>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="nunit.framework, Version=2.4.7.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="calibration.cs" />
     <Compile Include="calibrationStereo.cs" />
+    <Compile Include="classimage.cs" />
+    <Compile Include="evidenceRay.cs" />
+    <Compile Include="MersenneTwister.cs" />
     <Compile Include="motionModel.cs" />
     <Compile Include="occupancygridCell.cs" />
     <Compile Include="occupancygridMultiHypothesis.cs" />
     <Compile Include="particleGridCell.cs" />
     <Compile Include="particlePath.cs" />
     <Compile Include="particlePose.cs" />
+    <Compile Include="pos3D.cs" />
     <Compile Include="rayModelLookup.cs" />
+    <Compile Include="robot.cs" />
     <Compile Include="scanMatching.cs" />
+    <Compile Include="sentienceRadar.cs" />
+    <Compile Include="sentience_stereo.cs" />
+    <Compile Include="sentience_stereo_contours.cs" />
     <Compile Include="sentience_stereo_FAST.cs" />
+    <Compile Include="sentience_stereo_interface.cs" />
+    <Compile Include="sentienceTracking.cs" />
     <Compile Include="simulation.cs" />
     <Compile Include="simulationPathSegment.cs" />
     <Compile Include="specialMath.cs" />
-    <Compile Include="classimage.cs" />
-    <Compile Include="sentienceRadar.cs" />
-    <Compile Include="sentienceTracking.cs" />
-    <Compile Include="sentience_stereo_contours.cs" />
-    <Compile Include="sentience_stereo_interface.cs" />
-    <Compile Include="sentience_stereo.cs" />
-    <Compile Include="MersenneTwister.cs" />
-    <Compile Include="robot.cs" />
     <Compile Include="stereoCorrespondence.cs" />
-    <Compile Include="evidenceRay.cs" />
-    <Compile Include="pos3D.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="stereoFeatures.cs" />
     <Compile Include="stereoHead.cs" />
     <Compile Include="stereoModel.cs" />
+    <Compile Include="FASTlines.cs" />
     <Compile Include="ThreadMappingState.cs" />
     <Compile Include="ThreadMappingUpdate.cs" />
     <Compile Include="ThreadStereoCorrespondence.cs" />
     <Compile Include="ThreadStereoCorrespondenceState.cs" />
-    <Compile Include="occupancygridBase.cs" />
+    <Compile Include="Mono.SIMD\AccelerationAttribute.cs" />
+    <Compile Include="Mono.SIMD\AccelMode.cs" />
+    <Compile Include="Mono.SIMD\SimdRuntime.cs" />
+    <Compile Include="Mono.SIMD\Vector2d.cs" />
+    <Compile Include="Mono.SIMD\Vector2l.cs" />
+    <Compile Include="Mono.SIMD\Vector2ul.cs" />
+    <Compile Include="Mono.SIMD\Vector4f.cs" />
+    <Compile Include="Mono.SIMD\Vector4i.cs" />
+    <Compile Include="Mono.SIMD\Vector4ui.cs" />
+    <Compile Include="Mono.SIMD\Vector8s.cs" />
+    <Compile Include="Mono.SIMD\Vector8us.cs" />
+    <Compile Include="Mono.SIMD\Vector16b.cs" />
+    <Compile Include="Mono.SIMD\Vector16sb.cs" />
+    <Compile Include="unittests\tests_occupancygrid.cs" />
+    <Compile Include="unittests\tests_pos3D.cs" />
+    <Compile Include="parallel.cs" />
+    <Compile Include="unittests\tests_parallel.cs" />
+    <Compile Include="OdometryData.cs" />
     <Compile Include="occupancygridSimple.cs" />
+    <Compile Include="occupancygridBase.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="LICENCE.txt" />
+    <None Include="LICENCE.txt" />
   </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <ProjectReference Include="..\utilities\utilities.csproj">
+      <Project>{C52357E0-3E32-4690-9F0B-696352412DB6}</Project>
+      <Name>utilities</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FASTcorners\FASTcorners.csproj">
-      <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
+      <Project>{C52357E0-3E32-4690-9F0B-696352412DB6}</Project>
       <Name>FASTcorners</Name>
     </ProjectReference>
     <ProjectReference Include="..\pathplanner\pathplanner.csproj">
-      <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
+      <Project>{C52357E0-3E32-4690-9F0B-696352412DB6}</Project>
       <Name>pathplanner</Name>
     </ProjectReference>
-    <ProjectReference Include="..\utilities\utilities.csproj">
-      <Project>{E699E1D5-D5AA-445C-BAD3-F0F6A53D7538}</Project>
-      <Name>utilities</Name>
-    </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
