@@ -23,7 +23,7 @@ namespace sluggish.utilities
 {	
 	public class fraction
 	{
-	    public int numerator, denominator;
+	    public long numerator, denominator;
 	
 		public fraction()
 		{
@@ -49,8 +49,29 @@ namespace sluggish.utilities
 		public static fraction operator + (fraction f1, fraction f2)
 		{
 			fraction frac = new fraction();
-			frac.numerator = (f1.numerator * f2.denominator) + (f2.numerator * f1.denominator);
-			frac.denominator = f2.denominator * f1.denominator;
+			if ((f1.numerator != 0) && (f2.numerator != 0))
+			{
+			    frac.numerator = (f1.numerator * f2.denominator) + (f2.numerator * f1.denominator);
+			    frac.denominator = f2.denominator * f1.denominator;
+			}
+			else
+			{
+			    if (f1.numerator == 0)
+			    {
+			        frac.numerator = f2.numerator;
+			        frac.denominator = f2.denominator;
+			    }
+			    else
+			    {
+			        frac.numerator = f1.numerator;
+			        frac.denominator = f1.denominator;
+			    }
+			}
+			if ((frac.denominator < 0) && (frac.numerator >= 0))
+			{
+			    frac.numerator = -frac.numerator;
+			    frac.denominator = -frac.denominator;
+			}
 			return(frac);
 		}
 		
@@ -63,8 +84,38 @@ namespace sluggish.utilities
 		public static fraction operator - (fraction f1, fraction f2)
 		{
 			fraction frac = new fraction();
-			frac.numerator = (f1.numerator * f2.denominator) - (f2.numerator * f2.denominator);
-			frac.denominator = f2.denominator * f1.denominator;
+			if ((f1.numerator != 0) && (f2.numerator != 0))
+			{
+			    if (f2.numerator > 0)
+			    {
+			        frac.numerator = (f1.numerator * f2.denominator) - (f2.numerator * f2.denominator);
+			        frac.denominator = f1.denominator * f2.denominator;
+			    }
+			    else
+			    {
+			        frac.numerator = (f1.numerator * f2.denominator) + (-f2.numerator * f1.denominator);
+			        frac.denominator = f2.denominator * f1.denominator;
+			    }
+			}
+			else
+			{
+			    if (f1.numerator == 0)
+			    {
+			        frac.numerator = -f2.numerator;
+			        frac.denominator = f2.denominator;
+			    }
+			    else
+			    {
+			        frac.numerator = f1.numerator;			    
+			        frac.denominator = f1.denominator;
+			    }
+			}
+						    			
+			if ((frac.denominator < 0) && (frac.numerator >= 0))
+			{
+			    frac.numerator = -frac.numerator;
+			    frac.denominator = -frac.denominator;
+			}
 			return(frac);
 		}
 		
@@ -79,6 +130,11 @@ namespace sluggish.utilities
 			fraction frac = new fraction();
 			frac.numerator = f1.numerator * f2.numerator;
 			frac.denominator = f1.denominator * f2.denominator;
+			if ((frac.denominator < 0) && (frac.numerator >= 0))
+			{
+			    frac.numerator = -frac.numerator;
+			    frac.denominator = -frac.denominator;
+			}
 			return(frac);
 		}
 		
@@ -97,6 +153,11 @@ namespace sluggish.utilities
 			{
 			    frac.numerator *= -1;
 			    frac.denominator *= -1;
+			}
+			if ((frac.denominator < 0) && (frac.numerator >= 0))
+			{
+			    frac.numerator = -frac.numerator;
+			    frac.denominator = -frac.denominator;
 			}
 			return(frac);
 		}
@@ -138,7 +199,7 @@ namespace sluggish.utilities
 		/// <param name="num1"></param>
 		/// <param name="remainder"></param>
 		/// <returns>denominator</returns>
-		private static int GCD(int num1, int remainder)
+		private static long GCD(long num1, long remainder)
 		{
 			if (remainder == 0)
 			{
@@ -155,9 +216,9 @@ namespace sluggish.utilities
 		/// </summary>
 		/// <param name="numerator">fraction numerator</param>
 		/// <param name="denominator">fraction denominator</param>  
-		public static void Reduce(ref int numerator, ref int denominator)
+		public static void Reduce(ref long numerator, ref long denominator)
 		{
-			int rdc = 0;
+			long rdc = 0;
 			if(denominator > numerator)
 				rdc = GCD(denominator, numerator);
 			else if(denominator < numerator)
@@ -166,6 +227,12 @@ namespace sluggish.utilities
 				rdc = GCD(numerator, denominator);
 			numerator /= rdc;
 			denominator /= rdc;
+			
+			if ((denominator < 0) && (numerator >= 0))
+			{
+			    numerator = -numerator;
+			    denominator = -denominator;
+			}			
 		}
 		
 		/// <summary>
@@ -175,6 +242,20 @@ namespace sluggish.utilities
 		{
 			Reduce(ref numerator, ref denominator);
 		}
+		
+		/// <summary>
+		/// truncates the fraction
+		/// </summary>
+		/// <param name="max_value"></param>
+        public void Truncate(int max_value)
+        {
+	        while (numerator > max_value)
+	        {
+	            numerator /= 2;
+	            denominator /= 2;
+	        }
+        }
+		
 				
 	}
 }
