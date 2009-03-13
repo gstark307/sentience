@@ -199,16 +199,18 @@ namespace sluggish.utilities
 		/// <param name="num1"></param>
 		/// <param name="remainder"></param>
 		/// <returns>denominator</returns>
-		private static long GCD(long num1, long remainder)
+		private static long GCD(long a, long b)
 		{
-			if (remainder == 0)
-			{
-				return(num1);
-			}
-			else
-			{
-				return(GCD(remainder, num1 % remainder));
-			}
+	        long Remainder;
+	    
+	        while( b != 0 )
+	        {
+	            Remainder = a % b;
+	            a = b;
+	            b = Remainder;
+	        }
+	      
+	        return a;
 		}
 		
 		/// <summary>
@@ -249,7 +251,8 @@ namespace sluggish.utilities
 		/// <param name="max_value"></param>
         public void Truncate(int max_value)
         {
-	        while (numerator > max_value)
+	        while ((numerator > max_value) ||
+	               (denominator > max_value))
 	        {
 	            numerator /= 2;
 	            denominator /= 2;
