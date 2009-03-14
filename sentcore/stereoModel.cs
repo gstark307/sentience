@@ -148,17 +148,29 @@ namespace sentience.core
         {
             int width = 320;
             int height = 240;
-            Byte[] img_result = new Byte[width * height * 3];
+            byte[] img_result = new byte[width * height * 3];
             createLookupTable(gridCellSize_mm, img_result, width, height);
         }
 
+        public void createLookupTable(
+		    int gridCellSize_mm, 
+		    int image_width, 
+		    int image_height)
+        {
+            byte[] img_result = new byte[image_width * image_height * 3];
+            createLookupTable(gridCellSize_mm, img_result, image_width, image_height);
+        }		
+		
         /// <summary>
         /// creates a lookup table for sensor models at different visual disparities
         /// </summary>
         /// <param name="img_result"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void createLookupTable(int gridCellSize_mm, Byte[] img_result, int width, int height)
+        public void createLookupTable(
+		    int gridCellSize_mm, 
+		    byte[] img_result, 
+		    int width, int height)
         {
             bool mirror = false;
             int divisor = 40;
@@ -227,10 +239,11 @@ namespace sentience.core
         /// <param name="apply_smoothing">try to smooth the data to remove pixelation effects</param>
         /// <param name="gridCellSize_mm">Size of each occupancy grid cell in millimetres</param>
         /// <param name="mirror">apply mirroring</param>
-        private void updateRayModel(float[, ,] grid_layer, int grid_dimension, 
-                                    Byte[] img, int img_width, int img_height, 
-                                    int divisor, bool apply_smoothing,
-                                    int gridCellSize_mm, bool mirror)
+        private void updateRayModel(
+		    float[, ,] grid_layer, int grid_dimension, 
+            byte[] img, int img_width, int img_height, 
+            int divisor, bool apply_smoothing,
+            int gridCellSize_mm, bool mirror)
         {
             // half a pixel of horizontal uncertainty
             sigma = 1.0f / (image_width * 1) * FOV_horizontal;
@@ -488,17 +501,60 @@ namespace sentience.core
         /// create a list of rays to be stored within poses
         /// </summary>
         /// <param name="head">head configuration</param>
-        /// <param name="camera_index">index number for the stereo camera</param>
-        /// <returns>list of evidence rays</returns>
-        public List<evidenceRay> createObservation(stereoHead head, int camera_index)
+        /// <param name="stereo_camera_index">index number for the stereo camera</param>
+        /// <returns>list of evidence rays, centred at (0, 0, 0)</returns>
+        public List<evidenceRay> createObservation(
+		    stereoHead head, 
+		    int stereo_camera_index)
+        {
+            List<evidenceRay> result;
+			
+			if (head.features[stereo_camera_index] != null)
+			{
+	            result = createObservation(
+			        head.cameraPosition[stereo_camera_index],
+			        head.calibration[stereo_camera_index].baseline,
+			        head.calibration[stereo_camera_index].leftcam.image_width,
+			        head.calibration[stereo_camera_index].leftcam.image_height,
+			        head.calibration[stereo_camera_index].leftcam.camera_FOV_degrees,
+			        head.features[stereo_camera_index].features,
+			        head.features[stereo_camera_index].colour,
+			        head.features[stereo_camera_index].uncertainties);
+			}
+			else
+			{
+				result = new List<evidenceRay>();
+			}
+			
+            return (result);
+        }
+
+		/// <summary>
+		/// returns a set of evidence rays based upon the given observation
+		/// </summary>
+		/// <param name="observer">observer position and orientation</param>
+		/// <param name="baseline">baseline distance</param>
+		/// <param name="image_width">camera image width</param>
+		/// <param name="image_height">camera image height</param>
+		/// <param name="FOV_degrees">horizontal camera field of view in degrees</param>
+		/// <param name="stereo_features">stereo features, as groups of three figures</param>
+		/// <param name="stereo_features_colour">colour of each stereo feature</param>
+		/// <param name="stereo_features_uncertainties">uncertainty value associated with each stereo feature</param>
+		/// <returns>list of evidence rays, centred at (0, 0, 0)</returns>
+        public List<evidenceRay> createObservation(
+		    pos3D observer,
+		    float baseline,
+		    int image_width,
+		    int image_height,
+		    float FOV_degrees,
+		    float[] stereo_features,
+		    byte[,] stereo_features_colour,
+		    float[] stereo_features_uncertainties)
         {
             List<evidenceRay> result = new List<evidenceRay>();
 
             // get essential data for this stereo camera
-            baseline = head.calibration[camera_index].baseline;
-            image_width = head.calibration[camera_index].leftcam.image_width;
-            image_height = head.calibration[camera_index].leftcam.image_height;
-            FOV_horizontal = head.calibration[camera_index].leftcam.camera_FOV_degrees * (float)Math.PI / 180.0f;
+            FOV_horizontal = FOV_degrees * (float)Math.PI / 180.0f;
             FOV_vertical = FOV_horizontal * image_height / image_width;
 
             // calculate observational uncertainty as a standard deviation
@@ -506,16 +562,14 @@ namespace sentience.core
             sigma = 1.0f / (image_width * 1) * FOV_horizontal;
 
             // some head geometry
-            pos3D headOrientation = head.cameraPosition[camera_index];
+            pos3D headOrientation = observer;
             pos3D cameraOrientation = new pos3D(0, 0, 0);
             cameraOrientation.pan = headOrientation.pan;
             cameraOrientation.tilt = headOrientation.tilt;
             cameraOrientation.roll = headOrientation.roll;
 
-            if (head.features[camera_index] != null)  // if there are stereo features associated with this camera
+            if (stereo_features != null)  // if there are stereo features associated with this camera
             {
-                float[] stereo_features = head.features[camera_index].features;
-                float[] uncertainties = head.features[camera_index].uncertainties;
                 int f2 = 0;
                 for (int f = 0; f < stereo_features.Length; f += 3)
                 {
@@ -525,10 +579,13 @@ namespace sentience.core
                     float disparity = stereo_features[f + 2];
 
                     // create a ray
-                    evidenceRay ray = createRay(image_x, image_y, disparity, uncertainties[f2],
-                                                head.features[camera_index].colour[f2, 0],
-                                                head.features[camera_index].colour[f2, 1],
-                                                head.features[camera_index].colour[f2, 2]);
+                    evidenceRay ray = 
+						createRay(
+						    image_x, image_y, disparity, 
+						    stereo_features_uncertainties[f2],
+                            stereo_features_colour[f2, 0],
+                            stereo_features_colour[f2, 1],
+                            stereo_features_colour[f2, 2]);
 
                     if (ray != null)
                     {
@@ -545,7 +602,7 @@ namespace sentience.core
             return (result);
         }
 
-
+		
         /// <summary>
         /// shows the gaussian distribution thrown into the grid
         /// this is only used for visualisation/debugging

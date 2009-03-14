@@ -199,6 +199,8 @@ namespace sentience.core
 
             const int X_AXIS = 0;
             const int Y_AXIS = 1;
+			
+			float inverse_cellSize_mm = 1.0f / cellSize_mm;
 
             // which disparity index in the lookup table to use
             // we multiply by 2 because the lookup is in half pixel steps
@@ -325,6 +327,7 @@ namespace sentience.core
 
                 int steps = (int)(longest / cellSize_mm);
                 if (steps < 1) steps = 1;
+				float inverse_steps = 1.0f / steps;
 
                 // calculate the range from the cameras to the start of the ray in grid cells
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
@@ -342,9 +345,9 @@ namespace sentience.core
                     widest_point = steps;
 
                 // calculate increment values in millimetres
-                float x_incr_mm = xdist_mm / steps;
-                float y_incr_mm = ydist_mm / steps;
-                float z_incr_mm = zdist_mm / steps;
+                float x_incr_mm = xdist_mm * inverse_steps;
+                float y_incr_mm = ydist_mm * inverse_steps;
+                float z_incr_mm = zdist_mm * inverse_steps;
 
                 // step through the ray, one grid cell at a time
                 int grid_step = 0;
@@ -384,20 +387,20 @@ namespace sentience.core
                     // localisation rays are wider, to enable a more effective matching score
                     // which is not too narrowly focussed and brittle
                     int ray_wdth_localisation = ray_wdth + localisation_search_cells;
-
+					
                     xx_mm += x_incr_mm;
                     yy_mm += y_incr_mm;
                     zz_mm += z_incr_mm;
                     // convert the x millimetre position into a grid cell position
-                    int x_cell = (int)Math.Round((xx_mm - grid_centre_x_mm) / (float)cellSize_mm);
+                    int x_cell = (int)Math.Round((xx_mm - grid_centre_x_mm) * inverse_cellSize_mm);
                     if ((x_cell > ray_wdth_localisation) && (x_cell < dimension_cells - ray_wdth_localisation))
                     {
                         // convert the y millimetre position into a grid cell position
-                        int y_cell = (int)Math.Round((yy_mm - grid_centre_y_mm) / (float)cellSize_mm);
+                        int y_cell = (int)Math.Round((yy_mm - grid_centre_y_mm) * inverse_cellSize_mm);
                         if ((y_cell > ray_wdth_localisation) && (y_cell < dimension_cells - ray_wdth_localisation))
                         {
                             // convert the z millimetre position into a grid cell position
-                            int z_cell = (int)Math.Round((zz_mm - grid_centre_z_mm) / (float)cellSize_mm);
+                            int z_cell = (int)Math.Round((zz_mm - grid_centre_z_mm) * inverse_cellSize_mm);
                             if ((z_cell >= 0) && (z_cell < dimension_cells_vertical))
                             {
 
@@ -410,7 +413,7 @@ namespace sentience.core
                                     centre_prob = 0.5f + (sensormodel_lookup_probability[sensormodel_index][grid_step] * 0.5f);
                                 else
                                     // calculate the probability from the vacancy model
-                                    centre_prob = vacancyFunction(grid_step / (float)steps, steps);
+                                    centre_prob = vacancyFunction(grid_step * inverse_steps, steps);
 
 
                                 // width of the localisation ray
@@ -476,8 +479,7 @@ namespace sentience.core
                                         if (cell[x_cell2][y_cell2] == null)
                                             cell[x_cell2][y_cell2] = new particleGridCellBase[dimension_cells_vertical];
                                         if (cell[x_cell2][y_cell2][z_cell] == null)
-                                            cell[x_cell2][y_cell2][z_cell] = new particleGridCellBase();
-                                            
+											cell[x_cell2][y_cell2][z_cell] = new particleGridCellBase();
                                         particleGridCellBase c = cell[x_cell2][y_cell2][z_cell];
                                         c.probabilityLogOdds += probabilities.LogOdds(prob);
                                         c.colour = ray.colour;    // this is simplistic, but we'll live with it                     
@@ -1071,6 +1073,7 @@ namespace sentience.core
 
                         if (prob != NO_OCCUPANCY_EVIDENCE)
                         {
+							//Console.WriteLine("prob = " + prob.ToString());
                             if (prob > 0.5f)
                             {
                                 if (prob > 0.7f)

@@ -34,7 +34,7 @@ namespace sentience.core
     public class robot : pos3D
     {
         // name of the robot
-        public String Name = "My Robot";  
+        public string Name = "My Robot";  
 
         // the number of threads to use for mapping
         private int mapping_threads = 1;
