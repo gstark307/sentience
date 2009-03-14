@@ -81,6 +81,58 @@ namespace sentience.core
 		
 		#endregion
 		
+        #region "probability of a vertical grid column (for overhead views)"
+		
+        /// <summary>
+        /// return the probability of occupancy for a vertical grid column
+        /// </summary>
+        /// <param name="x">x cell coordinate on the grid</param>
+        /// <param name="y">y cell coordinate on the grid</param>
+		/// <param name="mean_colour">average cell colour for the column</param>
+        /// <returns>probability for the vertical grid column</returns>
+        public float GetProbability(
+		    int x, int y,
+            float[] mean_colour)
+        {
+            float prob_log_odds_total = 0;
+            int hits = 0;
+
+            mean_colour[0] = 0;
+			mean_colour[1] = 0;
+			mean_colour[2] = 0;
+			
+			particleGridCellBase[] column = cell[x][y];
+			if (column != null)
+			{
+	            for (int z = column.Length - 1; z >= 0; z--)
+	            {
+	                if (column[z] != null)
+					{
+		                float prob_log_odds = column[z].probabilityLogOdds;
+		                if (prob_log_odds != NO_OCCUPANCY_EVIDENCE)
+		                {
+		                    prob_log_odds_total += prob_log_odds;	                    
+							// unroll loop for speed
+		                    mean_colour[0] += column[z].colour[0];
+							mean_colour[1] += column[z].colour[1];
+							mean_colour[2] += column[z].colour[2];
+		                    hits++;
+		                }
+					}
+	            }
+	            if (hits > 0)
+	            {
+                    mean_colour[0] /= hits;
+					mean_colour[1] /= hits;
+					mean_colour[2] /= hits;
+	            }
+			}
+            return (probabilities.LogOddsToProbability(prob_log_odds_total));
+        }
+		
+		
+        #endregion
+		
         #region "calculating the matching probability"
         
         public const int NO_OCCUPANCY_EVIDENCE = 99999999;        
@@ -660,7 +712,6 @@ namespace sentience.core
 
         #endregion
 		
-
         #region "saving and loading"
 
         /// <summary>
@@ -979,6 +1030,95 @@ namespace sentience.core
 
         #endregion
 
+        #region "display"
 		
+        /// <summary>
+        /// show the grid map as an image
+        /// </summary>
+        /// <param name="img">colour image data</param>
+        /// <param name="width">width in pixels</param>
+        /// <param name="height">height in pixels</param>
+        public void Show(
+		    byte[] img, 
+            int width, 
+            int height)
+        {
+            float[] mean_colour = new float[3];
+
+            for (int y = 0; y < height; y++)
+            {
+                // get the y cell coordinate within the grid
+                int cell_y = y * (dimension_cells-1) / height;
+
+                for (int x = 0; x < width; x++)
+                {
+                    // get the x cell coordinate within the grid
+                    int cell_x = x * (dimension_cells - 1) / width;
+
+                    int n = ((y * width) + x) * 3;
+
+                    if (cell[cell_x][cell_y] == null)
+                    {
+                        // terra incognita                        
+                        img[n++] = (byte)255;
+						img[n++] = (byte)255;
+						img[n] = (byte)255;
+                    }
+                    else
+                    {
+                        // get the probability for this vertical column
+                        float prob = GetProbability(cell_x, cell_y, mean_colour);
+
+                        if (prob != NO_OCCUPANCY_EVIDENCE)
+                        {
+                            if (prob > 0.5f)
+                            {
+                                if (prob > 0.7f)
+								{
+									// occupied
+                                    img[n++] = (byte)0;
+									img[n++] = (byte)0;
+									img[n] = (byte)0;
+								}
+                                else
+								{
+									// occupied
+                                    img[n++] = (byte)100;
+									img[n++] = (byte)100;
+									img[n] = (byte)100;
+								}
+                            }
+                            else
+                            {
+                                if (prob < 0.3f)
+								{
+									// vacant
+                                    img[n++] = (byte)230;
+                                    img[n++] = (byte)230;
+                                    img[n] = (byte)230;
+								}
+                                else
+								{
+									// vacant
+                                    img[n++] = (byte)200;
+									img[n++] = (byte)200;
+									img[n] = (byte)200;
+								}
+                            }
+                        }
+                        else
+                        {
+							// terra incognita
+                            img[n++] = (byte)255;
+							img[n++] = (byte)255;
+							img[n] = (byte)255;
+                        }
+                    }
+                }
+            }
+        }
+		
+		
+        #endregion
 	}
 }

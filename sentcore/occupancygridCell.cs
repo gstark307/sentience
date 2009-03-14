@@ -135,15 +135,19 @@ namespace sentience.core
         /// </summary>
         /// <param name="pose">pose from which the observation was made</param>
         /// <returns>probability as log odds</returns>
-        public float GetProbability(particlePose pose, int x, int y,
-                                    float[] mean_colour, ref float mean_variance)
+        public float GetProbability(
+		    particlePose pose, 
+		    int x, int y,
+            float[] mean_colour, 
+		    ref float mean_variance)
         {
             float probabilityLogOdds = 0;
             int hits = 0;
             mean_variance = 0;
 
-            for (int col = 0; col < 3; col++)
-                mean_colour[col] = 0;
+            mean_colour[0] = 0;
+			mean_colour[1] = 0;
+			mean_colour[2] = 0;
 
             for (int z = Hypothesis.Length - 1; z >= 0; z--)
             {
@@ -151,9 +155,10 @@ namespace sentience.core
                 float probLO = GetProbability(pose, x, y, z, true, temp_colour, ref variance);
                 if (probLO != NO_OCCUPANCY_EVIDENCE)
                 {
-                    probabilityLogOdds += probLO;
-                    for (int col = 2; col >= 0; col--)
-                        mean_colour[col] += temp_colour[col];
+                    probabilityLogOdds += probLO;                    
+                    mean_colour[0] += temp_colour[0];
+					mean_colour[1] += temp_colour[1];
+					mean_colour[2] += temp_colour[2];
                     mean_variance += variance;
                     hits++;
                 }
@@ -161,8 +166,9 @@ namespace sentience.core
             if (hits > 0)
             {
                 mean_variance /= hits;
-                for (int col = 2; col >= 0; col--)
-                    mean_colour[col] /= hits;
+                mean_colour[0] /= hits;
+				mean_colour[1] /= hits;
+				mean_colour[2] /= hits;
             }
             return (probabilities.LogOddsToProbability(probabilityLogOdds));
         }
@@ -179,13 +185,14 @@ namespace sentience.core
         /// <param name="colour">average colour of this grid cell</param>
         /// <param name="mean_variance">average colour variance of this grid cell</param>
         /// <returns>probability value</returns>
-        public unsafe float GetProbability(particlePose pose, 
-                                           int x, 
-                                           int y, 
-                                           int z, 
-                                           bool returnLogOdds,
-                                           float[] colour, 
-                                           ref float mean_variance)
+        public unsafe float GetProbability(
+		    particlePose pose, 
+            int x, 
+            int y, 
+            int z, 
+            bool returnLogOdds,
+            float[] colour, 
+            ref float mean_variance)
         {
             int col, p, i, hits = 0;
             float probabilityLogOdds = 0;
@@ -204,16 +211,20 @@ namespace sentience.core
 			    {			
 			        fixed (float* unsafe_max_level = max_level)
 			        {
-			            for (col = 2; col >= 0; col--)
-			                unsafe_colour[col] = 0;
+			            unsafe_colour[0] = 0;
+						unsafe_colour[1] = 0;
+						unsafe_colour[2] = 0;
 
 			            // first retrieve any distilled occupancy value
 			            if (distilled != null)
 			                if (distilled[z] != null)
 			                {
 			                    probabilityLogOdds += distilled[z].probabilityLogOdds;
-			                    for (col = 2; col >= 0; col--)
-			                        unsafe_colour[col] += distilled[z].colour[col];
+			                    
+			                    unsafe_colour[0] += distilled[z].colour[0];
+							    unsafe_colour[1] += distilled[z].colour[1];
+							    unsafe_colour[2] += distilled[z].colour[2];
+							
 			                    hits++;
 			                }
 
@@ -248,27 +259,34 @@ namespace sentience.core
 			                                            {
 			                                                probabilityLogOdds += h.probabilityLogOdds;
 
+	                                                        level = h.colour[0];
+															level = h.colour[1];
+															level = h.colour[2];
+			                                                unsafe_colour[0] += level;
+															unsafe_colour[1] += level;
+															unsafe_colour[2] += level;
+															
 			                                                // update mean colour and variance
-			                                                for (col = 2; col >= 0; col--)
-			                                                {
-			                                                    level = h.colour[col];
-			                                                    unsafe_colour[col] += level;
+		                                                    if (hits > 0)
+		                                                    {
+		                                                        if (level < unsafe_min_level[0]) unsafe_min_level[0] = level;
+		                                                        if (level < unsafe_min_level[1]) unsafe_min_level[1] = level;
+		                                                        if (level < unsafe_min_level[2]) unsafe_min_level[2] = level;
 
-			                                                    // update colour variance
-			                                                    if (hits > 0)
-			                                                    {
-			                                                        if (level < unsafe_min_level[col])
-			                                                            unsafe_min_level[col] = level;
-
-			                                                        if (level > unsafe_max_level[col])
-			                                                            unsafe_max_level[col] = level;
-			                                                    }
-			                                                    else
-			                                                    {
-			                                                        unsafe_min_level[col] = level;
-			                                                        unsafe_max_level[col] = level;
-			                                                    }
-			                                                }
+		                                                        if (level > unsafe_max_level[0]) unsafe_max_level[0] = level;
+																if (level > unsafe_max_level[1]) unsafe_max_level[1] = level;
+																if (level > unsafe_max_level[2]) unsafe_max_level[2] = level;
+		                                                    }
+		                                                    else
+		                                                    {
+		                                                        unsafe_min_level[0] = level;
+																unsafe_min_level[1] = level;
+																unsafe_min_level[2] = level;
+																
+		                                                        unsafe_max_level[0] = level;
+																unsafe_max_level[1] = level;
+																unsafe_max_level[2] = level;
+		                                                    }
 
 			                                                hits++;
 			                                            }
@@ -295,14 +313,18 @@ namespace sentience.core
             {
                 // calculate mean colour variance
                 mean_variance = 0;
-                for (col = 0; col < 3; col++)
-                    mean_variance += max_level[col] - min_level[col];
+                
+                mean_variance += max_level[0] - min_level[0];
+				mean_variance += max_level[1] - min_level[1];
+				mean_variance += max_level[2] - min_level[2];
+				
                 //mean_variance /= (3 * 255.0f);
                 mean_variance *= 0.001307189542483660130718954248366f;
 
-                // calculate the average colour
-                for (col = 2; col >= 0; col--)
-                    colour[col] /= hits;
+                // calculate the average colour                
+                colour[0] /= hits;
+				colour[1] /= hits;
+				colour[2] /= hits;
 
                 // at the end we convert the total log odds value into a probability
                 if (returnLogOdds)

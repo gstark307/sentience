@@ -20,6 +20,8 @@
 using System;
 using NUnit.Framework;
 using sentience.core;
+using sluggish.utilities;
+using System.Drawing;
 
 namespace sentience.core.tests
 {
@@ -36,6 +38,7 @@ namespace sentience.core.tests
 		    int maxMappingRange_mm = 5000;
 		    float vacancyWeighting = 0;
 		    
+			// create a grid
 		    occupancygridSimple grid = 
 		        new occupancygridSimple(
 		            dimension_cells,
@@ -47,10 +50,18 @@ namespace sentience.core.tests
 		    
 		    Assert.AreNotEqual(grid, null, "object occupancygridSimple was not created");
 		    
+			// create an observer
 		    robot observer = new robot(1, robot.MAPPING_SIMPLE);
 		    Assert.AreNotEqual(observer, null, "robot object was not created");
 		
-		    
+			// save the result as an image
+			int img_width = 640;
+			int img_height = 480;
+		    byte[] img = new byte[img_width * img_height * 3];
+			grid.Show(img, img_width, img_height);
+			Bitmap bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+			bmp.Save("rays.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
 		}	
 	
 		[Test()]
