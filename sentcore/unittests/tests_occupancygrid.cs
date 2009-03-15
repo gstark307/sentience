@@ -31,15 +31,81 @@ namespace sentience.core.tests
 	public class tests_occupancygrid_simple
 	{
 		[Test()]
+		public void EvidenceRayRotation()
+		{
+			int debug_img_width = 640;
+			int debug_img_height = 480;
+		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+			for (int i = (debug_img_width * debug_img_height * 3)-1; i >= 0; i--)
+				debug_img[i] = 255;
+			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			
+			int cellSize_mm = 32;
+		    int image_width = 320;
+		    int image_height = 240;
+			
+			Console.WriteLine("Creating sensor models");			
+			stereoModel inverseSensorModel = new stereoModel();
+			inverseSensorModel.createLookupTable(cellSize_mm, image_width, image_height);
+			
+            // create a ray
+			float FOV_horizontal = 78 * (float)Math.PI / 180.0f;
+			inverseSensorModel.FOV_horizontal = FOV_horizontal;
+			inverseSensorModel.FOV_vertical = FOV_horizontal * image_height / image_width;
+            evidenceRay ray = 
+			    inverseSensorModel.createRay(
+				    image_width/2, image_height/2, 4, 
+					0, 255, 255, 255);
+			
+			pos3D[] start_vertices = (pos3D[])ray.vertices.Clone();
+			
+			Console.WriteLine("x,y,z:  " + start_vertices[0].x.ToString() + ", " + start_vertices[0].y.ToString() + ", " + start_vertices[0].z.ToString());
+			for (int i = 0; i <  ray.vertices.Length; i++)
+			{
+				int j = i + 1;
+				if (j == ray.vertices.Length) j = 0;
+				int x0 = (debug_img_width/2) + (int)ray.vertices[i].x/50;
+				int y0 = (debug_img_height/2) + (int)ray.vertices[i].y/50;
+				int x1 = (debug_img_width/2) + (int)ray.vertices[j].x/50;
+				int y1 = (debug_img_height/2) + (int)ray.vertices[j].y/50;
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, x0,y0,x1,y1,0,255,0,0,false);
+			}
+			
+			float angle_degrees = 30;
+			float angle_radians = angle_degrees / 180.0f * (float)Math.PI;
+			pos3D rotation = new pos3D(0, 0, 0);
+			rotation.pan = angle_degrees;
+			ray.translateRotate(rotation);
+			
+			Console.WriteLine("x,y,z:  " + ray.vertices[0].x.ToString() + ", " + ray.vertices[0].y.ToString() + ", " + ray.vertices[0].z.ToString());
+			for (int i = 0; i <  ray.vertices.Length; i++)
+			{
+				int j = i + 1;
+				if (j == ray.vertices.Length) j = 0;
+				int x0 = (debug_img_width/2) + (int)ray.vertices[i].x/50;
+				int y0 = (debug_img_height/2) + (int)ray.vertices[i].y/50;
+				int x1 = (debug_img_width/2) + (int)ray.vertices[j].x/50;
+				int y1 = (debug_img_height/2) + (int)ray.vertices[j].y/50;
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, x0,y0,x1,y1,255,0,0,0,false);
+			}
+
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			bmp.Save("tests_occupancygrid_simple_EvidenceRayRotation.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);			
+		}
+		
+		[Test()]
 		public void InsertRays()
 		{
+		    int image_width = 640;
+		    int image_height = 480;
 			int no_of_stereo_cameras = 1;
 		    int localisationRadius_mm = 1000;
-		    int maxMappingRange_mm = 5000;
+		    int maxMappingRange_mm = 8000;
 		    int cellSize_mm = 32;
 		    int dimension_cells = 8000 / cellSize_mm;
 		    int dimension_cells_vertical = dimension_cells/2;
-		    float vacancyWeighting = 0.2f;
+		    float vacancyWeighting = 2.0f;
+			float FOV_horizontal = 78 * (float)Math.PI / 180.0f;
 					    
 			// create a grid
 			Console.WriteLine("Creating grid");
@@ -53,19 +119,18 @@ namespace sentience.core.tests
 		            vacancyWeighting);
 		    
 		    Assert.AreNotEqual(grid, null, "object occupancygridSimple was not created");
-
-		    int image_width = 320;
-		    int image_height = 240;
 			
 			Console.WriteLine("Creating sensor models");			
 			stereoModel inverseSensorModel = new stereoModel();
+			inverseSensorModel.FOV_horizontal = FOV_horizontal;
+			inverseSensorModel.FOV_vertical = FOV_horizontal * image_height / image_width;			
 			inverseSensorModel.createLookupTable(cellSize_mm, image_width, image_height);
 			
 			// observer parameters
 		    pos3D observer = new pos3D(0,0,0);
 		    float stereo_camera_baseline_mm = 100;
-			pos3D left_camera_location = new pos3D(-stereo_camera_baseline_mm*0.5f,0,0);
-			pos3D right_camera_location = new pos3D(stereo_camera_baseline_mm*0.5f,0,0);
+			pos3D left_camera_location = new pos3D(stereo_camera_baseline_mm*0.5f,0,0);
+			pos3D right_camera_location = new pos3D(-stereo_camera_baseline_mm*0.5f,0,0);
 		    float FOV_degrees = 78;
 			int no_of_stereo_features = 2000;
 		    float[] stereo_features = new float[no_of_stereo_features * 3];
@@ -78,8 +143,12 @@ namespace sentience.core.tests
 			for (int correspondence = 0; correspondence < no_of_stereo_features; correspondence++)
 			{
 				float x = rnd.Next(image_width-1);
-				float y = rnd.Next(image_height-1);
-				float disparity = 0.5f + (rnd.Next(10)/2.0f);
+				float y = rnd.Next(image_height/50) + (image_height/2);
+				float disparity = 7;
+				if ((x < image_width/5) || (x > image_width * 4/5))
+				{
+					disparity = 10;
+				}
 				byte colour_red = (byte)rnd.Next(255);
 				byte colour_green = (byte)rnd.Next(255);
 				byte colour_blue = (byte)rnd.Next(255);
@@ -122,10 +191,15 @@ namespace sentience.core.tests
 			int debug_img_width = 640;
 			int debug_img_height = 480;
 		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
-			grid.Show(debug_img, debug_img_width, debug_img_height);
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+			grid.Show(debug_img, debug_img_width, debug_img_height, false);
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
-			bmp.Save("tests_occupancygrid_simple_InsertRays.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			bmp.Save("tests_occupancygrid_simple_InsertRays_overhead.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+
+			grid.ShowFront(debug_img, debug_img_width, debug_img_height, true);
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			bmp.Save("tests_occupancygrid_simple_InsertRays_front.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
 		}	
 	
 		[Test()]

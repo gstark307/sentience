@@ -1035,18 +1035,23 @@ namespace sentience.core
         #region "display"
 		
         /// <summary>
-        /// show the grid map as an image
+        /// show an overhead view of the grid map as an image
         /// </summary>
         /// <param name="img">colour image data</param>
         /// <param name="width">width in pixels</param>
         /// <param name="height">height in pixels</param>
+		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
         public void Show(
 		    byte[] img, 
             int width, 
-            int height)
+            int height,
+		    bool show_all_occupied_cells)
         {
             float[] mean_colour = new float[3];
 
+			for (int i = (width * height * 3) - 1; i >= 0; i--)
+				img[i] = 255;
+			
             for (int y = 0; y < height; y++)
             {
                 // get the y cell coordinate within the grid
@@ -1059,20 +1064,21 @@ namespace sentience.core
 
                     int n = ((y * width) + x) * 3;
 
-                    if (cell[cell_x][cell_y] == null)
-                    {
-                        // terra incognita                        
-                        img[n++] = (byte)255;
-						img[n++] = (byte)255;
-						img[n] = (byte)255;
-                    }
-                    else
+                    if (cell[cell_x][cell_y] != null)
                     {
                         // get the probability for this vertical column
-                        float prob = GetProbability(cell_x, cell_y, mean_colour);
+                        float prob = GetProbability(cell_x, cell_y, mean_colour);						
 
                         if (prob != NO_OCCUPANCY_EVIDENCE)
                         {
+							if (show_all_occupied_cells) prob = 1;
+							
+							byte b = (byte)(255 - (prob*255));
+							img[n++] = b;
+ 					        img[n++] = b;
+							img[n] = b;
+
+							/*
 							//Console.WriteLine("prob = " + prob.ToString());
                             if (prob > 0.5f)
                             {
@@ -1108,6 +1114,7 @@ namespace sentience.core
 									img[n] = (byte)200;
 								}
                             }
+                            */
                         }
                         else
                         {
@@ -1117,6 +1124,96 @@ namespace sentience.core
 							img[n] = (byte)255;
                         }
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// show a front view of the grid map as an image
+        /// </summary>
+        /// <param name="img">colour image data</param>
+        /// <param name="width">width in pixels</param>
+        /// <param name="height">height in pixels</param>
+		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
+        public void ShowFront(
+		    byte[] img, 
+            int width, 
+            int height,
+		    bool show_all_occupied_cells)
+        {
+            float[] mean_colour = new float[3];
+			
+			for (int i = (width * height * 3) - 1; i >= 0; i--)
+				img[i] = 255;
+
+            for (int cell_x = 0; cell_x < dimension_cells; cell_x++)
+            {
+                // get the x coordinate within the image
+                int x = (cell_x * (width-1)) / dimension_cells;
+
+                for (int cell_z = 0; cell_z < dimension_cells_vertical; cell_z++)
+                {
+                    // get the y coordinate within the image
+                    int y = (height/2) - (cell_z * (height-1) / dimension_cells_vertical);
+
+                    int n = ((y * width) + x) * 3;
+					
+					float prob_log_odds_total = 0;
+					int hits = 0;
+                    for (int cell_y = 0; cell_y < dimension_cells; cell_y++)
+                    {
+						if (cell[cell_x][cell_y] != null)
+						{
+							if (cell[cell_x][cell_y][cell_z] != null)
+							{
+								if (cell[cell_x][cell_y][cell_z].probabilityLogOdds != NO_OCCUPANCY_EVIDENCE)
+								{
+								    prob_log_odds_total += cell[cell_x][cell_y][cell_z].probabilityLogOdds;
+									hits++;
+								}
+							}
+						}
+					}
+					
+					if (hits > 0)
+					{
+						float prob = probabilities.LogOddsToProbability(prob_log_odds_total);
+						if (show_all_occupied_cells) prob = 1;
+                        if (prob > 0.5f)
+                        {
+                            if (prob > 0.7f)
+							{
+								// occupied
+                                img[n++] = (byte)0;
+								img[n++] = (byte)0;
+								img[n] = (byte)0;
+							}
+                            else
+							{
+								// occupied
+                                img[n++] = (byte)100;
+								img[n++] = (byte)100;
+								img[n] = (byte)100;
+							}
+                        }
+                        else
+                        {
+                            if (prob < 0.3f)
+							{
+								// vacant
+                                img[n++] = (byte)230;
+                                img[n++] = (byte)230;
+                                img[n] = (byte)230;
+							}
+                            else
+							{
+								// vacant
+                                img[n++] = (byte)200;
+								img[n++] = (byte)200;
+								img[n] = (byte)200;
+							}
+                        }						
+					}
                 }
             }
         }

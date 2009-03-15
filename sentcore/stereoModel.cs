@@ -157,6 +157,8 @@ namespace sentience.core
 		    int image_width, 
 		    int image_height)
         {
+			this.image_width = image_width;
+			this.image_height = image_height;
             byte[] img_result = new byte[image_width * image_height * 3];
             createLookupTable(gridCellSize_mm, img_result, image_width, image_height);
         }		
