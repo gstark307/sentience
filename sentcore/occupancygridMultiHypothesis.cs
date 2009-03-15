@@ -384,7 +384,7 @@ namespace sentience.core
             {
                 // the range from the cameras from which insertion of data begins
                 // for vacancy rays this will be zero, but will be non-zero for the occupancy area
-                int startingRange = 0;
+                int starting_range_cells = 0;
 
                 switch (modelcomponent)
                 {
@@ -396,7 +396,7 @@ namespace sentience.core
                             occupied_dy = ray.vertices[1].y - ray.vertices[0].y;
                             occupied_dz = ray.vertices[1].z - ray.vertices[0].z;
                             intersect_x = ray.vertices[0].x + (occupied_dx * ray.fattestPoint);
-                            intersect_y = ray.vertices[0].y + (occupied_dx * ray.fattestPoint);
+                            intersect_y = ray.vertices[0].y + (occupied_dy * ray.fattestPoint);
                             intersect_z = ray.vertices[0].z + (occupied_dz * ray.fattestPoint);
 
                             xdist_mm = occupied_dx;
@@ -465,9 +465,9 @@ namespace sentience.core
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
                 {
                     if (longest_axis == Y_AXIS)
-                        startingRange = (int)Math.Abs((ray.vertices[0].y - ray.observedFrom.y) / cellSize_mm);
+                        starting_range_cells = (int)Math.Abs((ray.vertices[0].y - ray.observedFrom.y) / cellSize_mm);
                     else
-                        startingRange = (int)Math.Abs((ray.vertices[0].x - ray.observedFrom.x) / cellSize_mm);
+                        starting_range_cells = (int)Math.Abs((ray.vertices[0].x - ray.observedFrom.x) / cellSize_mm);
                 }
 
                 // what is the widest point of the ray in cells
@@ -487,7 +487,7 @@ namespace sentience.core
                 {
                     // is this position inside the maximum mapping range
                     bool withinMappingRange = true;
-                    if (grid_step + startingRange > max_mapping_range_cells)
+                    if (grid_step + starting_range_cells > max_mapping_range_cells)
                     {
                         withinMappingRange = false;
                         if ((grid_step==0) && (modelcomponent == OCCUPIED_SENSORMODEL))
@@ -518,7 +518,7 @@ namespace sentience.core
 
                     // localisation rays are wider, to enable a more effective matching score
                     // which is not too narrowly focussed and brittle
-                    int ray_wdth_localisation = ray_wdth + localisation_search_cells;
+                    int ray_wdth_localisation = ray_wdth + 1; //localisation_search_cells;
 
                     xx_mm += x_incr_mm;
                     yy_mm += y_incr_mm;

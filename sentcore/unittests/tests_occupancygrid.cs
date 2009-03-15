@@ -31,6 +31,82 @@ namespace sentience.core.tests
 	public class tests_occupancygrid_simple
 	{
 		[Test()]
+		public void RaysIntersection()
+		{
+			int debug_img_width = 640;
+			int debug_img_height = 480;
+		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+			for (int i = (debug_img_width * debug_img_height * 3)-1; i >= 0; i--)
+				debug_img[i] = 255;
+			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+		    float max_y=0, max_x=0;
+			float ray_uncertainty = 0.5f;
+			
+			for (int example = 0; example < 10; example++)
+			{
+				float disparity = 2;
+			    float x1 = 640/2; 
+				float x2 = x1 - disparity; 
+				
+				disparity = 0.8f + (example * 0.5f);				
+				x1 = (640/2) + (example * 1.5f); 
+				x2 = x1 - disparity;
+				
+			    int grid_dimension = 2000; 				
+	            float x_start = 0;
+				float y_start = 0;
+	            float x_end = 0;
+				float y_end = 0;
+	            float x_left = 0;
+				float y_left = 0;
+	            float x_right = 0;
+				float y_right = 0;
+					
+				stereoModel inverseSensorModel = new stereoModel();
+				inverseSensorModel.image_width = 640;
+				inverseSensorModel.image_height = 480;
+	            inverseSensorModel.raysIntersection(
+			        x1, x2, 
+			        grid_dimension, ray_uncertainty,
+	                ref x_start, ref y_start,
+	                ref x_end, ref y_end,
+	                ref x_left, ref y_left,
+	                ref x_right, ref y_right);
+				
+				if (example == 0)
+				{
+				    max_y = -y_end * 1.2f;
+				    max_x = x_start * 2;
+				}
+				
+				x_start = x_start * debug_img_width / max_x;
+				y_start = -y_start * debug_img_height / max_y;
+				x_end = x_end * debug_img_width / max_x;
+				y_end = -y_end * debug_img_height / max_y;
+				x_left = x_left * debug_img_width / max_x;
+				y_left = -y_left * debug_img_height / max_y;
+				x_right = x_right * debug_img_width / max_x;
+				y_right = -y_right * debug_img_height / max_y;		
+				
+				y_start = debug_img_height - 1 - y_start;
+				y_end = debug_img_height - 1 - y_end;
+				y_left = debug_img_height - 1 - y_left;
+				y_right = debug_img_height - 1 - y_right;
+				
+				//Console.WriteLine("max: " + max.ToString());
+							
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_start, (int)y_start, (int)x_left, (int)y_left, 0,0,0,0,false);
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_end, (int)y_end, (int)x_left, (int)y_left, 0,0,0,0,false);
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_end, (int)y_end, (int)x_right, (int)y_right, 0,0,0,0,false);
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_start, (int)y_start, (int)x_right, (int)y_right, 0,0,0,0,false);
+			
+			}
+			
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			bmp.Save("tests_occupancygrid_simple_RaysIntersection.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);			
+		}
+		
+		[Test()]
 		public void EvidenceRayRotation()
 		{
 			int debug_img_width = 640;
@@ -99,12 +175,12 @@ namespace sentience.core.tests
 		    int image_width = 640;
 		    int image_height = 480;
 			int no_of_stereo_cameras = 1;
-		    int localisationRadius_mm = 1000;
-		    int maxMappingRange_mm = 8000;
+		    int localisationRadius_mm = 16000;
+		    int maxMappingRange_mm = 16000;
 		    int cellSize_mm = 32;
-		    int dimension_cells = 8000 / cellSize_mm;
+		    int dimension_cells = 16000 / cellSize_mm;
 		    int dimension_cells_vertical = dimension_cells/2;
-		    float vacancyWeighting = 2.0f;
+		    float vacancyWeighting = 0; //2.0f;
 			float FOV_horizontal = 78 * (float)Math.PI / 180.0f;
 					    
 			// create a grid
@@ -144,10 +220,10 @@ namespace sentience.core.tests
 			{
 				float x = rnd.Next(image_width-1);
 				float y = rnd.Next(image_height/50) + (image_height/2);
-				float disparity = 7;
+				float disparity = 6;
 				if ((x < image_width/5) || (x > image_width * 4/5))
 				{
-					disparity = 10;
+					disparity = 6; //15;
 				}
 				byte colour_red = (byte)rnd.Next(255);
 				byte colour_green = (byte)rnd.Next(255);

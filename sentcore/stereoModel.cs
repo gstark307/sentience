@@ -248,7 +248,7 @@ namespace sentience.core
             int gridCellSize_mm, bool mirror)
         {
             // half a pixel of horizontal uncertainty
-            sigma = 1.0f / (image_width * 1) * FOV_horizontal;
+            sigma = 1.0f / (image_width * 2) * FOV_horizontal;
             //sigma *= image_width / 320;
             this.divisor = divisor;
 
@@ -559,9 +559,9 @@ namespace sentience.core
             FOV_horizontal = FOV_degrees * (float)Math.PI / 180.0f;
             FOV_vertical = FOV_horizontal * image_height / image_width;
 
-            // calculate observational uncertainty as a standard deviation
-            // of half a pixel
-            sigma = 1.0f / (image_width * 1) * FOV_horizontal;
+            // calc uncertainty in angle (+/- half a pixel)
+            float angular_uncertainty = FOV_horizontal / (image_width * 2);
+			sigma = 100 * (float)Math.Tan(angular_uncertainty); // 100 is the factor used in RaysIntersection
 
             // some head geometry
             pos3D headOrientation = observer;
@@ -584,7 +584,7 @@ namespace sentience.core
                     evidenceRay ray = 
 						createRay(
 						    image_x, image_y, disparity, 
-						    stereo_features_uncertainties[f2],
+						    1 + stereo_features_uncertainties[f2],
                             stereo_features_colour[f2, 0],
                             stereo_features_colour[f2, 1],
                             stereo_features_colour[f2, 2]);
@@ -919,9 +919,10 @@ namespace sentience.core
         /// <param name="g">green colour component of the ray</param>
         /// <param name="b">blue colour component of the ray</param>
         /// <returns>evidence ray object</returns>
-        public evidenceRay createRay(float x, float y, float disparity, 
-                                     float uncertainty, 
-                                     byte r, byte g, byte b)
+        public evidenceRay createRay(
+		    float x, float y, float disparity, 
+            float uncertainty, 
+            byte r, byte g, byte b)
         {
             evidenceRay ray = null;
             float x1 = x + disparity;
@@ -1245,15 +1246,14 @@ namespace sentience.core
         /// <param name="y_left">left intersection</param>
         /// <param name="x_right">right intersection</param>
         /// <param name="y_right">right intersection</param>
-        private void raysIntersection(float x1, float x2, int grid_dimension, float ray_uncertainty,
-                                      ref float x_start, ref float y_start,
-                                      ref float x_end, ref float y_end,
-                                      ref float x_left, ref float y_left,
-                                      ref float x_right, ref float y_right)
+        public void raysIntersection(
+		    float x1, float x2, 
+		    int grid_dimension, float ray_uncertainty,
+            ref float x_start, ref float y_start,
+            ref float x_end, ref float y_end,
+            ref float x_left, ref float y_left,
+            ref float x_right, ref float y_right)
         {
-            // calc uncertainty in angle (+/- half a pixel)
-            float angular_uncertainty = FOV_horizontal / (image_width * 2);
-
             // convert x positions to angles
             int half_width = image_width / 2;
 
@@ -1275,9 +1275,7 @@ namespace sentience.core
             float xx1 = (d * (float)Math.Sin(angle1_radians));
             float xx2 = (d * (float)Math.Sin(angle2_radians));
             float yy = d;
-
-            if (ray_uncertainty < 0.5f) ray_uncertainty = 0.5f;
-            float uncertainty = sigma * d * ray_uncertainty;
+			float uncertainty = sigma * ray_uncertainty;
             
             // locate the vertices of the diamond shape formed by
             // the intersection of two rays
