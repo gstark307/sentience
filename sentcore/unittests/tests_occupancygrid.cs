@@ -48,7 +48,7 @@ namespace sentience.core.tests
 			    float x1 = 640/2; 
 				float x2 = x1 - disparity; 
 				
-				disparity = 0.8f + (example * 0.5f);				
+				//disparity = 0.8f + (example * 0.5f);				
 				x1 = (640/2) + (example * 1.5f); 
 				x2 = x1 - disparity;
 				
@@ -220,10 +220,10 @@ namespace sentience.core.tests
 			{
 				float x = rnd.Next(image_width-1);
 				float y = rnd.Next(image_height/50) + (image_height/2);
-				float disparity = 6;
+				float disparity = 7;
 				if ((x < image_width/5) || (x > image_width * 4/5))
 				{
-					disparity = 6; //15;
+					disparity = 7; //15;
 				}
 				byte colour_red = (byte)rnd.Next(255);
 				byte colour_green = (byte)rnd.Next(255);

@@ -95,6 +95,7 @@ namespace sentience.core
             float[] mean_colour)
         {
             float prob_log_odds_total = 0;
+            float prob = NO_OCCUPANCY_EVIDENCE;
             int hits = 0;
 
             mean_colour[0] = 0;
@@ -125,9 +126,10 @@ namespace sentience.core
                     mean_colour[0] /= hits;
 					mean_colour[1] /= hits;
 					mean_colour[2] /= hits;
+					prob = probabilities.LogOddsToProbability(prob_log_odds_total);
 	            }
 			}
-            return (probabilities.LogOddsToProbability(prob_log_odds_total));
+            return (prob);
         }
 		
 		
@@ -218,7 +220,7 @@ namespace sentience.core
 
             float xdist_mm=0, ydist_mm=0, zdist_mm=0, xx_mm=0, yy_mm=0, zz_mm=0;
             float occupied_dx = 0, occupied_dy = 0, occupied_dz = 0;
-            float intersect_x = 0, intersect_y = 0, intersect_z = 0;
+            //float intersect_x = 0, intersect_y = 0, intersect_z = 0;
             float centre_prob = 0, prob = 0, prob_localisation = 0; // probability values at the centre axis and outside
             float matchingScore = NO_OCCUPANCY_EVIDENCE;  // total localisation matching score
             int rayWidth = 0;         // widest point in the ray in cells
@@ -259,9 +261,9 @@ namespace sentience.core
                             occupied_dx = ray.vertices[1].x - ray.vertices[0].x;
                             occupied_dy = ray.vertices[1].y - ray.vertices[0].y;
                             occupied_dz = ray.vertices[1].z - ray.vertices[0].z;
-                            intersect_x = ray.vertices[0].x + (occupied_dx * ray.fattestPoint);
-                            intersect_y = ray.vertices[0].y + (occupied_dy * ray.fattestPoint);
-                            intersect_z = ray.vertices[0].z + (occupied_dz * ray.fattestPoint);
+                            //intersect_x = ray.vertices[0].x + (occupied_dx * ray.fattestPoint);
+                            //intersect_y = ray.vertices[0].y + (occupied_dy * ray.fattestPoint);
+                            //intersect_z = ray.vertices[0].z + (occupied_dz * ray.fattestPoint);
 
                             xdist_mm = occupied_dx;
                             ydist_mm = occupied_dy;
@@ -319,12 +321,11 @@ namespace sentience.core
                 // ensure that the vacancy model does not overlap
                 // the probably occupied area
                 // This is crude and could potentially leave a gap
-                if (modelcomponent != OCCUPIED_SENSORMODEL)
-                    longest -= ray.width;
+                //    longest -= ray.width;
 
                 int steps = (int)(longest * inverse_cellSize_mm);
                 if (steps < 1) steps = 1;
-				float inverse_steps = 1.0f / steps;
+                float inverse_steps = 1.0f / steps;
 
                 // calculate the range from the cameras to the start of the ray in grid cells
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
@@ -345,7 +346,7 @@ namespace sentience.core
                 float x_incr_mm = xdist_mm * inverse_steps;
                 float y_incr_mm = ydist_mm * inverse_steps;
                 float z_incr_mm = zdist_mm * inverse_steps;
-
+                
                 // step through the ray, one grid cell at a time
                 int grid_step = 0;
                 while (grid_step < steps)
@@ -384,10 +385,10 @@ namespace sentience.core
                     // localisation rays are wider, to enable a more effective matching score
                     // which is not too narrowly focussed and brittle
                     int ray_wdth_localisation = ray_wdth + 1; //localisation_search_cells;
-					
-                    xx_mm += x_incr_mm;
-                    yy_mm += y_incr_mm;
-                    zz_mm += z_incr_mm;
+										
+                    xx_mm += x_incr_mm*step_size;
+                    yy_mm += y_incr_mm*step_size;
+                    zz_mm += z_incr_mm*step_size;
 					
                     // convert the x millimetre position into a grid cell position
                     int x_cell = (int)Math.Round((xx_mm - grid_centre_x_mm) * inverse_cellSize_mm);
@@ -485,7 +486,7 @@ namespace sentience.core
 											cell[x_cell2][y_cell2][z_cell] = new particleGridCellBase();
                                         particleGridCellBase c = cell[x_cell2][y_cell2][z_cell];
                                         c.probabilityLogOdds += probabilities.LogOdds(prob);
-                                        c.colour = ray.colour;    // this is simplistic, but we'll live with it
+                                        c.colour = ray.colour;    // this is simplistic, but we'll live with it                                                                                
                                     }
                                 }
                             }
@@ -1075,8 +1076,8 @@ namespace sentience.core
                         if (prob != NO_OCCUPANCY_EVIDENCE)
                         {
 							if (show_all_occupied_cells) prob = 1;
-							
-							if (prob >= 0.5f)
+
+							if (prob > 0.5f)
 							{
 							    byte b = (byte)(255 - ((prob-0.5f)*2*255));
 							    img[n++] = 0;
@@ -1129,6 +1130,7 @@ namespace sentience.core
                             }
                             */
                         }
+                        /*
                         else
                         {
 							// terra incognita
@@ -1136,6 +1138,7 @@ namespace sentience.core
 							img[n++] = (byte)255;
 							img[n] = (byte)255;
                         }
+                        */
                     }
                 }
             }

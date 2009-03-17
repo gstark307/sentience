@@ -520,9 +520,9 @@ namespace sentience.core
                     // which is not too narrowly focussed and brittle
                     int ray_wdth_localisation = ray_wdth + 1; //localisation_search_cells;
 
-                    xx_mm += x_incr_mm;
-                    yy_mm += y_incr_mm;
-                    zz_mm += z_incr_mm;
+                    xx_mm += x_incr_mm*step_size;
+                    yy_mm += y_incr_mm*step_size;
+                    zz_mm += z_incr_mm*step_size;
                     // convert the x millimetre position into a grid cell position
                     int x_cell = (int)Math.Round((xx_mm - grid_centre_x_mm) / (float)cellSize_mm);
                     if ((x_cell > ray_wdth_localisation) && (x_cell < dimension_cells - ray_wdth_localisation))
