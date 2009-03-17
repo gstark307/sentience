@@ -42,6 +42,7 @@ namespace sentience.core
         public int image_width = 320;   // horizontal image size
         public int image_height = 240;  // vertical image size
         public float focal_length = 5;  // focal length in millimetres
+        public float sensor_pixels_per_mm = 100;
         public float baseline = 100;    // distance between the centres of the two cameras in millimetres
         public float sigma = 0.04f;     //0.005f;  //angular uncertainty magnitude (standard deviation) pixels per mm of range
         private float max_prob = 0.0f;
@@ -115,6 +116,43 @@ namespace sentience.core
    4943,   4951,   4957,   4967,   4969,   4973,   4987,   4993,   4999,   5003, 
    5009,   5011,   5021,   5023,   5039,   5051,   5059,   5077,  5081,   5087 };
 
+
+        #region "converting disparity to distance"
+        
+        /// <summary>
+        /// returns the distance for the given stereo disparity
+        /// </summary>
+        /// <param name="disparity_pixels">disparity in pixels</param>
+        /// <param name="focal_length_mm">focal length in millimetres</param>
+        /// <param name="sensor_pixels_per_mm">number of pixels per millimetre on the sensor chip</param>
+        /// <param name="baseline_mm">distance between cameras in millimetres</param>
+        /// <returns>range in millimetres</returns>        
+        public static float DisparityToDistance(float disparity_pixels,
+                                                float focal_length_mm,
+                                                float sensor_pixels_per_mm,
+                                                float baseline_mm)
+        {
+            float focal_length_pixels = focal_length_mm * sensor_pixels_per_mm;
+            float distance_mm = baseline_mm * focal_length_pixels / disparity_pixels;
+            return(distance_mm);
+        }
+
+        /// <summary>
+        /// returns the distance for the given stereo disparity
+        /// </summary>
+        /// <param name="disparity_pixels">disparity in pixels</param>
+        /// <param name="focal_length_pixels">focal length in pixels</param>
+        /// <param name="baseline_mm">distance between cameras in millimetres</param>
+        /// <returns>range in millimetres</returns>        
+        public static float DisparityToDistance(float disparity_pixels,
+                                                float focal_length_pixels,
+                                                float baseline_mm)
+        {
+            float distance_mm = baseline_mm * focal_length_pixels / disparity_pixels;
+            return(distance_mm);
+        }        
+        
+        #endregion
 
         #region "calculation of the sensor model lookup table"
 
@@ -280,7 +318,8 @@ namespace sentience.core
                 float x_left = 0, y_left = 0;
                 float x_right = 0, y_right = 0;
                 float confidence = 1;
-                raysIntersection(xx, x, grid_dimension, confidence,
+                float distance = 100;
+                raysIntersection(xx, x, grid_dimension, confidence, distance,
                                  ref x_start, ref y_start, ref x_end, ref y_end,
                                  ref x_left, ref y_left, ref x_right, ref y_right);
                 if (x_right > x_left)
@@ -450,7 +489,8 @@ namespace sentience.core
             float x_left = 0, y_left = 0;
             float x_right = 0, y_right = 0;
             float confidence = 1;
-            raysIntersection(xx, x, grid_dimension, confidence,
+            float distance = 100;
+            raysIntersection(xx, x, grid_dimension, confidence, distance,
                              ref x_start, ref y_start, ref x_end, ref y_end,
                              ref x_left, ref y_left, ref x_right, ref y_right);
             if (x_right > x_left)
@@ -931,9 +971,10 @@ namespace sentience.core
             float x_end = 0, y_end = 0;
             float x_left = 0, y_left = 0;
             float x_right = 0, y_right = 0;
-            int grid_dimension = 2000;
+            int grid_dimension = 2000;            
+            float distance = DisparityToDistance(disparity, focal_length, sensor_pixels_per_mm, baseline);
 
-            raysIntersection(x1, x2, grid_dimension, uncertainty,
+            raysIntersection(x1, x2, grid_dimension, uncertainty, distance,
                              ref x_start, ref y_start, ref x_end, ref y_end,
                              ref x_left, ref y_left, ref x_right, ref y_right);
             if (y_start < -1) y_start = -y_start;
@@ -1022,7 +1063,10 @@ namespace sentience.core
                     float x_left = 0, y_left = 0;
                     float x_right = 0, y_right = 0;
                     float uncertainty = 1;
+                    float distance = DisparityToDistance(disp, focal_length, sensor_pixels_per_mm, baseline);
+
                     raysIntersection(xx + offset, x + offset, grid_dimension, uncertainty,
+                                     distance,
                                      ref x_start, ref y_start, ref x_end, ref y_end,
                                      ref x_left, ref y_left, ref x_right, ref y_right);
                     if (x_right > x_left)
@@ -1249,6 +1293,7 @@ namespace sentience.core
         public void raysIntersection(
 		    float x1, float x2, 
 		    int grid_dimension, float ray_uncertainty,
+		    float distance,
             ref float x_start, ref float y_start,
             ref float x_end, ref float y_end,
             ref float x_left, ref float y_left,
@@ -1270,11 +1315,10 @@ namespace sentience.core
             float offset_x1 = (grid_dimension / (2*divisor)) - (baseline / 2);
             float offset_x2 = (grid_dimension / (2*divisor)) + (baseline / 2);
             
-            const int d = 100;  // some arbitrary number
-
-            float xx1 = (d * (float)Math.Sin(angle1_radians));
-            float xx2 = (d * (float)Math.Sin(angle2_radians));
-            float yy = d;
+            distance = 100;
+            float xx1 = (distance * (float)Math.Sin(angle1_radians));
+            float xx2 = (distance * (float)Math.Sin(angle2_radians));
+            float yy = distance;
 			float uncertainty = sigma * ray_uncertainty;
             
             // locate the vertices of the diamond shape formed by

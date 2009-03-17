@@ -408,7 +408,10 @@ namespace sentience.core
                                 // get the probability at this point 
                                 // for the central axis of the ray using the inverse sensor model
                                 if (modelcomponent == OCCUPIED_SENSORMODEL)
+                                {
                                     centre_prob = 0.5f + (sensormodel_lookup_probability[sensormodel_index][grid_step] * 0.5f);
+                                    Console.WriteLine("centre_prob: " + centre_prob.ToString());
+                                }
                                 else
                                     // calculate the probability from the vacancy model
                                     centre_prob = vacancyFunction(grid_step * inverse_steps, steps);                                

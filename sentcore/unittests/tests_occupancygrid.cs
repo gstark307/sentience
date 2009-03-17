@@ -61,6 +61,10 @@ namespace sentience.core.tests
 				float y_left = 0;
 	            float x_right = 0;
 				float y_right = 0;
+				float focal_length = 5;
+				float sensor_pixels_per_mm = 100;
+				float baseline = 100;
+				float distance = stereoModel.DisparityToDistance(disparity, focal_length, sensor_pixels_per_mm, baseline);
 					
 				stereoModel inverseSensorModel = new stereoModel();
 				inverseSensorModel.image_width = 640;
@@ -68,6 +72,7 @@ namespace sentience.core.tests
 	            inverseSensorModel.raysIntersection(
 			        x1, x2, 
 			        grid_dimension, ray_uncertainty,
+			        distance,
 	                ref x_start, ref y_start,
 	                ref x_end, ref y_end,
 	                ref x_left, ref y_left,
