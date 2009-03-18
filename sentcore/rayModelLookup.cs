@@ -153,7 +153,7 @@ namespace sentience.core
             int ray_model_normal_length = 10;
             for (int i = 0; i < rayModelsData.Count; i++)
             {
-                String[] dataStr = (rayModelsData[i]).Split(',');
+                string[] dataStr = (rayModelsData[i]).Split(',');
                 if (dataStr.Length > ray_model_normal_length) ray_model_normal_length = dataStr.Length;
             }
 
@@ -168,7 +168,7 @@ namespace sentience.core
                 if (d < length.Length)
                 {
                     // corresponding to zero and 0.5 pixel disparity don't exist
-                    String[] dataStr = ((String)rayModelsData[i]).Split(',');
+                    string[] dataStr = ((string)rayModelsData[i]).Split(',');
                     length[d] = dataStr.Length;
                     for (int j = 0; j < dataStr.Length; j++)
                         probability[d][j] = Convert.ToSingle(dataStr[j], format);

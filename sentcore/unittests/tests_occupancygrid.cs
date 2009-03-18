@@ -206,7 +206,9 @@ namespace sentience.core.tests
 			inverseSensorModel.FOV_horizontal = FOV_horizontal;
 			inverseSensorModel.FOV_vertical = FOV_horizontal * image_height / image_width;			
 			inverseSensorModel.createLookupTable(cellSize_mm, image_width, image_height);
-			
+
+            //Assert.AreNotEqual(0, inverseSensorModel.ray_model.probability[1][5], "Ray model probabilities not updated");
+						
 			// observer parameters
 		    pos3D observer = new pos3D(0,0,0);
 		    float stereo_camera_baseline_mm = 100;

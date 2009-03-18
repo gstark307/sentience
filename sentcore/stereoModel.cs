@@ -286,7 +286,7 @@ namespace sentience.core
             int gridCellSize_mm, bool mirror)
         {
             // half a pixel of horizontal uncertainty
-            sigma = 1.0f / (image_width * 2) * FOV_horizontal;
+            sigma = 1.0f / (image_width * 1) * FOV_horizontal;
             //sigma *= image_width / 320;
             this.divisor = divisor;
 
@@ -460,7 +460,7 @@ namespace sentience.core
                                   int divisor, bool show_outline, bool mirror)
         {
             // half a pixel of horizontal uncertainty
-            sigma = 1.8f / (image_width * 2) * FOV_horizontal;
+            sigma = 1.8f / (image_width * 1) * FOV_horizontal;
             sigma *= image_width / 320;
             this.divisor = divisor;
 
@@ -601,7 +601,8 @@ namespace sentience.core
 
             // calc uncertainty in angle (+/- half a pixel)
             float angular_uncertainty = FOV_horizontal / (image_width * 2);
-			sigma = 100 * (float)Math.Tan(angular_uncertainty); // 100 is the factor used in RaysIntersection
+			//sigma = 100 * (float)Math.Tan(angular_uncertainty); // 100 is the factor used in RaysIntersection
+			sigma = 1.0f / (image_width * 1) * FOV_horizontal;
 
             // some head geometry
             pos3D headOrientation = observer;
@@ -1319,7 +1320,7 @@ namespace sentience.core
             float xx1 = (distance * (float)Math.Sin(angle1_radians));
             float xx2 = (distance * (float)Math.Sin(angle2_radians));
             float yy = distance;
-			float uncertainty = sigma * ray_uncertainty;
+			float uncertainty = sigma * distance * ray_uncertainty;
             
             // locate the vertices of the diamond shape formed by
             // the intersection of two rays

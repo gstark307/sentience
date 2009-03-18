@@ -1080,7 +1080,7 @@ namespace sentience.core
                         {
 							if (show_all_occupied_cells) prob = 1;
 
-							if (prob > 0.5f)
+							if (prob >= 0.5f)
 							{
 							    byte b = (byte)(255 - ((prob-0.5f)*2*255));
 							    img[n++] = 0;
