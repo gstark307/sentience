@@ -177,6 +177,7 @@ namespace sentience.core.tests
 		[Test()]
 		public void InsertRays()
 		{
+			int no_of_stereo_features = 2000;
 		    int image_width = 640;
 		    int image_height = 480;
 			int no_of_stereo_cameras = 1;
@@ -210,12 +211,11 @@ namespace sentience.core.tests
             //Assert.AreNotEqual(0, inverseSensorModel.ray_model.probability[1][5], "Ray model probabilities not updated");
 						
 			// observer parameters
-		    pos3D observer = new pos3D(0,0,0);
+		    pos3D observer = new pos3D(150,0,0);
 		    float stereo_camera_baseline_mm = 100;
 			pos3D left_camera_location = new pos3D(stereo_camera_baseline_mm*0.5f,0,0);
 			pos3D right_camera_location = new pos3D(-stereo_camera_baseline_mm*0.5f,0,0);
 		    float FOV_degrees = 78;
-			int no_of_stereo_features = 2000;
 		    float[] stereo_features = new float[no_of_stereo_features * 3];
 		    byte[,] stereo_features_colour = new byte[no_of_stereo_features, 3];
 		    float[] stereo_features_uncertainties = new float[no_of_stereo_features];

@@ -380,7 +380,7 @@ namespace sentience.core
                                 // and maintains its width after the widest point
                                 ray_wdth = rayWidth; 
                         }
-                    }
+                    }                    
 
                     // localisation rays are wider, to enable a more effective matching score
                     // which is not too narrowly focussed and brittle
@@ -410,11 +410,13 @@ namespace sentience.core
                                 if (modelcomponent == OCCUPIED_SENSORMODEL)
                                 {
                                     centre_prob = 0.5f + (sensormodel_lookup_probability[sensormodel_index][grid_step] * 0.5f);
-                                    Console.WriteLine("centre_prob: " + centre_prob.ToString());
+                                    //Console.WriteLine("centre_prob: " + centre_prob.ToString());
                                 }
                                 else
+                                {
                                     // calculate the probability from the vacancy model
-                                    centre_prob = vacancyFunction(grid_step * inverse_steps, steps);                                
+                                    centre_prob = vacancyFunction(grid_step * inverse_steps, steps);
+                                }
 								
                                 // width of the localisation ray
                                 for (int width = -ray_wdth_localisation; width <= ray_wdth_localisation; width++)
@@ -439,12 +441,22 @@ namespace sentience.core
                                     // this multiplier implements a gaussian distribution around the centre
                                     if (width != 0) // don't bother if this is the centre of the ray
                                     {
-                                        // the probability used for wide localisation rays
-                                        prob_localisation *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth_localisation];
-
-                                        // the probability used for narrower mapping rays
-                                        if (isInsideMappingRayWidth)
-                                            prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
+                                        if (ray_wdth > 0)
+                                        {
+	                                        if (modelcomponent == OCCUPIED_SENSORMODEL)
+	                                        {
+	                                            prob_localisation = 0.5f + ((prob_localisation - 0.5f) * gaussianLookup[Math.Abs(width) * 9 / ray_wdth_localisation]);
+		                                        
+		                                        // the probability used for narrower mapping rays
+		                                        if (isInsideMappingRayWidth)
+	                                                prob = 0.5f + ((prob - 0.5f) * gaussianLookup[Math.Abs(width) * 9 / ray_wdth]);
+	                                        }
+	                                        else
+	                                        {
+	                                            prob_localisation *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth_localisation];
+	                                            if (isInsideMappingRayWidth) prob *= gaussianLookup[Math.Abs(width) * 9 / ray_wdth];
+	                                        }
+                                        }
                                     }
 
                                     if ((withinMappingRange) &&
@@ -490,6 +502,10 @@ namespace sentience.core
                                         particleGridCellBase c = cell[x_cell2][y_cell2][z_cell];
                                         c.probabilityLogOdds += probabilities.LogOdds(prob);
                                         c.colour = ray.colour;    // this is simplistic, but we'll live with it                                                                                
+                                        //if (prob < 0.5f)
+                                        //{
+                                        //    Console.WriteLine("prob " + prob.ToString());
+                                        //}
                                     }
                                 }
                             }

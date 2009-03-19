@@ -973,7 +973,7 @@ namespace sentience.core
             float x_left = 0, y_left = 0;
             float x_right = 0, y_right = 0;
             int grid_dimension = 2000;            
-            float distance = DisparityToDistance(disparity, focal_length, sensor_pixels_per_mm, baseline);
+            float distance = 100; //DisparityToDistance(disparity, focal_length, sensor_pixels_per_mm, baseline);
 
             raysIntersection(x1, x2, grid_dimension, uncertainty, distance,
                              ref x_start, ref y_start, ref x_end, ref y_end,

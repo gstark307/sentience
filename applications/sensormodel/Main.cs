@@ -15,6 +15,7 @@ namespace sentience.sensormodel
 	{
 		public static void Main(string[] args)
 		{
+		
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
 
