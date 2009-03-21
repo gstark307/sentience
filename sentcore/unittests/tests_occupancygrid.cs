@@ -39,72 +39,106 @@ namespace sentience.core.tests
 			for (int i = (debug_img_width * debug_img_height * 3)-1; i >= 0; i--)
 				debug_img[i] = 255;
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-		    float max_y=0, max_x=0;
+		    float min_x = float.MaxValue, max_x = float.MinValue;
+			float min_y = 0, max_y = float.MinValue;
 			float ray_uncertainty = 0.5f;
 			
-			for (int example = 0; example < 10; example++)
+            List<float> x_start = new List<float>();
+			List<float> y_start = new List<float>();
+            List<float> x_end = new List<float>();
+			List<float> y_end = new List<float>();
+            List<float> x_left = new List<float>();
+			List<float> y_left = new List<float>();
+            List<float> x_right = new List<float>();
+			List<float> y_right = new List<float>();
+			
+			float disparity = 7;
+		    float x1 = 640/2; 
+			float x2 = x1 - disparity; 
+		    int grid_dimension = 2000; 				
+			float focal_length = 5;
+			float sensor_pixels_per_mm = 100;
+			float baseline = 100;
+			stereoModel inverseSensorModel = new stereoModel();
+			inverseSensorModel.image_width = 640;
+			inverseSensorModel.image_height = 480;
+			
+			for (disparity = 15; disparity >= 15; disparity-=5)
 			{
-				float disparity = 2;
-			    float x1 = 640/2; 
-				float x2 = x1 - disparity; 
-				
-				//disparity = 0.8f + (example * 0.5f);				
-				x1 = (640/2) + (example * 1.5f); 
-				x2 = x1 - disparity;
-				
-			    int grid_dimension = 2000; 				
-	            float x_start = 0;
-				float y_start = 0;
-	            float x_end = 0;
-				float y_end = 0;
-	            float x_left = 0;
-				float y_left = 0;
-	            float x_right = 0;
-				float y_right = 0;
-				float focal_length = 5;
-				float sensor_pixels_per_mm = 100;
-				float baseline = 100;
-				float distance = stereoModel.DisparityToDistance(disparity, focal_length, sensor_pixels_per_mm, baseline);
+				for (int example = 0; example < 640 / 40; example++)
+				{				
+					x1 = example * 40; 
+					x2 = x1 - disparity;
 					
-				stereoModel inverseSensorModel = new stereoModel();
-				inverseSensorModel.image_width = 640;
-				inverseSensorModel.image_height = 480;
-	            inverseSensorModel.raysIntersection(
-			        x1, x2, 
-			        grid_dimension, ray_uncertainty,
-			        distance,
-	                ref x_start, ref y_start,
-	                ref x_end, ref y_end,
-	                ref x_left, ref y_left,
-	                ref x_right, ref y_right);
-				
-				if (example == 0)
-				{
-				    max_y = -y_end * 1.2f;
-				    max_x = x_start * 2;
+					float distance = stereoModel.DisparityToDistance(disparity, focal_length, sensor_pixels_per_mm, baseline);
+	
+	                float curr_x_start = 0;
+					float curr_y_start = 0;
+		            float curr_x_end = 0;
+					float curr_y_end = 0;
+		            float curr_x_left = 0;
+					float curr_y_left = 0;
+		            float curr_x_right = 0;
+					float curr_y_right = 0;
+					
+		            inverseSensorModel.raysIntersection(
+				        x1, x2, 
+				        grid_dimension, ray_uncertainty,
+				        distance,
+		                ref curr_x_start, ref curr_y_start,
+		                ref curr_x_end, ref curr_y_end,
+		                ref curr_x_left, ref curr_y_left,
+		                ref curr_x_right, ref curr_y_right);
+					/*
+					curr_y_start = -curr_y_start;
+					curr_y_end = -curr_y_end;
+					curr_y_left = -curr_y_left;
+					curr_y_right = -curr_y_right;
+					*/
+					
+					x_start.Add(curr_x_start);
+					y_start.Add(curr_y_start);
+					x_end.Add(curr_x_end);
+					y_end.Add(curr_y_end);
+					x_left.Add(curr_x_left);
+					y_left.Add(curr_y_left);
+					x_right.Add(curr_x_right);
+					y_right.Add(curr_y_right);
+					
+					if (curr_x_end < min_x) min_x = curr_x_end;
+					if (curr_x_end > max_x) max_x = curr_x_end;
+					if (curr_x_left < min_x) min_x = curr_x_left;
+					if (curr_x_right > max_x) max_x = curr_x_right;
+					if (curr_y_start < min_y) min_y = curr_y_start;
+					if (curr_y_end > max_y) max_y = curr_y_end;
+					
+					Console.WriteLine("curr_y_start: " + curr_y_start.ToString());
+					
 				}
+			}
+			
+			for (int i = 0; i < x_start.Count; i++)
+			{
+				float curr_x_start = (x_start[i] - min_x) * debug_img_width / (max_x - min_x);
+				float curr_y_start = (y_start[i] - min_y) * debug_img_height / (max_y - min_y);
+				float curr_x_end = (x_end[i] - min_x) * debug_img_width / (max_x - min_x);
+				float curr_y_end = (y_end[i] - min_y) * debug_img_height / (max_y - min_y);
+				float curr_x_left = (x_left[i] - min_x) * debug_img_width / (max_x - min_x);
+				float curr_y_left = (y_left[i] - min_y) * debug_img_height / (max_y - min_y);
+				float curr_x_right = (x_right[i] - min_x) * debug_img_width / (max_x - min_x);
+				float curr_y_right = (y_right[i] - min_y) * debug_img_height / (max_y - min_y);		
 				
-				x_start = x_start * debug_img_width / max_x;
-				y_start = -y_start * debug_img_height / max_y;
-				x_end = x_end * debug_img_width / max_x;
-				y_end = -y_end * debug_img_height / max_y;
-				x_left = x_left * debug_img_width / max_x;
-				y_left = -y_left * debug_img_height / max_y;
-				x_right = x_right * debug_img_width / max_x;
-				y_right = -y_right * debug_img_height / max_y;		
-				
-				y_start = debug_img_height - 1 - y_start;
-				y_end = debug_img_height - 1 - y_end;
-				y_left = debug_img_height - 1 - y_left;
-				y_right = debug_img_height - 1 - y_right;
+				curr_y_start = debug_img_height - 1 - curr_y_start;
+				curr_y_end = debug_img_height - 1 - curr_y_end;
+				curr_y_left = debug_img_height - 1 - curr_y_left;
+				curr_y_right = debug_img_height - 1 - curr_y_right;
 				
 				//Console.WriteLine("max: " + max.ToString());
 							
-				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_start, (int)y_start, (int)x_left, (int)y_left, 0,0,0,0,false);
-				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_end, (int)y_end, (int)x_left, (int)y_left, 0,0,0,0,false);
-				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_end, (int)y_end, (int)x_right, (int)y_right, 0,0,0,0,false);
-				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)x_start, (int)y_start, (int)x_right, (int)y_right, 0,0,0,0,false);
-			
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)curr_x_start, (int)curr_y_start, (int)curr_x_left, (int)curr_y_left, 0,0,0,0,false);
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)curr_x_end, (int)curr_y_end, (int)curr_x_left, (int)curr_y_left, 0,0,0,0,false);
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)curr_x_end, (int)curr_y_end, (int)curr_x_right, (int)curr_y_right, 0,0,0,0,false);
+				drawing.drawLine(debug_img, debug_img_width, debug_img_height, (int)curr_x_start, (int)curr_y_start, (int)curr_x_right, (int)curr_y_right, 0,0,0,0,false);			
 			}
 			
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
@@ -137,6 +171,9 @@ namespace sentience.core.tests
 			    inverseSensorModel.createRay(
 				    image_width/2, image_height/2, 4, 
 					0, 255, 255, 255);
+			
+			Assert.AreNotEqual(null, ray, "No ray was created");
+			Assert.AreNotEqual(null, ray.vertices, "No ray vertices were created");
 			
 			pos3D[] start_vertices = (pos3D[])ray.vertices.Clone();
 			
@@ -181,10 +218,10 @@ namespace sentience.core.tests
 		    int image_width = 640;
 		    int image_height = 480;
 			int no_of_stereo_cameras = 1;
-		    int localisationRadius_mm = 16000;
-		    int maxMappingRange_mm = 16000;
+		    int localisationRadius_mm = 32000;
+		    int maxMappingRange_mm = 32000;
 		    int cellSize_mm = 32;
-		    int dimension_cells = 16000 / cellSize_mm;
+		    int dimension_cells = 32000 / cellSize_mm;
 		    int dimension_cells_vertical = dimension_cells/2;
 		    float vacancyWeighting = 0; //2.0f;
 			float FOV_horizontal = 78 * (float)Math.PI / 180.0f;

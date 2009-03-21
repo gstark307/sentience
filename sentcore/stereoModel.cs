@@ -981,7 +981,7 @@ namespace sentience.core
             if (y_start < -1) y_start = -y_start;
             if (y_end < -1) y_end = -y_end;
 
-            if (x_right > x_left)
+            if (x_right >= x_left)
             {
                 // calc uncertainty in angle (+/- half a pixel)
                 float angular_uncertainty = FOV_vertical / (image_height * 2);

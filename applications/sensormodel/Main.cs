@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using sentience.core;
 using sluggish.utilities;
 using sluggish.utilities.xml;
+using sentience.core.tests;
 
 namespace sentience.sensormodel
 {
@@ -15,7 +16,7 @@ namespace sentience.sensormodel
 	{
 		public static void Main(string[] args)
 		{
-		
+			
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
 
