@@ -80,7 +80,15 @@ namespace sentience.core
         }
 
         #endregion
-	
+
+        #region "clearing the grid"
+
+        public virtual void Clear()
+        {
+        }
+
+        #endregion
+
         #region "sensor model"
 
         // a weight value used to define how aggressively the
@@ -93,19 +101,20 @@ namespace sentience.core
         /// creates a loouk table for the cacancy part of the ray model
         /// This avoids having to run slow Exp functions
         /// </summary>
-        /// <param name="min_vacancy_probability"></param>
-        /// <param name="max_vacancy_probability"></param>
-        /// <param name="levels"></param>
-        protected void CreateVacancyModelLookup(float min_vacancy_probability, 
-                                              float max_vacancy_probability,
-                                              int levels)
+        /// <param name="min_vacancy_probability">minimum probability value</param>
+        /// <param name="max_vacancy_probability">maximum probability value</param>
+        /// <param name="levels">number of discrete steps in the lookup</param>
+        protected void CreateVacancyModelLookup(
+            float min_vacancy_probability, 
+            float max_vacancy_probability,
+            int levels)
         {
             vacancy_model_lookup = new float[levels];
             for (int i = 0; i < levels; i++)
             {
                 float fraction = i / (float)levels;
                 vacancy_model_lookup[i] = 
-                    vacancyFunction(fraction, levels, 
+                    vacancyFunction(fraction, 
                                     min_vacancy_probability, max_vacancy_probability);
             }
         }
@@ -114,11 +123,13 @@ namespace sentience.core
         /// function for vacancy within the sensor model
         /// </summary>
         /// <param name="fraction">fractional distance along the vacancy part of the ray model</param>
-        /// <param name="steps"></param>
-        /// <returns></returns>
-        protected float vacancyFunction(float fraction, int steps,
-                                      float min_vacancy_probability, 
-                                      float max_vacancy_probability)
+        /// <param name="min_vacancy_probability">minimum probability</param>
+        /// <param name="max_vacancy_probability">maximum probability</param>
+        /// <returns>probability</returns>
+        static public float vacancyFunction(
+            float fraction,
+            float min_vacancy_probability, 
+            float max_vacancy_probability)
         {
             float prob = min_vacancy_probability + ((max_vacancy_probability - min_vacancy_probability) *
                          (float)Math.Exp(-(fraction * fraction)));
@@ -140,7 +151,8 @@ namespace sentience.core
                 CreateVacancyModelLookup(min_vacancy_probability, max_vacancy_probability, 1000);
             }
             float prob = vacancy_model_lookup[(int)(fraction * (vacancy_model_lookup.Length-1))];
-            return (0.5f - (prob / steps));
+            prob = 0.5f - (prob / steps);
+            return (prob);
         }
 
         #endregion	

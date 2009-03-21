@@ -60,7 +60,8 @@ namespace sentience.core
         public particlePath best_path = null;
 
         // random number generator
-        private MersenneTwister rnd = new MersenneTwister(100);
+        //private MersenneTwister rnd = new MersenneTwister(100);
+        private Random rnd = new Random(0);
 
         // the time step at which all branches converge to a single path
         private UInt32 root_time_step = UInt32.MaxValue;
@@ -126,7 +127,7 @@ namespace sentience.core
                            int random_seed)
         {
             // seed the random number generator
-            rnd = new MersenneTwister(random_seed);
+            rnd = new Random(random_seed); // MersenneTwister(random_seed);
 
             this.rob = rob;
             this.LocalGrid = LocalGrid;
@@ -221,7 +222,7 @@ namespace sentience.core
             float v = 0;
 
             for (int i = 0; i < 12; i++)
-                v += (((float)rnd.NextDoublePositive() * 2) - 1.0f) * b;
+                v += (((float)rnd.Next() * 2) - 1.0f) * b;
                 //v += ((rnd.Next(200000) / 100000.0f) - 1.0f) * b;
 
             return(v / 2.0f);

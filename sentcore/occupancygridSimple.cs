@@ -80,15 +80,26 @@ namespace sentience.core
 		}
 		
 		#endregion
-		
+
+        #region "clearing the grid"
+
+        public override void Clear()
+        {
+            for (int x = 0; x < cell.Length; x++)
+                for (int y = 0; y < cell[x].Length; y++)
+                    cell[x][y] = null;
+        }
+
+        #endregion
+
         #region "probability of a vertical grid column (for overhead views)"
-		
+
         /// <summary>
         /// return the probability of occupancy for a vertical grid column
         /// </summary>
         /// <param name="x">x cell coordinate on the grid</param>
         /// <param name="y">y cell coordinate on the grid</param>
-		/// <param name="mean_colour">average cell colour for the column</param>
+        /// <param name="mean_colour">average cell colour for the column</param>
         /// <returns>probability for the vertical grid column</returns>
         public float GetProbability(
 		    int x, int y,
@@ -288,7 +299,7 @@ namespace sentience.core
                             xx_mm = left_camera_location.x;
                             yy_mm = left_camera_location.y;
                             zz_mm = left_camera_location.z;
-                            step_size = 2;
+                            //step_size = 2;
                             break;
                         }
                     case VACANT_SENSORMODEL_RIGHT_CAMERA:
@@ -303,7 +314,7 @@ namespace sentience.core
                             xx_mm = right_camera_location.x;
                             yy_mm = right_camera_location.y;
                             zz_mm = right_camera_location.z;
-                            step_size = 2;
+                            //step_size = 2;
                             break;
                         }
                 }
@@ -334,13 +345,15 @@ namespace sentience.core
                         starting_range_cells = (int)Math.Abs((ray.vertices[0].y - ray.observedFrom.y) * inverse_cellSize_mm);
                     else
                         starting_range_cells = (int)Math.Abs((ray.vertices[0].x - ray.observedFrom.x) * inverse_cellSize_mm);
-                }
 
-                // what is the widest point of the ray in cells
-                if (modelcomponent == OCCUPIED_SENSORMODEL)
-                    widest_point = (int)(ray.fattestPoint * steps / ray.length);
+                    // what is the widest point of the ray in cells
+                    widest_point = (int)(ray.fattestPoint * steps);
+                }
                 else
+                {
+                    // what is the widest point of the ray in cells
                     widest_point = steps;
+                }
 
                 // calculate increment values in millimetres
                 float x_incr_mm = xdist_mm * inverse_steps;
@@ -416,6 +429,7 @@ namespace sentience.core
                                 {
                                     // calculate the probability from the vacancy model
                                     centre_prob = vacancyFunction(grid_step * inverse_steps, steps);
+                                    //Console.WriteLine("centre_prob: " + centre_prob.ToString());
                                 }
 								
                                 // width of the localisation ray
@@ -1098,15 +1112,17 @@ namespace sentience.core
 
 							if (prob >= 0.5f)
 							{
-							    byte b = (byte)(255 - ((prob-0.5f)*2*255));
+							    int b = (int)(127 + ((prob-0.5f)*10*255));
+                                if (b > 255) b = 255;
 							    img[n++] = 0;
- 					            img[n++] = b;
+ 					            img[n++] = (byte)b;
 							    img[n] = 0;
 							}
 							else
 							{
-							    byte b = (byte)(126 + ((0.5f - prob)*2*127));
-							    img[n++] = b;
+							    int b = (int)(255 - ((0.5f - prob)*50*155));
+                                if (b < 100) b = 100;
+							    img[n++] = (byte)b;
  					            img[n++] = 0;
 							    img[n] = 0;
 							}

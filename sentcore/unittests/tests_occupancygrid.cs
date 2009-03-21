@@ -218,12 +218,12 @@ namespace sentience.core.tests
 		    int image_width = 640;
 		    int image_height = 480;
 			int no_of_stereo_cameras = 1;
-		    int localisationRadius_mm = 32000;
-		    int maxMappingRange_mm = 32000;
+		    int localisationRadius_mm = 16000;
+		    int maxMappingRange_mm = 16000;
 		    int cellSize_mm = 32;
-		    int dimension_cells = 32000 / cellSize_mm;
+		    int dimension_cells = 16000 / cellSize_mm;
 		    int dimension_cells_vertical = dimension_cells/2;
-		    float vacancyWeighting = 0; //2.0f;
+		    float vacancyWeighting = 0.5f;
 			float FOV_horizontal = 78 * (float)Math.PI / 180.0f;
 					    
 			// create a grid
@@ -248,12 +248,16 @@ namespace sentience.core.tests
             //Assert.AreNotEqual(0, inverseSensorModel.ray_model.probability[1][5], "Ray model probabilities not updated");
 						
 			// observer parameters
-		    pos3D observer = new pos3D(10000,0,0);
+            int pan_angle_degrees = 0;
+		    pos3D observer = new pos3D(0,0,0);
+            observer.pan = pan_angle_degrees * (float)Math.PI / 180.0f;
 		    float stereo_camera_baseline_mm = 100;
 			pos3D left_camera_location = new pos3D(stereo_camera_baseline_mm*0.5f,0,0);
 			pos3D right_camera_location = new pos3D(-stereo_camera_baseline_mm*0.5f,0,0);
-			left_camera_location.translate(observer.x, observer.y, observer.z);
-			right_camera_location.translate(observer.x, observer.y, observer.z);
+            left_camera_location = left_camera_location.rotate(observer.pan, observer.tilt, observer.roll);
+            right_camera_location = right_camera_location.rotate(observer.pan, observer.tilt, observer.roll);
+            left_camera_location = left_camera_location.translate(observer.x, observer.y, observer.z);
+            right_camera_location = right_camera_location.translate(observer.x, observer.y, observer.z);
 		    float FOV_degrees = 78;
 		    float[] stereo_features = new float[no_of_stereo_features * 3];
 		    byte[,] stereo_features_colour = new byte[no_of_stereo_features, 3];
@@ -261,7 +265,8 @@ namespace sentience.core.tests
 			
 			// create some stereo disparities within the field of view
 			Console.WriteLine("Adding disparities");
-			MersenneTwister rnd = new MersenneTwister(0);
+			//MersenneTwister rnd = new MersenneTwister(0);
+            Random rnd = new Random(0);
 			for (int correspondence = 0; correspondence < no_of_stereo_features; correspondence++)
 			{
 				float x = rnd.Next(image_width-1);
@@ -299,7 +304,7 @@ namespace sentience.core.tests
 		                stereo_features,
 		                stereo_features_colour,
 		                stereo_features_uncertainties,
-					    false);
+					    true);
 
 				// insert rays into the grid
 				Console.WriteLine("Throwing rays");
@@ -323,9 +328,85 @@ namespace sentience.core.tests
 			grid.ShowFront(debug_img, debug_img_width, debug_img_height, true);
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			bmp.Save("tests_occupancygrid_simple_InsertRays_front.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-		}	
-	
-		[Test()]
+
+            // side view of the probabilities
+            float max_prob = -1;
+            float min_prob = 1;
+            float[] probs = new float[dimension_cells/2];
+            float[] mean_colour = new float[3];
+            for (int y = dimension_cells / 2; y < dimension_cells; y++)
+            {
+                float p = grid.GetProbability(dimension_cells / 2, y, mean_colour);                
+                probs[y - (dimension_cells / 2)] = p;
+                if (p != occupancygridSimple.NO_OCCUPANCY_EVIDENCE)
+                {
+                    if (p < min_prob) min_prob = p;
+                    if (p > max_prob) max_prob = p;
+                }
+            }
+            for (int i = 0; i < debug_img.Length; i++) debug_img[i] = 255;
+            int prev_x = -1;
+            int prev_y = debug_img_height / 2;
+            for (int i = 0; i < probs.Length; i++)
+            {
+                if (probs[i] != occupancygridSimple.NO_OCCUPANCY_EVIDENCE)
+                {
+                    int x = i * (debug_img_width - 1) / probs.Length;
+                    int y = debug_img_height - 1 - (int)((probs[i] - min_prob) / (max_prob - min_prob) * (debug_img_height - 1));
+                    int n = ((y * debug_img_width) + x) * 3;
+                    if (prev_x > -1)
+                    {
+                        int r = 255;
+                        int g = 0;
+                        int b = 0;
+                        if (probs[i] > 0.5f)
+                        {
+                            r = 0;
+                            g = 255;
+                            b = 0;
+                        }
+                        drawing.drawLine(debug_img, debug_img_width, debug_img_height, prev_x, prev_y, x, y, r, g, b, 0, false);
+                    }
+                    prev_x = x;
+                    prev_y = y;
+                }
+            }
+            int y_zero = debug_img_height - 1 - (int)((0.5f-min_prob) / (max_prob - min_prob) * (debug_img_height - 1));
+            drawing.drawLine(debug_img, debug_img_width, debug_img_height, 0, y_zero, debug_img_width - 1, y_zero, 0, 0, 0, 0, false);
+
+            BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+            bmp.Save("tests_occupancygrid_simple_InsertRays_probs.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+        }
+
+        [Test()]
+        public void VacancyFunction()
+        {
+            float min_probability = 0;
+            float max_probability = 1;
+            int debug_img_width = 640;
+            int debug_img_height = 480;
+            byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+            for (int i = 0; i < debug_img.Length; i++) debug_img[i] = 255;
+            Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            int prev_y = debug_img_height-1;
+            for (int x = 0; x < debug_img_width; x++)
+            {
+                float prob = occupancygridBase.vacancyFunction(x/(float)debug_img_width, min_probability, max_probability);
+                Console.WriteLine(prob.ToString());
+                int y = debug_img_height - (int)(prob * (debug_img_height-1) / max_probability);
+                if (x > 0)
+                {
+                    drawing.drawLine(debug_img, debug_img_width, debug_img_height, x-1, prev_y, x, y, 0, 0, 0, 0, false);
+                }
+                prev_y = y;
+            }
+
+            BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+            bmp.Save("tests_occupancygrid_simple_VacancyFunction.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+        }
+
+        [Test()]
 		public void GridCreation()
 		{
 		    int dimension_cells = 50;

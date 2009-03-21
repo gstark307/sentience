@@ -16,6 +16,7 @@ namespace sentience.sensormodel
 	{
 		public static void Main(string[] args)
 		{
+            //tests_occupancygrid_simple.InsertRays();
 			
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());

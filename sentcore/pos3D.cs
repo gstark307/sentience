@@ -215,6 +215,15 @@ namespace sentience.core
             roll = other.roll;
         }
 
+        public pos3D Subtract(pos3D p)
+        {
+            pos3D new_p = new pos3D(x - p.x, y - p.y, z - p.z);
+            new_p.pan = pan - p.pan;
+            new_p.tilt = tilt - p.tilt;
+            new_p.roll = roll - p.roll;
+            return (new_p);
+        }
+
 
         #region "saving and loading"
 

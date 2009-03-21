@@ -30,7 +30,8 @@ namespace sentience.core
     /// </summary>
     public class sentience_stereo_contours
     {
-        MersenneTwister rnd = new MersenneTwister(100);
+        //MersenneTwister rnd = new MersenneTwister(100);
+        Random rnd = new Random(0);
 
         public bool useSmoothing = false;
 

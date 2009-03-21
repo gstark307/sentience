@@ -32,7 +32,8 @@ namespace sentience.core
     public sealed class stereoModel
     {
         // random number generator
-        MersenneTwister rnd = new MersenneTwister(100);
+        //MersenneTwister rnd = new MersenneTwister(0);
+        Random rnd = new Random(0);
 
         public bool mapping = true;
 

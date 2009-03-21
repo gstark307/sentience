@@ -36,7 +36,8 @@ namespace sentience.core
         #region "variables"
 
         // random number generator
-        private MersenneTwister rnd = new MersenneTwister(100);
+        //private MersenneTwister rnd = new MersenneTwister(100);
+        private Random rnd = new Random(0);
 
         // list grid cells which need to be cleared of garbage
         private List<occupancygridCellMultiHypothesis> garbage;
@@ -114,6 +115,22 @@ namespace sentience.core
                                             float vacancyWeighting)
         {
             init(dimension_cells, dimension_cells_vertical, cellSize_mm, localisationRadius_mm, maxMappingRange_mm, vacancyWeighting);
+        }
+
+        #endregion
+
+        #region "clearing the grid"
+
+        public override void Clear()
+        {
+            for (int x = 0; x < cell.Length; x++)
+            {
+                for (int y = 0; y < cell[x].Length; y++)
+                {
+                    cell[x][y] = null;
+                    navigable_space[x][y] = false;
+                }
+            }
         }
 
         #endregion
@@ -1462,4 +1479,4 @@ namespace sentience.core
         #endregion
     }
 
-}
+}
