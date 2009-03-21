@@ -248,10 +248,12 @@ namespace sentience.core.tests
             //Assert.AreNotEqual(0, inverseSensorModel.ray_model.probability[1][5], "Ray model probabilities not updated");
 						
 			// observer parameters
-		    pos3D observer = new pos3D(150,0,0);
+		    pos3D observer = new pos3D(10000,0,0);
 		    float stereo_camera_baseline_mm = 100;
 			pos3D left_camera_location = new pos3D(stereo_camera_baseline_mm*0.5f,0,0);
 			pos3D right_camera_location = new pos3D(-stereo_camera_baseline_mm*0.5f,0,0);
+			left_camera_location.translate(observer.x, observer.y, observer.z);
+			right_camera_location.translate(observer.x, observer.y, observer.z);
 		    float FOV_degrees = 78;
 		    float[] stereo_features = new float[no_of_stereo_features * 3];
 		    byte[,] stereo_features_colour = new byte[no_of_stereo_features, 3];
@@ -296,7 +298,8 @@ namespace sentience.core.tests
 		                FOV_degrees,
 		                stereo_features,
 		                stereo_features_colour,
-		                stereo_features_uncertainties);
+		                stereo_features_uncertainties,
+					    false);
 
 				// insert rays into the grid
 				Console.WriteLine("Throwing rays");

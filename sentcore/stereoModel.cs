@@ -561,7 +561,8 @@ namespace sentience.core
 			        head.calibration[stereo_camera_index].leftcam.camera_FOV_degrees,
 			        head.features[stereo_camera_index].features,
 			        head.features[stereo_camera_index].colour,
-			        head.features[stereo_camera_index].uncertainties);
+			        head.features[stereo_camera_index].uncertainties,
+				    false);
 			}
 			else
 			{
@@ -582,6 +583,7 @@ namespace sentience.core
 		/// <param name="stereo_features">stereo features, as groups of three figures</param>
 		/// <param name="stereo_features_colour">colour of each stereo feature</param>
 		/// <param name="stereo_features_uncertainties">uncertainty value associated with each stereo feature</param>
+		/// <param name="translate">translate the ray to be relative to the observer position, otherwise it's relative to (0,0,0)</param>
 		/// <returns>list of evidence rays, centred at (0, 0, 0)</returns>
         public List<evidenceRay> createObservation(
 		    pos3D observer,
@@ -591,7 +593,8 @@ namespace sentience.core
 		    float FOV_degrees,
 		    float[] stereo_features,
 		    byte[,] stereo_features_colour,
-		    float[] stereo_features_uncertainties)
+		    float[] stereo_features_uncertainties,
+		    bool translate)
         {
             List<evidenceRay> result = new List<evidenceRay>();
 
@@ -606,7 +609,8 @@ namespace sentience.core
 
             // some head geometry
             pos3D headOrientation = observer;
-            pos3D cameraOrientation = new pos3D(0, 0, 0);
+            pos3D cameraOrientation = observer;
+			if (!translate) cameraOrientation = new pos3D(0, 0, 0);
             cameraOrientation.pan = headOrientation.pan;
             cameraOrientation.tilt = headOrientation.tilt;
             cameraOrientation.roll = headOrientation.roll;
@@ -994,7 +998,7 @@ namespace sentience.core
                 float z_end = (int)(y_end * Math.Sin(angle));
 
                 //use an offset so that the point from which the ray was observed was (0,0,0)
-                float x_offset = grid_dimension / 2;
+                float x_offset = grid_dimension * 0.5f;
                 ray = new evidenceRay();
                 ray.vertices[0] = new pos3D(x_start - x_offset, y_start, z_start);
                 
@@ -1002,7 +1006,7 @@ namespace sentience.core
                 ray.fattestPoint = (y_left - y_start) / (y_end - y_start);
                 //ray.vertices[2] = new pos3D(x_left - x_offset, y_left, z);
                 //ray.vertices[3] = new pos3D(x_right - x_offset, y_right, z);
-                //ray.centre = new pos3D(x_left + ((x_right-x_left)/2) - x_offset, y_left, z);
+                //ray.centre = new pos3D(x_left + ((x_right-x_left)*0.5f) - x_offset, y_left, z);
                 ray.width = x_right - x_left;
 
                 ray.colour[0] = r;
