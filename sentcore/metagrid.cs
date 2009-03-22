@@ -201,6 +201,27 @@ namespace sentience.core
         #endregion
 
         #region "localisation"
+        
+        static private void getTrialPose(
+            int index, int max_index, 
+            float translation_x_tollerance, 
+            float translation_y_tollerance,
+            float angular_offset, 
+            ref float x, 
+            ref float y)
+        {
+            int whorls = 10 + ((max_index-200)/70);
+            float max_angle = 2 * 3.1415927f * whorls;
+            const float offset = 1.5f;
+            float rand_angle = offset + (index * (max_angle - offset) / (float)max_index);
+            float ang = rand_angle * 0.85f / max_angle;
+            rand_angle = rand_angle * (1.0f + (((float)Math.PI - 1.0f) * 0.5f * (1.0f - ang) * (1.0f - ang)));
+            float rand_radius = rand_angle / max_angle;
+
+            rand_angle += angular_offset;
+            x = rand_radius * translation_x_tollerance / 2 * (float)Math.Sin(rand_angle);
+            y = rand_radius * translation_y_tollerance / 2 * (float)Math.Cos(rand_angle);
+        }        
 
 		/// <summary>
 		/// creates a set of random poses
@@ -235,35 +256,71 @@ namespace sentience.core
 			if (poses == null) poses = new List<pos3D>();
 			poses.Clear();
 			
+			float place_cell_area = (sampling_radius_minor_mm * sampling_radius_major_mm * 4) / no_of_poses;
+			float place_cell_dimension = (float)Math.Sqrt(place_cell_area);
+			place_cell_dimension *= 0.9f;
+			
+			int place_cell_x = 0;
+			int place_cell_y = 0;
+			int place_cells_across = (int)(sampling_radius_minor_mm*2/place_cell_dimension);
+			int place_cells_down = (int)(sampling_radius_major_mm*2/place_cell_dimension);
+			float place_cell_offset = 0;
+			int half_place_cells_across = place_cells_across/2;
+			int half_place_cells_down = place_cells_down/2;
+			float place_cell_dimension_offset = place_cell_dimension*0.5f;
+			float dist = 1;
+			float x_offset = 0;
+			float y_offset = 0;
+			int ctr = 0;
+			
 			for (int i = 0; i < no_of_poses; i++)
-			{
-				float dist = 1;
-				float x_offset = 0;
-				float y_offset = 0;
-				while (dist > 0.5f)
-				{
-                    // create a random sample position
-                    x_offset = ((float)rnd.NextDouble() - 0.5f);
-                    y_offset = ((float)rnd.NextDouble() - 0.5f);				
-				    dist = (float)Math.Sqrt(x_offset*x_offset + y_offset*y_offset);
+			{	
+			    int tries = 0;
+			    dist = sampling_radius_minor_mm;
+			    while ((dist >= sampling_radius_minor_mm) && (tries < half_place_cells_across))
+			    {
+					x_offset = place_cell_offset + ((place_cell_x - half_place_cells_across) * place_cell_dimension);
+					y_offset = place_cell_dimension_offset + (place_cell_y - half_place_cells_down) * place_cell_dimension;
+					
+					place_cell_x++;
+					if (place_cell_x >= place_cells_across)
+					{
+					    ctr = rnd.Next(2);
+					    place_cell_x = 0;
+					    place_cell_y++;
+					    if (place_cell_offset == 0)
+					        place_cell_offset = place_cell_dimension_offset;
+					    else
+					        place_cell_offset = 0;
+					}
+					
+	                float dx = x_offset;
+	                float dy = y_offset * sampling_radius_minor_mm / sampling_radius_major_mm;								
+					dist = (float)Math.Sqrt(dx*dx+dy*dy);
+				    tries++;
 				}
-				x_offset *= sampling_radius_minor_mm * 2;
-				y_offset *= sampling_radius_major_mm * 2;
 				
-				//Console.WriteLine("x,y: " + x_offset.ToString() + ", " + y_offset.ToString());
-
-                pos3D sample_pose = new pos3D(x_offset, y_offset, 0);
-                sample_pose.pan = pan + (((float)rnd.NextDouble() - 0.5f) * 2 * max_orientation_variance);
-                sample_pose.tilt = tilt + (((float)rnd.NextDouble() - 0.5f) * 2 * max_tilt_variance);
-                sample_pose.roll = roll + (((float)rnd.NextDouble() - 0.5f) * 2 * max_roll_variance);
-				
-				poses.Add(sample_pose);
+				if (tries < half_place_cells_across)
+				{					
+					//Console.WriteLine("x,y: " + x_offset.ToString() + ", " + y_offset.ToString());
+	
+	                pos3D sample_pose = new pos3D(x_offset, y_offset, 0);
+	                if (ctr % 2 == 0)
+	                    sample_pose.pan = pan + ((float)rnd.NextDouble() * max_orientation_variance);
+	                else
+	                    sample_pose.pan = pan - ((float)rnd.NextDouble() * max_orientation_variance);
+	                sample_pose.tilt = tilt + (((float)rnd.NextDouble() - 0.5f) * 2 * max_tilt_variance);
+	                sample_pose.roll = roll + (((float)rnd.NextDouble() - 0.5f) * 2 * max_roll_variance);
+					
+					poses.Add(sample_pose);
+					ctr++;
+				}
 			}
 			
             // create an image showing the results
             if (img != null)
             {
-                float max_radius = sampling_radius_major_mm * 0.02f;
+                float max_radius = sampling_radius_major_mm * 0.025f;
                 for (int i = img.Length - 1; i >= 0; i--) img[i] = 0;
                 int tx = -(int)(sampling_radius_major_mm);
                 int ty = -(int)(sampling_radius_major_mm);
@@ -286,16 +343,28 @@ namespace sentience.core
 			
 		}
 		
-        static void FindBestPose(
+		/// <summary>
+		/// given a set of poses and their matching scores return the best pose
+		/// </summary>
+		/// <param name="poses">list of poses which have been evaluated</param>
+		/// <param name="scores">localisation matching score for each pose</param>
+		/// <param name="best_pose">returned best pose</param>
+		/// <param name="sampling_radius_major_mm">major axis length</param>
+		/// <param name="img">optional image data</param>
+		/// <param name="img_width">image width</param>
+		/// <param name="img_height">image height</param>
+        static public void FindBestPose(
             List<pos3D> poses,
             List<float> scores,
             ref pos3D best_pose,
             float sampling_radius_major_mm,
             byte[] img,
             int img_width,
-            int img_height)
+            int img_height,
+            float known_best_pose_x,
+            float known_best_pose_y)
         {
-			float peak_radius = sampling_radius_major_mm * 0.1f;
+			float peak_radius = sampling_radius_major_mm * 0.4f;
             float max_score = float.MinValue;
 			float peak_x = 0;
 			float peak_y = 0;
@@ -330,7 +399,8 @@ namespace sentience.core
 				    {
 				        if (Math.Abs(dz) < peak_radius)
 				        {
-							float score = Math.Abs(scores[i]);
+							float score = 1 + Math.Abs(scores[i]);
+							score = score * score;
 							best_pose.x += poses[i].x * score;
 							best_pose.y += poses[i].y * score;
 							best_pose.z += poses[i].z * score;
@@ -357,25 +427,29 @@ namespace sentience.core
             {
                 float max_radius = sampling_radius_major_mm * 0.1f;
                 for (int i = img.Length - 1; i >= 0; i--) img[i] = 0;
-                int tx = -(int)(sampling_radius_major_mm * 0.5f);
-                int ty = -(int)(sampling_radius_major_mm * 0.5f);
-                int bx = (int)(sampling_radius_major_mm * 0.5f);
-                int by = (int)(sampling_radius_major_mm * 0.5f);
+                int tx = -(int)(sampling_radius_major_mm);
+                int ty = -(int)(sampling_radius_major_mm);
+                int bx = (int)(sampling_radius_major_mm);
+                int by = (int)(sampling_radius_major_mm);
 
                 for (int i = 0; i < poses.Count; i++)
                 {
                     pos3D p = poses[i];
                     float score = scores[i];
-                    int x = (int)((p.x - tx) * img_width / sampling_radius_major_mm);
-                    int y = (int)((p.y - ty) * img_height / sampling_radius_major_mm);
+                    int x = (int)((p.x - tx) * img_width / (sampling_radius_major_mm*2));
+                    int y = (int)((p.y - ty) * img_height / (sampling_radius_major_mm*2));
                     int radius = (int)(score * max_radius / max_score);
 					byte intensity = (byte)(score * 255 / max_score);
 					drawing.drawSpot(img, img_width, img_height, x,y,radius,intensity, intensity, intensity);
                 }
 
-				int best_x = (int)((best_pose.x - tx) * img_width / sampling_radius_major_mm);
-                int best_y = (int)((best_pose.y - ty) * img_height / sampling_radius_major_mm);
+				int best_x = (int)((best_pose.x - tx) * img_width / (sampling_radius_major_mm*2));
+                int best_y = (int)((best_pose.y - ty) * img_height / (sampling_radius_major_mm*2));
 				drawing.drawCross(img, img_width, img_height, best_x,best_y,(int)max_radius, 255, 0, 0, 1);
+
+  			    int known_best_x = (int)((known_best_pose_x - tx) * img_width / (sampling_radius_major_mm*2));
+                int known_best_y = (int)((known_best_pose_y - ty) * img_height / (sampling_radius_major_mm*2));
+				drawing.drawCross(img, img_width, img_height, known_best_x,known_best_y,(int)max_radius, 0, 255, 0, 1);
             }
         }
 
@@ -521,7 +595,7 @@ namespace sentience.core
             }
 
 			// locate the best possible pose
-            FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, null, 0, 0);
+            FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, null, 0, 0, 0, 0);
 
             return (best_matching_score);
         }

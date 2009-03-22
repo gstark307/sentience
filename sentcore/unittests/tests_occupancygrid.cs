@@ -38,9 +38,9 @@ namespace sentience.core.tests
 		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			
-		    int no_of_poses = 400;
+		    int no_of_poses = 200;
 		    float sampling_radius_major_mm = 100;
-		    float sampling_radius_minor_mm = 50;
+		    float sampling_radius_minor_mm = 80;
 		    float pan = 0;
 		    float tilt = 0;
 		    float roll = 0;
@@ -65,9 +65,74 @@ namespace sentience.core.tests
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			bmp.Save("tests_occupancygrid_simple_CreatePoses.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 			
-			Assert.AreEqual(no_of_poses, poses.Count);
+			//Assert.Greater(poses.Count, no_of_poses-20);
+			//Assert.Less(poses.Count, no_of_poses+20);
 		}
-		
+
+		[Test()]
+		public void FindBestPose()
+		{
+			int debug_img_width = 640;
+			int debug_img_height = 480;
+		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			
+		    int no_of_poses = 400;
+		    float sampling_radius_major_mm = 100;
+		    float sampling_radius_minor_mm = 80;
+		    float pan = 0;
+		    float tilt = 0;
+		    float roll = 0;
+		    float max_orientation_variance = 5 * (float)Math.PI / 180.0f;
+		    float max_tilt_variance = 0 * (float)Math.PI / 180.0f;
+		    float max_roll_variance = 0 * (float)Math.PI / 180.0f;
+		    Random rnd = new Random(5);
+		    List<pos3D> poses = null;
+		    float ideal_best_pose_x = ((float)rnd.NextDouble()-0.5f) * sampling_radius_minor_mm * 2 * 0.8f;
+		    float ideal_best_pose_y = ((float)rnd.NextDouble()-0.5f) * sampling_radius_major_mm * 2 * 0.8f;
+		    float ideal_pan = ((float)rnd.NextDouble() - 0.5f) * (max_orientation_variance*2);
+			
+			metagrid.CreatePoses(
+		        no_of_poses,
+		        sampling_radius_major_mm,
+		        sampling_radius_minor_mm,
+		        pan, tilt, roll,
+		        max_orientation_variance,
+		        max_tilt_variance,
+		        max_roll_variance,
+		        rnd, 
+			    null, 0, 0,
+			    ref poses);
+			    
+			List<float> scores = new List<float>();
+			for (int i = 0; i < poses.Count; i++)
+			{
+			    float score = (float)rnd.NextDouble();
+			    scores.Add(score);
+			    float dx = poses[i].x - ideal_best_pose_x;
+			    float dy = poses[i].y - ideal_best_pose_y;
+			    float dp = (poses[i].pan - ideal_pan) * sampling_radius_major_mm / max_orientation_variance;
+			    float dist = (float)Math.Sqrt(dx*dx + dy*dy + dp*dp) * 0.01f;
+			    scores[i] += 2.0f / (1.0f + dist*dist);
+			}
+			
+			pos3D best_pose = null;
+            metagrid.FindBestPose(
+                poses,
+                scores,
+                ref best_pose,
+                sampling_radius_major_mm,
+                debug_img,
+                debug_img_width,
+                debug_img_height,
+                ideal_best_pose_x,
+                ideal_best_pose_y);
+			
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			bmp.Save("tests_occupancygrid_simple_FindBestPose.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+		}
+
+								
 		[Test()]
 		public void RaysIntersection()
 		{
