@@ -31,6 +31,44 @@ namespace sentience.core.tests
 	public class tests_occupancygrid_simple
 	{
 		[Test()]
+		public void CreatePoses()
+		{
+			int debug_img_width = 640;
+			int debug_img_height = 480;
+		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			
+		    int no_of_poses = 400;
+		    float sampling_radius_major_mm = 100;
+		    float sampling_radius_minor_mm = 50;
+		    float pan = 0;
+		    float tilt = 0;
+		    float roll = 0;
+		    float max_orientation_variance = 5 * (float)Math.PI / 180.0f;
+		    float max_tilt_variance = 0 * (float)Math.PI / 180.0f;
+		    float max_roll_variance = 0 * (float)Math.PI / 180.0f;
+		    Random rnd = new Random(0);
+		    List<pos3D> poses = null;
+			
+			metagrid.CreatePoses(
+		        no_of_poses,
+		        sampling_radius_major_mm,
+		        sampling_radius_minor_mm,
+		        pan, tilt, roll,
+		        max_orientation_variance,
+		        max_tilt_variance,
+		        max_roll_variance,
+		        rnd, 
+			    debug_img, debug_img_width, debug_img_height,
+			    ref poses);
+			
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			bmp.Save("tests_occupancygrid_simple_CreatePoses.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+			
+			Assert.AreEqual(no_of_poses, poses.Count);
+		}
+		
+		[Test()]
 		public void RaysIntersection()
 		{
 			int debug_img_width = 640;
