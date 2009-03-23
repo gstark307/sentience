@@ -74,7 +74,8 @@ namespace sentience.core.tests
 		{
 			int debug_img_width = 640;
 			int debug_img_height = 480;
-		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+		    byte[] debug_img_poses = new byte[debug_img_width * debug_img_height * 3];
+		    byte[] debug_img_graph = new byte[debug_img_width * debug_img_height * 3];
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			
 		    int no_of_poses = 400;
@@ -86,7 +87,7 @@ namespace sentience.core.tests
 		    float max_orientation_variance = 5 * (float)Math.PI / 180.0f;
 		    float max_tilt_variance = 0 * (float)Math.PI / 180.0f;
 		    float max_roll_variance = 0 * (float)Math.PI / 180.0f;
-		    Random rnd = new Random(5);
+		    Random rnd = new Random(16);
 		    List<pos3D> poses = null;
 		    float ideal_best_pose_x = ((float)rnd.NextDouble()-0.5f) * sampling_radius_minor_mm * 2 * 0.8f;
 		    float ideal_best_pose_y = ((float)rnd.NextDouble()-0.5f) * sampling_radius_major_mm * 2 * 0.8f;
@@ -122,14 +123,17 @@ namespace sentience.core.tests
                 scores,
                 ref best_pose,
                 sampling_radius_major_mm,
-                debug_img,
+                debug_img_poses,
+                debug_img_graph,
                 debug_img_width,
                 debug_img_height,
                 ideal_best_pose_x,
                 ideal_best_pose_y);
 			
-			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img_poses, bmp);
 			bmp.Save("tests_occupancygrid_simple_FindBestPose.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img_graph, bmp);
+			bmp.Save("tests_occupancygrid_simple_FindBestPose_graph.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 		}
 
 								

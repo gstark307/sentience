@@ -202,27 +202,6 @@ namespace sentience.core
 
         #region "localisation"
         
-        static private void getTrialPose(
-            int index, int max_index, 
-            float translation_x_tollerance, 
-            float translation_y_tollerance,
-            float angular_offset, 
-            ref float x, 
-            ref float y)
-        {
-            int whorls = 10 + ((max_index-200)/70);
-            float max_angle = 2 * 3.1415927f * whorls;
-            const float offset = 1.5f;
-            float rand_angle = offset + (index * (max_angle - offset) / (float)max_index);
-            float ang = rand_angle * 0.85f / max_angle;
-            rand_angle = rand_angle * (1.0f + (((float)Math.PI - 1.0f) * 0.5f * (1.0f - ang) * (1.0f - ang)));
-            float rand_radius = rand_angle / max_angle;
-
-            rand_angle += angular_offset;
-            x = rand_radius * translation_x_tollerance / 2 * (float)Math.Sin(rand_angle);
-            y = rand_radius * translation_y_tollerance / 2 * (float)Math.Cos(rand_angle);
-        }        
-
 		/// <summary>
 		/// creates a set of random poses
 		/// </summary>
@@ -358,13 +337,13 @@ namespace sentience.core
             List<float> scores,
             ref pos3D best_pose,
             float sampling_radius_major_mm,
-            byte[] img,
+            byte[] img_poses, byte[] img_graph,
             int img_width,
             int img_height,
             float known_best_pose_x,
             float known_best_pose_y)
         {
-			float peak_radius = sampling_radius_major_mm * 0.4f;
+			float peak_radius = sampling_radius_major_mm * 0.5f;
             float max_score = float.MinValue;
 			float peak_x = 0;
 			float peak_y = 0;
@@ -380,6 +359,9 @@ namespace sentience.core
                 }
             }
 			
+			float min_score = max_score * 0.5f;
+			float min_score2 = max_score * 0.8f;
+			
 			if (best_pose == null) best_pose = new pos3D(0,0,0);
 			best_pose.x = 0;
 			best_pose.y = 0;
@@ -390,24 +372,27 @@ namespace sentience.core
 			float hits = 0;
 			for (int i = 0; i < poses.Count; i++)
 			{
-				float dx = poses[i].x - peak_x;
-				float dy = poses[i].y - peak_y;
-				float dz = poses[i].z - peak_z;
-				if (Math.Abs(dx) < peak_radius)
-				{
-				    if (Math.Abs(dy) < peak_radius)
-				    {
-				        if (Math.Abs(dz) < peak_radius)
-				        {
-							float score = 1 + Math.Abs(scores[i]);
-							score = score * score;
-							best_pose.x += poses[i].x * score;
-							best_pose.y += poses[i].y * score;
-							best_pose.z += poses[i].z * score;
-							best_pose.pan += poses[i].pan * score;
-							best_pose.tilt += poses[i].tilt * score;
-							best_pose.roll += poses[i].roll * score;
-							hits += score;
+			    if (scores[i] > min_score2)
+			    {
+					float dx = poses[i].x - peak_x;
+					float dy = poses[i].y - peak_y;
+					float dz = poses[i].z - peak_z;
+					//if (Math.Abs(dx) < peak_radius)
+					{
+					    //if (Math.Abs(dy) < peak_radius)
+					    {
+					        //if (Math.Abs(dz) < peak_radius)
+					        {
+								float score = Math.Abs(scores[i]);
+								score *= score;
+								best_pose.x += poses[i].x * score;
+								best_pose.y += poses[i].y * score;
+								best_pose.z += poses[i].z * score;
+								best_pose.pan += poses[i].pan * score;
+								best_pose.tilt += poses[i].tilt * score;
+								best_pose.roll += poses[i].roll * score;
+								hits += score;
+							}
 						}
 					}
 				}
@@ -421,16 +406,63 @@ namespace sentience.core
 				best_pose.tilt /= hits;
 				best_pose.roll /= hits;				
 			}
+			
+			float grad = 1;
+			if (Math.Abs(best_pose.x) < 0.0001f) grad = best_pose.y / best_pose.x;
+			float d1 = (float)Math.Sqrt(best_pose.x*best_pose.x + best_pose.y*best_pose.y);
+			float origin_x = best_pose.x*sampling_radius_major_mm*5/d1; //sampling_radius_major_mm*best_pose.x/Math.Abs(best_pose.x);
+			float origin_y = best_pose.y*sampling_radius_major_mm*5/d1;
+			
+			List<float> points = new List<float>();
+			float points_min_distance = float.MaxValue;
+			float points_max_distance = float.MinValue;
+			float dxx = best_pose.y;
+			float dyy = best_pose.x;
+			float dist_to_best_pose = (float)Math.Sqrt(dxx*dxx + dyy*dyy);
+			float max_score2 = 0;
+			for (int i = 0; i < poses.Count; i++)
+			{
+			    if (scores[i] > min_score)
+			    {
+				    float ix = 0;
+				    float iy = 0;
+				    geometry.intersection(
+				        0, 0, best_pose.x, best_pose.y,
+				        poses[i].x-dxx, poses[i].y-dyy, poses[i].x, poses[i].y,
+				        ref ix, ref iy);
+				        
+				    float dxx2 = ix - origin_x;
+				    float dyy2 = iy - origin_y;
+				    float dist = (float)Math.Sqrt(dxx2*dxx2 + dyy2*dyy2);
+				    float score = scores[i];
+				    points.Add(dist);
+				    points.Add(score);
+				    if (score > max_score2) max_score2 = score;
+				    if (dist < points_min_distance) points_min_distance = dist;
+				    if (dist > points_max_distance) points_max_distance = dist;
+			    }
+			}
+			
 
             // create an image showing the results
-            if (img != null)
+            if (img_poses != null)
             {
                 float max_radius = sampling_radius_major_mm * 0.1f;
-                for (int i = img.Length - 1; i >= 0; i--) img[i] = 0;
+                for (int i = img_poses.Length - 1; i >= 0; i--)
+                {
+                    img_poses[i] = 0;
+                    img_graph[i] = 255;
+                }
                 int tx = -(int)(sampling_radius_major_mm);
                 int ty = -(int)(sampling_radius_major_mm);
                 int bx = (int)(sampling_radius_major_mm);
                 int by = (int)(sampling_radius_major_mm);
+
+  			    int origin_x2 = (int)((origin_x - tx) * img_width / (sampling_radius_major_mm*2));
+                int origin_y2 = (int)((origin_y - ty) * img_height / (sampling_radius_major_mm*2));
+  			    int origin_x3 = (int)((0 - tx) * img_width / (sampling_radius_major_mm*2));
+                int origin_y3 = (int)((0 - ty) * img_height / (sampling_radius_major_mm*2));
+                drawing.drawLine(img_poses, img_width, img_height, origin_x3, origin_y3, origin_x2, origin_y2, 255, 255, 0, 0, false);
 
                 for (int i = 0; i < poses.Count; i++)
                 {
@@ -439,17 +471,37 @@ namespace sentience.core
                     int x = (int)((p.x - tx) * img_width / (sampling_radius_major_mm*2));
                     int y = (int)((p.y - ty) * img_height / (sampling_radius_major_mm*2));
                     int radius = (int)(score * max_radius / max_score);
-					byte intensity = (byte)(score * 255 / max_score);
-					drawing.drawSpot(img, img_width, img_height, x,y,radius,intensity, intensity, intensity);
+					byte intensity_r = (byte)(score * 255 / max_score);
+					byte intensity_g = intensity_r;
+					byte intensity_b = intensity_r;
+					if (score < min_score)
+					{
+					    intensity_r = 0;
+					    intensity_g = 0;
+					}
+					if ((score >= min_score) &&
+					    (score < max_score - ((max_score - min_score)*0.5f)))
+					{
+					    intensity_g = 0;
+					}
+					drawing.drawSpot(img_poses, img_width, img_height, x,y,radius,intensity_r, intensity_g, intensity_b);
                 }
 
 				int best_x = (int)((best_pose.x - tx) * img_width / (sampling_radius_major_mm*2));
                 int best_y = (int)((best_pose.y - ty) * img_height / (sampling_radius_major_mm*2));
-				drawing.drawCross(img, img_width, img_height, best_x,best_y,(int)max_radius, 255, 0, 0, 1);
+				drawing.drawCross(img_poses, img_width, img_height, best_x,best_y,(int)max_radius, 255, 0, 0, 1);
 
   			    int known_best_x = (int)((known_best_pose_x - tx) * img_width / (sampling_radius_major_mm*2));
                 int known_best_y = (int)((known_best_pose_y - ty) * img_height / (sampling_radius_major_mm*2));
-				drawing.drawCross(img, img_width, img_height, known_best_x,known_best_y,(int)max_radius, 0, 255, 0, 1);
+				drawing.drawCross(img_poses, img_width, img_height, known_best_x,known_best_y,(int)max_radius, 0, 255, 0, 1);  			    
+
+                // draw the graph								
+				for (int i = 0; i < points.Count; i += 2)
+				{
+				    int graph_x = (int)((points[i] - points_min_distance) * (img_width-1) / (points_max_distance - points_min_distance));
+				    int graph_y = img_height-1-((int)(points[i+1] * (img_height-1) / (max_score2*1.1f)));
+				    drawing.drawCross(img_graph, img_width, img_height, graph_x, graph_y, 3, 0,0,0,0);
+				}
             }
         }
 
@@ -595,7 +647,7 @@ namespace sentience.core
             }
 
 			// locate the best possible pose
-            FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, null, 0, 0, 0, 0);
+            FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, null, null, 0, 0, 0, 0);
 
             return (best_matching_score);
         }
