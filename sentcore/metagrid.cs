@@ -410,8 +410,8 @@ namespace sentience.core
 			float grad = 1;
 			if (Math.Abs(best_pose.x) < 0.0001f) grad = best_pose.y / best_pose.x;
 			float d1 = (float)Math.Sqrt(best_pose.x*best_pose.x + best_pose.y*best_pose.y);
-			float origin_x = best_pose.x*sampling_radius_major_mm*5/d1; //sampling_radius_major_mm*best_pose.x/Math.Abs(best_pose.x);
-			float origin_y = best_pose.y*sampling_radius_major_mm*5/d1;
+			float origin_x = best_pose.x*sampling_radius_major_mm*2/d1; //sampling_radius_major_mm*best_pose.x/Math.Abs(best_pose.x);
+			float origin_y = best_pose.y*sampling_radius_major_mm*2/d1;
 			
 			List<float> points = new List<float>();
 			float points_min_distance = float.MaxValue;
@@ -462,7 +462,7 @@ namespace sentience.core
                 int origin_y2 = (int)((origin_y - ty) * img_height / (sampling_radius_major_mm*2));
   			    int origin_x3 = (int)((0 - tx) * img_width / (sampling_radius_major_mm*2));
                 int origin_y3 = (int)((0 - ty) * img_height / (sampling_radius_major_mm*2));
-                drawing.drawLine(img_poses, img_width, img_height, origin_x3, origin_y3, origin_x2, origin_y2, 255, 255, 0, 0, false);
+                drawing.drawLine(img_poses, img_width, img_height, origin_x3, origin_y3, origin_x2, origin_y2, 255, 255, 0, 1, false);
 
                 for (int i = 0; i < poses.Count; i++)
                 {

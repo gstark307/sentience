@@ -65,8 +65,8 @@ namespace sentience.core.tests
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			bmp.Save("tests_occupancygrid_simple_CreatePoses.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 			
-			//Assert.Greater(poses.Count, no_of_poses-20);
-			//Assert.Less(poses.Count, no_of_poses+20);
+			Assert.Greater(poses.Count, no_of_poses - 15);
+			Assert.Less(poses.Count, no_of_poses + 15);
 		}
 
 		[Test()]
@@ -87,7 +87,7 @@ namespace sentience.core.tests
 		    float max_orientation_variance = 5 * (float)Math.PI / 180.0f;
 		    float max_tilt_variance = 0 * (float)Math.PI / 180.0f;
 		    float max_roll_variance = 0 * (float)Math.PI / 180.0f;
-		    Random rnd = new Random(16);
+		    Random rnd = new Random(81);
 		    List<pos3D> poses = null;
 		    float ideal_best_pose_x = ((float)rnd.NextDouble()-0.5f) * sampling_radius_minor_mm * 2 * 0.8f;
 		    float ideal_best_pose_y = ((float)rnd.NextDouble()-0.5f) * sampling_radius_major_mm * 2 * 0.8f;
@@ -105,35 +105,56 @@ namespace sentience.core.tests
 			    null, 0, 0,
 			    ref poses);
 			    
-			List<float> scores = new List<float>();
-			for (int i = 0; i < poses.Count; i++)
+			const int steps = 10;
+			
+			for (int s = 0; s < steps; s++)
 			{
-			    float score = (float)rnd.NextDouble();
-			    scores.Add(score);
-			    float dx = poses[i].x - ideal_best_pose_x;
-			    float dy = poses[i].y - ideal_best_pose_y;
-			    float dp = (poses[i].pan - ideal_pan) * sampling_radius_major_mm / max_orientation_variance;
-			    float dist = (float)Math.Sqrt(dx*dx + dy*dy + dp*dp) * 0.01f;
-			    scores[i] += 2.0f / (1.0f + dist*dist);
+  		        ideal_best_pose_x = sampling_radius_minor_mm * 0.3f;
+		        ideal_best_pose_y = sampling_radius_major_mm * (-0.7f + (s*1.4f/steps));
+		        ideal_pan = 0;
+			    
+				List<float> scores = new List<float>();
+				for (int i = 0; i < poses.Count; i++)
+				{
+				    float score = (float)rnd.NextDouble();
+				    scores.Add(score);
+				    float dx = poses[i].x - ideal_best_pose_x;
+				    float dy = poses[i].y - ideal_best_pose_y;
+				    float dp = (poses[i].pan - ideal_pan) * sampling_radius_major_mm / max_orientation_variance;
+				    float dist = (float)Math.Sqrt(dx*dx + dy*dy + dp*dp) * 0.01f;
+				    scores[i] += 2.0f / (1.0f + dist*dist);
+				}
+				
+				pos3D best_pose = null;
+	            metagrid.FindBestPose(
+	                poses,
+	                scores,
+	                ref best_pose,
+	                sampling_radius_major_mm,
+	                debug_img_poses,
+	                debug_img_graph,
+	                debug_img_width,
+	                debug_img_height,
+	                ideal_best_pose_x,
+	                ideal_best_pose_y);
+	                
+	            float pan_angle_error = (ideal_pan - best_pose.pan) * 180 / (float)Math.PI;
+	            Console.WriteLine("Target Pan angle: " + (ideal_pan * 180 / (float)Math.PI).ToString() + " degrees");
+	            Console.WriteLine("Estimated Pan angle: " + (best_pose.pan * 180 / (float)Math.PI).ToString() + " degrees");
+	            Console.WriteLine("Pan error: " + pan_angle_error.ToString() + " degrees");
+	            
+	            float position_error_x = Math.Abs(ideal_best_pose_x - best_pose.x);
+	            float position_error_y = Math.Abs(ideal_best_pose_y - best_pose.y);
+	            
+	            Assert.Less(pan_angle_error, 1);
+	            Assert.Less(position_error_x, sampling_radius_major_mm * 0.15f);
+	            Assert.Less(position_error_y, sampling_radius_major_mm * 0.15f);
+				
+				BitmapArrayConversions.updatebitmap_unsafe(debug_img_poses, bmp);
+				bmp.Save("tests_occupancygrid_simple_FindBestPose" + s.ToString() + ".gif", System.Drawing.Imaging.ImageFormat.Gif);
+				BitmapArrayConversions.updatebitmap_unsafe(debug_img_graph, bmp);
+				bmp.Save("tests_occupancygrid_simple_FindBestPose_graph" + s.ToString() + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 			}
-			
-			pos3D best_pose = null;
-            metagrid.FindBestPose(
-                poses,
-                scores,
-                ref best_pose,
-                sampling_radius_major_mm,
-                debug_img_poses,
-                debug_img_graph,
-                debug_img_width,
-                debug_img_height,
-                ideal_best_pose_x,
-                ideal_best_pose_y);
-			
-			BitmapArrayConversions.updatebitmap_unsafe(debug_img_poses, bmp);
-			bmp.Save("tests_occupancygrid_simple_FindBestPose.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
-			BitmapArrayConversions.updatebitmap_unsafe(debug_img_graph, bmp);
-			bmp.Save("tests_occupancygrid_simple_FindBestPose_graph.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 		}
 
 								
