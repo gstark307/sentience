@@ -319,10 +319,10 @@ namespace sentience.core
 		    float probability_variance,
 		    int r, int g, int b)
 		{
-			int tx_cell = tx_mm / cellSize_mm;
-			int ty_cell = ty_mm / cellSize_mm;
-			int bx_cell = bx_mm / cellSize_mm;
-			int by_cell = by_mm / cellSize_mm;
+		    int tx_cell = (dimension_cells/2) + (int)((tx_mm - x) / cellSize_mm);
+		    int ty_cell = (dimension_cells/2) + (int)((ty_mm - y) / cellSize_mm);
+		    int bx_cell = (dimension_cells/2) + (int)((bx_mm - x) / cellSize_mm);
+		    int by_cell = (dimension_cells/2) + (int)((by_mm - y) / cellSize_mm);
 			int height_cells = height_mm / cellSize_mm;
 			int thickness_cells = thickness_mm / cellSize_mm;
 
@@ -361,10 +361,10 @@ namespace sentience.core
 		    float probability_variance,
 		    int r, int g, int b)
 		{		
-			int tx_cell = tx_mm / cellSize_mm;
-			int ty_cell = ty_mm / cellSize_mm;
-			int bx_cell = bx_mm / cellSize_mm;
-			int by_cell = by_mm / cellSize_mm;
+		    int tx_cell = (dimension_cells/2) + (int)((tx_mm - x) / cellSize_mm);
+		    int ty_cell = (dimension_cells/2) + (int)((ty_mm - y) / cellSize_mm);
+		    int bx_cell = (dimension_cells/2) + (int)((bx_mm - x) / cellSize_mm);
+		    int by_cell = (dimension_cells/2) + (int)((by_mm - y) / cellSize_mm);
 			int wall_height_cells = wall_height_mm / cellSize_mm;
 			int door_height_cells = door_height_mm / cellSize_mm;
 			int door_width_cells = door_width_mm / cellSize_mm;
