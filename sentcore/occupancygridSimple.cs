@@ -1271,5 +1271,148 @@ namespace sentience.core
 		
 		
         #endregion
+		
+        #region "inserting simulated structures"
+		
+		/// <summary>
+		/// inserts a simulated wall into the grid
+		/// </summary>
+		/// <param name="tx_cell">start x cell coordinate</param>
+		/// <param name="ty_cell">start y cell coordinate</param>
+		/// <param name="bx_cell">end x cell coordinate</param>
+		/// <param name="by_cell">end y cell coordinate</param>
+		/// <param name="height_cells">height of the wall in cells</param>
+		/// <param name="thickness_cells">thickness of the wall in cells</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public override void InsertWallCells(
+		    int tx_cell, int ty_cell,
+		    int bx_cell, int by_cell,
+		    int height_cells,
+		    int thickness_cells,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+			Random rnd = new Random(0);
+			if (height_cells >= dimension_cells_vertical)
+				height_cells = dimension_cells_vertical - 1;
+			if (thickness_cells < 1) thickness_cells = 1;
+			
+			int dx = bx_cell - tx_cell;
+			int dy = by_cell - ty_cell;
+			int length_cells = (int)Math.Sqrt(dx*dx + dy*dy);
+			
+			for (int i = 0; i < length_cells; i++)
+			{
+				int x_cell = tx_cell + (i * dx / length_cells);
+				if ((x_cell > -1) && (x_cell < dimension_cells))
+				{
+				    int y_cell = ty_cell + (i * dy / length_cells);
+					if ((y_cell > -1) && (y_cell < dimension_cells))
+					{
+						if (cell[x_cell][y_cell] == null)
+							cell[x_cell][y_cell] = new particleGridCellBase[dimension_cells_vertical];
+						for (int z_cell = 0; z_cell < height_cells; z_cell++)
+						{
+							if (cell[x_cell][y_cell][z_cell] == null)
+								cell[x_cell][y_cell][z_cell] = new particleGridCellBase();
+							
+							float prob = 0.8f + ((float)rnd.NextDouble() * probability_variance * 2) - probability_variance;
+							if (prob > 0.99f) prob = 0.99f;
+							if (prob < 0.5f) prob  = 0.5f;
+							
+							particleGridCellBase c = cell[x_cell][y_cell][z_cell];
+							c.probabilityLogOdds = probabilities.LogOdds(prob);
+							c.colour = new byte[3];
+							c.colour[0] = (byte)r;
+							c.colour[1] = (byte)g;
+							c.colour[1] = (byte)b;
+						}
+					}
+				}				
+			}
+		}
+
+		/// <summary>
+		/// inserts a simulated doorway into the grid
+		/// </summary>
+		/// <param name="tx_cell">start x cell coordinate</param>
+		/// <param name="ty_cell">start y cell coordinate</param>
+		/// <param name="bx_cell">end x cell coordinate</param>
+		/// <param name="by_cell">end y cell coordinate</param>
+		/// <param name="wall_height_cells">height of the wall in cells</param>
+		/// <param name="door_height_cells">height of the doorway in cells</param>
+		/// <param name="door_width_cells">width of the doorway in cells</param>
+		/// <param name="thickness_cells">thickness of the wall in cells</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public override void InsertDoorwayCells(
+		    int tx_cell, int ty_cell,
+		    int bx_cell, int by_cell,
+		    int wall_height_cells,
+		    int door_height_cells,
+		    int door_width_cells,
+		    int thickness_cells,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+			Random rnd = new Random(0);
+			if (wall_height_cells >= dimension_cells_vertical)
+				wall_height_cells = dimension_cells_vertical - 1;
+			if (thickness_cells < 1) thickness_cells = 1;
+			if (door_height_cells > wall_height_cells)
+				door_height_cells = wall_height_cells;
+			
+			int dx = bx_cell - tx_cell;
+			int dy = by_cell - ty_cell;
+			int length_cells = (int)Math.Sqrt(dx*dx + dy*dy);
+			
+			int door_start_index = (length_cells/2) - (door_width_cells/2);
+			int door_end_index = door_start_index + door_width_cells;
+			for (int i = 0; i < length_cells; i++)
+			{
+				int x_cell = tx_cell + (i * dx / length_cells);
+				if ((x_cell > -1) && (x_cell < dimension_cells))
+				{
+				    int y_cell = ty_cell + (i * dy / length_cells);
+					if ((y_cell > -1) && (y_cell < dimension_cells))
+					{
+						if (cell[x_cell][y_cell] == null)
+							cell[x_cell][y_cell] = new particleGridCellBase[dimension_cells_vertical];
+						for (int z_cell = 0; z_cell < wall_height_cells; z_cell++)
+						{
+							if (cell[x_cell][y_cell][z_cell] == null)
+								cell[x_cell][y_cell][z_cell] = new particleGridCellBase();
+							
+							float prob = 0.8f + ((float)rnd.NextDouble() * probability_variance * 2) - probability_variance;
+							if (prob > 0.99f) prob = 0.99f;
+							if (prob < 0.5f) prob  = 0.5f;
+							
+							if ((i >= door_start_index) && 
+							    (i <= door_end_index) &&
+							    (z_cell < door_height_cells))
+							{
+								prob = 0.2f + ((float)rnd.NextDouble() * probability_variance * 2) - probability_variance;
+							    if (prob > 0.4f) prob = 0.4f;
+							    if (prob < 0.01f) prob  = 0.01f;
+							}
+							
+							particleGridCellBase c = cell[x_cell][y_cell][z_cell];
+							c.probabilityLogOdds = probabilities.LogOdds(prob);
+							c.colour = new byte[3];
+							c.colour[0] = (byte)r;
+							c.colour[1] = (byte)g;
+							c.colour[1] = (byte)b;
+						}
+					}
+				}				
+			}
+		}		
+				
+        #endregion
 	}
 }

@@ -346,6 +346,37 @@ namespace sentience.core
         private particleGridCellBase[] distilled;
 
         /// <summary>
+        /// distill a given probability value
+        /// </summary>
+        /// <param name="z">z coordinate</param>
+        /// <param name="probability">probability value in the range 0.0-1.0</param>
+        /// <param name="r">red colour component in the range 0-255</param>
+        /// <param name="g">green colour component in the range 0-255</param>
+        /// <param name="b">blue colour component in the range 0-255</param>
+        public void Distill(
+		    int z, 
+		    float probability,
+		    int r, int g, int b)
+        {
+            // create the distilled array
+            if (distilled == null)
+                distilled = new particleGridCellBase[Hypothesis.Length];
+
+            if (distilled[z] == null)
+            {
+                // create a new distilled particle
+                distilled[z] = new particleGridCellBase();
+                distilled[z].colour = new byte[3];
+            }
+
+            // update an existing distilled value
+            distilled[z].probabilityLogOdds = probabilities.LogOdds(probability);			
+			distilled[z].colour[0] = (byte)r;
+			distilled[z].colour[1] = (byte)g;
+			distilled[z].colour[2] = (byte)b;
+		}
+		
+        /// <summary>
         /// distill an individual grid particle
         /// </summary>
         /// <param name="hypothesis">the grid particle to be distilled</param>

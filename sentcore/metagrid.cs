@@ -653,6 +653,104 @@ namespace sentience.core
         }
 
         #endregion
+		
+        #region "inserting simulated structures, mainly for unit testing purposes"
+				
+		/// <summary>
+		/// inserts a simulated wall into the grid
+		/// </summary>
+		/// <param name="tx_mm">start x coordinate</param>
+		/// <param name="ty_mm">start y coordinate</param>
+		/// <param name="bx_mm">end x coordinate</param>
+		/// <param name="by_mm">end y coordinate</param>
+		/// <param name="height_mm">height of the wall</param>
+		/// <param name="thickness_mm">thickness of the wall</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public void InsertWall(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int height_mm,
+		    int thickness_mm,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+			for (int grd = 0; grd < grid.Length; grd++)
+			{
+			    int cellSize_mm = grid[grd].cellSize_mm;
+				
+			    int tx_cell = (grid[grd].dimension_cells/2) + (int)((tx_mm - grid[grd].x) / cellSize_mm);
+			    int ty_cell = (grid[grd].dimension_cells/2) + (int)((ty_mm - grid[grd].y) / cellSize_mm);
+			    int bx_cell = (grid[grd].dimension_cells/2) + (int)((bx_mm - grid[grd].x) / cellSize_mm);
+			    int by_cell = (grid[grd].dimension_cells/2) + (int)((by_mm - grid[grd].y) / cellSize_mm);
+			    int height_cells = height_mm / cellSize_mm;
+			    int thickness_cells = thickness_mm / cellSize_mm;
+				
+			    grid[grd].InsertWallCells(
+		            tx_cell, ty_cell,
+		            bx_cell, by_cell,
+		            height_cells,
+		            thickness_cells,
+		            probability_variance,
+			        r, g, b);			
+			}
+		}
+		
+		
+		/// <summary>
+		/// inserts a simulated doorway into the grid
+		/// </summary>
+		/// <param name="tx_mm">start x coordinate</param>
+		/// <param name="ty_mm">start y coordinate</param>
+		/// <param name="bx_mm">end x coordinate</param>
+		/// <param name="by_mm">end y coordinate</param>
+		/// <param name="wall_height_mm">height of the wall</param>
+		/// <param name="door_height_mm">height of the door</param>
+		/// <param name="door_width_mm">width of the door</param>
+		/// <param name="thickness_mm">thickness of the wall</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public void InsertDoorway(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int wall_height_mm,
+		    int door_height_mm,
+		    int door_width_mm,
+		    int thickness_mm,
+		    float probability_variance,
+		    int r, int g, int b)
+		{		
+			for (int grd = 0; grd < grid.Length; grd++)
+			{
+			    int cellSize_mm = grid[grd].cellSize_mm;
+				
+			    int tx_cell = (grid[grd].dimension_cells/2) + (int)((tx_mm - grid[grd].x) / cellSize_mm);
+			    int ty_cell = (grid[grd].dimension_cells/2) + (int)((ty_mm - grid[grd].y) / cellSize_mm);
+			    int bx_cell = (grid[grd].dimension_cells/2) + (int)((bx_mm - grid[grd].x) / cellSize_mm);
+			    int by_cell = (grid[grd].dimension_cells/2) + (int)((by_mm - grid[grd].y) / cellSize_mm);
+			    int wall_height_cells = wall_height_mm / cellSize_mm;
+			    int door_height_cells = door_height_mm / cellSize_mm;
+			    int door_width_cells = door_width_mm / cellSize_mm;
+			    int thickness_cells = thickness_mm / cellSize_mm;
+			
+			    grid[grd].InsertDoorwayCells(
+			        tx_cell, ty_cell,
+			        bx_cell, by_cell,
+			        wall_height_cells,
+			        door_height_cells,
+			        door_width_cells,
+			        thickness_cells,
+			        probability_variance,
+			        r, g, b);
+			}
+		}
+		
+        #endregion
+		
 
     }
 }

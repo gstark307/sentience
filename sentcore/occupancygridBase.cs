@@ -156,8 +156,7 @@ namespace sentience.core
         }
 
         #endregion	
-					
-					
+										
         #region "calculating the matching probability"
 
         /// <summary>
@@ -246,6 +245,142 @@ namespace sentience.core
         }
                 
         #endregion
-					
+		
+        #region "inserting simulated structures, mainly for unit testing purposes"
+		
+		/// <summary>
+		/// inserts a simulated wall into the grid
+		/// </summary>
+		/// <param name="tx_cell">start x cell coordinate</param>
+		/// <param name="ty_cell">start y cell coordinate</param>
+		/// <param name="bx_cell">end x cell coordinate</param>
+		/// <param name="by_cell">end y cell coordinate</param>
+		/// <param name="height_cells">height of the wall in cells</param>
+		/// <param name="thickness_cells">thickness of the wall in cells</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public virtual void InsertWallCells(
+		    int tx_cell, int ty_cell,
+		    int bx_cell, int by_cell,
+		    int height_cells,
+		    int thickness_cells,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+		}
+		
+		/// <summary>
+		/// inserts a simulated doorway into the grid
+		/// </summary>
+		/// <param name="tx_cell">start x cell coordinate</param>
+		/// <param name="ty_cell">start y cell coordinate</param>
+		/// <param name="bx_cell">end x cell coordinate</param>
+		/// <param name="by_cell">end y cell coordinate</param>
+		/// <param name="wall_height_cells">height of the wall in cells</param>
+		/// <param name="door_height_cells">height of the doorway in cells</param>
+		/// <param name="door_width_cells">width of the doorway in cells</param>
+		/// <param name="thickness_cells">thickness of the wall in cells</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public virtual void InsertDoorwayCells(
+		    int tx_cell, int ty_cell,
+		    int bx_cell, int by_cell,
+		    int wall_height_cells,
+		    int door_height_cells,
+		    int door_width_cells,
+		    int thickness_cells,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+		}
+		
+		/// <summary>
+		/// inserts a simulated wall into the grid
+		/// </summary>
+		/// <param name="tx_mm">start x coordinate</param>
+		/// <param name="ty_mm">start y coordinate</param>
+		/// <param name="bx_mm">end x coordinate</param>
+		/// <param name="by_mm">end y coordinate</param>
+		/// <param name="height_mm">height of the wall</param>
+		/// <param name="thickness_mm">thickness of the wall</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public virtual void InsertWall(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int height_mm,
+		    int thickness_mm,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+			int tx_cell = tx_mm / cellSize_mm;
+			int ty_cell = ty_mm / cellSize_mm;
+			int bx_cell = bx_mm / cellSize_mm;
+			int by_cell = by_mm / cellSize_mm;
+			int height_cells = height_mm / cellSize_mm;
+			int thickness_cells = thickness_mm / cellSize_mm;
+
+			InsertWallCells(
+		        tx_cell, ty_cell,
+		        bx_cell, by_cell,
+		        height_cells,
+		        thickness_cells,
+		        probability_variance,
+			    r, g, b);			
+		}
+		
+		
+		/// <summary>
+		/// inserts a simulated doorway into the grid
+		/// </summary>
+		/// <param name="tx_mm">start x coordinate</param>
+		/// <param name="ty_mm">start y coordinate</param>
+		/// <param name="bx_mm">end x coordinate</param>
+		/// <param name="by_mm">end y coordinate</param>
+		/// <param name="wall_height_mm">height of the wall</param>
+		/// <param name="door_height_mm">height of the door</param>
+		/// <param name="door_width_mm">width of the door</param>
+		/// <param name="thickness_mm">thickness of the wall</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public virtual void InsertDoorway(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int wall_height_mm,
+		    int door_height_mm,
+		    int door_width_mm,
+		    int thickness_mm,
+		    float probability_variance,
+		    int r, int g, int b)
+		{		
+			int tx_cell = tx_mm / cellSize_mm;
+			int ty_cell = ty_mm / cellSize_mm;
+			int bx_cell = bx_mm / cellSize_mm;
+			int by_cell = by_mm / cellSize_mm;
+			int wall_height_cells = wall_height_mm / cellSize_mm;
+			int door_height_cells = door_height_mm / cellSize_mm;
+			int door_width_cells = door_width_mm / cellSize_mm;
+			int thickness_cells = thickness_mm / cellSize_mm;
+			
+			InsertDoorwayCells(
+			    tx_cell, ty_cell,
+			    bx_cell, by_cell,
+			    wall_height_cells,
+			    door_height_cells,
+			    door_width_cells,
+			    thickness_cells,
+			    probability_variance,
+			    r, g, b);
+		}
+		
+        #endregion
 	}
 }
