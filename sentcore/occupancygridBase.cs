@@ -270,6 +270,29 @@ namespace sentience.core
 		    int r, int g, int b)
 		{
 		}
+
+		/// <summary>
+		/// inserts a simulated block into the grid
+		/// </summary>
+		/// <param name="tx_cell">start x cell coordinate</param>
+		/// <param name="ty_cell">start y cell coordinate</param>
+		/// <param name="bx_cell">end x cell coordinate</param>
+		/// <param name="by_cell">end y cell coordinate</param>
+		/// <param name="bottom_height_cells">bottom height of the block in cells</param>
+		/// <param name="top_height_cells">bottom height of the block in cells</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public virtual void InsertBlockCells(
+		    int tx_cell, int ty_cell,
+		    int bx_cell, int by_cell,
+		    int bottom_height_cells,
+		    int top_height_cells,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+		}
 		
 		/// <summary>
 		/// inserts a simulated doorway into the grid
@@ -296,6 +319,43 @@ namespace sentience.core
 		    float probability_variance,
 		    int r, int g, int b)
 		{
+		}
+		
+		/// <summary>
+		/// inserts a simulated block into the grid
+		/// </summary>
+		/// <param name="tx_mm">start x coordinate</param>
+		/// <param name="ty_mm">start y coordinate</param>
+		/// <param name="bx_mm">end x coordinate</param>
+		/// <param name="by_mm">end y coordinate</param>
+		/// <param name="bottom_height_mm">bottom height of the block</param>
+		/// <param name="top_height_mm">top height of the block</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public virtual void InsertBlock(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int bottom_height_mm,
+		    int top_height_mm,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+		    int tx_cell = (dimension_cells/2) + (int)((tx_mm - x) / cellSize_mm);
+		    int ty_cell = (dimension_cells/2) + (int)((ty_mm - y) / cellSize_mm);
+		    int bx_cell = (dimension_cells/2) + (int)((bx_mm - x) / cellSize_mm);
+		    int by_cell = (dimension_cells/2) + (int)((by_mm - y) / cellSize_mm);
+			int bottom_height_cells = bottom_height_mm / cellSize_mm;
+			int top_height_cells = top_height_mm / cellSize_mm;
+
+			InsertBlockCells(
+		        tx_cell, ty_cell,
+		        bx_cell, by_cell,
+		        bottom_height_cells,
+			    top_height_cells,
+		        probability_variance,
+			    r, g, b);			
 		}
 		
 		/// <summary>
@@ -379,6 +439,18 @@ namespace sentience.core
 			    thickness_cells,
 			    probability_variance,
 			    r, g, b);
+		}
+		
+        #endregion
+		
+        #region "exporting grid data to other applications"
+		
+        /// <summary>
+        /// export the occupancy grid data to IFrIT basic particle file format for visualisation
+        /// </summary>
+        /// <param name="filename">name of the file to save as</param>
+        public virtual void ExportToIFrIT(string filename)
+        {
 		}
 		
         #endregion

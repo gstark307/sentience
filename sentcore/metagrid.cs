@@ -657,6 +657,48 @@ namespace sentience.core
         #region "inserting simulated structures, mainly for unit testing purposes"
 				
 		/// <summary>
+		/// inserts a simulated block into the grid
+		/// </summary>
+		/// <param name="tx_mm">start x coordinate</param>
+		/// <param name="ty_mm">start y coordinate</param>
+		/// <param name="bx_mm">end x coordinate</param>
+		/// <param name="by_mm">end y coordinate</param>
+		/// <param name="bottom_height_mm">bottom height of the block</param>
+		/// <param name="top_height_mm">bottom height of the block</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public void InsertBlockCells(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int bottom_height_mm,
+		    int top_height_mm,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+			for (int grd = 0; grd < grid.Length; grd++)
+			{
+			    int cellSize_mm = grid[grd].cellSize_mm;
+				
+			    int tx_cell = (grid[grd].dimension_cells/2) + (int)((tx_mm - grid[grd].x) / cellSize_mm);
+			    int ty_cell = (grid[grd].dimension_cells/2) + (int)((ty_mm - grid[grd].y) / cellSize_mm);
+			    int bx_cell = (grid[grd].dimension_cells/2) + (int)((bx_mm - grid[grd].x) / cellSize_mm);
+			    int by_cell = (grid[grd].dimension_cells/2) + (int)((by_mm - grid[grd].y) / cellSize_mm);
+			    int bottom_height_cells = bottom_height_mm / cellSize_mm;
+			    int top_height_cells = top_height_mm / cellSize_mm;
+				
+			    grid[grd].InsertBlockCells(
+		            tx_cell, ty_cell,
+		            bx_cell, by_cell,
+		            bottom_height_cells,
+		            top_height_cells,
+		            probability_variance,
+			        r, g, b);			
+			}
+		}		
+		
+		/// <summary>
 		/// inserts a simulated wall into the grid
 		/// </summary>
 		/// <param name="tx_mm">start x coordinate</param>
@@ -748,6 +790,32 @@ namespace sentience.core
 			        r, g, b);
 			}
 		}
+		
+        #endregion
+		
+        #region "exporting grid data to third party visualisation programs"
+
+        /// <summary>
+        /// export the occupancy grids data to IFrIT basic particle file format for visualisation
+        /// </summary>
+        /// <param name="filename">name of the file to save as</param>
+        public void ExportToIFrIT(string filename)
+        {
+			if (filename.Contains("."))
+			{
+				string prefix = "";
+				string extension = "";
+		        string[] str = filename.Split('.');
+				if (str.Length > 1)
+				{
+					for (int i = 0; i < str.Length-1; i++) prefix += str[i];
+					extension = str[str.Length-1];					
+					
+					for (int i = 0; i < grid.Length; i++)
+						grid[i].ExportToIFrIT(prefix + i.ToString() + "." + extension);
+				}
+			}
+        }
 		
         #endregion
 		

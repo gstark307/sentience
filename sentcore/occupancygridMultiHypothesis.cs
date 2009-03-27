@@ -1323,6 +1323,14 @@ namespace sentience.core
         #region "exporting grid data to third party visualisation programs"
 
         /// <summary>
+        /// TODO: export the occupancy grid data to IFrIT basic particle file format for visualisation
+        /// </summary>
+        /// <param name="filename">name of the file to save as</param>
+        public override void ExportToIFrIT(string filename)
+        {
+		}
+		
+        /// <summary>
         /// export the occupancy grid data to IFrIT basic particle file format for visualisation
         /// </summary>
         /// <param name="filename">name of the file to save as</param>
@@ -1480,6 +1488,60 @@ namespace sentience.core
 		
         #region "inserting simulated structures, mainly for unit testing purposes"
 		
+		/// <summary>
+		/// inserts a simulated block into the grid
+		/// </summary>
+		/// <param name="tx_cell">start x cell coordinate</param>
+		/// <param name="ty_cell">start y cell coordinate</param>
+		/// <param name="bx_cell">end x cell coordinate</param>
+		/// <param name="by_cell">end y cell coordinate</param>
+		/// <param name="bottom_height_cells">bottom height of the block in cells</param>
+		/// <param name="top_height_cells">bottom height of the block in cells</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public override void InsertBlockCells(
+		    int tx_cell, int ty_cell,
+		    int bx_cell, int by_cell,
+		    int bottom_height_cells,
+		    int top_height_cells,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+			Random rnd = new Random(0);
+			if (top_height_cells >= dimension_cells_vertical)
+				top_height_cells = dimension_cells_vertical - 1;
+			if (bottom_height_cells < 0) bottom_height_cells = 0;
+
+			for (int x_cell = tx_cell; x_cell <= bx_cell; x_cell++)
+			{
+				if ((x_cell > -1) && (x_cell < dimension_cells))
+				{
+			        for (int y_cell = ty_cell; y_cell <= by_cell; y_cell++)
+			        {
+				        if ((y_cell > -1) && (y_cell < dimension_cells))
+				        {
+						    if (cell[x_cell][y_cell] == null)
+							    cell[x_cell][y_cell] = new occupancygridCellMultiHypothesis(dimension_cells_vertical);
+							
+			                for (int z_cell = bottom_height_cells; z_cell <= top_height_cells; z_cell++)
+			                {
+				                if ((z_cell > -1) && (z_cell < dimension_cells_vertical))
+				                {
+									float prob = 0.8f + ((float)rnd.NextDouble() * probability_variance * 2) - probability_variance;
+									if (prob > 0.99f) prob = 0.99f;
+									if (prob < 0.5f) prob  = 0.5f;
+									
+								    cell[x_cell][y_cell].Distill(z_cell, prob, r, g, b);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+				
 		/// <summary>
 		/// inserts a simulated wall into the grid
 		/// </summary>

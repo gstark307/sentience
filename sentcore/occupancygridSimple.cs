@@ -611,22 +611,22 @@ namespace sentience.core
         /// export the occupancy grid data to IFrIT basic particle file format for visualisation
         /// </summary>
         /// <param name="filename">name of the file to save as</param>
-        public void ExportToIFrIT(string filename)
+        public override void ExportToIFrIT(string filename)
         {
             ExportToIFrIT(filename, dimension_cells / 2, dimension_cells / 2, dimension_cells);
         }
 
-        /// <summary>
+        /// <summary>		
         /// export the occupancy grid data to IFrIT basic particle file format for visualisation
         /// </summary>
         /// <param name="filename">name of the file to save as</param>
-        /// <param name="pose">best available pose</param>
         /// <param name="centre_x">centre of the tile in grid cells</param>
         /// <param name="centre_y">centre of the tile in grid cells</param>
         /// <param name="width_cells">width of the tile in grid cells</param>
-        public void ExportToIFrIT(string filename,
-                                  int centre_x, int centre_y,
-                                  int width_cells)
+        public void ExportToIFrIT(
+		    string filename,
+            int centre_x, int centre_y,
+            int width_cells)
         {
             float threshold = 0.5f;
             int half_width_cells = width_cells / 2;
@@ -1272,8 +1272,71 @@ namespace sentience.core
 		
         #endregion
 		
+        
         #region "inserting simulated structures"
 		
+		/// <summary>
+		/// inserts a simulated block into the grid
+		/// </summary>
+		/// <param name="tx_cell">start x cell coordinate</param>
+		/// <param name="ty_cell">start y cell coordinate</param>
+		/// <param name="bx_cell">end x cell coordinate</param>
+		/// <param name="by_cell">end y cell coordinate</param>
+		/// <param name="bottom_height_cells">bottom height of the block in cells</param>
+		/// <param name="top_height_cells">bottom height of the block in cells</param>
+		/// <param name="probability_variance">variation of probabilities, typically less than 0.2</param>
+		/// <param name="r">red colour component in the range 0-255</param>
+		/// <param name="g">green colour component in the range 0-255</param>
+		/// <param name="b">blue colour component in the range 0-255</param>
+		public override void InsertBlockCells(
+		    int tx_cell, int ty_cell,
+		    int bx_cell, int by_cell,
+		    int bottom_height_cells,
+		    int top_height_cells,
+		    float probability_variance,
+		    int r, int g, int b)
+		{
+			Random rnd = new Random(0);
+			if (top_height_cells >= dimension_cells_vertical)
+				top_height_cells = dimension_cells_vertical - 1;
+			if (bottom_height_cells < 0) bottom_height_cells = 0;
+
+			for (int x_cell = tx_cell; x_cell <= bx_cell; x_cell++)
+			{
+				if ((x_cell > -1) && (x_cell < dimension_cells))
+				{
+			        for (int y_cell = ty_cell; y_cell <= by_cell; y_cell++)
+			        {
+				        if ((y_cell > -1) && (y_cell < dimension_cells))
+				        {
+						    if (cell[x_cell][y_cell] == null)
+							    cell[x_cell][y_cell] = new particleGridCellBase[dimension_cells_vertical];
+							
+			                for (int z_cell = bottom_height_cells; z_cell <= top_height_cells; z_cell++)
+			                {
+				                if ((z_cell > -1) && (z_cell < dimension_cells_vertical))
+				                {
+							        if (cell[x_cell][y_cell][z_cell] == null)
+								        cell[x_cell][y_cell][z_cell] = new particleGridCellBase();
+									
+									float prob = 0.8f + ((float)rnd.NextDouble() * probability_variance * 2) - probability_variance;
+									if (prob > 0.99f) prob = 0.99f;
+									if (prob < 0.5f) prob  = 0.5f;
+									
+									particleGridCellBase c = cell[x_cell][y_cell][z_cell];
+									c.probabilityLogOdds = probabilities.LogOdds(prob);
+									c.colour = new byte[3];
+									c.colour[0] = (byte)r;
+									c.colour[1] = (byte)g;
+									c.colour[1] = (byte)b;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+				
 		/// <summary>
 		/// inserts a simulated wall into the grid
 		/// </summary>

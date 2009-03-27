@@ -28,8 +28,31 @@ using CenterSpace.Free;
 namespace sentience.core.tests
 {
 	[TestFixture()]
-	public class tests_occupancygrid_simple
+	public class tests_occupancygrid_meta
 	{
+		[Test()]
+		public void CreateSimulatedEnvironment()
+		{
+            int no_of_grids = 2;
+            int grid_type = metagrid.TYPE_SIMPLE;
+		    int dimension_mm = 16000;
+            int dimension_vertical_mm = 8000; 
+            int cellSize_mm = 32; 
+            int localisationRadius_mm = 16000; 
+            int maxMappingRange_mm = 16000; 
+            float vacancyWeighting = 0.5f;		
+			
+			metagrid grid = new metagrid(
+                no_of_grids,
+                grid_type,
+		        dimension_mm, 
+                dimension_vertical_mm, 
+                cellSize_mm, 
+                localisationRadius_mm, 
+                maxMappingRange_mm, 
+                vacancyWeighting);
+		}
+		
 		[Test()]
 		public void CreatePoses()
 		{
@@ -63,7 +86,7 @@ namespace sentience.core.tests
 			    ref poses);
 			
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
-			bmp.Save("tests_occupancygrid_simple_CreatePoses.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+			bmp.Save("tests_occupancygrid_meta_CreatePoses.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 			
 			Assert.Greater(poses.Count, no_of_poses - 15);
 			Assert.Less(poses.Count, no_of_poses + 15);
@@ -151,13 +174,16 @@ namespace sentience.core.tests
 	            Assert.Less(position_error_y, sampling_radius_major_mm * 0.15f);
 				
 				BitmapArrayConversions.updatebitmap_unsafe(debug_img_poses, bmp);
-				bmp.Save("tests_occupancygrid_simple_FindBestPose" + s.ToString() + ".gif", System.Drawing.Imaging.ImageFormat.Gif);
+				bmp.Save("tests_occupancygrid_meta_FindBestPose" + s.ToString() + ".gif", System.Drawing.Imaging.ImageFormat.Gif);
 				BitmapArrayConversions.updatebitmap_unsafe(debug_img_graph, bmp);
-				bmp.Save("tests_occupancygrid_simple_FindBestPose_graph" + s.ToString() + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+				bmp.Save("tests_occupancygrid_meta_FindBestPose_graph" + s.ToString() + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 			}
 		}
-
-								
+	}
+	
+	[TestFixture()]
+	public class tests_occupancygrid_simple
+	{
 		[Test()]
 		public void RaysIntersection()
 		{
