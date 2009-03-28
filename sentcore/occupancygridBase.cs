@@ -89,6 +89,50 @@ namespace sentience.core
 
         #endregion
 
+        #region "checking if a grid cell is occupied"
+		
+		/// <summary>
+		/// is the given grid cell occupied ?
+		/// </summary>
+		/// <param name="cell_x">x cell coordinate</param>
+		/// <param name="cell_y">y cell coordinate</param>
+		/// <param name="cell_z">z cell coordinate</param>
+		/// <returns>returns true if the probability of occupancy is greater than 0.5</returns>
+		public virtual bool IsOccupied(
+		    int cell_x,
+		    int cell_y,
+		    int cell_z)
+		{
+			return(false);
+		}
+		
+        #endregion
+
+        #region "probing the grid"
+		
+		/// <summary>
+		/// probes the grid using the given 3D line and returns the distance to the nearest occupied grid cell
+		/// </summary>
+		/// <param name="x0_mm">start x coordinate</param>
+		/// <param name="y0_mm">start y coordinate</param>
+		/// <param name="z0_mm">start z coordinate</param>
+		/// <param name="x1_mm">end x coordinate</param>
+		/// <param name="y1_mm">end y coordinate</param>
+		/// <param name="z1_mm">end z coordinate</param>
+		/// <returns>range to the nearest occupied grid cell in millimetres</returns>
+		public virtual float ProbeRange(
+	        float x0_mm,
+		    float y0_mm,
+		    float z0_mm,
+	        float x1_mm,
+		    float y1_mm,
+		    float z1_mm)
+		{
+			return(-1);
+		}
+		
+        #endregion
+		
         #region "sensor model"
 
         // a weight value used to define how aggressively the
@@ -356,6 +400,174 @@ namespace sentience.core
 			    top_height_cells,
 		        probability_variance,
 			    r, g, b);			
+		}
+				
+		/// <summary>
+		/// create a room-like structure within the grid
+		/// </summary>
+		/// <param name="tx_mm">top left x coordinate of the room</param>
+		/// <param name="ty_mm">top left y coordinate of the room</param>
+		/// <param name="bx_mm">bottom right x coordinate of the room</param>
+		/// <param name="by_mm">bottom right y coordinate of the room</param>
+		/// <param name="height_mm">height of the room</param>
+		/// <param name="wall_thickness_mm">thickness of the walls</param>
+		/// <param name="probability_variance">variation in probabilities, typically less than 0.2</param>
+		/// <param name="floor_r">red component of the floor colour</param>
+		/// <param name="floor_g">green component of the floor colour</param>
+		/// <param name="floor_b">blue component of the floor colour</param>
+		/// <param name="walls_r">red component of the wall colour</param>
+		/// <param name="walls_g">green component of the wall colour</param>
+		/// <param name="walls_b">blue component of the wall colour</param>
+		/// <param name="left_wall_doorways">centre position of doorways on the left wall in mm</param>
+		/// <param name="top_wall_doorways">centre position of doorways on the top wall in mm</param>
+		/// <param name="right_wall_doorways">centre position of doorways on the right wall in mm</param>
+		/// <param name="bottom_wall_doorways">centre position of doorways on the bottom wall in mm</param>
+		/// <param name="doorway_width_mm">width of doors</param>
+		/// <param name="doorway_height_mm">height of doors</param>
+		public virtual void InsertRoom(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int height_mm,
+		    int wall_thickness_mm,                           
+		    float probability_variance,
+		    int floor_r, int floor_g, int floor_b,
+		    int walls_r, int walls_g, int walls_b,
+		    List<int> left_wall_doorways,
+		    List<int> top_wall_doorways,
+		    List<int> right_wall_doorways,
+		    List<int> bottom_wall_doorways,
+		    int doorway_width_mm,
+		    int doorway_height_mm)
+		{
+			// floor			
+			InsertBlock(
+		        tx_mm, ty_mm,
+		        bx_mm, by_mm,
+		        0,
+			    10,
+		        probability_variance,
+			    floor_r, floor_g, floor_b);
+			
+			// left wall
+			InsertWall(
+			    tx_mm, ty_mm,
+			    tx_mm, by_mm,
+			    height_mm,
+			    wall_thickness_mm,
+			    probability_variance,
+			    walls_r, walls_g, walls_b);     
+			    			           
+
+			// top wall
+			InsertWall(
+			    tx_mm, ty_mm,
+			    bx_mm, ty_mm,
+			    height_mm,
+			    wall_thickness_mm,
+			    probability_variance,
+			    walls_r, walls_g, walls_b);            
+
+			// right wall
+			InsertWall(
+			    bx_mm, ty_mm,
+			    bx_mm, by_mm,
+			    height_mm,
+			    wall_thickness_mm,
+			    probability_variance,
+			    walls_r, walls_g, walls_b);            
+
+			// bottom wall
+			InsertWall(
+			    tx_mm, by_mm,
+			    bx_mm, by_mm,
+			    height_mm,
+			    wall_thickness_mm,
+			    probability_variance,
+			    walls_r, walls_g, walls_b);            
+			
+			int doorway_centre_x_mm, doorway_centre_y_mm;
+			if (left_wall_doorways != null)
+			{
+				doorway_centre_x_mm = tx_mm;
+				for (int i = 0; i < left_wall_doorways.Count; i++)
+				{
+					doorway_centre_y_mm = ty_mm + left_wall_doorways[i];
+					int doorway_ty_mm = doorway_centre_y_mm - (doorway_width_mm/2);
+					int doorway_by_mm = doorway_ty_mm + doorway_width_mm;
+					
+                    InsertDoorway(
+		                doorway_centre_x_mm, doorway_ty_mm,
+		                doorway_centre_x_mm, doorway_by_mm,
+		                height_mm,
+		                doorway_height_mm,
+		                doorway_width_mm,
+		                wall_thickness_mm,
+		                probability_variance,
+		                walls_r, walls_g, walls_b);					
+				}
+			}
+			
+			if (top_wall_doorways != null)
+			{
+				doorway_centre_y_mm = ty_mm;
+				for (int i = 0; i < top_wall_doorways.Count; i++)
+				{
+					doorway_centre_x_mm = tx_mm + top_wall_doorways[i];
+					int doorway_tx_mm = doorway_centre_x_mm - (doorway_width_mm/2);
+					int doorway_bx_mm = doorway_tx_mm + doorway_width_mm;
+					
+                    InsertDoorway(
+		                doorway_tx_mm, doorway_centre_y_mm,
+		                doorway_bx_mm, doorway_centre_y_mm,
+		                height_mm,
+		                doorway_height_mm,
+		                doorway_width_mm,
+		                wall_thickness_mm,
+		                probability_variance,
+		                walls_r, walls_g, walls_b);				
+				}
+			}
+			if (right_wall_doorways != null)
+			{
+				doorway_centre_x_mm = bx_mm;
+				for (int i = 0; i < right_wall_doorways.Count; i++)
+				{
+					doorway_centre_y_mm = ty_mm + right_wall_doorways[i];
+					int doorway_ty_mm = doorway_centre_y_mm - (doorway_width_mm/2);
+					int doorway_by_mm = doorway_ty_mm + doorway_width_mm;
+					
+                    InsertDoorway(
+		                doorway_centre_x_mm, doorway_ty_mm,
+		                doorway_centre_x_mm, doorway_by_mm,
+		                height_mm,
+		                doorway_height_mm,
+		                doorway_width_mm,
+		                wall_thickness_mm,
+		                probability_variance,
+		                walls_r, walls_g, walls_b);					
+				}
+			}
+			if (bottom_wall_doorways != null)
+			{
+				doorway_centre_y_mm = by_mm;
+				for (int i = 0; i < bottom_wall_doorways.Count; i++)
+				{
+					doorway_centre_x_mm = tx_mm + bottom_wall_doorways[i];
+					int doorway_tx_mm = doorway_centre_x_mm - (doorway_width_mm/2);
+					int doorway_bx_mm = doorway_tx_mm + doorway_width_mm;
+					
+                    InsertDoorway(
+		                doorway_tx_mm, doorway_centre_y_mm,
+		                doorway_bx_mm, doorway_centre_y_mm,
+		                height_mm,
+		                doorway_height_mm,
+		                doorway_width_mm,
+		                wall_thickness_mm,
+		                probability_variance,
+		                walls_r, walls_g, walls_b);				
+				}
+			}
+			
 		}
 		
 		/// <summary>

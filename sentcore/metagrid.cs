@@ -103,6 +103,50 @@ namespace sentience.core
 
         #endregion
 
+        #region "probing the grid"
+		
+		/// <summary>
+		/// probes the grid using the given 3D line and returns the distance to the nearest occupied grid cell
+		/// </summary>
+		/// <param name="grid_index">index number of the grid to be probed</param>
+		/// <param name="x0_mm">start x coordinate</param>
+		/// <param name="y0_mm">start y coordinate</param>
+		/// <param name="z0_mm">start z coordinate</param>
+		/// <param name="x1_mm">end x coordinate</param>
+		/// <param name="y1_mm">end y coordinate</param>
+		/// <param name="z1_mm">end z coordinate</param>
+		/// <returns>range to the nearest occupied grid cell in millimetres</returns>
+		public float ProbeRange(
+		    int grid_index,
+	        float x0_mm,
+		    float y0_mm,
+		    float z0_mm,
+	        float x1_mm,
+		    float y1_mm,
+		    float z1_mm)
+		{
+			float range_mm = -1;
+			switch(grid_type)
+			{
+			    case TYPE_SIMPLE:
+			    {
+				    range_mm = grid[grid_index].ProbeRange(x0_mm, y0_mm, z0_mm, x1_mm, y1_mm, z1_mm);
+				    break;
+			    }
+			    case TYPE_MULTI_HYPOTHESIS:
+			    {
+				    occupancygridMultiHypothesis grd = (occupancygridMultiHypothesis)grid[grid_index];
+				    // TODO get the best pose estimate
+				    particlePose pose = null;
+				    range_mm = grd.ProbeRange(x0_mm, y0_mm, z0_mm, x1_mm, y1_mm, z1_mm);
+				    break;
+			    }
+			}
+			return(range_mm);
+		}
+		
+        #endregion
+		
         #region "setting the grid position"
 
         /// <summary>
@@ -655,7 +699,63 @@ namespace sentience.core
         #endregion
 		
         #region "inserting simulated structures, mainly for unit testing purposes"
-				
+		
+		/// <summary>
+		/// create a room-like structure within the grid
+		/// </summary>
+		/// <param name="tx_mm">top left x coordinate of the room</param>
+		/// <param name="ty_mm">top left y coordinate of the room</param>
+		/// <param name="bx_mm">bottom right x coordinate of the room</param>
+		/// <param name="by_mm">bottom right y coordinate of the room</param>
+		/// <param name="height_mm">height of the room</param>
+		/// <param name="wall_thickness_mm">thickness of the walls</param>
+		/// <param name="probability_variance">variation in probabilities, typically less than 0.2</param>
+		/// <param name="floor_r">red component of the floor colour</param>
+		/// <param name="floor_g">green component of the floor colour</param>
+		/// <param name="floor_b">blue component of the floor colour</param>
+		/// <param name="walls_r">red component of the wall colour</param>
+		/// <param name="walls_g">green component of the wall colour</param>
+		/// <param name="walls_b">blue component of the wall colour</param>
+		/// <param name="left_wall_doorways">centre position of doorways on the left wall in mm</param>
+		/// <param name="top_wall_doorways">centre position of doorways on the top wall in mm</param>
+		/// <param name="right_wall_doorways">centre position of doorways on the right wall in mm</param>
+		/// <param name="bottom_wall_doorways">centre position of doorways on the bottom wall in mm</param>
+		/// <param name="doorway_width_mm">width of doors</param>
+		/// <param name="doorway_height_mm">height of doors</param>
+		public void InsertRoom(
+		    int tx_mm, int ty_mm,
+		    int bx_mm, int by_mm,
+		    int height_mm,
+		    int wall_thickness_mm,                           
+		    float probability_variance,
+		    int floor_r, int floor_g, int floor_b,
+		    int walls_r, int walls_g, int walls_b,
+		    List<int> left_wall_doorways,
+		    List<int> top_wall_doorways,
+		    List<int> right_wall_doorways,
+		    List<int> bottom_wall_doorways,
+		    int doorway_width_mm,
+		    int doorway_height_mm)
+		{
+			for (int grd = 0; grd < grid.Length; grd++)
+			{
+                grid[grd].InsertRoom(
+		            tx_mm, ty_mm,
+		            bx_mm, by_mm,
+		            height_mm,
+		            wall_thickness_mm,                           
+		            probability_variance,
+		            floor_r, floor_g, floor_b,
+		            walls_r, walls_g, walls_b,
+		            left_wall_doorways,
+		            top_wall_doorways,
+		            right_wall_doorways,
+		            bottom_wall_doorways,
+		            doorway_width_mm,
+		            doorway_height_mm);
+			}
+		}
+		
 		/// <summary>
 		/// inserts a simulated block into the grid
 		/// </summary>
@@ -819,6 +919,46 @@ namespace sentience.core
 		
         #endregion
 		
+        #region "display"
+		
+        /// <summary>
+        /// show an overhead view of the grid map as an image
+        /// </summary>
+		/// <param name="grid_index">index number of the grid to be shown</param>
+        /// <param name="img">colour image data</param>
+        /// <param name="width">width in pixels</param>
+        /// <param name="height">height in pixels</param>
+		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
+        public void Show(
+		    int grid_index,
+		    byte[] img, 
+            int width, 
+            int height,
+		    bool show_all_occupied_cells)
+        {
+			switch (grid_type)
+			{
+			    case TYPE_SIMPLE:
+			    {
+				    occupancygridSimple grd = (occupancygridSimple)grid[grid_index];
+				    grd.Show(img, width, height, show_all_occupied_cells);
+			        break;
+			    }
+			    case TYPE_MULTI_HYPOTHESIS:
+			    {
+			        // TODO: get the best pose
+				    particlePose pose = null;
+				    occupancygridMultiHypothesis grd = (occupancygridMultiHypothesis)grid[grid_index];
+				    grd.Show(
+				         occupancygridMultiHypothesis.VIEW_ABOVE, 
+                         img, width, height, pose, 
+                         true, true);
+				    break;
+			    }
+			}
+		}		
+		
+        #endregion
 
     }
 }

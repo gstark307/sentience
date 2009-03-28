@@ -35,10 +35,10 @@ namespace sentience.core.tests
 		{
             int no_of_grids = 2;
             int grid_type = metagrid.TYPE_SIMPLE;
-		    int dimension_mm = 16000;
-            int dimension_vertical_mm = 8000; 
+		    int dimension_mm = 8000;
+            int room_height_mm = 2500; 
             int cellSize_mm = 32; 
-            int localisationRadius_mm = 16000; 
+            int localisationRadius_mm = 8000; 
             int maxMappingRange_mm = 16000; 
             float vacancyWeighting = 0.5f;		
 			
@@ -46,11 +46,65 @@ namespace sentience.core.tests
                 no_of_grids,
                 grid_type,
 		        dimension_mm, 
-                dimension_vertical_mm, 
+                room_height_mm, 
                 cellSize_mm, 
                 localisationRadius_mm, 
                 maxMappingRange_mm, 
                 vacancyWeighting);
+			
+			int room_tx_mm = -(1050/2);
+			int room_ty_mm = -(dimension_mm/2) * 80/100;
+			int room_bx_mm = 1050/2;
+			int room_by_mm = room_ty_mm + 6000;
+			int doorway_height_mm = 2000;
+			int doorway_width_mm = 740;
+			int wall_thickness_mm = 100;
+			List<int> left_wall_doorways = new List<int>();
+			List<int> top_wall_doorways = new List<int>();
+			List<int> right_wall_doorways = new List<int>();
+			List<int> bottom_wall_doorways = new List<int>();
+			int floor_r = 0;
+			int floor_g = 0;
+			int floor_b = 0;
+			int walls_r = 0;
+			int walls_g = 0;
+			int walls_b = 255;
+			float probability_variance = 0.1f;
+			
+			left_wall_doorways.Add(900);
+			left_wall_doorways.Add(4000);
+			left_wall_doorways.Add(5200);
+			right_wall_doorways.Add(450);
+			right_wall_doorways.Add(4000);
+			
+			grid.InsertRoom(
+		        room_tx_mm, room_ty_mm,
+		        room_bx_mm, room_by_mm,
+		        room_height_mm,
+		        wall_thickness_mm,                           
+		        probability_variance,
+		        floor_r, floor_g, floor_b,
+		        walls_r, walls_g, walls_b,
+		        left_wall_doorways,
+		        top_wall_doorways,
+		        right_wall_doorways,
+		        bottom_wall_doorways,
+		        doorway_width_mm,
+		        doorway_height_mm);	
+			
+			int debug_img_width = 640;
+			int debug_img_height = 480;
+		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            for (int i = 0; i < no_of_grids; i++)
+			{
+			    grid.Show(i, debug_img, debug_img_width, debug_img_height, false);
+			    BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			    bmp.Save("tests_occupancygrid_meta_CreateSimulatedEnvironment_grid" + i.ToString() + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+			}
+			
+			grid.ExportToIFrIT("tests_occupancygrid_meta_CreateSimulatedEnvironment.txt");
 		}
 		
 		[Test()]

@@ -135,6 +135,78 @@ namespace sentience.core
 
         #endregion
 
+        #region "probing the grid"
+		
+		/// <summary>
+		/// probes the grid using the given 3D line and returns the distance to the nearest occupied grid cell
+		/// </summary>
+		/// <param name="pose">current best pose estimate</param>
+		/// <param name="x0_mm">start x coordinate</param>
+		/// <param name="y0_mm">start y coordinate</param>
+		/// <param name="z0_mm">start z coordinate</param>
+		/// <param name="x1_mm">end x coordinate</param>
+		/// <param name="y1_mm">end y coordinate</param>
+		/// <param name="z1_mm">end z coordinate</param>
+		/// <returns>range to the nearest occupied grid cell in millimetres</returns>
+		public float ProbeRange(
+		    particlePose pose,
+	        float x0_mm,
+		    float y0_mm,
+		    float z0_mm,
+	        float x1_mm,
+		    float y1_mm,
+		    float z1_mm)
+		{
+			float range_mm = -1;
+			int half_dimension_cells = dimension_cells/2;
+			int x0_cell = half_dimension_cells + (int)((x0_mm - x) / cellSize_mm);
+			int y0_cell = half_dimension_cells + (int)((y0_mm - y) / cellSize_mm);
+			int z0_cell = half_dimension_cells + (int)((z0_mm - z) / cellSize_mm);
+			int x1_cell = half_dimension_cells + (int)((x1_mm - x) / cellSize_mm);
+			int y1_cell = half_dimension_cells + (int)((y1_mm - y) / cellSize_mm);
+			int z1_cell = half_dimension_cells + (int)((z1_mm - z) / cellSize_mm);
+			int dx = x1_cell - x0_cell;
+			int dy = y1_cell - y0_cell;
+			int dz = z1_cell - z0_cell;
+			int dist_cells = (int)Math.Sqrt(dx*dx + dy*dy + dz*dz);
+			int x_cell, y_cell, z_cell;
+			float incr = 1 / (float)dist_cells;
+			float fraction = 0;
+			float[] colour = new float[3];
+			float mean_variance = 0;
+			for (int dist = 0; dist < dist_cells; dist++, fraction += incr)
+			{
+				x_cell = x0_cell + (int)(fraction * dx);
+				if ((x_cell > -1) && (x_cell < dimension_cells))
+				{
+				    y_cell = y0_cell + (int)(fraction * dy);
+					if ((y_cell > -1) && (y_cell < dimension_cells))
+					{
+				        z_cell = z0_cell + (int)(fraction * dz);
+						if ((z_cell > -1) && (z_cell < dimension_cells_vertical))
+						{
+							occupancygridCellMultiHypothesis c = cell[x_cell][y_cell];
+							if (c != null)
+							{
+							    if (c.GetProbability(pose, x_cell, y_cell, z_cell, false, colour, ref mean_variance) > 0.5f)
+							    {
+									range_mm = dist * cellSize_mm;
+									break;
+								}
+							}
+						}
+						else break;
+					}
+					else break;
+				}
+				else break;
+			}
+			return(range_mm);
+		}
+		
+        #endregion
+		
+		
         #region "grid colour variance"
 
         /// <summary>
@@ -1357,12 +1429,12 @@ namespace sentience.core
             float threshold = 0.5f;
             int half_width_cells = width_cells / 2;
 
-            int tx = centre_x + half_width_cells;
-            int ty = centre_y + half_width_cells;
-            int tz = width_cells;
-            int bx = centre_x - half_width_cells;
-            int by = centre_y - half_width_cells;
-            int bz = 0;
+            int tx = 99999;
+            int ty = 99999;
+            int tz = 99999;
+            int bx = -99999;
+            int by = -99999;
+            int bz = -99999;
 
             // dummy variables needed by GetProbability
             float[] colour = new float[3];
@@ -1409,12 +1481,12 @@ namespace sentience.core
             if (occupied_cells > 0)
             {
                 // add bounding box information
-                string bounding_box = Convert.ToString(tx) + " " + 
-                                      Convert.ToString(ty) + " " +
-                                      Convert.ToString(tz) + " " +
-                                      Convert.ToString(bx) + " " + 
-                                      Convert.ToString(by) + " " +
-                                      Convert.ToString(bz) + " X Y Z";
+                string bounding_box = Convert.ToString(0) + " " + 
+                                      Convert.ToString(0) + " " +
+                                      Convert.ToString(0) + " " +
+                                      Convert.ToString(dimension_cells) + " " + 
+                                      Convert.ToString(dimension_cells) + " " +
+                                      Convert.ToString(dimension_cells_vertical) + " X Y Z";
 
                 ArrayList particles = new ArrayList();
 
@@ -1443,7 +1515,7 @@ namespace sentience.core
 
                                             string particleStr = Convert.ToString(x) + " " +
                                                                  Convert.ToString(y) + " " +
-                                                                 Convert.ToString(z) + " " +
+                                                                 Convert.ToString(dimension_cells_vertical-1-z) + " " +
                                                                  Convert.ToString(prob) + " " +
                                                                  Convert.ToString(colour_value);
                                             particles.Add(particleStr);
