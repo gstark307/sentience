@@ -126,6 +126,8 @@
     <Compile Include="OdometryData.cs" />
     <Compile Include="occupancygridSimple.cs" />
     <Compile Include="occupancygridBase.cs" />
+    <Compile Include="gridCells.cs" />
+    <Compile Include="unittests\tests_gridCells.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENCE.txt" />

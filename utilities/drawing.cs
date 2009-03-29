@@ -355,13 +355,13 @@ namespace sluggish.utilities
 
         #region "circles/spots"
 
-        public static void drawCircle(Byte[] img, int img_width, int img_height,
+        public static void drawCircle(byte[] img, int img_width, int img_height,
                                       int x, int y, int radius, int r, int g, int b, int line_width)
         {
             drawCircle(img, img_width, img_height, (float)x, (float)y, (float)radius, r, g, b, line_width);
         }
 
-        public static void drawCircle(Byte[] img, int img_width, int img_height,
+        public static void drawCircle(byte[] img, int img_width, int img_height,
                                       float x, float y, float radius, int r, int g, int b, int line_width)
         {
             int points = 20;
@@ -380,11 +380,39 @@ namespace sluggish.utilities
         }
 
 
-        public static void drawSpot(Byte[] img, int img_width, int img_height,
+        public static void drawSpot(byte[] img, int img_width, int img_height,
                                     int x, int y, int radius, int r, int g, int b)
         {
             for (int rr = 1; rr <= radius; rr++)
                 drawCircle(img, img_width, img_height, x, y, rr, r, g, b, 1);
+        }
+
+		public static void drawSpotOverlay(
+		    byte[] img, int img_width, int img_height,
+            int x, int y, int radius, int r, int g, int b)
+        {
+			int radius_sqr = radius*radius;
+			for (int xx = x - radius; xx <= x + radius; xx++)
+			{
+				if ((xx > -1) && (xx < img_width))
+				{
+					int dx = xx - x;
+			        for (int yy = y - radius; yy <= y + radius; yy++)
+			        {
+				        if ((yy > -1) && (yy < img_height))
+				        {
+							int dy = yy - y;
+							if (dx*dx + dy*dy < radius_sqr)
+							{
+							    int n = ((yy * img_width) + xx) * 3;
+								if (r != -1) img[n+2] = (byte)r;
+								if (g != -1) img[n+1] = (byte)g;
+								if (b != -1) img[n] = (byte)b;
+							}							
+						}
+					}
+				}
+			}
         }
 
         #endregion
