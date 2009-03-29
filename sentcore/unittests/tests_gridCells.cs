@@ -38,11 +38,15 @@ namespace sentience.core.tests
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
             float first_grid_spacing = 1.0f;
-		    float second_grid_spacing = 1.05f;
+		    float second_grid_spacing = 1.04f;
 		    float first_grid_rotation_degrees = 0;
-		    float second_grid_rotation_degrees = 8;
-		    int dimension_x_cells = 30;
-		    int dimension_y_cells = 30;			
+		    float second_grid_rotation_degrees = 10;
+		    int dimension_x_cells = 40;
+		    int dimension_y_cells = 40;			
+		    
+		    float sampline_radius_major = 100;
+		    float sampling_radius_minor = sampline_radius_major/2;
+		    int radius = 3;
 			
 		    gridCells.ShowMoireGrid(
 		        first_grid_spacing,
@@ -54,9 +58,33 @@ namespace sentience.core.tests
 		        debug_img,
 		        debug_img_width,
 		        debug_img_height);
-			
+		        			
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			bmp.Save("tests_gridCells_ShowMoireGrid.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+
+            first_grid_spacing = 1.0f;
+		    second_grid_spacing = 1.2f;
+		    first_grid_rotation_degrees = 0;
+		    second_grid_rotation_degrees = 8;
+		    dimension_x_cells = 100;
+		    dimension_y_cells = 100;			
+
+   		    gridCells.ShowMoireGridVertices(
+		        sampline_radius_major,
+		        sampling_radius_minor,
+		        first_grid_spacing,
+		        second_grid_spacing,
+		        first_grid_rotation_degrees,
+		        second_grid_rotation_degrees,
+		        dimension_x_cells,
+		        dimension_y_cells,
+		        debug_img,
+		        debug_img_width,
+		        debug_img_height,
+		        radius);
+		        
+			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			bmp.Save("tests_gridCells_ShowMoireGrid_vertices.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 		}		
 		
 		[Test()]

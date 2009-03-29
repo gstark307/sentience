@@ -85,6 +85,8 @@ namespace sentience.core
 		/// <param name="dimension_y_cells">number of grid cells in the y axis</param>
 		/// <param name="cells">returned grid cell positions</param>
 		public static void CreateMoireGrid(
+		    float sampling_radius_major_mm,
+		    float sampling_radius_minor_mm,
 		    float first_grid_spacing,
 		    float second_grid_spacing,
 		    float first_grid_rotation_degrees,
@@ -96,6 +98,7 @@ namespace sentience.core
 			cells.Clear();
 			float scaling = 0;
 			float orientation = 0;
+			float dx, dy;
 			
 			// compute scaling and orientation of the grid
             MoireGrid(
@@ -108,23 +111,116 @@ namespace sentience.core
 			
 			float moire_grid_spacing = first_grid_spacing * scaling;
 			float half_grid_spacing = moire_grid_spacing/2;
+						
+			float radius_sqr = sampling_radius_minor_mm*sampling_radius_minor_mm;
+			
+			Console.WriteLine("moire_grid_spacing: " + moire_grid_spacing.ToString());
+			Console.WriteLine("radius_sqr: " + radius_sqr.ToString());			
 			
 			float half_x = dimension_x_cells * moire_grid_spacing / 2.0f;
 			float half_y = dimension_y_cells * moire_grid_spacing / 2.0f;
 			for (int cell_x = 0; cell_x < dimension_x_cells; cell_x++)
 			{
 			    for (int cell_y = 0; cell_y < dimension_y_cells; cell_y++)
-			    {
+			    {			    
 				    float x = (cell_x * moire_grid_spacing) - half_x;
-				    if (cell_x % 2 == 0) x += half_grid_spacing;
+				    if (cell_y % 2 == 0) x += half_grid_spacing;
 				    float y = (cell_y * moire_grid_spacing) - half_y;
-					pos3D grid_cell = new pos3D(x, y, 0);
-					grid_cell = grid_cell.rotate(orientation, 0, 0);
-					cells.Add(grid_cell);
+				    pos3D grid_cell = new pos3D(x, y, 0);
+				    grid_cell = grid_cell.rotate(-orientation, 0, 0);
+				    
+				    dx = grid_cell.x;
+				    dy = (grid_cell.y * sampling_radius_minor_mm) / sampling_radius_major_mm;
+				    
+				    float dist = dx*dx + dy*dy;
+				    if (dist <= radius_sqr)
+				    {
+					    cells.Add(grid_cell);
+					}
 				}
 			}
 		}
-		
+
+		/// <summary>
+		/// Returns positions of grid cells corresponding to a moire grid
+		/// produced by the interference of a pair of hexagonal grids (theta waves)
+		/// </summary>
+		/// <param name="sampling_radius_major_mm">radius of the major axis of the bounding ellipse</param>
+		/// <param name="sampling_radius_minor_mm">radius of the minor axis of the bounding ellipse</param>
+		/// <param name="first_grid_spacing">spacing of the first hexagonal grid (theta wavelength 1)</param>
+		/// <param name="second_grid_spacing">spacing of the second hexagonal grid (theta wavelength 2)</param>
+		/// <param name="first_grid_rotation_degrees">rotation of the first grid (theta field 1)</param>
+		/// <param name="second_grid_rotation_degrees">rotation of the second grid (theta field 2)</param>
+		/// <param name="dimension_x_cells">number of grid cells in the x axis</param>
+		/// <param name="dimension_y_cells">number of grid cells in the y axis</param>
+		/// <param name="img">image data</param>
+		/// <param name="img_width">image width</param>
+		/// <param name="img_height">image height</param>
+		/// <param name="radius">radius in pixels</param>
+		public static void ShowMoireGridVertices(
+		    float sampling_radius_major_mm,
+		    float sampling_radius_minor_mm,
+		    float first_grid_spacing,
+		    float second_grid_spacing,
+		    float first_grid_rotation_degrees,
+		    float second_grid_rotation_degrees,
+		    int dimension_x_cells,
+		    int dimension_y_cells,
+		    byte[] img,
+		    int img_width,
+		    int img_height,
+		    int radius)
+		{
+		    List<pos3D> cells = new List<pos3D>();
+		    
+            CreateMoireGrid(
+		        sampling_radius_major_mm,
+		        sampling_radius_minor_mm,
+		        first_grid_spacing,
+		        second_grid_spacing,
+		        first_grid_rotation_degrees,
+		        second_grid_rotation_degrees,
+		        dimension_x_cells,
+		        dimension_y_cells,
+		        ref cells);
+		        
+		    float min_x = float.MaxValue;
+		    float max_x = float.MinValue;
+		    float min_y = float.MaxValue;
+		    float max_y = float.MinValue;
+		    
+		    for (int i = 0; i < cells.Count; i++)
+		    {
+		        if (cells[i].x < min_x) min_x = cells[i].x;
+		        if (cells[i].y < min_y) min_y = cells[i].y;
+		        if (cells[i].x > max_x) max_x = cells[i].x;
+		        if (cells[i].y > max_y) max_y = cells[i].y;
+		    }
+		    
+		    if (max_x - min_x > max_y - min_y)
+		    {
+		        float cy = min_y + ((max_y - min_y)/2);
+		        min_y = cy - ((max_x - min_x)/2);
+		        max_y = min_y + (max_x - min_x);
+		    }
+		    else
+		    {
+		        float cx = min_x + ((max_x - min_x)/2);
+		        min_x = cx - ((max_y - min_y)/2);
+		        max_x = min_x + (max_y - min_y);
+		    }
+		    
+		    for (int i = (img_width * img_height * 3)-1; i >= 0; i--) img[i] = 0;
+		    
+		    for (int i = 0; i < cells.Count; i++)
+		    {
+		        pos3D cell = cells[i];
+		        int x = (int)((cell.x - min_x) * img_width / (max_x - min_x));
+		        int y = (int)((cell.y - min_y) * img_height / (max_y - min_y));
+		        drawing.drawSpot(img, img_width, img_height, x, y, radius, 255,255,255);
+            }		    
+        }
+								
 		/// <summary>
 		/// Returns positions of grid cells corresponding to a moire grid
 		/// produced by the interference of a pair of hexagonal grids (theta waves)
@@ -135,6 +231,9 @@ namespace sentience.core
 		/// <param name="second_grid_rotation_degrees">rotation of the second grid (theta field 2)</param>
 		/// <param name="dimension_x_cells">number of grid cells in the x axis</param>
 		/// <param name="dimension_y_cells">number of grid cells in the y axis</param>
+		/// <param name="img">image data</param>
+		/// <param name="img_width">image width</param>
+		/// <param name="img_height">image height</param>
 		public static void ShowMoireGrid(
 		    float first_grid_spacing,
 		    float second_grid_spacing,
@@ -203,14 +302,14 @@ namespace sentience.core
 			for (int grd = 0; grd < 2; grd++)
 			{			
 				float[,,] grid = grid1;
-				r = 60;
+				r = 5;
 				g = -1;
 				b = -1;
 				if (grd == 1)
 				{
 					grid = grid2;
 					r = -1;
-					g = 60;
+					g = 5;
 					b = -1;
 				}
 				
