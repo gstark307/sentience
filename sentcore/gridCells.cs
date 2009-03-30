@@ -43,6 +43,7 @@ namespace sentience.core
 		/// <param name="second_grid_spacing">spacing of the second grid</param>
 		/// <param name="first_grid_rotation_degrees">rotation of the first grid</param>
 		/// <param name="second_grid_rotation_degrees">rotation of the second grid</param>
+		/// <param name="k">scaling factor</param>
 		/// <param name="scaling">returned moire grid scaling</param>
 		/// <param name="orientation">returned moiré grid orientation in radians</param>
 		public static void MoireGrid(
@@ -50,11 +51,13 @@ namespace sentience.core
 		    float second_grid_spacing,
 		    float first_grid_rotation_degrees,
 		    float second_grid_rotation_degrees,
+		    float k,
 		    ref float scaling,
 		    ref float orientation)
 		{
 			// spacing factor between the two grids
 			float alpha = (first_grid_spacing - second_grid_spacing) / first_grid_spacing;
+			alpha /= k;
 			
 			// compute orientation of the moire grid
 			float theta1 = first_grid_rotation_degrees * (float)Math.PI / 180;
@@ -72,7 +75,96 @@ namespace sentience.core
 			scaling = (1.0f + alpha) / 
 				      (float)Math.Sqrt((alpha*alpha) + (2 * (1.0f - Math.Cos(eta)) * (1.0f + alpha)));			
 		}
-		
+
+		public static void CreateMoireGrid(
+		    float sampling_radius_major_mm,
+		    float sampling_radius_minor_mm,
+		    int no_of_poses,
+		    float pan,
+		    float tilt,
+		    float roll,
+		    float max_orientation_variance,
+		    float max_tilt_variance,
+		    float max_roll_variance,
+		    Random rnd,
+		    ref List<pos3D> cells,
+		    byte[] img,
+		    int img_width,
+		    int img_height)
+		{
+		    float first_grid_spacing = sampling_radius_minor_mm / (float)Math.Sqrt(no_of_poses);
+		    float second_grid_spacing = first_grid_spacing * 1.1f;
+		    float first_grid_rotation_degrees = 0;
+		    float second_grid_rotation_degrees = 10;
+		    float scaling_factor = 0.3f;		    
+
+		    int dimension_x_cells = 50;
+		    int dimension_y_cells = 50;
+
+            int cells_percent = 0;
+            
+            cells.Clear();
+            int tries = 0;
+            while (((cells_percent < 90) || (cells_percent > 110)) &&
+                   (tries < 10))
+            {
+			    CreateMoireGrid(
+			        sampling_radius_major_mm,
+			        sampling_radius_minor_mm,
+			        first_grid_spacing,
+			        second_grid_spacing,
+			        first_grid_rotation_degrees,
+			        second_grid_rotation_degrees,
+			        dimension_x_cells,
+			        dimension_y_cells,
+			        scaling_factor,
+			        ref cells);
+			        
+			    cells_percent = cells.Count * 100 / no_of_poses;
+			    
+			    if (cells_percent < 90) scaling_factor *= 0.9f;
+			    if (cells_percent > 110) scaling_factor *= 1.1f;
+		        tries++;
+		        
+		        Console.WriteLine("Cells = " + cells.Count.ToString());
+		    }
+		    
+		    for (int i = cells.Count-1; i >= 0; i--)
+		    {
+		        pos3D sample_pose = cells[i];
+                if (i % 2 == 0)
+                    sample_pose.pan = pan + ((float)rnd.NextDouble() * max_orientation_variance);
+                else
+                    sample_pose.pan = pan - ((float)rnd.NextDouble() * max_orientation_variance);
+                sample_pose.tilt = tilt + (((float)rnd.NextDouble() - 0.5f) * 2 * max_tilt_variance);
+                sample_pose.roll = roll + (((float)rnd.NextDouble() - 0.5f) * 2 * max_roll_variance);
+		    }
+		    
+            // create an image showing the results
+            if (img != null)
+            {
+                float max_radius = sampling_radius_major_mm * 0.025f;
+                for (int i = img.Length - 1; i >= 0; i--) img[i] = 0;
+                int tx = -(int)(sampling_radius_major_mm);
+                int ty = -(int)(sampling_radius_major_mm);
+                int bx = (int)(sampling_radius_major_mm);
+                int by = (int)(sampling_radius_major_mm);
+
+                for (int i = cells.Count - 1; i >= 0; i--)
+                {
+                    pos3D p = cells[i];
+                    int x = ((img_width - img_height)/2) + (int)((p.x - tx) * img_height / (sampling_radius_major_mm*2));
+                    int y = (int)((p.y - ty) * img_height / (sampling_radius_major_mm*2));
+                    int radius = (int)(max_radius * img_width / (sampling_radius_major_mm*2));
+					int r = (int)(((p.pan - pan) - (-max_orientation_variance)) * 255 / (max_orientation_variance*2));
+					int g = 255 - r;
+					int b = 0;
+					drawing.drawSpot(img, img_width, img_height, x, y, radius, r, g, b);
+                }
+            }
+		    
+        }
+								
 		/// <summary>
 		/// Returns positions of grid cells corresponding to a moire grid
 		/// produced by the interference of a pair of hexagonal grids (theta waves)
@@ -83,6 +175,7 @@ namespace sentience.core
 		/// <param name="second_grid_rotation_degrees">rotation of the second grid (theta field 2)</param>
 		/// <param name="dimension_x_cells">number of grid cells in the x axis</param>
 		/// <param name="dimension_y_cells">number of grid cells in the y axis</param>
+		/// <param name="scaling_factor">scaling factor (k)</param>
 		/// <param name="cells">returned grid cell positions</param>
 		public static void CreateMoireGrid(
 		    float sampling_radius_major_mm,
@@ -93,6 +186,7 @@ namespace sentience.core
 		    float second_grid_rotation_degrees,
 		    int dimension_x_cells,
 		    int dimension_y_cells,
+		    float scaling_factor,
 		    ref List<pos3D> cells)
 		{
 			cells.Clear();
@@ -106,6 +200,7 @@ namespace sentience.core
 		        second_grid_spacing,
 		        first_grid_rotation_degrees,
 		        second_grid_rotation_degrees,
+		        scaling_factor,
 		        ref scaling,
 		        ref orientation);
 			
@@ -153,6 +248,7 @@ namespace sentience.core
 		/// <param name="second_grid_rotation_degrees">rotation of the second grid (theta field 2)</param>
 		/// <param name="dimension_x_cells">number of grid cells in the x axis</param>
 		/// <param name="dimension_y_cells">number of grid cells in the y axis</param>
+		/// <param name="scaling_factor">scaling factor (k)</param>
 		/// <param name="img">image data</param>
 		/// <param name="img_width">image width</param>
 		/// <param name="img_height">image height</param>
@@ -166,6 +262,7 @@ namespace sentience.core
 		    float second_grid_rotation_degrees,
 		    int dimension_x_cells,
 		    int dimension_y_cells,
+		    float scaling_factor,
 		    byte[] img,
 		    int img_width,
 		    int img_height,
@@ -182,6 +279,7 @@ namespace sentience.core
 		        second_grid_rotation_degrees,
 		        dimension_x_cells,
 		        dimension_y_cells,
+		        scaling_factor,
 		        ref cells);
 		        
 		    float min_x = float.MaxValue;

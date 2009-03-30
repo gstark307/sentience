@@ -30,6 +30,48 @@ namespace sentience.core.tests
 	public class tests_gridCells
 	{
 		[Test()]
+		public void CreateMoireGrid()
+		{
+		    int no_of_poses = 300;
+		    float sampling_radius_major_mm = 100;
+		    float sampling_radius_minor_mm = 100;
+		    float pan = 0;
+		    float tilt = 0;
+		    float roll = 0;
+		    float max_orientation_variance = 5 * (float)Math.PI / 180;
+		    float max_tilt_variance = 0 * (float)Math.PI / 180;
+		    float max_roll_variance = 0 * (float)Math.PI / 180;
+		    Random rnd = new Random(0);		    
+		    
+		    List<pos3D> cells = new List<pos3D>();
+
+			int debug_img_width = 640;
+			int debug_img_height = 480;
+		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+				
+		    gridCells.CreateMoireGrid(
+		        sampling_radius_major_mm,
+		        sampling_radius_minor_mm,
+		        no_of_poses,
+		        pan, tilt, roll,
+		        max_orientation_variance,
+		        max_tilt_variance,
+		        max_roll_variance,
+		        rnd,
+		        ref cells,
+		        debug_img,
+		        debug_img_width,
+		        debug_img_height);
+		        		
+		    Assert.Greater(cells.Count, no_of_poses * 90 / 100);
+		    Assert.Less(cells.Count, no_of_poses * 110 / 100);
+
+		    BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
+			bmp.Save("tests_gridCells_CreateMoireGrid.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+        }
+	
+		[Test()]
 		public void ShowMoireGrid()
 		{
 			int debug_img_width = 640;
@@ -67,7 +109,8 @@ namespace sentience.core.tests
 		    first_grid_rotation_degrees = 0;
 		    second_grid_rotation_degrees = 8;
 		    dimension_x_cells = 100;
-		    dimension_y_cells = 100;			
+		    dimension_y_cells = 100;
+		    float scaling_factor = 2;
 
    		    gridCells.ShowMoireGridVertices(
 		        sampline_radius_major,
@@ -78,6 +121,7 @@ namespace sentience.core.tests
 		        second_grid_rotation_degrees,
 		        dimension_x_cells,
 		        dimension_y_cells,
+		        scaling_factor,
 		        debug_img,
 		        debug_img_width,
 		        debug_img_height,
