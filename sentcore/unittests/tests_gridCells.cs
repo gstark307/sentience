@@ -84,7 +84,7 @@ namespace sentience.core.tests
 		    float first_grid_rotation_degrees = 0;
 		    float second_grid_rotation_degrees = 10;
 		    int dimension_x_cells = 40;
-		    int dimension_y_cells = 40;			
+		    int dimension_y_cells = 40;
 		    
 		    float sampline_radius_major = 100;
 		    float sampling_radius_minor = sampline_radius_major/2;
@@ -132,45 +132,6 @@ namespace sentience.core.tests
 		}		
 		
 		[Test()]
-		public void CreatePoses()
-		{
-			int debug_img_width = 640;
-			int debug_img_height = 480;
-		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
-			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-			
-		    int no_of_poses = 200;
-		    float sampling_radius_major_mm = 100;
-		    float sampling_radius_minor_mm = 80;
-		    float pan = 0;
-		    float tilt = 0;
-		    float roll = 0;
-		    float max_orientation_variance = 5 * (float)Math.PI / 180.0f;
-		    float max_tilt_variance = 0 * (float)Math.PI / 180.0f;
-		    float max_roll_variance = 0 * (float)Math.PI / 180.0f;
-		    Random rnd = new Random(0);
-		    List<pos3D> poses = null;
-			
-			gridCells.CreatePoses(
-		        no_of_poses,
-		        sampling_radius_major_mm,
-		        sampling_radius_minor_mm,
-		        pan, tilt, roll,
-		        max_orientation_variance,
-		        max_tilt_variance,
-		        max_roll_variance,
-		        rnd, 
-			    debug_img, debug_img_width, debug_img_height,
-			    ref poses);
-			
-			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
-			bmp.Save("tests_gridCells_CreatePoses.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
-			
-			Assert.Greater(poses.Count, no_of_poses - 15);
-			Assert.Less(poses.Count, no_of_poses + 15);
-		}
-
-		[Test()]
 		public void FindBestPose()
 		{
 			int debug_img_width = 640;
@@ -189,22 +150,23 @@ namespace sentience.core.tests
 		    float max_tilt_variance = 0 * (float)Math.PI / 180.0f;
 		    float max_roll_variance = 0 * (float)Math.PI / 180.0f;
 		    Random rnd = new Random(81);
-		    List<pos3D> poses = null;
+		    List<pos3D> poses = new List<pos3D>();
 		    float ideal_best_pose_x = ((float)rnd.NextDouble()-0.5f) * sampling_radius_minor_mm * 2 * 0.8f;
 		    float ideal_best_pose_y = ((float)rnd.NextDouble()-0.5f) * sampling_radius_major_mm * 2 * 0.8f;
 		    float ideal_pan = ((float)rnd.NextDouble() - 0.5f) * (max_orientation_variance*2);
 			
-			gridCells.CreatePoses(
-		        no_of_poses,
+		    gridCells.CreateMoireGrid(
 		        sampling_radius_major_mm,
 		        sampling_radius_minor_mm,
+		        no_of_poses,
 		        pan, tilt, roll,
 		        max_orientation_variance,
 		        max_tilt_variance,
 		        max_roll_variance,
-		        rnd, 
-			    null, 0, 0,
-			    ref poses);
+		        rnd,
+		        ref poses,
+		        null,
+		        0, 0);
 			    
 			const int steps = 10;
 			

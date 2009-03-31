@@ -171,6 +171,8 @@ namespace sentience.core
 		/// </summary>
 		/// <param name="first_grid_spacing">spacing of the first hexagonal grid (theta wavelength 1)</param>
 		/// <param name="second_grid_spacing">spacing of the second hexagonal grid (theta wavelength 2)</param>
+		/// <param name="phase_major_degrees">phase precession in the direction of motion in degrees</param>
+		/// <param name="phase_minor_degrees">phase precession perpendicular to the direction of motion in degrees</param>
 		/// <param name="first_grid_rotation_degrees">rotation of the first grid (theta field 1)</param>
 		/// <param name="second_grid_rotation_degrees">rotation of the second grid (theta field 2)</param>
 		/// <param name="dimension_x_cells">number of grid cells in the x axis</param>
@@ -211,7 +213,7 @@ namespace sentience.core
 			
 			Console.WriteLine("moire_grid_spacing: " + moire_grid_spacing.ToString());
 			Console.WriteLine("radius_sqr: " + radius_sqr.ToString());			
-			
+						
 			float half_x = dimension_x_cells * moire_grid_spacing / 2.0f;
 			float half_y = dimension_y_cells * moire_grid_spacing / 2.0f;
 			for (int cell_x = 0; cell_x < dimension_x_cells; cell_x++)
@@ -242,6 +244,8 @@ namespace sentience.core
 		/// </summary>
 		/// <param name="sampling_radius_major_mm">radius of the major axis of the bounding ellipse</param>
 		/// <param name="sampling_radius_minor_mm">radius of the minor axis of the bounding ellipse</param>
+		/// <param name="phase_major_degrees">phase precession in the direction of motion in degrees</param>
+		/// <param name="phase_minor_degrees">phase precession perpendicular to the direction of motion in degrees</param>
 		/// <param name="first_grid_spacing">spacing of the first hexagonal grid (theta wavelength 1)</param>
 		/// <param name="second_grid_spacing">spacing of the second hexagonal grid (theta wavelength 2)</param>
 		/// <param name="first_grid_rotation_degrees">rotation of the first grid (theta field 1)</param>
@@ -434,131 +438,7 @@ namespace sentience.core
 		}		
 		
         #endregion		
-		
-        #region "generating possible poses"
-		
-		/// <summary>
-		/// creates a set of random poses
-		/// </summary>
-		/// <param name="no_of_poses">number of poses to be created</param>
-		/// <param name="sampling_radius_major_mm">major axis of the ellipse</param>
-		/// <param name="sampling_radius_minor_mm">minor axis of the ellipse</param>
-		/// <param name="pan">current pan angle</param>
-		/// <param name="tilt">current tilt angle</param>
-		/// <param name="roll">current roll angle</param>
-		/// <param name="max_orientation_variance">maximum variance around the current pan angle</param>
-		/// <param name="max_tilt_variance">maximum variance around the current tilt angle</param>
-		/// <param name="max_roll_variance">maximum variance around the current roll angle</param>
-		/// <param name="rnd">random number generator</param>
-		/// <param name="poses">list of poses</param>
-		static public void CreatePoses(
-		    int no_of_poses,
-		    float sampling_radius_major_mm,
-		    float sampling_radius_minor_mm,
-		    float pan,
-		    float tilt,
-		    float roll,
-		    float max_orientation_variance,
-		    float max_tilt_variance,
-		    float max_roll_variance,
-		    Random rnd,
-            byte[] img,
-            int img_width,
-            int img_height,		                               
-		    ref List<pos3D> poses)
-		{
-			if (poses == null) poses = new List<pos3D>();
-			poses.Clear();
-			
-			float place_cell_area = (sampling_radius_minor_mm * sampling_radius_major_mm * 4) / no_of_poses;
-			float place_cell_dimension = (float)Math.Sqrt(place_cell_area);
-			place_cell_dimension *= 0.9f;
-			
-			int place_cell_x = 0;
-			int place_cell_y = 0;
-			int place_cells_across = (int)(sampling_radius_minor_mm*2/place_cell_dimension);
-			int place_cells_down = (int)(sampling_radius_major_mm*2/place_cell_dimension);
-			float place_cell_offset = 0;
-			int half_place_cells_across = place_cells_across/2;
-			int half_place_cells_down = place_cells_down/2;
-			float place_cell_dimension_offset = place_cell_dimension*0.5f;
-			float dist = 1;
-			float x_offset = 0;
-			float y_offset = 0;
-			int ctr = 0;
-			
-			for (int i = 0; i < no_of_poses; i++)
-			{	
-			    int tries = 0;
-			    dist = sampling_radius_minor_mm;
-			    while ((dist >= sampling_radius_minor_mm) && (tries < half_place_cells_across))
-			    {
-					x_offset = place_cell_offset + ((place_cell_x - half_place_cells_across) * place_cell_dimension);
-					y_offset = place_cell_dimension_offset + (place_cell_y - half_place_cells_down) * place_cell_dimension;
-					
-					place_cell_x++;
-					if (place_cell_x >= place_cells_across)
-					{
-					    ctr = rnd.Next(2);
-					    place_cell_x = 0;
-					    place_cell_y++;
-					    if (place_cell_offset == 0)
-					        place_cell_offset = place_cell_dimension_offset;
-					    else
-					        place_cell_offset = 0;
-					}
-					
-	                float dx = x_offset;
-	                float dy = y_offset * sampling_radius_minor_mm / sampling_radius_major_mm;								
-					dist = (float)Math.Sqrt(dx*dx+dy*dy);
-				    tries++;
-				}
 				
-				if (tries < half_place_cells_across)
-				{					
-					//Console.WriteLine("x,y: " + x_offset.ToString() + ", " + y_offset.ToString());
-	
-	                pos3D sample_pose = new pos3D(x_offset, y_offset, 0);
-	                if (ctr % 2 == 0)
-	                    sample_pose.pan = pan + ((float)rnd.NextDouble() * max_orientation_variance);
-	                else
-	                    sample_pose.pan = pan - ((float)rnd.NextDouble() * max_orientation_variance);
-	                sample_pose.tilt = tilt + (((float)rnd.NextDouble() - 0.5f) * 2 * max_tilt_variance);
-	                sample_pose.roll = roll + (((float)rnd.NextDouble() - 0.5f) * 2 * max_roll_variance);
-					
-					poses.Add(sample_pose);
-					ctr++;
-				}
-			}
-			
-            // create an image showing the results
-            if (img != null)
-            {
-                float max_radius = sampling_radius_major_mm * 0.025f;
-                for (int i = img.Length - 1; i >= 0; i--) img[i] = 0;
-                int tx = -(int)(sampling_radius_major_mm);
-                int ty = -(int)(sampling_radius_major_mm);
-                int bx = (int)(sampling_radius_major_mm);
-                int by = (int)(sampling_radius_major_mm);
-
-                for (int i = 0; i < poses.Count; i++)
-                {
-                    pos3D p = poses[i];
-                    int x = (int)((p.x - tx) * img_width / (sampling_radius_major_mm*2));
-                    int y = (int)((p.y - ty) * img_height / (sampling_radius_major_mm*2));
-                    int radius = (int)(max_radius * img_width / (sampling_radius_major_mm*2));
-					int r = (int)(((p.pan - pan) - (-max_orientation_variance)) * 255 / (max_orientation_variance*2));
-					int g = 255 - r;
-					int b = 0;
-					//Console.WriteLine("x,y,r: " + x.ToString() + ", " + y.ToString() + ", " + r.ToString());
-					drawing.drawSpot(img, img_width, img_height, x, y, radius, r, g, b);
-                }
-            }
-			
-		}
-		
-        #endregion
-		
         #region "localisation"
 		
 		/// <summary>

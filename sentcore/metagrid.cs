@@ -298,7 +298,7 @@ namespace sentience.core
 
             poses.Clear();
             pose_score.Clear();
-			
+/*			
             gridCells.CreatePoses(
 			    no_of_samples,
 		        sampling_radius_major_mm,
@@ -312,7 +312,21 @@ namespace sentience.core
 			    rnd,
 			    null, 0, 0,
 		        ref poses);
-
+*/		        
+		    gridCells.CreateMoireGrid(
+		        sampling_radius_major_mm,
+		        sampling_radius_minor_mm,
+		        no_of_samples,
+		        robot_pose.pan,
+		        robot_pose.tilt,
+		        robot_pose.roll,
+		        max_orientation_variance,
+		        max_tilt_variance,
+		        max_roll_variance,
+		        rnd,
+		        ref poses,
+		        null, 0, 0);
+		        
             // positions of the left and right camera relative to the robots centre of rotation
             pos3D[] relative_left_cam = new pos3D[left_camera_location.Length];
             pos3D[] relative_right_cam = new pos3D[right_camera_location.Length];
