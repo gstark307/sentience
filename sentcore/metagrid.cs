@@ -325,7 +325,7 @@ namespace sentience.core
 		        max_roll_variance,
 		        rnd,
 		        ref poses,
-		        null, 0, 0);
+		        null, null, 0, 0);
 		        
             // positions of the left and right camera relative to the robots centre of rotation
             pos3D[] relative_left_cam = new pos3D[left_camera_location.Length];

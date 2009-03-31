@@ -32,7 +32,7 @@ namespace sentience.core.tests
 		[Test()]
 		public void CreateMoireGrid()
 		{
-		    int no_of_poses = 300;
+		    int no_of_poses = 200;
 		    float sampling_radius_major_mm = 100;
 		    float sampling_radius_minor_mm = 100;
 		    float pan = 0;
@@ -48,6 +48,7 @@ namespace sentience.core.tests
 			int debug_img_width = 640;
 			int debug_img_height = 480;
 		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+		    byte[] debug_img_moire = new byte[debug_img_width * debug_img_height * 3];
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 				
 		    gridCells.CreateMoireGrid(
@@ -61,6 +62,7 @@ namespace sentience.core.tests
 		        rnd,
 		        ref cells,
 		        debug_img,
+		        debug_img_moire,
 		        debug_img_width,
 		        debug_img_height);
 		        		
@@ -69,6 +71,9 @@ namespace sentience.core.tests
 
 		    BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			bmp.Save("tests_gridCells_CreateMoireGrid.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+
+   		    BitmapArrayConversions.updatebitmap_unsafe(debug_img_moire, bmp);
+			bmp.Save("tests_gridCells_CreateMoireGrid_moire.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
         }
 	
 		[Test()]
@@ -86,17 +91,20 @@ namespace sentience.core.tests
 		    int dimension_x_cells = 40;
 		    int dimension_y_cells = 40;
 		    
-		    float sampline_radius_major = 100;
-		    float sampling_radius_minor = sampline_radius_major/2;
+		    float sampline_radius_major = 20;
+		    float sampling_radius_minor = sampline_radius_major;
 		    int radius = 3;
 			
 		    gridCells.ShowMoireGrid(
+		        sampline_radius_major,
+		        sampling_radius_minor,
 		        first_grid_spacing,
 		        second_grid_spacing,
 		        first_grid_rotation_degrees,
 		        second_grid_rotation_degrees,
 		        dimension_x_cells,
 		        dimension_y_cells,
+		        1.0f,
 		        debug_img,
 		        debug_img_width,
 		        debug_img_height);
@@ -104,6 +112,8 @@ namespace sentience.core.tests
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			bmp.Save("tests_gridCells_ShowMoireGrid.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 
+		    sampline_radius_major = 100;
+		    sampling_radius_minor = sampline_radius_major/2;
             first_grid_spacing = 1.0f;
 		    second_grid_spacing = 1.2f;
 		    first_grid_rotation_degrees = 0;
@@ -165,7 +175,7 @@ namespace sentience.core.tests
 		        max_roll_variance,
 		        rnd,
 		        ref poses,
-		        null,
+		        null, null,
 		        0, 0);
 			    
 			const int steps = 10;
