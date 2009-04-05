@@ -249,7 +249,24 @@ namespace sentience.core
         /// <summary>
         /// Localisation
         /// </summary>
-        /// <param name="baseline_mm">baseline distance for each stereo camera in millimetres</param>
+        /// <param name="body_width_mm">width of the robot body in millimetres</param>
+        /// <param name="body_length_mm">length of the robot body in millimetres</param>
+        /// <param name="body_centre_of_rotation_x">x centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="body_centre_of_rotation_y">y centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="body_centre_of_rotation_z">z centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="head_centroid_x">head centroid x position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_centroid_y">head centroid y position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_centroid_z">head centroid z position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_pan">head pan angle in radians</param>
+        /// <param name="head_tilt">head tilt angle in radians</param>
+        /// <param name="head_roll">head roll angle in radians</param>
+        /// <param name="baseline_mm">stereo camera baseline in millimetres</param>
+        /// <param name="stereo_camera_position_x">stereo camera x position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_position_y">stereo camera y position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_position_z">stereo camera z position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_pan">stereo camera pan in radians relative to the head</param>
+        /// <param name="stereo_camera_tilt">stereo camera tilt in radians relative to the head</param>
+        /// <param name="stereo_camera_roll">stereo camera roll in radians relative to the head</param>
         /// <param name="image_width">image width for each stereo camera</param>
         /// <param name="image_height">image height for each stereo camera</param>
         /// <param name="FOV_degrees">field of view for each stereo camera in degrees</param>
@@ -257,8 +274,8 @@ namespace sentience.core
         /// <param name="stereo_features_colour">stereo feature colours for each stereo camera</param>
         /// <param name="stereo_features_uncertainties">stereo feature uncertainties (priors) for each stereo camera</param>
         /// <param name="sensormodel">sensor model for each stereo camera</param>
-        /// <param name="left_camera_location">position and orientation of the left camera on each stereo camera</param>
-        /// <param name="right_camera_location">position and orientation of the right camera on each stereo camera</param>
+        /// <param name="left_camera_location">returned position and orientation of the left camera on each stereo camera</param>
+        /// <param name="right_camera_location">returned position and orientation of the right camera on each stereo camera</param>
         /// <param name="no_of_samples">number of sample poses</param>
         /// <param name="sampling_radius_major_mm">major radius for samples, in the direction of robot movement</param>
         /// <param name="sampling_radius_minor_mm">minor radius for samples, perpendicular to the direction of robot movement</param>
@@ -272,7 +289,24 @@ namespace sentience.core
 		/// <param name="rnd">random number generator</param>
         /// <returns>best localisation matching score</returns>
         public float Localise(
-            float[] baseline_mm,
+		    float body_width_mm,
+		    float body_length_mm,
+		    float body_centre_of_rotation_x,
+		    float body_centre_of_rotation_y,
+		    float body_centre_of_rotation_z,
+		    float head_centroid_x,
+		    float head_centroid_y,
+		    float head_centroid_z,
+		    float head_pan,
+		    float head_tilt,
+		    float head_roll,
+		    float[] baseline_mm,
+		    float[] stereo_camera_position_x,
+		    float[] stereo_camera_position_y,
+		    float[] stereo_camera_position_z,
+		    float[] stereo_camera_pan,
+		    float[] stereo_camera_tilt,
+		    float[] stereo_camera_roll,
             int[] image_width,
             int[] image_height,
             float[] FOV_degrees,
@@ -280,8 +314,8 @@ namespace sentience.core
 		    byte[][,] stereo_features_colour,
 		    float[][] stereo_features_uncertainties,
             stereoModel[] sensormodel,
-            pos3D[] left_camera_location,
-            pos3D[] right_camera_location,
+            ref pos3D[] left_camera_location,
+            ref pos3D[] right_camera_location,
             int no_of_samples,
             float sampling_radius_major_mm,
             float sampling_radius_minor_mm,
@@ -313,12 +347,37 @@ namespace sentience.core
 		        null, null, 0, 0);
 		        
             // positions of the left and right camera relative to the robots centre of rotation
-            pos3D[] relative_left_cam = new pos3D[left_camera_location.Length];
-            pos3D[] relative_right_cam = new pos3D[right_camera_location.Length];
+            pos3D head_location;
+            left_camera_location = new pos3D[baseline_mm.Length];
+            right_camera_location = new pos3D[baseline_mm.Length];
+            pos3D[] camera_centre_location = new pos3D[baseline_mm.Length];
+            pos3D[] relative_left_cam = new pos3D[baseline_mm.Length];
+            pos3D[] relative_right_cam = new pos3D[baseline_mm.Length];
             for (int cam = 0; cam < baseline_mm.Length; cam++)
             {
-                relative_left_cam[cam] = left_camera_location[cam].Subtract(robot_pose);
-                relative_right_cam[cam] = right_camera_location[cam].Subtract(robot_pose);
+                calculateCameraPositions(
+		            body_width_mm,
+		            body_length_mm,
+		            head_centroid_x,
+		            head_centroid_y,
+		            head_centroid_z,
+		            head_pan,
+		            head_tilt,
+		            head_roll,
+		            baseline_mm[cam],
+		            stereo_camera_position_x[cam],
+		            stereo_camera_position_y[cam],
+		            stereo_camera_position_z[cam],
+		            stereo_camera_pan[cam],
+		            stereo_camera_tilt[cam],
+		            stereo_camera_roll[cam],
+                    ref head_location,
+                    ref camera_centre_location[cam],
+                    ref relative_left_cam[cam],
+                    ref relative_right_cam[cam]);            
+            
+                left_camera_location[cam] = relative_left_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
+                right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
             }
 
             pos3D stereo_camera_centre = new pos3D(0, 0, 0);
