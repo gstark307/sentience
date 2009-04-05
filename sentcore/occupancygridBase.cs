@@ -287,7 +287,66 @@ namespace sentience.core
                 right_camera_location[cam].pan = left_camera_location[cam].pan;
             }
         }
-                
+
+        /// <summary>
+        /// calculate the position of the robots head and cameras for this pose
+        /// </summary>
+        /// <param name="rob">robot object</param>
+        /// <param name="head_location">location of the centre of the head</param>
+        /// <param name="camera_centre_location">location of the centre of each stereo camera</param>
+        /// <param name="left_camera_location">location of the left camera within each stereo camera</param>
+        /// <param name="right_camera_location">location of the right camera within each stereo camera</param>
+        protected void calculateCameraPositions(
+		    float body_width_mm,
+		    float body_length_mm,
+		    float head_centroid_x,
+		    float head_centroid_y,
+		    float head_centroid_z,
+		    float head_pan,
+		    float head_tilt,
+		    float head_roll,
+		    float baseline_mm,
+            ref pos3D head_location,
+            ref pos3D camera_centre_location,
+            ref pos3D left_camera_location,
+            ref pos3D right_camera_location)
+        {
+            // calculate the position of the centre of the head relative to 
+            // the centre of rotation of the robots body
+            pos3D head_centroid = 
+				new pos3D(
+				    -(body_width_mm / 2) + head_centroid_x,
+                    -(body_length_mm / 2) + head_centroid_y,
+                    head_centroid_z);
+
+            // location of the centre of the head on the grid map
+            // adjusted for the robot pose and the head pan and tilt angle.
+            // Note that the positions and orientations of individual cameras
+            // on the head have already been accounted for within stereoModel.createObservation
+            pos3D head_locn = 
+				head_centroid.rotate(
+				    head_pan + pan, head_tilt, 0);
+            head_locn = head_locn.translate(x, y, 0);
+            head_location.copyFrom(head_locn);
+
+            // calculate the position of the centre of the stereo camera
+            // (baseline centre point)
+            pos3D camera_centre_locn = 
+				new pos3D(positionOrientation_x, positionOrientation_y, positionOrientation.z);
+            camera_centre_locn = camera_centre_locn.rotate(positionOrientation_pan + head_pan + pan, positionOrientation_tilt, positionOrientation.roll);
+            camera_centre_location = camera_centre_locn.translate(head_location.x, head_location.y, head_location.z);
+
+            // where are the left and right cameras?
+            // we need to know this for the origins of the vacancy models
+            float half_baseline_length = baseline / 2;
+            pos3D left_camera_locn = new pos3D(-half_baseline_length, 0, 0);
+            left_camera_locn = left_camera_locn.rotate(positionOrientation_pan + head_pan + pan, positionOrientation_tilt, positionOrientation_roll);
+            pos3D right_camera_locn = new pos3D(-left_camera_locn.x, -left_camera_locn.y, -left_camera_locn.z);
+            left_camera_location = left_camera_locn.translate(camera_centre_location.x, camera_centre_location.y, camera_centre_location.z);
+            right_camera_location = right_camera_locn.translate(camera_centre_location.x, camera_centre_location.y, camera_centre_location.z);
+            right_camera_location.pan = left_camera_location.pan;
+        }
+		
         #endregion
 		
         #region "inserting simulated structures, mainly for unit testing purposes"

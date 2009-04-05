@@ -122,5 +122,84 @@ namespace sentience.core
 		
         #endregion
 		
+        #region "updating the grid"
+		
+		
+        /// <summary>
+        /// Localisation
+        /// </summary>
+        /// <param name="baseline_mm">baseline distance for each stereo camera in millimetres</param>
+        /// <param name="image_width">image width for each stereo camera</param>
+        /// <param name="image_height">image height for each stereo camera</param>
+        /// <param name="FOV_degrees">field of view for each stereo camera in degrees</param>
+        /// <param name="stereo_features">stereo features (disparities) for each stereo camera</param>
+        /// <param name="stereo_features_colour">stereo feature colours for each stereo camera</param>
+        /// <param name="stereo_features_uncertainties">stereo feature uncertainties (priors) for each stereo camera</param>
+        /// <param name="sensormodel">sensor model for each stereo camera</param>
+        /// <param name="left_camera_location">position and orientation of the left camera on each stereo camera</param>
+        /// <param name="right_camera_location">position and orientation of the right camera on each stereo camera</param>
+        /// <param name="no_of_samples">number of sample poses</param>
+        /// <param name="sampling_radius_major_mm">major radius for samples, in the direction of robot movement</param>
+        /// <param name="sampling_radius_minor_mm">minor radius for samples, perpendicular to the direction of robot movement</param>
+        /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation</param>
+        /// <param name="max_orientation_variance">maximum variance in orientation in radians, used to create sample poses</param>
+        /// <param name="max_tilt_variance">maximum variance in tilt angle in radians, used to create sample poses</param>
+        /// <param name="max_roll_variance">maximum variance in roll angle in radians, used to create sample poses</param>
+        /// <param name="poses">list of poses tried</param>
+        /// <param name="pose_score">list of pose matching scores</param>
+        /// <param name="best_robot_pose">returned best pose estimate</param>
+		/// <param name="rnd">random number generator</param>
+        /// <returns>best localisation matching score</returns>
+        public float Localise(
+            float[] baseline_mm,
+            int[] image_width,
+            int[] image_height,
+            float[] FOV_degrees,
+		    float[][] stereo_features,
+		    byte[][,] stereo_features_colour,
+		    float[][] stereo_features_uncertainties,
+            stereoModel[] sensormodel,
+            pos3D[] left_camera_location,
+            pos3D[] right_camera_location,
+            int no_of_samples,
+            float sampling_radius_major_mm,
+            float sampling_radius_minor_mm,
+            pos3D robot_pose,
+            float max_orientation_variance,
+            float max_tilt_variance,
+            float max_roll_variance,
+            List<pos3D> poses,
+            List<float> pose_score,
+		    Random rnd,
+            ref pos3D best_robot_pose)
+        {
+			float matching_score = 
+				buffer[current_buffer_index].Localise(
+                    baseline_mm,
+                    image_width,
+                    image_height,
+                    FOV_degrees,
+		            stereo_features,
+		            stereo_features_colour,
+		            stereo_features_uncertainties,
+                    sensormodel,
+                    left_camera_location,
+                    right_camera_location,
+                    no_of_samples,
+                    sampling_radius_major_mm,
+                    sampling_radius_minor_mm,
+                    robot_pose,
+                    max_orientation_variance,
+                    max_tilt_variance,
+                    max_roll_variance,
+                    poses,
+                    pose_score,
+		            rnd,
+                    ref best_robot_pose);
+			return(matching_score);
+		}		
+		
+        #endregion
+		
 	}
 }
