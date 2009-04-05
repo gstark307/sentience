@@ -128,6 +128,7 @@
     <Compile Include="occupancygridBase.cs" />
     <Compile Include="gridCells.cs" />
     <Compile Include="unittests\tests_gridCells.cs" />
+    <Compile Include="metagridBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENCE.txt" />

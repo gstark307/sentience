@@ -262,7 +262,7 @@ namespace sentience.core
         /// <param name="no_of_samples">number of sample poses</param>
         /// <param name="sampling_radius_major_mm">major radius for samples, in the direction of robot movement</param>
         /// <param name="sampling_radius_minor_mm">minor radius for samples, perpendicular to the direction of robot movement</param>
-        /// <param name="robot_pose">position and orientation of the robots centre of rotation</param>
+        /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation</param>
         /// <param name="max_orientation_variance">maximum variance in orientation in radians, used to create sample poses</param>
         /// <param name="max_tilt_variance">maximum variance in tilt angle in radians, used to create sample poses</param>
         /// <param name="max_roll_variance">maximum variance in roll angle in radians, used to create sample poses</param>
@@ -298,21 +298,6 @@ namespace sentience.core
 
             poses.Clear();
             pose_score.Clear();
-/*			
-            gridCells.CreatePoses(
-			    no_of_samples,
-		        sampling_radius_major_mm,
-		        sampling_radius_minor_mm,
-		        robot_pose.pan,
-		        robot_pose.tilt,
-		        robot_pose.roll,
-		        max_orientation_variance,
-		        max_tilt_variance,
-		        max_roll_variance,
-			    rnd,
-			    null, 0, 0,
-		        ref poses);
-*/		        
 		    gridCells.CreateMoireGrid(
 		        sampling_radius_major_mm,
 		        sampling_radius_minor_mm,
@@ -339,8 +324,9 @@ namespace sentience.core
             pos3D stereo_camera_centre = new pos3D(0, 0, 0);
 
             // try a number of random poses
-            for (int i = 0; i < no_of_samples; i++)
-            {
+			// we can do this in parallel
+		    Parallel.For(0, no_of_samples, delegate(int i)
+		    {			
                 pos3D sample_pose = poses[i];
                 
                 float matching_score = 0;
@@ -399,7 +385,7 @@ namespace sentience.core
 				sample_pose.tilt -= robot_pose.tilt;
 				sample_pose.roll -= robot_pose.roll;
                 pose_score.Add(matching_score);
-            }
+            });
 
 			// locate the best possible pose
             gridCells.FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, null, null, 0, 0, 0, 0);
