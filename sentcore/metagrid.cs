@@ -36,6 +36,9 @@ namespace sentience.core
 
         // weighting for each sub grid, used to compute localisation matching scores
         protected float[] grid_weight;       
+        
+        // centre position of the grids
+        public float x,y,z;
 
         #region "constructors"
 
@@ -162,6 +165,9 @@ namespace sentience.core
             float centre_z_mm,
             float orientation_radians)
         {
+            x = centre_x_mm;
+            y = centre_y_mm;
+            z = centre_z_mm;
             for (int i = 0; i < grid.Length; i++)
             {
                 grid[i].x = centre_x_mm;
@@ -244,6 +250,141 @@ namespace sentience.core
 
         #endregion
 
+        #region "mapping"
+
+        /// <summary>
+        /// Mapping
+        /// </summary>
+        /// <param name="body_width_mm">width of the robot body in millimetres</param>
+        /// <param name="body_length_mm">length of the robot body in millimetres</param>
+        /// <param name="body_centre_of_rotation_x">x centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="body_centre_of_rotation_y">y centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="body_centre_of_rotation_z">z centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="head_centroid_x">head centroid x position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_centroid_y">head centroid y position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_centroid_z">head centroid z position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_pan">head pan angle in radians</param>
+        /// <param name="head_tilt">head tilt angle in radians</param>
+        /// <param name="head_roll">head roll angle in radians</param>
+        /// <param name="baseline_mm">stereo camera baseline in millimetres</param>
+        /// <param name="stereo_camera_position_x">stereo camera x position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_position_y">stereo camera y position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_position_z">stereo camera z position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_pan">stereo camera pan in radians relative to the head</param>
+        /// <param name="stereo_camera_tilt">stereo camera tilt in radians relative to the head</param>
+        /// <param name="stereo_camera_roll">stereo camera roll in radians relative to the head</param>
+        /// <param name="image_width">image width for each stereo camera</param>
+        /// <param name="image_height">image height for each stereo camera</param>
+        /// <param name="FOV_degrees">field of view for each stereo camera in degrees</param>
+        /// <param name="stereo_features">stereo features (disparities) for each stereo camera</param>
+        /// <param name="stereo_features_colour">stereo feature colours for each stereo camera</param>
+        /// <param name="stereo_features_uncertainties">stereo feature uncertainties (priors) for each stereo camera</param>
+        /// <param name="sensormodel">sensor model for each stereo camera</param>
+        /// <param name="left_camera_location">returned position and orientation of the left camera on each stereo camera</param>
+        /// <param name="right_camera_location">returned position and orientation of the right camera on each stereo camera</param>
+        /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation</param>
+        public void Map(
+		    float body_width_mm,
+		    float body_length_mm,
+		    float body_centre_of_rotation_x,
+		    float body_centre_of_rotation_y,
+		    float body_centre_of_rotation_z,
+		    float head_centroid_x,
+		    float head_centroid_y,
+		    float head_centroid_z,
+		    float head_pan,
+		    float head_tilt,
+		    float head_roll,
+		    float[] baseline_mm,
+		    float[] stereo_camera_position_x,
+		    float[] stereo_camera_position_y,
+		    float[] stereo_camera_position_z,
+		    float[] stereo_camera_pan,
+		    float[] stereo_camera_tilt,
+		    float[] stereo_camera_roll,
+            int[] image_width,
+            int[] image_height,
+            float[] FOV_degrees,
+		    float[][] stereo_features,
+		    byte[][,] stereo_features_colour,
+		    float[][] stereo_features_uncertainties,
+            stereoModel[] sensormodel,
+            ref pos3D[] left_camera_location,
+            ref pos3D[] right_camera_location,
+            pos3D robot_pose)
+        {
+            // positions of the left and right camera relative to the robots centre of rotation
+            pos3D head_location = new pos3D(0,0,0);
+            left_camera_location = new pos3D[baseline_mm.Length];
+            right_camera_location = new pos3D[baseline_mm.Length];
+            pos3D[] camera_centre_location = new pos3D[baseline_mm.Length];
+            pos3D[] relative_left_cam = new pos3D[baseline_mm.Length];
+            pos3D[] relative_right_cam = new pos3D[baseline_mm.Length];
+            for (int cam = 0; cam < baseline_mm.Length; cam++)
+            {
+                occupancygridBase.calculateCameraPositions(
+		            body_width_mm,
+		            body_length_mm,
+		            body_centre_of_rotation_x,
+		            body_centre_of_rotation_y,
+		            body_centre_of_rotation_z,
+		            head_centroid_x,
+		            head_centroid_y,
+		            head_centroid_z,
+		            head_pan,
+		            head_tilt,
+		            head_roll,
+		            baseline_mm[cam],
+		            stereo_camera_position_x[cam],
+		            stereo_camera_position_y[cam],
+		            stereo_camera_position_z[cam],
+		            stereo_camera_pan[cam],
+		            stereo_camera_tilt[cam],
+		            stereo_camera_roll[cam],
+                    ref head_location,
+                    ref camera_centre_location[cam],
+                    ref relative_left_cam[cam],
+                    ref relative_right_cam[cam]);
+                                           
+                left_camera_location[cam] = relative_left_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
+                right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
+            }
+
+            pos3D stereo_camera_centre = new pos3D(0, 0, 0);
+
+            // update the grid
+            for (int cam = 0; cam < baseline_mm.Length; cam++)
+            {
+                // centre position between the left and right cameras
+                stereo_camera_centre.x = left_camera_location[cam].x + ((right_camera_location[cam].x - left_camera_location[cam].x) * 0.5f);
+                stereo_camera_centre.y = left_camera_location[cam].y + ((right_camera_location[cam].y - left_camera_location[cam].y) * 0.5f);
+                stereo_camera_centre.z = left_camera_location[cam].z + ((right_camera_location[cam].z - left_camera_location[cam].z) * 0.5f);
+                stereo_camera_centre.pan = left_camera_location[cam].pan;
+                stereo_camera_centre.tilt = left_camera_location[cam].tilt;
+                stereo_camera_centre.roll = left_camera_location[cam].roll;
+
+                // create a set of stereo rays as observed from this pose
+                List<evidenceRay> rays = sensormodel[cam].createObservation(
+                    stereo_camera_centre,
+                    baseline_mm[cam],
+                    image_width[cam],
+                    image_height[cam],
+                    FOV_degrees[cam],
+                    stereo_features[cam],
+                    stereo_features_colour[cam],
+                    stereo_features_uncertainties[cam],
+                    true);
+
+			    // insert rays into the occupancy grid
+                for (int r = 0; r < rays.Count; r++)
+                {
+                    Insert(rays[r], sensormodel[cam].ray_model, left_camera_location[cam], right_camera_location[cam], false);
+                }
+            }
+        }
+
+        #endregion
+
         #region "localisation"        
 		
         /// <summary>
@@ -285,7 +426,7 @@ namespace sentience.core
         /// <param name="max_roll_variance">maximum variance in roll angle in radians, used to create sample poses</param>
         /// <param name="poses">list of poses tried</param>
         /// <param name="pose_score">list of pose matching scores</param>
-        /// <param name="best_robot_pose">returned best pose estimate</param>
+        /// <param name="pose_offset">offset of the best pose from the current one</param>
 		/// <param name="rnd">random number generator</param>
         /// <returns>best localisation matching score</returns>
         public float Localise(
@@ -326,7 +467,7 @@ namespace sentience.core
             List<pos3D> poses,
             List<float> pose_score,
 		    Random rnd,
-            ref pos3D best_robot_pose)
+            ref pos3D pose_offset)
         {
             float best_matching_score = float.MinValue;
 
@@ -347,7 +488,7 @@ namespace sentience.core
 		        null, null, 0, 0);
 		        
             // positions of the left and right camera relative to the robots centre of rotation
-            pos3D head_location;
+            pos3D head_location = new pos3D(0,0,0);
             left_camera_location = new pos3D[baseline_mm.Length];
             right_camera_location = new pos3D[baseline_mm.Length];
             pos3D[] camera_centre_location = new pos3D[baseline_mm.Length];
@@ -355,9 +496,12 @@ namespace sentience.core
             pos3D[] relative_right_cam = new pos3D[baseline_mm.Length];
             for (int cam = 0; cam < baseline_mm.Length; cam++)
             {
-                calculateCameraPositions(
+                occupancygridBase.calculateCameraPositions(
 		            body_width_mm,
 		            body_length_mm,
+		            body_centre_of_rotation_x,
+		            body_centre_of_rotation_y,
+		            body_centre_of_rotation_z,
 		            head_centroid_x,
 		            head_centroid_y,
 		            head_centroid_z,
@@ -374,8 +518,8 @@ namespace sentience.core
                     ref head_location,
                     ref camera_centre_location[cam],
                     ref relative_left_cam[cam],
-                    ref relative_right_cam[cam]);            
-            
+                    ref relative_right_cam[cam]);
+                                           
                 left_camera_location[cam] = relative_left_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
                 right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
             }
@@ -442,12 +586,27 @@ namespace sentience.core
                 // add the pose to the list
 				sample_pose.pan -= robot_pose.pan;
 				sample_pose.tilt -= robot_pose.tilt;
-				sample_pose.roll -= robot_pose.roll;
+				sample_pose.roll -= robot_pose.roll;				
                 pose_score.Add(matching_score);
             });
 
 			// locate the best possible pose
+			pos3D best_robot_pose = new pos3D(0, 0, 0);
             gridCells.FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, null, null, 0, 0, 0, 0);
+
+            // rotate the best pose to the robot's current orientation
+            // this becomes an offset, which may be used for course correction
+            pose_offset = best_robot_pose.rotate(robot_pose.pan, robot_pose.tilt, robot_pose.roll);
+            
+            // orientation relative to the current heading
+            pose_offset.pan = best_robot_pose.pan;
+            pose_offset.tilt = best_robot_pose.tilt;
+            pose_offset.roll = best_robot_pose.roll;
+
+            // range checks                        
+            if (Math.Abs(pose_offset.pan) > max_orientation_variance) Console.WriteLine("pose_offset pan out of range");
+            if (Math.Abs(pose_offset.tilt) > max_tilt_variance) Console.WriteLine("pose_offset tilt out of range");
+            if (Math.Abs(pose_offset.roll) > max_roll_variance) Console.WriteLine("pose_offset roll out of range");
 
             return (best_matching_score);
         }

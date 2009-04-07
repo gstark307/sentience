@@ -290,6 +290,7 @@ namespace sentience.core
 
         /// <summary>
         /// Calculate the position of the robots head and cameras for this pose
+        /// the positions returned are relative to the robots centre of rotation
         /// </summary>
         /// <param name="body_width_mm">width of the robot body in millimetres</param>
         /// <param name="body_length_mm">length of the robot body in millimetres</param>
@@ -313,7 +314,7 @@ namespace sentience.core
         /// <param name="camera_centre_location">returned stereo camera centre position/orientation</param>
         /// <param name="left_camera_location">returned left camera position/orientation</param>
         /// <param name="right_camera_location">returned right camera position/orientation</param>
-        protected void calculateCameraPositions(
+        public static void calculateCameraPositions(
 		    float body_width_mm,
 		    float body_length_mm,
 		    float body_centre_of_rotation_x,
@@ -345,14 +346,13 @@ namespace sentience.core
                     -(body_length_mm * 0.5f) + (body_centre_of_rotation_y - (body_length_mm * 0.5f)) + head_centroid_y,
                     head_centroid_z);
 
-            // location of the centre of the head on the grid map
+            // location of the centre of the head
             // adjusted for the robot pose and the head pan and tilt angle.
             // Note that the positions and orientations of individual cameras
             // on the head have already been accounted for within stereoModel.createObservation
             pos3D head_locn = 
 				head_centroid.rotate(
-				    head_pan + pan, head_tilt, 0);
-            head_locn = head_locn.translate(x, y, 0);
+				    head_pan, head_tilt, 0);
             head_location.copyFrom(head_locn);
 
             // calculate the position of the centre of the stereo camera
@@ -366,7 +366,7 @@ namespace sentience.core
 			// rotate the stereo camera	    	    
             camera_centre_locn = 
                 camera_centre_locn.rotate(
-                    stereo_camera_pan + head_pan + pan, 
+                    stereo_camera_pan + head_pan, 
                     stereo_camera_tilt + head_tilt, 
                     stereo_camera_roll + head_roll);
             
@@ -381,7 +381,7 @@ namespace sentience.core
             // we need to know this for the origins of the vacancy models
             float half_baseline_length = baseline_mm * 0.5f;
             pos3D left_camera_locn = new pos3D(-half_baseline_length, 0, 0);
-            left_camera_locn = left_camera_locn.rotate(stereo_camera_pan + head_pan + pan, stereo_camera_tilt + head_tilt, stereo_camera_roll + head_roll);            
+            left_camera_locn = left_camera_locn.rotate(stereo_camera_pan + head_pan, stereo_camera_tilt + head_tilt, stereo_camera_roll + head_roll);            
             pos3D right_camera_locn = new pos3D(-left_camera_locn.x, -left_camera_locn.y, -left_camera_locn.z);
             left_camera_location = left_camera_locn.translate(camera_centre_location.x, camera_centre_location.y, camera_centre_location.z);
             right_camera_location = right_camera_locn.translate(camera_centre_location.x, camera_centre_location.y, camera_centre_location.z);
