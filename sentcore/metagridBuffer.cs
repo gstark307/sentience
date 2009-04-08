@@ -34,7 +34,13 @@ namespace sentience.core
 		protected int current_buffer_index;
 		
 		protected List<float> grid_centres;
+		protected List<int> disparities_index;
+		
+		// index number of the current grid
 		protected int current_grid_index;
+		
+		// index number in the disparities data
+		protected int current_disparity_index;
 		
 		protected float dimension_mm;
 		
@@ -84,6 +90,7 @@ namespace sentience.core
 			current_grid_index = 0;
 			grid_centres = new List<float>();
 			localisations = new List<float>();
+			disparities_index = new List<int>();
 		}
 		
         #endregion
@@ -95,31 +102,42 @@ namespace sentience.core
 		    for (int i = 0; i < 2; i++) buffer[i].Clear();
 		    grid_centres.Clear();
 		    localisations.Clear();
+		    disparities_index.Clear();
 		    current_buffer_index = 0;
 		    current_grid_index = 0;
+		    current_disparity_index = 0;
 		}
 		
 		#endregion
 		
 		#region "loading a path"
 		
-		List<float> path;
+		// x,y coordinates along the path in millimetres
+		protected List<float> path;
+		
+		// file containing stereo disparities observations taken along a path
+		protected string disparities_filename;
 		
         /// <summary>
-        /// loads two encoder traces and contructs a path
+        /// loads path data generated from odometry and stereo vision observations
         /// </summary>
-        /// <param name="path_filename"></param>
+        /// <param name="path_filename">file containing the path data (estimated position/orientation over time)</param>
+        /// <param name="disparities_index_filename">file containing positions at which each stereo disparity set was observed</param>
+        /// <param name="disparities_filename">file containing observed stereo disparities</param>
         public void LoadPath(
-            string path_filename)
+            string path_filename,
+            string disparities_index_filename,
+            string disparities_filename)
         {
-            if (File.Exists(path_filename))
-            {
-                float half_dimension_sqr = dimension_mm * 0.5f;
-                half_dimension_sqr *= half_dimension_sqr;
+            this.disparities_filename = disparities_filename;
+            float half_dimension_sqr = dimension_mm * 0.5f;
+            half_dimension_sqr *= half_dimension_sqr;
             
+            if (File.Exists(path_filename))
+            {                
                 Reset();
                 path = new List<float>();
-                FileStream fs = fs = File.Open(path_filename, FileMode.Open);
+                FileStream fs = File.Open(path_filename, FileMode.Open);
                 BinaryReader br = new BinaryReader(fs);
 
                 int entries = br.ReadInt32();
@@ -143,7 +161,7 @@ namespace sentience.core
                         float dx = data.x - last_x;
                         float dy = data.y - last_y;
                         float dist_sqr = dx*dx + dy*dy;
-                        if (dist_sqr >= half_dimension_sqr)
+                        if (dist_sqr > half_dimension_sqr)
                         {
                             last_x = data.x;
                             last_y = data.y;
@@ -182,6 +200,55 @@ namespace sentience.core
             else
             {
                 Console.WriteLine("path file " + path_filename + " not found");
+            }            
+
+            if ((grid_centres.Count >= 3) &&
+                (File.Exists(disparities_index_filename)))
+            {
+                FileStream fs = File.Open(disparities_index_filename, FileMode.Open);
+                BinaryReader br = new BinaryReader(fs);
+
+                bool finished = false;
+                int disp_index = 0;
+                int grid_centres_index = 0;
+                float grid_centre_x = grid_centres[grid_centres_index * 3];
+                float grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
+                while (!finished)
+                {
+                    try
+                    {
+		                float position_x = br.ReadSingle();
+		                float position_y = br.ReadSingle();
+		                
+		                float dx = position_x - grid_centre_x;
+		                float dy = position_y - grid_centre_y;
+		                float dist_sqr = dx*dx + dy*dy;
+		                
+		                if (dist_sqr > half_dimension_sqr)
+		                {
+		                    if (grid_centres_index < grid_centres.Count/3)
+		                    {
+		                        disparities_index.Add(disp_index);
+                                grid_centres_index++;
+                                grid_centre_x = grid_centres[grid_centres_index * 3];
+                                grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
+                            }
+		                }
+		                disp_index++;
+                    }
+                    catch
+                    {
+                         disparities_index.Add(disp_index);
+                         finished = true;
+                    }
+                }
+
+                br.Close();
+                fs.Close();
+            }
+            else
+            {
+                Console.WriteLine("disparities index file " + disparities_index_filename + " not found");
             }            
         }
         
@@ -410,6 +477,55 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// Update the current grid with new mapping rays loaded from the disparities file
+        /// </summary>
+        /// <param name="body_width_mm">width of the robot body in millimetres</param>
+        /// <param name="body_length_mm">length of the robot body in millimetres</param>
+        /// <param name="body_centre_of_rotation_x">x centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="body_centre_of_rotation_y">y centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="body_centre_of_rotation_z">z centre of rotation of the robot, relative to the top left corner</param>
+        /// <param name="head_centroid_x">head centroid x position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_centroid_y">head centroid y position in millimetres relative to the top left corner of the body</param>
+        /// <param name="head_centroid_z">head centroid z position in millimetres relative to the top left corner of the body</param>
+        /// <param name="baseline_mm">stereo camera baseline in millimetres</param>
+        /// <param name="stereo_camera_position_x">stereo camera x position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_position_y">stereo camera y position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_position_z">stereo camera z position in millimetres relative to the head centroid</param>
+        /// <param name="stereo_camera_pan">stereo camera pan in radians relative to the head</param>
+        /// <param name="stereo_camera_tilt">stereo camera tilt in radians relative to the head</param>
+        /// <param name="stereo_camera_roll">stereo camera roll in radians relative to the head</param>
+        /// <param name="image_width">image width for each stereo camera</param>
+        /// <param name="image_height">image height for each stereo camera</param>
+        /// <param name="FOV_degrees">field of view for each stereo camera in degrees</param>
+        /// <param name="sensormodel">sensor model for each stereo camera</param>
+        protected void UpdateMap(
+		    float body_width_mm,
+		    float body_length_mm,
+		    float body_centre_of_rotation_x,
+		    float body_centre_of_rotation_y,
+		    float body_centre_of_rotation_z,
+		    float head_centroid_x,
+		    float head_centroid_y,
+		    float head_centroid_z,
+		    float[] baseline_mm,
+		    float[] stereo_camera_position_x,
+		    float[] stereo_camera_position_y,
+		    float[] stereo_camera_position_z,
+		    float[] stereo_camera_pan,
+		    float[] stereo_camera_tilt,
+		    float[] stereo_camera_roll,
+            int[] image_width,
+            int[] image_height,
+            float[] FOV_degrees,
+            stereoModel[] sensormodel)
+        {
+        
+            // TODO
+        
+        }
+
+
+        /// <summary>
         /// Localisation
         /// </summary>
         /// <param name="body_width_mm">width of the robot body in millimetres</param>
@@ -494,6 +610,15 @@ namespace sentience.core
             ref bool buffer_transition)
         {
             buffer_transition = false;
+            
+            bool insert_mapping_rays = false;
+            
+            // if this is the first time that localisation
+            // has been called since loading the path
+            // then update the map
+            if ((current_grid_index == 0) &&
+                (current_disparity_index == 0))
+                insert_mapping_rays = true;
         
             // distance to the centre of the currently active grid
             float dx = robot_pose.x - buffer[current_buffer_index].x;
@@ -517,6 +642,9 @@ namespace sentience.core
                     // move into the next grid
                     current_grid_index++;
                     
+                    // update the next map
+                    insert_mapping_rays = true;
+                    
                     // set the next grid centre                                    
                     SetNextPosition(
                         grid_centres[((current_grid_index+1) * 3)],
@@ -524,6 +652,31 @@ namespace sentience.core
                         grid_centres[((current_grid_index+1) * 3)] + 2);
                 }
                 buffer_transition = true;
+            }
+            
+            // create the map if necessary
+            if (insert_mapping_rays)
+            {
+                UpdateMap(
+		            body_width_mm,
+		            body_length_mm,
+		            body_centre_of_rotation_x,
+		            body_centre_of_rotation_y,
+		            body_centre_of_rotation_z,
+		            head_centroid_x,
+		            head_centroid_y,
+		            head_centroid_z,
+		            baseline_mm,
+		            stereo_camera_position_x,
+		            stereo_camera_position_y,
+		            stereo_camera_position_z,
+		            stereo_camera_pan,
+		            stereo_camera_tilt,
+		            stereo_camera_roll,
+                    image_width,
+                    image_height,
+                    FOV_degrees,
+                    sensormodel);
             }
         
             float matching_score = 
