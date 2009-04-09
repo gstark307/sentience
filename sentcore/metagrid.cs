@@ -295,91 +295,85 @@ namespace sentience.core
 		    float head_pan,
 		    float head_tilt,
 		    float head_roll,
-		    float[] baseline_mm,
-		    float[] stereo_camera_position_x,
-		    float[] stereo_camera_position_y,
-		    float[] stereo_camera_position_z,
-		    float[] stereo_camera_pan,
-		    float[] stereo_camera_tilt,
-		    float[] stereo_camera_roll,
-            int[] image_width,
-            int[] image_height,
-            float[] FOV_degrees,
-		    float[][] stereo_features,
-		    byte[][,] stereo_features_colour,
-		    float[][] stereo_features_uncertainties,
-            stereoModel[] sensormodel,
-            ref pos3D[] left_camera_location,
-            ref pos3D[] right_camera_location,
+		    float baseline_mm,
+		    float stereo_camera_position_x,
+		    float stereo_camera_position_y,
+		    float stereo_camera_position_z,
+		    float stereo_camera_pan,
+		    float stereo_camera_tilt,
+		    float stereo_camera_roll,
+            int image_width,
+            int image_height,
+            float FOV_degrees,
+		    float[] stereo_features,
+		    byte[,] stereo_features_colour,
+		    float[] stereo_features_uncertainties,
+            stereoModel sensormodel,
+            ref pos3D left_camera_location,
+            ref pos3D right_camera_location,
             pos3D robot_pose)
         {
             // positions of the left and right camera relative to the robots centre of rotation
             pos3D head_location = new pos3D(0,0,0);
-            left_camera_location = new pos3D[baseline_mm.Length];
-            right_camera_location = new pos3D[baseline_mm.Length];
-            pos3D[] camera_centre_location = new pos3D[baseline_mm.Length];
-            pos3D[] relative_left_cam = new pos3D[baseline_mm.Length];
-            pos3D[] relative_right_cam = new pos3D[baseline_mm.Length];
-            for (int cam = 0; cam < baseline_mm.Length; cam++)
-            {
-                occupancygridBase.calculateCameraPositions(
-		            body_width_mm,
-		            body_length_mm,
-		            body_centre_of_rotation_x,
-		            body_centre_of_rotation_y,
-		            body_centre_of_rotation_z,
-		            head_centroid_x,
-		            head_centroid_y,
-		            head_centroid_z,
-		            head_pan,
-		            head_tilt,
-		            head_roll,
-		            baseline_mm[cam],
-		            stereo_camera_position_x[cam],
-		            stereo_camera_position_y[cam],
-		            stereo_camera_position_z[cam],
-		            stereo_camera_pan[cam],
-		            stereo_camera_tilt[cam],
-		            stereo_camera_roll[cam],
-                    ref head_location,
-                    ref camera_centre_location[cam],
-                    ref relative_left_cam[cam],
-                    ref relative_right_cam[cam]);
-                                           
-                left_camera_location[cam] = relative_left_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
-                right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
-            }
+            pos3D camera_centre_location = null;
+            pos3D relative_left_cam = null;
+            pos3D relative_right_cam = null;
+			
+            occupancygridBase.calculateCameraPositions(
+	            body_width_mm,
+	            body_length_mm,
+	            body_centre_of_rotation_x,
+	            body_centre_of_rotation_y,
+	            body_centre_of_rotation_z,
+	            head_centroid_x,
+	            head_centroid_y,
+	            head_centroid_z,
+	            head_pan,
+	            head_tilt,
+	            head_roll,
+	            baseline_mm,
+	            stereo_camera_position_x,
+	            stereo_camera_position_y,
+	            stereo_camera_position_z,
+	            stereo_camera_pan,
+	            stereo_camera_tilt,
+	            stereo_camera_roll,
+                ref head_location,
+                ref camera_centre_location,
+                ref relative_left_cam,
+                ref relative_right_cam);
+                                       
+            left_camera_location = relative_left_cam.translate(robot_pose.x, robot_pose.y, robot_pose.z);
+            right_camera_location = relative_right_cam.translate(robot_pose.x, robot_pose.y, robot_pose.z);
 
             pos3D stereo_camera_centre = new pos3D(0, 0, 0);
 
             // update the grid
-            for (int cam = 0; cam < baseline_mm.Length; cam++)
+			
+            // centre position between the left and right cameras
+            stereo_camera_centre.x = left_camera_location.x + ((right_camera_location.x - left_camera_location.x) * 0.5f);
+            stereo_camera_centre.y = left_camera_location.y + ((right_camera_location.y - left_camera_location.y) * 0.5f);
+            stereo_camera_centre.z = left_camera_location.z + ((right_camera_location.z - left_camera_location.z) * 0.5f);
+            stereo_camera_centre.pan = left_camera_location.pan;
+            stereo_camera_centre.tilt = left_camera_location.tilt;
+            stereo_camera_centre.roll = left_camera_location.roll;
+
+            // create a set of stereo rays as observed from this pose
+            List<evidenceRay> rays = sensormodel.createObservation(
+                stereo_camera_centre,
+                baseline_mm,
+                image_width,
+                image_height,
+                FOV_degrees,
+                stereo_features,
+                stereo_features_colour,
+                stereo_features_uncertainties,
+                true);
+
+		    // insert rays into the occupancy grid
+            for (int r = 0; r < rays.Count; r++)
             {
-                // centre position between the left and right cameras
-                stereo_camera_centre.x = left_camera_location[cam].x + ((right_camera_location[cam].x - left_camera_location[cam].x) * 0.5f);
-                stereo_camera_centre.y = left_camera_location[cam].y + ((right_camera_location[cam].y - left_camera_location[cam].y) * 0.5f);
-                stereo_camera_centre.z = left_camera_location[cam].z + ((right_camera_location[cam].z - left_camera_location[cam].z) * 0.5f);
-                stereo_camera_centre.pan = left_camera_location[cam].pan;
-                stereo_camera_centre.tilt = left_camera_location[cam].tilt;
-                stereo_camera_centre.roll = left_camera_location[cam].roll;
-
-                // create a set of stereo rays as observed from this pose
-                List<evidenceRay> rays = sensormodel[cam].createObservation(
-                    stereo_camera_centre,
-                    baseline_mm[cam],
-                    image_width[cam],
-                    image_height[cam],
-                    FOV_degrees[cam],
-                    stereo_features[cam],
-                    stereo_features_colour[cam],
-                    stereo_features_uncertainties[cam],
-                    true);
-
-			    // insert rays into the occupancy grid
-                for (int r = 0; r < rays.Count; r++)
-                {
-                    Insert(rays[r], sensormodel[cam].ray_model, left_camera_location[cam], right_camera_location[cam], false);
-                }
+                Insert(rays[r], sensormodel.ray_model, left_camera_location, right_camera_location, false);
             }
         }
 

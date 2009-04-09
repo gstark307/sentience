@@ -42,6 +42,10 @@ namespace sentience.core
 		// index number in the disparities data
 		protected int current_disparity_index;
 		
+		protected FileStream disparities_file;
+		protected BinaryReader disparities_reader;
+		protected bool disparities_file_open;
+		
 		protected float dimension_mm;
 		
 		protected List<float> localisations;
@@ -106,6 +110,13 @@ namespace sentience.core
 		    current_buffer_index = 0;
 		    current_grid_index = 0;
 		    current_disparity_index = 0;
+			
+			// close the disparities file if it is still open
+			if (disparities_file_open)
+			{				
+				disparities_reader.Close();
+				disparities_file.Close();
+			}
 		}
 		
 		#endregion
@@ -196,60 +207,78 @@ namespace sentience.core
                 ShowPath(img, img_width, img_height, true, false);
                 BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
                 bmp.Save(filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+								
+	            if ((grid_centres.Count >= 2) &&
+	                (File.Exists(disparities_index_filename) &&
+				    (File.Exists(disparities_filename))))
+	            {
+	                fs = File.Open(disparities_index_filename, FileMode.Open);
+	                br = new BinaryReader(fs);
+	
+	                bool finished = false;
+	                int disp_index = 0;
+	                int grid_centres_index = 0;
+	                float grid_centre_x = grid_centres[grid_centres_index * 3];
+	                float grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
+	                while (!finished)
+	                {
+	                    try
+	                    {
+			                float position_x = br.ReadSingle();
+			                float position_y = br.ReadSingle();
+			                
+			                float dx = position_x - grid_centre_x;
+			                float dy = position_y - grid_centre_y;
+			                float dist_sqr = dx*dx + dy*dy;
+			                
+			                if (dist_sqr > half_dimension_sqr)
+			                {
+			                    if (grid_centres_index < grid_centres.Count/3)
+			                    {
+			                        disparities_index.Add(disp_index);
+	                                grid_centres_index++;
+	                                grid_centre_x = grid_centres[grid_centres_index * 3];
+	                                grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
+	                            }
+			                }
+			                disp_index++;
+	                    }
+	                    catch
+	                    {
+	                         disparities_index.Add(disp_index);
+	                         finished = true;
+	                    }
+	                }
+	
+	                br.Close();
+	                fs.Close();
+					
+					// open the main disparities file
+					try
+					{
+					    disparities_file = File.Open(disparities_filename, FileMode.Open);
+					    disparities_reader = new BinaryReader(disparities_file);
+						disparities_file_open = true;
+					}
+					catch
+					{
+					}
+	            }
+	            else
+	            {
+					if (!File.Exists(disparities_index_filename))
+	                    Console.WriteLine("disparities index file " + disparities_index_filename + " not found");
+					if (!File.Exists(disparities_filename))
+	                    Console.WriteLine("disparities file " + disparities_filename + " not found");
+					if (grid_centres.Count < 2) Console.WriteLine("Not enough grids");
+	            }            
+					
             }
             else
             {
                 Console.WriteLine("path file " + path_filename + " not found");
             }            
 
-            if ((grid_centres.Count >= 3) &&
-                (File.Exists(disparities_index_filename)))
-            {
-                FileStream fs = File.Open(disparities_index_filename, FileMode.Open);
-                BinaryReader br = new BinaryReader(fs);
-
-                bool finished = false;
-                int disp_index = 0;
-                int grid_centres_index = 0;
-                float grid_centre_x = grid_centres[grid_centres_index * 3];
-                float grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
-                while (!finished)
-                {
-                    try
-                    {
-		                float position_x = br.ReadSingle();
-		                float position_y = br.ReadSingle();
-		                
-		                float dx = position_x - grid_centre_x;
-		                float dy = position_y - grid_centre_y;
-		                float dist_sqr = dx*dx + dy*dy;
-		                
-		                if (dist_sqr > half_dimension_sqr)
-		                {
-		                    if (grid_centres_index < grid_centres.Count/3)
-		                    {
-		                        disparities_index.Add(disp_index);
-                                grid_centres_index++;
-                                grid_centre_x = grid_centres[grid_centres_index * 3];
-                                grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
-                            }
-		                }
-		                disp_index++;
-                    }
-                    catch
-                    {
-                         disparities_index.Add(disp_index);
-                         finished = true;
-                    }
-                }
-
-                br.Close();
-                fs.Close();
-            }
-            else
-            {
-                Console.WriteLine("disparities index file " + disparities_index_filename + " not found");
-            }            
         }
         
         public void ShowPath(
@@ -423,26 +452,26 @@ namespace sentience.core
 		    float head_pan,
 		    float head_tilt,
 		    float head_roll,
-		    float[] baseline_mm,
-		    float[] stereo_camera_position_x,
-		    float[] stereo_camera_position_y,
-		    float[] stereo_camera_position_z,
-		    float[] stereo_camera_pan,
-		    float[] stereo_camera_tilt,
-		    float[] stereo_camera_roll,
-            int[] image_width,
-            int[] image_height,
-            float[] FOV_degrees,
-		    float[][] stereo_features,
-		    byte[][,] stereo_features_colour,
-		    float[][] stereo_features_uncertainties,
-            stereoModel[] sensormodel,
+		    float baseline_mm,
+		    float stereo_camera_position_x,
+		    float stereo_camera_position_y,
+		    float stereo_camera_position_z,
+		    float stereo_camera_pan,
+		    float stereo_camera_tilt,
+		    float stereo_camera_roll,
+            int image_width,
+            int image_height,
+            float FOV_degrees,
+		    float[] stereo_features,
+		    byte[,] stereo_features_colour,
+		    float[] stereo_features_uncertainties,
+            stereoModel sensormodel,
             pos3D robot_pose)
         {        
 		    Parallel.For(0, 2, delegate(int i)
 		    {			
-                pos3D[] left_camera_location = null;
-                pos3D[] right_camera_location = null;
+                pos3D left_camera_location = null;
+                pos3D right_camera_location = null;
                 
                 buffer[i].Map(
 		            body_width_mm,
@@ -519,9 +548,79 @@ namespace sentience.core
             float[] FOV_degrees,
             stereoModel[] sensormodel)
         {
-        
-            // TODO
-        
+            if (disparities_file_open)
+			{
+				float[] stereo_features;
+				byte[,] stereo_features_colour;
+		        float[] stereo_features_uncertainties;
+				pos3D robot_pose = new pos3D(0,0,0);
+				
+				int next_disparity_index = disparities_index[current_grid_index];
+	            for (int i = current_disparity_index; i < next_disparity_index; i++)
+				{
+	                long time_long = disparities_reader.ReadInt64();
+	                robot_pose.x = disparities_reader.ReadSingle();
+					robot_pose.y = disparities_reader.ReadSingle();
+					robot_pose.pan = disparities_reader.ReadSingle();
+					float head_pan = disparities_reader.ReadSingle();
+					float head_tilt = disparities_reader.ReadSingle();
+					float head_roll = disparities_reader.ReadSingle();
+	                int stereo_camera_index = disparities_reader.ReadInt32();
+					int features_count = disparities_reader.ReadInt32();
+					
+					int ctr0 = 0;
+					stereo_features = new float[features_count*3];
+					stereo_features_colour = new byte[features_count,3];
+					stereo_features_uncertainties = new float[features_count];
+					
+	                for (int f = 0; f < features_count; f++)
+	                {
+						stereo_features_uncertainties[f] = 1;
+						stereo_features[ctr0++] = disparities_reader.ReadSingle();
+						stereo_features[ctr0++] = disparities_reader.ReadSingle();
+						stereo_features[ctr0++] = disparities_reader.ReadSingle();
+						stereo_features_colour[f, 0] = disparities_reader.ReadByte();
+						stereo_features_colour[f, 1] = disparities_reader.ReadByte();
+						stereo_features_colour[f, 2] = disparities_reader.ReadByte();
+	                }
+					
+					// insert the rays into the map
+                    Map(body_width_mm,
+		                body_length_mm,
+		                body_centre_of_rotation_x,
+		                body_centre_of_rotation_y,
+		                body_centre_of_rotation_z,
+		                head_centroid_x,
+		                head_centroid_y,
+		                head_centroid_z,
+		                head_pan,
+		                head_tilt,
+		                head_roll,
+		                baseline_mm[stereo_camera_index],
+		                stereo_camera_position_x[stereo_camera_index],
+		                stereo_camera_position_y[stereo_camera_index],
+		                stereo_camera_position_z[stereo_camera_index],
+		                stereo_camera_pan[stereo_camera_index],
+		                stereo_camera_tilt[stereo_camera_index],
+		                stereo_camera_roll[stereo_camera_index],
+                        image_width[stereo_camera_index],
+                        image_height[stereo_camera_index],
+                        FOV_degrees[stereo_camera_index],
+		                stereo_features,
+		                stereo_features_colour,
+		                stereo_features_uncertainties,
+                        sensormodel[stereo_camera_index],
+                        robot_pose);
+					
+					stereo_features = null;
+					stereo_features_colour = null;
+					stereo_features_uncertainties = null;
+				}
+			}
+			else
+			{
+				Console.WriteLine("disparities file not open");
+			}
         }
 
 
