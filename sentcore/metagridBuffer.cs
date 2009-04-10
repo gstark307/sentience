@@ -317,6 +317,19 @@ namespace sentience.core
             float h = by - ty;
             ty -= (h * 0.1f);
             by += (h * 0.1f);
+			
+			if (w > h)
+			{
+				float cy = ty + ((by - ty) / 2);
+				ty = cy - ((bx - tx)/2);
+				by = cy + ((bx - tx)/2);
+			}
+			else
+			{
+				float cx = tx + ((bx - tx) / 2);
+				tx = cx - ((by - ty)/2);
+				bx = cx + ((by - ty)/2);
+			}
 
             // show the path                        
             int prev_x = 0;
@@ -444,7 +457,7 @@ namespace sentience.core
         /// <param name="stereo_features_uncertainties">stereo feature uncertainties (priors) for each stereo camera</param>
         /// <param name="sensormodel">sensor model for each stereo camera</param>
         /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation</param>
-        public void Map(
+        protected void Map(
 		    float body_width_mm,
 		    float body_length_mm,
 		    float body_centre_of_rotation_x,

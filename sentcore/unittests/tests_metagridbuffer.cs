@@ -139,7 +139,7 @@ namespace sentience.core.tests
 			bw.Write(packed_stereo_features2_compressed.Length);
 			bw.Write(packed_stereo_features2_compressed);
 
-			// compress the colour data and write it to file
+			// compress the colour data and write it to file			
 			byte[] packed_stereo_feature_colours_compressed = AcedDeflator.Instance.Compress(packed_stereo_feature_colours, 0, packed_stereo_feature_colours.Length, AcedCompressionLevel.Fastest, 0, 0);
 			bw.Write(packed_stereo_feature_colours_compressed.Length);
 			bw.Write(packed_stereo_feature_colours_compressed);							
@@ -234,7 +234,8 @@ namespace sentience.core.tests
 		    float path_length_mm,
 		    float start_orientation,
 		    float end_orientation,
-		    float distance_between_poses_mm)
+		    float distance_between_poses_mm,
+		    ref List<OdometryData> save_path)
         {
             string[] str = filename.Split('.');
 			int no_of_stereo_features = 300;
@@ -243,7 +244,7 @@ namespace sentience.core.tests
 			float x_mm = start_x_mm, y_mm = start_y_mm;
 			float orientation = start_orientation;
 			int steps = (int)(path_length_mm / distance_between_poses_mm);
-			List<OdometryData> save_path = new List<OdometryData>();
+			save_path = new List<OdometryData>();
 			Random rnd = new Random(0);
 			
 			if (File.Exists(str[0] + "_disparities_index.dat"))
@@ -325,19 +326,21 @@ namespace sentience.core.tests
 		public void LoadPath()
 		{
 		    string filename = "load_path.dat";
-		    float path_length_mm = 50000;
+		    float path_length_mm = 10000;
 		    float start_orientation = 0;
-		    float end_orientation = 40 * (float)Math.PI / 180.0f;
+		    float end_orientation = 90 * (float)Math.PI / 180.0f;
 		    float distance_between_poses_mm = 100;
 			
 			string[] str = filename.Split('.');
 				
+			List<OdometryData> path = null;
             SavePath(
 		        filename,
 		        path_length_mm,
 		        start_orientation,
 		        end_orientation,
-		        distance_between_poses_mm);
+		        distance_between_poses_mm,
+			    ref path);
 			
 			Assert.AreEqual(true, File.Exists(filename));
 			Assert.AreEqual(true, File.Exists(str[0] + "_disparities_index.dat"));
@@ -373,7 +376,196 @@ namespace sentience.core.tests
             BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
             bmp.Save("load_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
         }		
-		
+
+		[Test()]
+		public void LocaliseAlongPath()
+		{
+		    string filename = "localise_along_path.dat";
+		    float path_length_mm = 10000;
+		    float start_orientation = 0;
+		    float end_orientation = 90 * (float)Math.PI / 180.0f;
+		    float distance_between_poses_mm = 100;
+			
+			string[] str = filename.Split('.');
+				
+			List<OdometryData> path = null;
+            SavePath(
+		        filename,
+		        path_length_mm,
+		        start_orientation,
+		        end_orientation,
+		        distance_between_poses_mm,
+			    ref path);
+			
+			Assert.AreEqual(true, File.Exists(filename));
+			Assert.AreEqual(true, File.Exists(str[0] + "_disparities_index.dat"));
+			Assert.AreEqual(true, File.Exists(str[0] + "_disparities.dat"));
+
+            int no_of_grids = 2;
+            int grid_type = metagrid.TYPE_SIMPLE;
+            int dimension_mm = 3000;
+            int dimension_vertical_mm = 2000;
+            int cellSize_mm = 32;
+            int localisationRadius_mm = 2000;
+            int maxMappingRange_mm = 2000;
+            float vacancyWeighting = 0.5f;
+
+            metagridBuffer buffer =
+                new metagridBuffer(
+                    no_of_grids,
+                    grid_type,
+                    dimension_mm,
+                    dimension_vertical_mm,
+                    cellSize_mm,
+                    localisationRadius_mm,
+                    maxMappingRange_mm,
+                    vacancyWeighting);
+
+            buffer.LoadPath(filename, str[0] + "_disparities_index.dat", str[0] + "_disparities.dat");
+            
+            int img_width = 640;
+            int img_height = 480;
+            byte[] img = new byte[img_width * img_height * 3];
+            Bitmap bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            buffer.ShowPath(img, img_width, img_height, true, true);
+            BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+            bmp.Save("localise_along_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			
+			int no_of_stereo_features = 200;
+		    float body_width_mm = 400;
+		    float body_length_mm = 400;
+		    float body_centre_of_rotation_x = body_width_mm/2;
+		    float body_centre_of_rotation_y = body_length_mm/2;
+		    float body_centre_of_rotation_z = 0;
+		    float head_centroid_x = body_width_mm/2;
+		    float head_centroid_y = body_length_mm/2;
+		    float head_centroid_z = 0;
+		    float head_pan = 0;
+		    float head_tilt = 0;
+		    float head_roll = 0;
+		    float[] baseline_mm = { 100 };
+		    float[] stereo_camera_position_x = { 0 };
+		    float[] stereo_camera_position_y = { 0 };
+		    float[] stereo_camera_position_z = { 0 };
+		    float[] stereo_camera_pan = { 0 };
+		    float[] stereo_camera_tilt = { 0 };
+		    float[] stereo_camera_roll = { 0 };
+            int[] image_width = { 640 };
+            int[] image_height = { 480 };
+            float[] FOV_degrees = { 78 };
+            pos3D[] left_camera_location = new pos3D[1];
+            pos3D[] right_camera_location = new pos3D[1];
+            int no_of_samples= 200;
+            float sampling_radius_major_mm = 50;
+            float sampling_radius_minor_mm = 40;
+            pos3D robot_pose = new pos3D(0,0,0);
+            float max_orientation_variance = 10 * (float)Math.PI / 180.0f;
+            float max_tilt_variance = 0;
+            float max_roll_variance = 0;
+            List<pos3D> poses = null;
+            List<float> pose_score = null;
+		    Random rnd = new Random(0);
+            pos3D pose_offset = null;
+            bool buffer_transition = false;
+
+			float disparity = 2;
+		    float[][] stereo_features = new float[1][];
+		    byte[][,] stereo_features_colour = new byte[1][,];
+		    float[][] stereo_features_uncertainties = new float[1][];
+			stereo_features_uncertainties[0] = new float[no_of_stereo_features];
+			for (int i = 0; i < no_of_stereo_features; i++)
+				stereo_features_uncertainties[0][i] = 1;
+
+			stereoModel[] sensormodel = new stereoModel[1];
+			sensormodel[0] = new stereoModel();
+			sensormodel[0].createLookupTable(cellSize_mm, image_width[0], image_height[0]);
+			
+			List<OdometryData> estimated_path = new List<OdometryData>();
+			
+			for (int i = 0; i < path.Count-1; i += 5)
+			{
+				OdometryData p0 = path[i];
+				OdometryData p1 = path[i + 1];
+				
+				// create an intermediate pose
+				robot_pose.x = p0.x + ((p1.x - p0.x)/2);
+				robot_pose.y = p0.y + ((p1.y - p0.y)/2);
+				robot_pose.z = 0;
+				robot_pose.pan = p0.orientation + ((p1.orientation - p0.orientation)/2);
+				
+				// create stereo features
+				int ctr = 0;
+				stereo_features[0] = new float[no_of_stereo_features * 3];
+				stereo_features_colour[0] = new byte[no_of_stereo_features, 3];
+				for (int f = 0; f < no_of_stereo_features; f++)
+				{
+					if (f < no_of_stereo_features/2)
+					{
+						stereo_features[0][ctr++] = 100;
+						stereo_features[0][ctr++] = rnd.Next(479);
+					}
+					else
+					{
+						stereo_features[0][ctr++] = 540;
+						stereo_features[0][ctr++] = rnd.Next(470);
+					}
+				    stereo_features[0][ctr++] = disparity;
+				}
+				
+                buffer.Localise(
+				    body_width_mm,
+				    body_length_mm,
+				    body_centre_of_rotation_x,
+				    body_centre_of_rotation_y,
+				    body_centre_of_rotation_z,
+				    head_centroid_x,
+				    head_centroid_y,
+				    head_centroid_z,
+				    head_pan,
+				    head_tilt,
+				    head_roll,
+				    baseline_mm,
+				    stereo_camera_position_x,
+				    stereo_camera_position_y,
+				    stereo_camera_position_z,
+				    stereo_camera_pan,
+				    stereo_camera_tilt,
+				    stereo_camera_roll,
+		            image_width,
+		            image_height,
+		            FOV_degrees,
+				    stereo_features,
+				    stereo_features_colour,
+				    stereo_features_uncertainties,
+		            sensormodel,
+		            ref left_camera_location,
+		            ref right_camera_location,
+		            no_of_samples,
+		            sampling_radius_major_mm,
+		            sampling_radius_minor_mm,
+		            robot_pose,
+		            max_orientation_variance,
+		            max_tilt_variance,
+		            max_roll_variance,
+		            poses,
+		            pose_score,
+				    rnd,
+		            ref pose_offset,
+		            ref buffer_transition);
+				
+				Console.WriteLine("pose_offset (mm): " + pose_offset.x.ToString() + ", " + pose_offset.y.ToString() + ", " + pose_offset.pan.ToString());
+				OdometryData estimated_pose = new OdometryData();
+				estimated_pose.x = robot_pose.x + pose_offset.x;
+				estimated_pose.y = robot_pose.y + pose_offset.y;
+				estimated_pose.orientation = robot_pose.pan + pose_offset.pan;
+				estimated_path.Add(estimated_pose);
+			}
+			
+            buffer.ShowPath(img, img_width, img_height, true, true);
+            BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+            bmp.Save("localise_along_path2.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+        }		
+				
 		[Test()]
 		public void Create()
 		{
