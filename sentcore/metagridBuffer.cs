@@ -22,6 +22,7 @@ using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
 using sluggish.utilities;
+using Aced.Compression;
 
 namespace sentience.core
 {
@@ -568,20 +569,28 @@ namespace sentience.core
 	                int stereo_camera_index = disparities_reader.ReadInt32();
 					int features_count = disparities_reader.ReadInt32();
 					
-					int ctr0 = 0;
-					stereo_features = new float[features_count*3];
+					int features_bytes = disparities_reader.ReadInt32();
+					byte[] fb = new byte[features_bytes];	
+					disparities_reader.Read(fb, 0, features_bytes);
+					byte[] packed_stereo_features2 = AcedInflator.Instance.Decompress(fb, 0, 0, 0);
+					stereo_features = ArrayConversions.ToFloatArray(packed_stereo_features2);
+
+					int colour_bytes = disparities_reader.ReadInt32();
+					byte[] cb = new byte[colour_bytes];
+					disparities_reader.Read(cb, 0, colour_bytes);
+					byte[] packed_stereo_feature_colours = AcedInflator.Instance.Decompress(cb, 0, 0, 0);
+					
+					// unpack stereo features
+					int ctr = 0;
 					stereo_features_colour = new byte[features_count,3];
 					stereo_features_uncertainties = new float[features_count];
 					
 	                for (int f = 0; f < features_count; f++)
 	                {
 						stereo_features_uncertainties[f] = 1;
-						stereo_features[ctr0++] = disparities_reader.ReadSingle();
-						stereo_features[ctr0++] = disparities_reader.ReadSingle();
-						stereo_features[ctr0++] = disparities_reader.ReadSingle();
-						stereo_features_colour[f, 0] = disparities_reader.ReadByte();
-						stereo_features_colour[f, 1] = disparities_reader.ReadByte();
-						stereo_features_colour[f, 2] = disparities_reader.ReadByte();
+						stereo_features_colour[f, 0] = packed_stereo_feature_colours[ctr++];
+						stereo_features_colour[f, 1] = packed_stereo_feature_colours[ctr++];
+						stereo_features_colour[f, 2] = packed_stereo_feature_colours[ctr++];
 	                }
 					
 					// insert the rays into the map

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -13,7 +13,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -46,11 +46,11 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <ProjectReference Include="..\..\sentcore\sentcore.csproj">
-      <Project>{C52357E0-3E32-4690-9F0B-696352412DB6}</Project>
+      <Project>{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}</Project>
       <Name>sentcore</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\utilities\utilities.csproj">
-      <Project>{3028A130-2D88-4581-B9F9-D840FA39875D}</Project>
+      <Project>{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}</Project>
       <Name>utilities</Name>
     </ProjectReference>
   </ItemGroup>

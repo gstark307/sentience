@@ -129,6 +129,11 @@
     <Compile Include="gridCells.cs" />
     <Compile Include="unittests\tests_gridCells.cs" />
     <Compile Include="metagridBuffer.cs" />
+    <Compile Include="memcompressor\Consts.cs" />
+    <Compile Include="memcompressor\Deflator.cs" />
+    <Compile Include="memcompressor\Inflator.cs" />
+    <Compile Include="memcompressor\Utils.cs" />
+    <Compile Include="unittests\tests_metagridbuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENCE.txt" />

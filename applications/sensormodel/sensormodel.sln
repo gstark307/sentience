@@ -17,10 +17,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00157781-7254-481B-8229-58E18AEF65F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00157781-7254-481B-8229-58E18AEF65F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00157781-7254-481B-8229-58E18AEF65F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00157781-7254-481B-8229-58E18AEF65F9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3028A130-2D88-4581-B9F9-D840FA39875D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3028A130-2D88-4581-B9F9-D840FA39875D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3028A130-2D88-4581-B9F9-D840FA39875D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -29,21 +29,21 @@ Global
 		{37F539C1-BAD3-4C42-A665-6CA932951A75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37F539C1-BAD3-4C42-A665-6CA932951A75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37F539C1-BAD3-4C42-A665-6CA932951A75}.Release|Any CPU.Build.0 = Release|Any CPU
-		{00157781-7254-481B-8229-58E18AEF65F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{00157781-7254-481B-8229-58E18AEF65F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{00157781-7254-481B-8229-58E18AEF65F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{00157781-7254-481B-8229-58E18AEF65F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AC0140B-9EF9-4E97-A4A6-8CC3023C8AD5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C52357E0-3E32-4690-9F0B-696352412DB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C52357E0-3E32-4690-9F0B-696352412DB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C52357E0-3E32-4690-9F0B-696352412DB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C52357E0-3E32-4690-9F0B-696352412DB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		name = sensormodel
 		version = 0.1
 		StartupItem = sensormodel.csproj
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
