@@ -363,7 +363,7 @@ namespace sentience.core
             if (show_localisations)
             {
                 int radius = (int)(200 * img_width / (bx - tx));
-	            for (int i = 0; i < localisations.Count; i += 4)
+	            for (int i = 0; i < localisations.Count; i += 5)
 	            {
 	                int x = (int)((localisations[i] - tx) * img_width / (bx - tx));
 	                int y = img_height - 1 - (int)((localisations[i + 1] - ty) * img_height / (by - ty));
@@ -565,6 +565,8 @@ namespace sentience.core
             float[] FOV_degrees,
             stereoModel[] sensormodel)
         {
+            const bool use_compression = false;
+
             if (disparities_file_open)
 			{
 				float[] stereo_features;
@@ -584,17 +586,35 @@ namespace sentience.core
 					float head_roll = disparities_reader.ReadSingle();
 	                int stereo_camera_index = disparities_reader.ReadInt32();
 					int features_count = disparities_reader.ReadInt32();
-					
-					int features_bytes = disparities_reader.ReadInt32();
-					byte[] fb = new byte[features_bytes];	
-					disparities_reader.Read(fb, 0, features_bytes);
-					byte[] packed_stereo_features2 = AcedInflator.Instance.Decompress(fb, 0, 0, 0);
-					stereo_features = ArrayConversions.ToFloatArray(packed_stereo_features2);
 
-					int colour_bytes = disparities_reader.ReadInt32();
-					byte[] cb = new byte[colour_bytes];
-					disparities_reader.Read(cb, 0, colour_bytes);
-					byte[] packed_stereo_feature_colours = AcedInflator.Instance.Decompress(cb, 0, 0, 0);
+                    if (use_compression)
+                    {
+                        int features_bytes = disparities_reader.ReadInt32();
+                        byte[] fb = new byte[features_bytes];
+                        disparities_reader.Read(fb, 0, features_bytes);
+                        byte[] packed_stereo_features2 = AcedInflator.Instance.Decompress(fb, 0, 0, 0);
+                        stereo_features = ArrayConversions.ToFloatArray(packed_stereo_features2);
+                    }
+                    else
+                    {
+                        byte[] fb = new byte[features_count * 3 * 4];
+                        disparities_reader.Read(fb, 0, fb.Length);
+                        stereo_features = ArrayConversions.ToFloatArray(fb);
+                    }
+
+                    byte[] packed_stereo_feature_colours = null;
+                    if (use_compression)
+                    {
+                        int colour_bytes = disparities_reader.ReadInt32();
+                        byte[] cb = new byte[colour_bytes];
+                        disparities_reader.Read(cb, 0, colour_bytes);
+                        packed_stereo_feature_colours = AcedInflator.Instance.Decompress(cb, 0, 0, 0);
+                    }
+                    else
+                    {
+                        packed_stereo_feature_colours = new byte[features_count * 3];
+                        disparities_reader.Read(packed_stereo_feature_colours, 0, packed_stereo_feature_colours.Length);
+                    }
 					
 					// unpack stereo features
 					int ctr = 0;
@@ -731,7 +751,8 @@ namespace sentience.core
             List<float> pose_score,
 		    Random rnd,
             ref pos3D pose_offset,
-            ref bool buffer_transition)
+            ref bool buffer_transition,
+            string debug_mapping_filename)
         {
             buffer_transition = false;
             
@@ -756,21 +777,28 @@ namespace sentience.core
             
             // if we are closer to the next grid than the current one
             // then swap the currently active grid
+            //if (dist_to_grid_centre_sqr_0 > dimension_mm/2)
             if (dist_to_grid_centre_sqr_1 < dist_to_grid_centre_sqr_0)
             {
                 current_buffer_index = 1 - current_buffer_index;
-                if (current_grid_index < (grid_centres.Count/3) - 1)
+                if (current_grid_index < (grid_centres.Count / 3) - 1)
                 {
                     buffer[1 - current_buffer_index].Clear();
-                    
+
                     // move into the next grid
                     current_grid_index++;
-                    
+
                     // update the next map
                     insert_mapping_rays = true;
-                    
-                    // set the next grid centre                                    
-                    SetNextPosition(
+
+                    // set the next grid centre
+                    SetPosition(
+                        current_buffer_index,
+                        grid_centres[(current_grid_index * 3)],
+                        grid_centres[(current_grid_index * 3)] + 1,
+                        grid_centres[(current_grid_index * 3)] + 2);
+                    SetPosition(
+                        1 - current_buffer_index,
                         grid_centres[((current_grid_index+1) * 3)],
                         grid_centres[((current_grid_index+1) * 3)] + 1,
                         grid_centres[((current_grid_index+1) * 3)] + 2);
@@ -801,6 +829,25 @@ namespace sentience.core
                     image_height,
                     FOV_degrees,
                     sensormodel);
+
+                if ((debug_mapping_filename != null) &&
+                    (debug_mapping_filename != ""))
+                {
+                    int debug_img_width = 640;
+                    int debug_img_height = 480;
+                    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+                    buffer[current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
+                    Bitmap debug_bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    BitmapArrayConversions.updatebitmap_unsafe(debug_img, debug_bmp);
+                    if (debug_mapping_filename.ToLower().EndsWith("png"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Png);
+                    if (debug_mapping_filename.ToLower().EndsWith("gif"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Gif);
+                    if (debug_mapping_filename.ToLower().EndsWith("jpg"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    if (debug_mapping_filename.ToLower().EndsWith("bmp"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+                }
             }
         
             float matching_score = 

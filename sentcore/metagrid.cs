@@ -520,9 +520,15 @@ namespace sentience.core
 
             pos3D stereo_camera_centre = new pos3D(0, 0, 0);
 
+            pose_score.Clear();
+            for (int p = 0; p < poses.Count; p++)
+            {
+                pose_score.Add(0);
+            }
+
             // try a number of random poses
 			// we can do this in parallel
-		    Parallel.For(0, no_of_samples, delegate(int i)
+		    Parallel.For(0, poses.Count, delegate(int i)
 		    {			
                 pos3D sample_pose = poses[i];
                 
@@ -581,7 +587,7 @@ namespace sentience.core
 				sample_pose.pan -= robot_pose.pan;
 				sample_pose.tilt -= robot_pose.tilt;
 				sample_pose.roll -= robot_pose.roll;				
-                pose_score.Add(matching_score);
+                pose_score[i] = matching_score;
             });
 
 			// locate the best possible pose
