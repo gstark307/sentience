@@ -268,9 +268,10 @@ namespace sentience.core.tests
 					    feat = new StereoFeatureTest(100, rnd.Next(479), disparity);
 					else
 						feat = new StereoFeatureTest(540, rnd.Next(479), disparity);
+                    feat.SetColour(0, 0, 0);
 					features.Add(feat);
 				}
-				
+
                 ProcessPose(
 		            str[0],
 		            DateTime.Now,
@@ -324,7 +325,7 @@ namespace sentience.core.tests
 		public void LoadPath()
 		{
 		    string filename = "load_path.dat";
-		    float path_length_mm = 10000;
+		    float path_length_mm = 50000;
 		    float start_orientation = 0;
 		    float end_orientation = 40 * (float)Math.PI / 180.0f;
 		    float distance_between_poses_mm = 100;
@@ -341,7 +342,37 @@ namespace sentience.core.tests
 			Assert.AreEqual(true, File.Exists(filename));
 			Assert.AreEqual(true, File.Exists(str[0] + "_disparities_index.dat"));
 			Assert.AreEqual(true, File.Exists(str[0] + "_disparities.dat"));
-		}		
+
+            int no_of_grids = 2;
+            int grid_type = metagrid.TYPE_SIMPLE;
+            int dimension_mm = 3000;
+            int dimension_vertical_mm = 2000;
+            int cellSize_mm = 32;
+            int localisationRadius_mm = 2000;
+            int maxMappingRange_mm = 2000;
+            float vacancyWeighting = 0.5f;
+
+            metagridBuffer buffer =
+                new metagridBuffer(
+                    no_of_grids,
+                    grid_type,
+                    dimension_mm,
+                    dimension_vertical_mm,
+                    cellSize_mm,
+                    localisationRadius_mm,
+                    maxMappingRange_mm,
+                    vacancyWeighting);
+
+            buffer.LoadPath(filename, str[0] + "_disparities_index.dat", str[0] + "_disparities.dat");
+            
+            int img_width = 640;
+            int img_height = 480;
+            byte[] img = new byte[img_width * img_height * 3];
+            buffer.ShowPath(img, img_width, img_height, true, true);
+            Bitmap bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+            bmp.Save("load_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+        }		
 		
 		[Test()]
 		public void Create()

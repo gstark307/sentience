@@ -124,7 +124,7 @@ namespace sentience.core
 		
 		#region "loading a path"
 		
-		// x,y coordinates along the path in millimetres
+		// x,y,z coordinates along the path in millimetres
 		protected List<float> path;
 		
 		// file containing stereo disparities observations taken along a path
@@ -159,6 +159,9 @@ namespace sentience.core
                     OdometryData data = OdometryData.Read(br);
                     path.Add(data.x);
                     path.Add(data.y);
+                    path.Add(0.0f);
+
+                    //Console.WriteLine("x: " + data.x.ToString() + "  y: " + data.y.ToString());
                     
                     if (t == 0)
                     {
