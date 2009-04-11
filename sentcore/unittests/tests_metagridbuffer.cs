@@ -399,11 +399,11 @@ namespace sentience.core.tests
 		public static void LocaliseAlongPath()
 		{
             // systematic bias
-            float bias_x_mm = 5;
-            float bias_y_mm = 0;
+            float bias_x_mm = 0;
+            float bias_y_mm = 20;
 
 		    string filename = "localise_along_path.dat";
-		    float path_length_mm = 100000;
+		    float path_length_mm = 20000;
 		    float start_orientation = 0;
 		    float end_orientation = 90 * (float)Math.PI / 180.0f;
 		    float distance_between_poses_mm = 100;
@@ -479,7 +479,7 @@ namespace sentience.core.tests
             float[] FOV_degrees = { 78 };
             pos3D[] left_camera_location = new pos3D[1];
             pos3D[] right_camera_location = new pos3D[1];
-            int no_of_samples= 200;
+            int no_of_samples = 300;
             float sampling_radius_major_mm = 50;
             float sampling_radius_minor_mm = 40;
             pos3D robot_pose = new pos3D(0,0,0);
