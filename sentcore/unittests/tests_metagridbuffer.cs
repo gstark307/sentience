@@ -591,6 +591,10 @@ namespace sentience.core.tests
                 average_offset_y_mm += pose_offset.y;
 			}
 
+            buffer.ShowPath(img, img_width, img_height, true, true);
+            BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+            bmp.Save("localise_along_path2.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+
             average_offset_x_mm /= estimated_path.Count;
             average_offset_y_mm /= estimated_path.Count;
             Console.WriteLine("Average offsets: " + average_offset_x_mm.ToString() + ", " + average_offset_y_mm.ToString());
@@ -598,11 +602,7 @@ namespace sentience.core.tests
             float diff_x_mm = Math.Abs(average_offset_x_mm - bias_x_mm);
             float diff_y_mm = Math.Abs(average_offset_y_mm - bias_y_mm);
             Assert.Less(diff_x_mm, 1.0f, "x bias not detected");
-            Assert.Less(diff_y_mm, 1.0f, "y bias not detected");
-			
-            buffer.ShowPath(img, img_width, img_height, true, true);
-            BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
-            bmp.Save("localise_along_path2.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+            Assert.Less(diff_y_mm, 1.0f, "y bias not detected");			
         }		
 				
 		[Test()]
@@ -636,5 +636,79 @@ namespace sentience.core.tests
 			
 			buffer.Reset();
 		}
+
+        [Test()]
+        public void MoveToNextLocalGrid()
+        {
+            int no_of_grids = 2;
+            int grid_type = metagrid.TYPE_SIMPLE;
+		    int dimension_mm = 3000;
+            int dimension_vertical_mm = 2000; 
+            int cellSize_mm = 32; 
+            int localisationRadius_mm = 2000;
+            int maxMappingRange_mm = 2000;
+            float vacancyWeighting = 0.5f;
+
+            int current_grid_index = 0;
+            int current_disparity_index = 0;
+            pos3D robot_pose = new pos3D(0,0,0);
+            metagrid[] buffer = new metagrid[2];
+            int current_buffer_index = 0;
+            List<float> grid_centres = new List<float>();
+            bool update_map = false;
+
+            float grid_centre_x_mm;
+            float grid_centre_y_mm;
+            float grid_centre_z_mm;
+
+            // create some grid centres along a straight line path
+            float path_length_mm = 10000;
+            int steps = (int)(path_length_mm / (dimension_mm/2));
+            for (int i = 0; i < steps; i++)
+            {
+                grid_centre_x_mm = 0;
+                grid_centre_y_mm = i * path_length_mm / steps;
+                grid_centre_z_mm = 0;
+                grid_centres.Add(grid_centre_x_mm);
+                grid_centres.Add(grid_centre_y_mm);
+                grid_centres.Add(grid_centre_z_mm);
+            }
+
+            // create the buffer
+            for (int i = 0; i < 2; i++)
+            {
+                buffer[i] = new metagrid(
+                    no_of_grids,
+                    grid_type,
+                    dimension_mm,
+                    dimension_vertical_mm,
+                    cellSize_mm,
+                    localisationRadius_mm,
+                    maxMappingRange_mm,
+                    vacancyWeighting);
+            }
+
+            // move along a straight line path
+            int transitions = 0;
+            for (int y = 0; y < path_length_mm; y += 100)
+            {
+                robot_pose.y = y;
+
+                if (metagridBuffer.MoveToNextLocalGrid(
+                    ref current_grid_index,
+                    ref current_disparity_index,
+                    robot_pose,
+                    buffer,
+                    ref current_buffer_index,
+                    grid_centres,
+                    ref update_map))
+                {
+                    transitions++;
+                }
+                current_disparity_index = 1;
+            }
+            Assert.AreEqual(steps - 1, transitions, "Incorrect number of local grid transitions");
+            Assert.AreEqual(steps - 1, current_grid_index, "Did not reach the final grid");
+        }
 	}
 }

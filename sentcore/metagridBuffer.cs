@@ -659,8 +659,9 @@ namespace sentience.core
 					
 					stereo_features = null;
 					stereo_features_colour = null;
-					stereo_features_uncertainties = null;
+					stereo_features_uncertainties = null;                    
 				}
+                current_disparity_index = next_disparity_index;
 			}
 			else
 			{
@@ -668,6 +669,117 @@ namespace sentience.core
 			}
         }
 
+        /// <summary>
+        /// swaps the two metagrids, clears the previous grid and assigns it the next centre position
+        /// </summary>
+        /// <param name="grid_centres">list of grid centre positions (x,y,z)</param>
+        /// <param name="current_grid_index">index of the current grid which we are in</param>
+        /// <param name="buffer">grid buffer, consisting of two metagrids</param>
+        /// <param name="current_buffer_index">index of the currently active buffer - i.e. which of the two we are currently in</param>
+        /// <param name="update_map">returns whether or not to update with new mapping rays</param>
+        public static void SwapBuffers(
+            List<float> grid_centres,
+            ref int current_grid_index,
+            metagrid[] buffer,
+            ref int current_buffer_index,
+            ref bool update_map)
+        {
+            int no_of_grids = grid_centres.Count / 3;
+            current_buffer_index = 1 - current_buffer_index;
+            if (current_grid_index < no_of_grids)
+            {
+                // move into the next grid
+                current_grid_index++;
+
+                if (current_grid_index < no_of_grids - 1)
+                {
+                    // clear the grid which we have just passed through
+                    buffer[1 - current_buffer_index].Clear();
+
+                    // update the next map
+                    update_map = true;
+
+                    // retrieve the next grid centre position
+                    float next_grid_centre_x = grid_centres[((current_grid_index + 1) * 3)];
+                    float next_grid_centre_y = grid_centres[((current_grid_index + 1) * 3) + 1];
+                    float next_grid_centre_z = grid_centres[((current_grid_index + 1) * 3) + 2];
+
+                    // set the next grid centre
+                    buffer[1 - current_buffer_index].SetPosition(next_grid_centre_x, next_grid_centre_y, next_grid_centre_z, 0.0f);
+                }
+            }
+        }
+
+        /// <summary>
+        /// moves to the next grid in the sequence, if necessary
+        /// </summary>
+        /// <param name="current_grid_index">index of the current local grid</param>
+        /// <param name="current_disparity_index">index of teh current disparities set within the disparities file</param>
+        /// <param name="robot_pose">the current robot pose</param>
+        /// <param name="buffer">buffer containing two metagrids</param>
+        /// <param name="current_buffer_index">index of the currently active grid within the buffer (0 or 1)</param>
+        /// <param name="grid_centres">list of grid centre positions (x,y,z)</param>
+        /// <param name="update_map">returns whether the map should be updated</param>
+        /// <returns>true if we have transitioned from one grid to the next</returns>
+        public static bool MoveToNextLocalGrid(
+            ref int current_grid_index,
+            ref int current_disparity_index,
+            pos3D robot_pose,
+            metagrid[] buffer,
+            ref int current_buffer_index,
+            List<float> grid_centres,
+            ref bool update_map)
+        {
+            bool buffer_transition = false;
+            update_map = false;
+            
+            // if this is the first time that localisation
+            // has been called since loading the path
+            // then update the map
+            if ((current_grid_index == 0) &&
+                (current_disparity_index == 0))
+            {
+                update_map = true;
+
+                float grid_centre_x_mm = grid_centres[current_grid_index * 3];
+                float grid_centre_y_mm = grid_centres[(current_grid_index * 3) + 1];
+                float grid_centre_z_mm = grid_centres[(current_grid_index * 3) + 2];
+                buffer[current_buffer_index].SetPosition(grid_centre_x_mm, grid_centre_y_mm, grid_centre_z_mm, 0);
+                int next_grid_index = current_grid_index + 1;
+                if (next_grid_index >= grid_centres.Count / 3) next_grid_index = current_grid_index;
+                grid_centre_x_mm = grid_centres[next_grid_index * 3];
+                grid_centre_y_mm = grid_centres[(next_grid_index * 3) + 1];
+                grid_centre_z_mm = grid_centres[(next_grid_index * 3) + 2];
+                buffer[1 - current_buffer_index].SetPosition(grid_centre_x_mm, grid_centre_y_mm, grid_centre_z_mm, 0);
+            }
+        
+            // distance to the centre of the currently active grid
+            float dx = robot_pose.x - buffer[current_buffer_index].x;
+            float dy = robot_pose.y - buffer[current_buffer_index].y;
+            float dz = robot_pose.z - buffer[current_buffer_index].z;
+            float dist_to_grid_centre_sqr_0 = dx*dx + dy*dy + dz*dz;
+            dx = robot_pose.x - buffer[1 - current_buffer_index].x;
+            dy = robot_pose.y - buffer[1 - current_buffer_index].y;
+            dz = robot_pose.z - buffer[1 - current_buffer_index].z;
+            float dist_to_grid_centre_sqr_1 = dx*dx + dy*dy + dz*dz;
+            
+            // if we are closer to the next grid than the current one
+            // then swap the currently active grid
+            //if (dist_to_grid_centre_sqr_0 > dimension_mm/2)
+            if (dist_to_grid_centre_sqr_1 < dist_to_grid_centre_sqr_0)
+            {
+                // swap the two metagrids
+                SwapBuffers(
+                    grid_centres,
+                    ref current_grid_index,
+                    buffer,
+                    ref current_buffer_index,
+                    ref update_map);
+
+                buffer_transition = true;
+            }
+            return(buffer_transition);
+        }
 
         /// <summary>
         /// Localisation
@@ -754,60 +866,20 @@ namespace sentience.core
             ref bool buffer_transition,
             string debug_mapping_filename)
         {
-            buffer_transition = false;
-            
-            bool insert_mapping_rays = false;
-            
-            // if this is the first time that localisation
-            // has been called since loading the path
-            // then update the map
-            if ((current_grid_index == 0) &&
-                (current_disparity_index == 0))
-                insert_mapping_rays = true;
-        
-            // distance to the centre of the currently active grid
-            float dx = robot_pose.x - buffer[current_buffer_index].x;
-            float dy = robot_pose.y - buffer[current_buffer_index].y;
-            float dz = robot_pose.z - buffer[current_buffer_index].z;
-            float dist_to_grid_centre_sqr_0 = dx*dx + dy*dy + dz*dz;
-            dx = robot_pose.x - buffer[1 - current_buffer_index].x;
-            dy = robot_pose.y - buffer[1 - current_buffer_index].y;
-            dz = robot_pose.z - buffer[1 - current_buffer_index].z;
-            float dist_to_grid_centre_sqr_1 = dx*dx + dy*dy + dz*dz;
-            
-            // if we are closer to the next grid than the current one
-            // then swap the currently active grid
-            //if (dist_to_grid_centre_sqr_0 > dimension_mm/2)
-            if (dist_to_grid_centre_sqr_1 < dist_to_grid_centre_sqr_0)
-            {
-                current_buffer_index = 1 - current_buffer_index;
-                if (current_grid_index < (grid_centres.Count / 3) - 1)
-                {
-                    buffer[1 - current_buffer_index].Clear();
+            bool update_map = false;
 
-                    // move into the next grid
-                    current_grid_index++;
-
-                    // update the next map
-                    insert_mapping_rays = true;
-
-                    // set the next grid centre
-                    SetPosition(
-                        current_buffer_index,
-                        grid_centres[(current_grid_index * 3)],
-                        grid_centres[(current_grid_index * 3)] + 1,
-                        grid_centres[(current_grid_index * 3)] + 2);
-                    SetPosition(
-                        1 - current_buffer_index,
-                        grid_centres[((current_grid_index+1) * 3)],
-                        grid_centres[((current_grid_index+1) * 3)] + 1,
-                        grid_centres[((current_grid_index+1) * 3)] + 2);
-                }
-                buffer_transition = true;
-            }
+            // move to the next grid
+            buffer_transition = MoveToNextLocalGrid(
+                ref current_grid_index,
+                ref current_disparity_index,
+                robot_pose,
+                buffer,
+                ref current_buffer_index,
+                grid_centres,
+                ref update_map);
             
             // create the map if necessary
-            if (insert_mapping_rays)
+            if (update_map)
             {
                 UpdateMap(
 		            body_width_mm,
@@ -850,6 +922,7 @@ namespace sentience.core
                 }
             }
         
+            // localise within the currently active grid
             float matching_score = 
 	            buffer[current_buffer_index].Localise(
 			        body_width_mm,

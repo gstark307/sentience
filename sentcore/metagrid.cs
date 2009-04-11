@@ -354,9 +354,9 @@ namespace sentience.core
             stereo_camera_centre.x = left_camera_location.x + ((right_camera_location.x - left_camera_location.x) * 0.5f);
             stereo_camera_centre.y = left_camera_location.y + ((right_camera_location.y - left_camera_location.y) * 0.5f);
             stereo_camera_centre.z = left_camera_location.z + ((right_camera_location.z - left_camera_location.z) * 0.5f);
-            stereo_camera_centre.pan = left_camera_location.pan;
-            stereo_camera_centre.tilt = left_camera_location.tilt;
-            stereo_camera_centre.roll = left_camera_location.roll;
+            stereo_camera_centre.pan = robot_pose.pan + head_pan + stereo_camera_pan;
+            stereo_camera_centre.tilt = robot_pose.tilt + head_tilt + stereo_camera_tilt;
+            stereo_camera_centre.roll = robot_pose.roll + head_roll + stereo_camera_roll;
 
             // create a set of stereo rays as observed from this pose
             List<evidenceRay> rays = sensormodel.createObservation(

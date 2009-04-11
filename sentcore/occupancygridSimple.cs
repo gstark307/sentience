@@ -1210,7 +1210,7 @@ namespace sentience.core
                     // get the x cell coordinate within the grid
                     int cell_x = x * (dimension_cells - 1) / width;
 
-                    int n = ((y * width) + x) * 3;
+                    int n = (((height - 1 - y) * width) + x) * 3;
 
                     if (cell[cell_x][cell_y] != null)
                     {
