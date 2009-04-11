@@ -30,6 +30,8 @@ namespace sentience.core
 {
 	public class occupancygridBase : pos3D
 	{
+        public const int NO_OCCUPANCY_EVIDENCE = 99999999;   
+
         // lookup table for log odds calculations
         protected const int LOG_ODDS_LOOKUP_LEVELS = 1000;
         protected float[] LogOdds;

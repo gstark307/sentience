@@ -399,8 +399,8 @@ namespace sentience.core.tests
 		public static void LocaliseAlongPath()
 		{
             // systematic bias
-            float bias_x_mm = 0;
-            float bias_y_mm = 20;
+            float bias_x_mm = 10;
+            float bias_y_mm = 0;
 
 		    string filename = "localise_along_path.dat";
 		    float path_length_mm = 20000;
@@ -429,7 +429,7 @@ namespace sentience.core.tests
             int grid_type = metagrid.TYPE_SIMPLE;
             int dimension_mm = 8000;
             int dimension_vertical_mm = 2000;
-            int cellSize_mm = 50;
+            int cellSize_mm = 20;
             int localisationRadius_mm = 8000;
             int maxMappingRange_mm = 10000;
             float vacancyWeighting = 0.5f;
@@ -579,7 +579,8 @@ namespace sentience.core.tests
 				    rnd,
 		            ref pose_offset,
 		            ref buffer_transition,
-                    debug_mapping_filename);
+                    debug_mapping_filename,
+                    bias_x_mm, bias_y_mm);
 				
 				Console.WriteLine("pose_offset (mm): " + pose_offset.x.ToString() + ", " + pose_offset.y.ToString() + ", " + pose_offset.pan.ToString());
 				OdometryData estimated_pose = new OdometryData();

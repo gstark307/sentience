@@ -232,7 +232,7 @@ namespace sentience.core
             pos3D right_camera_location,
             bool localiseOnly)
         {
-            float matchingScore = 0;
+            float matchingScore = occupancygridBase.NO_OCCUPANCY_EVIDENCE;
             switch (grid_type)
             {
                 case TYPE_SIMPLE:
@@ -240,7 +240,13 @@ namespace sentience.core
                     for (int i = 0; i < grid.Length; i++)
                     {
                         occupancygridSimple grd = (occupancygridSimple)grid[i];
-                        matchingScore += grid_weight[i] * grd.Insert(ray, sensormodel_lookup, left_camera_location, right_camera_location, localiseOnly);
+                        float score = grd.Insert(ray, sensormodel_lookup, left_camera_location, right_camera_location, localiseOnly);
+
+                        if (score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
+                        {
+                            if (matchingScore == occupancygridBase.NO_OCCUPANCY_EVIDENCE) matchingScore = 0;
+                            matchingScore += grid_weight[i] * score;
+                        }
                     }
                     break;
                 }                
@@ -421,7 +427,11 @@ namespace sentience.core
         /// <param name="poses">list of poses tried</param>
         /// <param name="pose_score">list of pose matching scores</param>
         /// <param name="pose_offset">offset of the best pose from the current one</param>
-		/// <param name="rnd">random number generator</param>
+        /// <param name="rnd">random number generator</param>
+        /// <param name="pose_offset">returned pose offset</param>
+        /// <param name="img_poses">optional image within which to show poses</param>
+        /// <param name="img_poses_width">width of the poses image</param>
+        /// <param name="img_poses_height">height of the poses image</param>
         /// <returns>best localisation matching score</returns>
         public float Localise(
 		    float body_width_mm,
@@ -461,7 +471,12 @@ namespace sentience.core
             List<pos3D> poses,
             List<float> pose_score,
 		    Random rnd,
-            ref pos3D pose_offset)
+            ref pos3D pose_offset,
+            byte[] img_poses,
+            int img_poses_width,
+            int img_poses_height,
+            float known_best_pose_x_mm,
+            float known_best_pose_y_mm)
         {
             float best_matching_score = float.MinValue;
 
@@ -579,20 +594,28 @@ namespace sentience.core
 					// insert rays into the occupancy grid
                     for (int r = 0; r < rays.Count; r++)
                     {
-                        matching_score += Insert(rays[r], sensormodel[cam].ray_model, sample_pose_left_cam, sample_pose_right_cam, true);
+                        float score = Insert(rays[r], sensormodel[cam].ray_model, sample_pose_left_cam, sample_pose_right_cam, true);
+                        if (score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
+                        {
+                            if (matching_score == occupancygridBase.NO_OCCUPANCY_EVIDENCE) matching_score = 0;
+                            matching_score += score;
+                        }
                     }
                 }
 
                 // add the pose to the list
 				sample_pose.pan -= robot_pose.pan;
 				sample_pose.tilt -= robot_pose.tilt;
-				sample_pose.roll -= robot_pose.roll;				
-                pose_score[i] = matching_score;
+				sample_pose.roll -= robot_pose.roll;
+                if (matching_score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
+                {
+                    pose_score[i] = matching_score;
+                }
             });
 
 			// locate the best possible pose
 			pos3D best_robot_pose = new pos3D(0, 0, 0);
-            gridCells.FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, null, null, 0, 0, 0, 0);
+            gridCells.FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, img_poses, null, img_poses_width, img_poses_height, known_best_pose_x_mm, known_best_pose_y_mm);
 
             // rotate the best pose to the robot's current orientation
             // this becomes an offset, which may be used for course correction

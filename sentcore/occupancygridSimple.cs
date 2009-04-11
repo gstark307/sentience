@@ -254,9 +254,7 @@ namespace sentience.core
 		
         #endregion
 		
-        #region "calculating the matching probability"
-        
-        public const int NO_OCCUPANCY_EVIDENCE = 99999999;        
+        #region "calculating the matching probability"                    
 
         /// <summary>
         /// returns the localisation probability
@@ -1381,8 +1379,7 @@ namespace sentience.core
         }
 		
 		
-        #endregion
-		
+        #endregion		
         
         #region "inserting simulated structures"
 		

@@ -864,7 +864,9 @@ namespace sentience.core
 		    Random rnd,
             ref pos3D pose_offset,
             ref bool buffer_transition,
-            string debug_mapping_filename)
+            string debug_mapping_filename,
+            float known_best_pose_x_mm,
+            float known_best_pose_y_mm)
         {
             bool update_map = false;
 
@@ -921,6 +923,15 @@ namespace sentience.core
                         debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Bmp);
                 }
             }
+
+            int img_poses_width = 640;
+            int img_poses_height = 480;
+            byte[] img_poses = null;
+            if ((debug_mapping_filename != null) &&
+                (debug_mapping_filename != ""))
+            {
+                img_poses = new byte[img_poses_width * img_poses_height * 3];
+            }
         
             // localise within the currently active grid
             float matching_score = 
@@ -962,7 +973,12 @@ namespace sentience.core
 	                poses,
 	                pose_score,
 			        rnd,
-	                ref pose_offset);
+	                ref pose_offset,
+                    img_poses,
+                    img_poses_width,
+                    img_poses_height,
+                    known_best_pose_x_mm,
+                    known_best_pose_y_mm);
 	        
 	        // add this to the list of localisations                
 	        localisations.Add(robot_pose.x + pose_offset.x);
@@ -970,6 +986,16 @@ namespace sentience.core
 	        localisations.Add(robot_pose.z + pose_offset.z);
 	        localisations.Add(pose_offset.pan);
 	        localisations.Add(matching_score);
+
+            if ((debug_mapping_filename != null) &&
+                (debug_mapping_filename != ""))
+            {
+                string[] str = debug_mapping_filename.Split('.');
+                string poses_filename = str[0] + "_gridcells.gif";
+                Bitmap poses_bmp = new Bitmap(img_poses_width, img_poses_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                BitmapArrayConversions.updatebitmap_unsafe(img_poses, poses_bmp);
+                poses_bmp.Save(poses_filename, System.Drawing.Imaging.ImageFormat.Gif);
+            }
 	        
 	        return(matching_score);
         }

@@ -106,7 +106,8 @@ namespace sluggish.utilities
                 gaussLookup[i] = Gaussian(fract);
             }
             return (gaussLookup);
-        }                
+        }
+                
         #endregion
 	}
 }
