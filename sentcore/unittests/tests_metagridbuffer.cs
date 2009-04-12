@@ -399,7 +399,7 @@ namespace sentience.core.tests
 		public static void LocaliseAlongPath()
 		{
             // systematic bias
-            float bias_x_mm = 10;
+            float bias_x_mm = 1;
             float bias_y_mm = 0;
 
 		    string filename = "localise_along_path.dat";
@@ -429,7 +429,7 @@ namespace sentience.core.tests
             int grid_type = metagrid.TYPE_SIMPLE;
             int dimension_mm = 8000;
             int dimension_vertical_mm = 2000;
-            int cellSize_mm = 20;
+            int cellSize_mm = 50;
             int localisationRadius_mm = 8000;
             int maxMappingRange_mm = 10000;
             float vacancyWeighting = 0.5f;
@@ -604,7 +604,7 @@ namespace sentience.core.tests
             float diff_y_mm = Math.Abs(average_offset_y_mm - bias_y_mm);
             Assert.Less(diff_x_mm, 1.0f, "x bias not detected");
             Assert.Less(diff_y_mm, 1.0f, "y bias not detected");			
-        }		
+        }
 				
 		[Test()]
 		public void Create()
@@ -702,7 +702,8 @@ namespace sentience.core.tests
                     buffer,
                     ref current_buffer_index,
                     grid_centres,
-                    ref update_map))
+                    ref update_map,
+                    null))
                 {
                     transitions++;
                 }

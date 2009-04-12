@@ -482,22 +482,22 @@ namespace sentience.core
 
             poses.Clear();
             pose_score.Clear();
-		    gridCells.CreateMoireGrid(
-		        sampling_radius_major_mm,
-		        sampling_radius_minor_mm,
-		        no_of_samples,
-		        robot_pose.pan,
-		        robot_pose.tilt,
-		        robot_pose.roll,
-		        max_orientation_variance,
-		        max_tilt_variance,
-		        max_roll_variance,
-		        rnd,
-		        ref poses,
-		        null, null, 0, 0);
-		        
+            gridCells.CreateMoireGrid(
+                sampling_radius_major_mm,
+                sampling_radius_minor_mm,
+                no_of_samples,
+                robot_pose.pan,
+                robot_pose.tilt,
+                robot_pose.roll,
+                max_orientation_variance,
+                max_tilt_variance,
+                max_roll_variance,
+                rnd,
+                ref poses,
+                null, null, 0, 0);
+
             // positions of the left and right camera relative to the robots centre of rotation
-            pos3D head_location = new pos3D(0,0,0);
+            pos3D head_location = new pos3D(0, 0, 0);
             left_camera_location = new pos3D[baseline_mm.Length];
             right_camera_location = new pos3D[baseline_mm.Length];
             pos3D[] camera_centre_location = new pos3D[baseline_mm.Length];
@@ -506,29 +506,29 @@ namespace sentience.core
             for (int cam = 0; cam < baseline_mm.Length; cam++)
             {
                 occupancygridBase.calculateCameraPositions(
-		            body_width_mm,
-		            body_length_mm,
-		            body_centre_of_rotation_x,
-		            body_centre_of_rotation_y,
-		            body_centre_of_rotation_z,
-		            head_centroid_x,
-		            head_centroid_y,
-		            head_centroid_z,
-		            head_pan,
-		            head_tilt,
-		            head_roll,
-		            baseline_mm[cam],
-		            stereo_camera_position_x[cam],
-		            stereo_camera_position_y[cam],
-		            stereo_camera_position_z[cam],
-		            stereo_camera_pan[cam],
-		            stereo_camera_tilt[cam],
-		            stereo_camera_roll[cam],
+                    body_width_mm,
+                    body_length_mm,
+                    body_centre_of_rotation_x,
+                    body_centre_of_rotation_y,
+                    body_centre_of_rotation_z,
+                    head_centroid_x,
+                    head_centroid_y,
+                    head_centroid_z,
+                    head_pan,
+                    head_tilt,
+                    head_roll,
+                    baseline_mm[cam],
+                    stereo_camera_position_x[cam],
+                    stereo_camera_position_y[cam],
+                    stereo_camera_position_z[cam],
+                    stereo_camera_pan[cam],
+                    stereo_camera_tilt[cam],
+                    stereo_camera_roll[cam],
                     ref head_location,
                     ref camera_centre_location[cam],
                     ref relative_left_cam[cam],
                     ref relative_right_cam[cam]);
-                                           
+
                 left_camera_location[cam] = relative_left_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
                 right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
             }
@@ -541,17 +541,19 @@ namespace sentience.core
                 pose_score.Add(0);
             }
 
+            int no_of_zero_probabilities = 0;
+
             // try a number of random poses
-			// we can do this in parallel
-		    Parallel.For(0, poses.Count, delegate(int i)
-		    {			
+            // we can do this in parallel
+            Parallel.For(0, poses.Count, delegate(int i)
+            {
                 pos3D sample_pose = poses[i];
-                
+
                 float matching_score = 0;
 
                 for (int cam = 0; cam < baseline_mm.Length; cam++)
                 {
-					// update the position of the left camera for this pose
+                    // update the position of the left camera for this pose
                     pos3D sample_pose_left_cam = relative_left_cam[cam].add(sample_pose);
                     sample_pose_left_cam.pan = 0;
                     sample_pose_left_cam.tilt = 0;
@@ -561,7 +563,7 @@ namespace sentience.core
                     sample_pose_left_cam.y += robot_pose.y;
                     sample_pose_left_cam.z += robot_pose.z;
 
-					// update the position of the right camera for this pose
+                    // update the position of the right camera for this pose
                     pos3D sample_pose_right_cam = relative_right_cam[cam].add(sample_pose);
                     sample_pose_right_cam.pan = 0;
                     sample_pose_right_cam.tilt = 0;
@@ -575,9 +577,12 @@ namespace sentience.core
                     stereo_camera_centre.x = sample_pose_left_cam.x + ((sample_pose_right_cam.x - sample_pose_left_cam.x) * 0.5f);
                     stereo_camera_centre.y = sample_pose_left_cam.y + ((sample_pose_right_cam.y - sample_pose_left_cam.y) * 0.5f);
                     stereo_camera_centre.z = sample_pose_left_cam.z + ((sample_pose_right_cam.z - sample_pose_left_cam.z) * 0.5f);
-                    stereo_camera_centre.pan = robot_pose.pan + head_pan + stereo_camera_pan[cam];
-                    stereo_camera_centre.tilt = robot_pose.tilt + head_tilt + stereo_camera_tilt[cam];
-                    stereo_camera_centre.roll = robot_pose.roll + head_roll + stereo_camera_roll[cam];
+                    stereo_camera_centre.x = robot_pose.x;
+                    stereo_camera_centre.y = robot_pose.y;
+                    stereo_camera_centre.z = robot_pose.z;
+                    stereo_camera_centre.pan = robot_pose.pan + head_pan + stereo_camera_pan[cam] + sample_pose.pan;
+                    stereo_camera_centre.tilt = robot_pose.tilt + head_tilt + stereo_camera_tilt[cam] + sample_pose.tilt;
+                    stereo_camera_centre.roll = robot_pose.roll + head_roll + stereo_camera_roll[cam] + sample_pose.roll;
 
                     // create a set of stereo rays as observed from this pose
                     List<evidenceRay> rays = sensormodel[cam].createObservation(
@@ -591,7 +596,7 @@ namespace sentience.core
                         stereo_features_uncertainties[cam],
                         true);
 
-					// insert rays into the occupancy grid
+                    // insert rays into the occupancy grid
                     for (int r = 0; r < rays.Count; r++)
                     {
                         float score = Insert(rays[r], sensormodel[cam].ray_model, sample_pose_left_cam, sample_pose_right_cam, true);
@@ -604,32 +609,49 @@ namespace sentience.core
                 }
 
                 // add the pose to the list
-				sample_pose.pan -= robot_pose.pan;
-				sample_pose.tilt -= robot_pose.tilt;
-				sample_pose.roll -= robot_pose.roll;
+                sample_pose.pan -= robot_pose.pan;
+                sample_pose.tilt -= robot_pose.tilt;
+                sample_pose.roll -= robot_pose.roll;
+
+                if (Math.Abs(sample_pose.pan) > max_orientation_variance)
+                {
+                    Console.WriteLine("Pose variance out of range");
+                }
+
                 if (matching_score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
                 {
-                    pose_score[i] = matching_score;
+                    float prob = probabilities.LogOddsToProbability(matching_score);
+                    if (prob == 0) no_of_zero_probabilities++;
+                    pose_score[i] = prob;
                 }
             });
 
-			// locate the best possible pose
-			pos3D best_robot_pose = new pos3D(0, 0, 0);
-            gridCells.FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, img_poses, null, img_poses_width, img_poses_height, known_best_pose_x_mm, known_best_pose_y_mm);
+            if (no_of_zero_probabilities == poses.Count)
+            {
+                Console.WriteLine("Localisation failure");
+                pose_offset = new pos3D(0, 0, 0);
+                best_matching_score = 0;
+            }
+            else
+            {
+                // locate the best possible pose
+                pos3D best_robot_pose = new pos3D(0, 0, 0);
+                gridCells.FindBestPose(poses, pose_score, ref best_robot_pose, sampling_radius_major_mm, img_poses, null, img_poses_width, img_poses_height, known_best_pose_x_mm, known_best_pose_y_mm);
 
-            // rotate the best pose to the robot's current orientation
-            // this becomes an offset, which may be used for course correction
-            pose_offset = best_robot_pose.rotate(robot_pose.pan, robot_pose.tilt, robot_pose.roll);
-            
-            // orientation relative to the current heading
-            pose_offset.pan = best_robot_pose.pan;
-            pose_offset.tilt = best_robot_pose.tilt;
-            pose_offset.roll = best_robot_pose.roll;
+                // rotate the best pose to the robot's current orientation
+                // this becomes an offset, which may be used for course correction
+                pose_offset = best_robot_pose.rotate(robot_pose.pan, robot_pose.tilt, robot_pose.roll);
 
-            // range checks                        
-            if (Math.Abs(pose_offset.pan) > max_orientation_variance) Console.WriteLine("pose_offset pan out of range");
-            if (Math.Abs(pose_offset.tilt) > max_tilt_variance) Console.WriteLine("pose_offset tilt out of range");
-            if (Math.Abs(pose_offset.roll) > max_roll_variance) Console.WriteLine("pose_offset roll out of range");
+                // orientation relative to the current heading
+                pose_offset.pan = best_robot_pose.pan;
+                pose_offset.tilt = best_robot_pose.tilt;
+                pose_offset.roll = best_robot_pose.roll;
+
+                // range checks                        
+                if (Math.Abs(pose_offset.pan) > max_orientation_variance) Console.WriteLine("pose_offset pan out of range");
+                if (Math.Abs(pose_offset.tilt) > max_tilt_variance) Console.WriteLine("pose_offset tilt out of range");
+                if (Math.Abs(pose_offset.roll) > max_roll_variance) Console.WriteLine("pose_offset roll out of range");
+            }
 
             return (best_matching_score);
         }

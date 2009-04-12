@@ -31,7 +31,9 @@ namespace sentience.core
 	public class occupancygridSimple : occupancygridBase
 	{
 	    // grid cells
-	    protected particleGridCellBase[][][] cell; 
+	    protected particleGridCellBase[][][] cell;
+
+        protected bool[][] localisation_test;
 
         #region "constructors"
 				
@@ -46,6 +48,10 @@ namespace sentience.core
 		    cell = new particleGridCellBase[dimension_cells][][];
 		    for (int x = 0; x < dimension_cells; x++)
 		        cell[x] = new particleGridCellBase[dimension_cells][];
+
+            localisation_test = new bool[dimension_cells][];
+            for (int x = 0; x < dimension_cells; x++)
+                localisation_test[x] = new bool[dimension_cells];
 		        
 		    this.dimension_cells = dimension_cells;
 		    this.dimension_cells_vertical = dimension_cells_vertical;
@@ -86,8 +92,13 @@ namespace sentience.core
         public override void Clear()
         {
             for (int x = 0; x < cell.Length; x++)
+            {
                 for (int y = 0; y < cell[x].Length; y++)
+                {
                     cell[x][y] = null;
+                    localisation_test[x][y] = false;
+                }
+            }
         }
 
         #endregion
@@ -359,6 +370,7 @@ namespace sentience.core
             // in turbo mode only use a single vacancy ray
             int max_modelcomponent = VACANT_SENSORMODEL_RIGHT_CAMERA;
             if (TurboMode) max_modelcomponent = VACANT_SENSORMODEL_LEFT_CAMERA;
+            if (localiseOnly) max_modelcomponent = OCCUPIED_SENSORMODEL;
 			
 			float[][] sensormodel_lookup_probability = sensormodel_lookup.probability;
 			
@@ -585,26 +597,33 @@ namespace sentience.core
                                         // only localise using occupancy, not vacancy
                                         if (modelcomponent == OCCUPIED_SENSORMODEL)
                                         {
+                                            // test
+                                            localisation_test[x_cell2][y_cell2] = true;
+
 											if (cell[x_cell2][y_cell2] != null)
 											{
-												if (cell[x_cell2][y_cell2][z_cell] != null)
+                                                if (cell[x_cell2][y_cell2][z_cell] != null)
 												{
-		                                            // update the matching score, by combining the probability
-		                                            // of the grid cell with the probability from the localisation ray
-		                                            float score = NO_OCCUPANCY_EVIDENCE;
-		                                            if (longest_axis == X_AXIS)
-		                                                score = matchingProbability(x_cell2, y_cell2, z_cell, prob_localisation, ray.colour);
-		
-		                                            if (longest_axis == Y_AXIS)
-		                                                score = matchingProbability(x_cell2, y_cell2, z_cell, prob_localisation, ray.colour);
-		
-		                                            if (score != NO_OCCUPANCY_EVIDENCE)
-		                                            {
-		                                                if (matchingScore != NO_OCCUPANCY_EVIDENCE)
-		                                                    matchingScore += score;
-		                                                else
-		                                                    matchingScore = score;
-		                                            }
+                                                    if (cell[x_cell2][y_cell2][z_cell].probabilityLogOdds > 0)
+                                                    {
+
+                                                        // update the matching score, by combining the probability
+                                                        // of the grid cell with the probability from the localisation ray
+                                                        float score = NO_OCCUPANCY_EVIDENCE;
+                                                        if (longest_axis == X_AXIS)
+                                                            score = matchingProbability(x_cell2, y_cell2, z_cell, prob_localisation, ray.colour);
+
+                                                        if (longest_axis == Y_AXIS)
+                                                            score = matchingProbability(x_cell2, y_cell2, z_cell, prob_localisation, ray.colour);
+
+                                                        if (score != NO_OCCUPANCY_EVIDENCE)
+                                                        {
+                                                            if (matchingScore != NO_OCCUPANCY_EVIDENCE)
+                                                                matchingScore += score;
+                                                            else
+                                                                matchingScore = score;
+                                                        }
+                                                    }
 												}
 											}
                                         }
@@ -1210,79 +1229,39 @@ namespace sentience.core
 
                     int n = (((height - 1 - y) * width) + x) * 3;
 
+                    
                     if (cell[cell_x][cell_y] != null)
                     {
                         // get the probability for this vertical column
-                        float prob = GetProbability(cell_x, cell_y, mean_colour);						
+                        float prob = GetProbability(cell_x, cell_y, mean_colour);
 
                         if (prob != NO_OCCUPANCY_EVIDENCE)
                         {
-							if (show_all_occupied_cells) prob = 1;
+                            if (show_all_occupied_cells) prob = 1;
 
-							if (prob >= 0.5f)
-							{
-							    int b = (int)(127 + ((prob-0.5f)*10*255));
-                                if (b > 255) b = 255;
-							    img[n++] = 0;
- 					            img[n++] = (byte)b;
-							    img[n] = 0;
-							}
-							else
-							{
-							    int b = (int)(255 - ((0.5f - prob)*50*155));
-                                if (b < 100) b = 100;
-							    img[n++] = (byte)b;
- 					            img[n++] = 0;
-							    img[n] = 0;
-							}
-
-							/*
-							//Console.WriteLine("prob = " + prob.ToString());
-                            if (prob > 0.5f)
+                            if (prob >= 0.5f)
                             {
-                                if (prob > 0.7f)
-								{
-									// occupied
-                                    img[n++] = (byte)0;
-									img[n++] = (byte)0;
-									img[n] = (byte)0;
-								}
-                                else
-								{
-									// occupied
-                                    img[n++] = (byte)100;
-									img[n++] = (byte)100;
-									img[n] = (byte)100;
-								}
+                                int b = (int)(127 + ((prob - 0.5f) * 10 * 255));
+                                if (b > 255) b = 255;
+                                img[n] = 0;
+                                img[n + 1] = (byte)b;
+                                img[n + 2] = 0;
                             }
                             else
                             {
-                                if (prob < 0.3f)
-								{
-									// vacant
-                                    img[n++] = (byte)230;
-                                    img[n++] = (byte)230;
-                                    img[n] = (byte)230;
-								}
-                                else
-								{
-									// vacant
-                                    img[n++] = (byte)200;
-									img[n++] = (byte)200;
-									img[n] = (byte)200;
-								}
+                                int b = (int)(255 - ((0.5f - prob) * 50 * 155));
+                                if (b < 100) b = 100;
+                                img[n] = (byte)b;
+                                img[n + 1] = 0;
+                                img[n + 2] = 0;
                             }
-                            */
                         }
-                        /*
-                        else
-                        {
-							// terra incognita
-                            img[n++] = (byte)255;
-							img[n++] = (byte)255;
-							img[n] = (byte)255;
-                        }
-                        */
+                    }
+                    
+
+                    if (localisation_test[cell_x][cell_y])
+                    {
+                        img[n + 2] = (byte)(255 - img[n + 2]);
                     }
                 }
             }

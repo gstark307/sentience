@@ -368,10 +368,14 @@ namespace sentience.core
 	                int x = (int)((localisations[i] - tx) * img_width / (bx - tx));
 	                int y = img_height - 1 - (int)((localisations[i + 1] - ty) * img_height / (by - ty));
 	                float pan = localisations[i + 3] + (float)Math.PI;
-	                int x2 = x + (int)(radius * Math.Sin(pan));
-	                int y2 = y + (int)(radius * Math.Sin(pan));
-	                drawing.drawLine(img, img_width, img_height, x,y,x2,y2,0,255,0, 0,false);
-	                drawing.drawSpot(img, img_width, img_height, x,y,2, 0,255,0);	                
+                    if (localisations[i + 4] > 0)
+                    {
+                        drawing.drawSpot(img, img_width, img_height, x, y, 2, 0, 255, 0);
+                    }
+                    else
+                    {
+                        drawing.drawSpot(img, img_width, img_height, x, y, 2, 255, 0, 0);
+                    }
 	            }
             }
         }
@@ -573,8 +577,15 @@ namespace sentience.core
 				byte[,] stereo_features_colour;
 		        float[] stereo_features_uncertainties;
 				pos3D robot_pose = new pos3D(0,0,0);
-				
-				int next_disparity_index = disparities_index[current_grid_index];
+
+                //int next_grid_index = current_grid_index + 1;
+                //if (next_grid_index >= grid_centres.Count / 3) next_grid_index = (grid_centres.Count / 3) - 1;
+
+                int next_grid_index = current_grid_index;
+                //if (current_grid_index < 1)
+                //    next_grid_index = 1;
+                
+                int next_disparity_index = disparities_index[next_grid_index];
 	            for (int i = current_disparity_index; i < next_disparity_index; i++)
 				{
 	                long time_long = disparities_reader.ReadInt64();
@@ -728,7 +739,8 @@ namespace sentience.core
             metagrid[] buffer,
             ref int current_buffer_index,
             List<float> grid_centres,
-            ref bool update_map)
+            ref bool update_map,
+            string debug_mapping_filename)
         {
             bool buffer_transition = false;
             update_map = false;
@@ -768,6 +780,25 @@ namespace sentience.core
             //if (dist_to_grid_centre_sqr_0 > dimension_mm/2)
             if (dist_to_grid_centre_sqr_1 < dist_to_grid_centre_sqr_0)
             {
+                if ((debug_mapping_filename != null) &&
+                    (debug_mapping_filename != ""))
+                {
+                    int debug_img_width = 640;
+                    int debug_img_height = 480;
+                    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
+                    buffer[current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
+                    Bitmap debug_bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    BitmapArrayConversions.updatebitmap_unsafe(debug_img, debug_bmp);
+                    if (debug_mapping_filename.ToLower().EndsWith("png"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Png);
+                    if (debug_mapping_filename.ToLower().EndsWith("gif"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Gif);
+                    if (debug_mapping_filename.ToLower().EndsWith("jpg"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    if (debug_mapping_filename.ToLower().EndsWith("bmp"))
+                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+                }
+
                 // swap the two metagrids
                 SwapBuffers(
                     grid_centres,
@@ -878,7 +909,8 @@ namespace sentience.core
                 buffer,
                 ref current_buffer_index,
                 grid_centres,
-                ref update_map);
+                ref update_map,
+                debug_mapping_filename);
             
             // create the map if necessary
             if (update_map)
@@ -903,25 +935,6 @@ namespace sentience.core
                     image_height,
                     FOV_degrees,
                     sensormodel);
-
-                if ((debug_mapping_filename != null) &&
-                    (debug_mapping_filename != ""))
-                {
-                    int debug_img_width = 640;
-                    int debug_img_height = 480;
-                    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
-                    buffer[current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
-                    Bitmap debug_bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                    BitmapArrayConversions.updatebitmap_unsafe(debug_img, debug_bmp);
-                    if (debug_mapping_filename.ToLower().EndsWith("png"))
-                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Png);
-                    if (debug_mapping_filename.ToLower().EndsWith("gif"))
-                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Gif);
-                    if (debug_mapping_filename.ToLower().EndsWith("jpg"))
-                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    if (debug_mapping_filename.ToLower().EndsWith("bmp"))
-                        debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Bmp);
-                }
             }
 
             int img_poses_width = 640;
@@ -986,6 +999,10 @@ namespace sentience.core
 	        localisations.Add(robot_pose.z + pose_offset.z);
 	        localisations.Add(pose_offset.pan);
 	        localisations.Add(matching_score);
+
+            if (update_map)
+            {
+            }
 
             if ((debug_mapping_filename != null) &&
                 (debug_mapping_filename != ""))

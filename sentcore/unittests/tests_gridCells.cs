@@ -220,8 +220,8 @@ namespace sentience.core.tests
 	            float position_error_y = Math.Abs(ideal_best_pose_y - best_pose.y);
 	            
 	            Assert.Less(pan_angle_error, 1);
-	            Assert.Less(position_error_x, sampling_radius_major_mm * 0.16f);
-	            Assert.Less(position_error_y, sampling_radius_major_mm * 0.16f);
+	            Assert.Less(position_error_x, sampling_radius_major_mm * 0.3f);
+	            Assert.Less(position_error_y, sampling_radius_major_mm * 0.3f);
 				
 				BitmapArrayConversions.updatebitmap_unsafe(debug_img_poses, bmp);
 				bmp.Save("tests_gridCells_FindBestPose" + s.ToString() + ".gif", System.Drawing.Imaging.ImageFormat.Gif);
