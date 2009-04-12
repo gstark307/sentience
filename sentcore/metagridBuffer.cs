@@ -786,8 +786,8 @@ namespace sentience.core
                     int debug_img_width = 640;
                     int debug_img_height = 480;
                     byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
-                    buffer[current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
                     Bitmap debug_bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    buffer[current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
                     BitmapArrayConversions.updatebitmap_unsafe(debug_img, debug_bmp);
                     if (debug_mapping_filename.ToLower().EndsWith("png"))
                         debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Png);
@@ -797,6 +797,19 @@ namespace sentience.core
                         debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
                     if (debug_mapping_filename.ToLower().EndsWith("bmp"))
                         debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+
+                    string[] str = debug_mapping_filename.Split('.');
+                    string debug_mapping_filename2 = str[0] + "b." + str[1];
+                    buffer[1 - current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
+                    BitmapArrayConversions.updatebitmap_unsafe(debug_img, debug_bmp);
+                    if (debug_mapping_filename2.ToLower().EndsWith("png"))
+                        debug_bmp.Save(debug_mapping_filename2, System.Drawing.Imaging.ImageFormat.Png);
+                    if (debug_mapping_filename2.ToLower().EndsWith("gif"))
+                        debug_bmp.Save(debug_mapping_filename2, System.Drawing.Imaging.ImageFormat.Gif);
+                    if (debug_mapping_filename2.ToLower().EndsWith("jpg"))
+                        debug_bmp.Save(debug_mapping_filename2, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    if (debug_mapping_filename2.ToLower().EndsWith("bmp"))
+                        debug_bmp.Save(debug_mapping_filename2, System.Drawing.Imaging.ImageFormat.Bmp);
                 }
 
                 // swap the two metagrids

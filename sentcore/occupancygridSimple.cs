@@ -648,11 +648,11 @@ namespace sentience.core
                                     }
                                 }
                             }
-                            else grid_step = steps;  // its the end of the ray, break out of the loop
+                            //else grid_step = steps;  // its the end of the ray, break out of the loop
                         }
-                        else grid_step = steps;  // its the end of the ray, break out of the loop
+                        //else grid_step = steps;  // its the end of the ray, break out of the loop
                     }
-                    else grid_step = steps;  // time to bail out chaps!
+                    //else grid_step = steps;  // time to bail out chaps!
                     grid_step += step_size;
                 }
             }
