@@ -507,7 +507,7 @@ namespace sentience.core.tests
             float average_offset_y_mm = 0;
 			List<OdometryData> estimated_path = new List<OdometryData>();
 			
-			for (int i = 0; i < path.Count-1; i += 1)
+			for (int i = 0; i < path.Count-1; i += 5)
 			{
                 string debug_mapping_filename = "localise_along_path_map_" + i.ToString() + ".jpg";
 
@@ -515,10 +515,10 @@ namespace sentience.core.tests
 				OdometryData p1 = path[i + 1];
 				
 				// create an intermediate pose
-				robot_pose.x = p0.x + ((p1.x - p0.x)/2) + bias_x_mm;
-				robot_pose.y = p0.y + ((p1.y - p0.y)/2) + bias_y_mm;
+				robot_pose.x = p0.x; // + ((p1.x - p0.x)/2) + bias_x_mm;
+				robot_pose.y = p0.y; // + ((p1.y - p0.y)/2) + bias_y_mm;
 				robot_pose.z = 0;
-				robot_pose.pan = p0.orientation + ((p1.orientation - p0.orientation)/2);
+				robot_pose.pan = p0.orientation; // + ((p1.orientation - p0.orientation)/2);
 				
 				// create stereo features
 				int ctr = 0;
