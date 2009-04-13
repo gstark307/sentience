@@ -16,7 +16,7 @@ namespace sentience.sensormodel
 	{
 		public static void Main(string[] args)
 		{
-            tests_metagridbuffer.LocaliseAlongPath();
+            //tests_metagridbuffer.LocaliseAlongPath();
 			
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());

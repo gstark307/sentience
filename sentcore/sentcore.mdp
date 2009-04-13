@@ -70,14 +70,23 @@
     <File name="OdometryData.cs" subtype="Code" buildaction="Compile" />
     <File name="occupancygridSimple.cs" subtype="Code" buildaction="Compile" />
     <File name="occupancygridBase.cs" subtype="Code" buildaction="Compile" />
+    <File name="unittests/tests_gridCells.cs" subtype="Code" buildaction="Compile" />
+    <File name="unittests/tests_metagridbuffer.cs" subtype="Code" buildaction="Compile" />
+    <File name="metagrid.cs" subtype="Code" buildaction="Compile" />
+    <File name="metagridBuffer.cs" subtype="Code" buildaction="Compile" />
+    <File name="memcompressor/Consts.cs" subtype="Code" buildaction="Compile" />
+    <File name="memcompressor/Deflator.cs" subtype="Code" buildaction="Compile" />
+    <File name="memcompressor/Inflator.cs" subtype="Code" buildaction="Compile" />
+    <File name="memcompressor/Utils.cs" subtype="Code" buildaction="Compile" />
+    <File name="gridCells.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
-    <ProjectReference type="Project" localcopy="True" refto="memcompressor" />
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Project" localcopy="True" refto="pathplanner" />
     <ProjectReference type="Project" localcopy="True" refto="utilities" />
     <ProjectReference type="Project" localcopy="True" refto="FASTcorners" />
     <ProjectReference type="Gac" localcopy="True" refto="nunit.framework, Version=2.2.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" />
+    <ProjectReference type="Gac" localcopy="True" refto="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   </References>
 </Project>

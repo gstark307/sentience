@@ -395,8 +395,8 @@ namespace sentience.core.tests
             bmp.Save("load_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
         }		
 
-		//[Test()]
-		public static void LocaliseAlongPath()
+		[Test()]
+		public void LocaliseAlongPath()
 		{
             // systematic bias
             float bias_x_mm = 1;

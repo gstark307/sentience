@@ -1,0 +1,32 @@
+<Combine name="sensormodel" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="sensormodel" configuration="Debug" />
+      <Entry build="True" name="sentcore" configuration="Debug" />
+      <Entry build="True" name="utilities" configuration="Debug" />
+      <Entry build="True" name="FASTcorners" configuration="Debug" />
+      <Entry build="True" name="pathplanner" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="sensormodel" configuration="Release" />
+      <Entry build="True" name="sentcore" configuration="Release" />
+      <Entry build="True" name="utilities" configuration="Release" />
+      <Entry build="True" name="FASTcorners" configuration="Release" />
+      <Entry build="True" name="pathplanner" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="sensormodel" single="True">
+    <Execute type="None" entry="sensormodel" />
+    <Execute type="None" entry="sentcore" />
+    <Execute type="None" entry="utilities" />
+    <Execute type="None" entry="FASTcorners" />
+    <Execute type="None" entry="pathplanner" />
+  </StartMode>
+  <Entries>
+    <Entry filename="sensormodel.mdp" />
+    <Entry filename="../../sentcore/sentcore.mdp" />
+    <Entry filename="../../utilities/utilities.mdp" />
+    <Entry filename="../../FASTcorners/FASTcorners.mdp" />
+    <Entry filename="../../pathplanner/pathplanner.mdp" />
+  </Entries>
+</Combine>
