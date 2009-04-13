@@ -602,7 +602,7 @@ namespace sentience.core
 											{
                                                 if (cell[x_cell2][y_cell2][z_cell] != null)
 												{
-                                                    if (cell[x_cell2][y_cell2][z_cell].probabilityLogOdds > 0)
+                                                    //if (cell[x_cell2][y_cell2][z_cell].probabilityLogOdds > 0)
                                                     {
 
                                                         // update the matching score, by combining the probability

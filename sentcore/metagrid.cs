@@ -578,13 +578,15 @@ namespace sentience.core
                     stereo_camera_centre.x = sample_pose_left_cam.x + ((sample_pose_right_cam.x - sample_pose_left_cam.x) * 0.5f);
                     stereo_camera_centre.y = sample_pose_left_cam.y + ((sample_pose_right_cam.y - sample_pose_left_cam.y) * 0.5f);
                     stereo_camera_centre.z = sample_pose_left_cam.z + ((sample_pose_right_cam.z - sample_pose_left_cam.z) * 0.5f);
-                    stereo_camera_centre.pan = robot_pose.pan + head_pan + stereo_camera_pan[cam] + sample_pose.pan;
-                    stereo_camera_centre.tilt = robot_pose.tilt + head_tilt + stereo_camera_tilt[cam] + sample_pose.tilt;
-                    stereo_camera_centre.roll = robot_pose.roll + head_roll + stereo_camera_roll[cam] + sample_pose.roll;
+
+                    stereo_camera_centre.pan = head_pan + stereo_camera_pan[cam] + sample_pose.pan;
+                    stereo_camera_centre.tilt = head_tilt + stereo_camera_tilt[cam] + sample_pose.tilt;
+                    stereo_camera_centre.roll = head_roll + stereo_camera_roll[cam] + sample_pose.roll;
 
                     // create a set of stereo rays as observed from this pose
                     List<evidenceRay> rays = sensormodel[cam].createObservation(
                         stereo_camera_centre,
+                        //robot_pose,
                         baseline_mm[cam],
                         image_width[cam],
                         image_height[cam],
@@ -618,9 +620,9 @@ namespace sentience.core
 
                 if (matching_score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
                 {
-                    float prob = probabilities.LogOddsToProbability(matching_score);
-                    if (prob == 0) no_of_zero_probabilities++;
-                    pose_score[i] = prob;
+                    //float prob = probabilities.LogOddsToProbability(matching_score);
+                    //if (prob == 0) no_of_zero_probabilities++;
+                    pose_score[i] = matching_score; // prob;
                 }
             } //);
 

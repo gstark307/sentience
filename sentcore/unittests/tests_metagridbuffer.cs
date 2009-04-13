@@ -395,8 +395,8 @@ namespace sentience.core.tests
             bmp.Save("load_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
         }		
 
-		[Test()]
-		public void LocaliseAlongPath()
+		//[Test()]
+		public static void LocaliseAlongPath()
 		{
             // systematic bias
             float bias_x_mm = 1;
@@ -515,10 +515,10 @@ namespace sentience.core.tests
 				OdometryData p1 = path[i + 1];
 				
 				// create an intermediate pose
-				robot_pose.x = p0.x; // + ((p1.x - p0.x)/2) + bias_x_mm;
-				robot_pose.y = p0.y; // + ((p1.y - p0.y)/2) + bias_y_mm;
+				robot_pose.x = p0.x + ((p1.x - p0.x)/2) + bias_x_mm;
+				robot_pose.y = p0.y + ((p1.y - p0.y)/2) + bias_y_mm;
 				robot_pose.z = 0;
-				robot_pose.pan = p0.orientation; // + ((p1.orientation - p0.orientation)/2);
+				robot_pose.pan = p0.orientation + ((p1.orientation - p0.orientation)/2);
 				
 				// create stereo features
 				int ctr = 0;

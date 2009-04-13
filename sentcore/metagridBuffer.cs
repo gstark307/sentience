@@ -222,28 +222,26 @@ namespace sentience.core
 	                bool finished = false;
 	                int disp_index = 0;
 	                int grid_centres_index = 0;
-	                float grid_centre_x = grid_centres[grid_centres_index * 3];
-	                float grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
 	                while (!finished)
 	                {
 	                    try
 	                    {
 			                float position_x = br.ReadSingle();
 			                float position_y = br.ReadSingle();
-			                
-			                float dx = position_x - grid_centre_x;
-			                float dy = position_y - grid_centre_y;
-			                float dist_sqr = dx*dx + dy*dy;
-			                
-			                if (dist_sqr > half_dimension_sqr)
+
+                            float dx = position_x - grid_centres[grid_centres_index * 3];
+                            float dy = position_y - grid_centres[(grid_centres_index * 3) + 1];
+                            float dist_sqr0 = dx * dx + dy * dy;
+                            int next_grid_centres_index = grid_centres_index + 1;
+                            if (next_grid_centres_index >= grid_centres.Count / 3) next_grid_centres_index = (grid_centres.Count / 3) - 1;
+                            dx = position_x - grid_centres[next_grid_centres_index * 3];
+                            dy = position_y - grid_centres[(next_grid_centres_index * 3) + 1];
+                            float dist_sqr1 = dx * dx + dy * dy;
+
+                            if (dist_sqr0 > dist_sqr1)
 			                {
-			                    if (grid_centres_index < grid_centres.Count/3)
-			                    {
-			                        disparities_index.Add(disp_index);
-	                                grid_centres_index++;
-	                                grid_centre_x = grid_centres[grid_centres_index * 3];
-	                                grid_centre_y = grid_centres[(grid_centres_index * 3) + 1];
-	                            }
+			                    disparities_index.Add(disp_index);
+                                if (next_grid_centres_index < (grid_centres.Count / 3)-1) grid_centres_index++;
 			                }
 			                disp_index++;
 	                    }
