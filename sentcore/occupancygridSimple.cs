@@ -541,13 +541,11 @@ namespace sentience.core
                                 if (modelcomponent == OCCUPIED_SENSORMODEL)
                                 {
                                     centre_prob = 0.5f + (sensormodel_lookup_probability[sensormodel_index][grid_step] * 0.5f);
-                                    //Console.WriteLine("centre_prob: " + centre_prob.ToString());
                                 }
                                 else
                                 {
                                     // calculate the probability from the vacancy model
                                     centre_prob = vacancyFunction(grid_step * inverse_steps, steps);
-                                    //Console.WriteLine("centre_prob: " + centre_prob.ToString());
                                 }
 								
                                 // width of the localisation ray
@@ -641,10 +639,6 @@ namespace sentience.core
                                         particleGridCellBase c = cell[x_cell2][y_cell2][z_cell];
                                         c.probabilityLogOdds += probabilities.LogOdds(prob);
                                         c.colour = ray.colour;    // this is simplistic, but we'll live with it                                                                                
-                                        //if (prob < 0.5f)
-                                        //{
-                                        //    Console.WriteLine("prob " + prob.ToString());
-                                        //}
                                     }
                                 }
                             }

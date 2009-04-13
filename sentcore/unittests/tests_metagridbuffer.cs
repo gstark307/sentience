@@ -507,7 +507,7 @@ namespace sentience.core.tests
             float average_offset_y_mm = 0;
 			List<OdometryData> estimated_path = new List<OdometryData>();
 			
-			for (int i = 0; i < path.Count-1; i += 5)
+			for (int i = 0; i < path.Count-1; i += 1)
 			{
                 string debug_mapping_filename = "localise_along_path_map_" + i.ToString() + ".jpg";
 
@@ -524,7 +524,7 @@ namespace sentience.core.tests
 				int ctr = 0;
 				stereo_features[0] = new float[no_of_stereo_features * 3];
 				stereo_features_colour[0] = new byte[no_of_stereo_features, 3];
-				for (int f = 0; f < no_of_stereo_features; f++)
+				for (int f = 0; f < no_of_stereo_features; f += 5)
 				{
 					if (f < no_of_stereo_features/2)
 					{
@@ -594,7 +594,7 @@ namespace sentience.core.tests
 
             buffer.ShowPath(img, img_width, img_height, true, true);
             BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
-            bmp.Save("localise_along_path2.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+            bmp.Save("localisations_along_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
 
             average_offset_x_mm /= estimated_path.Count;
             average_offset_y_mm /= estimated_path.Count;

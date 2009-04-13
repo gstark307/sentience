@@ -545,7 +545,8 @@ namespace sentience.core
 
             // try a number of random poses
             // we can do this in parallel
-            Parallel.For(0, poses.Count, delegate(int i)
+            //Parallel.For(0, poses.Count, delegate(int i)
+            for (int i = 0; i < poses.Count; i++)
             {
                 pos3D sample_pose = poses[i];
 
@@ -577,9 +578,6 @@ namespace sentience.core
                     stereo_camera_centre.x = sample_pose_left_cam.x + ((sample_pose_right_cam.x - sample_pose_left_cam.x) * 0.5f);
                     stereo_camera_centre.y = sample_pose_left_cam.y + ((sample_pose_right_cam.y - sample_pose_left_cam.y) * 0.5f);
                     stereo_camera_centre.z = sample_pose_left_cam.z + ((sample_pose_right_cam.z - sample_pose_left_cam.z) * 0.5f);
-                    stereo_camera_centre.x = robot_pose.x;
-                    stereo_camera_centre.y = robot_pose.y;
-                    stereo_camera_centre.z = robot_pose.z;
                     stereo_camera_centre.pan = robot_pose.pan + head_pan + stereo_camera_pan[cam] + sample_pose.pan;
                     stereo_camera_centre.tilt = robot_pose.tilt + head_tilt + stereo_camera_tilt[cam] + sample_pose.tilt;
                     stereo_camera_centre.roll = robot_pose.roll + head_roll + stereo_camera_roll[cam] + sample_pose.roll;
@@ -624,7 +622,7 @@ namespace sentience.core
                     if (prob == 0) no_of_zero_probabilities++;
                     pose_score[i] = prob;
                 }
-            });
+            } //);
 
             if (no_of_zero_probabilities == poses.Count)
             {

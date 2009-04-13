@@ -55,10 +55,7 @@ namespace sentience.core
 
         public pos3D add(pos3D other)
         {
-            pos3D sum = new pos3D(x, y, z);
-            sum.x = x + other.x;
-            sum.y = y + other.y;
-            sum.z = z + other.z;
+            pos3D sum = new pos3D(x + other.x, y + other.y, z + other.z);
             sum.pan = pan + other.pan;
             sum.tilt = tilt + other.tilt;
             sum.roll = roll + other.roll;
@@ -67,10 +64,7 @@ namespace sentience.core
 
         public pos3D subtract(pos3D other)
         {
-            pos3D sum = new pos3D(x, y, z);
-            sum.x = x - other.x;
-            sum.y = y - other.y;
-            sum.z = z - other.z;
+            pos3D sum = new pos3D(x - other.x, y - other.y, z - other.z);
             sum.pan = pan - other.pan;
             sum.tilt = tilt - other.tilt;
             sum.roll = roll - other.roll;

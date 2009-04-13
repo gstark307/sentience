@@ -695,8 +695,11 @@ namespace sentience.core
             ref int current_buffer_index,
             ref bool update_map)
         {
+            int curr_buffer = 1 - current_buffer_index;
+            int next_buffer = current_buffer_index;
+
             int no_of_grids = grid_centres.Count / 3;
-            current_buffer_index = 1 - current_buffer_index;
+            current_buffer_index = curr_buffer;
             if (current_grid_index < no_of_grids)
             {
                 // move into the next grid
@@ -705,18 +708,19 @@ namespace sentience.core
                 if (current_grid_index < no_of_grids - 1)
                 {
                     // clear the grid which we have just passed through
-                    buffer[1 - current_buffer_index].Clear();
+                    buffer[next_buffer].Clear();
 
                     // update the next map
                     update_map = true;
 
                     // retrieve the next grid centre position
-                    float next_grid_centre_x = grid_centres[((current_grid_index + 1) * 3)];
-                    float next_grid_centre_y = grid_centres[((current_grid_index + 1) * 3) + 1];
-                    float next_grid_centre_z = grid_centres[((current_grid_index + 1) * 3) + 2];
+                    int next_grid_index = current_grid_index + 1;
+                    float next_grid_centre_x = grid_centres[(next_grid_index * 3)];
+                    float next_grid_centre_y = grid_centres[(next_grid_index * 3) + 1];
+                    float next_grid_centre_z = grid_centres[(next_grid_index * 3) + 2];
 
                     // set the next grid centre
-                    buffer[1 - current_buffer_index].SetPosition(next_grid_centre_x, next_grid_centre_y, next_grid_centre_z, 0.0f);
+                    buffer[next_buffer].SetPosition(next_grid_centre_x, next_grid_centre_y, next_grid_centre_z, 0.0f);
                 }
             }
         }
@@ -1012,10 +1016,6 @@ namespace sentience.core
 	        localisations.Add(robot_pose.z + pose_offset.z);
 	        localisations.Add(pose_offset.pan);
 	        localisations.Add(matching_score);
-
-            if (update_map)
-            {
-            }
 
             if ((debug_mapping_filename != null) &&
                 (debug_mapping_filename != ""))
