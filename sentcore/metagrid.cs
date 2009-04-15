@@ -533,8 +533,6 @@ namespace sentience.core
                 right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
             }
 
-            pos3D stereo_camera_centre = new pos3D(0, 0, 0);
-
             pose_score.Clear();
             for (int p = 0; p < poses.Count; p++)
             {
@@ -545,8 +543,8 @@ namespace sentience.core
 
             // try a number of random poses
             // we can do this in parallel
-            //Parallel.For(0, poses.Count, delegate(int i)
-            for (int i = 0; i < poses.Count; i++)
+            Parallel.For(0, poses.Count, delegate(int i)
+            //for (int i = 0; i < poses.Count; i++)
             {
                 pos3D sample_pose = poses[i];
 
@@ -575,9 +573,11 @@ namespace sentience.core
                     sample_pose_right_cam.z += robot_pose.z;
 
                     // centre position between the left and right cameras
-                    stereo_camera_centre.x = sample_pose_left_cam.x + ((sample_pose_right_cam.x - sample_pose_left_cam.x) * 0.5f);
-                    stereo_camera_centre.y = sample_pose_left_cam.y + ((sample_pose_right_cam.y - sample_pose_left_cam.y) * 0.5f);
-                    stereo_camera_centre.z = sample_pose_left_cam.z + ((sample_pose_right_cam.z - sample_pose_left_cam.z) * 0.5f);
+                    pos3D stereo_camera_centre = 
+                        new pos3D(
+                            sample_pose_left_cam.x + ((sample_pose_right_cam.x - sample_pose_left_cam.x) * 0.5f),
+                            sample_pose_left_cam.y + ((sample_pose_right_cam.y - sample_pose_left_cam.y) * 0.5f),
+                            sample_pose_left_cam.z + ((sample_pose_right_cam.z - sample_pose_left_cam.z) * 0.5f));
 
                     stereo_camera_centre.pan = head_pan + stereo_camera_pan[cam] + sample_pose.pan;
                     stereo_camera_centre.tilt = head_tilt + stereo_camera_tilt[cam] + sample_pose.tilt;
@@ -586,7 +586,6 @@ namespace sentience.core
                     // create a set of stereo rays as observed from this pose
                     List<evidenceRay> rays = sensormodel[cam].createObservation(
                         stereo_camera_centre,
-                        //robot_pose,
                         baseline_mm[cam],
                         image_width[cam],
                         image_height[cam],
@@ -620,11 +619,12 @@ namespace sentience.core
 
                 if (matching_score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
                 {
-                    //float prob = probabilities.LogOddsToProbability(matching_score);
-                    //if (prob == 0) no_of_zero_probabilities++;
-                    pose_score[i] = matching_score; // prob;
+                    float prob = probabilities.LogOddsToProbability(matching_score);
+                    if (prob == 0) no_of_zero_probabilities++;
+                    pose_score[i] = prob;
+                    //pose_score[i] = matching_score;
                 }
-            } //);
+            } );
 
             if (no_of_zero_probabilities == poses.Count)
             {

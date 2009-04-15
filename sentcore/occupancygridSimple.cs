@@ -275,7 +275,7 @@ namespace sentience.core
         /// <param name="sensormodel_probability">probability value from a specific point in the ray, taken from the sensor model</param>
         /// <param name="colour">colour of the localisation ray</param>
         /// <returns>log odds probability of there being a match between the ray and the grid</returns>
-        private float matchingProbability(
+        public float matchingProbability(
             int x_cell, int y_cell, int z_cell,
             float sensormodel_probability,
             byte[] colour)
@@ -291,7 +291,8 @@ namespace sentience.core
                 ((1.0f - sensormodel_probability) * (1.0f - existing_probability)));
 
             // localisation matching probability, expressed as log odds
-            prob_log_odds = LogOdds[(int)(occupancy_probability * LOG_ODDS_LOOKUP_LEVELS)];
+            //prob_log_odds = LogOdds[(int)(occupancy_probability * LOG_ODDS_LOOKUP_LEVELS)];
+            prob_log_odds = probabilities.LogOdds(occupancy_probability);
             
             return(prob_log_odds);
         }

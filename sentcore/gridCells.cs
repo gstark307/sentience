@@ -515,6 +515,8 @@ namespace sentience.core
             float score_range = max_score - min_score;
 			float minimum_score = min_score + (score_range * 0.5f);
             float minimum_score2 = min_score + (score_range * 0.8f);
+			//float minimum_score = 0.98f;
+            //float minimum_score2 = 0.99f;
 			
 			if (best_pose == null) best_pose = new pos3D(0,0,0);
 			best_pose.x = 0;
@@ -605,7 +607,7 @@ namespace sentience.core
             // create an image showing the results
             if ((img_poses != null) && (score_range > 0))
             {
-                float max_radius = sampling_radius_major_mm * 0.1f;
+                float max_radius = img_width/50; // sampling_radius_major_mm * 0.1f;
                 for (int i = img_poses.Length - 1; i >= 0; i--)
                 {
                     img_poses[i] = 0;

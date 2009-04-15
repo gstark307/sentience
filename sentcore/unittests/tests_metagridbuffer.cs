@@ -395,17 +395,17 @@ namespace sentience.core.tests
             bmp.Save("load_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
         }		
 
-		//[Test()]
-		public static void LocaliseAlongPath()
+		[Test()]
+		public void LocaliseAlongPath()
 		{
             // systematic bias
-            float bias_x_mm = 1;
+            float bias_x_mm = -200;
             float bias_y_mm = 0;
 
 		    string filename = "localise_along_path.dat";
 		    float path_length_mm = 20000;
 		    float start_orientation = 0;
-		    float end_orientation = 90 * (float)Math.PI / 180.0f;
+		    float end_orientation = 0; //90 * (float)Math.PI / 180.0f;
 		    float distance_between_poses_mm = 100;
             float disparity = 15;
 			
@@ -425,7 +425,7 @@ namespace sentience.core.tests
 			Assert.AreEqual(true, File.Exists(str[0] + "_disparities_index.dat"));
 			Assert.AreEqual(true, File.Exists(str[0] + "_disparities.dat"));
 
-            int no_of_grids = 2;
+            int no_of_grids = 1;
             int grid_type = metagrid.TYPE_SIMPLE;
             int dimension_mm = 8000;
             int dimension_vertical_mm = 2000;
@@ -480,10 +480,10 @@ namespace sentience.core.tests
             pos3D[] left_camera_location = new pos3D[1];
             pos3D[] right_camera_location = new pos3D[1];
             int no_of_samples = 300;
-            float sampling_radius_major_mm = 50;
-            float sampling_radius_minor_mm = 40;
+            float sampling_radius_major_mm = cellSize_mm*10;
+            float sampling_radius_minor_mm = cellSize_mm*10;
             pos3D robot_pose = new pos3D(0,0,0);
-            float max_orientation_variance = 10 * (float)Math.PI / 180.0f;
+            float max_orientation_variance = 5 * (float)Math.PI / 180.0f;
             float max_tilt_variance = 0;
             float max_roll_variance = 0;
             List<pos3D> poses = new List<pos3D>();
@@ -602,8 +602,8 @@ namespace sentience.core.tests
 
             float diff_x_mm = Math.Abs(average_offset_x_mm - bias_x_mm);
             float diff_y_mm = Math.Abs(average_offset_y_mm - bias_y_mm);
-            Assert.Less(diff_x_mm, 1.0f, "x bias not detected");
-            Assert.Less(diff_y_mm, 1.0f, "y bias not detected");			
+            Assert.Less(diff_x_mm, 20.0f, "x bias not detected");
+            Assert.Less(diff_y_mm, 20.0f, "y bias not detected");			
         }
 				
 		[Test()]
