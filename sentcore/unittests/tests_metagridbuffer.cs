@@ -499,9 +499,15 @@ namespace sentience.core.tests
 			for (int i = 0; i < no_of_stereo_features; i++)
 				stereo_features_uncertainties[0][i] = 1;
 
-			stereoModel[] sensormodel = new stereoModel[1];
-			sensormodel[0] = new stereoModel();
-			sensormodel[0].createLookupTable(cellSize_mm, image_width[0], image_height[0]);
+			List<int> cell_sizes = buffer.GetCellSizes();
+			Assert.AreEqual(no_of_grids, cell_sizes.Count);
+			stereoModel[][] sensormodel = new stereoModel[1][];
+			sensormodel[0] = new stereoModel[no_of_grids];
+			for (int i = 0; i < no_of_grids; i++)
+			{
+				sensormodel[0][i] = new stereoModel();
+			    sensormodel[0][i].createLookupTable(cell_sizes[i], image_width[0], image_height[0]);
+			}
 
             float average_offset_x_mm = 0;
             float average_offset_y_mm = 0;

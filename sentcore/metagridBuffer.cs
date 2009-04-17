@@ -99,6 +99,19 @@ namespace sentience.core
 		}
 		
         #endregion
+
+        #region "getting cell sizes"
+		
+		/// <summary>
+		/// returns the cell size for each grid within a metagrid
+		/// </summary>
+		/// <returns>cell sizes</returns>
+		public List<int> GetCellSizes()
+		{
+			return(buffer[0].GetCellSizes());
+		}
+		
+        #endregion
 		
 		#region "resetting"
 		
@@ -471,6 +484,7 @@ namespace sentience.core
 		    float head_pan,
 		    float head_tilt,
 		    float head_roll,
+		    int stereo_camera_index,
 		    float baseline_mm,
 		    float stereo_camera_position_x,
 		    float stereo_camera_position_y,
@@ -484,7 +498,7 @@ namespace sentience.core
 		    float[] stereo_features,
 		    byte[,] stereo_features_colour,
 		    float[] stereo_features_uncertainties,
-            stereoModel sensormodel,
+            stereoModel[][] sensormodel,
             pos3D robot_pose)
         {        
 		    Parallel.For(0, 2, delegate(int i)
@@ -504,6 +518,7 @@ namespace sentience.core
 		            head_pan,
 		            head_tilt,
 		            head_roll,
+				    stereo_camera_index,
 		            baseline_mm,
 		            stereo_camera_position_x,
 		            stereo_camera_position_y,
@@ -565,7 +580,7 @@ namespace sentience.core
             int[] image_width,
             int[] image_height,
             float[] FOV_degrees,
-            stereoModel[] sensormodel)
+            stereoModel[][] sensormodel)
         {
             const bool use_compression = false;
 
@@ -650,6 +665,7 @@ namespace sentience.core
 		                head_pan,
 		                head_tilt,
 		                head_roll,
+					    stereo_camera_index,
 		                baseline_mm[stereo_camera_index],
 		                stereo_camera_position_x[stereo_camera_index],
 		                stereo_camera_position_y[stereo_camera_index],
@@ -663,7 +679,7 @@ namespace sentience.core
 		                stereo_features,
 		                stereo_features_colour,
 		                stereo_features_uncertainties,
-                        sensormodel[stereo_camera_index],
+                        sensormodel,
                         robot_pose);
 					
 					stereo_features = null;
@@ -895,7 +911,7 @@ namespace sentience.core
 		    float[][] stereo_features,
 		    byte[][,] stereo_features_colour,
 		    float[][] stereo_features_uncertainties,
-            stereoModel[] sensormodel,
+            stereoModel[][] sensormodel,
             ref pos3D[] left_camera_location,
             ref pos3D[] right_camera_location,
             int no_of_samples,
@@ -1027,6 +1043,64 @@ namespace sentience.core
 	        
 	        return(matching_score);
         }
+		
+        public float Localise(
+		    robotGeometry geom,
+		    float[][] stereo_features,
+		    byte[][,] stereo_features_colour,
+		    float[][] stereo_features_uncertainties,
+		    Random rnd,
+            ref pos3D pose_offset,
+            ref bool buffer_transition,
+            string debug_mapping_filename,
+            float known_best_pose_x_mm,
+            float known_best_pose_y_mm)
+        {
+			return(Localise(
+		        geom.body_width_mm,
+		        geom.body_length_mm,
+		        geom.body_centre_of_rotation_x,
+		        geom.body_centre_of_rotation_y,
+		        geom.body_centre_of_rotation_z,
+		        geom.head_centroid_x,
+		        geom.head_centroid_y,
+		        geom.head_centroid_z,
+		        geom.head_pan,
+		        geom.head_tilt,
+		        geom.head_roll,
+		        geom.baseline_mm,
+		        geom.stereo_camera_position_x,
+		        geom.stereo_camera_position_y,
+		        geom.stereo_camera_position_z,
+		        geom.stereo_camera_pan,
+		        geom.stereo_camera_tilt,
+		        geom.stereo_camera_roll,
+                geom.image_width,
+                geom.image_height,
+                geom.FOV_degrees,
+		        stereo_features,
+		        stereo_features_colour,
+		        stereo_features_uncertainties,
+                geom.sensormodel,
+                ref geom.left_camera_location,
+                ref geom.right_camera_location,
+                geom.no_of_sample_poses,
+                geom.sampling_radius_major_mm,
+                geom.sampling_radius_minor_mm,
+                geom.pose,
+                geom.max_orientation_variance,
+                geom.max_tilt_variance,
+                geom.max_roll_variance,
+                geom.poses,
+                geom.pose_probability,
+		        rnd,
+                ref pose_offset,
+                ref buffer_transition,
+                debug_mapping_filename,
+                known_best_pose_x_mm,
+                known_best_pose_y_mm			                
+			));
+		}
 		
         #endregion
 		

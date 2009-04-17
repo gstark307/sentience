@@ -96,6 +96,22 @@ namespace sentience.core
 
         #endregion
 
+        #region "getting cell sizes"
+		
+		/// <summary>
+		/// returns the cell size for each grid
+		/// </summary>
+		/// <returns>list of cell sizes</returns>
+		public List<int> GetCellSizes()
+		{
+			List<int> cell_sizes = new List<int>();
+			for (int i = 0; i < grid.Length; i++)
+			    cell_sizes.Add(grid[i].cellSize_mm);
+			return(cell_sizes);
+		}
+		
+        #endregion
+		
         #region "clearing the grid"
 
         public void Clear()
@@ -186,7 +202,7 @@ namespace sentience.core
         /// </summary>
         /// <param name="ray">stereo ray</param>
         /// <param name="origin">pose from which this observation was made</param>
-        /// <param name="sensormodel_lookup">sensor model to be used</param>
+        /// <param name="sensormodel">sensor model for each grid level</param>
         /// <param name="left_camera_location">left stereo camera position and orientation</param>
         /// <param name="right_camera_location">right stereo camera position and orientation</param>
         /// <param name="localiseOnly">whether we are mapping or localising</param>
@@ -194,7 +210,7 @@ namespace sentience.core
         public float Insert(
             evidenceRay ray,
             particlePose origin,
-            rayModelLookup sensormodel_lookup,
+		    stereoModel[] sensormodel,                            
             pos3D left_camera_location,
             pos3D right_camera_location,
             bool localiseOnly)
@@ -205,10 +221,11 @@ namespace sentience.core
             {
                 case TYPE_MULTI_HYPOTHESIS:
                     {
-                        for (int i = 0; i < grid.Length; i++)
+                        for (int grid_level = 0; grid_level < grid.Length; grid_level++)
                         {
-                            occupancygridMultiHypothesis grd = (occupancygridMultiHypothesis)grid[i];
-                            matchingScore += grid_weight[i] * grd.Insert(ray, origin, sensormodel_lookup, left_camera_location, right_camera_location, localiseOnly);
+					        rayModelLookup sensormodel_lookup = sensormodel[grid_level].ray_model;
+                            occupancygridMultiHypothesis grd = (occupancygridMultiHypothesis)grid[grid_level];
+                            matchingScore += grid_weight[grid_level] * grd.Insert(ray, origin, sensormodel_lookup, left_camera_location, right_camera_location, localiseOnly);
                         }
                         break;
                     }
@@ -220,14 +237,14 @@ namespace sentience.core
         /// insert a stereo ray into the grid
         /// </summary>
         /// <param name="ray">stereo ray</param>
-        /// <param name="sensormodel_lookup">sensor model to be used</param>
+        /// <param name="sensormodel">sensor model for each grid level</param>
         /// <param name="left_camera_location">left stereo camera position and orientation</param>
         /// <param name="right_camera_location">right stereo camera position and orientation</param>
         /// <param name="localiseOnly">whether we are mapping or localising</param>
         /// <returns>localisation matching score</returns>
         public float Insert(
             evidenceRay ray,
-            rayModelLookup sensormodel_lookup,
+		    stereoModel[] sensormodel,             
             pos3D left_camera_location,
             pos3D right_camera_location,
             bool localiseOnly)
@@ -237,15 +254,16 @@ namespace sentience.core
             {
                 case TYPE_SIMPLE:
                 {
-                    for (int i = 0; i < grid.Length; i++)
+                    for (int grid_level = 0; grid_level < grid.Length; grid_level++)
                     {
-                        occupancygridSimple grd = (occupancygridSimple)grid[i];
+					    rayModelLookup sensormodel_lookup = sensormodel[grid_level].ray_model;
+                        occupancygridSimple grd = (occupancygridSimple)grid[grid_level];
                         float score = grd.Insert(ray, sensormodel_lookup, left_camera_location, right_camera_location, localiseOnly);
 
                         if (score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
                         {
                             if (matchingScore == occupancygridBase.NO_OCCUPANCY_EVIDENCE) matchingScore = 0;
-                            matchingScore += grid_weight[i] * score;
+                            matchingScore += grid_weight[grid_level] * score;
                         }
                     }
                     break;
@@ -285,7 +303,7 @@ namespace sentience.core
         /// <param name="stereo_features">stereo features (disparities) for each stereo camera</param>
         /// <param name="stereo_features_colour">stereo feature colours for each stereo camera</param>
         /// <param name="stereo_features_uncertainties">stereo feature uncertainties (priors) for each stereo camera</param>
-        /// <param name="sensormodel">sensor model for each stereo camera</param>
+        /// <param name="sensormodel">sensor model for each grid level</param>
         /// <param name="left_camera_location">returned position and orientation of the left camera on each stereo camera</param>
         /// <param name="right_camera_location">returned position and orientation of the right camera on each stereo camera</param>
         /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation</param>
@@ -301,6 +319,7 @@ namespace sentience.core
 		    float head_pan,
 		    float head_tilt,
 		    float head_roll,
+		    int stereo_camera_index,
 		    float baseline_mm,
 		    float stereo_camera_position_x,
 		    float stereo_camera_position_y,
@@ -314,7 +333,7 @@ namespace sentience.core
 		    float[] stereo_features,
 		    byte[,] stereo_features_colour,
 		    float[] stereo_features_uncertainties,
-            stereoModel sensormodel,
+            stereoModel[][] sensormodel,
             ref pos3D left_camera_location,
             ref pos3D right_camera_location,
             pos3D robot_pose)
@@ -365,7 +384,7 @@ namespace sentience.core
             stereo_camera_centre.roll = robot_pose.roll + head_roll + stereo_camera_roll;
 
             // create a set of stereo rays as observed from this pose
-            List<evidenceRay> rays = sensormodel.createObservation(
+            List<evidenceRay> rays = sensormodel[stereo_camera_index][0].createObservation(
                 stereo_camera_centre,
                 baseline_mm,
                 image_width,
@@ -379,7 +398,7 @@ namespace sentience.core
 		    // insert rays into the occupancy grid
             for (int r = 0; r < rays.Count; r++)
             {
-                Insert(rays[r], sensormodel.ray_model, left_camera_location, right_camera_location, false);
+                Insert(rays[r], sensormodel[stereo_camera_index], left_camera_location, right_camera_location, false);
             }
         }
 
@@ -458,7 +477,7 @@ namespace sentience.core
 		    float[][] stereo_features,
 		    byte[][,] stereo_features_colour,
 		    float[][] stereo_features_uncertainties,
-            stereoModel[] sensormodel,
+            stereoModel[][] sensormodel,
             ref pos3D[] left_camera_location,
             ref pos3D[] right_camera_location,
             int no_of_samples,
@@ -584,7 +603,7 @@ namespace sentience.core
                     stereo_camera_centre.roll = head_roll + stereo_camera_roll[cam] + sample_pose.roll;
 
                     // create a set of stereo rays as observed from this pose
-                    List<evidenceRay> rays = sensormodel[cam].createObservation(
+                    List<evidenceRay> rays = sensormodel[cam][0].createObservation(
                         stereo_camera_centre,
                         baseline_mm[cam],
                         image_width[cam],
@@ -598,7 +617,7 @@ namespace sentience.core
                     // insert rays into the occupancy grid
                     for (int r = 0; r < rays.Count; r++)
                     {
-                        float score = Insert(rays[r], sensormodel[cam].ray_model, sample_pose_left_cam, sample_pose_right_cam, true);
+                        float score = Insert(rays[r], sensormodel[cam], sample_pose_left_cam, sample_pose_right_cam, true);
                         if (score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
                         {
                             if (matching_score == occupancygridBase.NO_OCCUPANCY_EVIDENCE) matching_score = 0;
