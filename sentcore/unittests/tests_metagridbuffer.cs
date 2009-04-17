@@ -483,7 +483,7 @@ namespace sentience.core.tests
             float sampling_radius_major_mm = cellSize_mm*10;
             float sampling_radius_minor_mm = cellSize_mm*10;
             pos3D robot_pose = new pos3D(0,0,0);
-            float max_orientation_variance = 5 * (float)Math.PI / 180.0f;
+            float max_orientation_variance = 10 * (float)Math.PI / 180.0f;
             float max_tilt_variance = 0;
             float max_roll_variance = 0;
             List<pos3D> poses = new List<pos3D>();
@@ -602,8 +602,8 @@ namespace sentience.core.tests
 
             float diff_x_mm = Math.Abs(average_offset_x_mm - bias_x_mm);
             float diff_y_mm = Math.Abs(average_offset_y_mm - bias_y_mm);
-            Assert.Less(diff_x_mm, 20.0f, "x bias not detected");
-            Assert.Less(diff_y_mm, 20.0f, "y bias not detected");			
+            Assert.Less(diff_x_mm, cellSize_mm, "x bias not detected");
+            Assert.Less(diff_y_mm, cellSize_mm, "y bias not detected");			
         }
 				
 		[Test()]
