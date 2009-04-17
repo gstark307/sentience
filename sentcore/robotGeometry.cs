@@ -98,8 +98,38 @@ namespace sentience.core
 	        max_orientation_variance = 5 * (float)Math.PI / 180.0f;
 	        max_tilt_variance = 0;
 	        max_roll_variance = 0;
+			pose = new pos3D(0,0,0);
 			poses = new List<pos3D>();
 			pose_probability = new List<float>();			
+		}
+		
+		public void CreateStereoCameras(
+		    int no_of_stereo_cameras,
+		    float cam_baseline_mm,
+		    int cam_image_width, 
+		    int cam_image_height,
+		    float cam_FOV_degrees)
+		{
+			baseline_mm = new float[no_of_stereo_cameras];
+			image_width = new int[no_of_stereo_cameras];
+			image_height = new int[no_of_stereo_cameras];
+			FOV_degrees = new float[no_of_stereo_cameras];
+			stereo_camera_position_x = new float[no_of_stereo_cameras];
+			stereo_camera_position_y = new float[no_of_stereo_cameras];
+			stereo_camera_position_z = new float[no_of_stereo_cameras];
+			stereo_camera_pan = new float[no_of_stereo_cameras];
+			stereo_camera_tilt = new float[no_of_stereo_cameras];
+			stereo_camera_roll = new float[no_of_stereo_cameras];
+			left_camera_location = new pos3D[no_of_stereo_cameras];
+			right_camera_location = new pos3D[no_of_stereo_cameras];
+			
+			for (int cam = 0; cam < no_of_stereo_cameras; cam++)
+			{
+				baseline_mm[cam] = cam_baseline_mm;
+				image_width[cam] = cam_image_width;
+				image_height[cam] = cam_image_height;
+				FOV_degrees[cam] = cam_FOV_degrees;
+			}
 		}
 		
 		public void CreateSensorModels(

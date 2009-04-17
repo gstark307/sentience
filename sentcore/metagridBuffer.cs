@@ -189,7 +189,7 @@ namespace sentience.core
                         float dx = data.x - last_x;
                         float dy = data.y - last_y;
                         float dist_sqr = dx*dx + dy*dy;
-                        if (dist_sqr > half_dimension_sqr)
+                        if (dist_sqr > half_dimension_sqr*150/100)
                         {
                             last_x = data.x;
                             last_y = data.y;
@@ -886,7 +886,7 @@ namespace sentience.core
 		/// <param name="rnd">random number generator</param>
         /// <param name="buffer_transition">have we transitioned to the next grid buffer?</param>
         /// <returns>best localisation matching score</returns>
-        public float Localise(
+        protected float Localise(
 		    float body_width_mm,
 		    float body_length_mm,
 		    float body_centre_of_rotation_x,
@@ -1023,23 +1023,26 @@ namespace sentience.core
                     img_poses_height,
                     known_best_pose_x_mm,
                     known_best_pose_y_mm);
-	        
-	        // add this to the list of localisations                
-	        localisations.Add(robot_pose.x + pose_offset.x);
-	        localisations.Add(robot_pose.y + pose_offset.y);
-	        localisations.Add(robot_pose.z + pose_offset.z);
-	        localisations.Add(pose_offset.pan);
-	        localisations.Add(matching_score);
-
-            if ((debug_mapping_filename != null) &&
-                (debug_mapping_filename != ""))
-            {
-                string[] str = debug_mapping_filename.Split('.');
-                string poses_filename = str[0] + "_gridcells.gif";
-                Bitmap poses_bmp = new Bitmap(img_poses_width, img_poses_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                BitmapArrayConversions.updatebitmap_unsafe(img_poses, poses_bmp);
-                poses_bmp.Save(poses_filename, System.Drawing.Imaging.ImageFormat.Gif);
-            }
+			
+			if (matching_score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
+			{	        
+		        // add this to the list of localisations                
+		        localisations.Add(robot_pose.x + pose_offset.x);
+		        localisations.Add(robot_pose.y + pose_offset.y);
+		        localisations.Add(robot_pose.z + pose_offset.z);
+		        localisations.Add(pose_offset.pan);
+		        localisations.Add(matching_score);
+	
+	            if ((debug_mapping_filename != null) &&
+	                (debug_mapping_filename != ""))
+	            {
+	                string[] str = debug_mapping_filename.Split('.');
+	                string poses_filename = str[0] + "_gridcells.gif";
+	                Bitmap poses_bmp = new Bitmap(img_poses_width, img_poses_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+	                BitmapArrayConversions.updatebitmap_unsafe(img_poses, poses_bmp);
+	                poses_bmp.Save(poses_filename, System.Drawing.Imaging.ImageFormat.Gif);
+	            }
+			}
 	        
 	        return(matching_score);
         }

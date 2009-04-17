@@ -649,7 +649,7 @@ namespace sentience.core
             {
                 Console.WriteLine("Localisation failure");
                 pose_offset = new pos3D(0, 0, 0);
-                best_matching_score = 0;
+                best_matching_score = occupancygridBase.NO_OCCUPANCY_EVIDENCE;
             }
             else
             {
