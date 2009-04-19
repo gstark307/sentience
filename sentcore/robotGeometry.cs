@@ -71,8 +71,12 @@ namespace sentience.core
         public pos3D[] left_camera_location;
         public pos3D[] right_camera_location;
 		
-		// current estimated pose
-        public pos3D pose;
+		// current estimated pose for each stereo camera
+		// if all stereo cameras observe at the same time this
+		// will be the same, but potentially observations could be made with
+		// some small time delay which may result in a slightly different
+		// pose associated with each
+        public pos3D[] pose;
 				
 		// this defines dimensions of the pose uncertainty ellipse
         public float sampling_radius_major_mm;
@@ -98,7 +102,6 @@ namespace sentience.core
 	        max_orientation_variance = 5 * (float)Math.PI / 180.0f;
 	        max_tilt_variance = 0;
 	        max_roll_variance = 0;
-			pose = new pos3D(0,0,0);
 			poses = new List<pos3D>();
 			pose_probability = new List<float>();			
 		}
@@ -108,8 +111,14 @@ namespace sentience.core
 		    float cam_baseline_mm,
 		    int cam_image_width, 
 		    int cam_image_height,
-		    float cam_FOV_degrees)
+		    float cam_FOV_degrees,
+		    float head_diameter_mm,
+		    float default_head_orientation_degrees)
 		{
+			pose = new pos3D[no_of_stereo_cameras];
+			for (int i = 0; i < no_of_stereo_cameras; i++)
+			    pose[i] = new pos3D(0,0,0);
+			
 			baseline_mm = new float[no_of_stereo_cameras];
 			image_width = new int[no_of_stereo_cameras];
 			image_height = new int[no_of_stereo_cameras];
@@ -125,6 +134,12 @@ namespace sentience.core
 			
 			for (int cam = 0; cam < no_of_stereo_cameras; cam++)
 			{
+				float cam_orientation = cam * (float)Math.PI*2 / no_of_stereo_cameras;
+				cam_orientation += default_head_orientation_degrees * (float)Math.PI / 180.0f;
+				stereo_camera_position_x[cam] = head_diameter_mm * 0.5f * (float)Math.Sin(cam_orientation);
+				stereo_camera_position_y[cam] = head_diameter_mm * 0.5f * (float)Math.Cos(cam_orientation);				
+				stereo_camera_pan[cam] = cam_orientation;
+				
 				baseline_mm[cam] = cam_baseline_mm;
 				image_width[cam] = cam_image_width;
 				image_height[cam] = cam_image_height;

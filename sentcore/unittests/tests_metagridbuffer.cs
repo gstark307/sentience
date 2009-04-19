@@ -253,6 +253,7 @@ namespace sentience.core.tests
 		    float distance_between_poses_mm,
             float disparity,
 		    int no_of_stereo_features,
+		    int no_of_stereo_cameras,
 		    ref List<OdometryData> save_path)
         {
             string[] str = filename.Split('.');
@@ -271,31 +272,34 @@ namespace sentience.core.tests
 			
 			for (int i = 0; i < steps; i++)
 			{
-				OdometryData data = new OdometryData();
-				data.orientation = orientation;
-				data.x = x_mm;
-				data.y = y_mm;
-				save_path.Add(data);
-				
-				List<StereoFeatureTest> features = new List<StereoFeatureTest>();
-				for (int f = 0; f < no_of_stereo_features; f++)
+				for (int cam = 0; cam < no_of_stereo_cameras; cam++)
 				{
-					StereoFeatureTest feat;
-					if (f < no_of_stereo_features/2)
-					    feat = new StereoFeatureTest(20, rnd.Next(239), disparity);
-					else
-						feat = new StereoFeatureTest(300, rnd.Next(239), disparity);
-                    feat.SetColour(0, 0, 0);
-					features.Add(feat);
+					OdometryData data = new OdometryData();
+					data.orientation = orientation;
+					data.x = x_mm;
+					data.y = y_mm;
+					save_path.Add(data);
+					
+					List<StereoFeatureTest> features = new List<StereoFeatureTest>();
+					for (int f = 0; f < no_of_stereo_features; f++)
+					{
+						StereoFeatureTest feat;
+						if (f < no_of_stereo_features/2)
+						    feat = new StereoFeatureTest(20, rnd.Next(239), disparity);
+						else
+							feat = new StereoFeatureTest(300, rnd.Next(239), disparity);
+	                    feat.SetColour(0, 0, 0);
+						features.Add(feat);
+					}
+					
+	                ProcessPose(
+			            str[0],
+			            DateTime.Now,
+			            x_mm, y_mm,
+			            orientation,
+			            0,0,0,
+				        cam, features);
 				}
-
-                ProcessPose(
-		            str[0],
-		            DateTime.Now,
-		            x_mm, y_mm,
-		            orientation,
-		            0,0,0,
-			        0, features);
 				
 				x_mm += distance_between_poses_mm * (float)Math.Sin(orientation);
 				y_mm += distance_between_poses_mm * (float)Math.Cos(orientation);
@@ -347,6 +351,7 @@ namespace sentience.core.tests
 		    float end_orientation = 90 * (float)Math.PI / 180.0f;
 		    float distance_between_poses_mm = 100;
             float disparity = 15;
+			int no_of_stereo_cameras = 1;
 			
 			string[] str = filename.Split('.');
 				
@@ -359,6 +364,7 @@ namespace sentience.core.tests
 		        distance_between_poses_mm,
                 disparity,
 			    300,
+			    no_of_stereo_cameras,
 			    ref path);
 			
 			Assert.AreEqual(true, File.Exists(filename));
@@ -402,6 +408,12 @@ namespace sentience.core.tests
             // systematic bias
             float bias_x_mm = -200;
             float bias_y_mm = 0;
+			
+			// number of stereo cameras on the robot's head
+			int no_of_stereo_cameras = 2;
+			
+			// diameter of the robot's head
+			float head_diameter_mm = 100;
 		    
 			// number of stereo features per step during mapping
 			int no_of_mapping_stereo_features = 300;
@@ -427,6 +439,7 @@ namespace sentience.core.tests
 		        distance_between_poses_mm,
                 disparity,
 			    no_of_mapping_stereo_features,
+			    no_of_stereo_cameras,
 			    ref path);
 			
 			Assert.AreEqual(true, File.Exists(filename));
@@ -466,9 +479,11 @@ namespace sentience.core.tests
 			robotGeometry geom = new robotGeometry();
 			
 			geom.CreateStereoCameras(
-		        1, 100,
+		        no_of_stereo_cameras, 100,
 		        320, 240,		        
-		        78);
+		        78,
+			    head_diameter_mm,
+			    0);
 			                         
 			geom.CreateSensorModels(buffer);
 			
@@ -476,12 +491,15 @@ namespace sentience.core.tests
             pos3D pose_offset = null;
             bool buffer_transition = false;
 
-		    float[][] stereo_features = new float[1][];
-		    byte[][,] stereo_features_colour = new byte[1][,];
-		    float[][] stereo_features_uncertainties = new float[1][];
-			stereo_features_uncertainties[0] = new float[no_of_localisation_stereo_features];
-			for (int i = 0; i < no_of_localisation_stereo_features; i++)
-				stereo_features_uncertainties[0][i] = 1;
+		    float[][] stereo_features = new float[no_of_stereo_cameras][];
+		    byte[][,] stereo_features_colour = new byte[no_of_stereo_cameras][,];
+		    float[][] stereo_features_uncertainties = new float[no_of_stereo_cameras][];
+			for (int i = 0; i < no_of_stereo_cameras; i++)
+			{
+			    stereo_features_uncertainties[i] = new float[no_of_localisation_stereo_features];
+			    for (int j = 0; j < no_of_localisation_stereo_features; j++)
+				    stereo_features_uncertainties[i][j] = 1;
+			}
 
             float average_offset_x_mm = 0;
             float average_offset_y_mm = 0;
@@ -497,28 +515,31 @@ namespace sentience.core.tests
 				OdometryData p1 = path[i + 1];
 				
 				// create an intermediate pose
-				geom.pose.x = p0.x + ((p1.x - p0.x)/2) + bias_x_mm;
-				geom.pose.y = p0.y + ((p1.y - p0.y)/2) + bias_y_mm;
-				geom.pose.z = 0;
-				geom.pose.pan = p0.orientation + ((p1.orientation - p0.orientation)/2);
-				
-				// create stereo features				
-				int ctr = 0;
-				stereo_features[0] = new float[no_of_localisation_stereo_features * 3];
-				stereo_features_colour[0] = new byte[no_of_localisation_stereo_features, 3];
-				for (int f = 0; f < no_of_localisation_stereo_features; f += 5)
+				for (int cam = 0; cam < no_of_stereo_cameras; cam++)
 				{
-					if (f < no_of_localisation_stereo_features/2)
+				    geom.pose[cam].x = p0.x + ((p1.x - p0.x)/2) + bias_x_mm;
+				    geom.pose[cam].y = p0.y + ((p1.y - p0.y)/2) + bias_y_mm;
+				    geom.pose[cam].z = 0;
+				    geom.pose[cam].pan = p0.orientation + ((p1.orientation - p0.orientation)/2);
+								
+					// create stereo features				
+					int ctr = 0;
+					stereo_features[cam] = new float[no_of_localisation_stereo_features * 3];
+					stereo_features_colour[cam] = new byte[no_of_localisation_stereo_features, 3];
+					for (int f = 0; f < no_of_localisation_stereo_features; f += 5)
 					{
-						stereo_features[0][ctr++] = 20;
-						stereo_features[0][ctr++] = rnd.Next(239);
+						if (f < no_of_localisation_stereo_features/2)
+						{
+							stereo_features[cam][ctr++] = 20;
+							stereo_features[cam][ctr++] = rnd.Next(239);
+						}
+						else
+						{
+							stereo_features[cam][ctr++] = geom.image_width[cam] - 20;
+							stereo_features[cam][ctr++] = rnd.Next(239);
+						}
+					    stereo_features[cam][ctr++] = disparity;
 					}
-					else
-					{
-						stereo_features[0][ctr++] = geom.image_width[0] - 20;
-						stereo_features[0][ctr++] = rnd.Next(239);
-					}
-				    stereo_features[0][ctr++] = disparity;
 				}
 				
                 float matching_score = buffer.Localise(
@@ -536,9 +557,9 @@ namespace sentience.core.tests
 				{				
 					Console.WriteLine("pose_offset (mm): " + pose_offset.x.ToString() + ", " + pose_offset.y.ToString() + ", " + pose_offset.pan.ToString());
 					OdometryData estimated_pose = new OdometryData();
-					estimated_pose.x = geom.pose.x + pose_offset.x;
-					estimated_pose.y = geom.pose.y + pose_offset.y;
-					estimated_pose.orientation = geom.pose.pan + pose_offset.pan;
+					estimated_pose.x = geom.pose[0].x + pose_offset.x;
+					estimated_pose.y = geom.pose[0].y + pose_offset.y;
+					estimated_pose.orientation = geom.pose[0].pan + pose_offset.pan;
 					estimated_path.Add(estimated_pose);
 	                average_offset_x_mm += pose_offset.x;
 	                average_offset_y_mm += pose_offset.y;

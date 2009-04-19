@@ -876,7 +876,7 @@ namespace sentience.core
         /// <param name="no_of_samples">number of sample poses</param>
         /// <param name="sampling_radius_major_mm">major radius for samples, in the direction of robot movement</param>
         /// <param name="sampling_radius_minor_mm">minor radius for samples, perpendicular to the direction of robot movement</param>
-        /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation</param>
+        /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation, for each stereo camera observation</param>
         /// <param name="max_orientation_variance">maximum variance in orientation in radians, used to create sample poses</param>
         /// <param name="max_tilt_variance">maximum variance in tilt angle in radians, used to create sample poses</param>
         /// <param name="max_roll_variance">maximum variance in roll angle in radians, used to create sample poses</param>
@@ -917,7 +917,7 @@ namespace sentience.core
             int no_of_samples,
             float sampling_radius_major_mm,
             float sampling_radius_minor_mm,
-            pos3D robot_pose,
+            pos3D[] robot_pose,
             float max_orientation_variance,
             float max_tilt_variance,
             float max_roll_variance,
@@ -936,7 +936,7 @@ namespace sentience.core
             buffer_transition = MoveToNextLocalGrid(
                 ref current_grid_index,
                 ref current_disparity_index,
-                robot_pose,
+                robot_pose[0],
                 buffer,
                 ref current_buffer_index,
                 grid_centres,
@@ -1027,9 +1027,9 @@ namespace sentience.core
 			if (matching_score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
 			{	        
 		        // add this to the list of localisations                
-		        localisations.Add(robot_pose.x + pose_offset.x);
-		        localisations.Add(robot_pose.y + pose_offset.y);
-		        localisations.Add(robot_pose.z + pose_offset.z);
+		        localisations.Add(robot_pose[0].x + pose_offset.x);
+		        localisations.Add(robot_pose[0].y + pose_offset.y);
+		        localisations.Add(robot_pose[0].z + pose_offset.z);
 		        localisations.Add(pose_offset.pan);
 		        localisations.Add(matching_score);
 	

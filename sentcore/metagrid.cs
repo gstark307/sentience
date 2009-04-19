@@ -439,7 +439,7 @@ namespace sentience.core
         /// <param name="no_of_samples">number of sample poses</param>
         /// <param name="sampling_radius_major_mm">major radius for samples, in the direction of robot movement</param>
         /// <param name="sampling_radius_minor_mm">minor radius for samples, perpendicular to the direction of robot movement</param>
-        /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation</param>
+        /// <param name="robot_pose">current estimated position and orientation of the robots centre of rotation, from which each stereo camera took its observations</param>
         /// <param name="max_orientation_variance">maximum variance in orientation in radians, used to create sample poses</param>
         /// <param name="max_tilt_variance">maximum variance in tilt angle in radians, used to create sample poses</param>
         /// <param name="max_roll_variance">maximum variance in roll angle in radians, used to create sample poses</param>
@@ -483,7 +483,7 @@ namespace sentience.core
             int no_of_samples,
             float sampling_radius_major_mm,
             float sampling_radius_minor_mm,
-            pos3D robot_pose,
+            pos3D[] robot_pose,
             float max_orientation_variance,
             float max_tilt_variance,
             float max_roll_variance,
@@ -505,9 +505,9 @@ namespace sentience.core
                 sampling_radius_major_mm,
                 sampling_radius_minor_mm,
                 no_of_samples,
-                robot_pose.pan,
-                robot_pose.tilt,
-                robot_pose.roll,
+                robot_pose[0].pan,
+                robot_pose[0].tilt,
+                robot_pose[0].roll,
                 max_orientation_variance,
                 max_tilt_variance,
                 max_roll_variance,
@@ -548,8 +548,8 @@ namespace sentience.core
                     ref relative_left_cam[cam],
                     ref relative_right_cam[cam]);
 
-                left_camera_location[cam] = relative_left_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
-                right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose.x, robot_pose.y, robot_pose.z);
+                left_camera_location[cam] = relative_left_cam[cam].translate(robot_pose[cam].x, robot_pose[cam].y, robot_pose[cam].z);
+                right_camera_location[cam] = relative_right_cam[cam].translate(robot_pose[cam].x, robot_pose[cam].y, robot_pose[cam].z);
             }
 
             pose_score.Clear();
@@ -577,9 +577,9 @@ namespace sentience.core
                     sample_pose_left_cam.tilt = 0;
                     sample_pose_left_cam.roll = 0;
                     sample_pose_left_cam = sample_pose_left_cam.rotate(sample_pose.pan, sample_pose.tilt, sample_pose.roll);
-                    sample_pose_left_cam.x += robot_pose.x;
-                    sample_pose_left_cam.y += robot_pose.y;
-                    sample_pose_left_cam.z += robot_pose.z;
+                    sample_pose_left_cam.x += robot_pose[cam].x;
+                    sample_pose_left_cam.y += robot_pose[cam].y;
+                    sample_pose_left_cam.z += robot_pose[cam].z;
 
                     // update the position of the right camera for this pose
                     pos3D sample_pose_right_cam = relative_right_cam[cam].add(sample_pose);
@@ -587,9 +587,9 @@ namespace sentience.core
                     sample_pose_right_cam.tilt = 0;
                     sample_pose_right_cam.roll = 0;
                     sample_pose_right_cam = sample_pose_right_cam.rotate(sample_pose.pan, sample_pose.tilt, sample_pose.roll);
-                    sample_pose_right_cam.x += robot_pose.x;
-                    sample_pose_right_cam.y += robot_pose.y;
-                    sample_pose_right_cam.z += robot_pose.z;
+                    sample_pose_right_cam.x += robot_pose[cam].x;
+                    sample_pose_right_cam.y += robot_pose[cam].y;
+                    sample_pose_right_cam.z += robot_pose[cam].z;
 
                     // centre position between the left and right cameras
                     pos3D stereo_camera_centre = 
@@ -627,9 +627,9 @@ namespace sentience.core
                 }
 
                 // add the pose to the list
-                sample_pose.pan -= robot_pose.pan;
-                sample_pose.tilt -= robot_pose.tilt;
-                sample_pose.roll -= robot_pose.roll;
+                sample_pose.pan -= robot_pose[0].pan;
+                sample_pose.tilt -= robot_pose[0].tilt;
+                sample_pose.roll -= robot_pose[0].roll;
 
                 if (Math.Abs(sample_pose.pan) > max_orientation_variance)
                 {
@@ -659,7 +659,7 @@ namespace sentience.core
 
                 // rotate the best pose to the robot's current orientation
                 // this becomes an offset, which may be used for course correction
-                pose_offset = best_robot_pose.rotate(robot_pose.pan, robot_pose.tilt, robot_pose.roll);
+                pose_offset = best_robot_pose.rotate(robot_pose[0].pan, robot_pose[0].tilt, robot_pose[0].roll);
 
                 // orientation relative to the current heading
                 pose_offset.pan = best_robot_pose.pan;
