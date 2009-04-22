@@ -341,6 +341,48 @@ namespace sentience.core.tests
 		
         #endregion
 		
+		#region "saving and loading as xml"
+		
+		[Test()]
+		public void SaveAndLoad()
+		{
+			string filename = "tests_metagridbuffer_SaveAndLoad.xml";
+            int no_of_grids = 2;
+            int grid_type = metagrid.TYPE_SIMPLE;
+            int dimension_mm = 3000;
+            int dimension_vertical_mm = 2000;
+            int cellSize_mm = 32;
+            int localisationRadius_mm = 2000;
+            int maxMappingRange_mm = 2000;
+            float vacancyWeighting = 0.5f;
+
+            metagridBuffer buffer1 =
+                new metagridBuffer(
+                    no_of_grids,
+                    grid_type,
+                    dimension_mm,
+                    dimension_vertical_mm,
+                    cellSize_mm,
+                    localisationRadius_mm,
+                    maxMappingRange_mm,
+                    vacancyWeighting);
+			
+			buffer1.Save(filename);
+			
+			metagridBuffer buffer2 = new metagridBuffer();
+			buffer2.Load(filename);
+			
+			Assert.AreEqual(buffer1.no_of_grid_levels, buffer2.no_of_grid_levels);
+			Assert.AreEqual(buffer1.grid_type, buffer2.grid_type);
+		    Assert.AreEqual(buffer1.dimension_mm, buffer2.dimension_mm);
+			Assert.AreEqual(buffer1.dimension_vertical_mm, buffer2.dimension_vertical_mm);
+			Assert.AreEqual(buffer1.cellSize_mm, buffer2.cellSize_mm);
+			Assert.AreEqual(buffer1.localisationRadius_mm, buffer2.localisationRadius_mm);
+			Assert.AreEqual(buffer1.maxMappingRange_mm, buffer2.maxMappingRange_mm);
+			Assert.AreEqual(buffer1.vacancyWeighting, buffer2.vacancyWeighting);
+		}
+		
+		#endregion
 		
 		[Test()]
 		public void LoadPath()

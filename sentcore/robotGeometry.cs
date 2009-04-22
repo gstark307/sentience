@@ -18,7 +18,10 @@
 */
 
 using System;
+using System.IO;
+using System.Xml;
 using System.Collections.Generic;
+using sluggish.utilities.xml;
 
 namespace sentience.core
 {
@@ -38,6 +41,9 @@ namespace sentience.core
 	    public float head_centroid_x;
 	    public float head_centroid_y;
 	    public float head_centroid_z;
+		
+		// diameter of the head
+		public float head_diameter_mm;
 		
 		// head orientation in radians
 	    public float head_pan;
@@ -115,6 +121,7 @@ namespace sentience.core
 		    float head_diameter_mm,
 		    float default_head_orientation_degrees)
 		{
+			this.head_diameter_mm = head_diameter_mm;
 			pose = new pos3D[no_of_stereo_cameras];
 			for (int i = 0; i < no_of_stereo_cameras; i++)
 			    pose[i] = new pos3D(0,0,0);
@@ -180,5 +187,521 @@ namespace sentience.core
 				}
 			}
 		}
+		
+		#region "loading and saving"
+		
+        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        {
+            XmlElement nodeRobot = doc.CreateElement("RobotGeometry");
+            parent.AppendChild(nodeRobot);								
+			
+            xml.AddComment(doc, nodeRobot, "Dimensions of the body in millimetres");
+            xml.AddTextElement(doc, nodeRobot, "BodyWidthMillimetres", Convert.ToString(body_width_mm));
+            xml.AddTextElement(doc, nodeRobot, "BodyLengthMillimetres", Convert.ToString(body_length_mm));
+            xml.AddTextElement(doc, nodeRobot, "BodyHeightMillimetres", Convert.ToString(body_height_mm));
+
+            xml.AddComment(doc, nodeRobot, "centre of rotation, relative to the top left corner of the body's bounding box");
+            xml.AddTextElement(doc, nodeRobot, "CentreOfRotationX", Convert.ToString(body_centre_of_rotation_x));
+            xml.AddTextElement(doc, nodeRobot, "CentreOfRotationY", Convert.ToString(body_centre_of_rotation_y));
+            xml.AddTextElement(doc, nodeRobot, "CentreOfRotationZ", Convert.ToString(body_centre_of_rotation_z));
+
+            xml.AddComment(doc, nodeRobot, "Head centroid relative to the top left corner of the body's bounding box");
+            xml.AddTextElement(doc, nodeRobot, "HeadCentreX", Convert.ToString(head_centroid_x));
+            xml.AddTextElement(doc, nodeRobot, "HeadCentreY", Convert.ToString(head_centroid_y));
+            xml.AddTextElement(doc, nodeRobot, "HeadCentreZ", Convert.ToString(head_centroid_z));
+
+			xml.AddTextElement(doc, nodeRobot, "HeadDiameterMillimetres", Convert.ToString(head_diameter_mm));
+
+            xml.AddComment(doc, nodeRobot, "Maximum pose variance");
+            xml.AddTextElement(doc, nodeRobot, "MaxOrientationVarianceDegrees", Convert.ToString(max_orientation_variance / (float)Math.PI * 180));
+            xml.AddTextElement(doc, nodeRobot, "MaxTiltVarianceDegrees", Convert.ToString(max_tilt_variance / (float)Math.PI * 180));
+            xml.AddTextElement(doc, nodeRobot, "MaxRollVarianceDegrees", Convert.ToString(max_roll_variance / (float)Math.PI * 180));			
+
+			int no_of_stereo_cameras = baseline_mm.Length;
+			xml.AddTextElement(doc, nodeRobot, "NoOfStereoCameras", Convert.ToString(no_of_stereo_cameras));			
+			
+            XmlElement nodeCameras = doc.CreateElement("Cameras");
+            nodeRobot.AppendChild(nodeCameras);
+			
+			for (int i = 0; i < no_of_stereo_cameras; i++)
+			{
+                XmlElement nodeStereoCamera = doc.CreateElement("StereoCamera");
+                nodeCameras.AppendChild(nodeStereoCamera);
+				xml.AddTextElement(doc, nodeStereoCamera, "BaselineMillimetres", Convert.ToString(baseline_mm[i]));
+				
+				string str = "";
+				str = Convert.ToString(stereo_camera_position_x[i]) + " ";
+				str += Convert.ToString(stereo_camera_position_y[i]) + " ";
+				str += Convert.ToString(stereo_camera_position_z[i]);
+  			    xml.AddComment(doc, nodeStereoCamera, "stereo camera position relative to the head centroid");			
+				xml.AddTextElement(doc, nodeStereoCamera, "PositionMillimetres", str);
+
+				str = Convert.ToString(stereo_camera_pan[i] / (float)Math.PI * 180) + " ";
+				str += Convert.ToString(stereo_camera_tilt[i] / (float)Math.PI * 180) + " ";
+				str += Convert.ToString(stereo_camera_roll[i] / (float)Math.PI * 180);
+			    xml.AddComment(doc, nodeStereoCamera, "stereo camera orientation relative to the head");
+		 	    xml.AddTextElement(doc, nodeStereoCamera, "OrientationDegrees", str);
+			
+				str = Convert.ToString(image_width[i]) + " ";
+				str += Convert.ToString(image_height[i]) + " ";
+			    xml.AddComment(doc, nodeStereoCamera, "image dimensions for each stereo camera");
+			    xml.AddTextElement(doc, nodeStereoCamera, "ImageDimensions", str);
+
+				xml.AddTextElement(doc, nodeStereoCamera, "FOVDegrees", Convert.ToString(FOV_degrees[i]));
+			}
+			
+            return (nodeRobot);
+        }
+
+        /// <summary>
+        /// return an Xml document containing geometry parameters
+        /// </summary>
+        /// <returns></returns>
+        private XmlDocument getXmlDocument()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlElement nodeGeom = doc.CreateElement("Geometry");
+            doc.AppendChild(nodeGeom);
+
+            nodeGeom.AppendChild(getXml(doc, nodeGeom));
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save camera geometry as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void Save(string filename)
+        {
+            XmlDocument doc = getXmlDocument();
+            doc.Save(filename);
+        }
+		
+        /// <summary>
+        /// parse an xml node to extract geometry parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(
+		    XmlNode xnod, int level,
+            ref int cameraIndex)
+        {
+            XmlNode xnodWorking;
+
+			if (xnod.Name == "StereoCamera")
+			{
+				cameraIndex++;
+			}			
+            if (xnod.Name == "BodyWidthMillimetres")
+            {
+                body_width_mm = Convert.ToSingle(xnod.InnerText);
+            }
+            if (xnod.Name == "BodyLengthMillimetres")
+            {
+                body_length_mm = Convert.ToSingle(xnod.InnerText);
+            }
+            if (xnod.Name == "BodyHeightMillimetres")
+            {
+                body_height_mm = Convert.ToSingle(xnod.InnerText);
+            }
+
+			if (xnod.Name == "CentreOfRotationX")
+            {
+                body_centre_of_rotation_x = Convert.ToSingle(xnod.InnerText);
+            }
+			if (xnod.Name == "CentreOfRotationY")
+            {
+                body_centre_of_rotation_y = Convert.ToSingle(xnod.InnerText);
+            }
+			if (xnod.Name == "CentreOfRotationZ")
+            {
+                body_centre_of_rotation_z = Convert.ToSingle(xnod.InnerText);
+            }
+			
+			if (xnod.Name == "HeadCentreX")
+			{
+				head_centroid_x = Convert.ToSingle(xnod.InnerText);
+			}
+			if (xnod.Name == "HeadCentreY")
+			{
+				head_centroid_y = Convert.ToSingle(xnod.InnerText);
+			}
+			if (xnod.Name == "HeadCentreZ")
+			{
+				head_centroid_z = Convert.ToSingle(xnod.InnerText);
+			}
+
+			if (xnod.Name == "HeadDiameterMillimetres")
+			{
+				head_diameter_mm = Convert.ToSingle(xnod.InnerText);
+			}
+
+			if (xnod.Name == "MaxOrientationVarianceDegrees")
+			{
+				max_orientation_variance = Convert.ToSingle(xnod.InnerText) / 180.0f * (float)Math.PI;
+			}
+			if (xnod.Name == "MaxTiltVarianceDegrees")
+			{
+				max_tilt_variance = Convert.ToSingle(xnod.InnerText) / 180.0f * (float)Math.PI;
+			}
+			if (xnod.Name == "MaxRollVarianceDegrees")
+			{
+				max_roll_variance = Convert.ToSingle(xnod.InnerText) / 180.0f * (float)Math.PI;
+			}
+
+			if (xnod.Name == "NoOfStereoCameras")
+			{
+				cameraIndex = -1;
+				int no_of_stereo_cameras = Convert.ToInt32(xnod.InnerText);
+				
+				baseline_mm = new float[no_of_stereo_cameras];
+				stereo_camera_position_x = new float[no_of_stereo_cameras];
+				stereo_camera_position_y = new float[no_of_stereo_cameras];
+				stereo_camera_position_z = new float[no_of_stereo_cameras];
+				stereo_camera_pan = new float[no_of_stereo_cameras];
+				stereo_camera_tilt = new float[no_of_stereo_cameras];
+				stereo_camera_roll = new float[no_of_stereo_cameras];
+				image_width = new int[no_of_stereo_cameras];
+				image_height = new int[no_of_stereo_cameras];
+				FOV_degrees = new float[no_of_stereo_cameras];
+			    left_camera_location = new pos3D[no_of_stereo_cameras];
+			    right_camera_location = new pos3D[no_of_stereo_cameras];
+				for (int i = 0; i < no_of_stereo_cameras; i++)
+				{
+					left_camera_location[i] = new pos3D(0,0,0);
+					right_camera_location[i] = new pos3D(0,0,0);
+				}
+			}
+			
+			if (xnod.Name == "BaselineMillimetres")
+			{
+				baseline_mm[cameraIndex] = Convert.ToSingle(xnod.InnerText);
+			}
+			if (xnod.Name == "PositionMillimetres")
+			{
+				string[] str = xnod.InnerText.Split(' ');
+				stereo_camera_position_x[cameraIndex] = Convert.ToSingle(str[0]);
+				stereo_camera_position_y[cameraIndex] = Convert.ToSingle(str[1]);
+				stereo_camera_position_z[cameraIndex] = Convert.ToSingle(str[2]);
+			}
+			if (xnod.Name == "OrientationDegrees")
+			{
+				string[] str = xnod.InnerText.Split(' ');
+				stereo_camera_pan[cameraIndex] = Convert.ToSingle(str[0]) / 180.0f * (float)Math.PI;
+				stereo_camera_tilt[cameraIndex] = Convert.ToSingle(str[1]) / 180.0f * (float)Math.PI;
+				stereo_camera_roll[cameraIndex] = Convert.ToSingle(str[2]) / 180.0f * (float)Math.PI;
+			}
+			
+			if (xnod.Name == "ImageDimensions")
+			{
+				string[] str = xnod.InnerText.Split(' ');
+				image_width[cameraIndex] = Convert.ToInt32(str[0]);
+				image_height[cameraIndex] = Convert.ToInt32(str[1]);
+			}
+			
+			if (xnod.Name == "FOVDegrees")
+			{
+				FOV_degrees[cameraIndex] = Convert.ToSingle(xnod.InnerText);
+			}			
+			
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1, ref cameraIndex);
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+		
+        /// <summary>
+        /// load geometry parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public bool Load(string filename)
+        {
+            bool loaded = false;
+
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+                int cameraIndex = -1;
+                LoadFromXml(xnodDE, 0, ref cameraIndex);
+                
+                // close the reader
+                xtr.Close();
+                loaded = true;
+            }
+            return (loaded);
+        }		
+		
+		#endregion
+		
+		#region "setters"
+		
+		/// <summary>
+		///set the centre of rotation relative to the top left corner of the body 
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="z"></param>
+		public void SetCentreOfRotation(
+		    float x, 
+		    float y,
+		    float z)
+		{
+		    body_centre_of_rotation_x = x;
+		    body_centre_of_rotation_y = y;
+		    body_centre_of_rotation_z = z;
+		}
+		
+		/// <summary>
+		///sets the centroid position of the robot's head 
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="z"></param>
+		public void SetHeadPosition(
+		    float x,
+            float y,
+		    float z)
+		{
+			head_centroid_x = x;
+			head_centroid_y = y;
+			head_centroid_z = z;
+		}
+
+		/// <summary>
+		/// sets the orientation of the robots head 
+		/// </summary>
+		/// <param name="pan"></param>
+		/// <param name="tilt"></param>
+		/// <param name="roll"></param>
+		public void SetHeadOrientation(
+		    float pan_degrees,
+		    float tilt_degrees,
+		    float roll_degrees)
+		{
+			head_pan = pan_degrees * (float)Math.PI / 180.0f;
+			head_tilt = tilt_degrees * (float)Math.PI / 180.0f;
+			head_roll = roll_degrees * (float)Math.PI / 180.0f;
+		}
+		
+		/// <summary>
+		/// sets the position and orientation of the robots head
+		/// </summary>
+		/// <param name="p">
+		/// A <see cref="pos3D"/>
+		/// </param>
+		public void SetHeadPositionOrientation(pos3D p)
+		{
+			head_centroid_x = p.x;
+			head_centroid_y = p.y;
+			head_centroid_z = p.z;
+			head_pan = p.pan;
+			head_tilt = p.tilt;
+			head_roll = p.roll;
+		}
+		
+		public void SetBodyDimensions(
+		    float width_mm,
+		    float length_mm,
+		    float height_mm)
+		{
+			body_width_mm = width_mm;
+			body_length_mm = length_mm;
+			body_height_mm = height_mm;
+		}
+		
+		#endregion
+
+		#region "loading and saving sensor models"
+		
+        /// <summary>
+        /// parse an xml node to extract buffer parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXmlSensorModels(
+		    XmlNode xnod, int level,
+		    ref int no_of_stereo_cameras,
+		    ref int no_of_grid_levels,
+            ref int camera_index,
+		    ref int grid_level)
+        {
+            XmlNode xnodWorking;
+
+			if (xnod.Name == "NoOfStereoCameras")
+			{
+				no_of_stereo_cameras = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "NoOfGridLevels")
+			{
+				no_of_grid_levels = Convert.ToInt32(xnod.InnerText);
+				camera_index = 0;
+				grid_level = -1;
+			    
+				sensormodel = new stereoModel[no_of_stereo_cameras][];
+			    for (int stereo_cam = 0; stereo_cam < no_of_stereo_cameras; stereo_cam++)
+			    {
+				    sensormodel[stereo_cam] = new stereoModel[no_of_grid_levels];
+				    for (int size = 0; size < no_of_grid_levels; size++)
+				    {
+				        sensormodel[stereo_cam][size] = new stereoModel();
+					    sensormodel[stereo_cam][size].ray_model = new rayModelLookup(1,1);
+				    }
+			    }
+			}
+			if (xnod.Name == "Model")
+			{
+				grid_level++;
+				if (grid_level >= no_of_grid_levels)
+				{
+					grid_level = 0;
+				    camera_index++;
+				}
+				List<string> rayModelsData = new List<string>();
+				sensormodel[camera_index][grid_level].ray_model.LoadFromXml(xnod, level+1, rayModelsData);
+				sensormodel[camera_index][grid_level].ray_model.LoadSensorModelData(rayModelsData);
+			}
+			
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXmlSensorModels(xnodWorking, level + 1,
+		                ref no_of_stereo_cameras,
+		                ref no_of_grid_levels,
+                        ref camera_index,
+		                ref grid_level);
+					            
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+		
+        /// <summary>
+        /// load buffer parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public bool LoadSensorModels(string filename)
+        {
+            bool loaded = false;
+
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+		        int no_of_stereo_cameras = 0;
+		        int no_of_grid_levels = 0;
+                int camera_index = 0;
+		        int grid_level = 0;
+                LoadFromXmlSensorModels(xnodDE, 0,
+				    ref no_of_stereo_cameras,
+				    ref no_of_grid_levels,
+				    ref camera_index,
+				    ref grid_level);
+								                           
+                // close the reader
+                xtr.Close();
+                loaded = true;
+            }
+            return (loaded);
+        }				
+		
+		
+        public XmlElement getXmlSensorModels(XmlDocument doc, XmlElement parent)
+        {
+            XmlElement nodeModels = doc.CreateElement("StereoCameraSensorModels");
+            parent.AppendChild(nodeModels);								
+			
+			int no_of_stereo_cameras = image_width.Length;
+			int no_of_grid_levels = sensormodel[0].Length;
+            xml.AddTextElement(doc, nodeModels, "NoOfStereoCameras", Convert.ToString(no_of_stereo_cameras));
+            xml.AddTextElement(doc, nodeModels, "NoOfGridLevels", Convert.ToString(no_of_grid_levels));
+
+			for (int stereo_cam = 0; stereo_cam < no_of_stereo_cameras; stereo_cam++)
+			{
+				for (int size = 0; size < no_of_grid_levels; size++)
+				{
+                    XmlElement nodeCamera = doc.CreateElement("Model");
+                    nodeModels.AppendChild(nodeCamera);						
+					
+					rayModelLookup ray_model = sensormodel[stereo_cam][size].ray_model;
+
+					nodeCamera.AppendChild(
+			            ray_model.getXml(doc, nodeCamera));
+				}
+			}
+			
+            return (nodeModels);
+        }
+
+        /// <summary>
+        /// return an Xml document containing sensor models
+        /// </summary>
+        /// <returns></returns>
+        private XmlDocument getXmlDocumentSensorModels()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlElement nodeSensors = doc.CreateElement("Sensors");
+            doc.AppendChild(nodeSensors);
+			
+            nodeSensors.AppendChild(
+			    getXmlSensorModels(doc, nodeSensors));
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save buffer as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void SaveSensorModels(string filename)
+        {
+            XmlDocument doc = getXmlDocumentSensorModels();
+            doc.Save(filename);
+        }
+		
+		#endregion
+		
 	}
 }

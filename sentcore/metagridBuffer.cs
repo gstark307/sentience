@@ -18,10 +18,12 @@
 */
 
 using System;
+using System.Xml;
 using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
 using sluggish.utilities;
+using sluggish.utilities.xml;
 using Aced.Compression;
 
 namespace sentience.core
@@ -47,16 +49,23 @@ namespace sentience.core
 		protected BinaryReader disparities_reader;
 		protected bool disparities_file_open;
 		
-		protected float dimension_mm;
+		public int dimension_mm;
+		public int dimension_vertical_mm;
+		public int no_of_grid_levels;
+		public int grid_type;
+		public int cellSize_mm;
+		public int localisationRadius_mm;
+        public int maxMappingRange_mm;
+		public float vacancyWeighting;
 		
 		protected List<float> localisations;
 		
         #region "constructor"
 		
         /// <summary>
-        /// constructor
+        /// initialise the buffer
         /// </summary>
-        /// <param name="no_of_grids">The number of sub grids</param>
+        /// <param name="no_of_grid_levels">The number of sub grids</param>
         /// <param name="grid_type">the type of sub grids</param>
         /// <param name="dimension_mm">dimension of the smallest sub grid</param>
         /// <param name="dimension_vertical_mm">vertical dimension of the smallest sub grid</param>
@@ -64,8 +73,8 @@ namespace sentience.core
         /// <param name="localisationRadius_mm">localisation radius within the smallest sub grid</param>
         /// <param name="maxMappingRange_mm">maximum mapping radius within the smallest sub grid</param>
         /// <param name="vacancyWeighting">vacancy model weighting, typically between 0.2 and 2</param>
-        public metagridBuffer(
-            int no_of_grids,
+        public void Initialise(
+            int no_of_grid_levels,
             int grid_type,
 		    int dimension_mm, 
             int dimension_vertical_mm, 
@@ -75,6 +84,13 @@ namespace sentience.core
             float vacancyWeighting)
         {
             this.dimension_mm = dimension_mm;
+			this.dimension_vertical_mm = dimension_vertical_mm;
+			this.no_of_grid_levels = no_of_grid_levels;
+			this.grid_type = grid_type;
+			this.cellSize_mm = cellSize_mm;
+			this.localisationRadius_mm = localisationRadius_mm;
+			this.maxMappingRange_mm = maxMappingRange_mm;
+			this.vacancyWeighting = vacancyWeighting;
         
 			// create the buffer
 			buffer = new metagrid[2];
@@ -82,7 +98,7 @@ namespace sentience.core
 			{
 				buffer[i] = 
 					new metagrid(
-				        no_of_grids,
+				        no_of_grid_levels,
 				        grid_type,
 				        dimension_mm,
 				        dimension_vertical_mm,
@@ -97,9 +113,237 @@ namespace sentience.core
 			localisations = new List<float>();
 			disparities_index = new List<int>();
 		}
+
+        /// <summary>
+        /// constructor
+        /// </summary>
+        /// <param name="no_of_grid_levels">The number of sub grids</param>
+        /// <param name="grid_type">the type of sub grids</param>
+        /// <param name="dimension_mm">dimension of the smallest sub grid</param>
+        /// <param name="dimension_vertical_mm">vertical dimension of the smallest sub grid</param>
+        /// <param name="cellSize_mm">cell size of the smallest sub grid</param>
+        /// <param name="localisationRadius_mm">localisation radius within the smallest sub grid</param>
+        /// <param name="maxMappingRange_mm">maximum mapping radius within the smallest sub grid</param>
+        /// <param name="vacancyWeighting">vacancy model weighting, typically between 0.2 and 2</param>
+        public metagridBuffer(
+            int no_of_grid_levels,
+            int grid_type,
+		    int dimension_mm, 
+            int dimension_vertical_mm, 
+            int cellSize_mm, 
+            int localisationRadius_mm, 
+            int maxMappingRange_mm, 
+            float vacancyWeighting)
+        {
+			Initialise(
+                no_of_grid_levels,
+                grid_type,
+		        dimension_mm, 
+                dimension_vertical_mm, 
+                cellSize_mm, 
+                localisationRadius_mm, 
+                maxMappingRange_mm, 
+                vacancyWeighting);
+		}		
+
+        public metagridBuffer()
+		{
+		}
 		
         #endregion
+		
+		#region "loading and saving"
+		
+        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        {
+            XmlElement nodeBuffer = doc.CreateElement("MetaGridBuffer");
+            parent.AppendChild(nodeBuffer);								
+			
+            xml.AddComment(doc, nodeBuffer, "The number of grid scales");
+            xml.AddTextElement(doc, nodeBuffer, "NoOfGridLevels", Convert.ToString(no_of_grid_levels));
+            xml.AddComment(doc, nodeBuffer, "Type of occupancy grid (0 = simple, 1 = multi hypothesis)");
+            xml.AddTextElement(doc, nodeBuffer, "GridType", Convert.ToString(grid_type));
+            xml.AddComment(doc, nodeBuffer, "Dimension of the smallest grid scale in millimetres");
+            xml.AddTextElement(doc, nodeBuffer, "DimensionMillimetres", Convert.ToString(dimension_mm));
+            xml.AddComment(doc, nodeBuffer, "Vertical dimension of the smallest grid scale in millimetres");
+            xml.AddTextElement(doc, nodeBuffer, "VerticalDimensionMillimetres", Convert.ToString(dimension_vertical_mm));
+            xml.AddComment(doc, nodeBuffer, "Occupancy grid cell size on millimetres");
+            xml.AddTextElement(doc, nodeBuffer, "CellSizeMillimetres", Convert.ToString(cellSize_mm));
+            xml.AddComment(doc, nodeBuffer, "Radius used for localisation rays in millimetres");
+            xml.AddTextElement(doc, nodeBuffer, "LocalisationRadiusMillimetres", Convert.ToString(localisationRadius_mm));
+            xml.AddComment(doc, nodeBuffer, "Radius used for mapping rays in millimetres");
+            xml.AddTextElement(doc, nodeBuffer, "MappingRadiusMillimetres", Convert.ToString(maxMappingRange_mm));
+            xml.AddComment(doc, nodeBuffer, "Weighting applied to vacancy model, typically in the range 0.3-1.0");
+            xml.AddTextElement(doc, nodeBuffer, "VacancyWeighting", Convert.ToString(vacancyWeighting));
+			
+            return (nodeBuffer);
+        }
 
+        /// <summary>
+        /// return an Xml document containing metagridBuffer
+        /// </summary>
+        /// <returns></returns>
+        private XmlDocument getXmlDocument()
+        {
+            // Create the document.
+            XmlDocument doc = new XmlDocument();
+
+            // Insert the xml processing instruction and the root node
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "ISO-8859-1", null);
+            doc.PrependChild(dec);
+
+            XmlElement nodeGeom = doc.CreateElement("OccupancyGrids");
+            doc.AppendChild(nodeGeom);
+			
+            nodeGeom.AppendChild(
+			    getXml(doc, nodeGeom));
+
+            return (doc);
+        }
+
+        /// <summary>
+        /// save buffer as an xml file
+        /// </summary>
+        /// <param name="filename">file name to save as</param>
+        public void Save(string filename)
+        {
+            XmlDocument doc = getXmlDocument();
+            doc.Save(filename);
+        }
+		
+        /// <summary>
+        /// parse an xml node to extract buffer parameters
+        /// </summary>
+        /// <param name="xnod"></param>
+        /// <param name="level"></param>
+        public void LoadFromXml(
+		    XmlNode xnod, int level,
+            ref int no_of_grid_levels,
+            ref int grid_type,
+		    ref int dimension_mm,
+            ref int dimension_vertical_mm,
+            ref int cellSize_mm,
+            ref int localisationRadius_mm,
+            ref int maxMappingRange_mm,
+            ref float vacancyWeighting)
+        {
+            XmlNode xnodWorking;
+
+			if (xnod.Name == "NoOfGridLevels")
+			{
+				no_of_grid_levels = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "GridType")
+			{
+				grid_type = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "DimensionMillimetres")
+			{
+				dimension_mm = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "VerticalDimensionMillimetres")
+			{
+				dimension_vertical_mm = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "CellSizeMillimetres")
+			{
+				cellSize_mm = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "LocalisationRadiusMillimetres")
+			{
+				localisationRadius_mm = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "MappingRadiusMillimetres")
+			{
+				maxMappingRange_mm = Convert.ToInt32(xnod.InnerText);
+			}
+			if (xnod.Name == "VacancyWeighting")
+			{
+				vacancyWeighting = Convert.ToSingle(xnod.InnerText);
+			}
+			
+            // call recursively on all children of the current node
+            if (xnod.HasChildNodes)
+            {
+                xnodWorking = xnod.FirstChild;
+                while (xnodWorking != null)
+                {
+                    LoadFromXml(xnodWorking, level + 1,
+			            ref no_of_grid_levels,
+			            ref grid_type,
+					    ref dimension_mm,
+			            ref dimension_vertical_mm,
+			            ref cellSize_mm,
+			            ref localisationRadius_mm,
+			            ref maxMappingRange_mm,
+			            ref vacancyWeighting);
+					            
+                    xnodWorking = xnodWorking.NextSibling;
+                }
+            }
+        }
+		
+        /// <summary>
+        /// load buffer parameters from file
+        /// </summary>
+        /// <param name="filename"></param>
+        public bool Load(string filename)
+        {
+            bool loaded = false;
+
+            if (File.Exists(filename))
+            {
+                // use an XmlTextReader to open an XML document
+                XmlTextReader xtr = new XmlTextReader(filename);
+                xtr.WhitespaceHandling = WhitespaceHandling.None;
+
+                // load the file into an XmlDocuent
+                XmlDocument xd = new XmlDocument();
+                xd.Load(xtr);
+
+                // get the document root node
+                XmlNode xnodDE = xd.DocumentElement;
+
+                // recursively walk the node tree
+	            int no_of_grid_levels=0;
+	            int grid_type=0;
+			    int dimension_mm=0; 
+	            int dimension_vertical_mm=0; 
+	            int cellSize_mm=0; 
+	            int localisationRadius_mm=0; 
+	            int maxMappingRange_mm=0; 
+	            float vacancyWeighting=0;
+                LoadFromXml(xnodDE, 0,
+	                ref no_of_grid_levels,
+	                ref grid_type,
+			        ref dimension_mm,
+	                ref dimension_vertical_mm,
+	                ref cellSize_mm,
+	                ref localisationRadius_mm,
+	                ref maxMappingRange_mm,
+	                ref vacancyWeighting
+				);
+				
+				Initialise(
+	                no_of_grid_levels,
+	                grid_type,
+			        dimension_mm,
+	                dimension_vertical_mm,
+	                cellSize_mm, 
+	                localisationRadius_mm,
+	                maxMappingRange_mm, 
+	                vacancyWeighting);
+				                           
+                // close the reader
+                xtr.Close();
+                loaded = true;
+            }
+            return (loaded);
+        }		
+		
+		#endregion
+			
+		
         #region "getting cell sizes"
 		
 		/// <summary>

@@ -1,4 +1,4 @@
-<Project name="sentcore" fileversion="2.0" language="C#" clr-version="Net_2_0" ctype="DotNetProject">
+<Project name="sentcore" fileversion="2.0" language="C#" clr-version="Net_2_0" targetFramework="2.0" ctype="DotNetProject">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
       <Output directory="bin/Debug" assembly="sentcore" />
@@ -80,6 +80,9 @@
     <File name="memcompressor/Utils.cs" subtype="Code" buildaction="Compile" />
     <File name="gridCells.cs" subtype="Code" buildaction="Compile" />
     <File name="robotGeometry.cs" subtype="Code" buildaction="Compile" />
+    <File name="steersman.cs" subtype="Code" buildaction="Compile" />
+    <File name="unittests/tests_robotGeometry.cs" subtype="Code" buildaction="Compile" />
+    <File name="unittests/tests_steersman.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -89,5 +92,6 @@
     <ProjectReference type="Project" localcopy="True" refto="FASTcorners" />
     <ProjectReference type="Gac" localcopy="True" refto="nunit.framework, Version=2.2.8.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" />
     <ProjectReference type="Gac" localcopy="True" refto="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <ProjectReference type="Gac" localcopy="True" refto="nunit.core" />
   </References>
 </Project>
