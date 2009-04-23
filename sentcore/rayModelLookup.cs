@@ -51,8 +51,9 @@ namespace sentience.core
         /// </summary>
         /// <param name="max_disparity_pixels">maximum disparity in pixels</param>
         /// <param name="max_sensor_model_length">maximum sensor model length in grid cells</param>
-        private void init(int max_disparity_pixels,
-                          int max_sensor_model_length)
+        private void init(
+		    int max_disparity_pixels,
+            int max_sensor_model_length)
         {
             dimension_disparity = max_disparity_pixels * 2;
             dimension_probability = max_sensor_model_length;
@@ -230,8 +231,7 @@ namespace sentience.core
             }
 
             // call recursively on all children of the current node
-            if ((xnod.HasChildNodes) &&
-                (xnod.Name == "InverseSensorModels"))
+            if (xnod.HasChildNodes)
             {
                 xnodWorking = xnod.FirstChild;
                 while (xnodWorking != null)

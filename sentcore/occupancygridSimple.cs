@@ -461,10 +461,13 @@ namespace sentience.core
                 if (modelcomponent == OCCUPIED_SENSORMODEL)
                 {
                     if (longest_axis == Y_AXIS)
-                        starting_range_cells = (int)Math.Abs((ray.vertices[0].y - ray.observedFrom.y) * inverse_cellSize_mm);
+                        starting_range_cells = (int)((ray.vertices[0].y - ray.observedFrom.y) * inverse_cellSize_mm);
                     else
-                        starting_range_cells = (int)Math.Abs((ray.vertices[0].x - ray.observedFrom.x) * inverse_cellSize_mm);
+                        starting_range_cells = (int)((ray.vertices[0].x - ray.observedFrom.x) * inverse_cellSize_mm);
 
+					// always positive
+					if (starting_range_cells < 0) starting_range_cells = -starting_range_cells;
+					
                     // what is the widest point of the ray in cells
                     widest_point = (int)(ray.fattestPoint * steps);
                 }
@@ -523,15 +526,15 @@ namespace sentience.core
                     zz_mm += z_incr_mm*step_size;
 					
                     // convert the x millimetre position into a grid cell position
-                    int x_cell = (int)Math.Round((xx_mm - grid_centre_x_mm) * inverse_cellSize_mm);
+                    int x_cell = (int)(((xx_mm - grid_centre_x_mm) * inverse_cellSize_mm) + 0.5f);
                     if ((x_cell > ray_wdth_localisation) && (x_cell < dimension_cells - ray_wdth_localisation))
                     {
                         // convert the y millimetre position into a grid cell position
-                        int y_cell = (int)Math.Round((yy_mm - grid_centre_y_mm) * inverse_cellSize_mm);										
+                        int y_cell = (int)(((yy_mm - grid_centre_y_mm) * inverse_cellSize_mm) + 0.5f);
                         if ((y_cell > ray_wdth_localisation) && (y_cell < dimension_cells - ray_wdth_localisation))
                         {
                             // convert the z millimetre position into a grid cell position
-                            int z_cell = (int)Math.Round((zz_mm - grid_centre_z_mm) * inverse_cellSize_mm);
+                            int z_cell = (int)(((zz_mm - grid_centre_z_mm) * inverse_cellSize_mm) + 0.5f);
                             if ((z_cell >= 0) && (z_cell < dimension_cells_vertical))
                             {
                                 int x_cell2 = x_cell;

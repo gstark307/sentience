@@ -20,6 +20,8 @@
 using System;
 using System.IO;
 using System.Xml;
+using System.Drawing;
+using sluggish.utilities;
 using sluggish.utilities.xml;
 
 namespace sentience.core
@@ -28,7 +30,11 @@ namespace sentience.core
 	{
 		// geometry of the robot
 	    public robotGeometry robot_geometry;
+		
+		// occupancy grid double buffer
 		public metagridBuffer buffer;
+		
+		// random number generator
 		protected Random rnd;
 		
 		#region "constructors"
@@ -267,6 +273,30 @@ namespace sentience.core
 		
 		#endregion
 		
+		#region "display"
+		
+		public void ShowLocalisations(
+            string image_filename, 
+		    int img_width, 
+		    int img_height)
+		{
+            byte[] img = new byte[img_width * img_height * 3];
+            Bitmap bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            buffer.ShowPath(img, img_width, img_height, true, true);
+            BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+
+			if (image_filename.ToLower().EndsWith("gif"))
+                bmp.Save(image_filename, System.Drawing.Imaging.ImageFormat.Gif);			
+			if (image_filename.ToLower().EndsWith("png"))
+                bmp.Save(image_filename, System.Drawing.Imaging.ImageFormat.Png);			
+			if (image_filename.ToLower().EndsWith("bmp"))
+                bmp.Save(image_filename, System.Drawing.Imaging.ImageFormat.Bmp);			
+			if (image_filename.ToLower().EndsWith("jpg"))
+                bmp.Save(image_filename, System.Drawing.Imaging.ImageFormat.Jpeg);			
+		}		
+		
+		#endregion
+		
 		#region "loading a path"
 		
 		protected string current_path_filename;
@@ -289,7 +319,7 @@ namespace sentience.core
 			current_disparities_filename = disparities_filename;
 			
 			buffer.LoadPath(path_filename, disparities_index_filename, disparities_filename);
-		}
+		}		
 		
 		public void ResetPath()
 		{
@@ -396,6 +426,67 @@ namespace sentience.core
 			robot_geometry.SetHeadPosition(x, y, z);
 		}
 				
+		/// <summary>
+		/// Defines the major and minor axes of an ellipse which describes the pos uncertainty 
+		/// The major axis of the ellipse is in the direction of motion
+		/// </summary>
+		/// <param name="major_axis_mm">length of the major axis, in the direction of motion, in millimetres</param>
+		/// <param name="minor_axis_mm">length of the minor axis, perpendicular to the direction of motion, in millimetres</param>
+		public void SetPoseUncertaintyEllipse(
+		    float major_axis_mm,
+		    float minor_axis_mm)
+		{
+			robot_geometry.SetPoseUncertaintyEllipse(major_axis_mm, minor_axis_mm);
+		}
+		
+		/// <summary>
+		/// Set the maximum orientation variance, used when considering possible poses 
+		/// </summary>
+		/// <param name="pan_degrees">maximum variance in pan angle</param>
+		/// <param name="tilt_degrees">maximum variance in tilt angle</param>
+		/// <param name="roll_degrees">maximum variance in roll angle</param>
+		public void SetMaximumOrientationVariance(
+		    float pan_degrees,
+		    float tilt_degrees,
+		    float roll_degrees)
+		{
+			robot_geometry.SetMaximumOrientationVariance(pan_degrees, tilt_degrees, roll_degrees);
+		}
+
+		/// <summary>
+		/// sets the estimates position and orientation for the given stereo camera observation
+		/// </summary>
+		/// <param name="stereo_camera_index">index number of the stereo camera from which the observation was made</param>
+		/// <param name="x_mm">estimated x position when the observation was made</param>
+		/// <param name="y_mm">estimated y position when the observation was made</param>
+		/// <param name="z_mm">estimated z position when the observation was made</param>
+		/// <param name="pan_radians">estimated pan angle when the observation was made</param>
+		/// <param name="tilt_radians">estimated tilt angle when the observation was made</param>
+		/// <param name="roll_radians">estimated roll angle when the observation was made</param>
+		public void SetCurrentPosition(
+		    int stereo_camera_index,
+		    float x_mm,
+		    float y_mm,
+		    float z_mm,
+		    float pan_radians,
+		    float tilt_radians,
+		    float roll_radians)
+		{
+			if (robot_geometry.pose[stereo_camera_index] != null)
+			{
+			    robot_geometry.pose[stereo_camera_index].x = x_mm;
+			    robot_geometry.pose[stereo_camera_index].y = y_mm;
+			    robot_geometry.pose[stereo_camera_index].z = z_mm;				
+			}
+			else
+			{	
+				robot_geometry.pose[stereo_camera_index] = new pos3D(x_mm,y_mm,z_mm);
+			}
+			robot_geometry.pose[stereo_camera_index].pan = pan_radians;
+			robot_geometry.pose[stereo_camera_index].tilt = tilt_radians;
+			robot_geometry.pose[stereo_camera_index].roll = roll_radians;
+		}
+
 		#endregion
 	    
 	}

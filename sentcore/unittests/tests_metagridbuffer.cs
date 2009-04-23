@@ -245,7 +245,7 @@ namespace sentience.core.tests
         /// <param name="start_orientation">orientation at the start of the path</param>
         /// <param name="end_orientation">orientation at the end of the path</param>
         /// <param name="distance_between_poses_mm">distance between poses</param>
-        private static void SavePath(
+        public static void SavePath(
 		    string filename,
 		    float path_length_mm,
 		    float start_orientation,

@@ -1,0 +1,37 @@
+<Combine fileversion="2.0" name="steersman">
+  <Policies>
+    <DotNetNamingPolicy DirectoryNamespaceAssociation="None" ResourceNamePolicy="FileFormatDefault" />
+    <TextStylePolicy FileWidth="120" TabWidth="4" TabsToSpaces="False" NoTabsAfterNonTabs="False" RemoveTrailingWhitespace="False" EolMarker="Native" />
+    <StandardHeader Text="" inheritsSet="MITX11License" />
+  </Policies>
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="sentcore" configuration="Debug" />
+      <Entry build="True" name="utilities" configuration="Debug" />
+      <Entry build="True" name="FASTcorners" configuration="Debug" />
+      <Entry build="True" name="pathplanner" configuration="Debug" />
+      <Entry build="True" name="steersman" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="sentcore" configuration="Release" />
+      <Entry build="True" name="utilities" configuration="Release" />
+      <Entry build="True" name="FASTcorners" configuration="Release" />
+      <Entry build="True" name="pathplanner" configuration="Release" />
+      <Entry build="True" name="steersman" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="steersman" single="True">
+    <Execute type="None" entry="sentcore" />
+    <Execute type="None" entry="utilities" />
+    <Execute type="None" entry="FASTcorners" />
+    <Execute type="None" entry="pathplanner" />
+    <Execute type="None" entry="steersman" />
+  </StartMode>
+  <Entries>
+    <Entry filename="../../sentcore/sentcore.mdp" />
+    <Entry filename="../../utilities/utilities.mdp" />
+    <Entry filename="../../FASTcorners/FASTcorners.mdp" />
+    <Entry filename="../../pathplanner/pathplanner.mdp" />
+    <Entry filename="steersman.mdp" />
+  </Entries>
+</Combine>

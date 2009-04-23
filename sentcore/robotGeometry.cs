@@ -102,7 +102,7 @@ namespace sentience.core
 		
 		public robotGeometry()
 		{
-	        no_of_sample_poses = 300;
+	        no_of_sample_poses = 200;
 	        sampling_radius_major_mm = 300;
 	        sampling_radius_minor_mm = 300;
 	        max_orientation_variance = 5 * (float)Math.PI / 180.0f;
@@ -362,6 +362,8 @@ namespace sentience.core
 				int no_of_stereo_cameras = Convert.ToInt32(xnod.InnerText);
 				
 				baseline_mm = new float[no_of_stereo_cameras];
+				pose = new pos3D[no_of_stereo_cameras];
+				poses = new List<pos3D>();
 				stereo_camera_position_x = new float[no_of_stereo_cameras];
 				stereo_camera_position_y = new float[no_of_stereo_cameras];
 				stereo_camera_position_z = new float[no_of_stereo_cameras];
@@ -460,6 +462,20 @@ namespace sentience.core
 		#region "setters"
 		
 		/// <summary>
+		/// Defines the major and minor axes of an ellipse which describes the pos uncertainty 
+		/// The major axis of the ellipse is in the direction of motion
+		/// </summary>
+		/// <param name="major_axis_mm">length of the major axis, in the direction of motion, in millimetres</param>
+		/// <param name="minor_axis_mm">length of the minor axis, perpendicular to the direction of motion, in millimetres</param>
+		public void SetPoseUncertaintyEllipse(
+		    float major_axis_mm,
+		    float minor_axis_mm)
+		{
+	        sampling_radius_major_mm = major_axis_mm;
+	        sampling_radius_minor_mm = minor_axis_mm;			
+		}
+		
+		/// <summary>
 		///set the centre of rotation relative to the top left corner of the body 
 		/// </summary>
 		/// <param name="x"></param>
@@ -533,6 +549,22 @@ namespace sentience.core
 			body_height_mm = height_mm;
 		}
 		
+		/// <summary>
+		/// Set the maximum orientation variance, used when considering possible poses 
+		/// </summary>
+		/// <param name="pan_degrees">maximum variance in pan angle</param>
+		/// <param name="tilt_degrees">maximum variance in tilt angle</param>
+		/// <param name="roll_degrees">maximum variance in roll angle</param>
+		public void SetMaximumOrientationVariance(
+		    float pan_degrees,
+		    float tilt_degrees,
+		    float roll_degrees)
+		{
+			max_orientation_variance = pan_degrees * (float)Math.PI / 180.0f;
+			max_tilt_variance = tilt_degrees * (float)Math.PI / 180.0f;
+			max_roll_variance = roll_degrees * (float)Math.PI / 180.0f;
+		}
+		
 		#endregion
 
 		#region "loading and saving sensor models"
@@ -583,6 +615,10 @@ namespace sentience.core
 				List<string> rayModelsData = new List<string>();
 				sensormodel[camera_index][grid_level].ray_model.LoadFromXml(xnod, level+1, rayModelsData);
 				sensormodel[camera_index][grid_level].ray_model.LoadSensorModelData(rayModelsData);
+				if (rayModelsData.Count == 0)
+				{
+					Console.WriteLine("Warning: ray models not loaded");
+				}
 			}
 			
             // call recursively on all children of the current node
