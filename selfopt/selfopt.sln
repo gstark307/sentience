@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C# Express 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "selfopt", "selfopt.csproj", "{AD77A121-1D6E-491B-9B7D-0AA77BE4A0A0}"
 EndProject
 Global

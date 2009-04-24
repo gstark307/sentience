@@ -14,6 +14,7 @@
     </UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,7 +27,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -87,6 +87,7 @@
     <Compile Include="pos3D.cs" />
     <Compile Include="rayModelLookup.cs" />
     <Compile Include="robot.cs" />
+    <Compile Include="robotGeometry.cs" />
     <Compile Include="scanMatching.cs" />
     <Compile Include="sentienceRadar.cs" />
     <Compile Include="sentience_stereo.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="simulation.cs" />
     <Compile Include="simulationPathSegment.cs" />
     <Compile Include="specialMath.cs" />
+    <Compile Include="steersman.cs" />
     <Compile Include="stereoCorrespondence.cs" />
     <Compile Include="stereoFeatures.cs" />
     <Compile Include="stereoHead.cs" />
@@ -134,6 +136,8 @@
     <Compile Include="memcompressor\Inflator.cs" />
     <Compile Include="memcompressor\Utils.cs" />
     <Compile Include="unittests\tests_metagridbuffer.cs" />
+    <Compile Include="unittests\tests_robotGeometry.cs" />
+    <Compile Include="unittests\tests_steersman.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LICENCE.txt" />
