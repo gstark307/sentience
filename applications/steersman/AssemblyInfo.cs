@@ -9,12 +9,12 @@ using System.Runtime.CompilerServices;
 // Information about this assembly is defined by the following attributes. 
 // Change them to the values specific to your project.
 
-[assembly: AssemblyTitle("sensormodel")]
-[assembly: AssemblyDescription("A utility for generating stereo vision sensor models")]
+[assembly: AssemblyTitle("steersman")]
+[assembly: AssemblyDescription("A utility for generating sensor models")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sluggish Software")]
-[assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyProduct("steersman")]
+[assembly: AssemblyCopyright("Copyright © Sluggish Software 2009")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
