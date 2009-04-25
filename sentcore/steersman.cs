@@ -20,6 +20,7 @@
 using System;
 using System.IO;
 using System.Xml;
+using System.Collections.Generic;
 using System.Drawing;
 using sluggish.utilities;
 using sluggish.utilities.xml;
@@ -36,6 +37,13 @@ namespace sentience.core
 		
 		// random number generator
 		protected Random rnd;
+		
+		// overall map
+	    public string overall_map_filename;
+		protected byte[] overall_map_img = null;
+		protected int overall_map_dimension_mm;
+		protected int overall_map_centre_x_mm;
+		protected int overall_map_centre_y_mm;		
 		
 		#region "constructors"
 		
@@ -318,7 +326,14 @@ namespace sentience.core
 			current_disparities_index_filename = disparities_index_filename;
 			current_disparities_filename = disparities_filename;
 			
-			buffer.LoadPath(path_filename, disparities_index_filename, disparities_filename);
+			buffer.LoadPath(
+			    path_filename, 
+			    disparities_index_filename, 
+			    disparities_filename,
+			    ref overall_map_dimension_mm,
+			    ref overall_map_centre_x_mm,
+			    ref overall_map_centre_y_mm);
+			overall_map_img = null;
 		}		
 		
 		public void ResetPath()
@@ -327,7 +342,14 @@ namespace sentience.core
 			if ((current_path_filename != null) &&
 			    (current_path_filename != ""))
 			{			    
-			    buffer.LoadPath(current_path_filename, current_disparities_index_filename, current_disparities_filename);
+				overall_map_img = null;
+			    buffer.LoadPath(
+				    current_path_filename, 
+				    current_disparities_index_filename, 
+				    current_disparities_filename,
+				    ref overall_map_dimension_mm,
+				    ref overall_map_centre_x_mm,
+				    ref overall_map_centre_y_mm);
 			}
 		}
 		
@@ -379,7 +401,12 @@ namespace sentience.core
                 ref buffer_transition,
                 debug_mapping_filename,
                 known_offset_x_mm, 
-			    known_offset_y_mm);
+			    known_offset_y_mm,
+		        overall_map_filename,
+		        ref overall_map_img,
+		        overall_map_dimension_mm,
+		        overall_map_centre_x_mm,
+		        overall_map_centre_y_mm);
 			
 			if (matching_score == occupancygridBase.NO_OCCUPANCY_EVIDENCE)
 				valid_localisation = false;
@@ -488,6 +515,6 @@ namespace sentience.core
 		}
 
 		#endregion
-	    
+		
 	}
 }

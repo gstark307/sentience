@@ -433,7 +433,17 @@ namespace sentience.core.tests
                     maxMappingRange_mm,
                     vacancyWeighting);
 
-            buffer.LoadPath(filename, str[0] + "_disparities_index.dat", str[0] + "_disparities.dat");
+		    int overall_map_dimension_mm = 0;
+		    int overall_map_centre_x_mm = 0;
+		    int overall_map_centre_y_mm = 0;
+			
+            buffer.LoadPath(
+			    filename, 
+			    str[0] + "_disparities_index.dat", 
+			    str[0] + "_disparities.dat",
+		        ref overall_map_dimension_mm,
+		        ref overall_map_centre_x_mm,
+		        ref overall_map_centre_y_mm);
             
             int img_width = 640;
             int img_height = 480;
@@ -444,8 +454,8 @@ namespace sentience.core.tests
             bmp.Save("load_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
         }		
 
-		[Test()]
-		public void LocaliseAlongPath()
+		//[Test()]
+		public static void LocaliseAlongPath()
 		{
             // systematic bias
             float bias_x_mm = -200;
@@ -470,6 +480,12 @@ namespace sentience.core.tests
 		    float distance_between_poses_mm = 100;
             float disparity = 15;
 			
+		    string overall_map_filename = "overall_map.jpg";
+		    byte[] overall_map_img = null;
+		    int overall_map_dimension_mm = 0;
+		    int overall_map_centre_x_mm = 0;
+		    int overall_map_centre_y_mm = 0;
+						
 			string[] str = filename.Split('.');
 				
 			List<OdometryData> path = null;
@@ -483,7 +499,7 @@ namespace sentience.core.tests
 			    no_of_mapping_stereo_features,
 			    no_of_stereo_cameras,
 			    ref path);
-			
+						
 			Assert.AreEqual(true, File.Exists(filename));
 			Assert.AreEqual(true, File.Exists(str[0] + "_disparities_index.dat"));
 			Assert.AreEqual(true, File.Exists(str[0] + "_disparities.dat"));
@@ -508,7 +524,13 @@ namespace sentience.core.tests
                     maxMappingRange_mm,
                     vacancyWeighting);
 
-            buffer.LoadPath(filename, str[0] + "_disparities_index.dat", str[0] + "_disparities.dat");
+            buffer.LoadPath(
+			    filename, 
+			    str[0] + "_disparities_index.dat", 
+			    str[0] + "_disparities.dat",
+		        ref overall_map_dimension_mm,
+		        ref overall_map_centre_x_mm,
+		        ref overall_map_centre_y_mm);			                
             
             int img_width = 640;
             int img_height = 480;
@@ -593,7 +615,12 @@ namespace sentience.core.tests
                     ref pose_offset,
                     ref buffer_transition,
                     debug_mapping_filename,
-                    bias_x_mm, bias_y_mm);
+                    bias_x_mm, bias_y_mm,
+		            overall_map_filename,
+		            ref overall_map_img,
+		            overall_map_dimension_mm,
+		            overall_map_centre_x_mm,
+		            overall_map_centre_y_mm);
 				
 				if (matching_score != occupancygridBase.NO_OCCUPANCY_EVIDENCE)
 				{				
@@ -724,6 +751,7 @@ namespace sentience.core.tests
             {
                 robot_pose.y = y;
 
+				byte[] overall_map_img = null;
                 if (metagridBuffer.MoveToNextLocalGrid(
                     ref current_grid_index,
                     ref current_disparity_index,
@@ -732,7 +760,9 @@ namespace sentience.core.tests
                     ref current_buffer_index,
                     grid_centres,
                     ref update_map,
-                    null))
+                    null,
+				    null, ref overall_map_img,
+				    0,0,0));
                 {
                     transitions++;
                 }

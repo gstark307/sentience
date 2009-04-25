@@ -1,25 +1,45 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/steersman.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Main.cs" ctype="Workbench">
     <Files>
-      <File FileName="Main.cs" Line="10" Column="22" />
-      <File FileName="../../sentcore/steersman.cs" Line="80" Column="1" />
-      <File FileName="../../sentcore/metagridBuffer.cs" Line="1" Column="1" />
-      <File FileName="../../sentcore/robotGeometry.cs" Line="20" Column="14" />
+      <File FileName="../../sentcore/unittests/tests_metagridbuffer.cs" Line="458" Column="39" />
+      <File FileName="Main.cs" Line="39" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="sentcore" expanded="True">
-            <Node name="steersman.cs" selected="True" />
+          <Node name="steersman" expanded="True">
+            <Node name="Main.cs" selected="True" />
           </Node>
-          <Node name="steersman" expanded="True" />
-          <Node name="utilities" expanded="True" />
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
+        <State expanded="True" selected="True">
+          <Node name="steersman" expanded="True">
+            <Node name="sentience" expanded="True">
+              <Node name="core" expanded="True">
+                <Node name="tests" expanded="True">
+                  <Node name="tests_metagridbuffer" expanded="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State>
+          <Value>no_of_cameras</Value>
         </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/home/motters/develop/sentience/applications/steersman/Main.cs" line="42" />
+      <Breakpoint file="/home/motters/develop/sentience/applications/steersman/Main.cs" line="39" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
 </Properties>

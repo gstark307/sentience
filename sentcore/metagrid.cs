@@ -899,7 +899,7 @@ namespace sentience.core
         #endregion
 		
         #region "display"
-		
+
         /// <summary>
         /// show an overhead view of the grid map as an image
         /// </summary>
@@ -915,12 +915,45 @@ namespace sentience.core
             int height,
 		    bool show_all_occupied_cells)
         {
+		    int map_width_mm = grid[grid_index].dimension_cells * grid[grid_index].cellSize_mm;
+		    int map_height_mm = map_width_mm;
+		    int map_centre_x_mm = (int)grid[grid_index].x;
+		    int map_centre_y_mm = (int)grid[grid_index].y;
+			
+			Show(grid_index, img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, true);
+		}
+		
+        /// <summary>
+        /// show an overhead view of the grid map as an image
+        /// </summary>
+		/// <param name="grid_index">index number of the grid to be shown</param>
+        /// <param name="img">colour image data</param>
+        /// <param name="width">width in pixels</param>
+        /// <param name="height">height in pixels</param>
+		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
+		/// <param name="map_width_mm">width of the larger map area within this will be displayed</param>
+		/// <param name="map_height_mm">height of the larger map area within this will be displayed</param>
+		/// <param name="map_centre_x_mm">centre x position of the larger map area within this will be displayed</param>
+		/// <param name="map_centre_y_mm">centre x position of the larger map area within this will be displayed</param>
+		/// <param name="clear_image">clear the image</param>
+        public void Show(
+		    int grid_index,
+		    byte[] img, 
+            int width, 
+            int height,
+		    bool show_all_occupied_cells,
+		    int map_width_mm,
+		    int map_height_mm,
+		    int map_centre_x_mm,
+		    int map_centre_y_mm,
+		    bool clear_image)		                 
+        {
 			switch (grid_type)
 			{
 			    case TYPE_SIMPLE:
 			    {
 				    occupancygridSimple grd = (occupancygridSimple)grid[grid_index];
-				    grd.Show(img, width, height, show_all_occupied_cells);
+				    grd.Show(img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, clear_image);
 			        break;
 			    }
 			    case TYPE_MULTI_HYPOTHESIS:

@@ -387,6 +387,52 @@ namespace sentience.core
 		// file containing stereo disparities observations taken along a path
 		protected string disparities_filename;
 		
+		/// <summary>
+		/// returns the dimensions of a map which would show the complete path
+		/// </summary>
+		/// <param name="path">odometry data</param>
+		/// <param name="overall_map_dimension_mm">returned dimension of the overall map</param>
+		/// <param name="overall_map_centre_x_mm">returned centre x position of the overall map</param>
+		/// <param name="overall_map_centre_y_mm">returned centre y position of the overall map</param>
+		protected void GetOverallMapDimensions(
+		    List<float> path,
+		    ref int overall_map_dimension_mm,
+		    ref int overall_map_centre_x_mm,
+		    ref int overall_map_centre_y_mm)
+		{
+			if (path.Count > 1)
+			{
+			    float tx = float.MaxValue;
+			    float ty = float.MaxValue;
+			    float bx = float.MinValue;
+			    float by = float.MinValue;
+		        for (int i = 0; i < path.Count; i += 3)
+			    {
+					float x = path[i];
+					float y = path[i + 1];
+					if (x < tx) tx = x;
+					if (y < ty) ty = y;
+					if (x > bx) bx = x;
+					if (y > by) by = y;
+			    }
+				
+				overall_map_centre_x_mm = (int)(tx + ((bx - tx) / 2));
+				overall_map_centre_y_mm = (int)(ty + ((by - ty) / 2));
+				
+				if (bx - tx > by - ty)
+				{
+					overall_map_dimension_mm = (int)(bx - tx);
+				}
+				else
+				{
+					overall_map_dimension_mm = (int)(by - ty);
+				}
+				
+				// add a border
+				overall_map_dimension_mm  = overall_map_dimension_mm * 115/100;				
+			}
+		}
+				
         /// <summary>
         /// loads path data generated from odometry and stereo vision observations
         /// </summary>
@@ -396,7 +442,10 @@ namespace sentience.core
         public void LoadPath(
             string path_filename,
             string disparities_index_filename,
-            string disparities_filename)
+            string disparities_filename,
+		    ref int overall_map_dimension_mm,
+		    ref int overall_map_centre_x_mm,
+		    ref int overall_map_centre_y_mm)		                     
         {
             this.disparities_filename = disparities_filename;
             float half_dimension_sqr = dimension_mm * 0.5f;
@@ -446,6 +495,13 @@ namespace sentience.core
 
                 br.Close();
                 fs.Close();
+				
+				// get the dimensions of an overall map which shows the entire path
+				GetOverallMapDimensions(
+				    path, 
+		            ref overall_map_dimension_mm,
+		            ref overall_map_centre_x_mm,
+		            ref overall_map_centre_y_mm);				                        
                 
 	            // position the first two grids
 	            if (grid_centres.Count >= 3)
@@ -993,6 +1049,12 @@ namespace sentience.core
         /// <param name="current_buffer_index">index of the currently active grid within the buffer (0 or 1)</param>
         /// <param name="grid_centres">list of grid centre positions (x,y,z)</param>
         /// <param name="update_map">returns whether the map should be updated</param>
+        /// <param name="debug_mapping_filename">filename to save debugging images</param>
+        /// <param name="overall_map_filename">filename to save an overall map of the path</param>
+        /// <param name="overall_map_img">overall map image data</param>
+        /// <param name="overall_map_dimension_mm">dimension of the overall map in millimetres</param>
+        /// <param name="overall_map_centre_x_mm">centre x position of the overall map in millimetres</param>
+        /// <param name="overall_map_centre_y_mm">centre x position of the overall map in millimetres</param>
         /// <returns>true if we have transitioned from one grid to the next</returns>
         public static bool MoveToNextLocalGrid(
             ref int current_grid_index,
@@ -1002,7 +1064,12 @@ namespace sentience.core
             ref int current_buffer_index,
             List<float> grid_centres,
             ref bool update_map,
-            string debug_mapping_filename)
+            string debug_mapping_filename,
+		    string overall_map_filename,
+		    ref byte[] overall_map_img,
+		    int overall_map_dimension_mm,
+		    int overall_map_centre_x_mm,
+		    int overall_map_centre_y_mm)
         {
             bool buffer_transition = false;
             update_map = false;
@@ -1060,6 +1127,7 @@ namespace sentience.core
                     if (debug_mapping_filename.ToLower().EndsWith("bmp"))
                         debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Bmp);
 
+					/*
                     string[] str = debug_mapping_filename.Split('.');
                     string debug_mapping_filename2 = str[0] + "b." + str[1];
                     buffer[1 - current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
@@ -1072,6 +1140,35 @@ namespace sentience.core
                         debug_bmp.Save(debug_mapping_filename2, System.Drawing.Imaging.ImageFormat.Jpeg);
                     if (debug_mapping_filename2.ToLower().EndsWith("bmp"))
                         debug_bmp.Save(debug_mapping_filename2, System.Drawing.Imaging.ImageFormat.Bmp);
+                    */
+				}
+					
+                if ((overall_map_filename != null) &&
+                    (overall_map_filename != ""))
+                {
+                    int overall_img_width = 640;
+                    int overall_img_height = 480;
+					
+					int overall_map_dimension2_mm = overall_map_dimension_mm * overall_img_height / overall_img_width;
+					
+					bool clear_image = false;
+					if (overall_map_img == null)
+					{
+                        overall_map_img = new byte[overall_img_width * overall_img_height * 3];
+						clear_image = true;
+					}
+                    Bitmap overall_bmp = new Bitmap(overall_img_width, overall_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    buffer[current_buffer_index].Show(0, overall_map_img, overall_img_width, overall_img_height, false, overall_map_dimension_mm, overall_map_dimension2_mm, overall_map_centre_x_mm, overall_map_centre_y_mm, clear_image);
+                    BitmapArrayConversions.updatebitmap_unsafe(overall_map_img, overall_bmp);
+                    if (overall_map_filename.ToLower().EndsWith("png"))
+                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Png);
+                    if (overall_map_filename.ToLower().EndsWith("gif"))
+                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Gif);
+                    if (overall_map_filename.ToLower().EndsWith("jpg"))
+                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    if (overall_map_filename.ToLower().EndsWith("bmp"))
+                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+					
                 }
 
                 // swap the two metagrids
@@ -1129,6 +1226,11 @@ namespace sentience.core
         /// <param name="pose_offset">offset of the best pose from the current one</param>
 		/// <param name="rnd">random number generator</param>
         /// <param name="buffer_transition">have we transitioned to the next grid buffer?</param>
+        /// <param name="overall_map_filename">filename to save an overall map of the path</param>
+        /// <param name="overall_map_img">overall map image data</param>
+        /// <param name="overall_map_dimension_mm">dimension of the overall map in millimetres</param>
+        /// <param name="overall_map_centre_x_mm">centre x position of the overall map in millimetres</param>
+        /// <param name="overall_map_centre_y_mm">centre x position of the overall map in millimetres</param>
         /// <returns>best localisation matching score</returns>
         protected float Localise(
 		    float body_width_mm,
@@ -1172,7 +1274,12 @@ namespace sentience.core
             ref bool buffer_transition,
             string debug_mapping_filename,
             float known_best_pose_x_mm,
-            float known_best_pose_y_mm)
+            float known_best_pose_y_mm,
+		    string overall_map_filename,
+		    ref byte[] overall_map_img,
+		    int overall_map_dimension_mm,
+		    int overall_map_centre_x_mm,
+		    int overall_map_centre_y_mm)		                         
         {
             bool update_map = false;
 
@@ -1185,7 +1292,12 @@ namespace sentience.core
                 ref current_buffer_index,
                 grid_centres,
                 ref update_map,
-                debug_mapping_filename);
+                debug_mapping_filename,
+		        overall_map_filename,
+		        ref overall_map_img,
+		        overall_map_dimension_mm,
+		        overall_map_centre_x_mm,
+		        overall_map_centre_y_mm);
             
             // create the map if necessary
             if (update_map)
@@ -1301,7 +1413,12 @@ namespace sentience.core
             ref bool buffer_transition,
             string debug_mapping_filename,
             float known_best_pose_x_mm,
-            float known_best_pose_y_mm)
+            float known_best_pose_y_mm,
+		    string overall_map_filename,
+		    ref byte[] overall_map_img,
+		    int overall_map_dimension_mm,
+		    int overall_map_centre_x_mm,
+		    int overall_map_centre_y_mm)		                      
         {
 			return(Localise(
 		        geom.body_width_mm,
@@ -1345,7 +1462,12 @@ namespace sentience.core
                 ref buffer_transition,
                 debug_mapping_filename,
                 known_best_pose_x_mm,
-                known_best_pose_y_mm			                
+                known_best_pose_y_mm,
+		        overall_map_filename,
+		        ref overall_map_img,
+		        overall_map_dimension_mm,
+		        overall_map_centre_x_mm,
+		        overall_map_centre_y_mm			                
 			));
 		}
 		

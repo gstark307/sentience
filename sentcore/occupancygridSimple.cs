@@ -1196,7 +1196,7 @@ namespace sentience.core
         #endregion
 
         #region "display"
-		
+
         /// <summary>
         /// show an overhead view of the grid map as an image
         /// </summary>
@@ -1209,6 +1209,117 @@ namespace sentience.core
             int width, 
             int height,
 		    bool show_all_occupied_cells)
+        {
+		    int map_width_mm = dimension_cells * cellSize_mm;
+		    int map_height_mm = map_width_mm;
+		    int map_centre_x_mm = (int)x;
+		    int map_centre_y_mm = (int)y;
+				
+            Show(img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, true);
+		}		
+		
+        /// <summary>
+        /// show an overhead view of the grid map as an image
+        /// </summary>
+        /// <param name="img">colour image data</param>
+        /// <param name="width">width in pixels</param>
+        /// <param name="height">height in pixels</param>
+		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
+		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
+		/// <param name="map_width_mm">width of the larger map area within this will be displayed</param>
+		/// <param name="map_height_mm">height of the larger map area within this will be displayed</param>
+		/// <param name="map_centre_x_mm">centre x position of the larger map area within this will be displayed</param>
+		/// <param name="map_centre_y_mm">centre x position of the larger map area within this will be displayed</param>
+		/// <param name="clear_image">clear the image</param>
+        public void Show(
+		    byte[] img, 
+            int width, 
+            int height,
+		    bool show_all_occupied_cells,
+		    int map_width_mm,
+		    int map_height_mm,
+		    int map_centre_x_mm,
+		    int map_centre_y_mm,
+		    bool clear_image)
+        {
+            float[] mean_colour = new float[3];
+
+			if (clear_image)
+			    for (int i = (width * height * 3) - 1; i >= 0; i--) img[i] = 255;
+			
+			int dimension_mm = dimension_cells * cellSize_mm;
+			
+			int map_tx_mm = map_centre_x_mm - (map_width_mm/2);
+			int map_ty_mm = map_centre_y_mm - (map_height_mm/2);
+			
+			int tx = (((int)x - (dimension_mm/2)) - map_tx_mm) * width / map_width_mm;
+			int ty = (((int)y - (dimension_mm/2)) - map_ty_mm) * height / map_height_mm;
+			int bx = (((int)x + (dimension_mm/2)) - map_tx_mm) * width / map_width_mm;
+			int by = (((int)y + (dimension_mm/2)) - map_ty_mm) * height / map_height_mm;
+			
+			int w = bx - tx;
+			int h = by - ty;
+			
+            for (int yy = ty; yy < by; yy++)
+            {
+                // get the y cell coordinate within the grid
+                int cell_y = (yy - ty) * (dimension_cells-1) / h;
+
+                for (int xx = tx; xx < bx; xx++)
+                {
+                    // get the x cell coordinate within the grid
+                    int cell_x = (xx - tx) * (dimension_cells - 1) / w;
+
+                    int n = (((height - 1 - yy) * width) + xx) * 3;
+					if (n + 3 < img.Length)
+					{
+	                    if (cell[cell_x][cell_y] != null)
+	                    {
+	                        // get the probability for this vertical column
+	                        float prob = GetProbability(cell_x, cell_y, mean_colour);
+	
+	                        if (prob != NO_OCCUPANCY_EVIDENCE)
+	                        {
+	                            if (show_all_occupied_cells) prob = 1;
+	
+	                            if (prob >= 0.5f)
+	                            {
+	                                int b = (int)(127 + ((prob - 0.5f) * 10 * 255));
+	                                if (b > 255) b = 255;
+	                                img[n] = 0;
+	                                img[n + 1] = (byte)b;
+	                                img[n + 2] = 0;
+	                            }
+	                            else
+	                            {
+	                                int b = (int)(255 - ((0.5f - prob) * 50 * 155));
+	                                if (b < 100) b = 100;
+	                                img[n] = (byte)b;
+	                                img[n + 1] = 0;
+	                                img[n + 2] = 0;
+	                            }
+	                        }
+	                    }	                    
+	
+	                    if (localisation_test[cell_x][cell_y])
+	                    {
+	                        img[n + 2] = (byte)(255 - img[n + 2]);
+	                    }
+					}
+                }
+            }
+        }
+
+/*		
+        public void Show(
+		    byte[] img, 
+            int width, 
+            int height,
+		    bool show_all_occupied_cells,
+		    int map_width_mm,
+		    int map_height_mm,
+		    int map_centre_x_mm,
+		    int map_centre_y_mm)
         {
             float[] mean_colour = new float[3];
 
@@ -1263,8 +1374,9 @@ namespace sentience.core
                     }
                 }
             }
-        }
-
+        }		
+*/
+		
         /// <summary>
         /// show a front view of the grid map as an image
         /// </summary>
