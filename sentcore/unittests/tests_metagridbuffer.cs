@@ -454,8 +454,8 @@ namespace sentience.core.tests
             bmp.Save("load_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
         }		
 
-		//[Test()]
-		public static void LocaliseAlongPath()
+		[Test()]
+		public void LocaliseAlongPath()
 		{
             // systematic bias
             float bias_x_mm = -200;
@@ -476,7 +476,7 @@ namespace sentience.core.tests
 		    string filename = "localise_along_path.dat";
 		    float path_length_mm = 20000;
 		    float start_orientation = 0;
-		    float end_orientation = 0; //90 * (float)Math.PI / 180.0f;
+            float end_orientation = 0; // 90 * (float)Math.PI / 180.0f;
 		    float distance_between_poses_mm = 100;
             float disparity = 15;
 			
@@ -533,7 +533,7 @@ namespace sentience.core.tests
 		        ref overall_map_centre_y_mm);			                
             
             int img_width = 640;
-            int img_height = 480;
+            int img_height = 640;
             byte[] img = new byte[img_width * img_height * 3];
             Bitmap bmp = new Bitmap(img_width, img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             buffer.ShowPath(img, img_width, img_height, true, true);
@@ -640,6 +640,15 @@ namespace sentience.core.tests
 					Console.WriteLine("Localisation failure");
 				}
 			}
+
+            metagridBuffer.UpdateOverallMap(
+                buffer.buffer,
+                0,
+                overall_map_filename,
+                ref overall_map_img,
+                overall_map_dimension_mm,
+                overall_map_centre_x_mm,
+                overall_map_centre_y_mm);
 
             buffer.ShowPath(img, img_width, img_height, true, true);
             BitmapArrayConversions.updatebitmap_unsafe(img, bmp);

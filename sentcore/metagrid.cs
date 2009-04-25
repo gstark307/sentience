@@ -908,19 +908,21 @@ namespace sentience.core
         /// <param name="width">width in pixels</param>
         /// <param name="height">height in pixels</param>
 		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
+        /// <param name="show_localisation">whether to show grid cells probed during localisation</param>
         public void Show(
 		    int grid_index,
 		    byte[] img, 
             int width, 
             int height,
-		    bool show_all_occupied_cells)
+		    bool show_all_occupied_cells,
+            bool show_localisation)
         {
 		    int map_width_mm = grid[grid_index].dimension_cells * grid[grid_index].cellSize_mm;
 		    int map_height_mm = map_width_mm;
 		    int map_centre_x_mm = (int)grid[grid_index].x;
 		    int map_centre_y_mm = (int)grid[grid_index].y;
 			
-			Show(grid_index, img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, true);
+			Show(grid_index, img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, true, show_localisation);
 		}
 		
         /// <summary>
@@ -936,6 +938,7 @@ namespace sentience.core
 		/// <param name="map_centre_x_mm">centre x position of the larger map area within this will be displayed</param>
 		/// <param name="map_centre_y_mm">centre x position of the larger map area within this will be displayed</param>
 		/// <param name="clear_image">clear the image</param>
+        /// <param name="show_localisation">whether to show grid cells probed during localisation</param>
         public void Show(
 		    int grid_index,
 		    byte[] img, 
@@ -946,14 +949,15 @@ namespace sentience.core
 		    int map_height_mm,
 		    int map_centre_x_mm,
 		    int map_centre_y_mm,
-		    bool clear_image)		                 
+		    bool clear_image,
+            bool show_localisation)		                 
         {
 			switch (grid_type)
 			{
 			    case TYPE_SIMPLE:
 			    {
 				    occupancygridSimple grd = (occupancygridSimple)grid[grid_index];
-				    grd.Show(img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, clear_image);
+				    grd.Show(img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, clear_image, show_localisation);
 			        break;
 			    }
 			    case TYPE_MULTI_HYPOTHESIS:

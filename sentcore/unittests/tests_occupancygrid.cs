@@ -96,10 +96,11 @@ namespace sentience.core.tests
 			int debug_img_height = 480;
 		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            bool show_localisation = false;
 
             for (int i = 0; i < no_of_grids; i++)
 			{
-			    grid.Show(i, debug_img, debug_img_width, debug_img_height, false);
+			    grid.Show(i, debug_img, debug_img_width, debug_img_height, false, show_localisation);
 			    BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			    bmp.Save("tests_occupancygrid_meta_CreateSimulatedEnvironment_grid" + i.ToString() + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 			}
@@ -403,7 +404,7 @@ namespace sentience.core.tests
 		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
-			grid.Show(debug_img, debug_img_width, debug_img_height, false);
+			grid.Show(debug_img, debug_img_width, debug_img_height, false, false);
 			BitmapArrayConversions.updatebitmap_unsafe(debug_img, bmp);
 			bmp.Save("tests_occupancygrid_simple_InsertRays_overhead.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
 

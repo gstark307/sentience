@@ -429,7 +429,7 @@ namespace sentience.core
 				}
 				
 				// add a border
-				overall_map_dimension_mm  = overall_map_dimension_mm * 115/100;				
+				overall_map_dimension_mm  = overall_map_dimension_mm * 175/100;				
 			}
 		}
 				
@@ -482,7 +482,8 @@ namespace sentience.core
                         float dx = data.x - last_x;
                         float dy = data.y - last_y;
                         float dist_sqr = dx*dx + dy*dy;
-                        if (dist_sqr > half_dimension_sqr*150/100)
+                        if ((dist_sqr > half_dimension_sqr*100/100) ||
+                            (t == entries - 1))
                         {
                             last_x = data.x;
                             last_y = data.y;
@@ -1040,6 +1041,53 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// updates the image of the overall map
+        /// </summary>
+        /// <param name="overall_map_filename">filename to save an overall map of the path</param>
+        /// <param name="overall_map_img">overall map image data</param>
+        /// <param name="overall_map_dimension_mm">dimension of the overall map in millimetres</param>
+        /// <param name="overall_map_centre_x_mm">centre x position of the overall map in millimetres</param>
+        /// <param name="overall_map_centre_y_mm">centre x position of the overall map in millimetres</param>
+        public static void UpdateOverallMap(
+            metagrid[] buffer,
+            int current_buffer_index,
+            string overall_map_filename,
+		    ref byte[] overall_map_img,
+		    int overall_map_dimension_mm,
+		    int overall_map_centre_x_mm,
+		    int overall_map_centre_y_mm)
+        {
+            if ((overall_map_filename != null) &&
+                (overall_map_filename != ""))
+            {
+                bool show_localisation = false;
+                int overall_img_width = 640;
+                int overall_img_height = 480;
+
+                int overall_map_dimension2_mm = overall_map_dimension_mm * overall_img_height / overall_img_width;
+
+                bool clear_image = false;
+                if (overall_map_img == null)
+                {
+                    overall_map_img = new byte[overall_img_width * overall_img_height * 3];
+                    clear_image = true;
+                }
+                Bitmap overall_bmp = new Bitmap(overall_img_width, overall_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                buffer[current_buffer_index].Show(0, overall_map_img, overall_img_width, overall_img_height, false, overall_map_dimension_mm, overall_map_dimension2_mm, overall_map_centre_x_mm, overall_map_centre_y_mm, clear_image, show_localisation);
+                BitmapArrayConversions.updatebitmap_unsafe(overall_map_img, overall_bmp);
+                if (overall_map_filename.ToLower().EndsWith("png"))
+                    overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Png);
+                if (overall_map_filename.ToLower().EndsWith("gif"))
+                    overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Gif);
+                if (overall_map_filename.ToLower().EndsWith("jpg"))
+                    overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+                if (overall_map_filename.ToLower().EndsWith("bmp"))
+                    overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+
+            }
+        }
+
+        /// <summary>
         /// moves to the next grid in the sequence, if necessary
         /// </summary>
         /// <param name="current_grid_index">index of the current local grid</param>
@@ -1112,11 +1160,12 @@ namespace sentience.core
                 if ((debug_mapping_filename != null) &&
                     (debug_mapping_filename != ""))
                 {
+                    bool show_localisation = true;
                     int debug_img_width = 640;
                     int debug_img_height = 480;
                     byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
                     Bitmap debug_bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                    buffer[current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false);
+                    buffer[current_buffer_index].Show(0, debug_img, debug_img_width, debug_img_height, false, show_localisation);
                     BitmapArrayConversions.updatebitmap_unsafe(debug_img, debug_bmp);
                     if (debug_mapping_filename.ToLower().EndsWith("png"))
                         debug_bmp.Save(debug_mapping_filename, System.Drawing.Imaging.ImageFormat.Png);
@@ -1142,35 +1191,16 @@ namespace sentience.core
                         debug_bmp.Save(debug_mapping_filename2, System.Drawing.Imaging.ImageFormat.Bmp);
                     */
 				}
-					
-                if ((overall_map_filename != null) &&
-                    (overall_map_filename != ""))
-                {
-                    int overall_img_width = 640;
-                    int overall_img_height = 480;
-					
-					int overall_map_dimension2_mm = overall_map_dimension_mm * overall_img_height / overall_img_width;
-					
-					bool clear_image = false;
-					if (overall_map_img == null)
-					{
-                        overall_map_img = new byte[overall_img_width * overall_img_height * 3];
-						clear_image = true;
-					}
-                    Bitmap overall_bmp = new Bitmap(overall_img_width, overall_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                    buffer[current_buffer_index].Show(0, overall_map_img, overall_img_width, overall_img_height, false, overall_map_dimension_mm, overall_map_dimension2_mm, overall_map_centre_x_mm, overall_map_centre_y_mm, clear_image);
-                    BitmapArrayConversions.updatebitmap_unsafe(overall_map_img, overall_bmp);
-                    if (overall_map_filename.ToLower().EndsWith("png"))
-                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Png);
-                    if (overall_map_filename.ToLower().EndsWith("gif"))
-                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Gif);
-                    if (overall_map_filename.ToLower().EndsWith("jpg"))
-                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    if (overall_map_filename.ToLower().EndsWith("bmp"))
-                        overall_bmp.Save(overall_map_filename, System.Drawing.Imaging.ImageFormat.Bmp);
-					
-                }
 
+                UpdateOverallMap(
+                    buffer,
+                    current_buffer_index,
+                    overall_map_filename,
+                    ref overall_map_img,
+                    overall_map_dimension_mm,
+                    overall_map_centre_x_mm,
+                    overall_map_centre_y_mm);
+					
                 // swap the two metagrids
                 SwapBuffers(
                     grid_centres,

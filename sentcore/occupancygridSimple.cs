@@ -1204,18 +1204,20 @@ namespace sentience.core
         /// <param name="width">width in pixels</param>
         /// <param name="height">height in pixels</param>
 		/// <param name="show_all_occupied_cells">show all occupied pixels</param>
+        /// <param name="show_localisation">whether to show grid cells probed during localisation</param>
         public void Show(
 		    byte[] img, 
             int width, 
             int height,
-		    bool show_all_occupied_cells)
+		    bool show_all_occupied_cells,
+            bool show_localisation)
         {
 		    int map_width_mm = dimension_cells * cellSize_mm;
 		    int map_height_mm = map_width_mm;
 		    int map_centre_x_mm = (int)x;
 		    int map_centre_y_mm = (int)y;
 				
-            Show(img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, true);
+            Show(img, width, height, show_all_occupied_cells, map_width_mm, map_height_mm, map_centre_x_mm, map_centre_y_mm, true, show_localisation);
 		}		
 		
         /// <summary>
@@ -1230,7 +1232,8 @@ namespace sentience.core
 		/// <param name="map_height_mm">height of the larger map area within this will be displayed</param>
 		/// <param name="map_centre_x_mm">centre x position of the larger map area within this will be displayed</param>
 		/// <param name="map_centre_y_mm">centre x position of the larger map area within this will be displayed</param>
-		/// <param name="clear_image">clear the image</param>
+        /// <param name="clear_image">clear the image</param>
+        /// <param name="show_localisation">whether to show grid cells probed during localisation</param>
         public void Show(
 		    byte[] img, 
             int width, 
@@ -1240,7 +1243,8 @@ namespace sentience.core
 		    int map_height_mm,
 		    int map_centre_x_mm,
 		    int map_centre_y_mm,
-		    bool clear_image)
+		    bool clear_image,
+            bool show_localisation)
         {
             float[] mean_colour = new float[3];
 
@@ -1271,7 +1275,7 @@ namespace sentience.core
                     int cell_x = (xx - tx) * (dimension_cells - 1) / w;
 
                     int n = (((height - 1 - yy) * width) + xx) * 3;
-					if (n + 3 < img.Length)
+					if ((n > -1) && (n + 3 < img.Length))
 					{
 	                    if (cell[cell_x][cell_y] != null)
 	                    {
@@ -1299,12 +1303,15 @@ namespace sentience.core
 	                                img[n + 2] = 0;
 	                            }
 	                        }
-	                    }	                    
-	
-	                    if (localisation_test[cell_x][cell_y])
-	                    {
-	                        img[n + 2] = (byte)(255 - img[n + 2]);
 	                    }
+
+                        if (show_localisation)
+                        {
+                            if (localisation_test[cell_x][cell_y])
+                            {
+                                img[n + 2] = (byte)(255 - img[n + 2]);
+                            }
+                        }
 					}
                 }
             }
