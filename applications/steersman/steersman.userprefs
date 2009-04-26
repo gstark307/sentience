@@ -15,6 +15,11 @@
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
       </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State>
+          <Value>no_of_cameras</Value>
+        </State>
+      </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
         <State expanded="True" selected="True">
           <Node name="steersman" expanded="True">
@@ -26,11 +31,6 @@
               </Node>
             </Node>
           </Node>
-        </State>
-      </Pad>
-      <Pad Id="MonoDevelop.Debugger.WatchPad">
-        <State>
-          <Value>no_of_cameras</Value>
         </State>
       </Pad>
     </Pads>
