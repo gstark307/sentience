@@ -50,17 +50,17 @@ namespace sentience.Steersman
             {
                 Console.WriteLine("steersman: creates sensor models to steer a robot along a path");					
 				
-				int body_width_mm = 500;
+				int body_width_mm = 465;
                 string body_width_mm_str = commandline.GetParameterValue("bodywidth", parameters);
                 if (body_width_mm_str != "")
 					body_width_mm = Convert.ToInt32(body_width_mm_str);
 
-				int body_length_mm = 500;
+				int body_length_mm = 375;
                 string body_length_mm_str = commandline.GetParameterValue("bodylength", parameters);
                 if (body_length_mm_str != "")
 					body_length_mm = Convert.ToInt32(body_length_mm_str);
 
-				int body_height_mm = 500;
+				int body_height_mm = 930;
                 string body_height_mm_str = commandline.GetParameterValue("bodyheight", parameters);
                 if (body_height_mm_str != "")
 					body_height_mm = Convert.ToInt32(body_height_mm_str);
@@ -70,12 +70,12 @@ namespace sentience.Steersman
                 if (centre_of_rotation_x_str != "")
 					centre_of_rotation_x = Convert.ToInt32(centre_of_rotation_x_str);
 
-				int centre_of_rotation_y = body_length_mm/2;
+				int centre_of_rotation_y = 75; //body_length_mm/2;
                 string centre_of_rotation_y_str = commandline.GetParameterValue("centrey", parameters);
                 if (centre_of_rotation_y_str != "")
 					centre_of_rotation_y = Convert.ToInt32(centre_of_rotation_y_str);
 
-				int centre_of_rotation_z = 0;
+				int centre_of_rotation_z = 75;
                 string centre_of_rotation_z_str = commandline.GetParameterValue("centrez", parameters);
                 if (centre_of_rotation_z_str != "")
 					centre_of_rotation_z = Convert.ToInt32(centre_of_rotation_z_str);
@@ -85,12 +85,12 @@ namespace sentience.Steersman
                 if (head_centroid_x_str != "")
 					head_centroid_x = Convert.ToInt32(head_centroid_x_str);
 
-				int head_centroid_y = body_length_mm/2;
+				int head_centroid_y = 65; //body_length_mm/2;
                 string head_centroid_y_str = commandline.GetParameterValue("heady", parameters);
                 if (head_centroid_y_str != "")
 					head_centroid_y = Convert.ToInt32(head_centroid_y_str);
 
-				int head_centroid_z = body_height_mm;
+				int head_centroid_z = 1600; //body_height_mm;
                 string head_centroid_z_str = commandline.GetParameterValue("headz", parameters);
                 if (head_centroid_z_str != "")
 					head_centroid_z = Convert.ToInt32(head_centroid_z_str);
@@ -102,7 +102,7 @@ namespace sentience.Steersman
                 if (no_of_stereo_cameras_str != "")
 					no_of_stereo_cameras = Convert.ToInt32(no_of_stereo_cameras_str);
 
-				float baseline_mm = 2;
+				float baseline_mm = 100;
                 string baseline_mm_str = commandline.GetParameterValue("baseline", parameters);
                 if (baseline_mm_str != "")
 					baseline_mm = Convert.ToSingle(baseline_mm_str);
@@ -125,7 +125,7 @@ namespace sentience.Steersman
                 if (FOV_degrees_str != "")
 					FOV_degrees = Convert.ToSingle(FOV_degrees_str);
 
-				float head_diameter_mm = 100;
+				float head_diameter_mm = 215;
                 string head_diameter_mm_str = commandline.GetParameterValue("headdiam", parameters);
                 if (head_diameter_mm_str != "")
 					head_diameter_mm = Convert.ToSingle(head_diameter_mm_str);

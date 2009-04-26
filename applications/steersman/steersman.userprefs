@@ -1,8 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="Main.cs" ctype="Workbench">
     <Files>
-      <File FileName="../../sentcore/unittests/tests_metagridbuffer.cs" Line="458" Column="39" />
-      <File FileName="Main.cs" Line="39" Column="1" />
+      <File FileName="../../sentcore/unittests/tests_metagridbuffer.cs" Line="458" Column="34" />
+      <File FileName="Main.cs" Line="49" Column="17" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -36,10 +36,7 @@
     </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService>
-    <BreakpointStore>
-      <Breakpoint file="/home/motters/develop/sentience/applications/steersman/Main.cs" line="42" />
-      <Breakpoint file="/home/motters/develop/sentience/applications/steersman/Main.cs" line="39" />
-    </BreakpointStore>
+    <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
 </Properties>
