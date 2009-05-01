@@ -1,15 +1,19 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="Main.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/unittests/tests_steersman.cs" ctype="Workbench">
     <Files>
       <File FileName="../../sentcore/unittests/tests_metagridbuffer.cs" Line="458" Column="34" />
       <File FileName="Main.cs" Line="49" Column="17" />
+      <File FileName="../../sentcore/unittests/tests_steersman.cs" Line="145" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="steersman" expanded="True">
-            <Node name="Main.cs" selected="True" />
+          <Node name="sentcore" expanded="True">
+            <Node name="unittests" expanded="True">
+              <Node name="tests_steersman.cs" selected="True" />
+            </Node>
           </Node>
+          <Node name="steersman" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
@@ -21,17 +25,7 @@
         </State>
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True" selected="True">
-          <Node name="steersman" expanded="True">
-            <Node name="sentience" expanded="True">
-              <Node name="core" expanded="True">
-                <Node name="tests" expanded="True">
-                  <Node name="tests_metagridbuffer" expanded="True" />
-                </Node>
-              </Node>
-            </Node>
-          </Node>
-        </State>
+        <State expanded="True" selected="True" />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
