@@ -1053,6 +1053,8 @@ namespace sentience.core
             int current_buffer_index,
             string overall_map_filename,
 		    ref byte[] overall_map_img,
+		    int overall_img_width,
+		    int overall_img_height,
 		    int overall_map_dimension_mm,
 		    int overall_map_centre_x_mm,
 		    int overall_map_centre_y_mm)
@@ -1061,8 +1063,6 @@ namespace sentience.core
                 (overall_map_filename != ""))
             {
                 bool show_localisation = false;
-                int overall_img_width = 640;
-                int overall_img_height = 480;
 
                 int overall_map_dimension2_mm = overall_map_dimension_mm * overall_img_height / overall_img_width;
 
@@ -1115,6 +1115,8 @@ namespace sentience.core
             string debug_mapping_filename,
 		    string overall_map_filename,
 		    ref byte[] overall_map_img,
+		    int overall_img_width,
+		    int overall_img_height,		                                       
 		    int overall_map_dimension_mm,
 		    int overall_map_centre_x_mm,
 		    int overall_map_centre_y_mm)
@@ -1197,6 +1199,8 @@ namespace sentience.core
                     current_buffer_index,
                     overall_map_filename,
                     ref overall_map_img,
+		            overall_img_width,
+		            overall_img_height,				                 
                     overall_map_dimension_mm,
                     overall_map_centre_x_mm,
                     overall_map_centre_y_mm);
@@ -1307,6 +1311,8 @@ namespace sentience.core
             float known_best_pose_y_mm,
 		    string overall_map_filename,
 		    ref byte[] overall_map_img,
+		    int overall_img_width,
+		    int overall_img_height,
 		    int overall_map_dimension_mm,
 		    int overall_map_centre_x_mm,
 		    int overall_map_centre_y_mm)		                         
@@ -1325,6 +1331,8 @@ namespace sentience.core
                 debug_mapping_filename,
 		        overall_map_filename,
 		        ref overall_map_img,
+		        overall_img_width,
+		        overall_img_height,			                                        
 		        overall_map_dimension_mm,
 		        overall_map_centre_x_mm,
 		        overall_map_centre_y_mm);
@@ -1446,6 +1454,8 @@ namespace sentience.core
             float known_best_pose_y_mm,
 		    string overall_map_filename,
 		    ref byte[] overall_map_img,
+		    int overall_img_width,
+		    int overall_img_height,
 		    int overall_map_dimension_mm,
 		    int overall_map_centre_x_mm,
 		    int overall_map_centre_y_mm)		                      
@@ -1495,6 +1505,8 @@ namespace sentience.core
                 known_best_pose_y_mm,
 		        overall_map_filename,
 		        ref overall_map_img,
+		        overall_img_width,
+		        overall_img_height,
 		        overall_map_dimension_mm,
 		        overall_map_centre_x_mm,
 		        overall_map_centre_y_mm			                

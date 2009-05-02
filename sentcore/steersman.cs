@@ -387,6 +387,8 @@ namespace sentience.core
 		    ref float offset_tilt_radians,
 		    ref float offset_roll_radians)
 		{
+		    int overall_img_width = 640;
+		    int overall_img_height = 480;
 			bool valid_localisation = true;
 			pos3D pose_offset = new pos3D(0,0,0);
 			bool buffer_transition = false;
@@ -404,6 +406,8 @@ namespace sentience.core
 			    known_offset_y_mm,
 		        overall_map_filename,
 		        ref overall_map_img,
+		        overall_img_width,
+		        overall_img_height,
 		        overall_map_dimension_mm,
 		        overall_map_centre_x_mm,
 		        overall_map_centre_y_mm);

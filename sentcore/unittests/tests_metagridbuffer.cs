@@ -482,6 +482,8 @@ namespace sentience.core.tests
 			
 		    string overall_map_filename = "overall_map.jpg";
 		    byte[] overall_map_img = null;
+		    int overall_img_width = 640;
+		    int overall_img_height = 480;
 		    int overall_map_dimension_mm = 0;
 		    int overall_map_centre_x_mm = 0;
 		    int overall_map_centre_y_mm = 0;
@@ -618,6 +620,8 @@ namespace sentience.core.tests
                     bias_x_mm, bias_y_mm,
 		            overall_map_filename,
 		            ref overall_map_img,
+		            overall_img_width,
+		            overall_img_height,
 		            overall_map_dimension_mm,
 		            overall_map_centre_x_mm,
 		            overall_map_centre_y_mm);
@@ -640,16 +644,7 @@ namespace sentience.core.tests
 					Console.WriteLine("Localisation failure");
 				}
 			}
-
-            metagridBuffer.UpdateOverallMap(
-                buffer.buffer,
-                0,
-                overall_map_filename,
-                ref overall_map_img,
-                overall_map_dimension_mm,
-                overall_map_centre_x_mm,
-                overall_map_centre_y_mm);
-
+			
             buffer.ShowPath(img, img_width, img_height, true, true);
             BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
             bmp.Save("localisations_along_path.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -714,6 +709,8 @@ namespace sentience.core.tests
             int localisationRadius_mm = 2000;
             int maxMappingRange_mm = 2000;
             float vacancyWeighting = 0.5f;
+		    int overall_img_width = 640;
+		    int overall_img_height = 480;
 
             int current_grid_index = 0;
             int current_disparity_index = 0;
@@ -770,7 +767,10 @@ namespace sentience.core.tests
                     grid_centres,
                     ref update_map,
                     null,
-				    null, ref overall_map_img,
+				    null, 
+				    ref overall_map_img,
+		            overall_img_width,
+		            overall_img_height,				                                       
 				    0,0,0));
                 {
                     transitions++;
