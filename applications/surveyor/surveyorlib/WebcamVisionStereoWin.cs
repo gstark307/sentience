@@ -277,6 +277,7 @@ namespace surveyor.vision
         {
             string filename = "capture";
 
+            
             // append temporary files path if specified
             if ((temporary_files_path != null) &&
                 (temporary_files_path != ""))
@@ -302,7 +303,7 @@ namespace surveyor.vision
                 }
             }
             filename += identifier;
-
+            
             if (dsCameras == null)
             {
                 dsCameras = new WebcamVisionDirectShow();
@@ -314,43 +315,16 @@ namespace surveyor.vision
                 }
                 dsCameras.Open();
             }
-
-            /*
-            if (dsCameras.left_image_filename != null)
-            {
-                // delete any existing images
-                if (File.Exists(dsCameras.left_image_filename))
-                {
-                    try
-                    {
-                        File.Delete(dsCameras.left_image_filename);
-                    }
-                    catch
-                    {
-                    }
-                }
-                if (File.Exists(dsCameras.right_image_filename))
-                {
-                    try
-                    {
-                        File.Delete(dsCameras.right_image_filename);
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
-            */
-
+            
             // set the camera index
             dsCameras.stereo_camera_index = stereo_camera_index;
 
             // whether to use pause or stop on the media control
             dsCameras.use_pause = use_media_pause;
-
+            
             // acquire new images
             dsCameras.Grab();
-
+            
             // set exposure
             dsCameras.exposure = exposure;
 
@@ -379,11 +353,18 @@ namespace surveyor.vision
                     }
                     if (bmp[cam] == null) break;
 
-                    image_width = bmp[cam].Width;
-                    image_height = bmp[cam].Height;
+                    try
+                    {
+                        image_width = bmp[cam].Width;
+                        image_height = bmp[cam].Height;
+                    }
+                    catch
+                    {
+                        bmp[cam] = null;
+                    }
 
-                    byte[] raw_image_data = new byte[image_width * image_height * 3];
-                    BitmapArrayConversions.updatebitmap(bmp[cam], raw_image_data);
+                    //byte[] raw_image_data = new byte[image_width * image_height * 3];
+                    //BitmapArrayConversions.updatebitmap(bmp[cam], raw_image_data);
                 }
 
                 if ((bmp[0] != null) && (bmp[1] != null))
@@ -429,6 +410,14 @@ namespace surveyor.vision
                         if (bmp[i] == null) Console.WriteLine("Warning: Did not acquire image from " + camera_device[i]);
                 }
 
+                try
+                {
+                    if (bmp[0] != null) bmp[0].Dispose();
+                    if (bmp[1] != null) bmp[1].Dispose();
+                }
+                catch
+                {
+                }
             }
 
             if (next_camera != null)

@@ -33,8 +33,8 @@ namespace surveyor.vision
 {
     public partial class frmStereo : Form
     {
-        int image_width = 320;
-        int image_height = 240;
+        int image_width = 640;
+        int image_height = 480;
         string stereo_camera_IP = "169.254.0.10";
         string calibration_filename = "calibration.xml";
         int left_camera_device_index = 1;
@@ -279,6 +279,7 @@ namespace surveyor.vision
 
         private void dissableRectificationToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            dissableRectificationToolStripMenuItem.Checked = !dissableRectificationToolStripMenuItem.Checked;
             dissable_rectification = dissableRectificationToolStripMenuItem.Checked;
             stereo_camera.dissable_rectification = dissable_rectification;
         }

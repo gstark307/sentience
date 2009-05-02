@@ -28,6 +28,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
+using sluggish.utilities;
 
 namespace surveyor.vision
 {
@@ -176,12 +177,11 @@ namespace surveyor.vision
                     if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
                     if (no_of_cameras > 2) filename += start_camera_index.ToString() + (start_camera_index + 1).ToString() + "_";
                     CaptureFrames(
-                        cam[start_camera_index], 
-                        cam[start_camera_index + 1], 
+                        start_camera_index,
+                        cam,
                         initial_frames, filename, 
                         output_format, 
-                        m_ip[start_camera_index], 
-                        m_ip[start_camera_index + 1], 
+                        m_ip, 
                         save_images,
                         min_exposure + (int)(exposure * (max_exposure - min_exposure) / 100),
                         use_pause,
@@ -199,7 +199,7 @@ namespace surveyor.vision
                 {
                     string filename = output_filename;
                     if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
-                    CaptureFrame(cam[0], initial_frames, filename, output_format, m_ip[0], min_exposure + (int)(exposure * (max_exposure - min_exposure) / 100), use_pause);
+                    CaptureFrame(cam[0], initial_frames, filename, output_format, ref m_ip[0], min_exposure + (int)(exposure * (max_exposure - min_exposure) / 100), use_pause);
                 }
 
             }
@@ -209,13 +209,12 @@ namespace surveyor.vision
         /// grabs frames from two cameras
         /// </summary>
         protected static void CaptureFrames(
-            WebcamVisionDirectShowCapture cam0,
-            WebcamVisionDirectShowCapture cam1,
+            int start_camera_index,
+            WebcamVisionDirectShowCapture[] cam,
             int initial_frames,
             string output_filename,
             string output_format,
-            IntPtr m_ip0,
-            IntPtr m_ip1,
+            IntPtr[] m_ip,
             bool save_images,
             int exposure,
             bool use_pause,
@@ -227,37 +226,38 @@ namespace surveyor.vision
             ref DateTime right_image_capture)
         {
             const int step_size = 5; // when checking if frames are blank
-            left_image_bitmap = null;
-            right_image_bitmap = null;
+            if (left_image_bitmap != null) left_image_bitmap.Dispose();
+            if (right_image_bitmap != null) right_image_bitmap.Dispose();
 
-            if ((cam0 != null) && (cam1 != null))
+            if ((cam[start_camera_index] != null) && (cam[start_camera_index+1] != null))
             {
                 /*
-                if (m_ip0 != IntPtr.Zero)
+                if (m_ip[start_camera_index] != IntPtr.Zero)
                 {
-                    Marshal.FreeCoTaskMem(m_ip0);
-                    m_ip0 = IntPtr.Zero;
+                    Marshal.FreeCoTaskMem(m_ip[start_camera_index]);
+                    m_ip[start_camera_index] = IntPtr.Zero;
                 }
-                
-                if (m_ip1 != IntPtr.Zero)
+
+                if (m_ip[start_camera_index+1] != IntPtr.Zero)
                 {
-                    Marshal.FreeCoTaskMem(m_ip1);
-                    m_ip1 = IntPtr.Zero;
+                    Marshal.FreeCoTaskMem(m_ip[start_camera_index+1]);
+                    m_ip[start_camera_index+1] = IntPtr.Zero;
                 }
-                 */
+                */
 
                 for (int i = 0; i < 2; i++)
                 {
-                    WebcamVisionDirectShowCapture cam = cam0;
-                    if (i > 0) cam = cam1;
+                    WebcamVisionDirectShowCapture c = cam[start_camera_index];
+                    if (i > 0) c = cam[start_camera_index+1];
 
                     // start rolling the cameras
-                    if (cam.lastFrame != null)
-                        cam.lastFrame.Dispose();
+                    if (c.lastFrame != null)
+                        c.lastFrame.Dispose();
 
-                    cam.Resume();
+                    c.Resume();
                 }
 
+                
                 // grab frames       
                 Bitmap grabbed_image0 = null;
                 Bitmap grabbed_image1 = null;
@@ -265,6 +265,7 @@ namespace surveyor.vision
                 bool is_blank1 = true;
                 DateTime left_image_cap = DateTime.Now;
                 DateTime right_image_cap = DateTime.Now;
+                //for (int j = 0; j < 2; j++)
                 Parallel.For(0, 2, delegate(int j)
                 {
                     for (int i = 0; i < initial_frames + 1; i++)
@@ -272,39 +273,23 @@ namespace surveyor.vision
 
                         if (j == 0)
                         {
-                            /*
-                            if (m_ip0 != IntPtr.Zero)
-                            {
-                                Marshal.FreeCoTaskMem(m_ip0);
-                                m_ip0 = IntPtr.Zero;
-                            }
-                             */
-
                             left_image_cap = DateTime.Now;
-                            cam0.SetExposure(exposure);
-                            grabbed_image0 = cam0.Grab(ref m_ip0, true);
+                            cam[start_camera_index].SetExposure(exposure);
+                            grabbed_image0 = cam[start_camera_index].Grab(ref m_ip[start_camera_index], true);
                             is_blank0 = IsBlankFrame(grabbed_image0, step_size);
                             if ((!is_blank0) && (i > 1)) break;
                         }
                         else
                         {
-                            /*
-                            if (m_ip1 != IntPtr.Zero)
-                            {
-                                Marshal.FreeCoTaskMem(m_ip1);
-                                m_ip1 = IntPtr.Zero;
-                            }
-                             */
-
                             right_image_cap = DateTime.Now;
-                            cam1.SetExposure(exposure);
-                            grabbed_image1 = cam1.Grab(ref m_ip1, true);
+                            cam[start_camera_index+1].SetExposure(exposure);
+                            grabbed_image1 = cam[start_camera_index+1].Grab(ref m_ip[start_camera_index+1], true);
                             is_blank1 = IsBlankFrame(grabbed_image1, step_size);
                             if ((!is_blank0) && (i > 1)) break;
                         }
                     }
-                });
-
+                } );
+                
                 left_image_capture = left_image_cap;
                 right_image_capture = right_image_cap;
 
@@ -333,18 +318,18 @@ namespace surveyor.vision
                         left_image_filename = "";
                         right_image_filename = "";
                     }
-                }
+                }                
 
                 for (int i = 0; i < 2; i++)
                 {
-                    WebcamVisionDirectShowCapture cam = cam0;
-                    if (i > 0) cam = cam1;
+                    WebcamVisionDirectShowCapture c = cam[start_camera_index];
+                    if (i > 0) c = cam[start_camera_index+1];
 
                     // stop the camera
                     if (use_pause)
-                        cam.Pause();
+                        c.Pause();
                     else
-                        cam.Stop();
+                        c.Stop();
                 }
             }
         }
@@ -357,7 +342,7 @@ namespace surveyor.vision
             int initial_frames,
             string output_filename,
             string output_format,
-            IntPtr m_ip,
+            ref IntPtr m_ip,
             int exposure,
             bool use_pause)
         {
@@ -490,6 +475,7 @@ namespace surveyor.vision
             if (bmp != null)
             {
                 byte[] image = new byte[bmp.Width * bmp.Height * 3];
+                BitmapArrayConversions.updatebitmap(bmp, image);
 
                 int i = image.Length - 1;
                 while ((is_blank) && (i > 0))
@@ -497,6 +483,7 @@ namespace surveyor.vision
                     if (image[i] != 0) is_blank = false;
                     i -= step_size;
                 }
+                image = null;
             }
             return (is_blank);
         }

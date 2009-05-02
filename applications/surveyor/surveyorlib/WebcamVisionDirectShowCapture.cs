@@ -165,20 +165,36 @@ namespace surveyor.vision
         /// b.RotateFlip(RotateFlipType.RotateNoneFlipY);
         /// </summary>
         /// <returns>Returned pointer to be freed by caller with Marshal.FreeCoTaskMem</returns>
-        public Bitmap Grab(ref IntPtr m_ip, bool update_bitmap)
+        public Bitmap Grab(
+            ref IntPtr m_ip, 
+            bool update_bitmap)
         {
             Bitmap grabbed_frame = null;
-
+            
             if (!paused)
-            {
+            {                
                 int hr;
+
+                if (m_ipBuffer != IntPtr.Zero)
+                {
+                    try
+                    {
+                        Marshal.FreeCoTaskMem(m_ipBuffer);
+                    }
+                    catch
+                    {
+                    }
+                    m_ipBuffer = IntPtr.Zero;
+                }
 
                 // get ready to wait for new image
                 m_PictureReady.Reset();
-                m_ipBuffer = Marshal.AllocCoTaskMem(Math.Abs(m_stride) * m_videoHeight);
 
+                bool free_mem = false;
                 try
                 {
+                    m_ipBuffer = Marshal.AllocCoTaskMem(Math.Abs(m_stride) * m_videoHeight);
+                
                     m_WantOne = true;
 
                     // If we are using a still pin, ask for a picture
@@ -198,11 +214,25 @@ namespace surveyor.vision
                 }
                 catch
                 {
-                    Marshal.FreeCoTaskMem(m_ipBuffer);
-                    m_ipBuffer = IntPtr.Zero;
-                    throw;
+                    free_mem = true;
+                    //throw;
                 }
 
+                if (free_mem)
+                {
+                    try
+                    {
+                        if (m_ipBuffer != IntPtr.Zero)
+                        {
+                            Marshal.FreeCoTaskMem(m_ipBuffer);
+                            m_ipBuffer = IntPtr.Zero;
+                        }
+                    }
+                    catch
+                    {
+                    }
+                }
+                
                 if (m_ipBuffer != IntPtr.Zero)
                 {
                     if (lastFrame != null)
@@ -211,6 +241,7 @@ namespace surveyor.vision
                     // store the last frame as a bitmap
                     if (update_bitmap)
                     {
+                        
                         if (bytes_per_pixel == 1)
                             grabbed_frame = new Bitmap(m_videoWidth, m_videoHeight, m_stride, PixelFormat.Format8bppIndexed, m_ipBuffer);
                         else
@@ -223,12 +254,15 @@ namespace surveyor.vision
                         catch
                         {
                         }
-                        lastFrame = grabbed_frame;
+                        lastFrame = grabbed_frame;                        
                         m_ip = m_ipBuffer;
+                        
                     }
                 }
+                 
             }
             //m_ip = m_ipBuffer;
+             
             return (grabbed_frame);
         }
 
