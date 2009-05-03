@@ -568,21 +568,23 @@ namespace surveyor.vision
 
         }
 
-        public static void MatchImages(string left_filename, string right_filename,
-                                       int no_of_masks,
-                                       double a, double b,
-                                       double min_phase_degrees, double max_phase_degrees,
-                                       double[] frequency,
-                                       int max_disparity,                                        
-                                       double min_difference, double max_difference,
-                                       string disparity_map_filename,
-                                       int calibration_offset_x,
-                                       int calibration_offset_y,
-                                       int vertical_compression,
-                                       int position_search_radius,
-                                       int minimum_intensity,
-                                       int random_rows,
-		                               List<StereoFeature> features)
+        public static void MatchImages(
+            string left_filename, string right_filename,
+            int no_of_masks,
+            double a, double b,
+            double min_phase_degrees, double max_phase_degrees,
+            double[] frequency,
+            int max_disparity,                                        
+            double min_difference, double max_difference,
+            string disparity_map_filename,
+            int calibration_offset_x,
+            int calibration_offset_y,
+            int calibration_scale,
+            int vertical_compression,
+            int position_search_radius,
+            int minimum_intensity,
+            int random_rows,
+		    List<StereoFeature> features)
         {
             // load images
             Bitmap left_bmp = (Bitmap)Bitmap.FromFile(left_filename);
@@ -607,6 +609,7 @@ namespace surveyor.vision
                         max_disparity,                         
                         min_difference, max_difference, 
                         calibration_offset_x, calibration_offset_y,
+                        calibration_scale,
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,
@@ -631,21 +634,23 @@ namespace surveyor.vision
         static double[][] left;
         static double[][] right;
         
-        private static void MatchImages(byte[] left_img, byte[] right_img,
-                                        int image_width, int image_height,
-                                        int no_of_masks,
-                                        double a, double b,
-                                        double min_phase_degrees, double max_phase_degrees,
-                                        double[] frequency,
-                                        int max_disparity, 
-                                        double min_difference, double max_difference,
-                                        int calibration_offset_x, int calibration_offset_y,
-                                        int vertical_compression,
-                                        int position_search_radius,
-                                        int minimum_intensity,
-                                        int random_rows,
-		                                List<StereoFeature> features,
-                                        byte[] disparity_map)
+        private static void MatchImages(
+            byte[] left_img, byte[] right_img,
+            int image_width, int image_height,
+            int no_of_masks,
+            double a, double b,
+            double min_phase_degrees, double max_phase_degrees,
+            double[] frequency,
+            int max_disparity, 
+            double min_difference, double max_difference,
+            int calibration_offset_x, int calibration_offset_y,
+            float calibration_scale,
+            int vertical_compression,
+            int position_search_radius,
+            int minimum_intensity,
+            int random_rows,
+		    List<StereoFeature> features,
+            byte[] disparity_map)
         {
 			features.Clear();
 			
@@ -765,10 +770,13 @@ namespace surveyor.vision
         /// <param name="hght">height of the images</param>
         /// <param name="calibration_offset_x">calibration offset to counter for any small vergence angle between the cameras</param>
         /// <param name="calibration_offset_y">calibration offset to counter for any small vergence angle between the cameras</param>
-        public override void Update(byte[] left_bmp_colour, byte[] right_bmp_colour,
-		                            byte[] left_bmp, byte[] right_bmp,
-                                    int wdth, int hght,
-                                    float calibration_offset_x, float calibration_offset_y)
+        /// <param name="calibration_scale">scale of one image relative to another</param>
+        public override void Update(
+            byte[] left_bmp_colour, byte[] right_bmp_colour,
+		    byte[] left_bmp, byte[] right_bmp,
+            int wdth, int hght,
+            float calibration_offset_x, float calibration_offset_y,
+            float calibration_scale)
         {
             //Console.WriteLine("calib x: " + calibration_offset_x.ToString());
             //Console.WriteLine("calib y: " + calibration_offset_y.ToString());
@@ -791,6 +799,7 @@ namespace surveyor.vision
                         max_disparity,                         
                         min_difference, max_difference, 
                         (int)calibration_offset_x, (int)calibration_offset_y,
+                        calibration_scale,
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,

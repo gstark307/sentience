@@ -356,7 +356,7 @@ namespace surveyor.vision
                 str = oRead.ReadLine();
                 if (str != null)
                 {
-                    float scale = Convert.ToSingle(str);
+                    stereo_camera.scale = Convert.ToSingle(str);
                 }
 
                 str = oRead.ReadLine();
@@ -390,6 +390,7 @@ namespace surveyor.vision
 
                     string params_filename = "manualoffsets_params.txt";
                     LoadManualCameraAlignmentCalibrationParameters(params_filename);
+                    stereo_camera.Save(calibration_filename);
                 }
             }
         }

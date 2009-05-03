@@ -112,10 +112,13 @@ namespace surveyor.vision
         /// <param name="image_height">height of the image</param>
         /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
         /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
-        public virtual void Update(byte[] left_bmp_colour, byte[] right_bmp_colour,
-		                           byte[] left_bmp, byte[] right_bmp,
-                                   int image_width, int image_height,
-                                   float calibration_offset_x, float calibration_offset_y)
+        public virtual void Update(
+            byte[] left_bmp_colour, byte[] right_bmp_colour,
+		    byte[] left_bmp, byte[] right_bmp,
+            int image_width, int image_height,
+            float calibration_offset_x, 
+            float calibration_offset_y,
+            float calibration_scale)
         {
             this.image_width = image_width;
             this.image_height = image_height;
@@ -146,9 +149,14 @@ namespace surveyor.vision
         /// <param name="rectified_right">right image bitmap object</param>
         /// <param name="calibration_offset_x">horizontal offset from calibration, correcting for non-parallel alignment of the cameras</param>
         /// <param name="calibration_offset_y">vertical offset from calibration, correcting for non-parallel alignment of the cameras</param>
-        public void Update(Bitmap rectified_left, Bitmap rectified_right,
-                           float calibration_offset_x, float calibration_offset_y)
-        {        
+        /// <param name="calibration_scale">scale of one image relative to the other</param>
+        public void Update(
+            Bitmap rectified_left, 
+            Bitmap rectified_right,
+            float calibration_offset_x, 
+            float calibration_offset_y,
+            float calibration_scale)
+        {
             image_width = rectified_left.Width;
             image_height = rectified_left.Height;
             int pixels = image_width * image_height * 3;
@@ -178,7 +186,8 @@ namespace surveyor.vision
             Update(img[0], img[1],
                    img[2], img[3],
                    rectified_left.Width, rectified_left.Height,
-                   calibration_offset_x, calibration_offset_y);
+                   calibration_offset_x, calibration_offset_y,
+                   calibration_scale);
 
             if (BroadcastStereoFeatureColours)
             {

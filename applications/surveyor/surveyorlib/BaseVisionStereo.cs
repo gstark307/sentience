@@ -76,6 +76,9 @@ namespace surveyor.vision
         // offsets when observing objects at
         // long distance (less than one pixel disparity)
         public float offset_x=0, offset_y=0;
+
+        // scaling factor of one camera image relative to the other
+        public float scale = 1;
         
         // rotation of the right camera relative to the left
         public float rotation = 0;
@@ -431,7 +434,8 @@ namespace surveyor.vision
             polynomial[] lens_distortion_curve,
             float[] centre_of_distortion_x, float[] centre_of_distortion_y,
             float[] minimum_rms_error,
-            float rotation, float scale,
+            float rotation, 
+            float scale,
             float offset_x, float offset_y)
         {
             // make sure that floating points are saved in a standard format
@@ -483,11 +487,16 @@ namespace surveyor.vision
 
             for (int cam = 0; cam < lens_distortion_curve.Length; cam++)
             {
+                float image_scale = 1;
+                if ((scale < 1) && (cam == 0)) image_scale = 1.0f / scale;
+                if ((scale > 1) && (cam == 1)) image_scale = scale;
+
                 XmlElement elem = getCameraXml(
                     doc, fov_degrees,
                     lens_distortion_curve[cam],
                     centre_of_distortion_x[cam], centre_of_distortion_y[cam],
-                    minimum_rms_error[cam]);
+                    minimum_rms_error[cam],
+                    image_scale);
                 nodeCalibration.AppendChild(elem);
             }
 
@@ -510,7 +519,8 @@ namespace surveyor.vision
             float fov_degrees,
             polynomial lens_distortion_curve,
             float centre_of_distortion_x, float centre_of_distortion_y,
-            float minimum_rms_error)
+            float minimum_rms_error,
+            float scale)
         {
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
@@ -537,6 +547,8 @@ namespace surveyor.vision
             xml.AddTextElement(doc, elem, "DistortionCoefficients", coefficients);
             xml.AddComment(doc, elem, "The minimum RMS error between the distortion curve and plotted points");
             xml.AddTextElement(doc, elem, "RMSerror", Convert.ToString(minimum_rms_error, format));
+            xml.AddComment(doc, elem, "Scaling factor");
+            xml.AddTextElement(doc, elem, "Scale", Convert.ToString(scale, format));
 
             return (elem);
         }
@@ -680,6 +692,11 @@ namespace surveyor.vision
             if (xnod.Name == "RMSerror")
             {
                 calibration_survey[camera_index].minimum_rms_error = Convert.ToSingle(xnod.InnerText, format);
+            }
+
+            if (xnod.Name == "Scale")
+            {
+                scale = Convert.ToSingle(xnod.InnerText, format);
             }
 
             // call recursively on all children of the current node
@@ -975,7 +992,8 @@ namespace surveyor.vision
 
                     if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],
-                                              -offset_x, offset_y);
+                                              -offset_x, offset_y,
+                                              scale);
                         
                     break;
                 }
@@ -989,7 +1007,8 @@ namespace surveyor.vision
 
                     if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y);
+                                              offset_x, offset_y,
+                                              scale);
                     
                     break;
                 }
@@ -1003,7 +1022,8 @@ namespace surveyor.vision
 
                     if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y);
+                                              offset_x, offset_y,
+                                              scale);
                     
                     break;
                 }
