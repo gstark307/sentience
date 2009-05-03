@@ -1,4 +1,4 @@
-/*
+﻿/*
     Command line parsing utility functions
     Copyright (C) 2000-2007 Bob Mottram
     fuzzgun@gmail.com

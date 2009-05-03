@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Data;
 using System.Drawing;
 using System.Text;
@@ -33,6 +34,7 @@ namespace surveyor.vision
 {
     public partial class frmStereo : Form
     {
+        string manual_camera_alignment_calibration_program = "\\develop\\sentience\\applications\\surveyor\\manualoffsets\\bin\\Debug\\manualoffsets.exe";
         int image_width = 640;
         int image_height = 480;
         string stereo_camera_IP = "169.254.0.10";
@@ -282,6 +284,114 @@ namespace surveyor.vision
             dissableRectificationToolStripMenuItem.Checked = !dissableRectificationToolStripMenuItem.Checked;
             dissable_rectification = dissableRectificationToolStripMenuItem.Checked;
             stereo_camera.dissable_rectification = dissable_rectification;
+        }
+
+        private void saveAnimatedGifToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if ((picLeftImage.Image != null) && (picRightImage.Image != null))
+            {
+                picLeftImage.Image.Save("anim0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                picRightImage.Image.Save("anim1.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+
+                if ((File.Exists("anim0.bmp")) &&
+                    (File.Exists("anim1.bmp")))
+                {
+                    //List<string> images = new List<string>();
+                    //images.Add("anim0.gif");
+                    //images.Add("anim1.gif");
+
+                    float offset_x = -10;
+                    float offset_y = 3;
+                    float scale = 95 / 100.0f;
+
+                    GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, offset_x, offset_y, scale);
+                    //File.Delete("anim0.gif");
+                    //File.Delete("anim1.gif");
+                    MessageBox.Show("Animated gif created");
+                }
+            }
+        }
+
+        private void LoadManualCameraAlignmentCalibrationParameters(string filename)
+        {
+            StreamReader oRead = null;
+            string str;
+            bool filefound = true;
+
+            try
+            {
+                oRead = File.OpenText(filename);
+            }
+            catch
+            {
+                filefound = false;
+            }
+
+            if (filefound)
+            {
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    string left_image_filename = str;
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    string right_image_filename = str;
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    stereo_camera.offset_x = Convert.ToSingle(str);
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    stereo_camera.offset_y = Convert.ToSingle(str);
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    float scale = Convert.ToSingle(str);
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    float delay_mS = Convert.ToInt32(str);
+                }
+
+                oRead.Close();
+            }
+        }
+
+        private void manualCameraAlignmentCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if ((picLeftImage.Image != null) && (picRightImage.Image != null))
+            {
+                string left_filename = System.Environment.CurrentDirectory + "\\calib0.bmp";
+                string right_filename = System.Environment.CurrentDirectory + "\\calib1.bmp";
+                picLeftImage.Image.Save(left_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+                picRightImage.Image.Save(right_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+
+                if ((File.Exists(left_filename)) &&
+                    (File.Exists(right_filename)))
+                {
+                    System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                    proc.EnableRaisingEvents = false;
+                    proc.StartInfo.FileName = manual_camera_alignment_calibration_program;
+                    proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " -right " + '"' + right_filename + '"' + " -offsetx " + stereo_camera.offset_x.ToString() + " -offsety " + stereo_camera.offset_y.ToString();
+                    proc.Start();
+                    proc.WaitForExit();
+
+                    string params_filename = "manualoffsets_params.txt";
+                    LoadManualCameraAlignmentCalibrationParameters(params_filename);
+                }
+            }
         }
 
         /*

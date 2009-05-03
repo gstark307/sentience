@@ -67,6 +67,8 @@
     <Compile Include="EventLog.cs" />
     <Compile Include="FTPclient.cs" />
     <Compile Include="geometry.cs" />
+    <Compile Include="GifClass.cs" />
+    <Compile Include="GifCreator.cs" />
     <Compile Include="graph.cs" />
     <Compile Include="graph_intensity_histogram.cs" />
     <Compile Include="graph_lines.cs" />

@@ -84,6 +84,8 @@
     <Compile Include="correspondence\StereoVisionDense.cs" />
     <Compile Include="correspondence\StereoVisionGeometric.cs" />
     <Compile Include="correspondence\StereoVisionSimple.cs" />
+    <Compile Include="GifClass.cs" />
+    <Compile Include="GifCreator.cs" />
     <Compile Include="parallel.cs" />
     <Compile Include="probabilities.cs" />
     <Compile Include="SurveyorCalibration.cs" />

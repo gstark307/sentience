@@ -20,7 +20,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace surveyor.vision
+namespace sluggish.utilities
 {
     /// <summary>
     /// used to play beepy noises when something is detected
