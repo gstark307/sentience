@@ -43,15 +43,17 @@
             this.timAnimation = new System.Windows.Forms.Timer(this.components);
             this.picAnimation = new System.Windows.Forms.PictureBox();
             this.grpAdjustments = new System.Windows.Forms.GroupBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.txtInterval = new System.Windows.Forms.TextBox();
+            this.chkAnimate = new System.Windows.Forms.CheckBox();
             this.lblScale = new System.Windows.Forms.Label();
             this.txtScale = new System.Windows.Forms.TextBox();
             this.lblOffsetY = new System.Windows.Forms.Label();
             this.txtOffsetY = new System.Windows.Forms.TextBox();
             this.lblOffsetX = new System.Windows.Forms.Label();
             this.txtOffsetX = new System.Windows.Forms.TextBox();
-            this.chkAnimate = new System.Windows.Forms.CheckBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.txtInterval = new System.Windows.Forms.TextBox();
+            this.lblRotation = new System.Windows.Forms.Label();
+            this.txtRotation = new System.Windows.Forms.TextBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -161,6 +163,8 @@
             // 
             // grpAdjustments
             // 
+            this.grpAdjustments.Controls.Add(this.lblRotation);
+            this.grpAdjustments.Controls.Add(this.txtRotation);
             this.grpAdjustments.Controls.Add(this.label1);
             this.grpAdjustments.Controls.Add(this.txtInterval);
             this.grpAdjustments.Controls.Add(this.chkAnimate);
@@ -172,10 +176,40 @@
             this.grpAdjustments.Controls.Add(this.txtOffsetX);
             this.grpAdjustments.Location = new System.Drawing.Point(385, 41);
             this.grpAdjustments.Name = "grpAdjustments";
-            this.grpAdjustments.Size = new System.Drawing.Size(138, 186);
+            this.grpAdjustments.Size = new System.Drawing.Size(169, 208);
             this.grpAdjustments.TabIndex = 4;
             this.grpAdjustments.TabStop = false;
             this.grpAdjustments.Text = "Adjustments";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(17, 169);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(66, 13);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "Interval (mS)";
+            // 
+            // txtInterval
+            // 
+            this.txtInterval.Location = new System.Drawing.Point(111, 166);
+            this.txtInterval.Name = "txtInterval";
+            this.txtInterval.Size = new System.Drawing.Size(39, 20);
+            this.txtInterval.TabIndex = 5;
+            this.txtInterval.Text = "500";
+            this.txtInterval.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtInterval.Leave += new System.EventHandler(this.txtInterval_Leave);
+            this.txtInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtInterval_KeyPress);
+            // 
+            // chkAnimate
+            // 
+            this.chkAnimate.AutoSize = true;
+            this.chkAnimate.Location = new System.Drawing.Point(22, 143);
+            this.chkAnimate.Name = "chkAnimate";
+            this.chkAnimate.Size = new System.Drawing.Size(64, 17);
+            this.chkAnimate.TabIndex = 4;
+            this.chkAnimate.Text = "Animate";
+            this.chkAnimate.UseVisualStyleBackColor = true;
             // 
             // lblScale
             // 
@@ -188,10 +222,10 @@
             // 
             // txtScale
             // 
-            this.txtScale.Location = new System.Drawing.Point(89, 80);
+            this.txtScale.Location = new System.Drawing.Point(111, 80);
             this.txtScale.Name = "txtScale";
             this.txtScale.Size = new System.Drawing.Size(39, 20);
-            this.txtScale.TabIndex = 4;
+            this.txtScale.TabIndex = 2;
             this.txtScale.Text = "1";
             this.txtScale.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtScale.Leave += new System.EventHandler(this.txtScale_Leave);
@@ -208,10 +242,10 @@
             // 
             // txtOffsetY
             // 
-            this.txtOffsetY.Location = new System.Drawing.Point(89, 54);
+            this.txtOffsetY.Location = new System.Drawing.Point(111, 54);
             this.txtOffsetY.Name = "txtOffsetY";
             this.txtOffsetY.Size = new System.Drawing.Size(39, 20);
-            this.txtOffsetY.TabIndex = 2;
+            this.txtOffsetY.TabIndex = 1;
             this.txtOffsetY.Text = "0";
             this.txtOffsetY.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtOffsetY.Leave += new System.EventHandler(this.txtOffsetY_Leave);
@@ -228,7 +262,7 @@
             // 
             // txtOffsetX
             // 
-            this.txtOffsetX.Location = new System.Drawing.Point(89, 28);
+            this.txtOffsetX.Location = new System.Drawing.Point(111, 28);
             this.txtOffsetX.Name = "txtOffsetX";
             this.txtOffsetX.Size = new System.Drawing.Size(39, 20);
             this.txtOffsetX.TabIndex = 0;
@@ -237,35 +271,25 @@
             this.txtOffsetX.Leave += new System.EventHandler(this.txtOffsetX_Leave);
             this.txtOffsetX.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtOffsetX_KeyPress);
             // 
-            // chkAnimate
+            // lblRotation
             // 
-            this.chkAnimate.AutoSize = true;
-            this.chkAnimate.Location = new System.Drawing.Point(22, 114);
-            this.chkAnimate.Name = "chkAnimate";
-            this.chkAnimate.Size = new System.Drawing.Size(64, 17);
-            this.chkAnimate.TabIndex = 6;
-            this.chkAnimate.Text = "Animate";
-            this.chkAnimate.UseVisualStyleBackColor = true;
+            this.lblRotation.AutoSize = true;
+            this.lblRotation.Location = new System.Drawing.Point(17, 109);
+            this.lblRotation.Name = "lblRotation";
+            this.lblRotation.Size = new System.Drawing.Size(88, 13);
+            this.lblRotation.TabIndex = 10;
+            this.lblRotation.Text = "Rotation degrees";
             // 
-            // label1
+            // txtRotation
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(17, 140);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(66, 13);
-            this.label1.TabIndex = 8;
-            this.label1.Text = "Interval (mS)";
-            // 
-            // txtInterval
-            // 
-            this.txtInterval.Location = new System.Drawing.Point(89, 137);
-            this.txtInterval.Name = "txtInterval";
-            this.txtInterval.Size = new System.Drawing.Size(39, 20);
-            this.txtInterval.TabIndex = 7;
-            this.txtInterval.Text = "500";
-            this.txtInterval.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtInterval.Leave += new System.EventHandler(this.txtInterval_Leave);
-            this.txtInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtInterval_KeyPress);
+            this.txtRotation.Location = new System.Drawing.Point(111, 106);
+            this.txtRotation.Name = "txtRotation";
+            this.txtRotation.Size = new System.Drawing.Size(39, 20);
+            this.txtRotation.TabIndex = 3;
+            this.txtRotation.Text = "0";
+            this.txtRotation.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtRotation.Leave += new System.EventHandler(this.txtRotation_Leave);
+            this.txtRotation.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtRotation_KeyPress);
             // 
             // frmManualOffsetCalibration
             // 
@@ -319,5 +343,7 @@
         private System.Windows.Forms.CheckBox chkAnimate;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtInterval;
+        private System.Windows.Forms.Label lblRotation;
+        private System.Windows.Forms.TextBox txtRotation;
     }
 }

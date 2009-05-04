@@ -44,7 +44,15 @@ namespace manualoffsets
                 parameters_exist = true;
             }
 
-            frmManualOffsetCalibration frm = new frmManualOffsetCalibration(left_image_filename, right_image_filename, offset_x, offset_y, scale, parameters_exist);
+            float rotation_degrees = 0;
+            string rotation_degrees_str = commandline.GetParameterValue("rotation", parameters);
+            if (rotation_degrees_str != "")
+            {
+                rotation_degrees = Convert.ToSingle(rotation_degrees_str);
+                parameters_exist = true;
+            }
+
+            frmManualOffsetCalibration frm = new frmManualOffsetCalibration(left_image_filename, right_image_filename, offset_x, offset_y, scale, rotation_degrees, parameters_exist);
             frm.ShowDialog();
         }
 
@@ -61,6 +69,7 @@ namespace manualoffsets
             ValidParameters.Add("offsetx");
             ValidParameters.Add("offsety");
             ValidParameters.Add("scale");
+            ValidParameters.Add("rotation");
 
             return (ValidParameters);
         }

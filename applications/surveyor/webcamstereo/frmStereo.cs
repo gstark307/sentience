@@ -300,11 +300,7 @@ namespace surveyor.vision
                     //images.Add("anim0.gif");
                     //images.Add("anim1.gif");
 
-                    float offset_x = -10;
-                    float offset_y = 3;
-                    float scale = 95 / 100.0f;
-
-                    GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, offset_x, offset_y, scale);
+                    GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, stereo_camera.offset_x, stereo_camera.offset_y, stereo_camera.scale, stereo_camera.rotation * 180 / (float)Math.PI);
                     //File.Delete("anim0.gif");
                     //File.Delete("anim1.gif");
                     MessageBox.Show("Animated gif created");
@@ -362,6 +358,12 @@ namespace surveyor.vision
                 str = oRead.ReadLine();
                 if (str != null)
                 {
+                    stereo_camera.rotation = Convert.ToSingle(str) * (float)Math.PI / 180.0f;
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
                     float delay_mS = Convert.ToInt32(str);
                 }
 
@@ -384,7 +386,12 @@ namespace surveyor.vision
                     System.Diagnostics.Process proc = new System.Diagnostics.Process();
                     proc.EnableRaisingEvents = false;
                     proc.StartInfo.FileName = manual_camera_alignment_calibration_program;
-                    proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " -right " + '"' + right_filename + '"' + " -offsetx " + stereo_camera.offset_x.ToString() + " -offsety " + stereo_camera.offset_y.ToString();
+                    proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
+                    proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
+                    proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
+                    proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
+                    proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
+                    proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
                     proc.Start();
                     proc.WaitForExit();
 

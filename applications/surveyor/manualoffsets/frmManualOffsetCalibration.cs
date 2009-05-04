@@ -2,9 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using sluggish.utilities;
@@ -20,6 +18,7 @@ namespace manualoffsets
         private float offset_x = 0;
         private float offset_y = 0;
         private float scale = 1;
+        private float rotation_degrees = 0;
         private string gif_filename = "anim.gif";
         private int delay_mS = 200;
 
@@ -29,6 +28,7 @@ namespace manualoffsets
             float offset_x,
             float offset_y,
             float scale,
+            float rotation_degrees,
             bool parameters_exist)
         {
             InitializeComponent();
@@ -38,6 +38,7 @@ namespace manualoffsets
             this.offset_x = offset_x;
             this.offset_y = offset_y;
             this.scale = scale;
+            this.rotation_degrees = rotation_degrees;
 
             if (!parameters_exist) LoadPreviousParameters();
 
@@ -55,6 +56,7 @@ namespace manualoffsets
             txtOffsetX.Text = this.offset_x.ToString();
             txtOffsetY.Text = this.offset_y.ToString();
             txtScale.Text = this.scale.ToString();
+            txtRotation.Text = this.rotation_degrees.ToString();
 
             Update();
         }
@@ -134,6 +136,7 @@ namespace manualoffsets
                     offset_x,
                     offset_y,
                     scale,
+                    rotation_degrees,
                     ref processed_left_image_filename,
                     ref processed_right_image_filename);
                 ResizeForm();
@@ -323,6 +326,12 @@ namespace manualoffsets
                 str = oRead.ReadLine();
                 if (str != null)
                 {
+                    rotation_degrees = Convert.ToSingle(str);
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
                     delay_mS = Convert.ToInt32(str);
                 }
 
@@ -352,6 +361,7 @@ namespace manualoffsets
                 oWrite.WriteLine(offset_x.ToString());
                 oWrite.WriteLine(offset_y.ToString());
                 oWrite.WriteLine(scale.ToString());
+                oWrite.WriteLine(rotation_degrees.ToString());
                 oWrite.WriteLine(delay_mS.ToString());
                 oWrite.Close();
             }
@@ -430,6 +440,41 @@ namespace manualoffsets
             {
                 delay_mS = Convert.ToInt32(txtInterval.Text);
                 timAnimation.Interval = delay_mS;
+            }
+        }
+
+        private void txtRotation_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == 13)
+            {
+                if (txtRotation.Text != "")
+                {
+                    try
+                    {
+                        rotation_degrees = Convert.ToSingle(txtRotation.Text);
+                        Update();
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Invalid entry");
+                    }
+                }
+            }
+        }
+
+        private void txtRotation_Leave(object sender, EventArgs e)
+        {
+            if (txtRotation.Text != "")
+            {
+                try
+                {
+                    rotation_degrees = Convert.ToSingle(txtRotation.Text);
+                    Update();
+                }
+                catch
+                {
+                    MessageBox.Show("Invalid entry");
+                }
             }
         }
     }

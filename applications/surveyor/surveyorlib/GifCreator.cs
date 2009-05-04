@@ -36,7 +36,8 @@ namespace sluggish.utilities
             int delay_mS,
             float offset_x,
             float offset_y,
-            float scale)
+            float scale,
+            float rotation_degrees)
         {
             string left_image_filename = "";
             string right_image_filename = "";
@@ -49,9 +50,100 @@ namespace sluggish.utilities
                 offset_x,
                 offset_y,
                 scale,
+                rotation_degrees,
                 ref left_image_filename,
                 ref right_image_filename);
         }
+
+        #region "creating lookup tables for image scaling"
+
+        public static void CreateScaledImageLookupColour(
+            float scale,
+            int[] lookup, 
+            int img_width, int img_height,
+            int offset_x,
+            int offset_y,
+            float rotation_degrees)
+        {
+            float rotation_radians = rotation_degrees * (float)Math.PI / 180.0f;
+
+            int cy = img_height / 2;
+            int cx = img_width / 2;
+            int n = 0;
+            for (int y = 0; y < img_height; y++)
+            {
+                int yy = cy + (int)((y - cy) * scale) + offset_y;
+                for (int x = 0; x < img_width; x++, n += 3)
+                {
+                    int xx = cx + (int)((x - cx) * scale) + offset_x;
+
+                    int xx2 = xx;
+                    int yy2 = yy;
+                    if (rotation_degrees != 0)
+                    {
+                        float dx = xx - cx;
+                        float dy = yy - cy;
+                        float dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                        float angle = 0;
+                        if (dist != 0)
+                        {
+                            angle = (float)Math.Acos(dy / dist);
+                            if (dx < 0) angle = (float)(Math.PI*2) - angle;
+                        }
+                        angle += rotation_radians;
+
+                        xx2 = cx + (int)(dist * Math.Sin(angle));
+                        yy2 = cy + (int)(dist * Math.Cos(angle));
+                    }
+
+                    int n2 = ((yy2 * img_width) + xx2) * 3; 
+                    if ((n2 > -1) && (n2 < lookup.Length - 3))
+                    {
+                        lookup[n] = n2;
+                        lookup[n + 1] = n2 + 1;
+                        lookup[n + 2] = n2 + 2;
+                    }
+                }
+            }
+        }
+
+        public static void CreateScaledImageLookupMono(
+            float scale,
+            int[] lookup,
+            int img_width, int img_height,
+            int offset_x,
+            int offset_y,
+            float rotation_degrees)
+        {
+            float rotation_radians = rotation_degrees * (float)Math.PI / 180.0f;
+            float rotation_radians2 = rotation_radians + (float)Math.PI;
+
+            int cy = img_height / 2;
+            int cx = img_width / 2;
+            int n = 0;
+            for (int y = 0; y < img_height; y++)
+            {
+                int yy = cy + (int)((y - cy) * scale);
+                for (int x = 0; x < img_width; x++, n++)
+                {
+                    int xx = cx + (int)((x - cx) * scale);
+
+                    if (rotation_degrees != 0)
+                    {
+                        int xx2 = (int)((Math.Cos(rotation_radians2) * xx) - (Math.Sin(rotation_radians2) * yy));
+                        int yy2 = (int)((Math.Sin(rotation_radians) * xx) + (Math.Cos(rotation_radians) * yy));
+                        xx = xx2;
+                        yy = yy2;
+                    }
+
+                    int n2 = (yy * img_width) + xx;
+                    if ((n2 > -1) && (n2 < lookup.Length))
+                        lookup[n] = n2;
+                }
+            }
+        }
+
+        #endregion
 
         public static void CreateFromStereoPair(
             string left_image,
@@ -61,6 +153,7 @@ namespace sluggish.utilities
             float offset_x,
             float offset_y,
             float scale,
+            float rotation_degrees,
             ref string left_image_filename,
             ref string right_image_filename)
         {
@@ -73,25 +166,10 @@ namespace sluggish.utilities
                 Bitmap bmp0 = (Bitmap)Bitmap.FromFile(left_image);
                 byte[] img0 = new byte[bmp0.Width * bmp0.Height * 3];
                 BitmapArrayConversions.updatebitmap(bmp0, img0);
+                int[] lookup0 = new int[bmp0.Width * bmp0.Height * 3];
                 byte[] img0_scaled = new byte[bmp0.Width * bmp0.Height * 3];
-                int cy0 = bmp0.Height / 2;
-                int cx0 = bmp0.Width / 2;                
-                n = 0;
-                for (int y = 0; y < bmp0.Height; y++)
-                {
-                    int yy = cy0 + (int)((y - cy0) * scale);
-                    for (int x = 0; x < bmp0.Width; x++, n += 3)
-                    {
-                        int xx = cx0 + (int)((x - cx0) * scale);
-                        int n2 = ((yy * bmp0.Width) + xx) * 3;
-                        if ((n2 > -1) && (n2 < img0.Length - 3))
-                        {
-                            img0_scaled[n] = img0[n2];
-                            img0_scaled[n + 1] = img0[n2 + 1];
-                            img0_scaled[n + 2] = img0[n2 + 2];
-                        }
-                    }
-                }
+                CreateScaledImageLookupColour(scale, lookup0, bmp0.Width, bmp0.Height, 0, 0, 0);
+                for (int i = 0; i < img0_scaled.Length; i++) img0_scaled[i] = img0[lookup0[i]];
                 scale = 1;
                 bmp0 = new Bitmap(bmp0.Width, bmp0.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 BitmapArrayConversions.updatebitmap_unsafe(img0_scaled, bmp0);
@@ -103,25 +181,10 @@ namespace sluggish.utilities
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
             byte[] img_offset = new byte[bmp.Width * bmp.Height * 3];
-            n = 0;
-            int cy = bmp.Height / 2;
-            int cx = bmp.Width / 2;
+            int[] lookup1 = new int[bmp.Width * bmp.Height * 3];
             scale = 1.0f / scale;
-            for (int y = 0; y < bmp.Height; y++)
-            {
-                int yy = cy + (int)((y - cy) * scale);
-                for (int x = 0; x < bmp.Width; x++, n += 3)
-                {
-                    int xx = cx + (int)((x - cx) * scale);
-                    int n2 = (((int)(yy + offset_y) * bmp.Width) + (int)(xx + offset_x)) * 3;
-                    if ((n2 > -1) && (n2 < img.Length-3))
-                    {
-                        img_offset[n] = img[n2];
-                        img_offset[n+1] = img[n2+1];
-                        img_offset[n+2] = img[n2+2];
-                    }
-                }
-            }
+            CreateScaledImageLookupColour(scale, lookup1, bmp.Width, bmp.Height, (int)offset_x, (int)offset_y, rotation_degrees);
+            for (int i = 0; i < img_offset.Length; i++) img_offset[i] = img[lookup1[i]];
             bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(img_offset, bmp);
             right_image_filename = right_image.Substring(0, right_image.Length - 4) + "2.bmp";
