@@ -32,20 +32,8 @@ using sluggish.utilities;
 
 namespace surveyor.vision
 {
-    public class WebcamVisionDirectShow
+    public class WebcamVisionDirectShow : WebcamVisionDirectShowBase
     {
-        public string camera_devices = "0";
-        public int image_width = 320;
-        public int image_height = 240;
-        public int initial_frames = 3;
-        public string output_filename = "capture.jpg";
-        public float exposure = 100;    // in the range 0 - 100
-        public int min_exposure = 0;    // set this to the minimum exposure value for the camera
-        public int max_exposure = 650;  // set this to the maximum exposure value for the camera
-        public int no_of_cameras = 1;
-        public int stereo_camera_index = -1;
-        public bool save_images = false;
-
         protected int start_camera_index = 0;
         protected string output_format;
         protected int[] directshow_filter_index;
@@ -53,21 +41,6 @@ namespace surveyor.vision
         protected int[] camera_filter_index;
         protected IntPtr[] m_ip;
         protected PictureBox[] preview;
-
-        //use pause rather than stop command on the media control
-        public bool use_pause = true;
-
-        // filenames which images were saved to
-        public string left_image_filename;
-        public string right_image_filename;
-
-        // bitmaps captured
-        public Bitmap left_image_bitmap;
-        public Bitmap right_image_bitmap;
-
-        // times when images were captured
-        public DateTime left_image_capture;
-        public DateTime right_image_capture;
 
         /// <summary>
         /// destructor
@@ -80,19 +53,19 @@ namespace surveyor.vision
         /// <summary>
         /// opens camera devices
         /// </summary>
-        public void Open()
+        public override void Open()
         {
             Initialise();
         }
 
-        public void Open(int device_index)
+        public override void Open(int device_index)
         {
             camera_devices = device_index.ToString();
 
             Initialise();
         }
 
-        public void Open(int device_index0, int device_index1)
+        public override void Open(int device_index0, int device_index1)
         {
             camera_devices = device_index0.ToString() + "," + device_index1.ToString();
 
@@ -153,7 +126,7 @@ namespace surveyor.vision
         /// <summary>
         /// closes camera devices
         /// </summary>
-        public void Close()
+        public override void Close()
         {
             if (cam != null)
             {
@@ -167,7 +140,7 @@ namespace surveyor.vision
         /// <summary>
         /// grabs images from the cameras
         /// </summary>
-        public void Grab()
+        public override void Grab()
         {
             if (cam != null)
             {
@@ -486,6 +459,7 @@ namespace surveyor.vision
                 image = null;
             }
             return (is_blank);
-        }
+        }		
+		
     }
 }

@@ -57,6 +57,16 @@ namespace sluggish.utilities
 
         #region "creating lookup tables for image scaling"
 
+		/// <summary>
+		/// returns a lookup table in order to apply scaling, rotation and translation to a colour image
+		/// </summary>
+		/// <param name="scale">scale factor in the range 0.0 - 2.0</param>
+		/// <param name="lookup">returned lookup table</param>
+		/// <param name="img_width">image width</param>
+		/// <param name="img_height">image height</param>
+		/// <param name="offset_x">x offset the image</param>
+		/// <param name="offset_y">y offset the image</param>
+		/// <param name="rotation_degrees">rotate the image</param>
         public static void CreateScaledImageLookupColour(
             float scale,
             int[] lookup, 
@@ -72,10 +82,10 @@ namespace sluggish.utilities
             int n = 0;
             for (int y = 0; y < img_height; y++)
             {
-                int yy = cy + (int)((y - cy) * scale) + offset_y;
+                int yy = cy + (int)((y - cy) * scale);
                 for (int x = 0; x < img_width; x++, n += 3)
                 {
-                    int xx = cx + (int)((x - cx) * scale) + offset_x;
+                    int xx = cx + (int)((x - cx) * scale);
 
                     int xx2 = xx;
                     int yy2 = yy;
@@ -95,6 +105,9 @@ namespace sluggish.utilities
                         xx2 = cx + (int)(dist * Math.Sin(angle));
                         yy2 = cy + (int)(dist * Math.Cos(angle));
                     }
+					
+					xx2 += offset_x;
+					yy2 += offset_y;					
 
                     int n2 = ((yy2 * img_width) + xx2) * 3; 
                     if ((n2 > -1) && (n2 < lookup.Length - 3))
@@ -107,6 +120,16 @@ namespace sluggish.utilities
             }
         }
 
+		/// <summary>
+		/// returns a lookup table in order to apply scaling, rotation and translation to a mono image
+		/// </summary>
+		/// <param name="scale">scale factor in the range 0.0 - 2.0</param>
+		/// <param name="lookup">returned lookup table</param>
+		/// <param name="img_width">image width</param>
+		/// <param name="img_height">image height</param>
+		/// <param name="offset_x">x offset the image</param>
+		/// <param name="offset_y">y offset the image</param>
+		/// <param name="rotation_degrees">rotate the image</param>
         public static void CreateScaledImageLookupMono(
             float scale,
             int[] lookup,
@@ -128,15 +151,29 @@ namespace sluggish.utilities
                 {
                     int xx = cx + (int)((x - cx) * scale);
 
+                    int xx2 = xx;
+                    int yy2 = yy;
                     if (rotation_degrees != 0)
                     {
-                        int xx2 = (int)((Math.Cos(rotation_radians2) * xx) - (Math.Sin(rotation_radians2) * yy));
-                        int yy2 = (int)((Math.Sin(rotation_radians) * xx) + (Math.Cos(rotation_radians) * yy));
-                        xx = xx2;
-                        yy = yy2;
-                    }
+                        float dx = xx - cx;
+                        float dy = yy - cy;
+                        float dist = (float)Math.Sqrt((dx * dx) + (dy * dy));
+                        float angle = 0;
+                        if (dist != 0)
+                        {
+                            angle = (float)Math.Acos(dy / dist);
+                            if (dx < 0) angle = (float)(Math.PI*2) - angle;
+                        }
+                        angle += rotation_radians;
 
-                    int n2 = (yy * img_width) + xx;
+                        xx2 = cx + (int)(dist * Math.Sin(angle));
+                        yy2 = cy + (int)(dist * Math.Cos(angle));
+                    }
+					
+					xx2 += offset_x;
+					yy2 += offset_y;
+
+                    int n2 = (yy2 * img_width) + xx2; 
                     if ((n2 > -1) && (n2 < lookup.Length))
                         lookup[n] = n2;
                 }

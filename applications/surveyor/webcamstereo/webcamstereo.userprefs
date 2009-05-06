@@ -1,32 +1,23 @@
-﻿<UserCombinePreferences version="1.0" filename="/home/motters/develop/sentience/applications/surveyor/webcamstereo/webcamstereo.mds">
-  <Files>
-    <File name="Welcome" />
-    <File name="Main.cs" line="30" column="16" />
-    <File name="../surveyorlib/SurveyorVisionStereoGtk.cs" line="7" column="15" />
-    <File name="../surveyorlib/WebcamVisionStereoGtk.cs" line="35" column="17" />
-    <File name="../surveyorlib/WebcamVisionStereo.cs" line="130" column="27" />
-    <File name="../surveyorlib/SurveyorVisionStereo.cs" line="103" column="1" />
-    <File name="../surveyorlib/BaseVisionStereo.cs" line="96" column="1" />
-    <File name="../surveyorlib/WebcamVisionThreadGrabFrameMulti.cs" line="72" column="14" />
-    <File name="MainWindow.cs" line="38" column="38" />
-  </Files>
-  <Views>
-    <ViewMemento id="ProjectPad">
-      <Node expanded="True">
-        <Node name="webcamstereo" expanded="True">
-          <Node name="MainWindow.cs" selected="True" />
-        </Node>
-      </Node>
-    </ViewMemento>
-    <ViewMemento id="ClassPad">
-      <Node expanded="True" />
-    </ViewMemento>
-    <ViewMemento id="MonoDevelop.NUnit.TestPad">
-      <Node />
-    </ViewMemento>
-  </Views>
-  <Properties>
-    <Property key="ActiveWindow" value="/home/motters/develop/sentience/applications/surveyor/webcamstereo/MainWindow.cs" />
-    <Property key="ActiveConfiguration" value="Debug" />
-  </Properties>
-</UserCombinePreferences>
+﻿<Properties>
+  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
+    <Files>
+      <File FileName="MainWindow.cs" Line="392" Column="6" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="webcamstereo" expanded="True">
+            <Node name="MainWindow.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
+</Properties>

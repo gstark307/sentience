@@ -595,6 +595,7 @@ namespace surveyor.vision
                     bmp.Width, bmp.Height, distortion_curve,
                     1, 0, 
                     centre_of_distortion_x,centre_of_distortion_y,
+				    0, 0,
                     ref calibration_map, ref calibration_map_inverse);
                     
                 int n = 0;
@@ -720,7 +721,7 @@ namespace surveyor.vision
                 }
             }
         }
-
+		
         /// <summary>
         /// update the calibration lookup table, which maps pixels
         /// in the rectified image into the original image
@@ -728,21 +729,26 @@ namespace surveyor.vision
         /// <param name="image_width"></param>
         /// <param name="image_height"></param>
         /// <param name="curve">polynomial curve describing the lens distortion</param>
-        /// <param name="scale"></param>
-        /// <param name="rotation"></param>
-        /// <param name="centre_of_distortion_x"></param>
-        /// <param name="centre_of_distortion_y"></param>
-        /// <param name="calibration_map"></param>
-        /// <param name="calibration_map_inverse"></param>
-        public static void updateCalibrationMap(int image_width,
-                                                int image_height,
-                                                polynomial curve,
-                                                float scale,
-                                                float rotation,
-                                                float centre_of_distortion_x,
-                                                float centre_of_distortion_y,
-                                                ref int[] calibration_map,
-                                                ref int[, ,] calibration_map_inverse)
+        /// <param name="radial_scale">scaling factor</param>
+        /// <param name="rotation">rotation in radians</param>
+        /// <param name="centre_of_distortion_x">x centre of radial distortion</param>
+        /// <param name="centre_of_distortion_y">y centre of radial distortion</param>
+        /// <param name="offset_x">x offset</param>
+        /// <param name="offset_y">y offset</param>
+        /// <param name="calibration_map">lookup table which converts raw image to rectified image</param>
+        /// <param name="calibration_map_inverse">lookup table which converts rectified image to raw image</param>
+        public static void updateCalibrationMap(
+		    int image_width,
+            int image_height,
+            polynomial curve,
+            float radial_scale,
+            float rotation,
+            float centre_of_distortion_x,
+            float centre_of_distortion_y,
+		    float offset_x,
+		    float offset_y,
+            ref int[] calibration_map,
+            ref int[, ,] calibration_map_inverse)
         {
             int half_width = image_width / 2;
             int half_height = image_height / 2;
@@ -764,9 +770,9 @@ namespace surveyor.vision
                         {
                             double ratio = radial_dist_original / radial_dist_rectified;
                             float x2 = (float)Math.Round(centre_of_distortion_x + (dx * ratio));
-                            x2 = (x2 - (image_width / 2)) * scale;
+                            x2 = ((x2 + offset_x) - (image_width / 2)) * radial_scale;
                             float y2 = (float)Math.Round(centre_of_distortion_y + (dy * ratio));
-                            y2 = (y2 - (image_height / 2)) * scale;
+                            y2 = ((y2 + offset_y) - (image_height / 2)) * radial_scale;
 
                             // apply rotation
                             double x3 = x2, y3 = y2;

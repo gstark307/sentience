@@ -117,8 +117,7 @@ namespace surveyor.vision
 		    byte[] left_bmp, byte[] right_bmp,
             int image_width, int image_height,
             float calibration_offset_x, 
-            float calibration_offset_y,
-            float calibration_scale)
+            float calibration_offset_y)
         {
             this.image_width = image_width;
             this.image_height = image_height;
@@ -149,13 +148,11 @@ namespace surveyor.vision
         /// <param name="rectified_right">right image bitmap object</param>
         /// <param name="calibration_offset_x">horizontal offset from calibration, correcting for non-parallel alignment of the cameras</param>
         /// <param name="calibration_offset_y">vertical offset from calibration, correcting for non-parallel alignment of the cameras</param>
-        /// <param name="calibration_scale">scale of one image relative to the other</param>
         public void Update(
             Bitmap rectified_left, 
             Bitmap rectified_right,
             float calibration_offset_x, 
-            float calibration_offset_y,
-            float calibration_scale)
+            float calibration_offset_y)
         {
             image_width = rectified_left.Width;
             image_height = rectified_left.Height;
@@ -186,8 +183,7 @@ namespace surveyor.vision
             Update(img[0], img[1],
                    img[2], img[3],
                    rectified_left.Width, rectified_left.Height,
-                   calibration_offset_x, calibration_offset_y,
-                   calibration_scale);
+                   calibration_offset_x, calibration_offset_y);
 
             if (BroadcastStereoFeatureColours)
             {

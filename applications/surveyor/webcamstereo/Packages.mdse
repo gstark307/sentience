@@ -1,11 +1,1 @@
-<CombineEntry name="Packages" fileversion="2.0" ctype="PackagingProject">
-  <Packages>
-    <Package name="MonoDevelop Project Model Sources">
-      <Builder rootEntry="surveyorstereo.mds" targetFile="surveyorstereo-mds.tar.gz" format="MonoDevelop.Projects.MonoDevelopFileFormat" ctype="SourcesZipPackageBuilder">
-        <ChildEntries>
-          <Entry>surveyorstereo.mdp</Entry>
-        </ChildEntries>
-      </Builder>
-    </Package>
-  </Packages>
-</CombineEntry>
+<CombineEntry name="Packages" fileversion="2.0" ctype="PackagingProject" />

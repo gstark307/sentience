@@ -46,7 +46,7 @@ namespace surveyor.vision
         // the best centre of distortion value
         public float centre_of_distortion_x;
         public float centre_of_distortion_y;
-        
+		
         public void Reset()
         {
             survey = null;
@@ -55,8 +55,10 @@ namespace surveyor.vision
             best_fit_curve = null;
         }
 
-        public void Update(int image_width, int image_height,
-                           CalibrationDot[,] grid)
+        public void Update(
+		    int image_width, 
+		    int image_height,
+            CalibrationDot[,] grid)
         {
             if (survey_updates < test_interval)
             {

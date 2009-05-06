@@ -609,7 +609,6 @@ namespace surveyor.vision
                         max_disparity,                         
                         min_difference, max_difference, 
                         calibration_offset_x, calibration_offset_y,
-                        calibration_scale,
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,
@@ -644,7 +643,6 @@ namespace surveyor.vision
             int max_disparity, 
             double min_difference, double max_difference,
             int calibration_offset_x, int calibration_offset_y,
-            float calibration_scale,
             int vertical_compression,
             int position_search_radius,
             int minimum_intensity,
@@ -770,13 +768,11 @@ namespace surveyor.vision
         /// <param name="hght">height of the images</param>
         /// <param name="calibration_offset_x">calibration offset to counter for any small vergence angle between the cameras</param>
         /// <param name="calibration_offset_y">calibration offset to counter for any small vergence angle between the cameras</param>
-        /// <param name="calibration_scale">scale of one image relative to another</param>
         public override void Update(
             byte[] left_bmp_colour, byte[] right_bmp_colour,
 		    byte[] left_bmp, byte[] right_bmp,
             int wdth, int hght,
-            float calibration_offset_x, float calibration_offset_y,
-            float calibration_scale)
+            float calibration_offset_x, float calibration_offset_y)
         {
             //Console.WriteLine("calib x: " + calibration_offset_x.ToString());
             //Console.WriteLine("calib y: " + calibration_offset_y.ToString());
@@ -799,7 +795,6 @@ namespace surveyor.vision
                         max_disparity,                         
                         min_difference, max_difference, 
                         (int)calibration_offset_x, (int)calibration_offset_y,
-                        calibration_scale,
                         vertical_compression,
                         position_search_radius,
                         minimum_intensity,

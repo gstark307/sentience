@@ -17,6 +17,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// uncomment this on windows systems to enable directshow related classes
+//#define WINDOWS
+
 using System;
 using System.IO;
 using System.Diagnostics;
@@ -272,12 +275,12 @@ namespace surveyor.vision
 
         #region "grabbing images"
 
+#if WINDOWS
         WebcamVisionDirectShow dsCameras;
 
         protected void GrabWindows()
         {
             string filename = "capture";
-
             
             // append temporary files path if specified
             if ((temporary_files_path != null) &&
@@ -304,7 +307,7 @@ namespace surveyor.vision
                 }
             }
             filename += identifier;
-            
+            			
             if (dsCameras == null)
             {
                 dsCameras = new WebcamVisionDirectShow();
@@ -315,7 +318,7 @@ namespace surveyor.vision
                     dsCameras.image_height = image_height;
                 }
                 dsCameras.Open();
-            }
+            }            
             
             // set the camera index
             dsCameras.stereo_camera_index = stereo_camera_index;
@@ -429,24 +432,25 @@ namespace surveyor.vision
                 next_camera.Resume();
             }
         }
-
+#endif
         /// <summary>
         /// Method to detect if runtime platform is a MS Windows or not 
         /// </summary>
-        protected bool IsWindows()
-        {
-            return Path.DirectorySeparatorChar == '\\';
-        }
+        //protected bool IsWindows()
+        //{
+        //    return Path.DirectorySeparatorChar == '\\';
+        //}
 
         /// <summary>
-        /// grab a images using DirectShow
+        /// grab a images
         /// </summary>
         public override void Grab()
         {
-            if (IsWindows())
+#if WINDOWS			
                 GrabWindows();
-            else
+#else
                 GrabLinux();
+#endif
         }
 
         #endregion

@@ -768,6 +768,7 @@ namespace surveyor.vision
             else
             {
 
+				float radial_scale = scale;
                 for (int cam = 0; cam < 2; cam++)
                 {
                     Bitmap bmp = left_image;
@@ -780,10 +781,24 @@ namespace surveyor.vision
                         {
                             if (calibration_map[cam] == null)
                             {
+								if (cam == 0)
+								{
+									if (scale < 1)
+									{
+										radial_scale = 1.0f / scale;
+										scale = 1;
+									}
+								}
+								else
+								{
+									radial_scale = scale;
+								}
+								
                                 SurveyorCalibration.updateCalibrationMap(
                                     bmp.Width, bmp.Height, distortion_curve,
-                                    1, 0,
+                                    radial_scale, rotation,
                                     calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+								    0, 0,
                                     ref calibration_map[cam], ref calibration_map_inverse[cam]);
                             }
 
@@ -992,8 +1007,7 @@ namespace surveyor.vision
 
                     if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],
-                                              -offset_x, offset_y,
-                                              scale);
+                                              -offset_x, offset_y);
                         
                     break;
                 }
@@ -1007,8 +1021,7 @@ namespace surveyor.vision
 
                     if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y,
-                                              scale);
+                                              offset_x, offset_y);
                     
                     break;
                 }
@@ -1022,8 +1035,7 @@ namespace surveyor.vision
 
                     if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],
-                                              offset_x, offset_y,
-                                              scale);
+                                              offset_x, offset_y);
                     
                     break;
                 }

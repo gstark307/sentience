@@ -21,6 +21,8 @@ using System;
 using System.IO;
 using System.Drawing;
 using System.Threading;
+using System.Diagnostics;
+using System.Text;
 using Gtk;
 using surveyor.vision;
 using sluggish.utilities;
@@ -37,6 +39,7 @@ public partial class MainWindow: Gtk.Window
     int fps = 2;
     string temporary_files_path = "";
     string recorded_images_path = "";
+	string manual_camera_alignment_calibration_program = "calibtweaks";
          
     public WebcamVisionStereoGtk stereo_camera;
     
@@ -169,9 +172,9 @@ public partial class MainWindow: Gtk.Window
         md.Destroy();
         */
     }
-
-    protected virtual void OnCmdCalibrateAlignmentClicked (object sender, System.EventArgs e)
-    {
+	
+	private void CalibrateAlignment()
+	{
         if (stereo_camera.CalibrateCameraAlignment())
         {
             stereo_camera.Save(calibration_filename);
@@ -182,6 +185,11 @@ public partial class MainWindow: Gtk.Window
         {
             ShowMessage("Please individually calibrate left and right cameras before the calibrating the alignment");
         }
+	}
+
+    protected virtual void OnCmdCalibrateAlignmentClicked (object sender, System.EventArgs e)
+    {
+		CalibrateAlignment();
     }
 
     protected virtual void OnCmdSimpleStereoClicked (object sender, System.EventArgs e)
@@ -218,6 +226,138 @@ public partial class MainWindow: Gtk.Window
         Bitmap bmp = SurveyorCalibration.CreateDotPattern(1000, image_height * 1000 / image_width, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
         bmp.Save(filename, System.Drawing.Imaging.ImageFormat.Bmp);        
     }
+	
+    private void LoadManualCameraAlignmentCalibrationParameters(string filename)
+    {
+        StreamReader oRead = null;
+        string str;
+        bool filefound = true;
+
+        try
+        {
+            oRead = File.OpenText(filename);
+        }
+        catch
+        {
+            filefound = false;
+        }
+
+        if (filefound)
+        {
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                string left_image_filename = str;
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                string right_image_filename = str;
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.offset_x = Convert.ToSingle(str);
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.offset_y = Convert.ToSingle(str);
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.scale = Convert.ToSingle(str);
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.rotation = Convert.ToSingle(str) * (float)Math.PI / 180.0f;
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                float delay_mS = Convert.ToInt32(str);
+            }
+
+            oRead.Close();
+        }
+    }
+	
+	private void SaveImages(
+	    string left_image_filename,
+	    string right_image_filename)
+	{
+		byte[] left = new byte[image_width * image_height * 3];
+		byte[] right = new byte[image_width * image_height * 3];
+		GtkBitmap.getBitmap(leftimage, left);
+		GtkBitmap.getBitmap(rightimage, right);
+		Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+		Bitmap right_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+		BitmapArrayConversions.updatebitmap_unsafe(left, left_bmp);
+		BitmapArrayConversions.updatebitmap_unsafe(right, right_bmp);
+		left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+        right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+	}
+	
+	private void RunTweaks()
+	{
+        if ((leftimage != null) && (rightimage != null))
+        {
+			
+            string left_filename = System.Environment.CurrentDirectory + "\\calib0.bmp";
+            string right_filename = System.Environment.CurrentDirectory + "\\calib1.bmp";    
+            SaveImages(left_filename, right_filename);
+			
+            if ((File.Exists(left_filename)) &&
+                (File.Exists(right_filename)))
+            {
+                System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                proc.EnableRaisingEvents = false;
+                proc.StartInfo.FileName = "mono " + manual_camera_alignment_calibration_program;
+                proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
+                proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
+                proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
+                proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
+                proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
+                proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
+                proc.Start();
+                proc.WaitForExit();
+
+                string params_filename = "manualoffsets_params.txt";
+                LoadManualCameraAlignmentCalibrationParameters(params_filename);
+                stereo_camera.Save(calibration_filename);
+            }
+            
+        }
+	}
+	
+	private void SaveAnimatedGif()
+	{
+        if ((leftimage != null) && (rightimage != null))
+        {
+			SaveImages("anim0.bmp", "anim1.bmp");
+			
+            if ((File.Exists("anim0.bmp")) &&
+                (File.Exists("anim1.bmp")))
+            {
+                //List<string> images = new List<string>();
+                //images.Add("anim0.gif");
+                //images.Add("anim1.gif");
+
+                GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, stereo_camera.offset_x, stereo_camera.offset_y, stereo_camera.scale, stereo_camera.rotation * 180 / (float)Math.PI);
+                //File.Delete("anim0.gif");
+                //File.Delete("anim1.gif");
+                //MessageBox.Show("Animated gif created");
+            }
+        }		
+	}
 
     protected virtual void OnCmdSaveCalibrationImageClicked (object sender, System.EventArgs e)
     {
@@ -227,6 +367,26 @@ public partial class MainWindow: Gtk.Window
     protected virtual void OnCmdSaveCalibrationClicked (object sender, System.EventArgs e)
     {
         SaveCalibrationFile();
+    }    
+	
+	protected virtual void OnCmdTweaksClicked (object sender, System.EventArgs e)
+    {
+		RunTweaks();
+	}
+    
+    protected virtual void OnSaveAsAnimatedGifActionActivated (object sender, System.EventArgs e)
+	{
+	    SaveAnimatedGif();
+	}    
+		
+	protected virtual void OnCalibrateAlignmentActionActivated (object sender, System.EventArgs e)
+    {
+        CalibrateAlignment();
+    }
+	
+    protected virtual void OnManualTweaksActionActivated (object sender, System.EventArgs e)
+    {
+        RunTweaks();
     }
 
 }
