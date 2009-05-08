@@ -95,6 +95,7 @@
     <Compile Include="SurveyorvisionThreadGrabFrame.cs" />
     <Compile Include="SurveyorVisionThreadGrabFrameMulti.cs" />
     <Compile Include="WebcamVisionDirectShow.cs" />
+    <Compile Include="WebcamVisionDirectShowBase.cs" />
     <Compile Include="WebcamVisionDirectShowCapture.cs" />
     <Compile Include="WebcamVisionStereo.cs" />
     <Compile Include="WebcamVisionStereoWin.cs" />
