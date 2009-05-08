@@ -7,7 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using sluggish.utilities;
 
-namespace manualoffsets
+namespace calibrationtweaks
 {
     public partial class frmManualOffsetCalibration : Form
     {
@@ -474,6 +474,32 @@ namespace manualoffsets
                 catch
                 {
                     MessageBox.Show("Invalid entry");
+                }
+            }
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmAbout frm = new frmAbout();
+            frm.ShowDialog();
+        }
+
+        private void saveAnimatedGifToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Update();
+            if (File.Exists(gif_filename))
+            {
+                SaveFileDialog save_gif = new SaveFileDialog();
+
+                save_gif.Title = "Save Animated Gif";
+                save_gif.Filter = "Gif files (*.gif)|*.gif";
+                save_gif.FilterIndex = 1;
+                save_gif.RestoreDirectory = true;
+
+                if (save_gif.ShowDialog() == DialogResult.OK)
+                {
+                    if (gif_filename != save_gif.FileName)
+                        File.Copy(gif_filename, save_gif.FileName);
                 }
             }
         }

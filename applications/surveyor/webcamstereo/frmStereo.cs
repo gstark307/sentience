@@ -34,7 +34,7 @@ namespace surveyor.vision
 {
     public partial class frmStereo : Form
     {
-        string manual_camera_alignment_calibration_program = "\\develop\\sentience\\applications\\surveyor\\manualoffsets\\bin\\Debug\\manualoffsets.exe";
+        string manual_camera_alignment_calibration_program = "\\develop\\sentience\\applications\\surveyor\\calibrationtweaks\\bin\\Debug\\calibrationtweaks.exe";
         int image_width = 640;
         int image_height = 480;
         string stereo_camera_IP = "169.254.0.10";

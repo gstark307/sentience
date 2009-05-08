@@ -5,7 +5,7 @@ using System.Text;
 using sluggish.utilities;
 using System.Windows.Forms;
 
-namespace manualoffsets
+namespace calibrationtweaks
 {
     class Program
     {

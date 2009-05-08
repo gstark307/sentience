@@ -1,4 +1,4 @@
-﻿namespace manualoffsets
+﻿namespace calibrationtweaks
 {
     partial class frmManualOffsetCalibration
     {
@@ -38,11 +38,14 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
             this.timAnimation = new System.Windows.Forms.Timer(this.components);
             this.picAnimation = new System.Windows.Forms.PictureBox();
             this.grpAdjustments = new System.Windows.Forms.GroupBox();
+            this.lblRotation = new System.Windows.Forms.Label();
+            this.txtRotation = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.txtInterval = new System.Windows.Forms.TextBox();
             this.chkAnimate = new System.Windows.Forms.CheckBox();
@@ -52,8 +55,6 @@
             this.txtOffsetY = new System.Windows.Forms.TextBox();
             this.lblOffsetX = new System.Windows.Forms.Label();
             this.txtOffsetX = new System.Windows.Forms.TextBox();
-            this.lblRotation = new System.Windows.Forms.Label();
-            this.txtRotation = new System.Windows.Forms.TextBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -109,6 +110,7 @@
             this.saveAnimatedGifToolStripMenuItem.Name = "saveAnimatedGifToolStripMenuItem";
             this.saveAnimatedGifToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
             this.saveAnimatedGifToolStripMenuItem.Text = "Save animated gif";
+            this.saveAnimatedGifToolStripMenuItem.Click += new System.EventHandler(this.saveAnimatedGifToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -124,9 +126,18 @@
             // 
             // helpToolStripMenuItem
             // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // picLeftImage
             // 
@@ -181,6 +192,26 @@
             this.grpAdjustments.TabStop = false;
             this.grpAdjustments.Text = "Adjustments";
             // 
+            // lblRotation
+            // 
+            this.lblRotation.AutoSize = true;
+            this.lblRotation.Location = new System.Drawing.Point(17, 109);
+            this.lblRotation.Name = "lblRotation";
+            this.lblRotation.Size = new System.Drawing.Size(88, 13);
+            this.lblRotation.TabIndex = 10;
+            this.lblRotation.Text = "Rotation degrees";
+            // 
+            // txtRotation
+            // 
+            this.txtRotation.Location = new System.Drawing.Point(111, 106);
+            this.txtRotation.Name = "txtRotation";
+            this.txtRotation.Size = new System.Drawing.Size(39, 20);
+            this.txtRotation.TabIndex = 3;
+            this.txtRotation.Text = "0";
+            this.txtRotation.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtRotation.Leave += new System.EventHandler(this.txtRotation_Leave);
+            this.txtRotation.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtRotation_KeyPress);
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -196,7 +227,7 @@
             this.txtInterval.Name = "txtInterval";
             this.txtInterval.Size = new System.Drawing.Size(39, 20);
             this.txtInterval.TabIndex = 5;
-            this.txtInterval.Text = "500";
+            this.txtInterval.Text = "1000";
             this.txtInterval.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtInterval.Leave += new System.EventHandler(this.txtInterval_Leave);
             this.txtInterval.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtInterval_KeyPress);
@@ -238,7 +269,7 @@
             this.lblOffsetY.Name = "lblOffsetY";
             this.lblOffsetY.Size = new System.Drawing.Size(45, 13);
             this.lblOffsetY.TabIndex = 3;
-            this.lblOffsetY.Text = "Offset X";
+            this.lblOffsetY.Text = "Offset Y";
             // 
             // txtOffsetY
             // 
@@ -271,26 +302,6 @@
             this.txtOffsetX.Leave += new System.EventHandler(this.txtOffsetX_Leave);
             this.txtOffsetX.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtOffsetX_KeyPress);
             // 
-            // lblRotation
-            // 
-            this.lblRotation.AutoSize = true;
-            this.lblRotation.Location = new System.Drawing.Point(17, 109);
-            this.lblRotation.Name = "lblRotation";
-            this.lblRotation.Size = new System.Drawing.Size(88, 13);
-            this.lblRotation.TabIndex = 10;
-            this.lblRotation.Text = "Rotation degrees";
-            // 
-            // txtRotation
-            // 
-            this.txtRotation.Location = new System.Drawing.Point(111, 106);
-            this.txtRotation.Name = "txtRotation";
-            this.txtRotation.Size = new System.Drawing.Size(39, 20);
-            this.txtRotation.TabIndex = 3;
-            this.txtRotation.Text = "0";
-            this.txtRotation.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtRotation.Leave += new System.EventHandler(this.txtRotation_Leave);
-            this.txtRotation.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtRotation_KeyPress);
-            // 
             // frmManualOffsetCalibration
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -303,7 +314,7 @@
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmManualOffsetCalibration";
-            this.Text = "Manual Offset Calibration";
+            this.Text = "Stereo camera calibration tweaks";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmManualOffsetCalibration_FormClosing);
             this.Resize += new System.EventHandler(this.frmManualOffsetCalibration_Resize);
             this.menuStrip1.ResumeLayout(false);
@@ -345,5 +356,6 @@
         private System.Windows.Forms.TextBox txtInterval;
         private System.Windows.Forms.Label lblRotation;
         private System.Windows.Forms.TextBox txtRotation;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
     }
 }

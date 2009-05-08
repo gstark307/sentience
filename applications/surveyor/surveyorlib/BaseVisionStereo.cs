@@ -363,7 +363,6 @@ namespace surveyor.vision
             if ((rectified[0] != null) &&
                 (rectified[1] != null))
             {
-                float scale = 1;
                 int image_width = rectified[0].Width;
                 int image_height = rectified[0].Height;
                 polynomial[] lens_distortion_curve = new polynomial[2];
@@ -485,18 +484,17 @@ namespace surveyor.vision
             xml.AddComment(doc, nodeCalibration, "Rotation of the right image relative to the left in degrees");
             xml.AddTextElement(doc, nodeCalibration, "RelativeRotationDegrees", Convert.ToString(rotation / (float)Math.PI * 180.0f, format));
 
+            xml.AddComment(doc, nodeCalibration, "Scale of the right image relative to the left");
+            xml.AddTextElement(doc, nodeCalibration, "RelativeImageScale", Convert.ToString(scale, format));
+
             for (int cam = 0; cam < lens_distortion_curve.Length; cam++)
             {
-                float image_scale = 1;
-                if ((scale < 1) && (cam == 0)) image_scale = 1.0f / scale;
-                if ((scale > 1) && (cam == 1)) image_scale = scale;
-
                 XmlElement elem = getCameraXml(
                     doc, fov_degrees,
                     lens_distortion_curve[cam],
                     centre_of_distortion_x[cam], centre_of_distortion_y[cam],
                     minimum_rms_error[cam],
-                    image_scale);
+                    1.0f);
                 nodeCalibration.AppendChild(elem);
             }
 
@@ -614,7 +612,17 @@ namespace surveyor.vision
                 camera_index++;
                 calibration_survey[camera_index] = new CalibrationSurvey();
             }
-            
+
+            if (xnod.Name == "Scale")
+            {
+                // do nothing
+            }
+
+            if (xnod.Name == "RelativeImageScale")
+            {
+                scale = Convert.ToSingle(xnod.InnerText, format);
+            }
+
             if (xnod.Name == "DeviceName")
             {
                 device_name = xnod.InnerText;
@@ -694,11 +702,6 @@ namespace surveyor.vision
                 calibration_survey[camera_index].minimum_rms_error = Convert.ToSingle(xnod.InnerText, format);
             }
 
-            if (xnod.Name == "Scale")
-            {
-                scale = Convert.ToSingle(xnod.InnerText, format);
-            }
-
             // call recursively on all children of the current node
             if (xnod.HasChildNodes)
             {
@@ -768,6 +771,7 @@ namespace surveyor.vision
             else
             {
 
+                float scale2 = scale;
 				float radial_scale = scale;
                 for (int cam = 0; cam < 2; cam++)
                 {
@@ -783,15 +787,15 @@ namespace surveyor.vision
                             {
 								if (cam == 0)
 								{
-									if (scale < 1)
+									if (scale2 < 1)
 									{
-										radial_scale = 1.0f / scale;
-										scale = 1;
+										radial_scale = 1.0f / scale2;
+										scale2 = 1;
 									}
 								}
 								else
 								{
-									radial_scale = scale;
+									radial_scale = scale2;
 								}
 								
                                 SurveyorCalibration.updateCalibrationMap(
