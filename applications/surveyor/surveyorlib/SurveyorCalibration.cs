@@ -797,6 +797,65 @@ namespace surveyor.vision
             }
         }
 
+        /// <summary>
+        /// update the calibration lookup table using scale, rotation and translation only - no radial distortion correction
+        /// This may be useful on webcams where the image is pre-rectified in hardware
+        /// </summary>
+        /// <param name="image_width"></param>
+        /// <param name="image_height"></param>
+        /// <param name="radial_scale">scaling factor</param>
+        /// <param name="rotation">rotation in radians</param>
+        /// <param name="centre_of_distortion_x">x centre of radial distortion</param>
+        /// <param name="centre_of_distortion_y">y centre of radial distortion</param>
+        /// <param name="offset_x">x offset</param>
+        /// <param name="offset_y">y offset</param>
+        /// <param name="calibration_map">lookup table which converts raw image to rectified image</param>
+        /// <param name="calibration_map_inverse">lookup table which converts rectified image to raw image</param>
+        public static void updateCalibrationMap(
+            int image_width,
+            int image_height,
+            float radial_scale,
+            float rotation,
+            float centre_of_distortion_x,
+            float centre_of_distortion_y,
+            float offset_x,
+            float offset_y,
+            ref int[] calibration_map,
+            ref int[, ,] calibration_map_inverse)
+        {
+            int half_width = image_width / 2;
+            int half_height = image_height / 2;
+            calibration_map = new int[image_width * image_height];
+            calibration_map_inverse = new int[image_width, image_height, 2];
+            for (int x = 0; x < image_width; x++)
+            {
+                for (int y = 0; y < image_height; y++)
+                {
+                    // apply translation and scale
+                    float x2 = ((x + offset_x) - half_width) * radial_scale;
+                    float y2 = ((y + offset_y) - half_height) * radial_scale;
+
+                    // apply rotation
+                    double x3 = x2, y3 = y2;
+                    rotatePoint(x2, y2, -rotation, ref x3, ref y3);
+
+                    x3 += half_width;
+                    y3 += half_height;
+
+                    if (((int)x3 > -1) && ((int)x3 < image_width) &&
+                        ((int)y3 > -1) && ((int)y3 < image_height))
+                    {
+                        int n = (y * image_width) + x;
+                        int n2 = ((int)y3 * image_width) + (int)x3;
+
+                        calibration_map[n] = n2;
+                        calibration_map_inverse[(int)x3, (int)y3, 0] = x;
+                        calibration_map_inverse[(int)x3, (int)y3, 1] = y;
+                    }
+                }
+            }
+        }
+
         #endregion
         
 
