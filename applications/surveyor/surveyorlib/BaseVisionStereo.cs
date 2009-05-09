@@ -35,7 +35,10 @@ namespace surveyor.vision
         public int wait_for_grab_mS = 500;
 
         // rectification can be switched off
-        public bool dissable_rectification;
+        public bool disable_rectification;
+
+        // disable only the radial correction, but use offsets and scale/rotation
+        public bool disable_radial_correction;
 
         // on Windows use media control pause or not
         public bool use_media_pause = true;
@@ -320,7 +323,9 @@ namespace surveyor.vision
             float[] centre_of_distortion_x, float[] centre_of_distortion_y,
             float[] minimum_rms_error,
             float rotation, float scale,
-            float offset_x, float offset_y)
+            float offset_x, float offset_y,
+            bool disable_rectification,
+            bool disable_radial_correction)
         {
             // Create the document.
             XmlDocument doc = new XmlDocument();
@@ -348,7 +353,9 @@ namespace surveyor.vision
                 centre_of_distortion_x, centre_of_distortion_y,
                 minimum_rms_error,
                 rotation, scale,
-                offset_x, offset_y);
+                offset_x, offset_y,
+                disable_rectification,
+                disable_radial_correction);
             doc.DocumentElement.AppendChild(elem);
 
             return (doc);
@@ -391,7 +398,9 @@ namespace surveyor.vision
                         centre_of_distortion_x, centre_of_distortion_y,
                         minimum_rms_error,
                         rotation, scale,
-                        offset_x, offset_y);
+                        offset_x, offset_y,
+                        disable_rectification,
+                        disable_radial_correction);
 
                 doc.Save(filename);
             }
@@ -435,7 +444,9 @@ namespace surveyor.vision
             float[] minimum_rms_error,
             float rotation, 
             float scale,
-            float offset_x, float offset_y)
+            float offset_x, float offset_y,
+            bool disable_rectification,
+            bool disable_radial_correction)
         {
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
@@ -486,6 +497,12 @@ namespace surveyor.vision
 
             xml.AddComment(doc, nodeCalibration, "Scale of the right image relative to the left");
             xml.AddTextElement(doc, nodeCalibration, "RelativeImageScale", Convert.ToString(scale, format));
+
+            xml.AddComment(doc, nodeCalibration, "Disable all rectification");
+            xml.AddTextElement(doc, nodeCalibration, "DisableRectification", Convert.ToString(disable_rectification));
+
+            xml.AddComment(doc, nodeCalibration, "Disable radial correction, and use offsets and scale/rotation only");
+            xml.AddTextElement(doc, nodeCalibration, "DisableRadialCorrection", Convert.ToString(disable_radial_correction));
 
             for (int cam = 0; cam < lens_distortion_curve.Length; cam++)
             {
@@ -613,6 +630,16 @@ namespace surveyor.vision
                 calibration_survey[camera_index] = new CalibrationSurvey();
             }
 
+            if (xnod.Name == "DisableRadialCorrection")
+            {
+                disable_radial_correction = Convert.ToBoolean(xnod.InnerText);
+            }
+
+            if (xnod.Name == "DisableRectification")
+            {
+                disable_rectification = Convert.ToBoolean(xnod.InnerText);
+            }
+
             if (xnod.Name == "Scale")
             {
                 // do nothing
@@ -732,114 +759,20 @@ namespace surveyor.vision
                 if ((rectified[0] != null) &&
                     (rectified[1] != null))
                 {
-                    done = SurveyorCalibration.UpdateOffsets(rectified[0], rectified[1],
-                                                             ref offset_x, ref offset_y,
-                                                             ref rotation);
+                    done = SurveyorCalibration.UpdateOffsets(
+                        rectified[0], rectified[1],
+                        ref offset_x, ref offset_y,
+                        ref rotation);
                 }
             }
             return(done);
         }
-        
-        /// <summary>
-        /// rectifies the given images
-        /// </summary>
-        /// <param name="left_image">left image bitmap</param>
-        /// <param name="right_image">right image bitmap</param>
-        /*
-        protected void RectifyImages(Bitmap left_image, Bitmap right_image)
+
+        public void ResetCalibration()
         {
-            byte[][] img_rectified = new byte[2][];
-
-            float scale2 = scale;
-            float radial_scale = scale;
-            for (int cam = 0; cam < 2; cam++)
-            {
-                Bitmap bmp = left_image;
-                if (cam == 1) bmp = right_image;
-
-                if ((calibration_survey[cam] != null) && (bmp != null))
-                {
-                    polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
-                    if (distortion_curve != null)
-                    {
-                        if (calibration_map[cam] == null)
-                        {
-                            if (cam == 0)
-                            {
-                                if (scale2 < 1)
-                                {
-                                    radial_scale = 1.0f / scale2;
-                                    scale2 = 1;
-                                }
-                            }
-                            else
-                            {
-                                radial_scale = scale2;
-                            }
-
-                            if (!dissable_rectification)
-                            {
-                                SurveyorCalibration.updateCalibrationMap(
-                                    bmp.Width, bmp.Height, distortion_curve,
-                                    radial_scale, rotation,
-                                    calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
-                                    0, 0,
-                                    ref calibration_map[cam], ref calibration_map_inverse[cam]);
-                            }
-                            else
-                            {
-                                SurveyorCalibration.updateCalibrationMap(
-                                    bmp.Width, bmp.Height,
-                                    radial_scale, rotation,
-                                    calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
-                                    0, 0,
-                                    ref calibration_map[cam], ref calibration_map_inverse[cam]);
-                            }
-                        }
-
-                        byte[] img = null;
-                        try
-                        {
-                            img = new byte[bmp.Width * bmp.Height * 3];
-                        }
-                        catch
-                        {
-                        }
-                        if (img != null)
-                        {
-                            BitmapArrayConversions.updatebitmap(bmp, img);
-                            img_rectified[cam] = (byte[])img.Clone();
-
-                            int n = 0;
-                            int[] map = calibration_map[cam];
-                            for (int i = 0; i < img.Length; i += 3, n++)
-                            {
-                                int index = map[n] * 3;
-                                for (int col = 0; col < 3; col++)
-                                    img_rectified[cam][i + col] = img[index + col];
-                            }
-
-                            if (rectified[cam] == null)
-                                rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                            BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
-                        }
-                    }
-                    else
-                    {
-                        byte[] img = new byte[bmp.Width * bmp.Height * 3];
-                        if (img != null)
-                        {
-                            BitmapArrayConversions.updatebitmap(bmp, img);
-                            img_rectified[cam] = (byte[])img.Clone();
-                        }
-                    }
-                }
-            }
-
-            // adjust exposure
-            AutoExposure(img_rectified[0], img_rectified[1]);
+            ResetCalibration(0);
+            ResetCalibration(1);
         }
-         */
 
         /// <summary>
         /// rectifies the given images
@@ -850,7 +783,7 @@ namespace surveyor.vision
         {
             byte[][] img_rectified = new byte[2][];
 
-            if (dissable_rectification)
+            if (disable_rectification)
             {
                 // if rectification is dissabled make the rectified image the same as the raw image
                 for (int cam = 0; cam < 2; cam++)
@@ -871,9 +804,9 @@ namespace surveyor.vision
             }
             else
             {
-
-                float scale2 = scale;
-                float radial_scale = scale;
+                float rot = 0;
+                float scale2 = 1.0f / scale;
+                float radial_scale = scale2;
                 for (int cam = 0; cam < 2; cam++)
                 {
                     Bitmap bmp = left_image;
@@ -888,7 +821,7 @@ namespace surveyor.vision
                             {
                                 if (cam == 0)
                                 {
-                                    if (scale2 < 1)
+                                    if (scale2 > 1)
                                     {
                                         radial_scale = 1.0f / scale2;
                                         scale2 = 1;
@@ -897,14 +830,27 @@ namespace surveyor.vision
                                 else
                                 {
                                     radial_scale = scale2;
+                                    rot = rotation;
                                 }
 
-                                SurveyorCalibration.updateCalibrationMap(
-                                    bmp.Width, bmp.Height, distortion_curve,
-                                    radial_scale, rotation,
-                                    calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
-                                    0, 0,
-                                    ref calibration_map[cam], ref calibration_map_inverse[cam]);
+                                if (!disable_radial_correction)
+                                {
+                                    SurveyorCalibration.updateCalibrationMap(
+                                        bmp.Width, bmp.Height, distortion_curve,
+                                        radial_scale, -rot,
+                                        calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+                                        0, 0,
+                                        ref calibration_map[cam], ref calibration_map_inverse[cam]);
+                                }
+                                else
+                                {
+                                    SurveyorCalibration.updateCalibrationMap(
+                                        bmp.Width, bmp.Height,
+                                        radial_scale, -rot,
+                                        calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+                                        0, 0,
+                                        ref calibration_map[cam], ref calibration_map_inverse[cam]);
+                                }
                             }
 
                             byte[] img = null;

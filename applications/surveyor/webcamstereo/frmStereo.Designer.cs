@@ -40,6 +40,7 @@ namespace surveyor.vision
             this.calibrateLeftCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrateRightCameraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.calibrateCameraAlignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.manualCameraAlignmentCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.recordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dissableRectificationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.algorithmToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -47,7 +48,7 @@ namespace surveyor.vision
             this.denseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.picLeftImage = new System.Windows.Forms.PictureBox();
             this.picRightImage = new System.Windows.Forms.PictureBox();
-            this.manualCameraAlignmentCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.disableRadialCorrectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -124,7 +125,8 @@ namespace surveyor.vision
             this.calibrateCameraAlignmentToolStripMenuItem,
             this.manualCameraAlignmentCalibrationToolStripMenuItem,
             this.recordToolStripMenuItem,
-            this.dissableRectificationToolStripMenuItem});
+            this.dissableRectificationToolStripMenuItem,
+            this.disableRadialCorrectionToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -150,6 +152,13 @@ namespace surveyor.vision
             this.calibrateCameraAlignmentToolStripMenuItem.Text = "Calibrate Camera alignment";
             this.calibrateCameraAlignmentToolStripMenuItem.Click += new System.EventHandler(this.calibrateCameraAlignmentToolStripMenuItem_Click);
             // 
+            // manualCameraAlignmentCalibrationToolStripMenuItem
+            // 
+            this.manualCameraAlignmentCalibrationToolStripMenuItem.Name = "manualCameraAlignmentCalibrationToolStripMenuItem";
+            this.manualCameraAlignmentCalibrationToolStripMenuItem.Size = new System.Drawing.Size(272, 22);
+            this.manualCameraAlignmentCalibrationToolStripMenuItem.Text = "Manual camera alignment calibration";
+            this.manualCameraAlignmentCalibrationToolStripMenuItem.Click += new System.EventHandler(this.manualCameraAlignmentCalibrationToolStripMenuItem_Click);
+            // 
             // recordToolStripMenuItem
             // 
             this.recordToolStripMenuItem.Name = "recordToolStripMenuItem";
@@ -161,7 +170,7 @@ namespace surveyor.vision
             // 
             this.dissableRectificationToolStripMenuItem.Name = "dissableRectificationToolStripMenuItem";
             this.dissableRectificationToolStripMenuItem.Size = new System.Drawing.Size(272, 22);
-            this.dissableRectificationToolStripMenuItem.Text = "Dissable rectification";
+            this.dissableRectificationToolStripMenuItem.Text = "Disable rectification";
             this.dissableRectificationToolStripMenuItem.Click += new System.EventHandler(this.dissableRectificationToolStripMenuItem_Click);
             // 
             // algorithmToolStripMenuItem
@@ -205,12 +214,12 @@ namespace surveyor.vision
             this.picRightImage.TabIndex = 2;
             this.picRightImage.TabStop = false;
             // 
-            // manualCameraAlignmentCalibrationToolStripMenuItem
+            // disableRadialCorrectionToolStripMenuItem
             // 
-            this.manualCameraAlignmentCalibrationToolStripMenuItem.Name = "manualCameraAlignmentCalibrationToolStripMenuItem";
-            this.manualCameraAlignmentCalibrationToolStripMenuItem.Size = new System.Drawing.Size(272, 22);
-            this.manualCameraAlignmentCalibrationToolStripMenuItem.Text = "Manual camera alignment calibration";
-            this.manualCameraAlignmentCalibrationToolStripMenuItem.Click += new System.EventHandler(this.manualCameraAlignmentCalibrationToolStripMenuItem_Click);
+            this.disableRadialCorrectionToolStripMenuItem.Name = "disableRadialCorrectionToolStripMenuItem";
+            this.disableRadialCorrectionToolStripMenuItem.Size = new System.Drawing.Size(272, 22);
+            this.disableRadialCorrectionToolStripMenuItem.Text = "Disable radial correction";
+            this.disableRadialCorrectionToolStripMenuItem.Click += new System.EventHandler(this.disableRadialCorrectionToolStripMenuItem_Click);
             // 
             // frmStereo
             // 
@@ -258,6 +267,7 @@ namespace surveyor.vision
         private System.Windows.Forms.ToolStripMenuItem saveAnimatedGifToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem manualCameraAlignmentCalibrationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem disableRadialCorrectionToolStripMenuItem;
     }
 }
 

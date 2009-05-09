@@ -44,7 +44,8 @@ namespace surveyor.vision
         WebcamVisionStereoWin stereo_camera;
         int frames_per_sec = 1;
         bool use_pause = true;
-        bool dissable_rectification = true;
+        bool disable_rectification = true;
+        bool disable_radial_correction = true;
         int min_exposure = 0;
 
         // exposure range for Quickcam Pro 9000        
@@ -59,7 +60,8 @@ namespace surveyor.vision
 
             picLeftImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            dissableRectificationToolStripMenuItem.Checked = dissable_rectification;
+            dissableRectificationToolStripMenuItem.Checked = disable_rectification;
+            disableRadialCorrectionToolStripMenuItem.Checked = disable_radial_correction;
         }
 
         private void InitCameras()
@@ -75,8 +77,12 @@ namespace surveyor.vision
             stereo_camera.max_exposure = max_exposure;
             stereo_camera.use_media_pause = use_pause;
             stereo_camera.endless_thread = false;
-            stereo_camera.dissable_rectification = dissable_rectification;
+            disable_rectification = stereo_camera.disable_rectification;
+            disable_radial_correction = stereo_camera.disable_radial_correction;
             stereo_camera.Run();
+
+            dissableRectificationToolStripMenuItem.Checked = disable_rectification;
+            disableRadialCorrectionToolStripMenuItem.Checked = disable_radial_correction;
         }
 
         public void Init()
@@ -282,8 +288,9 @@ namespace surveyor.vision
         private void dissableRectificationToolStripMenuItem_Click(object sender, EventArgs e)
         {
             dissableRectificationToolStripMenuItem.Checked = !dissableRectificationToolStripMenuItem.Checked;
-            dissable_rectification = dissableRectificationToolStripMenuItem.Checked;
-            stereo_camera.dissable_rectification = dissable_rectification;
+            disable_rectification = dissableRectificationToolStripMenuItem.Checked;
+            stereo_camera.disable_rectification = disable_rectification;
+            stereo_camera.Save(calibration_filename);
         }
 
         private void saveAnimatedGifToolStripMenuItem_Click(object sender, EventArgs e)
@@ -398,8 +405,17 @@ namespace surveyor.vision
                     string params_filename = "manualoffsets_params.txt";
                     LoadManualCameraAlignmentCalibrationParameters(params_filename);
                     stereo_camera.Save(calibration_filename);
+                    stereo_camera.ResetCalibration();
                 }
             }
+        }
+
+        private void disableRadialCorrectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            disableRadialCorrectionToolStripMenuItem.Checked = !disableRadialCorrectionToolStripMenuItem.Checked;
+            disable_radial_correction = disableRadialCorrectionToolStripMenuItem.Checked;
+            stereo_camera.disable_radial_correction = disable_radial_correction;
+            stereo_camera.Save(calibration_filename);
         }
 
         /*
