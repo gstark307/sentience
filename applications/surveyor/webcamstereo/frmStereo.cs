@@ -35,8 +35,8 @@ namespace surveyor.vision
     public partial class frmStereo : Form
     {
         string manual_camera_alignment_calibration_program = "\\develop\\sentience\\applications\\surveyor\\calibrationtweaks\\bin\\Debug\\calibrationtweaks.exe";
-        int image_width = 640;
-        int image_height = 480;
+        int image_width = 320;
+        int image_height = 240;
         string stereo_camera_IP = "169.254.0.10";
         string calibration_filename = "calibration.xml";
         int left_camera_device_index = 1;
@@ -77,6 +77,12 @@ namespace surveyor.vision
             stereo_camera.max_exposure = max_exposure;
             stereo_camera.use_media_pause = use_pause;
             stereo_camera.endless_thread = false;
+            if (!File.Exists(calibration_filename))
+            {
+                stereo_camera.Save(calibration_filename);
+                stereo_camera.disable_rectification = true;
+                stereo_camera.disable_radial_correction = true;
+            }
             disable_rectification = stereo_camera.disable_rectification;
             disable_radial_correction = stereo_camera.disable_radial_correction;
             stereo_camera.Run();
@@ -285,12 +291,17 @@ namespace surveyor.vision
             Init();
         }
 
-        private void dissableRectificationToolStripMenuItem_Click(object sender, EventArgs e)
+        private void DisableRectification()
         {
             dissableRectificationToolStripMenuItem.Checked = !dissableRectificationToolStripMenuItem.Checked;
             disable_rectification = dissableRectificationToolStripMenuItem.Checked;
             stereo_camera.disable_rectification = disable_rectification;
             stereo_camera.Save(calibration_filename);
+        }
+
+        private void dissableRectificationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DisableRectification();
         }
 
         private void saveAnimatedGifToolStripMenuItem_Click(object sender, EventArgs e)
@@ -380,33 +391,41 @@ namespace surveyor.vision
 
         private void manualCameraAlignmentCalibrationToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if ((picLeftImage.Image != null) && (picRightImage.Image != null))
+            if (stereo_camera.disable_rectification)
             {
-                string left_filename = System.Environment.CurrentDirectory + "\\calib0.bmp";
-                string right_filename = System.Environment.CurrentDirectory + "\\calib1.bmp";
-                picLeftImage.Image.Save(left_filename, System.Drawing.Imaging.ImageFormat.Bmp);
-                picRightImage.Image.Save(right_filename, System.Drawing.Imaging.ImageFormat.Bmp);
-
-                if ((File.Exists(left_filename)) &&
-                    (File.Exists(right_filename)))
+                if ((picLeftImage.Image != null) && (picRightImage.Image != null))
                 {
-                    System.Diagnostics.Process proc = new System.Diagnostics.Process();
-                    proc.EnableRaisingEvents = false;
-                    proc.StartInfo.FileName = manual_camera_alignment_calibration_program;
-                    proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
-                    proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
-                    proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
-                    proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
-                    proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
-                    proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
-                    proc.Start();
-                    proc.WaitForExit();
+                    string left_filename = System.Environment.CurrentDirectory + "\\calib0.bmp";
+                    string right_filename = System.Environment.CurrentDirectory + "\\calib1.bmp";
+                    picLeftImage.Image.Save(left_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+                    picRightImage.Image.Save(right_filename, System.Drawing.Imaging.ImageFormat.Bmp);
 
-                    string params_filename = "manualoffsets_params.txt";
-                    LoadManualCameraAlignmentCalibrationParameters(params_filename);
-                    stereo_camera.Save(calibration_filename);
-                    stereo_camera.ResetCalibration();
+                    if ((File.Exists(left_filename)) &&
+                        (File.Exists(right_filename)))
+                    {
+                        System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                        proc.EnableRaisingEvents = false;
+                        proc.StartInfo.FileName = manual_camera_alignment_calibration_program;
+                        proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
+                        proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
+                        proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
+                        proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
+                        proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
+                        proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
+                        proc.Start();
+                        proc.WaitForExit();
+
+                        string params_filename = "manualoffsets_params.txt";
+                        LoadManualCameraAlignmentCalibrationParameters(params_filename);
+                        stereo_camera.Save(calibration_filename);
+                        stereo_camera.ResetCalibration();
+                    }
                 }
+            }
+            else
+            {
+                MessageBox.Show("Rectification must first be dissabled");
+                DisableRectification();
             }
         }
 

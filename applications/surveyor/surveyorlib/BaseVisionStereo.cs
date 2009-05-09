@@ -367,43 +367,47 @@ namespace surveyor.vision
         /// <param name="filename">filename to save as</param>
         public void Save(string filename)
         {
+            int img_width = image_width;
+            int img_height = image_height;
+
             if ((rectified[0] != null) &&
                 (rectified[1] != null))
             {
-                int image_width = rectified[0].Width;
-                int image_height = rectified[0].Height;
-                polynomial[] lens_distortion_curve = new polynomial[2];
-                float[] centre_of_distortion_x = new float[2];
-                float[] centre_of_distortion_y = new float[2];
-                float[] minimum_rms_error = new float[2];
-                for (int cam = 0; cam < 2; cam++)
-                {
-                    lens_distortion_curve[cam] = calibration_survey[cam].best_fit_curve;
-                    centre_of_distortion_x[cam] = calibration_survey[cam].centre_of_distortion_x;
-                    centre_of_distortion_y[cam] = calibration_survey[cam].centre_of_distortion_y;
-                    minimum_rms_error[cam] = (float)calibration_survey[cam].minimum_rms_error;
-                }
-            
-                XmlDocument doc =
-                    getXmlDocument(
-                        device_name,
-                        part_number,
-                        serial_number,
-                        focal_length_mm,
-                        pixels_per_mm,
-                        baseline_mm,
-                        fov_degrees,
-                        image_width, image_height,
-                        lens_distortion_curve,
-                        centre_of_distortion_x, centre_of_distortion_y,
-                        minimum_rms_error,
-                        rotation, scale,
-                        offset_x, offset_y,
-                        disable_rectification,
-                        disable_radial_correction);
-
-                doc.Save(filename);
+                img_width = rectified[0].Width;
+                img_height = rectified[0].Height;
             }
+
+            polynomial[] lens_distortion_curve = new polynomial[2];
+            float[] centre_of_distortion_x = new float[2];
+            float[] centre_of_distortion_y = new float[2];
+            float[] minimum_rms_error = new float[2];
+            for (int cam = 0; cam < 2; cam++)
+            {
+                lens_distortion_curve[cam] = calibration_survey[cam].best_fit_curve;
+                centre_of_distortion_x[cam] = calibration_survey[cam].centre_of_distortion_x;
+                centre_of_distortion_y[cam] = calibration_survey[cam].centre_of_distortion_y;
+                minimum_rms_error[cam] = (float)calibration_survey[cam].minimum_rms_error;
+            }
+        
+            XmlDocument doc =
+                getXmlDocument(
+                    device_name,
+                    part_number,
+                    serial_number,
+                    focal_length_mm,
+                    pixels_per_mm,
+                    baseline_mm,
+                    fov_degrees,
+                    img_width, img_height,
+                    lens_distortion_curve,
+                    centre_of_distortion_x, centre_of_distortion_y,
+                    minimum_rms_error,
+                    rotation, scale,
+                    offset_x, offset_y,
+                    disable_rectification,
+                    disable_radial_correction);
+
+            doc.Save(filename);
         }
 
 		/// <summary>

@@ -396,7 +396,7 @@ namespace surveyor.vision
                 {
                     float x_right = right_row_features[j];
 
-                    float disparity = x_left - x_right + (int)calibration_offset_x;
+                    float disparity = x_left - x_right + calibration_offset_x;
                     if ((disparity >= 0) && (disparity < max_disparity_pixels))
                     {
                         int direction_right = (int)right_row_features[j + 2];

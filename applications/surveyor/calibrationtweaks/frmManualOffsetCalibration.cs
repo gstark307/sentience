@@ -211,6 +211,54 @@ namespace calibrationtweaks
             }
         }
 
+        private void SaveAll()
+        {
+            if (txtOffsetX.Text != "")
+            {
+                try
+                {
+                    offset_x = Convert.ToSingle(txtOffsetX.Text);
+                    Update();
+                }
+                catch
+                {
+                }
+            }
+            if (txtOffsetY.Text != "")
+            {
+                try
+                {
+                    offset_y = Convert.ToSingle(txtOffsetY.Text);
+                    Update();
+                }
+                catch
+                {
+                }
+            }
+            if (txtScale.Text != "")
+            {
+                try
+                {
+                    scale = Convert.ToSingle(txtScale.Text);
+                    Update();
+                }
+                catch
+                {
+                }
+            }
+            if (txtRotation.Text != "")
+            {
+                try
+                {
+                    rotation_degrees = Convert.ToSingle(txtRotation.Text);
+                    Update();
+                }
+                catch
+                {
+                }
+            }
+        }
+
         private void txtOffsetX_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == 13)
@@ -371,6 +419,7 @@ namespace calibrationtweaks
 
         private void frmManualOffsetCalibration_FormClosing(object sender, FormClosingEventArgs e)
         {
+            SaveAll();
             SaveParameters();
         }
 
