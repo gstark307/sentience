@@ -69,8 +69,8 @@ namespace stereoserver
         {            
             // default settings for the surveyor stereo camera
             string stereo_camera_IP = "169.254.0.10";
-            string calibration_filename = "calibration.xml";
-            string calibration_filename2 = "calibration2.xml";
+            string calibration_filename0 = "calibration.xml";
+            string calibration_filename1 = "calibration1.xml";
             int left_port = 10001;
             int right_port = 10002;
                         
@@ -81,8 +81,8 @@ namespace stereoserver
             int stereo_algorithm_type = StereoVision.SIMPLE;
             float fps = 1.0f;
             
-            BaseVisionStereo stereo_camera = null;
-            BaseVisionStereo stereo_camera2 = null;
+            BaseVisionStereo stereo_camera0 = null;
+            BaseVisionStereo stereo_camera1 = null;
 
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
@@ -152,9 +152,13 @@ namespace stereoserver
             string use_media_pause_str = commandline.GetParameterValue("mediapause", parameters);
             if (use_media_pause_str != "") use_media_pause = true;
 
-            bool dissable_rectification = false;
-            string dissable_rectification_str = commandline.GetParameterValue("norectify", parameters);
-            if (dissable_rectification_str != "") dissable_rectification = true;
+            bool disable_rectification = false;
+            string disable_rectification_str = commandline.GetParameterValue("norectify", parameters);
+            if (disable_rectification_str != "") disable_rectification = true;
+
+            bool disable_radial_correction = false;
+            string disable_radial_correction_str = commandline.GetParameterValue("noradial", parameters);
+            if (disable_radial_correction_str != "") disable_radial_correction = true;
 
             string force = commandline.GetParameterValue("force", parameters);
 
@@ -169,17 +173,17 @@ namespace stereoserver
             // a file which if present pauses frame capture
             string pause_file = commandline.GetParameterValue("pause", parameters);
 
-            calibration_filename = commandline.GetParameterValue("calibration", parameters);
-            calibration_filename2 = commandline.GetParameterValue("calibration2", parameters);
-            if (calibration_filename == "")
+            calibration_filename0 = commandline.GetParameterValue("calibration0", parameters);
+            calibration_filename1 = commandline.GetParameterValue("calibration1", parameters);
+            if (calibration_filename0 == "")
             {
-                Console.WriteLine("You must supply a calibration file");
+                Console.WriteLine("You must supply a calibration file for stereo camera 0");
             }
             else
             {
-                if (!File.Exists(calibration_filename))
+                if (!File.Exists(calibration_filename0))
                 {
-                    Console.WriteLine("The calibration file " + calibration_filename + " could not be found");
+                    Console.WriteLine("The calibration file for stereo camera 0 " + calibration_filename0 + " could not be found");
                 }
                 else
                 {                
@@ -208,54 +212,56 @@ namespace stereoserver
                         if (is_ip_camera)
                         {
                             // surveyor stereo camera
-                            stereo_camera = Init(stereo_camera_IP, calibration_filename, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps);
+                            stereo_camera0 = Init(stereo_camera_IP, calibration_filename0, image_width, image_height, left_port, right_port, broadcast_port, stereo_algorithm_type, fps);
                         }
                         else
                         {
                             // webcam based stereo camera
-                            stereo_camera = Init(left_device, right_device, calibration_filename, image_width, image_height, broadcast_port, stereo_algorithm_type, fps, pause_file);
+                            stereo_camera0 = Init(left_device, right_device, calibration_filename0, image_width, image_height, broadcast_port, stereo_algorithm_type, fps, pause_file);
                             if ((left_device2 != "") && (right_device2 != ""))
                             {
-                                if (calibration_filename2 == "")
+                                if (calibration_filename1 == "")
                                 {
-                                    Console.WriteLine("No calibration file found for the second stereo camera");
+                                    Console.WriteLine("No calibration file found for stereo camera 1");
                                 }
                                 else
                                 {
-                                    stereo_camera2 = Init(left_device2, right_device2, calibration_filename2, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps, pause_file);
+                                    stereo_camera1 = Init(left_device2, right_device2, calibration_filename1, image_width, image_height, broadcast_port2, stereo_algorithm_type, fps, pause_file);
                                 }
                             }
                         }
                             
-                        stereo_camera.Record = record;
-                        stereo_camera.temporary_files_path = ramdisk;
-                        stereo_camera.recorded_images_path = record_path;                                                
-                        stereo_camera.SetPauseFile(pause_file);
-                        stereo_camera.stereo_camera_index = -1;
-                        stereo_camera.min_exposure = min_exposure;
-                        stereo_camera.max_exposure = max_exposure;
-                        stereo_camera.dissable_rectification = dissable_rectification;
-                        stereo_camera.use_media_pause = use_media_pause;
-                        stereo_camera.Run();                        
-                        if (stereo_camera2 != null)
+                        stereo_camera0.Record = record;
+                        stereo_camera0.temporary_files_path = ramdisk;
+                        stereo_camera0.recorded_images_path = record_path;                                                
+                        stereo_camera0.SetPauseFile(pause_file);
+                        stereo_camera0.stereo_camera_index = -1;
+                        stereo_camera0.min_exposure = min_exposure;
+                        stereo_camera0.max_exposure = max_exposure;
+                        stereo_camera0.disable_rectification = disable_rectification;
+                        stereo_camera0.disable_radial_correction = disable_radial_correction;
+                        stereo_camera0.use_media_pause = use_media_pause;
+                        stereo_camera0.Run();                        
+                        if (stereo_camera1 != null)
                         {
-                            stereo_camera.next_camera = stereo_camera2;
-                            stereo_camera2.next_camera = stereo_camera;
-                            stereo_camera.stereo_camera_index = 0;
-                            stereo_camera2.stereo_camera_index = 1;
-                            stereo_camera2.min_exposure = min_exposure;
-                            stereo_camera2.max_exposure = max_exposure;
-                            stereo_camera2.use_media_pause = use_media_pause;
-                            stereo_camera2.dissable_rectification = dissable_rectification;
-                            stereo_camera.active_camera = true;
-                            stereo_camera2.active_camera = false;
-                            stereo_camera2.Record = record;
-                            stereo_camera2.temporary_files_path = ramdisk;
-                            stereo_camera2.recorded_images_path = record_path;
-                            stereo_camera2.SetPauseFile(pause_file);
-                            stereo_camera2.Run();                            
+                            stereo_camera0.next_camera = stereo_camera1;
+                            stereo_camera1.next_camera = stereo_camera0;
+                            stereo_camera0.stereo_camera_index = 0;
+                            stereo_camera1.stereo_camera_index = 1;
+                            stereo_camera1.min_exposure = min_exposure;
+                            stereo_camera1.max_exposure = max_exposure;
+                            stereo_camera1.use_media_pause = use_media_pause;
+                            stereo_camera1.disable_rectification = disable_rectification;
+                            stereo_camera1.disable_radial_correction = disable_radial_correction;
+                            stereo_camera0.active_camera = true;
+                            stereo_camera1.active_camera = false;
+                            stereo_camera1.Record = record;
+                            stereo_camera1.temporary_files_path = ramdisk;
+                            stereo_camera1.recorded_images_path = record_path;
+                            stereo_camera1.SetPauseFile(pause_file);
+                            stereo_camera1.Run();                            
                         }
-                        while (stereo_camera.Running)
+                        while (stereo_camera0.Running)
                         {
                             System.Threading.Thread.Sleep(1000);
                         }
@@ -267,13 +273,14 @@ namespace stereoserver
             }
         }
 
-        private static SurveyorVisionStereoWin Init(string stereo_camera_IP,
-                                                    string calibration_filename,
-                                                    int image_width, int image_height,
-                                                    int left_port, int right_port,
-                                                    int broadcast_port,
-                                                    int stereo_algorithm_type,
-                                                    float fps)
+        private static SurveyorVisionStereoWin Init(
+            string stereo_camera_IP,
+            string calibration_filename,
+            int image_width, int image_height,
+            int left_port, int right_port,
+            int broadcast_port,
+            int stereo_algorithm_type,
+            float fps)
         {
             SurveyorVisionStereoWin stereo_camera =
                 new SurveyorVisionStereoWin(stereo_camera_IP, left_port, right_port, broadcast_port, fps);
@@ -350,8 +357,8 @@ namespace stereoserver
             ValidParameters.Add("broadcastport");
             ValidParameters.Add("broadcastport2");
             ValidParameters.Add("algorithm");
-            ValidParameters.Add("calibration");
-            ValidParameters.Add("calibration2");
+            ValidParameters.Add("calibration0");
+            ValidParameters.Add("calibration1");
             ValidParameters.Add("record");
             ValidParameters.Add("fps");
             ValidParameters.Add("ramdisk");
@@ -361,6 +368,7 @@ namespace stereoserver
             ValidParameters.Add("maxexposure");
             ValidParameters.Add("mediapause");
             ValidParameters.Add("norectify");
+            ValidParameters.Add("noradial");
 
             return (ValidParameters);
         }
