@@ -367,13 +367,11 @@ public partial class MainWindow: Gtk.Window
     protected virtual void OnCmdSaveCalibrationClicked (object sender, System.EventArgs e)
     {
         SaveCalibrationFile();
-    }    
-	
+    }    	
 	protected virtual void OnCmdTweaksClicked (object sender, System.EventArgs e)
     {
 		RunTweaks();
-	}
-    
+	}    
     protected virtual void OnSaveAsAnimatedGifActionActivated (object sender, System.EventArgs e)
 	{
 	    SaveAnimatedGif();
