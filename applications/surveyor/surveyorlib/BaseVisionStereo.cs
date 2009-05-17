@@ -67,6 +67,10 @@ namespace surveyor.vision
         // whether to record raw camera images
         public bool Record;        
         public ulong RecordFrameNumber;
+
+        // whether to save debugging images
+        public bool SaveDebugImages;
+        public int DebugFrameNumber;
         
         // whether to show the left or right image during calibration
         public bool show_left_image;
@@ -1102,6 +1106,92 @@ namespace surveyor.vision
             if (images_rectified)
             {
                 correspondence.Show(ref stereo_features);
+
+                // save debugging images if needed
+                // these are saved in gif format so that animations can easily be made
+                if ((SaveDebugImages) &&
+                    (stereo_features != null))
+                {
+                    string frame_number_str = DebugFrameNumber.ToString();
+
+                    // prepend some zeros so that everything is in sequential order
+                    // when making animations from the images
+                    int v = 10;
+                    while (v <= 100000)
+                    {
+                        if (DebugFrameNumber < v)
+                            frame_number_str = "0" + frame_number_str;
+                        v *= 10;
+                    }
+                    string debug_filename = "";
+                    if (stereo_camera_index > -1) debug_filename += "stereo_camera_" + stereo_camera_index.ToString() + "_";
+                    debug_filename += "stereo_features_" + frame_number_str + ".gif";
+
+                    string path = "";
+                    if ((recorded_images_path != null) &&
+                        (recorded_images_path != ""))
+                    {
+                        if (recorded_images_path.EndsWith("/"))
+                            path = recorded_images_path;
+                        else
+                            path = recorded_images_path + "/";
+                    }
+
+                    debug_filename = path + debug_filename;
+
+                    stereo_features.Save(debug_filename, System.Drawing.Imaging.ImageFormat.Gif);
+
+                    if ((rectified[0] != null) &&
+                        (rectified[1] != null))
+                    {
+                        byte[] img_rectified0 = new byte[rectified[0].Width * rectified[0].Height * 3];
+                        byte[] img_rectified1 = new byte[rectified[1].Width * rectified[1].Height * 3];
+
+                        BitmapArrayConversions.updatebitmap(rectified[0], img_rectified0);
+                        BitmapArrayConversions.updatebitmap(rectified[1], img_rectified1);
+
+                        byte[] img_composite = new byte[(rectified[0].Width + rectified[1].Width + 1) * rectified[0].Height * 3];
+
+                        int n = 0;
+                        for (int y = 0; y < rectified[0].Height; y++)
+                        {
+                            int yy = y * (rectified[0].Width + rectified[1].Width) * 3;
+                            for (int x = 0; x < rectified[0].Width; x++, n += 3, yy += 3)
+                            {
+                                img_composite[yy] = img_rectified0[n];
+                                img_composite[yy + 1] = img_rectified0[n + 1];
+                                img_composite[yy + 2] = img_rectified0[n + 2];
+                            }
+                        }
+
+                        n = 0;
+                        for (int y = 0; y < rectified[0].Height; y++)
+                        {
+                            int yy = ((y * (rectified[0].Width + rectified[1].Width)) + rectified[0].Width + 1) * 3;
+                            for (int x = 0; x < rectified[1].Width; x++, n += 3, yy += 3)
+                            {
+                                img_composite[yy] = img_rectified1[n];
+                                img_composite[yy + 1] = img_rectified1[n + 1];
+                                img_composite[yy + 2] = img_rectified1[n + 2];
+                            }
+                        }
+
+                        Bitmap bmp_composite = new Bitmap(rectified[0].Width + rectified[1].Width, rectified[0].Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        BitmapArrayConversions.updatebitmap_unsafe(img_composite, bmp_composite);
+
+                        debug_filename = path + "stereo_pair_" + stereo_camera_index.ToString() + "_" + frame_number_str + ".gif";
+                        bmp_composite.Save(debug_filename, System.Drawing.Imaging.ImageFormat.Gif);
+                        Console.WriteLine("Saved " + debug_filename);
+
+                        bmp_composite.Dispose();
+                        img_composite = null;
+                        img_rectified0 = null;
+                        img_rectified1 = null;
+                    }
+
+                    DebugFrameNumber++;
+                    if (DebugFrameNumber > 999999999) DebugFrameNumber = 0;  // we live in hope!
+                }
             }
             else
             {

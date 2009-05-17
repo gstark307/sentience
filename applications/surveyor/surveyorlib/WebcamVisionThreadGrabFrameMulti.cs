@@ -72,6 +72,7 @@ namespace surveyor.vision
             time_step_mS = (int)(1000 / state.fps);
 
             DateTime last_called = DateTime.Now;
+            const int sleep_time_mS = 100;
 
             bool looping = true;
             while (looping)
@@ -94,20 +95,19 @@ namespace surveyor.vision
                                (state.Running))
                         {
                             diff = DateTime.Now.Subtract(start_time);
-                            Thread.Sleep(10);
+                            Thread.Sleep(sleep_time_mS);
                         }
 
                     }
                     else
                     {
-                        Thread.Sleep(10);
+                        Thread.Sleep(sleep_time_mS);
                     }
                 }
                 else
                 {
                     //for (int i = 0; i < 100; i++)
-                        Thread.Sleep(5);
-
+                    Thread.Sleep(sleep_time_mS);
                     _callback(_data);
                 }
 

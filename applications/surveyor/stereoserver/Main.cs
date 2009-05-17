@@ -38,7 +38,7 @@ namespace stereoserver
         /// use with a Surveyor stereo vision system
         ///    stereoserver -server 169.254.0.10 
         ///                 -algorithm dense 
-        ///                 -calibration calibration.xml 
+        ///                 -calibration0 calibration.xml 
         ///                 -width 320 -height 240 
         ///                 -broadcastport 10010
         ///                 -fps 10
@@ -46,7 +46,7 @@ namespace stereoserver
         ///    stereoserver -leftdevice /dev/video1 
         ///                 -rightdevice /dev/video2 
         ///                 -algorithm dense 
-        ///                 -calibration calibration.xml 
+        ///                 -calibration0 calibration.xml 
         ///                 -width 320 -height 240 
         ///                 -ramdisk /home/myusername/ramdisk
         ///                 -record /home/myusername/recordedimages
@@ -57,19 +57,32 @@ namespace stereoserver
         ///                 -leftdevice2 /dev/video3 
         ///                 -rightdevice2 /dev/video4 
         ///                 -algorithm dense 
-        ///                 -calibration calibration.xml 
+        ///                 -calibration0 calibration0.xml 
+        ///                 -calibration1 calibration1.xml 
         ///                 -width 320 -height 240 
         ///                 -ramdisk /home/myusername/ramdisk
         ///                 -record /home/myusername/recordedimages
         ///                 -broadcastport 10010
         ///                 -broadcastport2 10011
+        /// use with two stereo cameras (based on webcams) on Microsoft Windows:
+        ///    stereoserver -leftdevice 0 
+        ///                 -rightdevice 1 
+        ///                 -leftdevice2 2 
+        ///                 -rightdevice2 3 
+        ///                 -algorithm dense 
+        ///                 -calibration0 calibration0.xml 
+        ///                 -calibration1 calibration1.xml 
+        ///                 -width 320 -height 240 
+        ///                 -record /home/myusername/recordedimages
+        ///                 -broadcastport 10010
+        ///                 -broadcastport2 10011        
         /// </example>
         /// <param name="args"></param>
         static void Main(string[] args)
         {            
             // default settings for the surveyor stereo camera
             string stereo_camera_IP = "169.254.0.10";
-            string calibration_filename0 = "calibration.xml";
+            string calibration_filename0 = "calibration0.xml";
             string calibration_filename1 = "calibration1.xml";
             int left_port = 10001;
             int right_port = 10002;
@@ -173,6 +186,14 @@ namespace stereoserver
             // a file which if present pauses frame capture
             string pause_file = commandline.GetParameterValue("pause", parameters);
 
+            // whether to save debugging images of the stereo disparities
+            bool save_debug_images = false;
+            string save_debug_images_str = commandline.GetParameterValue("debug", parameters);
+            if (save_debug_images_str != "")
+            {
+                save_debug_images = true;
+            }
+
             calibration_filename0 = commandline.GetParameterValue("calibration0", parameters);
             calibration_filename1 = commandline.GetParameterValue("calibration1", parameters);
             if (calibration_filename0 == "")
@@ -241,6 +262,7 @@ namespace stereoserver
                         stereo_camera0.disable_rectification = disable_rectification;
                         stereo_camera0.disable_radial_correction = disable_radial_correction;
                         stereo_camera0.use_media_pause = use_media_pause;
+                        stereo_camera0.SaveDebugImages = save_debug_images;
                         stereo_camera0.Run();                        
                         if (stereo_camera1 != null)
                         {
@@ -248,6 +270,7 @@ namespace stereoserver
                             stereo_camera1.next_camera = stereo_camera0;
                             stereo_camera0.stereo_camera_index = 0;
                             stereo_camera1.stereo_camera_index = 1;
+                            stereo_camera1.SaveDebugImages = save_debug_images;
                             stereo_camera1.min_exposure = min_exposure;
                             stereo_camera1.max_exposure = max_exposure;
                             stereo_camera1.use_media_pause = use_media_pause;
@@ -369,6 +392,7 @@ namespace stereoserver
             ValidParameters.Add("mediapause");
             ValidParameters.Add("norectify");
             ValidParameters.Add("noradial");
+            ValidParameters.Add("debug");
 
             return (ValidParameters);
         }

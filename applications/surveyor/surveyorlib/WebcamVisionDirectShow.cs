@@ -149,6 +149,7 @@ namespace surveyor.vision
                     string filename = output_filename;
                     if (stereo_camera_index > -1) filename += stereo_camera_index.ToString() + "_";
                     if (no_of_cameras > 2) filename += start_camera_index.ToString() + (start_camera_index + 1).ToString() + "_";
+                    
                     CaptureFrames(
                         start_camera_index,
                         cam,
@@ -164,7 +165,7 @@ namespace surveyor.vision
                         ref right_image_bitmap,
                         ref left_image_capture,
                         ref right_image_capture);
-
+                    
                     start_camera_index += 2;
                     if (start_camera_index >= no_of_cameras) start_camera_index = 0;
                 }
@@ -229,7 +230,6 @@ namespace surveyor.vision
 
                     c.Resume();
                 }
-
                 
                 // grab frames       
                 Bitmap grabbed_image0 = null;
@@ -238,9 +238,11 @@ namespace surveyor.vision
                 bool is_blank1 = true;
                 DateTime left_image_cap = DateTime.Now;
                 DateTime right_image_cap = DateTime.Now;
-                //for (int j = 0; j < 2; j++)
+
+                //for (int j = 0; j < 2; j++)                
                 Parallel.For(0, 2, delegate(int j)
                 {
+                    
                     for (int i = 0; i < initial_frames + 1; i++)
                     {
 
@@ -261,11 +263,12 @@ namespace surveyor.vision
                             if ((!is_blank0) && (i > 1)) break;
                         }
                     }
-                } );
-                
+                    
+                } );                
+
                 left_image_capture = left_image_cap;
                 right_image_capture = right_image_cap;
-
+                
                 if ((grabbed_image0 != null) &&
                     (grabbed_image1 != null))
                 {
@@ -296,7 +299,7 @@ namespace surveyor.vision
                 for (int i = 0; i < 2; i++)
                 {
                     WebcamVisionDirectShowCapture c = cam[start_camera_index];
-                    if (i > 0) c = cam[start_camera_index+1];
+                    if (i > 0) c = cam[start_camera_index + 1];
 
                     // stop the camera
                     if (use_pause)
@@ -416,12 +419,14 @@ namespace surveyor.vision
             string[] filter_names = WebcamVisionDirectShowCapture.GetDeviceNames();
             if (filter_names != null)
             {
+                int n = 0;
                 for (int i = 0; i < filter_names.Length; i++)
                 {
                     if (!filter_names[i].ToLower().Contains("vfw"))
                     {
-                        Console.WriteLine(filter_names[i]);
+                        Console.WriteLine(n.ToString() + ". " + filter_names[i]);
                         filter_indexes.Add(i);
+                        n++;
                     }
                 }
                 if (filter_indexes.Count > 0)
