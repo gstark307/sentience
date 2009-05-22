@@ -1,17 +1,18 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/unittests/tests_metagridbuffer.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/unittests/tests_gridCells.cs" ctype="Workbench">
     <Files>
-      <File FileName="../../sentcore/unittests/tests_metagridbuffer.cs" Line="668" Column="3" />
-      <File FileName="Main.cs" Line="49" Column="17" />
+      <File FileName="Main.cs" Line="51" Column="71" />
       <File FileName="../../sentcore/metagridBuffer.cs" Line="1459" Column="1" />
       <File FileName="../../sentcore/steersman.cs" Line="389" Column="2" />
+      <File FileName="../../sentcore/unittests/tests_gridCells.cs" Line="35" Column="29" />
+      <File FileName="../../sentcore/gridCells.cs" Line="146" Column="14" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="sentcore" expanded="True">
             <Node name="unittests" expanded="True">
-              <Node name="tests_metagridbuffer.cs" selected="True" />
+              <Node name="tests_gridCells.cs" selected="True" />
             </Node>
           </Node>
           <Node name="steersman" expanded="True" />
@@ -25,14 +26,17 @@
           <Value>no_of_cameras</Value>
         </State>
       </Pad>
+      <Pad Id="ConnectionManagerPad">
+        <State selected="True" />
+      </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
         <State expanded="True">
           <Node name="sentcore" expanded="True">
             <Node name="sentience" expanded="True">
               <Node name="core" expanded="True">
                 <Node name="tests" expanded="True">
-                  <Node name="tests_metagridbuffer" expanded="True">
-                    <Node name="LocaliseAlongPath" selected="True" />
+                  <Node name="tests_gridCells" expanded="True">
+                    <Node name="CreateMoireGrid" selected="True" />
                   </Node>
                 </Node>
               </Node>

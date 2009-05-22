@@ -41,12 +41,12 @@ namespace sentience.core.tests
 		    float max_orientation_variance = 5 * (float)Math.PI / 180;
 		    float max_tilt_variance = 0 * (float)Math.PI / 180;
 		    float max_roll_variance = 0 * (float)Math.PI / 180;
-		    Random rnd = new Random(0);		    
+		    Random rnd = new Random(0);
 		    
 		    List<pos3D> cells = new List<pos3D>();
 
-			int debug_img_width = 640;
-			int debug_img_height = 480;
+			int debug_img_width = 5000; //640;
+			int debug_img_height = 5000; //480;
 		    byte[] debug_img = new byte[debug_img_width * debug_img_height * 3];
 		    byte[] debug_img_moire = new byte[debug_img_width * debug_img_height * 3];
 			Bitmap bmp = new Bitmap(debug_img_width, debug_img_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -65,7 +65,7 @@ namespace sentience.core.tests
 		        debug_img_moire,
 		        debug_img_width,
 		        debug_img_height);
-		        		
+
 		    Assert.Greater(cells.Count, no_of_poses * 90 / 100);
 		    Assert.Less(cells.Count, no_of_poses * 110 / 100);
 

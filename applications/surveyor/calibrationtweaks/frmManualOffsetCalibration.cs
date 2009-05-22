@@ -529,8 +529,8 @@ namespace calibrationtweaks
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            frmAbout frm = new frmAbout();
-            frm.ShowDialog();
+            //frmAbout frm = new frmAbout();
+            //frm.ShowDialog();
         }
 
         private void saveAnimatedGifToolStripMenuItem_Click(object sender, EventArgs e)
