@@ -1131,10 +1131,17 @@ namespace surveyor.vision
                     if ((recorded_images_path != null) &&
                         (recorded_images_path != ""))
                     {
-                        if (recorded_images_path.EndsWith("/"))
+                        if (recorded_images_path.EndsWith(@"\"))
+                        {
                             path = recorded_images_path;
+                        }
                         else
-                            path = recorded_images_path + "/";
+                        {
+                            if (recorded_images_path.EndsWith("/"))
+                                path = recorded_images_path;
+                            else
+                                path = recorded_images_path + "/";
+                        }
                     }
 
                     debug_filename = path + debug_filename;

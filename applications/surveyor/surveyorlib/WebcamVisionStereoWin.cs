@@ -18,7 +18,7 @@
 */
 
 // uncomment this on windows systems to enable directshow related classes
-//#define WINDOWS
+#define WINDOWS
 
 using System;
 using System.IO;
