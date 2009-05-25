@@ -502,7 +502,7 @@ namespace sentience.core
 				    path, 
 		            ref overall_map_dimension_mm,
 		            ref overall_map_centre_x_mm,
-		            ref overall_map_centre_y_mm);				                        
+		            ref overall_map_centre_y_mm);	                        
                 
 	            // position the first two grids
 	            if (grid_centres.Count >= 3)
