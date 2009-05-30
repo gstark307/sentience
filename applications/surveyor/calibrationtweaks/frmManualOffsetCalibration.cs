@@ -21,6 +21,7 @@ namespace calibrationtweaks
         private float rotation_degrees = 0;
         private string gif_filename = "anim.gif";
         private int delay_mS = 200;
+		private bool reverse_colours = false;
 
         public frmManualOffsetCalibration(
             string left_image_filename,
@@ -29,7 +30,8 @@ namespace calibrationtweaks
             float offset_y,
             float scale,
             float rotation_degrees,
-            bool parameters_exist)
+            bool parameters_exist,
+		    bool reverse_colours)
         {
             InitializeComponent();
 
@@ -39,18 +41,35 @@ namespace calibrationtweaks
             this.offset_y = offset_y;
             this.scale = scale;
             this.rotation_degrees = rotation_degrees;
+			this.reverse_colours = reverse_colours;
 
             if (!parameters_exist) LoadPreviousParameters();
 
             if ((this.left_image_filename != null) &&
                 (this.left_image_filename != ""))
             {
-                picLeftImage.Image = (Bitmap)Bitmap.FromFile(this.left_image_filename);
+				Bitmap bmp = (Bitmap)Bitmap.FromFile(this.left_image_filename);
+				if (reverse_colours)
+				{
+					byte[] img = new byte[bmp.Width * bmp.Height * 3];
+					BitmapArrayConversions.updatebitmap(bmp, img);
+					BitmapArrayConversions.RGB_BGR(img);
+					BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+				}
+                picLeftImage.Image = bmp;
             }
             if ((this.right_image_filename != null) &&
                 (this.right_image_filename != ""))
             {
-                picRightImage.Image = (Bitmap)Bitmap.FromFile(this.right_image_filename);
+				Bitmap bmp = (Bitmap)Bitmap.FromFile(this.right_image_filename);
+				if (reverse_colours)
+				{
+					byte[] img = new byte[bmp.Width * bmp.Height * 3];
+					BitmapArrayConversions.updatebitmap(bmp, img);
+					BitmapArrayConversions.RGB_BGR(img);
+					BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+				}
+                picRightImage.Image = bmp;
             }
 
             txtOffsetX.Text = this.offset_x.ToString();
@@ -137,6 +156,7 @@ namespace calibrationtweaks
                     offset_y,
                     scale,
                     rotation_degrees,
+				    reverse_colours,
                     ref processed_left_image_filename,
                     ref processed_right_image_filename);
                 ResizeForm();
@@ -181,9 +201,29 @@ namespace calibrationtweaks
                 if (picAnimation.Image != null) picAnimation.Image.Dispose();
 
                 if (animation_state)
-                    picAnimation.Image = (Bitmap)Bitmap.FromFile(processed_left_image_filename);
+				{
+				    Bitmap bmp = (Bitmap)Bitmap.FromFile(processed_left_image_filename);
+				    if (reverse_colours)
+				    {
+					    byte[] img = new byte[bmp.Width * bmp.Height * 3];
+					    BitmapArrayConversions.updatebitmap(bmp, img);
+					    BitmapArrayConversions.RGB_BGR(img);
+					    BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+				    }					
+                    picAnimation.Image = bmp;
+				}
                 else
-                    picAnimation.Image = (Bitmap)Bitmap.FromFile(processed_right_image_filename);
+				{
+				    Bitmap bmp = (Bitmap)Bitmap.FromFile(processed_right_image_filename);
+				    if (reverse_colours)
+				    {
+					    byte[] img = new byte[bmp.Width * bmp.Height * 3];
+					    BitmapArrayConversions.updatebitmap(bmp, img);
+					    BitmapArrayConversions.RGB_BGR(img);
+					    BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+				    }					
+                    picAnimation.Image = bmp;
+				}
                 picAnimation.Refresh();                
                 
                 if (chkAnimate.Checked) animation_state = !animation_state;
@@ -535,7 +575,20 @@ namespace calibrationtweaks
 
         private void saveAnimatedGifToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Update();
+			/*
+			if (reverse_colours)
+			{
+				reverse_colours = false;
+				Update();
+				reverse_colours = true;
+			}
+			else
+			{
+                Update();
+			}
+			*/
+			
+			Update();
             if (File.Exists(gif_filename))
             {
                 SaveFileDialog save_gif = new SaveFileDialog();
@@ -546,7 +599,12 @@ namespace calibrationtweaks
                 save_gif.RestoreDirectory = true;
 
                 if (save_gif.ShowDialog() == DialogResult.OK)
-                {
+                {					
+					if (File.Exists(save_gif.FileName))
+					{
+						File.Delete(save_gif.FileName);
+					}
+					
                     if (gif_filename != save_gif.FileName)
                         File.Copy(gif_filename, save_gif.FileName);
                 }

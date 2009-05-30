@@ -147,11 +147,13 @@ namespace surveyor.vision
             if (exposure > 0) command_str += " -s brightness=" + exposure.ToString() + "%";
             command_str += " --save " + filename + "_.jpg";
 
-            //Console.WriteLine("");
-            //Console.WriteLine("");
-            //Console.WriteLine(command_str);
-            //Console.WriteLine("");
-            //Console.WriteLine("");
+			// fswebcam -q -d /dev/video1,/dev/video2 -r 320x240 --no-banner -S 2 -s brightness=50% --save capture12_.jpg
+			
+            Console.WriteLine("");
+            Console.WriteLine("");
+            Console.WriteLine(command_str);
+            Console.WriteLine("");
+            Console.WriteLine("");
 
             string left_image_filename = filename + "_0.jpg";
             string right_image_filename = filename + "_1.jpg";

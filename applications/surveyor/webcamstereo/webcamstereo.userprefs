@@ -1,12 +1,13 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
     <Files>
-      <File FileName="MainWindow.cs" Line="347" Column="5" />
+      <File FileName="MainWindow.cs" Line="366" Column="30" />
+      <File FileName="../surveyorlib/WebcamVisionStereo.cs" Line="23" Column="9" />
+      <File FileName="../surveyorlib/GtkBitmap.cs" Line="276" Column="6" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorlib" expanded="True" />
           <Node name="webcamstereo" expanded="True">
             <Node name="MainWindow.cs" selected="True" />
           </Node>
@@ -14,6 +15,9 @@
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
+        <State selected="True" />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

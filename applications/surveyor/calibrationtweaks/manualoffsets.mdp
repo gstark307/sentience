@@ -3,7 +3,7 @@
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
       <Output directory="../../../../robotbridgeware/bin/Debug" assemblyKeyFile="/home/motters/develop/sentience/applications/surveyor/calibrationtweaks/." assembly="calibtweaks" />
       <Build debugmode="True" target="Exe" />
-      <Execution runwithwarnings="True" commandlineparameters="-leftdevice /dev/video1 -rightdevice /dev/video2 -leftdevice2 /dev/video3 -rightdevice2 /dev/video4 -algorithm dense -calibration /home/motters/develop/sentience/applications/surveyor/surveyorstereo/bin/Debug/calibration.xml -width 320 -height 240 -ramdisk /home/motters/ramdisk" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
+      <Execution runwithwarnings="True" commandlineparameters="-leftdevice /dev/video1 -rightdevice /dev/video2 -leftdevice2 /dev/video3 -rightdevice2 /dev/video4 -algorithm dense -calibration /home/motters/develop/sentience/applications/surveyor/surveyorstereo/bin/Debug/calibration.xml -width 320 -height 240 -ramdisk /home/motters/ramdisk -reverse" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
       <EnvironmentVariables />
       <CodeGeneration compiler="Mcs" warninglevel="3" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>

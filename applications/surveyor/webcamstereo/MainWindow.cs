@@ -32,14 +32,24 @@ public partial class MainWindow: Gtk.Window
 {
     int image_width = 320;
     int image_height = 240;
-    string left_camera_device = "/dev/video1";
-    string right_camera_device = "/dev/video2";
+    string left_camera_device = "/dev/video2";
+    string right_camera_device = "/dev/video1";
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
     int fps = 2;
     string temporary_files_path = "";
     string recorded_images_path = "";
-	string manual_camera_alignment_calibration_program = "calibtweaks";
+	string manual_camera_alignment_calibration_program = "calibtweaks.exe";
+    bool disable_rectification = false;
+    bool disable_radial_correction = true;
+	bool reverse_colours = true;
+	
+	// use v4l-info <device> to find the min and max brightness levels
+	// for the camera, which are hardware specific
+	// for Creative Webcam NX Ultra the brightness range is 0->650
+	// for Minoru the brightness range is -10->10
+	int minimum_brightness = -10;
+	int maximum_brightness = 10;
          
     public WebcamVisionStereoGtk stereo_camera;
     
@@ -64,7 +74,14 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.Load(calibration_filename);
         stereo_camera.image_width = image_width;
         stereo_camera.image_height = image_height;        
+		stereo_camera.min_exposure = minimum_brightness;
+		stereo_camera.max_exposure = maximum_brightness;
         stereo_camera.Run();
+		
+		stereo_camera.disable_rectification = disable_rectification;
+		stereo_camera.disable_radial_correction = disable_radial_correction;
+		chkRectification.Active = !disable_rectification;
+		chkRadialCorrection.Active = !disable_radial_correction;
     }	
     
     private void CloseForm()
@@ -302,8 +319,26 @@ public partial class MainWindow: Gtk.Window
 		Bitmap right_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 		BitmapArrayConversions.updatebitmap_unsafe(left, left_bmp);
 		BitmapArrayConversions.updatebitmap_unsafe(right, right_bmp);
-		left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
-        right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+		if (left_image_filename.ToLower().EndsWith("png"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Png);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Png);
+		}
+		if (left_image_filename.ToLower().EndsWith("bmp"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+		}
+		if (left_image_filename.ToLower().EndsWith("gif"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Gif);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Gif);
+		}
+		if (left_image_filename.ToLower().EndsWith("jpg"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+		}
 	}
 	
 	private void RunTweaks()
@@ -327,6 +362,7 @@ public partial class MainWindow: Gtk.Window
                 proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
                 proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
                 proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
+				if (reverse_colours) proc.StartInfo.Arguments += " -reverse";
                 proc.Start();
                 proc.WaitForExit();
 
@@ -351,7 +387,7 @@ public partial class MainWindow: Gtk.Window
                 //images.Add("anim0.gif");
                 //images.Add("anim1.gif");
 
-                GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, stereo_camera.offset_x, stereo_camera.offset_y, stereo_camera.scale, stereo_camera.rotation * 180 / (float)Math.PI);
+                GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, stereo_camera.offset_x, stereo_camera.offset_y, stereo_camera.scale, stereo_camera.rotation * 180 / (float)Math.PI, reverse_colours);
                 //File.Delete("anim0.gif");
                 //File.Delete("anim1.gif");
                 //MessageBox.Show("Animated gif created");
@@ -383,8 +419,19 @@ public partial class MainWindow: Gtk.Window
     }
 	
     protected virtual void OnManualTweaksActionActivated (object sender, System.EventArgs e)
+	{
+	    RunTweaks();
+    }		
+		
+	protected virtual void OnChkDisableRectificationClicked (object sender, System.EventArgs e)
+	{
+        disable_rectification = !chkRectification.Active;
+        stereo_camera.disable_rectification = disable_rectification;
+	}    
+		
+    protected virtual void OnChkRadialCorrectionClicked (object sender, System.EventArgs e)
     {
-        RunTweaks();
+        disable_radial_correction = !chkRadialCorrection.Active;
+        stereo_camera.disable_radial_correction = disable_radial_correction;
     }
-
 }

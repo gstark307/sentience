@@ -37,7 +37,8 @@ namespace sluggish.utilities
             float offset_x,
             float offset_y,
             float scale,
-            float rotation_degrees)
+            float rotation_degrees,
+		    bool reverse_colours)
         {
             string left_image_filename = "";
             string right_image_filename = "";
@@ -51,6 +52,7 @@ namespace sluggish.utilities
                 offset_y,
                 scale,
                 rotation_degrees,
+			    reverse_colours,
                 ref left_image_filename,
                 ref right_image_filename);
         }
@@ -191,6 +193,7 @@ namespace sluggish.utilities
             float offset_y,
             float scale,
             float rotation_degrees,
+		    bool reverse_colours,
             ref string left_image_filename,
             ref string right_image_filename)
         {
@@ -203,6 +206,7 @@ namespace sluggish.utilities
                 Bitmap bmp0 = (Bitmap)Bitmap.FromFile(left_image);
                 byte[] img0 = new byte[bmp0.Width * bmp0.Height * 3];
                 BitmapArrayConversions.updatebitmap(bmp0, img0);
+				if (reverse_colours) BitmapArrayConversions.RGB_BGR(img0);
                 int[] lookup0 = new int[bmp0.Width * bmp0.Height * 3];
                 byte[] img0_scaled = new byte[bmp0.Width * bmp0.Height * 3];
                 CreateScaledImageLookupColour(scale, lookup0, bmp0.Width, bmp0.Height, 0, 0, 0);
@@ -217,12 +221,14 @@ namespace sluggish.utilities
             Bitmap bmp = (Bitmap)Bitmap.FromFile(right_image);
             byte[] img = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, img);
+			if (reverse_colours) BitmapArrayConversions.RGB_BGR(img);
             byte[] img_offset = new byte[bmp.Width * bmp.Height * 3];
             int[] lookup1 = new int[bmp.Width * bmp.Height * 3];
             scale = 1.0f / scale;
             CreateScaledImageLookupColour(scale, lookup1, bmp.Width, bmp.Height, (int)offset_x, (int)offset_y, rotation_degrees);
             for (int i = 0; i < img_offset.Length; i++) img_offset[i] = img[lookup1[i]];
             bmp = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			if (reverse_colours) BitmapArrayConversions.RGB_BGR(img_offset);
             BitmapArrayConversions.updatebitmap_unsafe(img_offset, bmp);
             right_image_filename = right_image.Substring(0, right_image.Length - 4) + "2.bmp";
             bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
@@ -230,13 +236,14 @@ namespace sluggish.utilities
             List<string> images = new List<string>();
             images.Add(left_image_filename);
             images.Add(right_image_filename);
-            CreateAnimatedGif(images, delay_mS, gif_filename);
+            CreateAnimatedGif(images, delay_mS, gif_filename, reverse_colours);
         }
 
         public static void CreateAnimatedGif(
             List<string> gifFiles, 
             int delay, 
-            string outputFile)
+            string outputFile,
+		    bool reverse_colours)
         {
             delay /= 10; // 100th of a second
 
@@ -248,6 +255,7 @@ namespace sluggish.utilities
             for (int i = 0; i < gifFiles.Count; i++)
             {
                 GifClass gif = new GifClass();
+				gif.reverse_colours = reverse_colours;
                 gif.LoadGifPicture(gifFiles[i]);
 
                 if (i == 0)
@@ -298,7 +306,9 @@ namespace sluggish.utilities
 
         public static byte[] CreateLoopBlock()
 
-        { return CreateLoopBlock(0); }
+        { 
+			return CreateLoopBlock(0); 
+		}
 
         public static byte[] CreateLoopBlock(int numberOfRepeatings)
         {

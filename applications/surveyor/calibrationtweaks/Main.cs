@@ -52,7 +52,12 @@ namespace calibrationtweaks
                 parameters_exist = true;
             }
 
-            frmManualOffsetCalibration frm = new frmManualOffsetCalibration(left_image_filename, right_image_filename, offset_x, offset_y, scale, rotation_degrees, parameters_exist);
+			bool reverse_colours = false;
+            string reverse_colours_str = commandline.GetParameterValue("reverse", parameters);
+			if (reverse_colours_str != "")
+				reverse_colours = true;
+
+            frmManualOffsetCalibration frm = new frmManualOffsetCalibration(left_image_filename, right_image_filename, offset_x, offset_y, scale, rotation_degrees, parameters_exist, reverse_colours);
             frm.ShowDialog();
         }
 
@@ -70,6 +75,7 @@ namespace calibrationtweaks
             ValidParameters.Add("offsety");
             ValidParameters.Add("scale");
             ValidParameters.Add("rotation");
+            ValidParameters.Add("reverse");
 
             return (ValidParameters);
         }

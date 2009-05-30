@@ -95,8 +95,6 @@ namespace sluggish.utilities
             return(success);
         }
 
-
-
         /// <summary>
         /// Copy the given bitmap object to a byte array
         /// </summary>
@@ -165,6 +163,20 @@ namespace sluggish.utilities
 			else
 				return(false);
         }
+		
+		/// <summary>
+		///swaps BGR and RGB formats
+		/// </summary>
+		/// <param name="img">image whose colour is to be reversed</param>
+		public static void RGB_BGR(byte[] img)
+		{
+			for (int i = 0; i < img.Length; i += 3)
+			{
+				byte temp = img[i];
+				img[i] = img[i+2];
+				img[i+2] = temp;
+			}
+		}
 
         /// <summary>
         /// inserts the given bitmap data into the given byte array

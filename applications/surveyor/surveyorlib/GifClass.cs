@@ -56,6 +56,8 @@ namespace sluggish.utilities
         public List<byte> m_ImageDescriptor = new List<byte>();
 
         public List<byte> m_ImageData = new List<byte>();
+		
+		public bool reverse_colours = false;
 
         public GifClass()
         { 
@@ -71,7 +73,15 @@ namespace sluggish.utilities
 
         public void LoadGifPicture(string filename)
         { 
-            LoadGifPicture((Bitmap)Bitmap.FromFile(filename)); 
+			Bitmap bmp = (Bitmap)Bitmap.FromFile(filename);
+			if (reverse_colours)
+			{
+				byte[] img = new byte[bmp.Width * bmp.Height * 3];
+				BitmapArrayConversions.updatebitmap(bmp, img);
+				BitmapArrayConversions.RGB_BGR(img);
+				BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+			}
+            LoadGifPicture(bmp); 
         }
 
         public void LoadGifPicture(Bitmap gifPicture)

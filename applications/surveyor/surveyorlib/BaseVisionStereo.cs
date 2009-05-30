@@ -45,6 +45,7 @@ namespace surveyor.vision
 
         // these values are completely arbitrary and specific to the camera model
         // You can use AMcap on Windows to find out what the range of exposure values is
+		// or v4l-info on Linux
         public int max_exposure = 650;
         public int min_exposure = 0;
 
@@ -734,7 +735,9 @@ namespace surveyor.vision
 
             if (xnod.Name == "RMSerror")
             {
-                calibration_survey[camera_index].minimum_rms_error = Convert.ToSingle(xnod.InnerText, format);
+				if ((xnod.InnerText != "") &&
+				    (xnod.InnerText != "Infinity"))
+                    calibration_survey[camera_index].minimum_rms_error = Convert.ToSingle(xnod.InnerText, format);
             }
 
             // call recursively on all children of the current node
