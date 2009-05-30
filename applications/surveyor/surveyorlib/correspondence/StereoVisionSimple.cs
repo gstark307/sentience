@@ -82,9 +82,10 @@ namespace surveyor.vision
 		/// <param name="image_width">width of the image</param>
 		/// <param name="gradient_direction">best responding gradient direction.  This helps to improve matching performance</param>
 		/// <returns>minimum sum of squared differences</returns>
-        protected int minSSD(int index, 
-		                     byte[] bmp, int image_width, 
-		                     ref int gradient_direction)
+        protected int minSSD(		                     
+		    int index, 
+		    byte[] bmp, int image_width, 
+		    ref int gradient_direction)
 		{
 			int min = int.MaxValue;
 			int pixels = bmp.Length;
@@ -397,6 +398,7 @@ namespace surveyor.vision
                     float x_right = right_row_features[j];
 
                     float disparity = x_left - x_right + calibration_offset_x;
+					//float disparity = x_right - x_left - calibration_offset_x;
                     if ((disparity >= 0) && (disparity < max_disparity_pixels))
                     {
                         int direction_right = (int)right_row_features[j + 2];

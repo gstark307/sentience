@@ -40,7 +40,8 @@ namespace surveyor.vision
         // the type of stereo correspondence algorithm being used
         public const int SIMPLE = 0;        
 		public const int DENSE = 1;
-		public const int GEOMETRIC = 2;
+		public const int EDGES = 2;
+		public const int GEOMETRIC = 3;
         public int algorithm_type;
 
         // Select rows at random from which to obtain disparities

@@ -506,7 +506,8 @@ namespace surveyor.vision
                     for (d = 0; d < max_disparity_pixels; d++)
                     {
                         x2 = x - d + calibration_offset_x;
-                        if (x2 > position_search_radius)
+                        if ((x2 > position_search_radius) && 
+						    (x2 > 0) && (x2 < image_width))
                         {
                             posn_diff = 1 + PointSimilarity1D(y, y2, left_img, right_img, disparity.Length,
                                                               x, x2, 1 + (position_search_radius*d/max_disparity_pixels));
