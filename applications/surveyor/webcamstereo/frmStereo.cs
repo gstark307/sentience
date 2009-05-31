@@ -318,7 +318,7 @@ namespace surveyor.vision
                     //images.Add("anim0.gif");
                     //images.Add("anim1.gif");
 
-                    GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, stereo_camera.offset_x, stereo_camera.offset_y, stereo_camera.scale, stereo_camera.rotation * 180 / (float)Math.PI);
+                    GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, stereo_camera.offset_x, stereo_camera.offset_y, stereo_camera.scale, stereo_camera.rotation * 180 / (float)Math.PI, false);
                     //File.Delete("anim0.gif");
                     //File.Delete("anim1.gif");
                     MessageBox.Show("Animated gif created");

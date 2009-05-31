@@ -31,10 +31,10 @@ namespace surveyor.vision
     {
         // we don't need to sample every row to get
         // usable range data.  Alternate rows will do.
-        protected const int vertical_compression = 2;
+        protected const int vertical_compression = 1;
 
 		// minimum probability used when matching features
-		public float minimum_matching_probability = 0.5f;
+		public float minimum_matching_probability = 0.7f;
 
         public StereoVisionEdges()
         {
@@ -97,7 +97,7 @@ namespace surveyor.vision
 		    byte[] left_bmp, byte[] right_bmp)
 		{
 			int difference = 0;
-			const int radius = 3;
+			const int radius = 2;
 			int pixels = radius * radius;
 
 			// compute average pixel intensity over the patch
@@ -117,44 +117,75 @@ namespace surveyor.vision
 			average_right /= pixels;
 
 			// compute sum of squared differences
-			for (int dy = -radius; dy <= radius; dy++)
+			for (int dy = -radius; dy < radius; dy++)
 			{
 				int n_left = ((left_y + dy) * image_width) + left_x - radius;
 				int n_right = ((right_y + dy) * image_width) + right_x - radius;
-			    for (int dx = -radius; dx <= radius; dx++, n_left++, n_right++)
+			    for (int dx = -radius; dx < radius; dx++, n_left++, n_right++)
 			    {
 					int diff_left = left_bmp[n_left] - average_left;
 					int diff_right = right_bmp[n_right] - average_right;
 					int diff = diff_left - diff_right;
-					difference += diff * diff;
+					difference += diff*diff;
 				}
 			}
-			
-			difference /= pixels;
+
+            if (difference == 0) 
+                difference = -1;
+            else
+			    difference /= pixels;
 			
 			return(difference);
 		}
-        
-		/// <summary>
-		/// Matches features along rows in the left and right images
-		/// </summary>
-		/// <param name="left_row_features">features along a row in the left image</param>
-		/// <param name="right_row_features">features along a row in the right image</param>
-		/// <param name="left_bmp">left mono image</param>
-		/// <param name="right_bmp">right mono image</param>
-		/// <param name="minimum_matching_probability">minimum matching probability in the range 0.0 - 1.0</param>
+
+        protected void NonMaximalSupression(
+            List<float> row_features, 
+            int suppression_radius)
+        {
+            int max_row_features = 6;
+
+            while (row_features.Count / 4 > max_row_features)
+            {
+                int victim = -1;
+                int lowest_magnitude = int.MaxValue;
+                for (int i = 0; i < row_features.Count; i += 4)
+                {
+                    int magnitude = (int)row_features[i + 3];
+                    if (magnitude < lowest_magnitude)
+                    {
+                        lowest_magnitude = magnitude;
+                        victim = i;
+                    }
+                }
+                if (victim != -1)
+                {
+                    for (int i = 3; i >= 0; i--)
+                    {
+                        row_features.RemoveAt(victim + i);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Matches features along rows in the left and right images
+        /// </summary>
+        /// <param name="left_row_features">features along a row in the left image</param>
+        /// <param name="right_row_features">features along a row in the right image</param>
+        /// <param name="left_bmp">left mono image</param>
+        /// <param name="right_bmp">right mono image</param>
+        /// <param name="minimum_matching_probability">minimum matching probability in the range 0.0 - 1.0</param>
         protected void MatchFeatures(
             List<float> left_row_features, 
             List<float> right_row_features,
             byte[] left_bmp, byte[] right_bmp,
 		    float minimum_matching_probability)
         {
-			const int RANGE = 10000;
 			int max_disparity_pixels = image_width * max_disparity / 100;
 
 			int matrix_x = left_row_features.Count/4;
 			int matrix_y = right_row_features.Count/4;
-			int[,,] matching_matrix = new int[matrix_x, matrix_y, 3];
+			float[,,] matching_matrix = new float[matrix_x, matrix_y, 3];
 			
 			int mx = 0;
 			int my = 0;
@@ -183,8 +214,9 @@ namespace surveyor.vision
 						if ((disp >= 0) && (disp < max_disparity_pixels))
 						{
 				            int y1 = (int)right_row_features[j + 1];
-							
-							matching_matrix[mx, my, 0] = FeatureDifference(x0,y0,x1,y1, left_bmp, right_bmp);
+				
+			                int diff = FeatureDifference(x0,y0,x1,y1, left_bmp, right_bmp);
+                            matching_matrix[mx, my, 0] = diff;
 						}
 					}
 				}
@@ -193,7 +225,7 @@ namespace surveyor.vision
 			// normalise along rows
 			for (my = 0; my < matrix_y; my++)
 			{
-				int sum = 0;
+				float sum = 0;
 				for (mx = 0; mx < matrix_x; mx++)
 				{
 					if (matching_matrix[mx, my, 0] != -1)
@@ -207,7 +239,7 @@ namespace surveyor.vision
 					{
 						if (matching_matrix[mx, my, 0] != -1)
 						{
-							matching_matrix[mx, my, 1] = matching_matrix[mx, my, 0] * RANGE / sum;
+							matching_matrix[mx, my, 1] = matching_matrix[mx, my, 0] / sum;
 						}
 					}
 				}
@@ -216,7 +248,7 @@ namespace surveyor.vision
 			// normalise along columns
 			for (mx = 0; mx < matrix_x; mx++)
 			{
-				int sum = 0;
+				float sum = 0;
 				for (my = 0; my < matrix_y; my++)
 				{
 					if (matching_matrix[mx, my, 0] != -1)
@@ -230,14 +262,13 @@ namespace surveyor.vision
 					{
 						if (matching_matrix[mx, my, 0] != -1)
 						{
-							matching_matrix[mx, my, 2] = matching_matrix[mx, my, 0] * RANGE / sum;
+							matching_matrix[mx, my, 2] = matching_matrix[mx, my, 0] / sum;
 						}
 					}
 				}
 			}
 			
 			// produce matching probabilities
-			int RANGE_SQR = RANGE*RANGE;
 			for (mx = 0; mx < matrix_x; mx++)
 			{
 				float max_probability = minimum_matching_probability;
@@ -246,9 +277,9 @@ namespace surveyor.vision
 			    {
 					if (matching_matrix[mx, my, 0] != -1)
 					{
-						float matching_probability = 
-							((RANGE - matching_matrix[mx, my, 1]) * (RANGE - matching_matrix[mx, my, 2])) / 
-						    (float)RANGE_SQR;
+                        float matching_probability =
+                            (1.0f - matching_matrix[mx, my, 1]) * 
+                            (1.0f - matching_matrix[mx, my, 2]);
 						
 						if (matching_probability > max_probability)
 						{
@@ -286,7 +317,7 @@ namespace surveyor.vision
             float calibration_offset_x, 
             float calibration_offset_y)
         {
-			int edge_detection_radius = image_width * 12 / 320;
+            int edge_detection_radius = image_width * 12 / 320;
 			
 			UpdateEdges(
 		        left_bmp_colour, right_bmp_colour,
@@ -465,7 +496,7 @@ namespace surveyor.vision
 				    		{
 				    		    int edge_x = edge_start + (((x-1) - edge_start) / 2) + (int)calibration_offset_x;
 				    	    	right_row_features.Add(edge_x);
-				    	    	right_row_features.Add(y);
+				    	    	right_row_features.Add(y + calibration_offset_y);
 				    	    	right_row_features.Add(rising);
 				    	    	right_row_features.Add(edge_magnitude);
 				    		}
@@ -475,6 +506,9 @@ namespace surveyor.vision
 	
 					if (right_row_features.Count > 0)
 					{
+                        NonMaximalSupression(left_row_features, 20);
+                        NonMaximalSupression(right_row_features, 20);
+
 						// match left and right features
 		                MatchFeatures(
 		                    left_row_features, 
