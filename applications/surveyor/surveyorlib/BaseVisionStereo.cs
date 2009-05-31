@@ -58,7 +58,7 @@ namespace surveyor.vision
         public float pixels_per_mm = 307;       // density of pixels on the sensor
         public float baseline_mm = 100;
         public float fov_degrees = 90;
-        public int stereo_algorithm_type = StereoVision.SIMPLE;
+        public int stereo_algorithm_type = StereoVision.EDGES;
         protected int prev_stereo_algorithm_type;
         protected bool broadcasting;
         
@@ -1066,6 +1066,20 @@ namespace surveyor.vision
                         
                     if (correspondence.algorithm_type != StereoVision.SIMPLE)
                         correspondence = new StereoVisionSimple();                        
+
+                    if (images_rectified)
+                        correspondence.Update(rectified[0], rectified[1],
+                                              -offset_x, offset_y);
+                        
+                    break;
+                }
+                case StereoVision.EDGES:
+                {                      
+                    if (correspondence == null)
+                        correspondence = new StereoVisionEdges();
+                        
+                    if (correspondence.algorithm_type != StereoVision.EDGES)
+                        correspondence = new StereoVisionEdges();               
 
                     if (images_rectified)
                         correspondence.Update(rectified[0], rectified[1],

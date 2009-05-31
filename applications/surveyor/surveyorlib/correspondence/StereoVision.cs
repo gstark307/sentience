@@ -42,7 +42,7 @@ namespace surveyor.vision
 		public const int DENSE = 1;
 		public const int EDGES = 2;
 		public const int GEOMETRIC = 3;
-        public int algorithm_type;
+        public int algorithm_type = EDGES;
 
         // Select rows at random from which to obtain disparities
         // this helps to reduce processing time
