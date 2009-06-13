@@ -29,8 +29,7 @@ extern struct stereo_data_struct {
 	unsigned short int features_per_row[STEREO_MAX_IMAGE_HEIGHT/STEREO_VERTICAL_SAMPLING];
 
 	/* Array storing a binary descriptor, 32bits in length, for each detected feature.
-	 * This will be used for matching purposes.
-	 * The first 17 bits represent pixels, the next 8 bits are mean luminance */
+	 * This will be used for matching purposes.*/
 	unsigned int descriptor[STEREO_MAX_FEATURES];
 
 	/* mean luminance for each feature */

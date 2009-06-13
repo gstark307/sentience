@@ -36,8 +36,7 @@ struct stereo_data_struct {
 	unsigned short int features_per_row[STEREO_MAX_IMAGE_HEIGHT/STEREO_VERTICAL_SAMPLING];
 
 	/* Array storing a binary descriptor, 32bits in length, for each detected feature.
-	 * This will be used for matching purposes.
-	 * The first 17 bits represent pixels, the next 8 bits are mean luminance */
+	 * This will be used for matching purposes.*/
 	unsigned int descriptor[STEREO_MAX_FEATURES];
 
 	/* mean luminance for each feature */
@@ -54,6 +53,7 @@ unsigned int row_peaks[STEREO_MAX_IMAGE_WIDTH];
 /* array stores matching probabilities */
 unsigned int stereo_matches[STEREO_MAX_FEATURES*4];
 
+/* copy the data from one structure to the other */
 void copy_to_received() {
 	memcpy(stereo_data_received.feature_x, stereo_data.feature_x, STEREO_MAX_FEATURES * sizeof(short int));
 	memcpy(stereo_data_received.features_per_row, stereo_data.features_per_row, (STEREO_MAX_IMAGE_HEIGHT/STEREO_VERTICAL_SAMPLING) * sizeof(unsigned short int));
