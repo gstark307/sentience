@@ -77,7 +77,7 @@ const unsigned char BitsSetTable256[] =
 };
 
 
-/* Updates sum of squared difference values along a single row
+/* Updates sliding sums and edge response values along a single row
  * Returns the mean luminance along the row */
 int stereo_update_sums(
     int y,                                /* row index */
@@ -106,14 +106,17 @@ int stereo_update_sums(
     int p0, p1;
     for (x = 4; x < (int)imgWidth-5; x++) {
 
+    	/* edge using 2 pixel radius */
     	p0 = (row_sum[x] - row_sum[x - 2]) -
     		 (row_sum[x + 2] - row_sum[x]);
     	if (p0 < 0) p0 = -p0;
 
+    	/* edge using 4 pixel radius */
     	p1 = (row_sum[x] - row_sum[x - 4]) -
     		 (row_sum[x + 4] - row_sum[x]);
     	if (p1 < 0) p1 = -p1;
 
+    	/* overall edge response */
     	row_peaks[x] = p0 + p1;
     }
 
