@@ -211,7 +211,7 @@ public partial class MainWindow: Gtk.Window
 
     protected virtual void OnCmdSimpleStereoClicked (object sender, System.EventArgs e)
     {
-        stereo_camera.stereo_algorithm_type = StereoVision.EDGES;
+        stereo_camera.stereo_algorithm_type = StereoVision.SIMPLE;
     }
 
     protected virtual void OnCmdDenseStereoClicked (object sender, System.EventArgs e)

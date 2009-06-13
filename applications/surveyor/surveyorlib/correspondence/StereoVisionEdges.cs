@@ -34,7 +34,7 @@ namespace surveyor.vision
         protected const int vertical_compression = 1;
 
 		// minimum probability used when matching features
-		public float minimum_matching_probability = 0.7f;
+		public float minimum_matching_probability = 0.01f;
 
         public StereoVisionEdges()
         {
@@ -97,7 +97,7 @@ namespace surveyor.vision
 		    byte[] left_bmp, byte[] right_bmp)
 		{
 			int difference = 0;
-			const int radius = 2;
+			const int radius = 5;
 			int pixels = radius * radius;
 
 			// compute average pixel intensity over the patch
@@ -133,39 +133,12 @@ namespace surveyor.vision
             if (difference == 0) 
                 difference = -1;
             else
-			    difference /= pixels;
+			{
+				difference = (int)Math.Sqrt(difference / (float)pixels);
+			}
 			
 			return(difference);
 		}
-
-        protected void NonMaximalSupression(
-            List<float> row_features, 
-            int suppression_radius)
-        {
-            int max_row_features = 6;
-
-            while (row_features.Count / 4 > max_row_features)
-            {
-                int victim = -1;
-                int lowest_magnitude = int.MaxValue;
-                for (int i = 0; i < row_features.Count; i += 4)
-                {
-                    int magnitude = (int)row_features[i + 3];
-                    if (magnitude < lowest_magnitude)
-                    {
-                        lowest_magnitude = magnitude;
-                        victim = i;
-                    }
-                }
-                if (victim != -1)
-                {
-                    for (int i = 3; i >= 0; i--)
-                    {
-                        row_features.RemoveAt(victim + i);
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// Matches features along rows in the left and right images
@@ -183,6 +156,7 @@ namespace surveyor.vision
         {
 			int max_disparity_pixels = image_width * max_disparity / 100;
 
+			List<StereoFeature> row_features = new List<StereoFeature>();
 			int matrix_x = left_row_features.Count/4;
 			int matrix_y = right_row_features.Count/4;
 			float[,,] matching_matrix = new float[matrix_x, matrix_y, 3];
@@ -207,7 +181,7 @@ namespace surveyor.vision
 			    for (int j = 0; j < right_row_features.Count-4; j += 4, my++)
 			    {
 					int rising1 = (int)right_row_features[j + 2];
-					if (rising0 == rising1)
+					//if (rising0 == rising1)
 					{
 				        int x1 = (int)right_row_features[j];
 						int disp = x0 - x1;
@@ -271,15 +245,22 @@ namespace surveyor.vision
 			// produce matching probabilities
 			for (mx = 0; mx < matrix_x; mx++)
 			{
+				int x0 = (int)left_row_features[mx * 4];
 				float max_probability = minimum_matching_probability;
 				int winner = -1;
 			    for (my = 0; my < matrix_y; my++)
 			    {
 					if (matching_matrix[mx, my, 0] != -1)
 					{
+						int x1 = (int)right_row_features[my * 4];
+						int disparity = x0 - x1;						
+						float disparity_prior = 1.0f - (disparity * 0.7f / (float)max_disparity_pixels);				
+						//disparity_prior *= (float)Math.Sin(disparity_prior * Math.PI / 2);
+						
                         float matching_probability =
                             (1.0f - matching_matrix[mx, my, 1]) * 
-                            (1.0f - matching_matrix[mx, my, 2]);
+                            (1.0f - matching_matrix[mx, my, 2]) *
+						    disparity_prior;
 						
 						if (matching_probability > max_probability)
 						{
@@ -290,13 +271,37 @@ namespace surveyor.vision
 				}
 				if (winner != -1)
 				{
-				    int x0 = (int)left_row_features[mx * 4];
-					int y0 = (int)left_row_features[(mx * 4) + 1];
-				    int x1 = (int)right_row_features[winner * 4];
-					int disparity = x0 - x1;
-					features.Add(new StereoFeature(x0, y0, disparity));
+				    int xx0 = (int)left_row_features[mx * 4];
+					int yy0 = (int)left_row_features[(mx * 4) + 1];
+				    int xx1 = (int)right_row_features[winner * 4];
+					int disparity = xx0 - xx1;
+					StereoFeature f = new StereoFeature(xx0, yy0, disparity);					
+					f.probability = max_probability;
+					row_features.Add(f);
 				}
-			}			
+			}
+			
+			const int max_features_per_row = 4;
+			while (row_features.Count > max_features_per_row)
+			{
+				float min_probability = 2;
+				int victim = -1;
+				for (int i = 0; i < row_features.Count; i++)
+				{
+					if (row_features[i].probability < min_probability)
+					{
+						min_probability = row_features[i].probability;
+						victim = i;
+					}
+				}
+				if (victim != -1)
+				{
+					row_features.RemoveAt(victim);
+				}
+			}
+			
+			for (int i = 0; i < row_features.Count; i++)
+				features.Add(row_features[i]);
         }
 
         /// <summary>
@@ -363,10 +368,10 @@ namespace surveyor.vision
 			
 			int image_width2 = image_width*2;
 			int image_width3 = image_width*3;
-			int ty = 4 + (int)(vertical_compression + Math.Abs(calibration_offset_y));
-			int by = image_height - 4 - (int)(vertical_compression + Math.Abs(calibration_offset_y));
-			if (ty < 4) ty = 4;
-			if (by > image_height - 4) by = image_height - 4;
+			int ty = 5 + (int)(vertical_compression + Math.Abs(calibration_offset_y));
+			int by = image_height - 5 - (int)(vertical_compression + Math.Abs(calibration_offset_y));
+			if (ty < 5) ty = 5;
+			if (by > image_height - 5) by = image_height - 5;
 			for (int y = ty; y < by; y += vertical_compression)
 			{				
 				left_row_features.Clear();
@@ -506,9 +511,6 @@ namespace surveyor.vision
 	
 					if (right_row_features.Count > 0)
 					{
-                        NonMaximalSupression(left_row_features, 20);
-                        NonMaximalSupression(right_row_features, 20);
-
 						// match left and right features
 		                MatchFeatures(
 		                    left_row_features, 

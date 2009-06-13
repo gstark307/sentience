@@ -29,6 +29,7 @@ namespace surveyor.vision
         public float x, y;
         public float disparity;
 		public byte[] colour;
+		public float probability;
         
         public StereoFeature(float x, float y, float disparity)
         {
