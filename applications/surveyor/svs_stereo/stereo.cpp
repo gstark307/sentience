@@ -304,7 +304,7 @@ int stereo_match(
         	/* invert bits of the descriptor for anti-correlation matching */
         	n = descL;
       	    descLanti = 0;
-       	    for (bit = 0; bit < 32; bit++) {
+       	    for (bit = 0; bit < STEREO_DESCRIPTOR_PIXELS; bit++) {
        	        /* Shift result vector to higher significance. */
        	    	descLanti <<= 1;
        	        /* Get least significant input bit. */
