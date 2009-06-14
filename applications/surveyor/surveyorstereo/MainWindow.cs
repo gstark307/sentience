@@ -36,7 +36,12 @@ public partial class MainWindow: Gtk.Window
     int fps = 10;
     string temporary_files_path = "";
     string recorded_images_path = "";
-         
+
+	string manual_camera_alignment_calibration_program = "calibtweaks.exe";
+    bool disable_rectification = false;
+    bool disable_radial_correction = true;
+	bool reverse_colours = true;
+	
     public SurveyorVisionStereoGtk stereo_camera;
     
     public MainWindow (): base (Gtk.WindowType.Toplevel)
@@ -226,4 +231,167 @@ public partial class MainWindow: Gtk.Window
         SaveCalibrationFile();
     }
 
+    private void LoadManualCameraAlignmentCalibrationParameters(string filename)
+    {
+        StreamReader oRead = null;
+        string str;
+        bool filefound = true;
+
+        try
+        {
+            oRead = File.OpenText(filename);
+        }
+        catch
+        {
+            filefound = false;
+        }
+
+        if (filefound)
+        {
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                string left_image_filename = str;
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                string right_image_filename = str;
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.offset_x = Convert.ToSingle(str);
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.offset_y = Convert.ToSingle(str);
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.scale = Convert.ToSingle(str);
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                stereo_camera.rotation = Convert.ToSingle(str) * (float)Math.PI / 180.0f;
+            }
+
+            str = oRead.ReadLine();
+            if (str != null)
+            {
+                float delay_mS = Convert.ToInt32(str);
+            }
+
+            oRead.Close();
+        }
+    }
+	
+	private void SaveImages(
+	    string left_image_filename,
+	    string right_image_filename)
+	{
+		byte[] left = new byte[image_width * image_height * 3];
+		byte[] right = new byte[image_width * image_height * 3];
+		GtkBitmap.getBitmap(leftimage, left);
+		GtkBitmap.getBitmap(rightimage, right);
+		Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+		Bitmap right_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+		BitmapArrayConversions.updatebitmap_unsafe(left, left_bmp);
+		BitmapArrayConversions.updatebitmap_unsafe(right, right_bmp);
+		if (left_image_filename.ToLower().EndsWith("png"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Png);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Png);
+		}
+		if (left_image_filename.ToLower().EndsWith("bmp"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+		}
+		if (left_image_filename.ToLower().EndsWith("gif"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Gif);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Gif);
+		}
+		if (left_image_filename.ToLower().EndsWith("jpg"))
+		{
+		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+		}
+	}
+	
+	private void RunTweaks()
+	{
+        if ((leftimage != null) && (rightimage != null))
+        {
+			
+            string left_filename = System.Environment.CurrentDirectory + "\\calib0.bmp";
+            string right_filename = System.Environment.CurrentDirectory + "\\calib1.bmp";    
+            SaveImages(left_filename, right_filename);
+			
+            if ((File.Exists(left_filename)) &&
+                (File.Exists(right_filename)))
+            {
+                System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                proc.EnableRaisingEvents = false;
+                proc.StartInfo.FileName = "mono " + manual_camera_alignment_calibration_program;
+                proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
+                proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
+                proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
+                proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
+                proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
+                proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
+				if (reverse_colours) proc.StartInfo.Arguments += " -reverse";
+                proc.Start();
+                proc.WaitForExit();
+
+                string params_filename = "manualoffsets_params.txt";
+                LoadManualCameraAlignmentCalibrationParameters(params_filename);
+                stereo_camera.Save(calibration_filename);
+            }
+            
+        }
+	}
+	
+	private void SaveAnimatedGif()
+	{
+        if ((leftimage != null) && (rightimage != null))
+        {
+			SaveImages("anim0.bmp", "anim1.bmp");
+			
+            if ((File.Exists("anim0.bmp")) &&
+                (File.Exists("anim1.bmp")))
+            {
+                //List<string> images = new List<string>();
+                //images.Add("anim0.gif");
+                //images.Add("anim1.gif");
+
+                GifCreator.CreateFromStereoPair("anim0.bmp", "anim1.bmp", "anim.gif", 1000, stereo_camera.offset_x, stereo_camera.offset_y, stereo_camera.scale, stereo_camera.rotation * 180 / (float)Math.PI, reverse_colours);
+                //File.Delete("anim0.gif");
+                //File.Delete("anim1.gif");
+                //MessageBox.Show("Animated gif created");
+            }
+        }		
+	}	
+	protected virtual void OnCmdTweaksClicked (object sender, System.EventArgs e)
+	{
+	    RunTweaks();
+    }
+		protected virtual void OnCmdAnimatedGifClicked (object sender, System.EventArgs e)
+	{
+	    SaveAnimatedGif();
+	}
+
+
+
+	
+	
 }
