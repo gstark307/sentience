@@ -12,7 +12,7 @@
 #define SVS_MAX_IMAGE_WIDTH      1024
 #define SVS_MAX_IMAGE_HEIGHT     1024
 #define SVS_VERTICAL_SAMPLING    8
-#define SVS_DESCRIPTOR_PIXELS    28
+#define SVS_DESCRIPTOR_PIXELS    30
 
 #define pixindex(xx, yy)  ((yy * imgWidth + xx) * 3)
 //#define pixindex(xx, yy)  ((yy * imgWidth + xx) * 2) & 0xFFFFFFFC  // always a multiple of 4

@@ -135,14 +135,12 @@ extern unsigned int row_peaks[SVS_MAX_IMAGE_WIDTH];
 extern unsigned int svs_matches[SVS_MAX_FEATURES*4];
 
 /* offsets of pixels to be compared within the patch region
- * arranged into a bresenham ring structure */
+ * arranged into a rectangular structure */
 const int pixel_offsets[] = {
-	-2,-2,  -2,-3,  -1,-3,   0,-3,   1,-3,   2,-3,   2,-2,
-	 3,-2,   3,-1,   3, 0,   3, 1,   3, 2,   2, 2,
-	 2, 3,   1, 3,   0, 3,  -1, 3,  -2, 3,  -2, 2,
-	-3, 2,  -3, 1,  -3, 0,  -3,-1,  -3,-2,
-	 0,-2,   2, 0,   0,-2,  -2, 0
+    -14,-2,  -12,-2, -10,-2,  -8,-2,  -6,-2,  -4,-2,  -2,-2,  0,-2,  2,-2,  4,-2,  6,-2,  8,-2,  10,-2,  12,-2,  14,-2,
+    -14, 0,  -12, 0, -10, 0,  -8, 0,  -6, 0,  -4, 0,  -2, 0,  0, 0,  2, 0,  4, 0,  6, 0,  8, 0,  10, 0,  12, 0,  14, 0
 };
+
 
 /* lookup table used for counting the number of set bits */
 const unsigned char BitsSetTable256[] =
@@ -193,7 +191,7 @@ int svs_update_sums(
 
     /* compute peaks */
     int p0, p1;
-    for (x = 4; x < (int)imgWidth-5; x++) {
+    for (x = 4; x < (int)imgWidth-4; x++) {
 
     	/* edge using 2 pixel radius */
     	p0 = (row_sum[x] - row_sum[x - 2]) -
@@ -222,15 +220,15 @@ void svs_non_max(
 
     /* average response */
     unsigned int av_peaks = 0;
-    for (x = 4; x < (int)imgWidth - 5; x++) {
+    for (x = 4; x < (int)imgWidth - 4; x++) {
       	av_peaks += row_peaks[x];
     }
-    av_peaks /= (imgWidth - 9);
+    av_peaks /= (imgWidth - 8);
 
     /* adjust the threshold */
     av_peaks = av_peaks * min_response / 100;
 
-	for (x = 0; x < (int)imgWidth - inhibition_radius; x++) {
+	for (x = 4; x < (int)imgWidth - inhibition_radius; x++) {
 
 		if (row_peaks[x] < av_peaks) row_peaks[x] = 0;
 		v = row_peaks[x];
@@ -260,9 +258,6 @@ int svs_compute_descriptor(
 	unsigned char bit_count = 0;
 	int pixel_offset_idx, ix, bit;
 	int mean = 0;
-	unsigned int red = 0;
-	unsigned int green = 0;
-	unsigned int blue = 0;
 	unsigned int desc = 0;
 
 	/* find the mean luminance for the patch */
@@ -272,14 +267,8 @@ int svs_compute_descriptor(
 		mean += rectified_frame_buf[ix + 2] +
 			    rectified_frame_buf[ix + 1] +
 				rectified_frame_buf[ix];
-		red += rectified_frame_buf[ix + 2];
-		green += rectified_frame_buf[ix + 1];
-		blue += rectified_frame_buf[ix];
 	}
 	mean /= SVS_DESCRIPTOR_PIXELS;
-	red /= SVS_DESCRIPTOR_PIXELS;
-	green /= SVS_DESCRIPTOR_PIXELS;
-	blue /= SVS_DESCRIPTOR_PIXELS;
 
 	/* binarise */
 	bit = 1;
@@ -297,15 +286,6 @@ int svs_compute_descriptor(
 	if ((bit_count > 3) &&
 		(bit_count < SVS_DESCRIPTOR_PIXELS-3)) {
 		mean /= 3;
-
-		/* if the patch is mosly red */
-		if (red*2 > green + blue) desc |= bit;
-		bit *= 2;
-		/* if the patch is mosly green */
-		if (green*2 > red + blue) desc |= bit;
-		bit *= 2;
-		/* if the patch is mosly blue */
-		if (blue*2 > red + green) desc |= bit;
 
 		/* adjust the patch luminance relative to the mean
 		 * luminance for the entire row.  This helps to ensure
@@ -334,9 +314,12 @@ int svs_get_features(
     int calibration_offset_y) {
 
 	unsigned short int no_of_feats;
-    int x, y, row_mean;
+    int x, y, row_mean, start_x;
     int no_of_features = 0;
     int row_idx = 0;
+
+    start_x = imgWidth - 15;
+    if ((int)imgWidth - inhibition_radius < start_x) start_x = (int)imgWidth - inhibition_radius;
 
     for (y = 4 + calibration_offset_y; y < (int)imgHeight - 4; y += SVS_VERTICAL_SAMPLING) {
 
@@ -349,7 +332,7 @@ int svs_get_features(
             svs_non_max(inhibition_radius, minimum_response);
 
             /* store the features */
-            for (x = imgWidth - 1 - inhibition_radius; x > 0; x--) {
+            for (x = start_x; x > 15; x--) {
                 if (row_peaks[x] > 0) {
 
             	    if (svs_compute_descriptor(x, y, rectified_frame_buf, no_of_features, row_mean) == 0) {
@@ -389,7 +372,7 @@ int svs_match(
 	int no_of_possible_matches = 0, matches = 0;
 
 	unsigned int meandescL, meandescR;
-	short meandesc[SVS_DESCRIPTOR_PIXELS+3];
+	short meandesc[SVS_DESCRIPTOR_PIXELS];
 
 	/* convert max disparity from percent to pixels */
 	max_disp = max_disparity_percent * imgWidth / 100;
@@ -404,11 +387,11 @@ int svs_match(
         /* compute mean descriptor for the left row
          * this will be used to create eigendescriptors */
         meandescL = 0;
-        memset(meandesc, 0, (SVS_DESCRIPTOR_PIXELS+3)* sizeof(short));
+        memset(meandesc, 0, (SVS_DESCRIPTOR_PIXELS)* sizeof(short));
         for (L = 0; L < no_of_feats_left; L++) {
         	descL = svs_data.descriptor[fL + L];
         	n = 1;
-        	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS+3; bit++, n *= 2) {
+        	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS; bit++, n *= 2) {
         		if (descL & n)
         			meandesc[bit]++;
         		else
@@ -416,7 +399,7 @@ int svs_match(
         	}
         }
         n = 1;
-    	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS+3; bit++, n *= 2) {
+    	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS; bit++, n *= 2) {
     		if (meandesc[bit] >= 0)
     			meandescL |= n;
     	}
@@ -424,11 +407,11 @@ int svs_match(
         /* compute mean descriptor for the right row
          * this will be used to create eigendescriptors */
         meandescR = 0;
-        memset(meandesc, 0, (SVS_DESCRIPTOR_PIXELS+3)* sizeof(short));
+        memset(meandesc, 0, (SVS_DESCRIPTOR_PIXELS)* sizeof(short));
         for (R = 0; R < no_of_feats_right; R++) {
         	descR = svs_data.descriptor[fR + R];
         	n = 1;
-        	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS+3; bit++, n *= 2) {
+        	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS; bit++, n *= 2) {
         		if (descR & n)
         			meandesc[bit]++;
         		else
@@ -436,7 +419,7 @@ int svs_match(
         	}
         }
         n = 1;
-    	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS+3; bit++, n *= 2) {
+    	for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS; bit++, n *= 2) {
     		if (meandesc[bit] > 0) meandescR |= n;
     	}
 
@@ -456,7 +439,7 @@ int svs_match(
         	/* invert bits of the descriptor for anti-correlation matching */
         	n = descL;
       	    descLanti = 0;
-       	    for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS+3; bit++) {
+       	    for (bit = 0; bit < SVS_DESCRIPTOR_PIXELS; bit++) {
        	        /* Shift result vector to higher significance. */
        	    	descLanti <<= 1;
        	        /* Get least significant input bit. */
@@ -480,7 +463,7 @@ int svs_match(
             	disp = xL - xR;
 
             	/* is the disparity within range? */
-            	if ((disp > 0) && (disp < max_disp)) {
+            	if ((disp >= 0) && (disp < max_disp)) {
 
                 	/* mean luminance for the right camera feature */
             	    meanR = svs_data_received.mean[fR + R];
@@ -516,8 +499,9 @@ int svs_match(
 
 						if (luma_diff < 0) luma_diff = -luma_diff;
 						int score =
+							10000 +
 							(max_disp * learnDisp) +
-							(((int)correlation + (int)(SVS_DESCRIPTOR_PIXELS+3 - anticorrelation)) * learnDesc) -
+							(((int)correlation + (int)(SVS_DESCRIPTOR_PIXELS - anticorrelation)) * learnDesc) -
 						    (luma_diff * learnLuma) -
 						    (disp * learnDisp);
 						if (score < 0) score = 0;
@@ -560,7 +544,7 @@ int svs_match(
                 	/* possible disparity */
                 	disp = xL - xR;
 
-                	if (disp > 0) {
+                	if (disp >= 0) {
                         /* add the best result to the list of possible matches */
                 	    svs_matches[no_of_possible_matches*4] = best_prob;
                 	    svs_matches[no_of_possible_matches*4 + 1] = (unsigned int)xL;

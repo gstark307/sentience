@@ -72,13 +72,10 @@ void draw_descriptor(
 	unsigned int desc;
 
 	/* offsets of pixels to be compared within the patch region
-	 * arranged into a bresenham ring structure */
+	 * arranged into a rectangular structure */
 	const int pixel_offsets[] = {
-		-2,-2,  -2,-3,  -1,-3,   0,-3,   1,-3,   2,-3,   2,-2,
-		 3,-2,   3,-1,   3, 0,   3, 1,   3, 2,   2, 2,
-		 2, 3,   1, 3,   0, 3,  -1, 3,  -2, 3,  -2, 2,
-		-3, 2,  -3, 1,  -3, 0,  -3,-1,  -3,-2,
-		 0,-2,   2, 0,   0,-2,  -2, 0
+	    -14,-2,  -12,-2, -10,-2,  -8,-2,  -6,-2,  -4,-2,  -2,-2,  0,-2,  2,-2,  4,-2,  6,-2,  8,-2,  10,-2,  12,-2,  14,-2,
+	    -14, 0,  -12, 0, -10, 0,  -8, 0,  -6, 0,  -4, 0,  -2, 0,  0, 0,  2, 0,  4, 0,  6, 0,  8, 0,  10, 0,  12, 0,  14, 0
 	};
 
 	desc = svs_data.descriptor[descriptor_index];
@@ -230,7 +227,7 @@ void LearnMatchingWeights(
 
 	int ideal_no_of_matches = 200;
 	int max_disparity_percent = 20;
-	int descriptor_match_threshold = SVS_DESCRIPTOR_PIXELS * 10 / 100;
+	int descriptor_match_threshold = 0;//SVS_DESCRIPTOR_PIXELS * 10 / 100;
 
 	int learnDesc_min = 1;
 	int learnDesc_max = 20;
@@ -291,10 +288,9 @@ int main() {
 	printf("frame size %d bytes\n", sizeof(svs_data));
 
 	bool show_descriptors = false;
-	std::string left_image_filename = "left.bmp";
-	//std::string left_image_filename = "test2.bmp";
+	std::string left_image_filename = "left4.bmp";
+	std::string right_image_filename = "right4.bmp";
 	std::string left_features_filename = "left_feats.ppm";
-	std::string right_image_filename = "right.bmp";
 	std::string right_features_filename = "right_feats.ppm";
 	std::string matched_features_filename = "matches.ppm";
 	std::string matched_features_two_images_filename = "matches_two.ppm";
@@ -305,15 +301,15 @@ int main() {
 	int calibration_offset_x = 5;
 	int calibration_offset_y = 6;
     int inhibition_radius = 16;
-    unsigned int minimum_response = 180;
+    unsigned int minimum_response = 150;
 
     /* matching params */
 	int ideal_no_of_matches = 200;
 	int max_disparity_percent = 20;
-	int descriptor_match_threshold = SVS_DESCRIPTOR_PIXELS * 10 / 100;
+	int descriptor_match_threshold = 0; //SVS_DESCRIPTOR_PIXELS * 0 / 100;
 	int learnDesc = 13;
-	int learnLuma = 1;
-	int learnDisp = 4;
+	int learnLuma = 4;
+	int learnDisp = 7;
 
 	if ((fileio::FileExists(left_image_filename)) &&
 		(fileio::FileExists(right_image_filename))) {
@@ -391,7 +387,7 @@ int main() {
 		delete bmp_left;
 		delete bmp_right;
 
-		LearnMatchingWeights(calibration_offset_x, calibration_offset_y, 150);
+		//LearnMatchingWeights(calibration_offset_x, calibration_offset_y, 100);
 
 		int matches = svs_match(
 			ideal_no_of_matches,
