@@ -560,12 +560,14 @@ int svs_match(
                 	/* possible disparity */
                 	disp = xL - xR;
 
-                    /* add the best result to the list of possible matches */
-                	svs_matches[no_of_possible_matches*4] = best_prob;
-                	svs_matches[no_of_possible_matches*4 + 1] = (unsigned int)xL;
-                	svs_matches[no_of_possible_matches*4 + 2] = (unsigned int)y;
-                	svs_matches[no_of_possible_matches*4 + 3] = (unsigned int)disp;
-                	no_of_possible_matches++;
+                	if (disp > 0) {
+                        /* add the best result to the list of possible matches */
+                	    svs_matches[no_of_possible_matches*4] = best_prob;
+                	    svs_matches[no_of_possible_matches*4 + 1] = (unsigned int)xL;
+                	    svs_matches[no_of_possible_matches*4 + 2] = (unsigned int)y;
+                	    svs_matches[no_of_possible_matches*4 + 3] = (unsigned int)disp;
+                	    no_of_possible_matches++;
+                	}
                 }
             }
         }
@@ -588,7 +590,7 @@ int svs_match(
         	match_prob =  svs_matches[curr_idx];
         	winner = -1;
 
-        	printf("prob = %d\n", match_prob);
+        	//printf("prob = %d\n", match_prob);
 
         	search_idx = curr_idx + 4;
         	max = no_of_possible_matches * 4;

@@ -103,7 +103,6 @@ int main() {
 	printf("frame size %d bytes\n", sizeof(svs_data));
 
 	bool show_descriptors = false;
-	bool disparity_spots = false;
 	std::string left_image_filename = "left3.bmp";
 	//std::string left_image_filename = "test2.bmp";
 	std::string left_features_filename = "left_feats.ppm";
@@ -124,9 +123,9 @@ int main() {
 	int ideal_no_of_matches = 200;
 	int max_disparity_percent = 20;
 	int descriptor_match_threshold = SVS_DESCRIPTOR_PIXELS * 10 / 100;
-	int learnDesc = 5;
-	int learnLuma = 2;
-	int learnDisp = 1;
+	int learnDesc = 10;
+	int learnLuma = 3;
+	int learnDisp = 2;
 
 	if ((fileio::FileExists(left_image_filename)) &&
 		(fileio::FileExists(right_image_filename))) {
@@ -218,11 +217,11 @@ int main() {
 			int x = svs_matches[i*4 + 1];
 			int y = svs_matches[i*4 + 2];
 			int disp = svs_matches[i*4 + 3];
-			drawing::drawSpot(img_matches, imgWidth, imgHeight, x, y, disp/8, 0, 255, 0);
+			drawing::drawBlendedSpot(img_matches, imgWidth, imgHeight, x, y, disp/8, 0, 255, 0);
 		}
 
 		/* show disparity as lines */
-		for (int i = 0; i < matches; i+= matches/30) {
+		for (int i = 0; i < matches; i+= matches/20) {
 			int x = svs_matches[i*4 + 1];
 			int r=0,g=0,b=0;
 			switch((x/4) % 6) {
@@ -265,8 +264,8 @@ int main() {
 			}
 			int y = svs_matches[i*4 + 2];
 			int disp = svs_matches[i*4 + 3];
-			int x2 = x - disp;
-			int y2 = imgHeight + y - calibration_offset_y;
+			int x2 = (x - disp) - (calibration_offset_x*2);
+			int y2 = imgHeight + y - (calibration_offset_y*2);
 			drawing::drawLine(img_matches_two_images, imgWidth, imgHeight*2, x,y, x2, y2, r,g,b,0,false);
 			drawing::drawCircle(img_matches_two_images, imgWidth, imgHeight*2, x,y, 2, r,g,b, 0);
 			drawing::drawCircle(img_matches_two_images, imgWidth, imgHeight*2, x2,y2, 2, r,g,b, 0);

@@ -255,6 +255,54 @@ void drawing::drawSpot(
 }
 
 /*!
+ * \brief draws a spot blended with the background
+ * \param img
+ * \param img_width
+ * \param img_height
+ * \param x
+ * \param y
+ * \param radius
+ * \param r
+ * \param g
+ * \param b
+ */
+void drawing::drawBlendedSpot(
+    unsigned char* img,
+    int img_width,
+    int img_height,
+    int x,
+    int y,
+    int radius,
+    int r,
+    int g,
+    int b)
+{
+	for (int yy = y - radius; yy <= y + radius; yy++)
+	{
+		if ((yy > -1) && (yy < img_height))
+		{
+			int dy = yy - y;
+		    for (int xx = x - radius; xx <= x + radius; xx++)
+		    {
+		    	if ((xx > -1) && (xx < img_width))
+		    	{
+		    		int dx = xx - x;
+		    		int dist = (int)sqrt(dx*dx + dy*dy);
+		    		if (dist <= radius)
+		    		{
+		    			int n = ((yy * img_width) + xx) * 3;
+		    			img[n] = (unsigned int)((img[n] + b) / 2);
+		    			img[n+1] = (unsigned int)((img[n + 1] + g) / 2);
+		    			img[n+2] = (unsigned int)((img[n + 2] + r) / 2);
+		    		}
+		    	}
+		    }
+		}
+	}
+}
+
+
+/*!
  * \brief draw a grid within the given image
  * \param img image to be returned
  * \param img_width width of the image
