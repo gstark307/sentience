@@ -97,16 +97,204 @@ void draw_descriptor(
 	}
 }
 
+/*---------------------------------------------------------------------*/
+/* learning matching weights */
+/*---------------------------------------------------------------------*/
+
+
+/*!
+ * \brief does the line intersect with the given line?
+ * \param x0 first line top x
+ * \param y0 first line top y
+ * \param x1 first line bottom x
+ * \param y1 first line bottom y
+ * \param x2 second line top x
+ * \param y2 second line top y
+ * \param x3 second line bottom x
+ * \param y3 second line bottom y
+ * \param xi intersection x coordinate
+ * \param yi intersection y coordinate
+ * \return true if the lines intersect
+ */
+bool intersection(
+    float x0,
+    float y0,
+    float x1,
+    float y1,
+    float x2,
+    float y2,
+    float x3,
+    float y3,
+    float& xi,
+    float& yi)
+{
+    float a1, b1, c1,         //constants of linear equations
+          a2, b2, c2,
+          det_inv,            //the inverse of the determinant of the coefficient
+          m1, m2, dm;         //the gradients of each line
+    bool insideLine = false;  //is the intersection along the lines given, or outside them
+    float tx, ty, bx, by;
+
+    //compute gradients, note the cludge for infinity, however, this will
+    //be close enough
+    if ((x1 - x0) != 0)
+        m1 = (y1 - y0) / (x1 - x0);
+    else
+        m1 = (float)1e+10;   //close, but no cigar
+
+    if ((x3 - x2) != 0)
+        m2 = (y3 - y2) / (x3 - x2);
+    else
+        m2 = (float)1e+10;   //close, but no cigar
+
+    dm = (float)ABS(m1 - m2);
+    if (dm > 0.000001f)
+    {
+        //compute constants
+        a1 = m1;
+        a2 = m2;
+
+        b1 = -1;
+        b2 = -1;
+
+        c1 = (y0 - m1 * x0);
+        c2 = (y2 - m2 * x2);
+
+        //compute the inverse of the determinate
+        det_inv = 1 / (a1 * b2 - a2 * b1);
+
+        //use Kramers rule to compute xi and yi
+        xi = ((b1 * c2 - b2 * c1) * det_inv);
+        yi = ((a2 * c1 - a1 * c2) * det_inv);
+
+        //is the intersection inside the line or outside it?
+        if (x0 < x1) { tx = x0; bx = x1; } else { tx = x1; bx = x0; }
+        if (y0 < y1) { ty = y0; by = y1; } else { ty = y1; by = y0; }
+        if ((xi >= tx) && (xi <= bx) && (yi >= ty) && (yi <= by))
+        {
+            if (x2 < x3) { tx = x2; bx = x3; } else { tx = x3; bx = x2; }
+            if (y2 < y3) { ty = y2; by = y3; } else { ty = y3; by = y2; }
+            if ((xi >= tx) && (xi <= bx) && (yi >= ty) && (yi <= by))
+            {
+                insideLine = true;
+            }
+        }
+    }
+    else
+    {
+        //parallel (or parallelish) lines, return some indicative value
+        xi = 9999;
+    }
+
+    return (insideLine);
+}
+
+/* returns an estimate of stereo matching quality by
+ * counting the number of intersections */
+float EstimateMatchingQuality(
+	int calibration_offset_x,
+	int calibration_offset_y,
+	int no_of_matches) {
+
+	int intersections = 0;
+
+	for (int i = 0; i < no_of_matches-1; i++) {
+		int x0 = svs_matches[i*4 + 1];
+		int y0 = svs_matches[i*4 + 2];
+		int disp = svs_matches[i*4 + 3];
+		int x1 = (x0 - disp) - (calibration_offset_x*2);
+		int y1 = imgHeight + y0 - (calibration_offset_y*2);
+
+		for (int j = i + 1; j < no_of_matches-1; j++) {
+			int x2 = svs_matches[j*4 + 1];
+			int y2 = svs_matches[j*4 + 2];
+			disp = svs_matches[j*4 + 3];
+			int x3 = (x2 - disp) - (calibration_offset_x*2);
+			int y3 = imgHeight + y2 - (calibration_offset_y*2);
+
+			float ix = 0;
+			float iy = 0;
+			if (intersection(x0,y0,x1,y1,x2,y2,x3,y3,ix,iy)) {
+				intersections++;
+			}
+		}
+	}
+
+	return(1.0f / (1.0f + ((float)intersections/(float)no_of_matches)));
+}
+
+void LearnMatchingWeights(
+	int calibration_offset_x,
+	int calibration_offset_y,
+	int minimum_matches) {
+
+	int ideal_no_of_matches = 200;
+	int max_disparity_percent = 20;
+	int descriptor_match_threshold = SVS_DESCRIPTOR_PIXELS * 10 / 100;
+
+	int learnDesc_min = 1;
+	int learnDesc_max = 20;
+	int learnLuma_min = 1;
+	int learnLuma_max = 10;
+	int learnDisp_min = 1;
+	int learnDisp_max = 10;
+
+	float max_quality = 0;
+	int learnDesc_best = 1;
+	int learnLuma_best = 1;
+	int learnDisp_best = 1;
+
+	for (int learnDesc = learnDesc_min; learnDesc < learnDesc_max; learnDesc++) {
+
+		for (int learnLuma = learnLuma_min; learnLuma < learnLuma_max; learnLuma++) {
+
+			for (int learnDisp = learnDisp_min; learnDisp < learnDisp_max; learnDisp++) {
+
+				int matches = svs_match(
+					ideal_no_of_matches,
+					max_disparity_percent,
+					descriptor_match_threshold,
+					learnDesc,
+					learnLuma,
+					learnDisp);
+
+				if (matches > minimum_matches) {
+					float quality = EstimateMatchingQuality(
+						calibration_offset_x,
+						calibration_offset_y,
+						matches);
+
+					if (quality > max_quality) {
+						max_quality = quality;
+						learnDesc_best = learnDesc;
+						learnLuma_best = learnLuma;
+						learnDisp_best = learnDisp;
+					}
+				}
+			}
+		}
+	}
+
+	printf("-- Result --\n");
+	printf("learnDesc: %d\n", learnDesc_best);
+	printf("learnLuma: %d\n", learnLuma_best);
+	printf("learnDisp: %d\n", learnDisp_best);
+}
+
+
+/*---------------------------------------------------------------------*/
+/* main */
+/*---------------------------------------------------------------------*/
 
 int main() {
 
 	printf("frame size %d bytes\n", sizeof(svs_data));
 
 	bool show_descriptors = false;
-	std::string left_image_filename = "left3.bmp";
+	std::string left_image_filename = "left.bmp";
 	//std::string left_image_filename = "test2.bmp";
 	std::string left_features_filename = "left_feats.ppm";
-	std::string right_image_filename = "right3.bmp";
+	std::string right_image_filename = "right.bmp";
 	std::string right_features_filename = "right_feats.ppm";
 	std::string matched_features_filename = "matches.ppm";
 	std::string matched_features_two_images_filename = "matches_two.ppm";
@@ -123,9 +311,9 @@ int main() {
 	int ideal_no_of_matches = 200;
 	int max_disparity_percent = 20;
 	int descriptor_match_threshold = SVS_DESCRIPTOR_PIXELS * 10 / 100;
-	int learnDesc = 10;
-	int learnLuma = 3;
-	int learnDisp = 2;
+	int learnDesc = 13;
+	int learnLuma = 1;
+	int learnDisp = 4;
 
 	if ((fileio::FileExists(left_image_filename)) &&
 		(fileio::FileExists(right_image_filename))) {
@@ -202,6 +390,8 @@ int main() {
 		bmp_right->SavePPM(right_features_filename.c_str());
 		delete bmp_left;
 		delete bmp_right;
+
+		LearnMatchingWeights(calibration_offset_x, calibration_offset_y, 150);
 
 		int matches = svs_match(
 			ideal_no_of_matches,
