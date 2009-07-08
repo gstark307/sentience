@@ -85,6 +85,7 @@ namespace surveyor.vision
                         {
                             state.synchronisation_pulse = false;
                             //state.RequestResolution640x480();
+						    
                             state.RequestFrame();
                             //Console.WriteLine("grab " + DateTime.Now.ToString());
                         }

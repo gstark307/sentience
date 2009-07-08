@@ -527,6 +527,72 @@ namespace surveyor.vision
             return (nodeStereoCamera);
         }
 
+		/// <summary>
+		/// saves camera calibration parameters to a binary file suitable
+		/// for uploading to the Surveyor SVS
+		/// </summary>
+		/// <param name="filename_left">filename for left camera params</param>
+		/// <param name="filename_right">filename for right camera params</param>
+		/// <param name="lens_distortion_curve">polynomials</param>
+		/// <param name="centre_of_distortion_x">centre of distortion</param>
+		/// <param name="centre_of_distortion_y">centre of distortion</param>
+		/// <param name="rotation">rotation in radians</param>
+		/// <param name="scale">scale</param>
+		/// <param name="offset_x">offset in pixels</param>
+		/// <param name="offset_y">offset in pixels</param>
+		public static void SaveCameraParameters(
+		    string filename_left,
+		    string filename_right,
+            polynomial[] lens_distortion_curve,
+            float[] centre_of_distortion_x, 
+		    float[] centre_of_distortion_y,
+            float rotation, 
+            float scale,
+            float offset_x, float offset_y)		                                        
+		{
+			FileStream fs;
+			BinaryWriter bw;
+			
+			for (int cam = 0; cam < 2; cam++)
+			{
+				if (cam == 0)
+                    fs = File.Open(filename_left, FileMode.Create);
+				else
+					fs = File.Open(filename_right, FileMode.Create);
+
+                bw = new BinaryWriter(fs);
+
+				if (cam == 0)
+				{
+                    bw.Write((int)0);
+					bw.Write((int)0);
+				}
+				else
+				{
+					bw.Write(Convert.ToInt32(offset_x));
+					bw.Write(Convert.ToInt32(offset_y));
+				}
+				bw.Write(Convert.ToInt32(centre_of_distortion_x[cam]));
+				bw.Write(Convert.ToInt32(centre_of_distortion_y[cam]));
+				if ((cam == 0) || (scale == 1))
+				{
+                    bw.Write((int)1);
+					bw.Write((int)1);
+				}
+				else
+				{
+					bw.Write(Convert.ToInt32(scale*6000));
+					bw.Write((int)6000);
+				}
+				for (int i = 1; i < 4; i++)
+				{
+					bw.Write(Convert.ToInt32(Math.Round(lens_distortion_curve[cam].Coeff(i)*10000000)));
+				}
+
+                bw.Close();
+                fs.Close();
+			}
+		}
 
         /// <summary>
         /// return an xml element containing camera calibration parameters

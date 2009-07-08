@@ -324,6 +324,7 @@ namespace surveyor.vision
         {
             int edge_detection_radius = image_width * 12 / 320;
 			
+			/*
 			UpdateEdges(
 		        left_bmp_colour, right_bmp_colour,
 			    left_bmp, right_bmp,
@@ -332,6 +333,7 @@ namespace surveyor.vision
                 calibration_offset_y,
 			    edge_detection_radius,
 			    minimum_matching_probability);
+			    */
 		}
 		
         /// <summary>

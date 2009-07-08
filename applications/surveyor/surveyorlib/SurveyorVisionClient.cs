@@ -52,12 +52,18 @@ namespace surveyor.vision
 		// are we waiting for an image to be returned ?
 		public bool waiting_for_reply;
 
-        public string image_request_command ="I";
+        public string image_request_command = "I";
+		public string processing_type_command = "g";
+		public string processing_type_stereo_command = "5";
+		public string processing_type_normal_command = "9";
         public string request_320_240 = "b";
         public string request_640_480 = "c";
         
         public int image_width, image_height;
         public Bitmap current_frame;
+		
+		public bool Embedded;
+		public int cam_index;  // 0 = left 1 = right
 		
         #region "platform specific code"		
 		
@@ -161,10 +167,14 @@ namespace surveyor.vision
 					
 					Running = true;
 				}
+				else
+				{
+					Console.WriteLine("Not connected");
+				}
 			}
 			catch(SocketException se)
 			{
-				Console.WriteLine("\nConnection failed, is the SRV1 running?\n" + se.Message);
+				Console.WriteLine("\nConnection failed, is the SVS running?\n" + se.Message);
 			}		
 		}			
 
@@ -172,16 +182,18 @@ namespace surveyor.vision
         /// send a message to the server
         /// </summary>
         /// <param name="msg"></param>
-        private void Send(string msg)
+        /// <param name="wait_for_reply">whether to wait for a reply</param>
+        private void Send(
+		    string msg, 
+		    bool wait_for_reply)
 		{            
 			try
 			{
-				// New code to send strings
 				NetworkStream networkStream = new NetworkStream(m_clientSocket);
 				System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(networkStream);
 				streamWriter.WriteLine(msg);
 				streamWriter.Flush();
-                waiting_for_reply = true;
+                waiting_for_reply = wait_for_reply;
 			}
 			catch(SocketException se)
 			{
@@ -429,21 +441,42 @@ namespace surveyor.vision
             grabber_thread.Start();        
         }
 
+		/// <summary>
+		/// enables onboard stereo correspondence on the SVS 
+		/// </summary>
+		public void EnableEmbeddedStereo()
+		{
+			Send(processing_type_command + processing_type_stereo_command, false);
+		}
+
+		/// <summary>
+		/// disables onboard stereo correspondence on the SVS 
+		/// </summary>
+		public void DisableEmbeddedStereo()
+		{
+			Send(processing_type_command + processing_type_normal_command, false);
+		}
+		
         public void RequestFrame()
         {            
-            Send(image_request_command);
+			if (!((Embedded) && (cam_index == 1)))
+			{
+                Send(image_request_command, true);
+			}
+			else
+			{
+				frame_arrived = true;
+			}
         }
 
         public void RequestResolution640x480()
         {            
-            Send(request_640_480);
-            waiting_for_reply = false;
+            Send(request_640_480, false);
         }
 
         public void RequestResolution320x256()
         {            
-            Send(request_320_240);
-            waiting_for_reply = false;
+            Send(request_320_240, false);
         }
         
         /// <summary>

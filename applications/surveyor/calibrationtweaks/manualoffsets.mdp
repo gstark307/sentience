@@ -3,7 +3,7 @@
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
       <Output directory="../../../../robotbridgeware/bin/Debug" assemblyKeyFile="/home/motters/develop/sentience/applications/surveyor/calibrationtweaks/." assembly="calibtweaks" />
       <Build debugmode="True" target="Exe" />
-      <Execution runwithwarnings="True" commandlineparameters="-left /home/motters/develop/sentience/applications/surveyor/svs_stereo/left4.bmp -right /home/motters/develop/sentience/applications/surveyor/svs_stereo/right4.bmp" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
+      <Execution runwithwarnings="True" commandlineparameters="-left /home/motters/Desktop/testimages/left.jpg -right /home/motters/Desktop/testimages/right.jpg" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
       <EnvironmentVariables />
       <CodeGeneration compiler="Mcs" warninglevel="3" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>

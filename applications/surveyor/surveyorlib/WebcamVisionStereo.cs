@@ -31,7 +31,7 @@ namespace surveyor.vision
     {
         protected string[] camera_device;
         public int skip_frames = 2;
-        protected string PauseFile;        
+        protected string PauseFile;   		
                 
         #region "constructors"
         
@@ -110,6 +110,8 @@ namespace surveyor.vision
             }
         }
 
+		public string capture_utility = "v4l2stereo";
+		
         protected void GrabLinux()
         {
             string filename = "capture";
@@ -149,15 +151,22 @@ namespace surveyor.vision
 
 			// fswebcam -q -d /dev/video1,/dev/video2 -r 320x240 --no-banner -S 2 -s brightness=50% --save capture12_.jpg
 			
+			if (capture_utility == "v4l2stereo")
+			{
+			    command_str = "v4l2stereo --dev0 " + camera_device[0] + " ";
+			    command_str += "--dev1 " + camera_device[1] + " ";
+			    command_str += "--save " + filename + "_";
+			}
+			
             Console.WriteLine("");
             Console.WriteLine("");
             Console.WriteLine(command_str);
             Console.WriteLine("");
             Console.WriteLine("");
 
-            string left_image_filename = filename + "_0.jpg";
+			string left_image_filename = filename + "_0.jpg";
             string right_image_filename = filename + "_1.jpg";
-
+			
             // delete any existing images
             for (int cam = 0; cam < 2; cam++)
             {

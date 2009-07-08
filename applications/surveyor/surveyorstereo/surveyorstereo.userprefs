@@ -1,20 +1,20 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/correspondence/StereoVisionDense.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
     <Files>
-      <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="210" Column="1" />
-      <File FileName="MainWindow.cs" Line="54" Column="22" />
-      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="36" Column="9" />
-      <File FileName="../surveyorlib/correspondence/StereoVisionDense.cs" Line="687" Column="1" />
+      <File FileName="MainWindow.cs" Line="397" Column="43" />
+      <File FileName="../surveyorlib/SurveyorVisionThreadGrabFrameMulti.cs" Line="132" Column="18" />
+      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="62" Column="38" />
+      <File FileName="../surveyorlib/SurveyorVisionStereoWin.cs" Line="1" Column="1" />
+      <File FileName="../surveyorlib/SurveyorvisionThreadGrabFrame.cs" Line="88" Column="11" />
+      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="460" Column="25" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorlib" expanded="True">
-            <Node name="correspondence" expanded="True">
-              <Node name="StereoVisionDense.cs" selected="True" />
-            </Node>
+          <Node name="surveyorlib" expanded="True" />
+          <Node name="surveyorstereo" expanded="True">
+            <Node name="MainWindow.cs" selected="True" />
           </Node>
-          <Node name="surveyorstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

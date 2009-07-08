@@ -34,7 +34,7 @@ namespace calibrationtweaks
 		    bool reverse_colours)
         {
             InitializeComponent();
-
+			
             this.left_image_filename = left_image_filename;
             this.right_image_filename = right_image_filename;
             this.offset_x = offset_x;
@@ -43,11 +43,17 @@ namespace calibrationtweaks
             this.rotation_degrees = rotation_degrees;
 			this.reverse_colours = reverse_colours;
 
-            if (!parameters_exist) LoadPreviousParameters();
+            if (!parameters_exist)
+			{
+				LoadPreviousParameters();
+                if (left_image_filename != "") this.left_image_filename = left_image_filename;
+                if (right_image_filename != "") this.right_image_filename = right_image_filename;				
+			}
 
             if ((this.left_image_filename != null) &&
                 (this.left_image_filename != ""))
             {
+				Console.WriteLine(this.left_image_filename);
 				Bitmap bmp = (Bitmap)Bitmap.FromFile(this.left_image_filename);
 				if (reverse_colours)
 				{

@@ -9,7 +9,7 @@
     <widget-library name="../../surveyorlib/bin/Debug/surveyorlib.dll" />
     <widget-library name="../bin/Debug/surveyorstereo.exe" internal="true" />
   </import>
-  <widget class="Gtk.Window" id="MainWindow" design-size="699 300">
+  <widget class="Gtk.Window" id="MainWindow" design-size="817 300">
     <action-group name="New Action Group" />
     <action-group name="Default">
       <action id="FileAction">
@@ -146,6 +146,22 @@
               </packing>
             </child>
             <child>
+              <widget class="Gtk.CheckButton" id="chkEmbedded">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Label" translatable="yes">Embedded</property>
+                <property name="DrawIndicator">True</property>
+                <property name="HasLabel">True</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnChkEmbeddedClicked" />
+              </widget>
+              <packing>
+                <property name="PackType">End</property>
+                <property name="Position">3</property>
+                <property name="AutoSize">True</property>
+              </packing>
+            </child>
+            <child>
               <widget class="Gtk.Button" id="cmdAnimatedGif">
                 <property name="MemberName" />
                 <property name="CanFocus">True</property>
@@ -156,7 +172,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">3</property>
+                <property name="Position">4</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>
@@ -173,7 +189,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">4</property>
+                <property name="Position">5</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>
@@ -190,7 +206,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">5</property>
+                <property name="Position">6</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>

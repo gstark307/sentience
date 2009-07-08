@@ -32,8 +32,8 @@ public partial class MainWindow: Gtk.Window
 {
     int image_width = 320;
     int image_height = 240;
-    string left_camera_device = "/dev/video2";
-    string right_camera_device = "/dev/video1";
+    string left_camera_device = "/dev/video1";
+    string right_camera_device = "/dev/video0";
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
     int fps = 2;

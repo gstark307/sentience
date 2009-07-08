@@ -43,12 +43,15 @@ namespace surveyor.vision
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
         /// <param name="phase_degrees">frame capture phase offset</param>
+        /// <param name="window">window object</param>
         public SurveyorVisionStereoGtk(string host,
                                        int port_number_left,
                                        int port_number_right,
                                        int broadcast_port,
-                                       float fps) : base (host, port_number_left, port_number_right, broadcast_port, fps)
+                                       float fps,
+		                               Gtk.Window window) : base (host, port_number_left, port_number_right, broadcast_port, fps)
         {
+			this.window = window;
             display_image = new Gtk.Image[2];
         }
         

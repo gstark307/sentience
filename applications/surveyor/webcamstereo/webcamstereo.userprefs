@@ -1,20 +1,18 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/correspondence/StereoVision.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
     <Files>
       <File FileName="../surveyorlib/correspondence/StereoVisionSimple.cs" Line="37" Column="41" />
       <File FileName="../surveyorlib/correspondence/StereoVisionEdges.cs" Line="284" Column="38" />
-      <File FileName="MainWindow.cs" Line="224" Column="1" />
-      <File FileName="../surveyorlib/correspondence/StereoVision.cs" Line="2" Column="1" />
+      <File FileName="MainWindow.cs" Line="41" Column="38" />
+      <File FileName="../surveyorlib/correspondence/StereoVision.cs" Line="9" Column="3" />
+      <File FileName="../surveyorlib/WebcamVisionStereo.cs" Line="170" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorlib" expanded="True">
-            <Node name="correspondence" expanded="True">
-              <Node name="StereoVision.cs" selected="True" />
-            </Node>
+          <Node name="webcamstereo" expanded="True">
+            <Node name="MainWindow.cs" selected="True" />
           </Node>
-          <Node name="webcamstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
@@ -23,10 +21,15 @@
       <Pad Id="MonoDevelop.NUnit.TestPad">
         <State selected="True" />
       </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/home/motters/develop/sentience/applications/surveyor/surveyorlib/WebcamVisionStereo.cs" line="189" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
 </Properties>

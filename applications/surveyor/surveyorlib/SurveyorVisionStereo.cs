@@ -30,8 +30,8 @@ namespace surveyor.vision
     {
         private SurveyorVisionClient[] camera;
         private string host;
-        private int[] port_number;
-
+        private int[] port_number;		
+		
         #region "constructors"
         
         /// <summary>
@@ -56,6 +56,7 @@ namespace surveyor.vision
             {
                 camera[cam] = new SurveyorVisionClient();
                 camera[cam].grab_mode = SurveyorVisionClient.GRAB_MULTI_CAMERA;
+				camera[cam].cam_index = cam;
             }
             
             port_number = new int[2];
@@ -64,6 +65,24 @@ namespace surveyor.vision
         }
         
         #endregion
+		
+		#region "enabling and disabling embedded stereo"
+		
+		public void EnableEmbeddedStereo()
+		{
+			camera[0].EnableEmbeddedStereo();
+			camera[0].Embedded = true;
+			camera[1].Embedded = true;
+		}
+		
+		public void DisableEmbeddedStereo()
+		{
+			camera[0].DisableEmbeddedStereo();
+			camera[0].Embedded = false;
+			camera[1].Embedded = false;
+		}
+		
+		#endregion
         
         #region "callbacks"
 
@@ -169,6 +188,10 @@ namespace surveyor.vision
                 Running = true;
                 Console.WriteLine("Stereo camera active on " + host);
             }
+			else
+			{
+				Console.WriteLine("Cameras not started");
+			}
         }
 
         public override void Stop()

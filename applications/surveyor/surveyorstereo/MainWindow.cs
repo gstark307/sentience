@@ -33,12 +33,12 @@ public partial class MainWindow: Gtk.Window
     string stereo_camera_IP = "169.254.0.10";
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
-    int fps = 10;
+    int fps = 30;
     string temporary_files_path = "";
     string recorded_images_path = "";
 
 	string manual_camera_alignment_calibration_program = "calibtweaks.exe";
-    bool disable_rectification = false;
+    bool disable_rectification = true; // false;
     bool disable_radial_correction = true;
 	bool reverse_colours = true;
 	
@@ -56,13 +56,12 @@ public partial class MainWindow: Gtk.Window
         GtkBitmap.setBitmap(left_bmp, leftimage);
         GtkBitmap.setBitmap(right_bmp, rightimage);
         
-        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002, broadcast_port, fps);
+        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002, broadcast_port, fps, this);
         stereo_camera.temporary_files_path = temporary_files_path;
         stereo_camera.recorded_images_path = recorded_images_path;
-        stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        stereo_camera.Load(calibration_filename);
+        //stereo_camera.Load(calibration_filename);
         stereo_camera.Run();
     }	
     
@@ -387,8 +386,20 @@ public partial class MainWindow: Gtk.Window
     }
 		protected virtual void OnCmdAnimatedGifClicked (object sender, System.EventArgs e)
 	{
-	    SaveAnimatedGif();
+	SaveAnimatedGif();
 	}
+		    protected virtual void OnChkEmbeddedClicked (object sender, System.EventArgs e)
+	{
+	    if (stereo_camera != null)
+	    {
+		    if (chkEmbedded.Active) 
+		        stereo_camera.EnableEmbeddedStereo();
+	        else
+	            stereo_camera.DisableEmbeddedStereo();
+	    }
+	}
+
+
 
 
 

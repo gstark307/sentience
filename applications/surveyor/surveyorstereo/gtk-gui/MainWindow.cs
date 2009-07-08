@@ -40,6 +40,8 @@ public partial class MainWindow {
     
     private Gtk.CheckButton chkCalibrateRight;
     
+    private Gtk.CheckButton chkEmbedded;
+    
     private Gtk.Button cmdAnimatedGif;
     
     private Gtk.Button cmdTweaks;
@@ -151,17 +153,28 @@ public partial class MainWindow {
         Gtk.Box.BoxChild w9 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkCalibrateRight]));
         w9.Position = 2;
         // Container child hbox2.Gtk.Box+BoxChild
+        this.chkEmbedded = new Gtk.CheckButton();
+        this.chkEmbedded.CanFocus = true;
+        this.chkEmbedded.Name = "chkEmbedded";
+        this.chkEmbedded.Label = Mono.Unix.Catalog.GetString("Embedded");
+        this.chkEmbedded.DrawIndicator = true;
+        this.chkEmbedded.UseUnderline = true;
+        this.hbox2.Add(this.chkEmbedded);
+        Gtk.Box.BoxChild w10 = ((Gtk.Box.BoxChild)(this.hbox2[this.chkEmbedded]));
+        w10.PackType = ((Gtk.PackType)(1));
+        w10.Position = 3;
+        // Container child hbox2.Gtk.Box+BoxChild
         this.cmdAnimatedGif = new Gtk.Button();
         this.cmdAnimatedGif.CanFocus = true;
         this.cmdAnimatedGif.Name = "cmdAnimatedGif";
         this.cmdAnimatedGif.UseUnderline = true;
         this.cmdAnimatedGif.Label = Mono.Unix.Catalog.GetString("Save Gif");
         this.hbox2.Add(this.cmdAnimatedGif);
-        Gtk.Box.BoxChild w10 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdAnimatedGif]));
-        w10.PackType = ((Gtk.PackType)(1));
-        w10.Position = 3;
-        w10.Expand = false;
-        w10.Fill = false;
+        Gtk.Box.BoxChild w11 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdAnimatedGif]));
+        w11.PackType = ((Gtk.PackType)(1));
+        w11.Position = 4;
+        w11.Expand = false;
+        w11.Fill = false;
         // Container child hbox2.Gtk.Box+BoxChild
         this.cmdTweaks = new Gtk.Button();
         this.cmdTweaks.CanFocus = true;
@@ -169,11 +182,11 @@ public partial class MainWindow {
         this.cmdTweaks.UseUnderline = true;
         this.cmdTweaks.Label = Mono.Unix.Catalog.GetString("Tweaks");
         this.hbox2.Add(this.cmdTweaks);
-        Gtk.Box.BoxChild w11 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdTweaks]));
-        w11.PackType = ((Gtk.PackType)(1));
-        w11.Position = 4;
-        w11.Expand = false;
-        w11.Fill = false;
+        Gtk.Box.BoxChild w12 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdTweaks]));
+        w12.PackType = ((Gtk.PackType)(1));
+        w12.Position = 5;
+        w12.Expand = false;
+        w12.Fill = false;
         // Container child hbox2.Gtk.Box+BoxChild
         this.cmdCalibrateAlignment = new Gtk.Button();
         this.cmdCalibrateAlignment.CanFocus = true;
@@ -181,16 +194,16 @@ public partial class MainWindow {
         this.cmdCalibrateAlignment.UseUnderline = true;
         this.cmdCalibrateAlignment.Label = Mono.Unix.Catalog.GetString("Calibrate Alignment");
         this.hbox2.Add(this.cmdCalibrateAlignment);
-        Gtk.Box.BoxChild w12 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdCalibrateAlignment]));
-        w12.PackType = ((Gtk.PackType)(1));
-        w12.Position = 5;
-        w12.Expand = false;
-        w12.Fill = false;
-        this.vbox1.Add(this.hbox2);
-        Gtk.Box.BoxChild w13 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox2]));
-        w13.Position = 2;
+        Gtk.Box.BoxChild w13 = ((Gtk.Box.BoxChild)(this.hbox2[this.cmdCalibrateAlignment]));
+        w13.PackType = ((Gtk.PackType)(1));
+        w13.Position = 6;
         w13.Expand = false;
         w13.Fill = false;
+        this.vbox1.Add(this.hbox2);
+        Gtk.Box.BoxChild w14 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox2]));
+        w14.Position = 2;
+        w14.Expand = false;
+        w14.Fill = false;
         // Container child vbox1.Gtk.Box+BoxChild
         this.hbox3 = new Gtk.HBox();
         this.hbox3.Name = "hbox3";
@@ -202,10 +215,10 @@ public partial class MainWindow {
         this.cmdSimpleStereo.UseUnderline = true;
         this.cmdSimpleStereo.Label = Mono.Unix.Catalog.GetString("Simple Stereo");
         this.hbox3.Add(this.cmdSimpleStereo);
-        Gtk.Box.BoxChild w14 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
-        w14.Position = 0;
-        w14.Expand = false;
-        w14.Fill = false;
+        Gtk.Box.BoxChild w15 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
+        w15.Position = 0;
+        w15.Expand = false;
+        w15.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdDenseStereo = new Gtk.Button();
         this.cmdDenseStereo.CanFocus = true;
@@ -213,10 +226,10 @@ public partial class MainWindow {
         this.cmdDenseStereo.UseUnderline = true;
         this.cmdDenseStereo.Label = Mono.Unix.Catalog.GetString("Dense Stereo");
         this.hbox3.Add(this.cmdDenseStereo);
-        Gtk.Box.BoxChild w15 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
-        w15.Position = 1;
-        w15.Expand = false;
-        w15.Fill = false;
+        Gtk.Box.BoxChild w16 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
+        w16.Position = 1;
+        w16.Expand = false;
+        w16.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibration = new Gtk.Button();
         this.cmdSaveCalibration.CanFocus = true;
@@ -224,10 +237,10 @@ public partial class MainWindow {
         this.cmdSaveCalibration.UseUnderline = true;
         this.cmdSaveCalibration.Label = Mono.Unix.Catalog.GetString("Save calibration file");
         this.hbox3.Add(this.cmdSaveCalibration);
-        Gtk.Box.BoxChild w16 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
-        w16.Position = 3;
-        w16.Expand = false;
-        w16.Fill = false;
+        Gtk.Box.BoxChild w17 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
+        w17.Position = 3;
+        w17.Expand = false;
+        w17.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibrationImage = new Gtk.Button();
         this.cmdSaveCalibrationImage.CanFocus = true;
@@ -235,21 +248,21 @@ public partial class MainWindow {
         this.cmdSaveCalibrationImage.UseUnderline = true;
         this.cmdSaveCalibrationImage.Label = Mono.Unix.Catalog.GetString("Save calibration image");
         this.hbox3.Add(this.cmdSaveCalibrationImage);
-        Gtk.Box.BoxChild w17 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
-        w17.Position = 4;
-        w17.Expand = false;
-        w17.Fill = false;
-        this.vbox1.Add(this.hbox3);
-        Gtk.Box.BoxChild w18 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
-        w18.PackType = ((Gtk.PackType)(1));
-        w18.Position = 3;
+        Gtk.Box.BoxChild w18 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
+        w18.Position = 4;
         w18.Expand = false;
         w18.Fill = false;
+        this.vbox1.Add(this.hbox3);
+        Gtk.Box.BoxChild w19 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
+        w19.PackType = ((Gtk.PackType)(1));
+        w19.Position = 3;
+        w19.Expand = false;
+        w19.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
         }
-        this.DefaultWidth = 699;
+        this.DefaultWidth = 817;
         this.DefaultHeight = 300;
         this.Show();
         this.DeleteEvent += new Gtk.DeleteEventHandler(this.OnDeleteEvent);
@@ -261,6 +274,7 @@ public partial class MainWindow {
         this.cmdCalibrateAlignment.Clicked += new System.EventHandler(this.OnCmdCalibrateAlignmentClicked);
         this.cmdTweaks.Clicked += new System.EventHandler(this.OnCmdTweaksClicked);
         this.cmdAnimatedGif.Clicked += new System.EventHandler(this.OnCmdAnimatedGifClicked);
+        this.chkEmbedded.Clicked += new System.EventHandler(this.OnChkEmbeddedClicked);
         this.cmdSimpleStereo.Clicked += new System.EventHandler(this.OnCmdSimpleStereoClicked);
         this.cmdDenseStereo.Clicked += new System.EventHandler(this.OnCmdDenseStereoClicked);
         this.cmdSaveCalibration.Clicked += new System.EventHandler(this.OnCmdSaveCalibrationClicked);
