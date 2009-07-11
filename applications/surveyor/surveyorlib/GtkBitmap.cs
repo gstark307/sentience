@@ -254,9 +254,15 @@ namespace sluggish.utilities.gtk
 
 		public static void setBitmap(Bitmap bmp, Gtk.Image img)
 		{
-		    byte[] bmp_data = new byte[bmp.Width * bmp.Height * 3];
-		    BitmapArrayConversions.updatebitmap(bmp, bmp_data);
-		    setBitmap(bmp_data, bmp.Width, bmp.Height, img);		    
+			try
+			{
+		        byte[] bmp_data = new byte[bmp.Width * bmp.Height * 3];
+		        BitmapArrayConversions.updatebitmap(bmp, bmp_data);
+		        setBitmap(bmp_data, bmp.Width, bmp.Height, img);		    
+			}
+			catch
+			{
+			}
 		}
 
 		/// <summary>

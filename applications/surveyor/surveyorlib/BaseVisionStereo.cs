@@ -413,6 +413,17 @@ namespace surveyor.vision
                     disable_radial_correction);
 
             doc.Save(filename);
+						
+			SaveCameraParameters(
+		        "svs_left",
+		        "svs_right",
+                lens_distortion_curve,
+                centre_of_distortion_x, 
+		        centre_of_distortion_y,
+                rotation, 
+                scale,
+                offset_x,
+			    offset_y);
         }
 
 		/// <summary>
@@ -540,7 +551,7 @@ namespace surveyor.vision
 		/// <param name="scale">scale</param>
 		/// <param name="offset_x">offset in pixels</param>
 		/// <param name="offset_y">offset in pixels</param>
-		public static void SaveCameraParameters(
+		public void SaveCameraParameters(
 		    string filename_left,
 		    string filename_right,
             polynomial[] lens_distortion_curve,
@@ -959,12 +970,18 @@ namespace surveyor.vision
                         }
                         else
                         {
-                            byte[] img = new byte[bmp.Width * bmp.Height * 3];
-                            if (img != null)
-                            {
-                                BitmapArrayConversions.updatebitmap(bmp, img);
-                                img_rectified[cam] = (byte[])img.Clone();
-                            }
+							try
+							{
+                                byte[] img = new byte[bmp.Width * bmp.Height * 3];
+                                if (img != null)
+                                {
+                                    BitmapArrayConversions.updatebitmap(bmp, img);
+                                    img_rectified[cam] = (byte[])img.Clone();
+                                }
+							}
+							catch
+							{
+							}
                         }
                     }
                 }

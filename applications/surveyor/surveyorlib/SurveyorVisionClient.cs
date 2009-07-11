@@ -45,6 +45,7 @@ namespace surveyor.vision
 		public bool Running;
 		public bool Streaming;
 		public bool frame_arrived;
+		public bool disparities_arrived;
 		
 		// desired frames per second
 		public float fps = 5;
@@ -61,6 +62,8 @@ namespace surveyor.vision
         
         public int image_width, image_height;
         public Bitmap current_frame;
+		public bool current_frame_busy;
+		public bool current_frame_swapping;
 		
 		public bool Embedded;
 		public int cam_index;  // 0 = left 1 = right
@@ -87,7 +90,7 @@ namespace surveyor.vision
 
         #region "sockets stuff"
 
-        const int DATA_BUFFER_SIZE = 2048;
+        const int DATA_BUFFER_SIZE = 1024;
 		public AsyncCallback m_pfnCallBack;
 		public Socket m_clientSocket;
 		public DateTime data_last_received;
@@ -198,7 +201,7 @@ namespace surveyor.vision
 			catch(SocketException se)
 			{
 				Console.WriteLine(se.Message);
-			}	
+			}
 		}
 
         public void WaitForReply(int timeout_sec)
@@ -255,7 +258,9 @@ namespace surveyor.vision
         public List<byte> received_data = new List<byte>();
         private long previous_frame_size, frame_size;
         private int previous_image_width, previous_image_height;
-        private int previous_header_pos = -1, header_pos = -1;
+        private int previous_image_header_pos = -1, image_header_pos = -1;
+        private int previous_disp_header_pos = -1, disp_header_pos = -1;
+		private int previous_no_of_matches = -1;
         private int search_pos;
         private byte[] received_frame;
         private MemoryStream memstream;
@@ -274,13 +279,17 @@ namespace surveyor.vision
             1280, 1024
         };
 
-        private void ReceiveFrame(List<byte> received_data, 
-                                  int start_index, int end_index,
-                                  long frame_size,
-                                  int image_width, int image_height)
+        private void ReceiveFrame(
+		    List<byte> received_data, 
+            int start_index, int end_index,
+            long frame_size,
+            int image_width, int image_height)
         {
-            if ((frame_size > 0) && (received_data.Count - start_index - 100 >= frame_size))
+            if ((frame_size > 0) && 
+			    (received_data.Count - start_index - 100 >= frame_size) &&
+			    (!current_frame_busy))
             {
+				current_frame_swapping = true;
                 const int initial_block = 10;
                 end_index = (int)(start_index + initial_block + frame_size);
 
@@ -291,14 +300,20 @@ namespace surveyor.vision
                 
                 for (int i = start_index + initial_block; i < end_index; i++, n++)
                     received_frame[n] = received_data[i];           
-                   
+                 
                 try
                 {
-                    if (current_frame != null) current_frame.Dispose();
-                    if (memstream != null) memstream.Dispose();
-                    memstream = new MemoryStream(received_frame, 0, (int)frame_size);
-                    current_frame = (Bitmap) Bitmap.FromStream(memstream);
-                    if (Verbose) Console.WriteLine("Frame received");
+                    MemoryStream new_memstream = new MemoryStream(received_frame, 0, (int)frame_size);
+                    Bitmap new_current_frame = (Bitmap) Bitmap.FromStream(new_memstream);
+					if ((new_current_frame != null) &&
+					    (!current_frame_busy))
+					{						
+						if (current_frame != null) current_frame.Dispose();
+						if (memstream != null) memstream.Dispose();
+						memstream = new_memstream;
+						current_frame = new_current_frame;
+                        if (Verbose) Console.WriteLine("Frame received");						
+					}
                 }
                 catch (Exception ex)
                 {
@@ -306,18 +321,19 @@ namespace surveyor.vision
                     Console.WriteLine("Error converting to jpeg: " + ex.Message);                    
                 }
 
-                frame_arrived = true;
-                
                 received_data.RemoveRange(0, end_index);
-                header_pos -= end_index;
+                image_header_pos -= end_index;
                 search_pos -= end_index;
-                previous_header_pos = header_pos;
+                previous_image_header_pos = image_header_pos;
+	            frame_arrived = true;
+				current_frame_swapping = false;
             }
             
         }
 
-        private void ReceiveFrame(List<byte> received_data)
+        private bool ReceiveFrame(List<byte> received_data)
         {
+			bool received = false;
             data_last_received = DateTime.Now;
             while (search_pos < received_data.Count - 10)
             {
@@ -348,19 +364,20 @@ namespace surveyor.vision
     					    
     					//Console.WriteLine("Frame size: " + frame_size.ToString());
     					        					
-    					header_pos = search_pos;
+    					image_header_pos = search_pos;
     					
-    					if (previous_header_pos > -1)
+    					if (previous_image_header_pos > -1)
     					{
     					    ReceiveFrame(received_data, 
-    					                 previous_header_pos, header_pos, 
+    					                 previous_image_header_pos, image_header_pos, 
     					                 previous_frame_size, 
     					                 previous_image_width, 
     					                 previous_image_height);        					                 
+							received = true;
     					}
     					else
     					{
-    					    previous_header_pos = header_pos;
+    					    previous_image_header_pos = image_header_pos;
     					}
     					
                     }
@@ -368,8 +385,100 @@ namespace surveyor.vision
                 }
                 search_pos++;
             }
+			return(received);
         }
 
+        private void ReceiveDisparities(
+		    List<byte> received_data, 
+            int start_index, int end_index,
+            int no_of_matches)
+        {
+            if (no_of_matches > 0)
+            {
+                const int initial_block = 9;
+                end_index = (int)(start_index + initial_block + (no_of_matches * 2 * 3));
+
+				int x,y,disp;
+                int i = start_index + initial_block;
+				
+                while (i < end_index)
+				{
+					for (int v = 0; v < 3; v++)
+					{
+                        byte low_byte = received_data[i++];
+						byte high_byte = received_data[i++];
+						int val = 0;
+                        if (high_byte < 0x80)
+                            val = high_byte * 0x100 | low_byte;
+                        else
+                            val = (high_byte |0xFF00) * 0x100 | low_byte;
+						switch(v)
+						{
+						    case 0:
+						    {
+							    x = val;
+							    break;
+						    }
+						    case 1:
+						    {
+							    y = val;
+							    break;
+						    }
+						    case 2:
+						    {
+							    disp = val;
+							    break;
+						    }
+						}
+					}
+				}
+                   
+                received_data.RemoveRange(0, end_index);
+                disp_header_pos -= end_index;
+                search_pos -= end_index;
+                previous_disp_header_pos = disp_header_pos;
+				disparities_arrived = true;
+            }
+            
+        }
+		
+        private bool ReceiveDisparities(List<byte> received_data)
+        {
+			bool received = false;
+            data_last_received = DateTime.Now;
+            while (search_pos < received_data.Count - 9)
+            {
+                if ((received_data[search_pos] == (byte)'#') && 
+                    (received_data[search_pos + 1] == (byte)'#') &&                
+                    (received_data[search_pos + 2] == (byte)'D') && 
+                    (received_data[search_pos + 3] == (byte)'S') &&
+                    (received_data[search_pos + 4] == (byte)'P'))
+                {                    		
+                    int no_of_matches = Convert.ToInt32(Convert.ToString((char)received_data[search_pos + 5]));
+					
+    			    disp_header_pos = search_pos;
+    					
+    				if (previous_disp_header_pos > -1)
+    				{
+    					ReceiveDisparities(
+						    received_data,
+    					    previous_disp_header_pos, disp_header_pos,
+						    previous_no_of_matches);
+						received = true;
+    				}
+    				else
+    				{
+    				    previous_disp_header_pos = disp_header_pos;
+						previous_no_of_matches = no_of_matches;
+    				}
+    					
+                }
+                    
+                search_pos++;
+            }
+			return(received);
+        }
+		
         private void OnDataReceived(IAsyncResult asyn)
 		{
 			try
@@ -386,7 +495,7 @@ namespace surveyor.vision
 				//Console.Write(".");
 				
                 ReceiveFrame(received_data);
-                                
+				//ReceiveDisparities(received_data);
 				WaitForData();
 			}
 			catch (ObjectDisposedException )
@@ -422,9 +531,10 @@ namespace surveyor.vision
         /// a new image has arrived
         /// </summary>
         /// <param name="state"></param>
-        private void FrameGrabCallback(object state)
+        private void FrameGrabCallbackClient(object state)
         {            
             //SurveyorVisionClient istate = (SurveyorVisionClient)state;
+			Thread.Sleep(10);
         }
 
         #endregion
@@ -435,7 +545,7 @@ namespace surveyor.vision
         public void StartStream()
         {
             Streaming = true;
-            grab_frames = new SurveyorVisionThreadGrabFrame(new WaitCallback(FrameGrabCallback),this);        
+            grab_frames = new SurveyorVisionThreadGrabFrame(new WaitCallback(FrameGrabCallbackClient),this);        
             Thread grabber_thread = new Thread(new ThreadStart(grab_frames.Execute));
             grabber_thread.Priority = ThreadPriority.Normal;
             grabber_thread.Start();        

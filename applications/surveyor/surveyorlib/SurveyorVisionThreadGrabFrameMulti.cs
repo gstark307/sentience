@@ -57,6 +57,8 @@ namespace surveyor.vision
             Update(state);
         }
 
+		DateTime data_last_requested = DateTime.Now;
+		
         /// <summary>
         /// update all cameras
         /// </summary>
@@ -64,76 +66,56 @@ namespace surveyor.vision
         private void Update(SurveyorVisionClient[] state)
         {
             int time_step_mS = (int)(1000 / state[0].fps);
-        
-            DateTime data_last_requested = DateTime.Now;
-            while (state[0].Streaming)
+                    
+            // If a cartain file exists then initiate pause
+            // This provides a very simple mechanism for other programs
+            // to start or stop the server
+            if ((PauseFile != null) &&
+                (PauseFile != ""))
             {
-                // If a cartain file exists then initiate pause
-                // This provides a very simple mechanism for other programs
-                // to start or stop the server
-                if ((PauseFile != null) &&
-                    (PauseFile != ""))
-                {
-	                if (File.Exists(PauseFile)) 
-	                    Pause = true;
-	                else
-	                    Pause = false;
-                }
-            
-                if (!Pause)
-                {
-                    TimeSpan diff = DateTime.Now.Subtract(data_last_requested);
-                    if (diff.TotalMilliseconds > time_step_mS)
-                    {
-                        data_last_requested = DateTime.Now;
-
-                        // clear the frame arrived flags on all cameras
-                        for (int cam = 0; cam < state.Length; cam++)
-                            state[cam].frame_arrived = false;
-
-                        // initiate master pulse
-                        for (int cam = 0; cam < state.Length; cam++)
-                            state[cam].synchronisation_pulse = true;
-
-                        // wait for frames to arrive
-                        DateTime start_waiting = DateTime.Now;
-                        bool all_frames_arrived = false;
-                        while (state[0].Streaming)
-                        {
-                            // check all cameras
-                            all_frames_arrived = true;
-                            for (int cam = 0; cam < state.Length; cam++)
-                            {
-                                if (!state[cam].frame_arrived)
-                                {
-                                    all_frames_arrived = false;
-                                    break;
-                                }
-                            }
-
-                            // is our patience exhausted ?
-                            TimeSpan elapsed = DateTime.Now.Subtract(start_waiting);
-                            if (elapsed.TotalMilliseconds > time_step_mS - 20)
-                                break;
-
-                            Thread.Sleep(10);
-                        }
-
-                        // announce that all frames have arrived
-                        if (all_frames_arrived) _callback(_data);
-
-                        //Console.WriteLine("pulse " + DateTime.Now.ToString());
-                    }
-                }
+                if (File.Exists(PauseFile)) 
+                    Pause = true;
                 else
-                {
-                    Thread.Sleep(40);
-                    _callback(_data);
-                }
-                Thread.Sleep(10);                
+                    Pause = false;
             }
-        }
         
+            if (!Pause)
+            {
+				//bool all_frames_arrived = false;
+                TimeSpan diff = DateTime.Now.Subtract(data_last_requested);
+                //if (diff.TotalMilliseconds > time_step_mS)
+				if ((((state[0].frame_arrived) && (state[1].frame_arrived)) ||
+				     (diff.TotalMilliseconds > time_step_mS)) &&
+				     ((!state[0].current_frame_busy) && (!state[1].current_frame_busy)))
+                {
+                    data_last_requested = DateTime.Now;
+
+                    for (int cam = 0; cam < state.Length; cam++)
+					{
+						// clear the frame arrived flags on all cameras
+						state[cam].frame_arrived = false;
+						// initiate master pulse
+                        state[cam].synchronisation_pulse = true;
+						state[cam].RequestFrame();
+					}
+				}
+                // announce that all frames have arrived
+				if ((state[0].frame_arrived) &&
+				    (state[1].frame_arrived))
+				{
+					Console.WriteLine("data arrived");
+			        state[0].frame_arrived = false;
+			        state[1].frame_arrived = false;
+				}
+            }
+            else
+            {
+                Thread.Sleep(40);
+				Console.WriteLine("Paused");
+            }
+            Thread.Sleep(10);
+		    _callback(_data);
+        }
         
     }
 }

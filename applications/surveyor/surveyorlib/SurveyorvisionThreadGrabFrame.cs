@@ -60,43 +60,7 @@ namespace surveyor.vision
         /// <param name="state">vision state</param>
         private void Update(SurveyorVisionClient state)
         {
-            DateTime data_last_requested = DateTime.Now;
-            while ((state.Streaming) && (!Halt))
-            {
-                switch(state.grab_mode)
-                {
-                    // for a monocular camera grab frames at regular intervals
-                    case SurveyorVisionClient.GRAB_MONOCULAR:
-                    {
-                        TimeSpan diff = DateTime.Now.Subtract(data_last_requested);
-                        if (diff.TotalMilliseconds > 1000 / state.fps)
-                        {                
-                            data_last_requested = DateTime.Now;
-                            //state.RequestResolution640x480();
-                            state.RequestFrame();                            
-                        }
-                        break;
-                    }
-                    
-                    // when using multiple cameras wait for a master synchronisation pulse
-                    case SurveyorVisionClient.GRAB_MULTI_CAMERA:
-                    {
-                        if (state.synchronisation_pulse)
-                        {
-                            state.synchronisation_pulse = false;
-                            //state.RequestResolution640x480();
-						    
-                            state.RequestFrame();
-                            //Console.WriteLine("grab " + DateTime.Now.ToString());
-                        }
-                        break;
-                    }                    
-                }
-                
-                _callback(_data);
-                
-                Thread.Sleep(10);                
-            }
+            _callback(_data);
         }
         
         

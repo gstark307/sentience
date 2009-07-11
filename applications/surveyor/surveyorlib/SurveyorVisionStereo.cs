@@ -42,11 +42,12 @@ namespace surveyor.vision
         /// <param name="port_number_right">port number for the right camera</param>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
-        public SurveyorVisionStereo(string host,
-                                    int port_number_left,
-                                    int port_number_right,
-                                    int broadcast_port,
-                                    float fps) : base(broadcast_port, fps)
+        public SurveyorVisionStereo(
+		    string host,
+            int port_number_left,
+            int port_number_right,
+            int broadcast_port,
+            float fps) : base(broadcast_port, fps)
         {
             device_name = "Surveyor stereo camera";
             this.host = host;
@@ -70,16 +71,20 @@ namespace surveyor.vision
 		
 		public void EnableEmbeddedStereo()
 		{
-			camera[0].EnableEmbeddedStereo();
-			camera[0].Embedded = true;
-			camera[1].Embedded = true;
+			for (int cam = 0; cam < 2; cam++)
+			{
+			    camera[cam].EnableEmbeddedStereo();
+			    camera[cam].Embedded = true;
+			}
 		}
 		
 		public void DisableEmbeddedStereo()
 		{
-			camera[0].DisableEmbeddedStereo();
-			camera[0].Embedded = false;
-			camera[1].Embedded = false;
+			for (int cam = 0; cam < 2; cam++)
+			{		
+			    camera[cam].DisableEmbeddedStereo();
+			    camera[cam].Embedded = false;
+			}
 		}
 		
 		#endregion
@@ -92,8 +97,12 @@ namespace surveyor.vision
         /// both images have arrived and are awaiting processing
         /// </summary>
         /// <param name="state"></param>
-        private void FrameGrabCallback(object state)
+        private void FrameGrabCallbackMulti(object state)
         {
+            SurveyorVisionClient[] istate = (SurveyorVisionClient[])state;
+			istate[0].current_frame_busy = true;
+			istate[1].current_frame_busy = true;
+			
             // pause or resume grabbing frames from the cameras
             if (correspondence != null)
             {
@@ -104,14 +113,13 @@ namespace surveyor.vision
                     grab_frames.Pause = true;
             }
 
-            SurveyorVisionClient[] istate = (SurveyorVisionClient[])state;
-            if ((istate[0].current_frame != null) && 
-                (istate[1].current_frame != null))
+            Bitmap left = (Bitmap)istate[0].current_frame;
+            Bitmap right = (Bitmap)istate[1].current_frame;
+            if ((left != null) && 
+                (right != null) &&
+			    (!istate[0].current_frame_swapping) &&
+			    (!istate[1].current_frame_swapping))
             {
-
-                Bitmap left = istate[0].current_frame;
-                Bitmap right = istate[1].current_frame;
-
                 image_width = left.Width;
                 image_height = left.Height;
                 
@@ -150,6 +158,22 @@ namespace surveyor.vision
                     Console.WriteLine("busy");
                 }
             }
+			else
+			{
+				Console.WriteLine("null frame");
+			}
+			
+			Thread.Sleep(10);
+			
+			istate[0].current_frame_busy = false;
+			istate[1].current_frame_busy = false;
+			
+			if (camera[0].Streaming)
+			{
+                sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
+                sync_thread.Priority = ThreadPriority.Normal;
+                sync_thread.Start(); 			
+			}
         }
 
         #endregion
@@ -181,7 +205,7 @@ namespace surveyor.vision
             if (cameras_started)
             {
                 // create a thread to send the master pulse
-                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallback), camera);        
+                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), camera);        
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
                 sync_thread.Start();   

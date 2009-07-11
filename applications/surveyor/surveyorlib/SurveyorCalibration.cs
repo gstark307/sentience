@@ -625,10 +625,12 @@ namespace surveyor.vision
         /// <param name="best_offset_x">returned x offset in pixels</param>
         /// <param name="best_offset_y">returned y offset in pixels</param>
         /// <param name="rotation">relative rotation of the right image to the left in radians</param>
-        public static bool UpdateOffsets(Bitmap rectified_left, Bitmap rectified_right,
-                                         ref float best_offset_x,
-                                         ref float best_offset_y,
-                                         ref float rotation)
+        public static bool UpdateOffsets(
+		    Bitmap rectified_left, 
+		    Bitmap rectified_right,
+            ref float best_offset_x,
+            ref float best_offset_y,
+            ref float rotation)
         {
 			bool success = false;
 			
