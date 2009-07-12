@@ -97,8 +97,7 @@ namespace surveyor.vision
 		public const int SVS_STATE_RECEIVE_IMAGES = 1;
 		public const int SVS_STATE_PROCESS_IMAGES = 2;
 		private DateTime svs_state_last;
-		
-		
+				
 		public void update_state()
 		{
 			switch(svs_state)
@@ -155,8 +154,10 @@ namespace surveyor.vision
 					    {
 						    // timed out - request images again
 						    Console.WriteLine("Timed out waiting for images");
-						    camera[0].StopSend();
-						    camera[1].StopSend();
+						    if (!camera[0].frame_arrived) 
+							    camera[0].StopSend();
+						    if (!camera[1].frame_arrived) 
+							    camera[1].StopSend();
 						    svs_state = SVS_STATE_GRAB_IMAGES;
 					    }
 				    }
@@ -208,7 +209,7 @@ namespace surveyor.vision
 				    case SVS_STATE_RECEIVE_IMAGES: { msg = "images received"; break; }
 				    case SVS_STATE_PROCESS_IMAGES: { msg = "process images"; break; }
 				}
-				Console.WriteLine(msg);
+				//if (Verbose) Console.WriteLine(msg);
 			}
 			prev_svs_state = svs_state;
 		}

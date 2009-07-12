@@ -61,9 +61,9 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        //stereo_camera.Load(calibration_filename);
+        stereo_camera.Load(calibration_filename);
         stereo_camera.Run();
-    }	
+    }
     
     private void CloseForm()
     {

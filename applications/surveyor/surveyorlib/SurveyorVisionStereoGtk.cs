@@ -170,8 +170,6 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>
         protected override void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
-            Console.WriteLine("DisplayImages");
-			
             if (display_image[0] != null)
             {
                 if ((show_left_image) &&
@@ -242,7 +240,6 @@ namespace surveyor.vision
                 // Since we're running in a separate thread from the GUI we have to
                 // call it in a special way
                 RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
-				Console.WriteLine("UpdateGUI");
 				
                 Gdk.Threads.Enter();
                 window.QueueDraw();

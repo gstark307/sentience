@@ -88,7 +88,7 @@ namespace surveyor.vision
 
         #region "sockets stuff"
 
-        const int DATA_BUFFER_SIZE = 1024;
+        const int DATA_BUFFER_SIZE = 1024*4;
 		public AsyncCallback m_pfnCallBack;
 		public Socket m_clientSocket;
 		public DateTime data_last_received;
