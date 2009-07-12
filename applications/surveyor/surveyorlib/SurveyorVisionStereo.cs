@@ -88,6 +88,132 @@ namespace surveyor.vision
 		}
 		
 		#endregion
+		
+		#region "state machine"
+		
+		private Bitmap bmp_state_left, bmp_state_right;
+		private int svs_state, prev_svs_state = -1;
+		public const int SVS_STATE_GRAB_IMAGES = 0;
+		public const int SVS_STATE_RECEIVE_IMAGES = 1;
+		public const int SVS_STATE_PROCESS_IMAGES = 2;
+		private DateTime svs_state_last;
+		
+		
+		public void update_state()
+		{
+			switch(svs_state)
+			{
+			    case SVS_STATE_GRAB_IMAGES:
+			    {
+				    svs_state_last = DateTime.Now;
+				
+	                // pause or resume grabbing frames from the cameras
+				    bool is_paused = false;
+	                if (correspondence != null)
+	                {
+	                    if ((!UpdateWhenClientsConnected) ||
+	                        ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
+	                        is_paused = false;
+	                    else
+	                        is_paused = true;
+	                }
+				
+				    if (!is_paused)
+				    {
+				        // request images                        
+				        camera[0].RequestFrame();
+				        camera[1].RequestFrame();					    
+				        svs_state = SVS_STATE_RECEIVE_IMAGES;
+				    }
+				    break;
+			    }
+			    case SVS_STATE_RECEIVE_IMAGES:
+			    {
+				    // both frames arrived
+			        if ((camera[0].frame_arrived) &&
+			            (camera[1].frame_arrived))
+				    {
+                        bmp_state_left = (Bitmap)camera[0].current_frame;
+                        bmp_state_right = (Bitmap)camera[1].current_frame;
+	                    if ((bmp_state_left != null) && 
+	                        (bmp_state_right != null))
+					    {
+						    // proceed to process the images
+						    svs_state = SVS_STATE_PROCESS_IMAGES;
+				    	}
+					    else
+					    {
+						    // images were invalid - try again
+						    svs_state = SVS_STATE_GRAB_IMAGES;
+					    }
+				    }
+				    else
+				    {
+			            int timeout_mS = 100; //(int)(1000 / fps);
+                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
+					    if (diff.TotalMilliseconds > timeout_mS)
+					    {
+						    // timed out - request images again
+						    Console.WriteLine("Timed out waiting for images");
+						    camera[0].StopSend();
+						    camera[1].StopSend();
+						    svs_state = SVS_STATE_GRAB_IMAGES;
+					    }
+				    }
+				    
+				    break;
+			    }
+			    case SVS_STATE_PROCESS_IMAGES:
+			    {
+	                image_width = bmp_state_left.Width;
+	                image_height = bmp_state_left.Height;
+
+                    //busy_processing = true;
+                    if (calibration_pattern != null)
+                    {
+                        if (!show_left_image)
+                            SurveyorCalibration.DetectDots(bmp_state_left, ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
+                        else
+                            SurveyorCalibration.DetectDots(bmp_state_right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
+                    }
+
+                    RectifyImages(bmp_state_left, bmp_state_right);
+                                         
+                    Process(bmp_state_left, bmp_state_right);
+                    
+                    // save images to file
+                    if (Record)
+                    {
+                        RecordFrameNumber++;
+                        bmp_state_left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                        bmp_state_right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                        if ((rectified[0] != null) && (rectified[0] != null))
+                        {
+                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                        }
+                    }
+				
+				    svs_state = SVS_STATE_GRAB_IMAGES;
+				
+				    break;
+			    }
+			}
+			if (prev_svs_state != svs_state)
+			{
+				string msg = "";
+				switch(svs_state)
+				{
+				    case SVS_STATE_GRAB_IMAGES: { msg = "grab images"; break; }
+				    case SVS_STATE_RECEIVE_IMAGES: { msg = "images received"; break; }
+				    case SVS_STATE_PROCESS_IMAGES: { msg = "process images"; break; }
+				}
+				Console.WriteLine(msg);
+			}
+			prev_svs_state = svs_state;
+		}
+		
+		#endregion
         
         #region "callbacks"
 
@@ -99,75 +225,6 @@ namespace surveyor.vision
         /// <param name="state"></param>
         private void FrameGrabCallbackMulti(object state)
         {
-            SurveyorVisionClient[] istate = (SurveyorVisionClient[])state;
-			istate[0].current_frame_busy = true;
-			istate[1].current_frame_busy = true;
-			
-            // pause or resume grabbing frames from the cameras
-            if (correspondence != null)
-            {
-                if ((!UpdateWhenClientsConnected) ||
-                    ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
-                    grab_frames.Pause = false;
-                else
-                    grab_frames.Pause = true;
-            }
-
-            Bitmap left = (Bitmap)istate[0].current_frame;
-            Bitmap right = (Bitmap)istate[1].current_frame;
-            if ((left != null) && 
-                (right != null) &&
-			    (!istate[0].current_frame_swapping) &&
-			    (!istate[1].current_frame_swapping))
-            {
-                image_width = left.Width;
-                image_height = left.Height;
-                
-                if (!busy_processing)
-                {
-                    busy_processing = true;
-                    if (calibration_pattern != null)
-                    {
-                        if (!show_left_image)
-                            SurveyorCalibration.DetectDots(left, ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
-                        else
-                            SurveyorCalibration.DetectDots(right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
-                    }
-
-                    RectifyImages(left, right);
-                                         
-                    Process(left, right);
-                    
-                    // save images to file
-                    if (Record)
-                    {
-                        RecordFrameNumber++;
-                        left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                        right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                        if ((rectified[0] != null) && (rectified[0] != null))
-                        {
-                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                        }
-                    }
-                    
-                    busy_processing = false;
-                }
-                else
-                {
-                    Console.WriteLine("busy");
-                }
-            }
-			else
-			{
-				Console.WriteLine("null frame");
-			}
-			
-			Thread.Sleep(10);
-			
-			istate[0].current_frame_busy = false;
-			istate[1].current_frame_busy = false;
-			
 			if (camera[0].Streaming)
 			{
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
@@ -205,7 +262,7 @@ namespace surveyor.vision
             if (cameras_started)
             {
                 // create a thread to send the master pulse
-                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), camera);        
+                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), this);        
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
                 sync_thread.Start();   

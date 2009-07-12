@@ -19,7 +19,6 @@
     <File name="GtkImage.cs" subtype="Code" buildaction="Compile" />
     <File name="SurveyorVisionClient.cs" subtype="Code" buildaction="Compile" />
     <File name="SurveyorVisionStereo.cs" subtype="Code" buildaction="Compile" />
-    <File name="SurveyorvisionThreadGrabFrame.cs" subtype="Code" buildaction="Compile" />
     <File name="SurveyorVisionThreadGrabFrameMulti.cs" subtype="Code" buildaction="Compile" />
     <File name="BitmapArrayConversions.cs" subtype="Code" buildaction="Compile" />
     <File name="SurveyorVisionStereoGtk.cs" subtype="Code" buildaction="Compile" />

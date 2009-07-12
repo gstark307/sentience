@@ -35,9 +35,6 @@ namespace surveyor.vision
         // this defines how images will be acquired
         public int grab_mode = GRAB_MONOCULAR;
         
-        // master pulse used to synchronise multiple cameras
-        public bool synchronisation_pulse;
-    
         // whether to show extra info
         public bool Verbose;
 
@@ -45,6 +42,7 @@ namespace surveyor.vision
 		public bool Running;
 		public bool Streaming;
 		public bool frame_arrived;
+		public bool frame_processed;
 		public bool disparities_arrived;
 		
 		// desired frames per second
@@ -179,8 +177,23 @@ namespace surveyor.vision
 			{
 				Console.WriteLine("\nConnection failed, is the SVS running?\n" + se.Message);
 			}		
-		}			
+		}		
+		
+		NetworkStream networkStream;
+		System.IO.StreamWriter streamWriter;
 
+		public void StopSend()
+		{
+			if (streamWriter != null)
+			{
+				streamWriter.Close();
+			}
+			if (networkStream != null)
+			{
+				networkStream.Close();
+			}
+		}
+		
         /// <summary>
         /// send a message to the server
         /// </summary>
@@ -192,8 +205,8 @@ namespace surveyor.vision
 		{            
 			try
 			{
-				NetworkStream networkStream = new NetworkStream(m_clientSocket);
-				System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(networkStream);
+				networkStream = new NetworkStream(m_clientSocket);
+				streamWriter = new System.IO.StreamWriter(networkStream);
 				streamWriter.WriteLine(msg);
 				streamWriter.Flush();
                 waiting_for_reply = wait_for_reply;
@@ -240,7 +253,7 @@ namespace surveyor.vision
 				                             0, theSocPkt.dataBuffer.Length,
 				                             SocketFlags.None, 
 				                             m_pfnCallBack, 
-				                             theSocPkt);
+				                             theSocPkt);				
 			}
 			catch(SocketException se)
 			{
@@ -286,8 +299,8 @@ namespace surveyor.vision
             int image_width, int image_height)
         {
             if ((frame_size > 0) && 
-			    (received_data.Count - start_index - 100 >= frame_size) &&
-			    (!current_frame_busy))
+			    (received_data.Count - start_index - 100 >= frame_size)) // &&
+			    //(!current_frame_busy))
             {
 				current_frame_swapping = true;
                 const int initial_block = 10;
@@ -305,15 +318,20 @@ namespace surveyor.vision
                 {
                     MemoryStream new_memstream = new MemoryStream(received_frame, 0, (int)frame_size);
                     Bitmap new_current_frame = (Bitmap) Bitmap.FromStream(new_memstream);
-					if ((new_current_frame != null) &&
-					    (!current_frame_busy))
-					{						
-						if (current_frame != null) current_frame.Dispose();
-						if (memstream != null) memstream.Dispose();
-						memstream = new_memstream;
-						current_frame = new_current_frame;
-                        if (Verbose) Console.WriteLine("Frame received");						
+					if (new_current_frame != null)
+					{
+					    if (!current_frame_busy)
+					    {						
+						    if (current_frame != null) current_frame.Dispose();
+						    if (memstream != null) memstream.Dispose();
+						    memstream = new_memstream;
+						    current_frame = new_current_frame;
+                            if (Verbose) 
+							    Console.WriteLine("Frame received");						
+						}
+						else Console.WriteLine("current_frame_busy = true");
 					}
+					else Console.WriteLine("new_current_frame = null");
                 }
                 catch (Exception ex)
                 {
@@ -523,7 +541,7 @@ namespace surveyor.vision
 
         #region "start and stop streaming"
 
-        SurveyorVisionThreadGrabFrame grab_frames;
+        //SurveyorVisionThreadGrabFrame grab_frames;
 
         #region "callbacks"
 
@@ -545,10 +563,10 @@ namespace surveyor.vision
         public void StartStream()
         {
             Streaming = true;
-            grab_frames = new SurveyorVisionThreadGrabFrame(new WaitCallback(FrameGrabCallbackClient),this);        
-            Thread grabber_thread = new Thread(new ThreadStart(grab_frames.Execute));
-            grabber_thread.Priority = ThreadPriority.Normal;
-            grabber_thread.Start();        
+            //grab_frames = new SurveyorVisionThreadGrabFrame(new WaitCallback(FrameGrabCallbackClient),this);        
+            //Thread grabber_thread = new Thread(new ThreadStart(grab_frames.Execute));
+            //grabber_thread.Priority = ThreadPriority.Normal;
+            //grabber_thread.Start();        
         }
 
 		/// <summary>
@@ -571,6 +589,7 @@ namespace surveyor.vision
         {            
 			if (!((Embedded) && (cam_index == 1)))
 			{
+				frame_arrived = false;
                 Send(image_request_command, true);
 			}
 			else
@@ -595,7 +614,7 @@ namespace surveyor.vision
         public void StopStream()
         {
             Streaming = false;
-            grab_frames.Halt = true;
+            //grab_frames.Halt = true;
         }
 
         #endregion

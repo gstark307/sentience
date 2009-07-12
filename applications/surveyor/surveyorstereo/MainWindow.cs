@@ -117,6 +117,7 @@ public partial class MainWindow: Gtk.Window
     
         if (Active)
         {            
+			//Console.WriteLine("show dots");
             ShowDotPattern(dest_img);
             stereo_camera.display_image[window_index] = dest_img;
             //stereo_camera.display_type = SurveyorVisionStereo.DISPLAY_CALIBRATION_DIFF;

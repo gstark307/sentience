@@ -35,9 +35,6 @@ namespace surveyor.vision
         private object _data;
         public bool Pause;
         
-        // use the existance of this file to pause or resume frame capture
-        public string PauseFile;
-
         /// <summary>
         /// constructor
         /// </summary>
@@ -53,67 +50,17 @@ namespace surveyor.vision
         /// </summary>
         public void Execute()
         {
-            SurveyorVisionClient[] state = (SurveyorVisionClient[])_data;
+            SurveyorVisionStereo state = (SurveyorVisionStereo)_data;
             Update(state);
         }
 
-		DateTime data_last_requested = DateTime.Now;
-		
         /// <summary>
         /// update all cameras
         /// </summary>
-        /// <param name="state">vision state</param>
-        private void Update(SurveyorVisionClient[] state)
+        /// <param name="state"></param>
+        private void Update(SurveyorVisionStereo state)
         {
-            int time_step_mS = (int)(1000 / state[0].fps);
-                    
-            // If a cartain file exists then initiate pause
-            // This provides a very simple mechanism for other programs
-            // to start or stop the server
-            if ((PauseFile != null) &&
-                (PauseFile != ""))
-            {
-                if (File.Exists(PauseFile)) 
-                    Pause = true;
-                else
-                    Pause = false;
-            }
-        
-            if (!Pause)
-            {
-				//bool all_frames_arrived = false;
-                TimeSpan diff = DateTime.Now.Subtract(data_last_requested);
-                //if (diff.TotalMilliseconds > time_step_mS)
-				if ((((state[0].frame_arrived) && (state[1].frame_arrived)) ||
-				     (diff.TotalMilliseconds > time_step_mS)) &&
-				     ((!state[0].current_frame_busy) && (!state[1].current_frame_busy)))
-                {
-                    data_last_requested = DateTime.Now;
-
-                    for (int cam = 0; cam < state.Length; cam++)
-					{
-						// clear the frame arrived flags on all cameras
-						state[cam].frame_arrived = false;
-						// initiate master pulse
-                        state[cam].synchronisation_pulse = true;
-						state[cam].RequestFrame();
-					}
-				}
-                // announce that all frames have arrived
-				if ((state[0].frame_arrived) &&
-				    (state[1].frame_arrived))
-				{
-					Console.WriteLine("data arrived");
-			        state[0].frame_arrived = false;
-			        state[1].frame_arrived = false;
-				}
-            }
-            else
-            {
-                Thread.Sleep(40);
-				Console.WriteLine("Paused");
-            }
-            Thread.Sleep(10);
+			state.update_state();			
 		    _callback(_data);
         }
         

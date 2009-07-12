@@ -93,7 +93,7 @@ namespace surveyor.vision
         {            
             window.GdkWindow.ProcessUpdates(true);
             if (calibration_window != null) 
-                calibration_window.GdkWindow.ProcessUpdates(true);
+                calibration_window.GdkWindow.ProcessUpdates(true);			
         }
         
         private Bitmap OverlayImage(Bitmap bmp, Bitmap overlay, int overlay_width)
@@ -170,7 +170,8 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>
         protected override void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
-        
+            Console.WriteLine("DisplayImages");
+			
             if (display_image[0] != null)
             {
                 if ((show_left_image) &&
@@ -233,14 +234,16 @@ namespace surveyor.vision
                     DisplayImage(display_image[1], right_image, false);
                 }
 
+            }			
+            
+            if (window != null)
+            {
                 // Here we need to update the GUI after receiving the right camera image
                 // Since we're running in a separate thread from the GUI we have to
                 // call it in a special way
                 RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
-            }
-            
-            if (window != null)
-            {
+				Console.WriteLine("UpdateGUI");
+				
                 Gdk.Threads.Enter();
                 window.QueueDraw();
                 Gdk.Threads.Leave();
