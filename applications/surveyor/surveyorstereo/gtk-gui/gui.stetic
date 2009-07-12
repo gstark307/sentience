@@ -10,6 +10,7 @@
     <widget-library name="../bin/Debug/surveyorstereo.exe" internal="true" />
   </import>
   <widget class="Gtk.Window" id="MainWindow" design-size="817 300">
+    <action-group name="New Action Group" />
     <action-group name="Default">
       <action id="FileAction">
         <property name="Type">Action</property>
@@ -37,7 +38,6 @@
         <signal name="Activated" handler="OnRecordImagesActionActivated" />
       </action>
     </action-group>
-    <action-group name="New Action Group" />
     <property name="MemberName" />
     <property name="CanFocus">True</property>
     <property name="Title" translatable="yes">Surveyor SVS</property>

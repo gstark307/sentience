@@ -831,7 +831,7 @@ namespace surveyor.vision
 
 
         #endregion
-
+		
 		/// <summary>
 		/// Calculates horizontal and vertical offsets which are the
 		/// result of the cameras not being perfectly aligned in parallel
@@ -895,94 +895,129 @@ namespace surveyor.vision
                 float rot = 0;
                 float scale2 = 1.0f / scale;
                 float radial_scale = scale2;
+				
+				if (!disable_radial_correction)
+				{
+					// merge coefficients to avoid large differences
+					if ((calibration_survey[0].best_fit_curve != null) &&
+					    (calibration_survey[1].best_fit_curve != null))
+					{
+						for (int coeff = 0; coeff <= calibration_survey[0].best_fit_curve.GetDegree(); coeff++)
+						{
+							double c0 = calibration_survey[0].best_fit_curve.Coeff(coeff);
+							double c1 = calibration_survey[1].best_fit_curve.Coeff(coeff);
+							if ((c0 != 0) && (c1 != 0))
+							{
+								// is there a big difference between coefficients
+								if (Math.Abs(c0 - c1) > 0.00000001)
+								{
+									double c = (c0+c1)/2;
+							        calibration_survey[0].best_fit_curve.SetCoeff(coeff, c);
+							        calibration_survey[1].best_fit_curve.SetCoeff(coeff, c);
+									calibration_map[0] = null;
+									calibration_map[1] = null;
+								}
+							}
+						}
+					}
+				}
+				
+				int ww,hh;
                 for (int cam = 0; cam < 2; cam++)
                 {
-                    Bitmap bmp = left_image;
+                    Bitmap bmp = left_image;					
                     if (cam == 1) bmp = right_image;
 
                     if ((calibration_survey[cam] != null) && (bmp != null))
                     {
-                        polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
-                        if (distortion_curve != null)
-                        {
-                            if (calibration_map[cam] == null)
-                            {
-                                if (cam == 0)
-                                {
-                                    if (scale2 > 1)
-                                    {
-                                        radial_scale = 1.0f / scale2;
-                                        scale2 = 1;
-                                    }
-                                }
-                                else
-                                {
-                                    radial_scale = scale2;
-                                    rot = rotation;
-                                }
-
-                                if (!disable_radial_correction)
-                                {
-                                    SurveyorCalibration.updateCalibrationMap(
-                                        bmp.Width, bmp.Height, distortion_curve,
-                                        radial_scale, -rot,
-                                        calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
-                                        0, 0,
-                                        ref calibration_map[cam], ref calibration_map_inverse[cam]);
-                                }
-                                else
-                                {
-                                    SurveyorCalibration.updateCalibrationMap(
-                                        bmp.Width, bmp.Height,
-                                        radial_scale, -rot,
-                                        calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
-                                        0, 0,
-                                        ref calibration_map[cam], ref calibration_map_inverse[cam]);
-                                }
-                            }
-
-                            byte[] img = null;
-                            try
-                            {
-                                img = new byte[bmp.Width * bmp.Height * 3];
-                            }
-                            catch
-                            {
-                            }
-                            if (img != null)
-                            {
-                                BitmapArrayConversions.updatebitmap(bmp, img);
-                                img_rectified[cam] = (byte[])img.Clone();
-
-                                int n = 0;
-                                int[] map = calibration_map[cam];
-                                for (int i = 0; i < img.Length; i += 3, n++)
-                                {
-                                    int index = map[n] * 3;
-                                    for (int col = 0; col < 3; col++)
-                                        img_rectified[cam][i + col] = img[index + col];
-                                }
-
-                                if (rectified[cam] == null)
-                                    rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                                BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
-                            }
-                        }
-                        else
-                        {
-							try
-							{
-                                byte[] img = new byte[bmp.Width * bmp.Height * 3];
-                                if (img != null)
-                                {
-                                    BitmapArrayConversions.updatebitmap(bmp, img);
-                                    img_rectified[cam] = (byte[])img.Clone();
-                                }
-							}
-							catch
-							{
-							}
-                        }
+					    ww = bmp.Width;
+						if (bmp != null)
+						{
+						    hh = bmp.Height;
+							
+	                        polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
+	                        if (distortion_curve != null)
+	                        {
+	                            if (calibration_map[cam] == null)
+	                            {
+	                                if (cam == 0)
+	                                {
+	                                    if (scale2 > 1)
+	                                    {
+	                                        radial_scale = 1.0f / scale2;
+	                                        scale2 = 1;
+	                                    }
+	                                }
+	                                else
+	                                {
+	                                    radial_scale = scale2;
+	                                    rot = rotation;
+	                                }
+	
+	                                if (!disable_radial_correction)
+	                                {
+	                                    SurveyorCalibration.updateCalibrationMap(
+	                                        ww, hh, 
+										    distortion_curve,
+	                                        radial_scale, -rot,
+	                                        calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+	                                        0, 0,
+	                                        ref calibration_map[cam], ref calibration_map_inverse[cam]);
+	                                }
+	                                else
+	                                {
+	                                    SurveyorCalibration.updateCalibrationMap(
+	                                        ww, hh,
+	                                        radial_scale, -rot,
+	                                        calibration_survey[cam].centre_of_distortion_x, calibration_survey[cam].centre_of_distortion_y,
+	                                        0, 0,
+	                                        ref calibration_map[cam], ref calibration_map_inverse[cam]);
+	                                }
+	                            }
+	
+	                            byte[] img = null;
+	                            try
+	                            {
+	                                img = new byte[ww * hh * 3];
+	                            }
+	                            catch
+	                            {
+	                            }
+	                            if ((img != null) && (bmp != null))
+	                            {
+	                                BitmapArrayConversions.updatebitmap(bmp, img);
+	                                img_rectified[cam] = (byte[])img.Clone();
+	
+	                                int n = 0;
+	                                int[] map = calibration_map[cam];
+	                                for (int i = 0; i < img.Length; i += 3, n++)
+	                                {
+	                                    int index = map[n] * 3;
+	                                    for (int col = 0; col < 3; col++)
+	                                        img_rectified[cam][i + col] = img[index + col];
+	                                }
+	
+	                                if (rectified[cam] == null)
+	                                    rectified[cam] = new Bitmap(ww, hh, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+	                                BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
+	                            }
+	                        }
+	                        else
+	                        {
+								try
+								{
+	                                byte[] img = new byte[ww * hh * 3];
+	                                if ((img != null) && (bmp != null))
+	                                {
+	                                    BitmapArrayConversions.updatebitmap(bmp, img);
+	                                    img_rectified[cam] = (byte[])img.Clone();
+	                                }
+								}
+								catch
+								{
+								}
+	                        }
+						}
                     }
                 }
             }

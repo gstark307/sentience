@@ -387,7 +387,7 @@ public partial class MainWindow: Gtk.Window
     }
 		protected virtual void OnCmdAnimatedGifClicked (object sender, System.EventArgs e)
 	{
-	SaveAnimatedGif();
+	    SaveAnimatedGif();
 	}
 		    protected virtual void OnChkEmbeddedClicked (object sender, System.EventArgs e)
 	{
@@ -399,11 +399,4 @@ public partial class MainWindow: Gtk.Window
 	            stereo_camera.DisableEmbeddedStereo();
 	    }
 	}
-
-
-
-
-
-	
-	
 }

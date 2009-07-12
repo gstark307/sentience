@@ -153,7 +153,7 @@ namespace surveyor.vision
 					    if (diff.TotalMilliseconds > timeout_mS)
 					    {
 						    // timed out - request images again
-						    Console.WriteLine("Timed out waiting for images");
+						    //Console.WriteLine("Timed out waiting for images");
 						    if (!camera[0].frame_arrived) 
 							    camera[0].StopSend();
 						    if (!camera[1].frame_arrived) 
@@ -166,37 +166,42 @@ namespace surveyor.vision
 			    }
 			    case SVS_STATE_PROCESS_IMAGES:
 			    {
-	                image_width = bmp_state_left.Width;
-	                image_height = bmp_state_left.Height;
-
-                    //busy_processing = true;
-                    if (calibration_pattern != null)
-                    {
-                        if (!show_left_image)
-                            SurveyorCalibration.DetectDots(bmp_state_left, ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
-                        else
-                            SurveyorCalibration.DetectDots(bmp_state_right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
-                    }
-
-                    RectifyImages(bmp_state_left, bmp_state_right);
-                                         
-                    Process(bmp_state_left, bmp_state_right);
-                    
-                    // save images to file
-                    if (Record)
-                    {
-                        RecordFrameNumber++;
-                        bmp_state_left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                        bmp_state_right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                        if ((rectified[0] != null) && (rectified[0] != null))
-                        {
-                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                        }
-                    }
+				    if (bmp_state_left != null)
+				    {
+		                image_width = bmp_state_left.Width;
+				        if (bmp_state_left != null)
+				        {
+		                    image_height = bmp_state_left.Height;
+	
+		                    //busy_processing = true;
+		                    if (calibration_pattern != null)
+		                    {
+		                        if (!show_left_image)
+		                            SurveyorCalibration.DetectDots(bmp_state_left, ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
+		                        else
+		                            SurveyorCalibration.DetectDots(bmp_state_right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
+		                    }
+		
+		                    RectifyImages(bmp_state_left, bmp_state_right);
+		                                         
+		                    Process(bmp_state_left, bmp_state_right);
+		                    
+		                    // save images to file
+		                    if (Record)
+		                    {
+		                        RecordFrameNumber++;
+		                        bmp_state_left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+		                        bmp_state_right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+		                        if ((rectified[0] != null) && (rectified[0] != null))
+		                        {
+		                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+		                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+		                        }
+		                    }
+					    }
+				    }
 				
 				    svs_state = SVS_STATE_GRAB_IMAGES;
-				
 				    break;
 			    }
 			}
