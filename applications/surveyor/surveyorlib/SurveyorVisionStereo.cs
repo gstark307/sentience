@@ -100,123 +100,126 @@ namespace surveyor.vision
 				
 		public void update_state()
 		{
-			switch(svs_state)
-			{
-			    case SVS_STATE_GRAB_IMAGES:
-			    {
-				    svs_state_last = DateTime.Now;
-				
-	                // pause or resume grabbing frames from the cameras
-				    bool is_paused = false;
-	                if (correspondence != null)
-	                {
-	                    if ((!UpdateWhenClientsConnected) ||
-	                        ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
-	                        is_paused = false;
-	                    else
-	                        is_paused = true;
-	                }
-				
-				    if (!is_paused)
-				    {
-				        // request images                        
-				        camera[0].RequestFrame();
-				        camera[1].RequestFrame();					    
-				        svs_state = SVS_STATE_RECEIVE_IMAGES;
-				    }
-				    break;
-			    }
-			    case SVS_STATE_RECEIVE_IMAGES:
-			    {
-				    // both frames arrived
-			        if ((camera[0].frame_arrived) &&
-			            (camera[1].frame_arrived))
-				    {
-                        bmp_state_left = (Bitmap)camera[0].current_frame;
-                        bmp_state_right = (Bitmap)camera[1].current_frame;
-	                    if ((bmp_state_left != null) && 
-	                        (bmp_state_right != null))
-					    {
-						    // proceed to process the images
-						    svs_state = SVS_STATE_PROCESS_IMAGES;
-				    	}
-					    else
-					    {
-						    // images were invalid - try again
-						    svs_state = SVS_STATE_GRAB_IMAGES;
-					    }
-				    }
-				    else
-				    {
-			            int timeout_mS = 100; //(int)(1000 / fps);
-                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
-					    if (diff.TotalMilliseconds > timeout_mS)
-					    {
-						    // timed out - request images again
-						    //Console.WriteLine("Timed out waiting for images");
-						    if (!camera[0].frame_arrived) 
-							    camera[0].StopSend();
-						    if (!camera[1].frame_arrived) 
-							    camera[1].StopSend();
-						    svs_state = SVS_STATE_GRAB_IMAGES;
-					    }
-				    }
-				    
-				    break;
-			    }
-			    case SVS_STATE_PROCESS_IMAGES:
-			    {
-				    if (bmp_state_left != null)
-				    {
-		                image_width = bmp_state_left.Width;
-				        if (bmp_state_left != null)
-				        {
-		                    image_height = bmp_state_left.Height;
-	
-		                    //busy_processing = true;
-		                    if (calibration_pattern != null)
-		                    {
-		                        if (!show_left_image)
-		                            SurveyorCalibration.DetectDots(bmp_state_left, ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
-		                        else
-		                            SurveyorCalibration.DetectDots(bmp_state_right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
-		                    }
-		
-		                    RectifyImages(bmp_state_left, bmp_state_right);
-		                                         
-		                    Process(bmp_state_left, bmp_state_right);
-		                    
-		                    // save images to file
-		                    if (Record)
-		                    {
-		                        RecordFrameNumber++;
-		                        bmp_state_left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-		                        bmp_state_right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-		                        if ((rectified[0] != null) && (rectified[0] != null))
-		                        {
-		                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-		                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-		                        }
-		                    }
-					    }
-				    }
-				
-				    svs_state = SVS_STATE_GRAB_IMAGES;
-				    break;
-			    }
-			}
-			if (prev_svs_state != svs_state)
-			{
-				string msg = "";
+			if ((camera[0].Running) && 
+			    (camera[1].Running))
+			{			
 				switch(svs_state)
 				{
-				    case SVS_STATE_GRAB_IMAGES: { msg = "grab images"; break; }
-				    case SVS_STATE_RECEIVE_IMAGES: { msg = "images received"; break; }
-				    case SVS_STATE_PROCESS_IMAGES: { msg = "process images"; break; }
+				    case SVS_STATE_GRAB_IMAGES:
+				    {
+					    int time_step_mS = (int)(1000 / fps);
+					    TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
+					    if (diff.TotalMilliseconds < time_step_mS) Thread.Sleep(time_step_mS - (int)diff.TotalMilliseconds);
+					    svs_state_last = DateTime.Now;
+					
+		                // pause or resume grabbing frames from the cameras
+					    bool is_paused = false;
+		                if (correspondence != null)
+		                {
+		                    if ((!UpdateWhenClientsConnected) ||
+		                        ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
+		                        is_paused = false;
+		                    else
+		                        is_paused = true;
+		                }
+					
+					    if (!is_paused)
+					    {
+					        // request images                        
+					        camera[0].RequestFrame();
+					        camera[1].RequestFrame();					    
+					        svs_state = SVS_STATE_RECEIVE_IMAGES;
+					    }
+					    break;
+				    }
+				    case SVS_STATE_RECEIVE_IMAGES:
+				    {
+					    // both frames arrived
+				        if ((camera[0].frame_arrived) &&
+				            (camera[1].frame_arrived))
+					    {
+	                        bmp_state_left = (Bitmap)camera[0].current_frame;
+	                        bmp_state_right = (Bitmap)camera[1].current_frame;
+		                    if ((bmp_state_left != null) && 
+		                        (bmp_state_right != null))
+						    {
+							    // proceed to process the images
+							    svs_state = SVS_STATE_PROCESS_IMAGES;
+					    	}
+						    else
+						    {
+							    // images were invalid - try again
+							    svs_state = SVS_STATE_GRAB_IMAGES;
+						    }
+					    }
+					    else
+					    {
+				            int timeout_mS = 100; //(int)(1000 / fps);
+	                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
+						    if (diff.TotalMilliseconds > timeout_mS)
+						    {
+							    // timed out - request images again
+							    //Console.WriteLine("Timed out waiting for images");
+							    svs_state = SVS_STATE_GRAB_IMAGES;
+						    }
+					    }
+					    
+					    break;
+				    }
+				    case SVS_STATE_PROCESS_IMAGES:
+				    {
+					    if (bmp_state_left != null)
+					    {
+			                image_width = bmp_state_left.Width;
+					        if (bmp_state_left != null)
+					        {
+			                    image_height = bmp_state_left.Height;
+		
+			                    //busy_processing = true;
+			                    if (calibration_pattern != null)
+			                    {
+			                        if (!show_left_image)
+			                            SurveyorCalibration.DetectDots(bmp_state_left, ref edge_detector, calibration_survey[0], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[0]);
+			                        else
+			                            SurveyorCalibration.DetectDots(bmp_state_right, ref edge_detector, calibration_survey[1], ref edges, ref linked_dots, ref grid, ref grid_diff, ref rectified[1]);
+			                    }
+			
+			                    RectifyImages(bmp_state_left, bmp_state_right);
+			                                         
+			                    Process(bmp_state_left, bmp_state_right);
+			                    
+			                    // save images to file
+			                    if (Record)
+			                    {
+			                        RecordFrameNumber++;
+			                        bmp_state_left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			                        bmp_state_right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			                        if ((rectified[0] != null) && (rectified[0] != null))
+			                        {
+			                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			                        }
+			                    }
+						    }
+					    }
+					
+					    svs_state = SVS_STATE_GRAB_IMAGES;
+					    break;
+				    }
 				}
-				//if (Verbose) Console.WriteLine(msg);
+				if (prev_svs_state != svs_state)
+				{
+					string msg = "";
+					switch(svs_state)
+					{
+					    case SVS_STATE_GRAB_IMAGES: { msg = "grab images"; break; }
+					    case SVS_STATE_RECEIVE_IMAGES: { msg = "images received"; break; }
+					    case SVS_STATE_PROCESS_IMAGES: { msg = "process images"; break; }
+					}
+					//if (Verbose) Console.WriteLine(msg);
+				}
+				prev_svs_state = svs_state;
 			}
-			prev_svs_state = svs_state;
 		}
 		
 		#endregion

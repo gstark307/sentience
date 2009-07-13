@@ -8,9 +8,8 @@
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorlib" expanded="True">
-            <Node name="SurveyorVisionStereo.cs" selected="True" />
-          </Node>
+          <Node name="Packages" selected="True" />
+          <Node name="surveyorlib" expanded="True" />
           <Node name="surveyorstereo" expanded="True" />
         </State>
       </Pad>

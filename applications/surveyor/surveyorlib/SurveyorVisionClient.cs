@@ -149,8 +149,6 @@ namespace surveyor.vision
 			{
                 // Create the socket instance
 				m_clientSocket = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp );				
-
-                m_clientSocket.ReceiveTimeout = 100;
                 
 				// Get the remote IP address
 				IPAddress ip = IPAddress.Parse(serverIP);
@@ -163,6 +161,9 @@ namespace surveyor.vision
 				m_clientSocket.Connect ( ipEnd );
 				if(m_clientSocket.Connected) 
                 {					
+                    m_clientSocket.ReceiveTimeout = 100;
+				    m_clientSocket.SendTimeout = 100;
+					
 					//Wait for data asynchronously 
 					WaitForData();
 					
@@ -182,18 +183,6 @@ namespace surveyor.vision
 		NetworkStream networkStream;
 		System.IO.StreamWriter streamWriter;
 
-		public void StopSend()
-		{
-			if (streamWriter != null)
-			{
-				streamWriter.Close();
-			}
-			if (networkStream != null)
-			{
-				networkStream.Close();
-			}
-		}
-		
         /// <summary>
         /// send a message to the server
         /// </summary>
@@ -205,8 +194,8 @@ namespace surveyor.vision
 		{            
 			try
 			{
-				networkStream = new NetworkStream(m_clientSocket);
-				streamWriter = new System.IO.StreamWriter(networkStream);
+				if (networkStream == null) networkStream = new NetworkStream(m_clientSocket);
+				if (streamWriter == null) streamWriter = new System.IO.StreamWriter(networkStream);
 				streamWriter.WriteLine(msg);
 				streamWriter.Flush();
                 waiting_for_reply = wait_for_reply;
@@ -249,15 +238,16 @@ namespace surveyor.vision
 				theSocPkt.thisSocket = m_clientSocket;
 				
 				// Start listening to the data asynchronously				
-				m_clientSocket.BeginReceive (theSocPkt.dataBuffer,
-				                             0, theSocPkt.dataBuffer.Length,
-				                             SocketFlags.None, 
-				                             m_pfnCallBack, 
-				                             theSocPkt);				
+				m_clientSocket.BeginReceive (
+				    theSocPkt.dataBuffer,
+				    0, theSocPkt.dataBuffer.Length,
+				    SocketFlags.None, 
+				    m_pfnCallBack, 
+				    theSocPkt);				
 			}
 			catch(SocketException se)
 			{
-				Console.WriteLine(se.Message);
+				Console.WriteLine("WaitForData: " + se.Message);
 			}
 		}
 

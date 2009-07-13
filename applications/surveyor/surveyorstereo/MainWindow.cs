@@ -33,7 +33,7 @@ public partial class MainWindow: Gtk.Window
     string stereo_camera_IP = "169.254.0.10";
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
-    int fps = 30;
+    int fps = 5;
     string temporary_files_path = "";
     string recorded_images_path = "";
 
