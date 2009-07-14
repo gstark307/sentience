@@ -1,18 +1,19 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/WebcamVisionStereo.cs" ctype="Workbench">
     <Files>
       <File FileName="../surveyorlib/correspondence/StereoVisionSimple.cs" Line="37" Column="41" />
       <File FileName="../surveyorlib/correspondence/StereoVisionEdges.cs" Line="284" Column="38" />
-      <File FileName="MainWindow.cs" Line="41" Column="38" />
+      <File FileName="MainWindow.cs" Line="360" Column="19" />
       <File FileName="../surveyorlib/correspondence/StereoVision.cs" Line="9" Column="3" />
-      <File FileName="../surveyorlib/WebcamVisionStereo.cs" Line="170" Column="1" />
+      <File FileName="../surveyorlib/WebcamVisionStereo.cs" Line="38" Column="22" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="webcamstereo" expanded="True">
-            <Node name="MainWindow.cs" selected="True" />
+          <Node name="surveyorlib" expanded="True">
+            <Node name="WebcamVisionStereo.cs" selected="True" />
           </Node>
+          <Node name="webcamstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">

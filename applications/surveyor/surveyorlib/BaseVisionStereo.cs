@@ -870,6 +870,13 @@ namespace surveyor.vision
         protected void RectifyImages(Bitmap left_image, Bitmap right_image)
         {
             byte[][] img_rectified = new byte[2][];
+			int ww = 0;
+			int hh = 0;
+			if (left_image != null)
+			{
+			    ww = left_image.Width;
+			    hh = left_image.Height;
+			}
 
             if (disable_rectification)
             {
@@ -879,13 +886,13 @@ namespace surveyor.vision
                     Bitmap bmp = left_image;
                     if (cam == 1) bmp = right_image;
 
-                    byte[] img = new byte[bmp.Width * bmp.Height * 3];
+                    byte[] img = new byte[ww * hh * 3];
                     if (img != null)
                     {
                         BitmapArrayConversions.updatebitmap(bmp, img);
                         img_rectified[cam] = (byte[])img.Clone();
                         if (rectified[cam] == null)
-                            rectified[cam] = new Bitmap(bmp.Width, bmp.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                            rectified[cam] = new Bitmap(ww, hh, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                         BitmapArrayConversions.updatebitmap_unsafe(img_rectified[cam], rectified[cam]);
                     }
                 }
@@ -898,6 +905,11 @@ namespace surveyor.vision
 				
 				if (!disable_radial_correction)
 				{
+					//calibration_survey[0].centre_of_distortion_x = ww/2;
+					//calibration_survey[0].centre_of_distortion_y = hh/2;
+					//calibration_survey[1].centre_of_distortion_x = ww/2;
+					//calibration_survey[1].centre_of_distortion_y = hh/2;
+					
 					// merge coefficients to avoid large differences
 					if ((calibration_survey[0].best_fit_curve != null) &&
 					    (calibration_survey[1].best_fit_curve != null))
@@ -916,13 +928,13 @@ namespace surveyor.vision
 							        calibration_survey[1].best_fit_curve.SetCoeff(coeff, c);
 									calibration_map[0] = null;
 									calibration_map[1] = null;
+									Console.WriteLine("Coefficients merged");
 								}
 							}
 						}
 					}
 				}
 				
-				int ww,hh;
                 for (int cam = 0; cam < 2; cam++)
                 {
                     Bitmap bmp = left_image;					
@@ -983,7 +995,8 @@ namespace surveyor.vision
 	                            catch
 	                            {
 	                            }
-	                            if ((img != null) && (bmp != null))
+	                            if ((img != null) && (bmp != null) &&
+								    (calibration_map[cam] != null))
 	                            {
 	                                BitmapArrayConversions.updatebitmap(bmp, img);
 	                                img_rectified[cam] = (byte[])img.Clone();

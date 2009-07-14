@@ -36,11 +36,11 @@ public partial class MainWindow: Gtk.Window
     string right_camera_device = "/dev/video0";
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
-    int fps = 2;
+    int fps = 10;
     string temporary_files_path = "";
     string recorded_images_path = "";
 	string manual_camera_alignment_calibration_program = "calibtweaks.exe";
-    bool disable_rectification = false;
+    bool disable_rectification = true;
     bool disable_radial_correction = true;
 	bool reverse_colours = true;
 	
@@ -71,7 +71,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.window = this;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        stereo_camera.Load(calibration_filename);
+        //stereo_camera.Load(calibration_filename);
         stereo_camera.image_width = image_width;
         stereo_camera.image_height = image_height;        
 		stereo_camera.min_exposure = minimum_brightness;
@@ -353,22 +353,29 @@ public partial class MainWindow: Gtk.Window
             if ((File.Exists(left_filename)) &&
                 (File.Exists(right_filename)))
             {
-                System.Diagnostics.Process proc = new System.Diagnostics.Process();
-                proc.EnableRaisingEvents = false;
-                proc.StartInfo.FileName = "mono " + manual_camera_alignment_calibration_program;
-                proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
-                proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
-                proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
-                proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
-                proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
-                proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
-				if (reverse_colours) proc.StartInfo.Arguments += " -reverse";
-                proc.Start();
-                proc.WaitForExit();
-
-                string params_filename = "manualoffsets_params.txt";
-                LoadManualCameraAlignmentCalibrationParameters(params_filename);
-                stereo_camera.Save(calibration_filename);
+				if (File.Exists(manual_camera_alignment_calibration_program))
+				{
+	                System.Diagnostics.Process proc = new System.Diagnostics.Process();
+	                proc.EnableRaisingEvents = false;
+	                proc.StartInfo.FileName = "mono " + manual_camera_alignment_calibration_program;
+	                proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
+	                proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
+	                proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
+	                proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
+	                proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
+	                proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
+					if (reverse_colours) proc.StartInfo.Arguments += " -reverse";
+	                proc.Start();
+	                proc.WaitForExit();
+	
+	                string params_filename = "manualoffsets_params.txt";
+	                LoadManualCameraAlignmentCalibrationParameters(params_filename);
+	                stereo_camera.Save(calibration_filename);
+				}
+				else
+				{
+					Console.WriteLine(manual_camera_alignment_calibration_program + " could not be found");
+				}
             }
             
         }

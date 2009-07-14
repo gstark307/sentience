@@ -14,6 +14,8 @@ public partial class MainWindow {
     
     private Gtk.UIManager UIManager;
     
+    private Gtk.Action SaveAsAnimatedGifAction;
+    
     private Gtk.Action FileAction;
     
     private Gtk.Action ExitAction;
@@ -25,8 +27,6 @@ public partial class MainWindow {
     private Gtk.Action CalibrateAlignmentAction;
     
     private Gtk.Action ManualTweaksAction;
-    
-    private Gtk.Action SaveAsAnimatedGifAction;
     
     private Gtk.VBox vbox1;
     
@@ -68,31 +68,31 @@ public partial class MainWindow {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
         this.UIManager = new Gtk.UIManager();
-        Gtk.ActionGroup w1 = new Gtk.ActionGroup("Default");
+        Gtk.ActionGroup w1 = new Gtk.ActionGroup("New Action Group");
+        this.SaveAsAnimatedGifAction = new Gtk.Action("SaveAsAnimatedGifAction", Mono.Unix.Catalog.GetString("Save as animated gif"), null, null);
+        this.SaveAsAnimatedGifAction.ShortLabel = Mono.Unix.Catalog.GetString("Save as animated gif");
+        w1.Add(this.SaveAsAnimatedGifAction, null);
+        this.UIManager.InsertActionGroup(w1, 0);
+        Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");
         this.FileAction = new Gtk.Action("FileAction", Mono.Unix.Catalog.GetString("File"), null, null);
         this.FileAction.ShortLabel = Mono.Unix.Catalog.GetString("File");
-        w1.Add(this.FileAction, null);
+        w2.Add(this.FileAction, null);
         this.ExitAction = new Gtk.Action("ExitAction", Mono.Unix.Catalog.GetString("Exit"), null, "gtk-stop");
         this.ExitAction.ShortLabel = Mono.Unix.Catalog.GetString("Exit");
-        w1.Add(this.ExitAction, null);
+        w2.Add(this.ExitAction, null);
         this.ToolsAction = new Gtk.Action("ToolsAction", Mono.Unix.Catalog.GetString("Tools"), null, null);
         this.ToolsAction.ShortLabel = Mono.Unix.Catalog.GetString("Tools");
-        w1.Add(this.ToolsAction, null);
+        w2.Add(this.ToolsAction, null);
         this.RecordImagesAction = new Gtk.ToggleAction("RecordImagesAction", Mono.Unix.Catalog.GetString("Record images"), null, null);
         this.RecordImagesAction.Active = true;
         this.RecordImagesAction.ShortLabel = Mono.Unix.Catalog.GetString("Record images");
-        w1.Add(this.RecordImagesAction, null);
+        w2.Add(this.RecordImagesAction, null);
         this.CalibrateAlignmentAction = new Gtk.Action("CalibrateAlignmentAction", Mono.Unix.Catalog.GetString("Calibrate Alignment"), null, null);
         this.CalibrateAlignmentAction.ShortLabel = Mono.Unix.Catalog.GetString("Calibrate Alignment");
-        w1.Add(this.CalibrateAlignmentAction, null);
+        w2.Add(this.CalibrateAlignmentAction, null);
         this.ManualTweaksAction = new Gtk.Action("ManualTweaksAction", Mono.Unix.Catalog.GetString("Manual Tweaks"), null, null);
         this.ManualTweaksAction.ShortLabel = Mono.Unix.Catalog.GetString("Manual Tweaks");
-        w1.Add(this.ManualTweaksAction, null);
-        this.UIManager.InsertActionGroup(w1, 0);
-        Gtk.ActionGroup w2 = new Gtk.ActionGroup("New Action Group");
-        this.SaveAsAnimatedGifAction = new Gtk.Action("SaveAsAnimatedGifAction", Mono.Unix.Catalog.GetString("Save as animated gif"), null, null);
-        this.SaveAsAnimatedGifAction.ShortLabel = Mono.Unix.Catalog.GetString("Save as animated gif");
-        w2.Add(this.SaveAsAnimatedGifAction, null);
+        w2.Add(this.ManualTweaksAction, null);
         this.UIManager.InsertActionGroup(w2, 1);
         this.AddAccelGroup(this.UIManager.AccelGroup);
         this.CanFocus = true;
@@ -280,11 +280,11 @@ public partial class MainWindow {
         this.DefaultHeight = 300;
         this.Show();
         this.DeleteEvent += new Gtk.DeleteEventHandler(this.OnDeleteEvent);
+        this.SaveAsAnimatedGifAction.Activated += new System.EventHandler(this.OnSaveAsAnimatedGifActionActivated);
         this.ExitAction.Activated += new System.EventHandler(this.OnExitActionActivated);
         this.RecordImagesAction.Activated += new System.EventHandler(this.OnRecordImagesActionActivated);
         this.CalibrateAlignmentAction.Activated += new System.EventHandler(this.OnCalibrateAlignmentActionActivated);
         this.ManualTweaksAction.Activated += new System.EventHandler(this.OnManualTweaksActionActivated);
-        this.SaveAsAnimatedGifAction.Activated += new System.EventHandler(this.OnSaveAsAnimatedGifActionActivated);
         this.chkRecord.Clicked += new System.EventHandler(this.OnChkRecordClicked);
         this.chkCalibrateLeft.Clicked += new System.EventHandler(this.OnChkCalibrateLeftClicked);
         this.chkCalibrateRight.Clicked += new System.EventHandler(this.OnChkCalibrateRightClicked);

@@ -54,7 +54,7 @@ namespace surveyor.vision
         public string image_request_command = "I";
 		public string processing_type_command = "g";
 		public string processing_type_stereo_command = "5";
-		public string processing_type_normal_command = "9";
+		public string processing_type_normal_command = "a";
         public string request_320_240 = "b";
         public string request_640_480 = "c";
         
@@ -178,7 +178,7 @@ namespace surveyor.vision
 			{
 				Console.WriteLine("\nConnection failed, is the SVS running?\n" + se.Message);
 			}		
-		}		
+		}
 		
 		NetworkStream networkStream;
 		System.IO.StreamWriter streamWriter;

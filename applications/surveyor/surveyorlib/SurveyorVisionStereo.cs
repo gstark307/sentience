@@ -30,7 +30,8 @@ namespace surveyor.vision
     {
         private SurveyorVisionClient[] camera;
         private string host;
-        private int[] port_number;		
+        private int[] port_number;	
+		public bool Pause;
 		
         #region "constructors"
         
@@ -69,22 +70,28 @@ namespace surveyor.vision
 		
 		#region "enabling and disabling embedded stereo"
 		
+		private bool enable_embedded = false;
+		private bool disable_embedded = true;
+		private bool rectification_enabled;
+		DateTime embedded_last_enabled_disabled = DateTime.Now;
+		
 		public void EnableEmbeddedStereo()
 		{
-			for (int cam = 0; cam < 2; cam++)
-			{
-			    camera[cam].EnableEmbeddedStereo();
-			    camera[cam].Embedded = true;
-			}
+			Console.WriteLine("Enabling embedded stereo");
+			embedded_last_enabled_disabled = DateTime.Now;
+			disable_embedded = false;
+			enable_embedded = true;	
+			rectification_enabled = !disable_rectification;
+			disable_rectification = true;
 		}
 		
 		public void DisableEmbeddedStereo()
 		{
-			for (int cam = 0; cam < 2; cam++)
-			{		
-			    camera[cam].DisableEmbeddedStereo();
-			    camera[cam].Embedded = false;
-			}
+			Console.WriteLine("Disabling embedded stereo");
+			embedded_last_enabled_disabled = DateTime.Now;
+			disable_embedded = true;
+			enable_embedded = false;
+			disable_rectification = !rectification_enabled;
 		}
 		
 		#endregion
@@ -96,6 +103,7 @@ namespace surveyor.vision
 		public const int SVS_STATE_GRAB_IMAGES = 0;
 		public const int SVS_STATE_RECEIVE_IMAGES = 1;
 		public const int SVS_STATE_PROCESS_IMAGES = 2;
+		public const int EMBEDDED_TIMEOUT_SEC = 5;
 		private DateTime svs_state_last;
 				
 		public void update_state()
@@ -106,29 +114,53 @@ namespace surveyor.vision
 				switch(svs_state)
 				{
 				    case SVS_STATE_GRAB_IMAGES:
-				    {
+				    {					    					
 					    int time_step_mS = (int)(1000 / fps);
 					    TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
-					    if (diff.TotalMilliseconds < time_step_mS) Thread.Sleep(time_step_mS - (int)diff.TotalMilliseconds);
-					    svs_state_last = DateTime.Now;
-					
-		                // pause or resume grabbing frames from the cameras
-					    bool is_paused = false;
-		                if (correspondence != null)
-		                {
-		                    if ((!UpdateWhenClientsConnected) ||
-		                        ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
-		                        is_paused = false;
-		                    else
-		                        is_paused = true;
-		                }
-					
-					    if (!is_paused)
+					    if (diff.TotalMilliseconds > time_step_mS)
 					    {
-					        // request images                        
-					        camera[0].RequestFrame();
-					        camera[1].RequestFrame();					    
-					        svs_state = SVS_STATE_RECEIVE_IMAGES;
+						    svs_state_last = DateTime.Now;
+						
+						    // enable embedded stereo
+						    TimeSpan diff2 = DateTime.Now.Subtract(embedded_last_enabled_disabled);
+						    if (enable_embedded)
+						    {
+							    if (diff2.TotalSeconds > EMBEDDED_TIMEOUT_SEC) enable_embedded = false;
+			                    camera[0].Embedded = true;
+				                camera[1].Embedded = true;			
+				                camera[0].EnableEmbeddedStereo();	
+							    //Console.WriteLine("Embedded stereo enabled");
+						    }
+						    // disable embedded stereo
+						    if (disable_embedded)
+						    {						    
+							    if (diff2.TotalSeconds > EMBEDDED_TIMEOUT_SEC) enable_embedded = false;
+			                    camera[0].Embedded = false;
+				                camera[1].Embedded = false;			
+				                camera[0].DisableEmbeddedStereo();	
+							    //Console.WriteLine("Embedded stereo disabled");
+						    }
+												
+			                // pause or resume grabbing frames from the cameras
+						    bool is_paused = false;
+			                if (correspondence != null)
+			                {
+			                    if ((!UpdateWhenClientsConnected) ||
+			                        ((UpdateWhenClientsConnected) && (correspondence.GetNoOfClients() > 0)))
+			                        is_paused = false;
+			                    else
+			                        is_paused = true;
+			                }
+						
+						    if ((Pause) || (is_paused)) Console.WriteLine("Paused");
+						
+						    if (((!is_paused) || (Pause)) && (diff2.TotalSeconds > EMBEDDED_TIMEOUT_SEC))
+						    {
+						        // request images                        
+						        camera[0].RequestFrame();
+						        camera[1].RequestFrame();					    
+						        svs_state = SVS_STATE_RECEIVE_IMAGES;
+						    }
 					    }
 					    break;
 				    }
@@ -154,7 +186,7 @@ namespace surveyor.vision
 					    }
 					    else
 					    {
-				            int timeout_mS = 100; //(int)(1000 / fps);
+				            int timeout_mS = 500; //(int)(1000 / fps);
 	                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
 						    if (diff.TotalMilliseconds > timeout_mS)
 						    {
@@ -216,7 +248,8 @@ namespace surveyor.vision
 					    case SVS_STATE_RECEIVE_IMAGES: { msg = "images received"; break; }
 					    case SVS_STATE_PROCESS_IMAGES: { msg = "process images"; break; }
 					}
-					//if (Verbose) Console.WriteLine(msg);
+					//if (Verbose) 
+					Console.WriteLine(msg);
 				}
 				prev_svs_state = svs_state;
 			}
@@ -251,36 +284,44 @@ namespace surveyor.vision
         public override void Run()
         {
             bool cameras_started = true;
-            
-            // start running the cameras
-            for (int cam = 0; cam < 2; cam++)
-            {
-                camera[cam].fps = fps;
-                camera[cam].Start(host, port_number[cam]);
-                if (camera[cam].Running)
-                {
-                    camera[cam].StartStream();
-                }
-                else
-                {
-                    cameras_started = false;
-                    break;
-                }
-            }
-            
-            if (cameras_started)
-            {
-                // create a thread to send the master pulse
-                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), this);        
-                sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
-                sync_thread.Priority = ThreadPriority.Normal;
-                sync_thread.Start();   
-                Running = true;
-                Console.WriteLine("Stereo camera active on " + host);
-            }
-			else
+			bool retry = true;
+			int tries = 0;
+			
+			while ((retry) && (tries < 4))
 			{
-				Console.WriteLine("Cameras not started");
+				tries++;
+            
+	            // start running the cameras
+	            for (int cam = 0; cam < 2; cam++)
+	            {
+	                camera[cam].fps = fps;
+	                camera[cam].Start(host, port_number[cam]);
+	                if (camera[cam].Running)
+	                {
+	                    camera[cam].StartStream();
+	                }
+	                else
+	                {
+	                    cameras_started = false;
+	                    break;
+	                }
+	            }
+	            
+	            if (cameras_started)
+	            {
+	                // create a thread to send the master pulse
+	                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), this);        
+	                sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
+	                sync_thread.Priority = ThreadPriority.Normal;
+	                sync_thread.Start();   
+	                Running = true;
+					retry = false;
+	                Console.WriteLine("Stereo camera active on " + host);
+	            }
+				else
+				{
+					Console.WriteLine("Cameras not started");
+				}
 			}
         }
 

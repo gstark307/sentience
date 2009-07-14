@@ -38,8 +38,8 @@ public partial class MainWindow: Gtk.Window
     string recorded_images_path = "";
 
 	string manual_camera_alignment_calibration_program = "calibtweaks.exe";
-    bool disable_rectification = true; // false;
-    bool disable_radial_correction = true;
+    //bool disable_rectification = true; // false;
+    //bool disable_radial_correction = true;
 	bool reverse_colours = true;
 	
     public SurveyorVisionStereoGtk stereo_camera;
@@ -61,7 +61,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        stereo_camera.Load(calibration_filename);
+        //stereo_camera.Load(calibration_filename);
         stereo_camera.Run();
     }
     
@@ -391,11 +391,11 @@ public partial class MainWindow: Gtk.Window
 	}
 		    protected virtual void OnChkEmbeddedClicked (object sender, System.EventArgs e)
 	{
-	    if (stereo_camera != null)
+		if (stereo_camera != null)
 	    {
 		    if (chkEmbedded.Active) 
-		        stereo_camera.EnableEmbeddedStereo();
-	        else
+			    stereo_camera.EnableEmbeddedStereo();
+			else
 	            stereo_camera.DisableEmbeddedStereo();
 	    }
 	}
