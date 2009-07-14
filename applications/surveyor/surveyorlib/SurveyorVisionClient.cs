@@ -161,8 +161,8 @@ namespace surveyor.vision
 				m_clientSocket.Connect ( ipEnd );
 				if(m_clientSocket.Connected) 
                 {					
-                    m_clientSocket.ReceiveTimeout = 100;
-				    m_clientSocket.SendTimeout = 100;
+                    m_clientSocket.ReceiveTimeout = 500;
+				    m_clientSocket.SendTimeout = 500;
 					
 					//Wait for data asynchronously 
 					WaitForData();
@@ -202,7 +202,7 @@ namespace surveyor.vision
 			}
 			catch(SocketException se)
 			{
-				Console.WriteLine(se.Message);
+				Console.WriteLine("Send: " + se.Message);
 			}
 		}
 
@@ -316,6 +316,14 @@ namespace surveyor.vision
 						    if (memstream != null) memstream.Dispose();
 						    memstream = new_memstream;
 						    current_frame = new_current_frame;
+
+                            received_data.RemoveRange(0, end_index);
+                            image_header_pos -= end_index;
+                            search_pos -= end_index;
+                            previous_image_header_pos = image_header_pos;
+                            frame_arrived = true;
+                            current_frame_swapping = false;
+                            
                             if (Verbose) 
 							    Console.WriteLine("Frame received");						
 						}
@@ -328,13 +336,6 @@ namespace surveyor.vision
                     current_frame = null;
                     Console.WriteLine("Error converting to jpeg: " + ex.Message);                    
                 }
-
-                received_data.RemoveRange(0, end_index);
-                image_header_pos -= end_index;
-                search_pos -= end_index;
-                previous_image_header_pos = image_header_pos;
-	            frame_arrived = true;
-				current_frame_swapping = false;
             }
             
         }
@@ -370,18 +371,23 @@ namespace surveyor.vision
                         for (int j = 0; j < 4; j++) 
     					    frame_size += (0xFF & received_data[search_pos + 6 + j]) << (8 * j);
     					    
-    					//Console.WriteLine("Frame size: " + frame_size.ToString());
+    					Console.WriteLine("Frame size: " + frame_size.ToString() + " bytes");
+						Console.WriteLine((received_data.Count - search_pos - 10).ToString() + " bytes received");
     					        					
     					image_header_pos = search_pos;
     					
     					if (previous_image_header_pos > -1)
     					{
-    					    ReceiveFrame(received_data, 
-    					                 previous_image_header_pos, image_header_pos, 
-    					                 previous_frame_size, 
-    					                 previous_image_width, 
-    					                 previous_image_height);        					                 
-							received = true;
+                            if (previous_image_header_pos < image_header_pos)
+                            {
+        					    ReceiveFrame(
+    							    received_data, 
+        					        previous_image_header_pos, image_header_pos, 
+        					        previous_frame_size, 
+        					        previous_image_width, 
+        					        previous_image_height);        					                 
+    							received = true;
+                            }
     					}
     					else
     					{
@@ -497,7 +503,7 @@ namespace surveyor.vision
 				for (int i = 0; i < iRx; i++)
 				    received_data.Add(theSockId.dataBuffer[i]);
 				    
-				if (Verbose)
+				//if (Verbose)
 				    Console.WriteLine(received_data.Count.ToString() + " bytes received");
 				
 				//Console.Write(".");

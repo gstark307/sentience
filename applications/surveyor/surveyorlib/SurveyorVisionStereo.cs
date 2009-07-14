@@ -186,12 +186,12 @@ namespace surveyor.vision
 					    }
 					    else
 					    {
-				            int timeout_mS = 500; //(int)(1000 / fps);
+				            int timeout_mS = 100; //(int)(1000 / fps);
 	                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
 						    if (diff.TotalMilliseconds > timeout_mS)
 						    {
 							    // timed out - request images again
-							    //Console.WriteLine("Timed out waiting for images");
+							    Console.WriteLine("Timed out waiting for images");
 							    svs_state = SVS_STATE_GRAB_IMAGES;
 						    }
 					    }
@@ -249,7 +249,7 @@ namespace surveyor.vision
 					    case SVS_STATE_PROCESS_IMAGES: { msg = "process images"; break; }
 					}
 					//if (Verbose) 
-					Console.WriteLine(msg);
+					//Console.WriteLine(msg);
 				}
 				prev_svs_state = svs_state;
 			}
