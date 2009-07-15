@@ -27,7 +27,7 @@ namespace surveyor.vision
     public class SurveyorCalibration
     {
         public const int dots_across = 20;
-        public const int dot_radius_percent = 30;    
+        public const int dot_radius_percent = 50;    
             
         /// <summary>
         /// use canny algorithm to find edges
@@ -36,9 +36,11 @@ namespace surveyor.vision
         /// <param name="edge_detector"></param>
         /// <param name="dots"></param>
         /// <param name="edges_bmp"></param>
-        private static void DetectEdges(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
-                                        ref hypergraph dots,
-                                        ref Bitmap edges_bmp)
+        private static void DetectEdges(
+            Bitmap bmp, 
+            ref EdgeDetectorCanny edge_detector,
+            ref hypergraph dots,
+            ref Bitmap edges_bmp)
         {
             byte[] image_data = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, image_data);
@@ -1201,13 +1203,15 @@ namespace surveyor.vision
         }
         
                 
-        public static hypergraph DetectDots(Bitmap bmp, ref EdgeDetectorCanny edge_detector,
-                                            CalibrationSurvey survey,
-                                            ref Bitmap detected_dots,
-                                            ref Bitmap linked_dots,
-                                            ref Bitmap grd,
-                                            ref Bitmap grid_diff,
-                                            ref Bitmap rectified)
+        public static hypergraph DetectDots(
+            Bitmap bmp, 
+            ref EdgeDetectorCanny edge_detector,
+            CalibrationSurvey survey,
+            ref Bitmap detected_dots,
+            ref Bitmap linked_dots,
+            ref Bitmap grd,
+            ref Bitmap grid_diff,
+            ref Bitmap rectified)
         {
             const int minimum_links = (dots_across * (dots_across/2)) / 2;
             hypergraph dots = null;

@@ -580,7 +580,7 @@ namespace surveyor.vision
 				}
 				else
 				{
-					bw.Write(Convert.ToInt32(offset_x));
+					bw.Write(Convert.ToInt32(-offset_x));
 					bw.Write(Convert.ToInt32(offset_y));
 				}
 				bw.Write(Convert.ToInt32(centre_of_distortion_x[cam]));
@@ -595,7 +595,9 @@ namespace surveyor.vision
 					bw.Write(Convert.ToInt32(scale*6000));
 					bw.Write((int)6000);
 				}
-				for (int i = 1; i < 4; i++)
+				int degree = lens_distortion_curve[cam].GetDegree();
+                bw.Write(degree);
+                for (int i = 1; i <= degree; i++)
 				{
 					bw.Write(Convert.ToInt32(Math.Round(lens_distortion_curve[cam].Coeff(i)*10000000)));
 				}
@@ -874,8 +876,8 @@ namespace surveyor.vision
 			int hh = 0;
 			if (left_image != null)
 			{
-			    ww = left_image.Width;
-			    hh = left_image.Height;
+			    ww = image_width; //left_image.Width;
+			    hh = image_height; //left_image.Height;
 			}
 
             if (disable_rectification)
@@ -902,39 +904,7 @@ namespace surveyor.vision
                 float rot = 0;
                 float scale2 = 1.0f / scale;
                 float radial_scale = scale2;
-				
-				if (!disable_radial_correction)
-				{
-					//calibration_survey[0].centre_of_distortion_x = ww/2;
-					//calibration_survey[0].centre_of_distortion_y = hh/2;
-					//calibration_survey[1].centre_of_distortion_x = ww/2;
-					//calibration_survey[1].centre_of_distortion_y = hh/2;
-					
-					// merge coefficients to avoid large differences
-					if ((calibration_survey[0].best_fit_curve != null) &&
-					    (calibration_survey[1].best_fit_curve != null))
-					{
-						for (int coeff = 0; coeff <= calibration_survey[0].best_fit_curve.GetDegree(); coeff++)
-						{
-							double c0 = calibration_survey[0].best_fit_curve.Coeff(coeff);
-							double c1 = calibration_survey[1].best_fit_curve.Coeff(coeff);
-							if ((c0 != 0) && (c1 != 0))
-							{
-								// is there a big difference between coefficients
-								if (Math.Abs(c0 - c1) > 0.00000001)
-								{
-									double c = (c0+c1)/2;
-							        calibration_survey[0].best_fit_curve.SetCoeff(coeff, c);
-							        calibration_survey[1].best_fit_curve.SetCoeff(coeff, c);
-									calibration_map[0] = null;
-									calibration_map[1] = null;
-									Console.WriteLine("Coefficients merged");
-								}
-							}
-						}
-					}
-				}
-				
+								
                 for (int cam = 0; cam < 2; cam++)
                 {
                     Bitmap bmp = left_image;					
@@ -942,11 +912,8 @@ namespace surveyor.vision
 
                     if ((calibration_survey[cam] != null) && (bmp != null))
                     {
-					    ww = bmp.Width;
 						if (bmp != null)
-						{
-						    hh = bmp.Height;
-							
+						{							
 	                        polynomial distortion_curve = calibration_survey[cam].best_fit_curve;
 	                        if (distortion_curve != null)
 	                        {
