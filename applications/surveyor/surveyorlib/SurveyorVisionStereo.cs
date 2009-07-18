@@ -186,7 +186,7 @@ namespace surveyor.vision
 					    }
 					    else
 					    {
-				            int timeout_mS = 100; //(int)(1000 / fps);
+				            int timeout_mS = 500;
 	                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
 						    if (diff.TotalMilliseconds > timeout_mS)
 						    {

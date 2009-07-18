@@ -1,15 +1,18 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/BaseVisionStereo.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/SurveyorVisionStereo.cs" ctype="Workbench">
     <Files>
-      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="197" Column="11" />
-      <File FileName="MainWindow.cs" Line="61" Column="22" />
-      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="319" Column="1" />
-      <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="580" Column="6" />
+      <File FileName="../surveyorlib/SurveyorCalibration.cs" Line="767" Column="10" />
+      <File FileName="../surveyorlib/calibration/CalibrationSurvey.cs" Line="37" Column="36" />
+      <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="903" Column="14" />
+      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="187" Column="14" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorstereo" expanded="True" selected="True" />
+          <Node name="surveyorlib" expanded="True">
+            <Node name="SurveyorVisionStereo.cs" selected="True" />
+          </Node>
+          <Node name="surveyorstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
