@@ -174,12 +174,23 @@ namespace stereoserver
             if (disable_radial_correction_str != "") disable_radial_correction = true;
 
             string force = commandline.GetParameterValue("force", parameters);
+			
+			bool flip_left_image = false;
+			string flip_left_image_str = commandline.GetParameterValue("flipleft", parameters);
+			if (flip_left_image_str != "")
+				flip_left_image = true;
+
+			bool flip_right_image = false;
+			string flip_right_image_str = commandline.GetParameterValue("flipright", parameters);
+			if (flip_right_image_str != "")
+				flip_right_image = true;
 
             string algorithm_str = commandline.GetParameterValue("algorithm", parameters);
             if (algorithm_str != "")
             {
                 algorithm_str = algorithm_str.ToLower();
                 if (algorithm_str == "simple") stereo_algorithm_type = StereoVision.SIMPLE;
+                if (algorithm_str == "edges") stereo_algorithm_type = StereoVision.EDGES;
                 if (algorithm_str == "dense") stereo_algorithm_type = StereoVision.DENSE;
             }
 
@@ -263,6 +274,8 @@ namespace stereoserver
                         stereo_camera0.disable_radial_correction = disable_radial_correction;
                         stereo_camera0.use_media_pause = use_media_pause;
                         stereo_camera0.SaveDebugImages = save_debug_images;
+						stereo_camera0.flip_left_image = flip_left_image;
+						stereo_camera0.flip_right_image = flip_right_image;
                         stereo_camera0.Run();                        
                         if (stereo_camera1 != null)
                         {
@@ -281,6 +294,8 @@ namespace stereoserver
                             stereo_camera1.Record = record;
                             stereo_camera1.temporary_files_path = ramdisk;
                             stereo_camera1.recorded_images_path = record_path;
+						    stereo_camera1.flip_left_image = flip_left_image;
+						    stereo_camera1.flip_right_image = flip_right_image;
                             stereo_camera1.SetPauseFile(pause_file);
                             stereo_camera1.Run();                            
                         }
@@ -392,6 +407,8 @@ namespace stereoserver
             ValidParameters.Add("mediapause");
             ValidParameters.Add("norectify");
             ValidParameters.Add("noradial");
+            ValidParameters.Add("flipleft");
+            ValidParameters.Add("flipright");
             ValidParameters.Add("debug");
 
             return (ValidParameters);

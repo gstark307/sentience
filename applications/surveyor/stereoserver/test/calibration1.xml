@@ -23,11 +23,11 @@
     <!--Calibration Data-->
     <Calibration>
       <!--Image offsets in pixels due to small missalignment from parallel-->
-      <Offsets>-5 3</Offsets>
+      <Offsets>-12 -20</Offsets>
       <!--Rotation of the right image relative to the left in degrees-->
-      <RelativeRotationDegrees>0</RelativeRotationDegrees>
+      <RelativeRotationDegrees>0.9999999</RelativeRotationDegrees>
       <!--Scale of the right image relative to the left-->
-      <RelativeImageScale>0.949</RelativeImageScale>
+      <RelativeImageScale>1</RelativeImageScale>
       <!--Disable all rectification-->
       <DisableRectification>False</DisableRectification>
       <!--Disable radial correction, and use offsets and scale/rotation only-->
@@ -43,6 +43,7 @@
         <RMSerror>Infinity</RMSerror>
         <!--Scaling factor-->
         <Scale>1</Scale>
+        <Flip>True</Flip>
       </Camera>
       <Camera>
         <!--Horizontal field of view of the camera in degrees-->

@@ -1,7 +1,7 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/correspondence/StereoVisionDense.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Main.cs" ctype="Workbench">
     <Files>
-      <File FileName="Main.cs" Line="286" Column="1" />
+      <File FileName="Main.cs" Line="220" Column="21" />
       <File FileName="../surveyorlib/SurveyorCalibration.cs" Line="770" Column="26" />
       <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="1038" Column="65" />
       <File FileName="../surveyorlib/correspondence/StereoVisionSimple.cs" Line="382" Column="1" />
@@ -11,16 +11,17 @@
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="stereoserver" expanded="True" />
+          <Node name="stereoserver" expanded="True" selected="True" />
           <Node name="surveyorlib" expanded="True">
-            <Node name="correspondence" expanded="True">
-              <Node name="StereoVisionDense.cs" selected="True" />
-            </Node>
+            <Node name="correspondence" expanded="True" />
           </Node>
         </State>
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
         <State selected="True" />

@@ -23,7 +23,7 @@
     <!--Calibration Data-->
     <Calibration>
       <!--Image offsets in pixels due to small missalignment from parallel-->
-      <Offsets>-8 0</Offsets>
+      <Offsets>-20 -2</Offsets>
       <!--Rotation of the right image relative to the left in degrees-->
       <RelativeRotationDegrees>0</RelativeRotationDegrees>
       <!--Scale of the right image relative to the left-->
@@ -38,11 +38,13 @@
         <!--The centre of distortion in pixels-->
         <CentreOfDistortion>0 0</CentreOfDistortion>
         <!--Polynomial coefficients used to describe the camera lens distortion-->
-        <DistortionCoefficients>0</DistortionCoefficients>
+        <DistortionCoefficients>0,0,0</DistortionCoefficients>
         <!--The minimum RMS error between the distortion curve and plotted points-->
         <RMSerror>Infinity</RMSerror>
         <!--Scaling factor-->
         <Scale>1</Scale>
+        <!--Whether to flip the image (camera mounted inverted)-->
+        <Flip>True</Flip>
       </Camera>
       <Camera>
         <!--Horizontal field of view of the camera in degrees-->
@@ -50,7 +52,7 @@
         <!--The centre of distortion in pixels-->
         <CentreOfDistortion>0 0</CentreOfDistortion>
         <!--Polynomial coefficients used to describe the camera lens distortion-->
-        <DistortionCoefficients>0</DistortionCoefficients>
+        <DistortionCoefficients>0,0,0</DistortionCoefficients>
         <!--The minimum RMS error between the distortion curve and plotted points-->
         <RMSerror>Infinity</RMSerror>
         <!--Scaling factor-->
