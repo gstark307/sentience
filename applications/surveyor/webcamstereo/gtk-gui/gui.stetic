@@ -9,7 +9,7 @@
     <widget-library name="../../surveyorlib/bin/Debug/surveyorlib.dll" />
     <widget-library name="../../../../../robotbridgeware/bin/Debug/webcamstereo.exe" internal="true" />
   </import>
-  <widget class="Gtk.Window" id="MainWindow" design-size="928 300">
+  <widget class="Gtk.Window" id="MainWindow" design-size="1076 300">
     <action-group name="New Action Group">
       <action id="SaveAsAnimatedGifAction">
         <property name="Type">Action</property>
@@ -168,6 +168,38 @@
               </packing>
             </child>
             <child>
+              <widget class="Gtk.CheckButton" id="chkFlipRight">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Label" translatable="yes">Flip right</property>
+                <property name="DrawIndicator">True</property>
+                <property name="HasLabel">True</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnChkFlipRightClicked" />
+              </widget>
+              <packing>
+                <property name="PackType">End</property>
+                <property name="Position">3</property>
+                <property name="AutoSize">True</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="Gtk.CheckButton" id="chkFlipLeft">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Label" translatable="yes">Flip left</property>
+                <property name="DrawIndicator">True</property>
+                <property name="HasLabel">True</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnChkFlipLeftClicked" />
+              </widget>
+              <packing>
+                <property name="PackType">End</property>
+                <property name="Position">4</property>
+                <property name="AutoSize">True</property>
+              </packing>
+            </child>
+            <child>
               <widget class="Gtk.CheckButton" id="chkRadialCorrection">
                 <property name="MemberName" />
                 <property name="CanFocus">True</property>
@@ -179,7 +211,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">3</property>
+                <property name="Position">5</property>
                 <property name="AutoSize">True</property>
               </packing>
             </child>
@@ -195,7 +227,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">4</property>
+                <property name="Position">6</property>
                 <property name="AutoSize">True</property>
               </packing>
             </child>
@@ -210,7 +242,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">5</property>
+                <property name="Position">7</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>
@@ -227,7 +259,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">6</property>
+                <property name="Position">8</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>

@@ -32,8 +32,8 @@ public partial class MainWindow: Gtk.Window
 {
     int image_width = 320;
     int image_height = 240;
-    string left_camera_device = "/dev/video1";
-    string right_camera_device = "/dev/video0";
+    string left_camera_device = "/dev/video2";
+    string right_camera_device = "/dev/video1";
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
     int fps = 10;
@@ -43,6 +43,10 @@ public partial class MainWindow: Gtk.Window
     bool disable_rectification = true;
     bool disable_radial_correction = true;
 	bool reverse_colours = true;
+	
+	// flip images if the camera is mounted inverted
+	bool flip_left_image = true;
+	bool flip_right_image = false;
 	
 	// use v4l-info <device> to find the min and max brightness levels
 	// for the camera, which are hardware specific
@@ -76,12 +80,16 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.image_height = image_height;        
 		stereo_camera.min_exposure = minimum_brightness;
 		stereo_camera.max_exposure = maximum_brightness;
+		stereo_camera.flip_left_image = flip_left_image;
+		stereo_camera.flip_right_image = flip_right_image;
         stereo_camera.Run();
 		
 		stereo_camera.disable_rectification = disable_rectification;
 		stereo_camera.disable_radial_correction = disable_radial_correction;
 		chkRectification.Active = !disable_rectification;
 		chkRadialCorrection.Active = !disable_radial_correction;
+		chkFlipLeft.Active = stereo_camera.flip_left_image;
+		chkFlipRight.Active = stereo_camera.flip_right_image;
     }	
     
     private void CloseForm()
@@ -211,12 +219,22 @@ public partial class MainWindow: Gtk.Window
 
     protected virtual void OnCmdSimpleStereoClicked (object sender, System.EventArgs e)
     {
-        stereo_camera.stereo_algorithm_type = StereoVision.SIMPLE;
+        stereo_camera.stereo_algorithm_type = StereoVision.EDGES;
+		stereo_camera.Load(calibration_filename);
+		chkFlipLeft.Active = stereo_camera.flip_left_image;
+		chkFlipRight.Active = stereo_camera.flip_right_image;
+		chkRectification.Active = !stereo_camera.disable_rectification;
+		chkRadialCorrection.Active = !stereo_camera.disable_radial_correction;
     }
 
     protected virtual void OnCmdDenseStereoClicked (object sender, System.EventArgs e)
     {
         stereo_camera.stereo_algorithm_type = StereoVision.DENSE;
+		stereo_camera.Load(calibration_filename);
+		chkFlipLeft.Active = stereo_camera.flip_left_image;
+		chkFlipRight.Active = stereo_camera.flip_right_image;
+		chkRectification.Active = !stereo_camera.disable_rectification;
+		chkRadialCorrection.Active = !stereo_camera.disable_radial_correction;
     }
 
     /// <summary>
@@ -436,9 +454,20 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.disable_rectification = disable_rectification;
 	}    
 		
-    protected virtual void OnChkRadialCorrectionClicked (object sender, System.EventArgs e)
+	protected virtual void OnChkRadialCorrectionClicked (object sender, System.EventArgs e)
     {
-        disable_radial_correction = !chkRadialCorrection.Active;
+		disable_radial_correction = !chkRadialCorrection.Active;
         stereo_camera.disable_radial_correction = disable_radial_correction;
     }
+    	protected virtual void OnChkFlipLeftClicked (object sender, System.EventArgs e)
+    {
+        flip_left_image = chkFlipLeft.Active;
+        stereo_camera.flip_left_image = chkFlipLeft.Active;
+    }
+    protected virtual void OnChkFlipRightClicked (object sender, System.EventArgs e)
+    {
+        flip_right_image = chkFlipRight.Active;
+        stereo_camera.flip_right_image = chkFlipRight.Active;
+    }
+    
 }

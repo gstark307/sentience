@@ -122,6 +122,9 @@ namespace surveyor.vision
         
         // path where recorded images will be stored
         public string recorded_images_path;
+
+        // whether to flip images if the cameras are inverted
+        public bool flip_left_image, flip_right_image;
         
         #region "constructors"
         
@@ -330,7 +333,9 @@ namespace surveyor.vision
             float rotation, float scale,
             float offset_x, float offset_y,
             bool disable_rectification,
-            bool disable_radial_correction)
+            bool disable_radial_correction,
+            bool flip_left_image,
+            bool flip_right_image)
         {
             // Create the document.
             XmlDocument doc = new XmlDocument();
@@ -360,7 +365,9 @@ namespace surveyor.vision
                 rotation, scale,
                 offset_x, offset_y,
                 disable_rectification,
-                disable_radial_correction);
+                disable_radial_correction,
+                flip_left_image,
+                flip_right_image);
             doc.DocumentElement.AppendChild(elem);
 
             return (doc);
@@ -410,7 +417,9 @@ namespace surveyor.vision
                     rotation, scale,
                     offset_x, offset_y,
                     disable_rectification,
-                    disable_radial_correction);
+                    disable_radial_correction,
+                    flip_left_image,
+                    flip_right_image);
 
             doc.Save(filename);
 						
@@ -447,7 +456,9 @@ namespace surveyor.vision
 		/// <param name="rotation">rotation of the right image relative to the left in degrees</param>
 		/// <param name="scale"></param>
 		/// <param name="offset_x">offset from parallel alignment in pixels in the horizontal axis</param>
-		/// <param name="offset_y">offset from parallel alignment in pixels in the vertical axis</param>
+        /// <param name="offset_y">offset from parallel alignment in pixels in the vertical axis</param>
+        /// <param name="flip_left_image">whether the left image should be flipped (camera mounted inverted)</param>
+        /// <param name="flip_right_image">whether the right image should be flipped (camera mounted inverted)</param>
 		/// <returns></returns>
         protected static XmlElement getXml(
             XmlDocument doc, XmlElement parent,
@@ -466,7 +477,9 @@ namespace surveyor.vision
             float scale,
             float offset_x, float offset_y,
             bool disable_rectification,
-            bool disable_radial_correction)
+            bool disable_radial_correction,
+            bool flip_left_image,
+            bool flip_right_image)
         {
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
@@ -526,12 +539,22 @@ namespace surveyor.vision
 
             for (int cam = 0; cam < lens_distortion_curve.Length; cam++)
             {
+                bool flip = false;
+                if (cam == 0)
+                {
+                    if (flip_left_image) flip = true;
+                }
+                else
+                {
+                    if (flip_right_image) flip = true;
+                }
+                
                 XmlElement elem = getCameraXml(
                     doc, fov_degrees,
                     lens_distortion_curve[cam],
                     centre_of_distortion_x[cam], centre_of_distortion_y[cam],
                     minimum_rms_error[cam],
-                    1.0f);
+                    1.0f, flip);
                 nodeCalibration.AppendChild(elem);
             }
 
@@ -595,11 +618,16 @@ namespace surveyor.vision
 					bw.Write(Convert.ToInt32(scale*6000));
 					bw.Write((int)6000);
 				}
-				int degree = lens_distortion_curve[cam].GetDegree();
+                int degree=0;
+                if (lens_distortion_curve[cam] != null)
+				    degree = lens_distortion_curve[cam].GetDegree();
                 bw.Write(degree);
                 for (int i = 1; i <= degree; i++)
 				{
-					bw.Write(Convert.ToInt32(Math.Round(lens_distortion_curve[cam].Coeff(i)*10000000)));
+                    if (lens_distortion_curve[cam] != null)
+					    bw.Write(Convert.ToInt32(Math.Round(lens_distortion_curve[cam].Coeff(i)*10000000)));
+                    else
+                        bw.Write(1);
 				}
                 bw.Write((int)image_width);
                 bw.Write((int)image_height);
@@ -618,6 +646,8 @@ namespace surveyor.vision
         /// <param name="centre_of_distortion_x">x coordinate of the centre of distortion within the image in pixels</param>
         /// <param name="centre_of_distortion_y">y coordinate of the centre of distortion within the image in pixels</param>
         /// <param name="minimum_rms_error">minimum curve fitting error in pixels</param>
+        /// <param name="scale"></param>
+        /// <param name="flip_image">whether to flip the image (camera mounted inverted)</param>
         /// <returns></returns>
         protected static XmlElement getCameraXml(
             XmlDocument doc,
@@ -625,7 +655,8 @@ namespace surveyor.vision
             polynomial lens_distortion_curve,
             float centre_of_distortion_x, float centre_of_distortion_y,
             float minimum_rms_error,
-            float scale)
+            float scale,
+            bool flip_image)
         {
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
@@ -654,6 +685,11 @@ namespace surveyor.vision
             xml.AddTextElement(doc, elem, "RMSerror", Convert.ToString(minimum_rms_error, format));
             xml.AddComment(doc, elem, "Scaling factor");
             xml.AddTextElement(doc, elem, "Scale", Convert.ToString(scale, format));
+            if (flip_image)
+            {
+                xml.AddComment(doc, elem, "Whether to flip the image (camera mounted inverted)");
+                xml.AddTextElement(doc, elem, "Flip", Convert.ToString(flip_image));
+            }
 
             return (elem);
         }
@@ -683,6 +719,8 @@ namespace surveyor.vision
 
                 // recursively walk the node tree
                 int cameraIndex = -1;
+                flip_left_image = false;
+                flip_right_image = false;
                 LoadFromXml(xnodDE, 0, ref cameraIndex);
 
                 // trigger calculation of the calibration maps
@@ -733,6 +771,14 @@ namespace surveyor.vision
             if (xnod.Name == "Scale")
             {
                 // do nothing
+            }
+
+            if (xnod.Name == "Flip")
+            {
+                if (camera_index == 0)
+                    flip_left_image = Convert.ToBoolean(xnod.InnerText);
+                else
+                    flip_right_image = Convert.ToBoolean(xnod.InnerText);
             }
 
             if (xnod.Name == "RelativeImageScale")

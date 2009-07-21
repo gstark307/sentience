@@ -155,7 +155,9 @@ namespace surveyor.vision
 			{
 			    command_str = "v4l2stereo --dev0 " + camera_device[0] + " ";
 			    command_str += "--dev1 " + camera_device[1] + " ";
-			    command_str += "--save " + filename + "_";
+                if (flip_left_image) command_str += "--flipleft ";
+                if (flip_right_image) command_str += "--flipright ";
+			    command_str += "--save " + filename + "_ ";
 			}
 			
             Console.WriteLine("");
