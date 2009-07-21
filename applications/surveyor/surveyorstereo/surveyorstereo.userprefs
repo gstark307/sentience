@@ -1,11 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/correspondence/StereoVisionEdges.cs" ctype="Workbench">
     <Files>
-      <File FileName="../surveyorlib/SurveyorCalibration.cs" Line="767" Column="10" />
-      <File FileName="../surveyorlib/calibration/CalibrationSurvey.cs" Line="37" Column="36" />
-      <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="38" Column="9" />
-      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="124" Column="36" />
-      <File FileName="../surveyorlib/correspondence/StereoVisionEdges.cs" Line="443" Column="23" />
+      <File FileName="MainWindow.cs" Line="64" Column="29" />
+      <File FileName="../surveyorlib/correspondence/StereoVisionEdgesCam.cs" Line="6" Column="38" />
+      <File FileName="../surveyorlib/correspondence/StereoVisionEdges.cs" Line="88" Column="14" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
