@@ -61,7 +61,6 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        //stereo_camera.Load(calibration_filename);
         stereo_camera.Run();
     }
     
@@ -187,13 +186,15 @@ public partial class MainWindow: Gtk.Window
     }
 
     protected virtual void OnCmdSimpleStereoClicked (object sender, System.EventArgs e)
-    {
-        stereo_camera.stereo_algorithm_type = StereoVision.SIMPLE;
+    {		
+        stereo_camera.stereo_algorithm_type = StereoVision.EDGES;
+        stereo_camera.Load(calibration_filename);		
     }
 
     protected virtual void OnCmdDenseStereoClicked (object sender, System.EventArgs e)
     {
         stereo_camera.stereo_algorithm_type = StereoVision.DENSE;
+		stereo_camera.Load(calibration_filename);
     }
 
     /// <summary>

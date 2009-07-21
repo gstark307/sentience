@@ -1,6 +1,6 @@
 /*
-    simple stereo vision based upon luminence only
-    Copyright (C) 2008 Bob Mottram
+    edge based stereo
+    Copyright (C) 2009 Bob Mottram
     fuzzgun@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.IO;
 using System.Drawing;
 using System.Collections.Generic;
 using sluggish.utilities;
@@ -29,279 +30,35 @@ namespace surveyor.vision
     /// </summary>
     public class StereoVisionEdges : StereoVision
     {
-        // we don't need to sample every row to get
-        // usable range data.  Alternate rows will do.
-        protected const int vertical_compression = 1;
+        private StereoVisionEdgesCam[] camera;
 
-		// minimum probability used when matching features
-		public float minimum_matching_probability = 0.01f;
+        /* feature detection params */
+        int inhibition_radius = 16;
+        uint minimum_response = 300;
 
+        /* matching params */
+        int ideal_no_of_matches = 200;
+        int descriptor_match_threshold = 0;
+        
+        /* These weights are used during matching of stereo features.
+         * You can adjust them if you wish */
+        int learnDesc = 18*5;  /* weight associated with feature descriptor match */
+        int learnLuma = 7*5;   /* weight associated with luminance match */
+        int learnDisp = 1;   /* weight associated with disparity (bias towards smaller disparities) */
+        int learnPrior = 4;  /* weight associated with prior disparity */
+
+        public int max_disparity_percent = 40;
+        public int use_priors = 1;
+        
         public StereoVisionEdges()
         {
             algorithm_type = EDGES;
-            BroadcastStereoFeatureColours = false;
-        }
-		
-		/// <summary>
-		/// returns an edge detection threshold proportional to the image contrast
-		/// </summary>
-		/// <param name="img_mono">image data</param>
-		/// <param name="width">width of the image</param>
-		/// <param name="height">height of the image</param>
-		/// <returns>threshold value</returns>
-		protected int GetEdgeDetectionThreshold(
-		    byte[] img_mono,
-		    int width,
-		    int height)		    
-		{
-			// make a ballpark estimate of the image contrast
-			int tx = width * 25 / 100;
-			int ty = height * 25 / 100;
-			int bx = width - tx;
-			int by = height - ty;
-			int contrast = 0;
-			int contrast_hits = 0;
-		    for (int y = ty; y < by; y += 4)
-		    {
-		    	int n = (y * width) + tx;
-		        for (int x = tx; x < bx; x += 4, n += 4)
-		        {
-		        	int pixel_contrast0 = img_mono[n] - img_mono[n-2];
-		        	if (pixel_contrast0 < 0) pixel_contrast0 = -pixel_contrast0;
-		        	int pixel_contrast1 = img_mono[n+2-width] - img_mono[n];
-		        	if (pixel_contrast1 < 0) pixel_contrast1 = -pixel_contrast1;
-		
-		        	contrast += pixel_contrast1 + pixel_contrast0;
-		        	contrast_hits += 2;
-		        }
-		    }
-		    if (contrast_hits > 0) contrast /= contrast_hits;
-		
-		    int auto_threshold = 5 + (contrast * 120 / 20);
-		    return(auto_threshold);	
-		}
-
-		/// <summary>
-		/// computes the difference between two feature points
-		/// </summary>
-		/// <param name="left_x">x coordinate in the left image</param>
-		/// <param name="left_y">y coordinate in the left image</param>
-		/// <param name="right_x">x coordinate in the right image</param>
-		/// <param name="right_y">y coordinate in the right image</param>
-		/// <param name="left_bmp">left mono image</param>
-		/// <param name="right_bmp">right mono image</param>
-		/// <returns>difference value</returns>
-        protected virtual int FeatureDifference(
-		    int left_x, int left_y,
-		    int right_x, int right_y,
-		    byte[] left_bmp, byte[] right_bmp)
-		{
-			int difference = 0;
-			const int radius = 5;
-			int pixels = radius * radius;
-
-			// compute average pixel intensity over the patch
-			int average_left = 0;
-			int average_right = 0;
-			for (int dy = -radius; dy < radius; dy++)
-			{
-				int n_left = ((left_y + dy) * image_width) + left_x - radius;
-				int n_right = ((right_y + dy) * image_width) + right_x - radius;
-			    for (int dx = -radius; dx < radius; dx++, n_left++, n_right++)
-			    {
-					average_left += left_bmp[n_left];
-					average_right += right_bmp[n_right];
-				}
-			}
-			average_left /= pixels;
-			average_right /= pixels;
-
-			// compute sum of squared differences
-			for (int dy = -radius; dy < radius; dy++)
-			{
-				int n_left = ((left_y + dy) * image_width) + left_x - radius;
-				int n_right = ((right_y + dy) * image_width) + right_x - radius;
-			    for (int dx = -radius; dx < radius; dx++, n_left++, n_right++)
-			    {
-					int diff_left = left_bmp[n_left] - average_left;
-					int diff_right = right_bmp[n_right] - average_right;
-					int diff = diff_left - diff_right;
-					difference += diff*diff;
-				}
-			}
-
-            if (difference == 0) 
-                difference = -1;
-            else
-			{
-				difference = (int)Math.Sqrt(difference / (float)pixels);
-			}
-			
-			return(difference);
-		}
-
-        /// <summary>
-        /// Matches features along rows in the left and right images
-        /// </summary>
-        /// <param name="left_row_features">features along a row in the left image</param>
-        /// <param name="right_row_features">features along a row in the right image</param>
-        /// <param name="left_bmp">left mono image</param>
-        /// <param name="right_bmp">right mono image</param>
-        /// <param name="minimum_matching_probability">minimum matching probability in the range 0.0 - 1.0</param>
-        protected void MatchFeatures(
-            List<float> left_row_features, 
-            List<float> right_row_features,
-            byte[] left_bmp, byte[] right_bmp,
-		    float minimum_matching_probability)
-        {
-			int max_disparity_pixels = image_width * max_disparity / 100;
-
-			List<StereoFeature> row_features = new List<StereoFeature>();
-			int matrix_x = left_row_features.Count/4;
-			int matrix_y = right_row_features.Count/4;
-			float[,,] matching_matrix = new float[matrix_x, matrix_y, 3];
-			
-			int mx = 0;
-			int my = 0;
-			for (mx = 0; mx < matrix_x; mx++)
-			{
-			    for (my = 0; my < matrix_y; my++)
-			    {
-					matching_matrix[mx, my, 0] = -1;
-				}
-			}
-			
-			mx = 0;			
-			for (int i = 0; i < left_row_features.Count-4; i += 4, mx++)
-			{
-				int x0 = (int)left_row_features[i];
-				int y0 = (int)left_row_features[i + 1];
-				int rising0 = (int)left_row_features[i + 2];
-				my = 0;
-			    for (int j = 0; j < right_row_features.Count-4; j += 4, my++)
-			    {
-					int rising1 = (int)right_row_features[j + 2];
-					//if (rising0 == rising1)
-					{
-				        int x1 = (int)right_row_features[j];
-						int disp = x0 - x1;
-						if ((disp >= 0) && (disp < max_disparity_pixels))
-						{
-				            int y1 = (int)right_row_features[j + 1];
-				
-			                int diff = FeatureDifference(x0,y0,x1,y1, left_bmp, right_bmp);
-                            matching_matrix[mx, my, 0] = diff;
-						}
-					}
-				}
-			}
-			
-			// normalise along rows
-			for (my = 0; my < matrix_y; my++)
-			{
-				float sum = 0;
-				for (mx = 0; mx < matrix_x; mx++)
-				{
-					if (matching_matrix[mx, my, 0] != -1)
-					{
-						sum += matching_matrix[mx, my, 0];
-					}
-				}
-				if (sum > 0)
-				{
-					for (mx = 0; mx < matrix_x; mx++)
-					{
-						if (matching_matrix[mx, my, 0] != -1)
-						{
-							matching_matrix[mx, my, 1] = matching_matrix[mx, my, 0] / sum;
-						}
-					}
-				}
-			}
-			
-			// normalise along columns
-			for (mx = 0; mx < matrix_x; mx++)
-			{
-				float sum = 0;
-				for (my = 0; my < matrix_y; my++)
-				{
-					if (matching_matrix[mx, my, 0] != -1)
-					{
-						sum += matching_matrix[mx, my, 0];
-					}
-				}
-				if (sum > 0)
-				{
-					for (my = 0; my < matrix_y; my++)
-					{
-						if (matching_matrix[mx, my, 0] != -1)
-						{
-							matching_matrix[mx, my, 2] = matching_matrix[mx, my, 0] / sum;
-						}
-					}
-				}
-			}
-			
-			// produce matching probabilities
-			for (mx = 0; mx < matrix_x; mx++)
-			{
-				int x0 = (int)left_row_features[mx * 4];
-				float max_probability = minimum_matching_probability;
-				int winner = -1;
-			    for (my = 0; my < matrix_y; my++)
-			    {
-					if (matching_matrix[mx, my, 0] != -1)
-					{
-						int x1 = (int)right_row_features[my * 4];
-						int disparity = x0 - x1;						
-						float disparity_prior = 1.0f - (disparity * 0.7f / (float)max_disparity_pixels);				
-						//disparity_prior *= (float)Math.Sin(disparity_prior * Math.PI / 2);
-						
-                        float matching_probability =
-                            (1.0f - matching_matrix[mx, my, 1]) * 
-                            (1.0f - matching_matrix[mx, my, 2]) *
-						    disparity_prior;
-						
-						if (matching_probability > max_probability)
-						{
-							max_probability = matching_probability;
-							winner = my;
-						}
-					}
-				}
-				if (winner != -1)
-				{
-				    int xx0 = (int)left_row_features[mx * 4];
-					int yy0 = (int)left_row_features[(mx * 4) + 1];
-				    int xx1 = (int)right_row_features[winner * 4];
-					int disparity = xx0 - xx1;
-					StereoFeature f = new StereoFeature(xx0, yy0, disparity);					
-					f.probability = max_probability;
-					row_features.Add(f);
-				}
-			}
-			
-			const int max_features_per_row = 4;
-			while (row_features.Count > max_features_per_row)
-			{
-				float min_probability = 2;
-				int victim = -1;
-				for (int i = 0; i < row_features.Count; i++)
-				{
-					if (row_features[i].probability < min_probability)
-					{
-						min_probability = row_features[i].probability;
-						victim = i;
-					}
-				}
-				if (victim != -1)
-				{
-					row_features.RemoveAt(victim);
-				}
-			}
-			
-			for (int i = 0; i < row_features.Count; i++)
-				features.Add(row_features[i]);
+            camera = new StereoVisionEdgesCam[2];
+            for (int cam = 0; cam < 2; cam++)
+            {
+                camera[cam] = new StereoVisionEdgesCam();
+                camera[cam].init(320, 240);
+            }
         }
 
         /// <summary>
@@ -322,208 +79,69 @@ namespace surveyor.vision
             float calibration_offset_x, 
             float calibration_offset_y)
         {
-            int edge_detection_radius = image_width * 12 / 320;
-			
-			/*
-			UpdateEdges(
-		        left_bmp_colour, right_bmp_colour,
-			    left_bmp, right_bmp,
-			    image_width, image_height,
-			    calibration_offset_x, 
-                calibration_offset_y,
-			    edge_detection_radius,
-			    minimum_matching_probability);
-			    */
-		}
-		
-        /// <summary>
-        /// update stereo correspondence
-        /// </summary>
-        /// <param name="left_bmp_colour">rectified left image data</param>
-        /// <param name="right_bmp_colour">rectified right_image_data</param>
-        /// <param name="left_bmp">rectified left image data</param>
-        /// <param name="right_bmp">rectified right_image_data</param>
-        /// <param name="image_width">width of the image</param>
-        /// <param name="image_height">height of the image</param>
-        /// <param name="calibration_offset_x">offset calculated during camera calibration</param>
-        /// <param name="calibration_offset_y">offset calculated during camera calibration</param>
-        /// <param name="minimum_matching_probability">minimum matching probability in the range 0.0 - 1.0</param>
-        protected void UpdateEdges(
-            byte[] left_bmp_colour, byte[] right_bmp_colour,
-		    byte[] left_bmp, byte[] right_bmp,
-            int image_width, int image_height,
-            float calibration_offset_x, 
-            float calibration_offset_y,
-		    int edge_detection_radius,
-		    float minimum_matching_probability)
-        {	
-			features.Clear();
-            this.image_width = image_width;
-            this.image_height = image_height;            
-						
-			// get the edge detection threshold
-			int edge_detection_threshold = GetEdgeDetectionThreshold(left_bmp, image_width, image_height);
-			
-			int[] buffer = new int[image_width];			
-            List<float> left_row_features = new List<float>();
-            List<float> right_row_features = new List<float>();
-			
-			int image_width2 = image_width*2;
-			int image_width3 = image_width*3;
-			int ty = 5 + (int)(vertical_compression + Math.Abs(calibration_offset_y));
-			int by = image_height - 5 - (int)(vertical_compression + Math.Abs(calibration_offset_y));
-			if (ty < 5) ty = 5;
-			if (by > image_height - 5) by = image_height - 5;
-			for (int y = ty; y < by; y += vertical_compression)
-			{				
-				left_row_features.Clear();
-				right_row_features.Clear();
-				
-				// edges in the left image
-				
-				int n_left = y * image_width;
-				int sum_left = left_bmp[n_left] + left_bmp[n_left-image_width] + left_bmp[n_left-image_width2] + left_bmp[n_left-image_width3] + left_bmp[n_left+image_width] + left_bmp[n_left+image_width2] + left_bmp[n_left+image_width3];
-				buffer[0] = sum_left;
-			    for (int x = 1; x < image_width; x++, n_left++)
-			    {
-			    	sum_left += left_bmp[n_left] + left_bmp[n_left-image_width] + left_bmp[n_left-image_width2] + left_bmp[n_left-image_width3] +
-			    	       left_bmp[n_left+image_width] + left_bmp[n_left+image_width2] + left_bmp[n_left+image_width3];
-			    	buffer[x] = sum_left;
-			    }
-		
-			    int edge_start = 0;
-			    int edge_rising = 0;
-		    	bool prev_is_edge = false;
-			    for (int x = edge_detection_radius; x < image_width - 1 - edge_detection_radius; x++)
-			    {
-			    	int rising = 0;
-			    	int r = edge_detection_radius;
-			    	bool is_edge = true;
-			    	int edge_magnitude = 0;
-			    	while (r > 1)
-			    	{
-			    	    int centre = buffer[x];
-			    	    int left = centre - buffer[x - r];
-			    	    int right = buffer[x + r] - centre;
-			    	    int diff = right - left;
-			    	    if (diff < 0)
-			    	    {
-			    	    	diff = -diff;
-			    	    	rising = 1;
-			    	    }
-			    	    if (diff < edge_detection_threshold * r)
-			    	    {
-			    	    	is_edge = false;
-			    	    	break;
-			    	    }
-			    	    else
-			    	    {
-			    	    	edge_magnitude += diff;
-			    	    }
-			    	    r--;
-			    	}
-			    	if (is_edge)
-			    	{
-			    		if (!prev_is_edge)
-			    		{
-			    			edge_start = x;
-			    			edge_rising = rising;
-			    		}
-			    	}
-			    	else
-			    	{
-			    		if (prev_is_edge)
-			    		{
-			    		    int edge_x = edge_start + (((x-1) - edge_start) / 2);
-			    	    	left_row_features.Add(edge_x);
-			    	    	left_row_features.Add(y);
-			    	    	left_row_features.Add(rising);
-			    	    	left_row_features.Add(edge_magnitude);
-			    		}
-			    	}
-			    	prev_is_edge = is_edge;
-			    }
-								
-				if (left_row_features.Count > 0)
-				{
-				
-					// edges in the right image
-					int n_right = (int)(y + calibration_offset_y) * image_width;
-					int sum_right = right_bmp[n_right] + right_bmp[n_right-image_width] + right_bmp[n_right-image_width2] + right_bmp[n_right-image_width3] + right_bmp[n_right+image_width] + right_bmp[n_right+image_width2] + right_bmp[n_right+image_width3];
-					buffer[0] = sum_right;
-				    for (int x = 1; x < image_width; x++, n_right++)
-				    {
-				    	sum_right += right_bmp[n_right] + right_bmp[n_right-image_width] + right_bmp[n_right-image_width2] + right_bmp[n_right-image_width3] +
-				    	       right_bmp[n_right+image_width] + right_bmp[n_right+image_width2] + right_bmp[n_right+image_width3];
-				    	buffer[x] = sum_right;
-				    }
-			
-				    edge_start = 0;
-				    edge_rising = 0;
-			    	prev_is_edge = false;
-				    for (int x = edge_detection_radius; x < image_width - 1 - edge_detection_radius; x++)
-				    {
-				    	int rising = 0;
-				    	int r = edge_detection_radius;
-				    	bool is_edge = true;
-				    	int edge_magnitude = 0;
-				    	while (r > 1)
-				    	{
-				    	    int centre = buffer[x];
-				    	    int left = centre - buffer[x - r];
-				    	    int right = buffer[x + r] - centre;
-				    	    int diff = right - left;
-				    	    if (diff < 0)
-				    	    {
-				    	    	diff = -diff;
-				    	    	rising = 1;
-				    	    }
-				    	    if (diff < edge_detection_threshold * r)
-				    	    {
-				    	    	is_edge = false;
-				    	    	break;
-				    	    }
-				    	    else
-				    	    {
-				    	    	edge_magnitude += diff;
-				    	    }
-				    	    r--;
-				    	}
-				    	if (is_edge)
-				    	{
-				    		if (!prev_is_edge)
-				    		{
-				    			edge_start = x;
-				    			edge_rising = rising;
-				    		}
-				    	}
-				    	else
-				    	{
-				    		if (prev_is_edge)
-				    		{
-				    		    int edge_x = edge_start + (((x-1) - edge_start) / 2) + (int)calibration_offset_x;
-				    	    	right_row_features.Add(edge_x);
-				    	    	right_row_features.Add(y + calibration_offset_y);
-				    	    	right_row_features.Add(rising);
-				    	    	right_row_features.Add(edge_magnitude);
-				    		}
-				    	}
-				    	prev_is_edge = is_edge;
-				    }
-	
-					if (right_row_features.Count > 0)
-					{
-						// match left and right features
-		                MatchFeatures(
-		                    left_row_features, 
-		                    right_row_features,
-		                    left_bmp, right_bmp,
-						    minimum_matching_probability);
-					}
-				}
-			}
-			
-        }
+            byte[] rectified_frame_buf;
+            StereoVisionEdgesCam stereocam = null;
+            
+            int calib_offset_x = (int)calibration_offset_x;
+            int calib_offset_y = (int)calibration_offset_y;
+            for (int cam = 1; cam >= 0; cam--) 
+            {
+                int no_of_feats = 0;
+                int no_of_feats_horizontal = 0;
+                if (cam == 0) 
+                {
+                    rectified_frame_buf = left_bmp_colour;
+                    stereocam = camera[0];
+                }
+                else 
+                {
+                    rectified_frame_buf = right_bmp_colour;
+                    stereocam = camera[1];
+                }
 
+                stereocam.imgWidth = (uint)image_width;
+                stereocam.imgHeight = (uint)image_height;
+                
+                no_of_feats = stereocam.svs_get_features_vertical(
+                    rectified_frame_buf,
+                    inhibition_radius,
+                    minimum_response,
+                    calib_offset_x,
+                    calib_offset_y);
+
+                if (cam == 0) 
+                {
+                    no_of_feats_horizontal = stereocam.svs_get_features_horizontal(
+                        rectified_frame_buf,
+                        inhibition_radius,
+                        minimum_response,
+                        calib_offset_x,
+                        calib_offset_y);
+                }
+
+                calib_offset_x = 0;
+                calib_offset_y = 0;
+            }
+
+            int matches = camera[0].svs_match(
+                camera[1],
+                ideal_no_of_matches,
+                max_disparity_percent,
+                descriptor_match_threshold,
+                learnDesc,
+                learnLuma,
+                learnDisp,
+                learnPrior,
+                use_priors);
+
+            features.Clear();
+            for (int i = 0; i < matches; i++)
+            {
+                features.Add(new StereoFeature(
+                    (float)(camera[0].svs_matches[i*4+1]), 
+                    (float)(camera[0].svs_matches[i*4+2]), 
+                    (float)(camera[0].svs_matches[i*4+3])));
+		    }
+        }
     }
 }

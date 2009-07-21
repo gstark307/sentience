@@ -29,7 +29,7 @@ namespace surveyor.vision
     public class BaseVisionStereo
     {
         protected int broadcast_port_number;
-        public float fps = 10;
+        public float fps = 30;
         public int stereo_camera_index = 0;
         public bool endless_thread = true;
         public int wait_for_grab_mS = 500;
@@ -601,6 +601,8 @@ namespace surveyor.vision
 				{
 					bw.Write(Convert.ToInt32(Math.Round(lens_distortion_curve[cam].Coeff(i)*10000000)));
 				}
+                bw.Write((int)image_width);
+                bw.Write((int)image_height);
 
                 bw.Close();
                 fs.Close();
