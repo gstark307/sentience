@@ -2,8 +2,7 @@
   <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/correspondence/StereoVisionEdges.cs" ctype="Workbench">
     <Files>
       <File FileName="MainWindow.cs" Line="64" Column="29" />
-      <File FileName="../surveyorlib/correspondence/StereoVisionEdgesCam.cs" Line="6" Column="38" />
-      <File FileName="../surveyorlib/correspondence/StereoVisionEdges.cs" Line="88" Column="14" />
+      <File FileName="../surveyorlib/correspondence/StereoVisionEdges.cs" Line="97" Column="18" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
