@@ -19,7 +19,7 @@
     <!--Sensor density in pixels per millimetre-->
     <SensorDensityPixelsPerMillimetre>307</SensorDensityPixelsPerMillimetre>
     <!--Camera baseline distance in millimetres-->
-    <BaselineMillimetres>100</BaselineMillimetres>
+    <BaselineMillimetres>120</BaselineMillimetres>
     <!--Calibration Data-->
     <Calibration>
       <!--Image offsets in pixels due to small missalignment from parallel-->
