@@ -43,6 +43,7 @@ public partial class MainWindow: Gtk.Window
     bool disable_rectification = true;
     bool disable_radial_correction = true;
 	bool reverse_colours = true;
+	int baseline_mm = 120;
 	
 	// flip images if the camera is mounted inverted
 	bool flip_left_image = true;
@@ -82,6 +83,7 @@ public partial class MainWindow: Gtk.Window
 		stereo_camera.max_exposure = maximum_brightness;
 		stereo_camera.flip_left_image = flip_left_image;
 		stereo_camera.flip_right_image = flip_right_image;
+		stereo_camera.baseline_mm = baseline_mm;
         stereo_camera.Run();
 		
 		stereo_camera.disable_rectification = disable_rectification;
@@ -90,6 +92,7 @@ public partial class MainWindow: Gtk.Window
 		chkRadialCorrection.Active = !disable_radial_correction;
 		chkFlipLeft.Active = stereo_camera.flip_left_image;
 		chkFlipRight.Active = stereo_camera.flip_right_image;
+		txtBaseline.Text = stereo_camera.baseline_mm.ToString();
     }	
     
     private void CloseForm()
@@ -200,6 +203,7 @@ public partial class MainWindow: Gtk.Window
 	
 	private void CalibrateAlignment()
 	{
+		stereo_camera.baseline_mm = Convert.ToInt32(txtBaseline.Text);
         if (stereo_camera.CalibrateCameraAlignment())
         {
             stereo_camera.Save(calibration_filename);
@@ -225,6 +229,7 @@ public partial class MainWindow: Gtk.Window
 		chkFlipRight.Active = stereo_camera.flip_right_image;
 		chkRectification.Active = !stereo_camera.disable_rectification;
 		chkRadialCorrection.Active = !stereo_camera.disable_radial_correction;
+		txtBaseline.Text = stereo_camera.baseline_mm.ToString();
     }
 
     protected virtual void OnCmdDenseStereoClicked (object sender, System.EventArgs e)
@@ -235,6 +240,7 @@ public partial class MainWindow: Gtk.Window
 		chkFlipRight.Active = stereo_camera.flip_right_image;
 		chkRectification.Active = !stereo_camera.disable_rectification;
 		chkRadialCorrection.Active = !stereo_camera.disable_radial_correction;
+		txtBaseline.Text = stereo_camera.baseline_mm.ToString();
     }
 
     /// <summary>
@@ -387,7 +393,8 @@ public partial class MainWindow: Gtk.Window
 	                proc.WaitForExit();
 	
 	                string params_filename = "manualoffsets_params.txt";
-	                LoadManualCameraAlignmentCalibrationParameters(params_filename);
+	                LoadManualCameraAlignmentCalibrationParameters(params_filename);										
+					stereo_camera.baseline_mm = Convert.ToInt32(txtBaseline.Text);
 	                stereo_camera.Save(calibration_filename);
 				}
 				else
