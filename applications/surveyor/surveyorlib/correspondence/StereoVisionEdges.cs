@@ -82,7 +82,7 @@ namespace surveyor.vision
             byte[] rectified_frame_buf;
             StereoVisionEdgesCam stereocam = null;
             
-            int calib_offset_x = -(int)calibration_offset_x;
+            int calib_offset_x = (int)calibration_offset_x;
             int calib_offset_y = (int)calibration_offset_y;
             for (int cam = 1; cam >= 0; cam--) 
             {

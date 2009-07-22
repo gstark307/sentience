@@ -291,9 +291,9 @@ namespace surveyor.vision
                 else
                 {
                     if (!File.Exists(left_image_filename))
-                        Console.WriteLine("File not found " + left_image_filename + ".");
+                        Console.WriteLine("Timed out: File not found " + left_image_filename + ".");
                     if (!File.Exists(right_image_filename))
-                        Console.WriteLine("File not found " + right_image_filename + ".");
+                        Console.WriteLine("Timed out: File not found " + right_image_filename + ".");
                 }
 
             }
