@@ -520,6 +520,14 @@ namespace surveyor.vision
             XmlElement nodeCalibration = doc.CreateElement("Calibration");
             nodeStereoCamera.AppendChild(nodeCalibration);
 
+            XmlElement nodeCalibrationPanTilt = doc.CreateElement("PanTiltMechanism");
+            nodeCalibration.AppendChild(nodeCalibrationPanTilt);
+
+            xml.AddComment(doc, nodeCalibrationPanTilt, "Calibration parameters for panning (servo0 servo1 angle0 angle1 standard deviation)");
+            xml.AddTextElement(doc, nodeCalibrationPanTilt, "PanParameters", "");
+            xml.AddComment(doc, nodeCalibrationPanTilt, "Calibration parameters for tilting (servo0 servo1 angle0 angle1 standard deviation)");
+            xml.AddTextElement(doc, nodeCalibrationPanTilt, "TiltParameters", "");
+            
             string offsets = Convert.ToString(offset_x, format) + " " +
                              Convert.ToString(offset_y, format);
             xml.AddComment(doc, nodeCalibration, "Image offsets in pixels due to small missalignment from parallel");

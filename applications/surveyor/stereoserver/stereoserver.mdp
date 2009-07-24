@@ -3,7 +3,7 @@
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
       <Output directory="../../../../robotbridgeware/bin/Debug" assemblyKeyFile="." assembly="stereoserver" />
       <Build debugmode="True" target="Exe" />
-      <Execution runwithwarnings="True" commandlineparameters="-leftdevice /dev/video2 -rightdevice /dev/video1 -leftdevice2 /dev/video3 -rightdevice2 /dev/video4 -algorithm edges -calibration0 /home/motters/develop/sentience/applications/surveyor/surveyorstereo/bin/Debug/calibration.xml -calibration1 /home/motters/develop/sentience/applications/surveyor/surveyorstereo/bin/Debug/calibration.xml -width 320 -height 240 -ramdisk /home/motters/ramdisk" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
+      <Execution runwithwarnings="True" commandlineparameters="-leftdevice /dev/video4 -rightdevice /dev/video2 -leftdevice2 /dev/video3 -rightdevice2 /dev/video1 -algorithm edges -calibration0 /home/motters/develop/sentience/applications/surveyor/stereoserver/test/calibration0.xml -calibration1 /home/motters/develop/sentience/applications/surveyor/stereoserver/test/calibration1.xml -width 320 -height 240 -force -flipleft" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
       <EnvironmentVariables />
       <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
