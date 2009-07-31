@@ -12,6 +12,10 @@
     <!--Serial number of the camera device-->
     <SerialNumber>
     </SerialNumber>
+    <PanTilt>
+      <PanParameters>60.51281 36.92307 -20.13735 15.7341 0.2178693</PanParameters>
+      <TiltParameters>2.994642 36.68893 -64.39236 -28.97488 1.150387</TiltParameters>
+    </PanTilt>
     <!--Dimensions of the images in pixels-->
     <ImageDimensions>320x240</ImageDimensions>
     <!--Focal length in millimetres-->
@@ -34,7 +38,7 @@
       <DisableRadialCorrection>True</DisableRadialCorrection>
       <Camera>
         <!--Horizontal field of view of the camera in degrees-->
-        <FieldOfViewDegrees>68</FieldOfViewDegrees>
+        <FieldOfViewDegrees>65</FieldOfViewDegrees>
         <!--The centre of distortion in pixels-->
         <CentreOfDistortion>0 0</CentreOfDistortion>
         <!--Polynomial coefficients used to describe the camera lens distortion-->
@@ -48,7 +52,7 @@
       </Camera>
       <Camera>
         <!--Horizontal field of view of the camera in degrees-->
-        <FieldOfViewDegrees>68</FieldOfViewDegrees>
+        <FieldOfViewDegrees>65</FieldOfViewDegrees>
         <!--The centre of distortion in pixels-->
         <CentreOfDistortion>0 0</CentreOfDistortion>
         <!--Polynomial coefficients used to describe the camera lens distortion-->
