@@ -51,22 +51,23 @@ namespace sentience.core.tests
             float disparity = 15;
 			
 			string steersman_filename = "tests_steersman_LocaliseAlongPath.xml";
-		    int body_width_mm = 500;
-		    int body_length_mm = 500;
-		    int body_height_mm= 500;
+		    int body_width_mm = 465;
+		    int body_length_mm = 380;
+		    int body_height_mm= 1660;
 		    int centre_of_rotation_x = body_width_mm/2;
 		    int centre_of_rotation_y = body_length_mm/2;
 		    int centre_of_rotation_z = 10;
 		    int head_centroid_x = body_width_mm/2;
-		    int head_centroid_y = body_length_mm/2;
-		    int head_centroid_z = 10;
+		    int head_centroid_y = 65;
+		    int head_centroid_z = 1600;
 		    string sensormodels_filename = "";
 		    int no_of_stereo_cameras = 2;
-		    float baseline_mm = 100;
+		    float baseline_mm = 120;
+			float dist_to_centre_of_tilt_mm = 0;
 		    int image_width = 320;
 		    int image_height = 240;
-		    float FOV_degrees = 78;
-		    float head_diameter_mm = 100;
+		    float FOV_degrees = 65;
+		    float head_diameter_mm = 160;
 		    float default_head_orientation_degrees = 0;
             int no_of_grid_levels = 1;
 		    int dimension_mm = 8000;
@@ -112,6 +113,7 @@ namespace sentience.core.tests
 			        sensormodels_filename,
 			        no_of_stereo_cameras,
 			        baseline_mm,
+				    dist_to_centre_of_tilt_mm,
 			        image_width,
 			        image_height,
 			        FOV_degrees,
@@ -254,34 +256,33 @@ namespace sentience.core.tests
 				Console.WriteLine("No localisation failures!");
 			Assert.Less(no_of_localisation_failures, 4, "Too many localisation failures");
         }
-		
-		
-		
+				
 		[Test()]
 		public void SaveAndLoad()
 		{
 			string filename = "tests_steersman_SaveAndLoad.xml";
 			
-		    int body_width_mm = 1000;
-		    int body_length_mm = 900;
-		    int body_height_mm = 800;
+		    int body_width_mm = 465;
+		    int body_length_mm = 380;
+		    int body_height_mm= 1660;
 		    int centre_of_rotation_x = body_width_mm/2;
 		    int centre_of_rotation_y = body_length_mm/2;
 		    int centre_of_rotation_z = 10;
 		    int head_centroid_x = body_width_mm/2;
-		    int head_centroid_y = body_length_mm/2;
-		    int head_centroid_z = 1200;
+		    int head_centroid_y = 65;
+		    int head_centroid_z = 1600;
 		    string sensormodels_filename = "";
             int no_of_grid_levels = 2;
 		    int dimension_mm = 8000; 
             int dimension_vertical_mm = 2000; 
             int cellSize_mm = 50;
 			int no_of_stereo_cameras = 2;
-			float baseline_mm = 100;
+			float baseline_mm = 120;
+			float dist_to_centre_of_tilt_mm = 0;
 			int image_width = 320;
 			int image_height = 240;
-			float FOV_degrees = 78;
-			float head_diameter_mm = 100;
+			float FOV_degrees = 65;
+			float head_diameter_mm = 180;
 			float default_head_orientation_degrees = 0;
 			
 			steersman visual_guidance1 = null;
@@ -306,6 +307,7 @@ namespace sentience.core.tests
 		            sensormodels_filename,
 		            no_of_stereo_cameras,
 		            baseline_mm,
+				    dist_to_centre_of_tilt_mm,
 		            image_width,
 		            image_height,
 		            FOV_degrees,

@@ -48,6 +48,62 @@ public partial class MainWindow {
     
     private Gtk.Button cmdCalibrateAlignment;
     
+    private Gtk.HBox hbox7;
+    
+    private Gtk.Button cmdSpinLeft;
+    
+    private Gtk.Button cmdBlank1;
+    
+    private Gtk.Button cmdSpinRight;
+    
+    private Gtk.Button cmdBlank2;
+    
+    private Gtk.Button cmdBlank3;
+    
+    private Gtk.Button cmd160x128;
+    
+    private Gtk.HBox hbox6;
+    
+    private Gtk.Button cmdBackLeft;
+    
+    private Gtk.Button cmdBack;
+    
+    private Gtk.Button cmdBackRight;
+    
+    private Gtk.Button cmdLaserOn;
+    
+    private Gtk.Button cmdLaserOff;
+    
+    private Gtk.Button cmd320x256;
+    
+    private Gtk.HBox hbox5;
+    
+    private Gtk.Button cmdLeft;
+    
+    private Gtk.Button cmdStop;
+    
+    private Gtk.Button cmdRight;
+    
+    private Gtk.Button cmdAvoid;
+    
+    private Gtk.Button cmdCrash;
+    
+    private Gtk.Button cmd640x512;
+    
+    private Gtk.HBox hbox4;
+    
+    private Gtk.Button cmdForwardLeft;
+    
+    private Gtk.Button cmdForward;
+    
+    private Gtk.Button cmdForwardRight;
+    
+    private Gtk.Button cmdFast;
+    
+    private Gtk.Button cmdSlow;
+    
+    private Gtk.Button cmd1280x1024;
+    
     private Gtk.HBox hbox3;
     
     private Gtk.Button cmdSimpleStereo;
@@ -62,22 +118,22 @@ public partial class MainWindow {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
         this.UIManager = new Gtk.UIManager();
-        Gtk.ActionGroup w1 = new Gtk.ActionGroup("New Action Group");
-        this.UIManager.InsertActionGroup(w1, 0);
-        Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");
+        Gtk.ActionGroup w1 = new Gtk.ActionGroup("Default");
         this.FileAction = new Gtk.Action("FileAction", Mono.Unix.Catalog.GetString("File"), null, null);
         this.FileAction.ShortLabel = Mono.Unix.Catalog.GetString("File");
-        w2.Add(this.FileAction, null);
+        w1.Add(this.FileAction, null);
         this.ExitAction = new Gtk.Action("ExitAction", Mono.Unix.Catalog.GetString("Exit"), null, "gtk-stop");
         this.ExitAction.ShortLabel = Mono.Unix.Catalog.GetString("Exit");
-        w2.Add(this.ExitAction, null);
+        w1.Add(this.ExitAction, null);
         this.ToolsAction = new Gtk.Action("ToolsAction", Mono.Unix.Catalog.GetString("Tools"), null, null);
         this.ToolsAction.ShortLabel = Mono.Unix.Catalog.GetString("Tools");
-        w2.Add(this.ToolsAction, null);
+        w1.Add(this.ToolsAction, null);
         this.RecordImagesAction = new Gtk.ToggleAction("RecordImagesAction", Mono.Unix.Catalog.GetString("Record images"), null, null);
         this.RecordImagesAction.Active = true;
         this.RecordImagesAction.ShortLabel = Mono.Unix.Catalog.GetString("Record images");
-        w2.Add(this.RecordImagesAction, null);
+        w1.Add(this.RecordImagesAction, null);
+        this.UIManager.InsertActionGroup(w1, 0);
+        Gtk.ActionGroup w2 = new Gtk.ActionGroup("New Action Group");
         this.UIManager.InsertActionGroup(w2, 1);
         this.AddAccelGroup(this.UIManager.AccelGroup);
         this.CanFocus = true;
@@ -205,6 +261,622 @@ public partial class MainWindow {
         w14.Expand = false;
         w14.Fill = false;
         // Container child vbox1.Gtk.Box+BoxChild
+        this.hbox7 = new Gtk.HBox();
+        this.hbox7.Name = "hbox7";
+        this.hbox7.Spacing = 6;
+        // Container child hbox7.Gtk.Box+BoxChild
+        this.cmdSpinLeft = new Gtk.Button();
+        this.cmdSpinLeft.CanFocus = true;
+        this.cmdSpinLeft.Name = "cmdSpinLeft";
+        this.cmdSpinLeft.UseUnderline = true;
+        // Container child cmdSpinLeft.Gtk.Container+ContainerChild
+        Gtk.Alignment w15 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w16 = new Gtk.HBox();
+        w16.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w17 = new Gtk.Image();
+        w17.Pixbuf = Gdk.Pixbuf.LoadFromResource("ccw.png");
+        w16.Add(w17);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w19 = new Gtk.Label();
+        w16.Add(w19);
+        w15.Add(w16);
+        this.cmdSpinLeft.Add(w15);
+        this.hbox7.Add(this.cmdSpinLeft);
+        Gtk.Box.BoxChild w23 = ((Gtk.Box.BoxChild)(this.hbox7[this.cmdSpinLeft]));
+        w23.Position = 0;
+        w23.Expand = false;
+        w23.Fill = false;
+        // Container child hbox7.Gtk.Box+BoxChild
+        this.cmdBlank1 = new Gtk.Button();
+        this.cmdBlank1.CanFocus = true;
+        this.cmdBlank1.Name = "cmdBlank1";
+        this.cmdBlank1.UseUnderline = true;
+        // Container child cmdBlank1.Gtk.Container+ContainerChild
+        Gtk.Alignment w24 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w25 = new Gtk.HBox();
+        w25.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w26 = new Gtk.Image();
+        w26.Pixbuf = Gdk.Pixbuf.LoadFromResource("blank.png");
+        w25.Add(w26);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w28 = new Gtk.Label();
+        w25.Add(w28);
+        w24.Add(w25);
+        this.cmdBlank1.Add(w24);
+        this.hbox7.Add(this.cmdBlank1);
+        Gtk.Box.BoxChild w32 = ((Gtk.Box.BoxChild)(this.hbox7[this.cmdBlank1]));
+        w32.Position = 1;
+        w32.Expand = false;
+        w32.Fill = false;
+        // Container child hbox7.Gtk.Box+BoxChild
+        this.cmdSpinRight = new Gtk.Button();
+        this.cmdSpinRight.CanFocus = true;
+        this.cmdSpinRight.Name = "cmdSpinRight";
+        this.cmdSpinRight.UseUnderline = true;
+        // Container child cmdSpinRight.Gtk.Container+ContainerChild
+        Gtk.Alignment w33 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w34 = new Gtk.HBox();
+        w34.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w35 = new Gtk.Image();
+        w35.Pixbuf = Gdk.Pixbuf.LoadFromResource("cw.png");
+        w34.Add(w35);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w37 = new Gtk.Label();
+        w34.Add(w37);
+        w33.Add(w34);
+        this.cmdSpinRight.Add(w33);
+        this.hbox7.Add(this.cmdSpinRight);
+        Gtk.Box.BoxChild w41 = ((Gtk.Box.BoxChild)(this.hbox7[this.cmdSpinRight]));
+        w41.Position = 2;
+        w41.Expand = false;
+        w41.Fill = false;
+        // Container child hbox7.Gtk.Box+BoxChild
+        this.cmdBlank2 = new Gtk.Button();
+        this.cmdBlank2.CanFocus = true;
+        this.cmdBlank2.Name = "cmdBlank2";
+        this.cmdBlank2.UseUnderline = true;
+        // Container child cmdBlank2.Gtk.Container+ContainerChild
+        Gtk.Alignment w42 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w43 = new Gtk.HBox();
+        w43.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w44 = new Gtk.Image();
+        w44.Pixbuf = Gdk.Pixbuf.LoadFromResource("blank.png");
+        w43.Add(w44);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w46 = new Gtk.Label();
+        w43.Add(w46);
+        w42.Add(w43);
+        this.cmdBlank2.Add(w42);
+        this.hbox7.Add(this.cmdBlank2);
+        Gtk.Box.BoxChild w50 = ((Gtk.Box.BoxChild)(this.hbox7[this.cmdBlank2]));
+        w50.Position = 3;
+        w50.Expand = false;
+        w50.Fill = false;
+        // Container child hbox7.Gtk.Box+BoxChild
+        this.cmdBlank3 = new Gtk.Button();
+        this.cmdBlank3.CanFocus = true;
+        this.cmdBlank3.Name = "cmdBlank3";
+        this.cmdBlank3.UseUnderline = true;
+        // Container child cmdBlank3.Gtk.Container+ContainerChild
+        Gtk.Alignment w51 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w52 = new Gtk.HBox();
+        w52.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w53 = new Gtk.Image();
+        w53.Pixbuf = Gdk.Pixbuf.LoadFromResource("blank.png");
+        w52.Add(w53);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w55 = new Gtk.Label();
+        w52.Add(w55);
+        w51.Add(w52);
+        this.cmdBlank3.Add(w51);
+        this.hbox7.Add(this.cmdBlank3);
+        Gtk.Box.BoxChild w59 = ((Gtk.Box.BoxChild)(this.hbox7[this.cmdBlank3]));
+        w59.Position = 4;
+        w59.Expand = false;
+        w59.Fill = false;
+        // Container child hbox7.Gtk.Box+BoxChild
+        this.cmd160x128 = new Gtk.Button();
+        this.cmd160x128.CanFocus = true;
+        this.cmd160x128.Name = "cmd160x128";
+        this.cmd160x128.UseUnderline = true;
+        // Container child cmd160x128.Gtk.Container+ContainerChild
+        Gtk.Alignment w60 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w61 = new Gtk.HBox();
+        w61.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w62 = new Gtk.Image();
+        w62.Pixbuf = Gdk.Pixbuf.LoadFromResource("160.png");
+        w61.Add(w62);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w64 = new Gtk.Label();
+        w61.Add(w64);
+        w60.Add(w61);
+        this.cmd160x128.Add(w60);
+        this.hbox7.Add(this.cmd160x128);
+        Gtk.Box.BoxChild w68 = ((Gtk.Box.BoxChild)(this.hbox7[this.cmd160x128]));
+        w68.Position = 5;
+        w68.Expand = false;
+        w68.Fill = false;
+        this.vbox1.Add(this.hbox7);
+        Gtk.Box.BoxChild w69 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox7]));
+        w69.PackType = ((Gtk.PackType)(1));
+        w69.Position = 3;
+        w69.Expand = false;
+        w69.Fill = false;
+        // Container child vbox1.Gtk.Box+BoxChild
+        this.hbox6 = new Gtk.HBox();
+        this.hbox6.Name = "hbox6";
+        this.hbox6.Spacing = 6;
+        // Container child hbox6.Gtk.Box+BoxChild
+        this.cmdBackLeft = new Gtk.Button();
+        this.cmdBackLeft.CanFocus = true;
+        this.cmdBackLeft.Name = "cmdBackLeft";
+        this.cmdBackLeft.UseUnderline = true;
+        // Container child cmdBackLeft.Gtk.Container+ContainerChild
+        Gtk.Alignment w70 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w71 = new Gtk.HBox();
+        w71.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w72 = new Gtk.Image();
+        w72.Pixbuf = Gdk.Pixbuf.LoadFromResource("backleft.png");
+        w71.Add(w72);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w74 = new Gtk.Label();
+        w71.Add(w74);
+        w70.Add(w71);
+        this.cmdBackLeft.Add(w70);
+        this.hbox6.Add(this.cmdBackLeft);
+        Gtk.Box.BoxChild w78 = ((Gtk.Box.BoxChild)(this.hbox6[this.cmdBackLeft]));
+        w78.Position = 0;
+        w78.Expand = false;
+        w78.Fill = false;
+        // Container child hbox6.Gtk.Box+BoxChild
+        this.cmdBack = new Gtk.Button();
+        this.cmdBack.CanFocus = true;
+        this.cmdBack.Name = "cmdBack";
+        this.cmdBack.UseUnderline = true;
+        // Container child cmdBack.Gtk.Container+ContainerChild
+        Gtk.Alignment w79 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w80 = new Gtk.HBox();
+        w80.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w81 = new Gtk.Image();
+        w81.Pixbuf = Gdk.Pixbuf.LoadFromResource("back.png");
+        w80.Add(w81);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w83 = new Gtk.Label();
+        w80.Add(w83);
+        w79.Add(w80);
+        this.cmdBack.Add(w79);
+        this.hbox6.Add(this.cmdBack);
+        Gtk.Box.BoxChild w87 = ((Gtk.Box.BoxChild)(this.hbox6[this.cmdBack]));
+        w87.Position = 1;
+        w87.Expand = false;
+        w87.Fill = false;
+        // Container child hbox6.Gtk.Box+BoxChild
+        this.cmdBackRight = new Gtk.Button();
+        this.cmdBackRight.CanFocus = true;
+        this.cmdBackRight.Name = "cmdBackRight";
+        this.cmdBackRight.UseUnderline = true;
+        // Container child cmdBackRight.Gtk.Container+ContainerChild
+        Gtk.Alignment w88 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w89 = new Gtk.HBox();
+        w89.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w90 = new Gtk.Image();
+        w90.Pixbuf = Gdk.Pixbuf.LoadFromResource("backright.png");
+        w89.Add(w90);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w92 = new Gtk.Label();
+        w89.Add(w92);
+        w88.Add(w89);
+        this.cmdBackRight.Add(w88);
+        this.hbox6.Add(this.cmdBackRight);
+        Gtk.Box.BoxChild w96 = ((Gtk.Box.BoxChild)(this.hbox6[this.cmdBackRight]));
+        w96.Position = 2;
+        w96.Expand = false;
+        w96.Fill = false;
+        // Container child hbox6.Gtk.Box+BoxChild
+        this.cmdLaserOn = new Gtk.Button();
+        this.cmdLaserOn.CanFocus = true;
+        this.cmdLaserOn.Name = "cmdLaserOn";
+        this.cmdLaserOn.UseUnderline = true;
+        // Container child cmdLaserOn.Gtk.Container+ContainerChild
+        Gtk.Alignment w97 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w98 = new Gtk.HBox();
+        w98.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w99 = new Gtk.Image();
+        w99.Pixbuf = Gdk.Pixbuf.LoadFromResource("laser.png");
+        w98.Add(w99);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w101 = new Gtk.Label();
+        w98.Add(w101);
+        w97.Add(w98);
+        this.cmdLaserOn.Add(w97);
+        this.hbox6.Add(this.cmdLaserOn);
+        Gtk.Box.BoxChild w105 = ((Gtk.Box.BoxChild)(this.hbox6[this.cmdLaserOn]));
+        w105.Position = 3;
+        w105.Expand = false;
+        w105.Fill = false;
+        // Container child hbox6.Gtk.Box+BoxChild
+        this.cmdLaserOff = new Gtk.Button();
+        this.cmdLaserOff.CanFocus = true;
+        this.cmdLaserOff.Name = "cmdLaserOff";
+        this.cmdLaserOff.UseUnderline = true;
+        // Container child cmdLaserOff.Gtk.Container+ContainerChild
+        Gtk.Alignment w106 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w107 = new Gtk.HBox();
+        w107.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w108 = new Gtk.Image();
+        w108.Pixbuf = Gdk.Pixbuf.LoadFromResource("no-laser.png");
+        w107.Add(w108);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w110 = new Gtk.Label();
+        w107.Add(w110);
+        w106.Add(w107);
+        this.cmdLaserOff.Add(w106);
+        this.hbox6.Add(this.cmdLaserOff);
+        Gtk.Box.BoxChild w114 = ((Gtk.Box.BoxChild)(this.hbox6[this.cmdLaserOff]));
+        w114.Position = 4;
+        w114.Expand = false;
+        w114.Fill = false;
+        // Container child hbox6.Gtk.Box+BoxChild
+        this.cmd320x256 = new Gtk.Button();
+        this.cmd320x256.CanFocus = true;
+        this.cmd320x256.Name = "cmd320x256";
+        this.cmd320x256.UseUnderline = true;
+        // Container child cmd320x256.Gtk.Container+ContainerChild
+        Gtk.Alignment w115 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w116 = new Gtk.HBox();
+        w116.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w117 = new Gtk.Image();
+        w117.Pixbuf = Gdk.Pixbuf.LoadFromResource("320.png");
+        w116.Add(w117);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w119 = new Gtk.Label();
+        w116.Add(w119);
+        w115.Add(w116);
+        this.cmd320x256.Add(w115);
+        this.hbox6.Add(this.cmd320x256);
+        Gtk.Box.BoxChild w123 = ((Gtk.Box.BoxChild)(this.hbox6[this.cmd320x256]));
+        w123.Position = 5;
+        w123.Expand = false;
+        w123.Fill = false;
+        this.vbox1.Add(this.hbox6);
+        Gtk.Box.BoxChild w124 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox6]));
+        w124.PackType = ((Gtk.PackType)(1));
+        w124.Position = 4;
+        w124.Expand = false;
+        w124.Fill = false;
+        // Container child vbox1.Gtk.Box+BoxChild
+        this.hbox5 = new Gtk.HBox();
+        this.hbox5.Name = "hbox5";
+        this.hbox5.Spacing = 6;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmdLeft = new Gtk.Button();
+        this.cmdLeft.CanFocus = true;
+        this.cmdLeft.Name = "cmdLeft";
+        this.cmdLeft.UseUnderline = true;
+        // Container child cmdLeft.Gtk.Container+ContainerChild
+        Gtk.Alignment w125 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w126 = new Gtk.HBox();
+        w126.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w127 = new Gtk.Image();
+        w127.Pixbuf = Gdk.Pixbuf.LoadFromResource("turnleft.png");
+        w126.Add(w127);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w129 = new Gtk.Label();
+        w126.Add(w129);
+        w125.Add(w126);
+        this.cmdLeft.Add(w125);
+        this.hbox5.Add(this.cmdLeft);
+        Gtk.Box.BoxChild w133 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmdLeft]));
+        w133.Position = 0;
+        w133.Expand = false;
+        w133.Fill = false;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmdStop = new Gtk.Button();
+        this.cmdStop.CanFocus = true;
+        this.cmdStop.Name = "cmdStop";
+        this.cmdStop.UseUnderline = true;
+        // Container child cmdStop.Gtk.Container+ContainerChild
+        Gtk.Alignment w134 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w135 = new Gtk.HBox();
+        w135.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w136 = new Gtk.Image();
+        w136.Pixbuf = Gdk.Pixbuf.LoadFromResource("stop.png");
+        w135.Add(w136);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w138 = new Gtk.Label();
+        w135.Add(w138);
+        w134.Add(w135);
+        this.cmdStop.Add(w134);
+        this.hbox5.Add(this.cmdStop);
+        Gtk.Box.BoxChild w142 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmdStop]));
+        w142.Position = 1;
+        w142.Expand = false;
+        w142.Fill = false;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmdRight = new Gtk.Button();
+        this.cmdRight.CanFocus = true;
+        this.cmdRight.Name = "cmdRight";
+        this.cmdRight.UseUnderline = true;
+        // Container child cmdRight.Gtk.Container+ContainerChild
+        Gtk.Alignment w143 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w144 = new Gtk.HBox();
+        w144.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w145 = new Gtk.Image();
+        w145.Pixbuf = Gdk.Pixbuf.LoadFromResource("turnright.png");
+        w144.Add(w145);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w147 = new Gtk.Label();
+        w144.Add(w147);
+        w143.Add(w144);
+        this.cmdRight.Add(w143);
+        this.hbox5.Add(this.cmdRight);
+        Gtk.Box.BoxChild w151 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmdRight]));
+        w151.Position = 2;
+        w151.Expand = false;
+        w151.Fill = false;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmdAvoid = new Gtk.Button();
+        this.cmdAvoid.CanFocus = true;
+        this.cmdAvoid.Name = "cmdAvoid";
+        this.cmdAvoid.UseUnderline = true;
+        // Container child cmdAvoid.Gtk.Container+ContainerChild
+        Gtk.Alignment w152 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w153 = new Gtk.HBox();
+        w153.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w154 = new Gtk.Image();
+        w154.Pixbuf = Gdk.Pixbuf.LoadFromResource("avoid.png");
+        w153.Add(w154);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w156 = new Gtk.Label();
+        w153.Add(w156);
+        w152.Add(w153);
+        this.cmdAvoid.Add(w152);
+        this.hbox5.Add(this.cmdAvoid);
+        Gtk.Box.BoxChild w160 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmdAvoid]));
+        w160.Position = 3;
+        w160.Expand = false;
+        w160.Fill = false;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmdCrash = new Gtk.Button();
+        this.cmdCrash.CanFocus = true;
+        this.cmdCrash.Name = "cmdCrash";
+        this.cmdCrash.UseUnderline = true;
+        // Container child cmdCrash.Gtk.Container+ContainerChild
+        Gtk.Alignment w161 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w162 = new Gtk.HBox();
+        w162.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w163 = new Gtk.Image();
+        w163.Pixbuf = Gdk.Pixbuf.LoadFromResource("no-avoid.png");
+        w162.Add(w163);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w165 = new Gtk.Label();
+        w162.Add(w165);
+        w161.Add(w162);
+        this.cmdCrash.Add(w161);
+        this.hbox5.Add(this.cmdCrash);
+        Gtk.Box.BoxChild w169 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmdCrash]));
+        w169.Position = 4;
+        w169.Expand = false;
+        w169.Fill = false;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmd640x512 = new Gtk.Button();
+        this.cmd640x512.CanFocus = true;
+        this.cmd640x512.Name = "cmd640x512";
+        this.cmd640x512.UseUnderline = true;
+        // Container child cmd640x512.Gtk.Container+ContainerChild
+        Gtk.Alignment w170 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w171 = new Gtk.HBox();
+        w171.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w172 = new Gtk.Image();
+        w172.Pixbuf = Gdk.Pixbuf.LoadFromResource("640.png");
+        w171.Add(w172);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w174 = new Gtk.Label();
+        w171.Add(w174);
+        w170.Add(w171);
+        this.cmd640x512.Add(w170);
+        this.hbox5.Add(this.cmd640x512);
+        Gtk.Box.BoxChild w178 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmd640x512]));
+        w178.Position = 5;
+        w178.Expand = false;
+        w178.Fill = false;
+        this.vbox1.Add(this.hbox5);
+        Gtk.Box.BoxChild w179 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox5]));
+        w179.PackType = ((Gtk.PackType)(1));
+        w179.Position = 5;
+        w179.Expand = false;
+        w179.Fill = false;
+        // Container child vbox1.Gtk.Box+BoxChild
+        this.hbox4 = new Gtk.HBox();
+        this.hbox4.Name = "hbox4";
+        this.hbox4.Spacing = 6;
+        // Container child hbox4.Gtk.Box+BoxChild
+        this.cmdForwardLeft = new Gtk.Button();
+        this.cmdForwardLeft.CanFocus = true;
+        this.cmdForwardLeft.Name = "cmdForwardLeft";
+        this.cmdForwardLeft.UseUnderline = true;
+        // Container child cmdForwardLeft.Gtk.Container+ContainerChild
+        Gtk.Alignment w180 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w181 = new Gtk.HBox();
+        w181.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w182 = new Gtk.Image();
+        w182.Pixbuf = Gdk.Pixbuf.LoadFromResource("driftleft.png");
+        w181.Add(w182);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w184 = new Gtk.Label();
+        w181.Add(w184);
+        w180.Add(w181);
+        this.cmdForwardLeft.Add(w180);
+        this.hbox4.Add(this.cmdForwardLeft);
+        Gtk.Box.BoxChild w188 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForwardLeft]));
+        w188.Position = 0;
+        w188.Expand = false;
+        w188.Fill = false;
+        // Container child hbox4.Gtk.Box+BoxChild
+        this.cmdForward = new Gtk.Button();
+        this.cmdForward.CanFocus = true;
+        this.cmdForward.Name = "cmdForward";
+        this.cmdForward.UseUnderline = true;
+        // Container child cmdForward.Gtk.Container+ContainerChild
+        Gtk.Alignment w189 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w190 = new Gtk.HBox();
+        w190.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w191 = new Gtk.Image();
+        w191.Pixbuf = Gdk.Pixbuf.LoadFromResource("forward.png");
+        w190.Add(w191);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w193 = new Gtk.Label();
+        w190.Add(w193);
+        w189.Add(w190);
+        this.cmdForward.Add(w189);
+        this.hbox4.Add(this.cmdForward);
+        Gtk.Box.BoxChild w197 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForward]));
+        w197.Position = 1;
+        w197.Expand = false;
+        w197.Fill = false;
+        // Container child hbox4.Gtk.Box+BoxChild
+        this.cmdForwardRight = new Gtk.Button();
+        this.cmdForwardRight.CanFocus = true;
+        this.cmdForwardRight.Name = "cmdForwardRight";
+        this.cmdForwardRight.UseUnderline = true;
+        // Container child cmdForwardRight.Gtk.Container+ContainerChild
+        Gtk.Alignment w198 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w199 = new Gtk.HBox();
+        w199.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w200 = new Gtk.Image();
+        w200.Pixbuf = Gdk.Pixbuf.LoadFromResource("driftright.png");
+        w199.Add(w200);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w202 = new Gtk.Label();
+        w199.Add(w202);
+        w198.Add(w199);
+        this.cmdForwardRight.Add(w198);
+        this.hbox4.Add(this.cmdForwardRight);
+        Gtk.Box.BoxChild w206 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForwardRight]));
+        w206.Position = 2;
+        w206.Expand = false;
+        w206.Fill = false;
+        // Container child hbox4.Gtk.Box+BoxChild
+        this.cmdFast = new Gtk.Button();
+        this.cmdFast.CanFocus = true;
+        this.cmdFast.Name = "cmdFast";
+        this.cmdFast.UseUnderline = true;
+        // Container child cmdFast.Gtk.Container+ContainerChild
+        Gtk.Alignment w207 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w208 = new Gtk.HBox();
+        w208.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w209 = new Gtk.Image();
+        w209.Pixbuf = Gdk.Pixbuf.LoadFromResource("mot9.png");
+        w208.Add(w209);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w211 = new Gtk.Label();
+        w208.Add(w211);
+        w207.Add(w208);
+        this.cmdFast.Add(w207);
+        this.hbox4.Add(this.cmdFast);
+        Gtk.Box.BoxChild w215 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdFast]));
+        w215.Position = 3;
+        w215.Expand = false;
+        w215.Fill = false;
+        // Container child hbox4.Gtk.Box+BoxChild
+        this.cmdSlow = new Gtk.Button();
+        this.cmdSlow.CanFocus = true;
+        this.cmdSlow.Name = "cmdSlow";
+        this.cmdSlow.UseUnderline = true;
+        // Container child cmdSlow.Gtk.Container+ContainerChild
+        Gtk.Alignment w216 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w217 = new Gtk.HBox();
+        w217.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w218 = new Gtk.Image();
+        w218.Pixbuf = Gdk.Pixbuf.LoadFromResource("mot5.png");
+        w217.Add(w218);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w220 = new Gtk.Label();
+        w217.Add(w220);
+        w216.Add(w217);
+        this.cmdSlow.Add(w216);
+        this.hbox4.Add(this.cmdSlow);
+        Gtk.Box.BoxChild w224 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdSlow]));
+        w224.Position = 4;
+        w224.Expand = false;
+        w224.Fill = false;
+        // Container child hbox4.Gtk.Box+BoxChild
+        this.cmd1280x1024 = new Gtk.Button();
+        this.cmd1280x1024.CanFocus = true;
+        this.cmd1280x1024.Name = "cmd1280x1024";
+        this.cmd1280x1024.UseUnderline = true;
+        // Container child cmd1280x1024.Gtk.Container+ContainerChild
+        Gtk.Alignment w225 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        // Container child GtkAlignment.Gtk.Container+ContainerChild
+        Gtk.HBox w226 = new Gtk.HBox();
+        w226.Spacing = 2;
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Image w227 = new Gtk.Image();
+        w227.Pixbuf = Gdk.Pixbuf.LoadFromResource("1280.png");
+        w226.Add(w227);
+        // Container child GtkHBox.Gtk.Container+ContainerChild
+        Gtk.Label w229 = new Gtk.Label();
+        w226.Add(w229);
+        w225.Add(w226);
+        this.cmd1280x1024.Add(w225);
+        this.hbox4.Add(this.cmd1280x1024);
+        Gtk.Box.BoxChild w233 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmd1280x1024]));
+        w233.Position = 5;
+        w233.Expand = false;
+        w233.Fill = false;
+        this.vbox1.Add(this.hbox4);
+        Gtk.Box.BoxChild w234 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox4]));
+        w234.PackType = ((Gtk.PackType)(1));
+        w234.Position = 6;
+        w234.Expand = false;
+        w234.Fill = false;
+        // Container child vbox1.Gtk.Box+BoxChild
         this.hbox3 = new Gtk.HBox();
         this.hbox3.Name = "hbox3";
         this.hbox3.Spacing = 6;
@@ -215,10 +887,10 @@ public partial class MainWindow {
         this.cmdSimpleStereo.UseUnderline = true;
         this.cmdSimpleStereo.Label = Mono.Unix.Catalog.GetString("Simple Stereo");
         this.hbox3.Add(this.cmdSimpleStereo);
-        Gtk.Box.BoxChild w15 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
-        w15.Position = 0;
-        w15.Expand = false;
-        w15.Fill = false;
+        Gtk.Box.BoxChild w235 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
+        w235.Position = 0;
+        w235.Expand = false;
+        w235.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdDenseStereo = new Gtk.Button();
         this.cmdDenseStereo.CanFocus = true;
@@ -226,10 +898,10 @@ public partial class MainWindow {
         this.cmdDenseStereo.UseUnderline = true;
         this.cmdDenseStereo.Label = Mono.Unix.Catalog.GetString("Dense Stereo");
         this.hbox3.Add(this.cmdDenseStereo);
-        Gtk.Box.BoxChild w16 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
-        w16.Position = 1;
-        w16.Expand = false;
-        w16.Fill = false;
+        Gtk.Box.BoxChild w236 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
+        w236.Position = 1;
+        w236.Expand = false;
+        w236.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibration = new Gtk.Button();
         this.cmdSaveCalibration.CanFocus = true;
@@ -237,10 +909,10 @@ public partial class MainWindow {
         this.cmdSaveCalibration.UseUnderline = true;
         this.cmdSaveCalibration.Label = Mono.Unix.Catalog.GetString("Save calibration file");
         this.hbox3.Add(this.cmdSaveCalibration);
-        Gtk.Box.BoxChild w17 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
-        w17.Position = 3;
-        w17.Expand = false;
-        w17.Fill = false;
+        Gtk.Box.BoxChild w237 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
+        w237.Position = 3;
+        w237.Expand = false;
+        w237.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibrationImage = new Gtk.Button();
         this.cmdSaveCalibrationImage.CanFocus = true;
@@ -248,22 +920,22 @@ public partial class MainWindow {
         this.cmdSaveCalibrationImage.UseUnderline = true;
         this.cmdSaveCalibrationImage.Label = Mono.Unix.Catalog.GetString("Save calibration image");
         this.hbox3.Add(this.cmdSaveCalibrationImage);
-        Gtk.Box.BoxChild w18 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
-        w18.Position = 4;
-        w18.Expand = false;
-        w18.Fill = false;
+        Gtk.Box.BoxChild w238 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
+        w238.Position = 4;
+        w238.Expand = false;
+        w238.Fill = false;
         this.vbox1.Add(this.hbox3);
-        Gtk.Box.BoxChild w19 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
-        w19.PackType = ((Gtk.PackType)(1));
-        w19.Position = 3;
-        w19.Expand = false;
-        w19.Fill = false;
+        Gtk.Box.BoxChild w239 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
+        w239.PackType = ((Gtk.PackType)(1));
+        w239.Position = 7;
+        w239.Expand = false;
+        w239.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
         }
         this.DefaultWidth = 817;
-        this.DefaultHeight = 300;
+        this.DefaultHeight = 413;
         this.Show();
         this.DeleteEvent += new Gtk.DeleteEventHandler(this.OnDeleteEvent);
         this.ExitAction.Activated += new System.EventHandler(this.OnExitActionActivated);
@@ -279,5 +951,24 @@ public partial class MainWindow {
         this.cmdDenseStereo.Clicked += new System.EventHandler(this.OnCmdDenseStereoClicked);
         this.cmdSaveCalibration.Clicked += new System.EventHandler(this.OnCmdSaveCalibrationClicked);
         this.cmdSaveCalibrationImage.Clicked += new System.EventHandler(this.OnCmdSaveCalibrationImageClicked);
+        this.cmdForwardLeft.Clicked += new System.EventHandler(this.OnCmdForwardLeftClicked);
+        this.cmdForward.Clicked += new System.EventHandler(this.OnCmdForwardClicked);
+        this.cmdForward.Activated += new System.EventHandler(this.OnCmdForwardActivated);
+        this.cmdForwardRight.Clicked += new System.EventHandler(this.OnCmdForwardRightClicked);
+        this.cmdFast.Clicked += new System.EventHandler(this.OnCmdFastClicked);
+        this.cmdSlow.Clicked += new System.EventHandler(this.OnCmdSlowClicked);
+        this.cmdLeft.Clicked += new System.EventHandler(this.OnCmdLeftClicked);
+        this.cmdStop.Clicked += new System.EventHandler(this.OnCmdStopClicked);
+        this.cmdStop.Activated += new System.EventHandler(this.OnCmdStopActivated);
+        this.cmdRight.Clicked += new System.EventHandler(this.OnCmdRightClicked);
+        this.cmdAvoid.Clicked += new System.EventHandler(this.OnCmdAvoidClicked);
+        this.cmdCrash.Clicked += new System.EventHandler(this.OnCmdCrashClicked);
+        this.cmdBackLeft.Clicked += new System.EventHandler(this.OnCmdBackLeftClicked);
+        this.cmdBack.Clicked += new System.EventHandler(this.OnCmdBackClicked);
+        this.cmdBack.Activated += new System.EventHandler(this.OnCmdBackActivated);
+        this.cmdBackRight.Clicked += new System.EventHandler(this.OnCmdBackRightClicked);
+        this.cmdLaserOn.Clicked += new System.EventHandler(this.OnCmdLaserOnClicked);
+        this.cmdSpinLeft.Clicked += new System.EventHandler(this.OnCmdSpinLeftClicked);
+        this.cmdSpinRight.Clicked += new System.EventHandler(this.OnCmdSpinRightClicked);
     }
 }

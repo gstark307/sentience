@@ -545,9 +545,9 @@ namespace sentience.core.tests
 			robotGeometry geom = new robotGeometry();
 			
 			geom.CreateStereoCameras(
-		        no_of_stereo_cameras, 100,
+		        no_of_stereo_cameras, 120, 0,
 		        320, 240,		        
-		        78,
+		        65,
 			    head_diameter_mm,
 			    0);
 			                         

@@ -65,6 +65,7 @@ namespace sentience.core
 		    string sensormodels_filename,
 		    int no_of_stereo_cameras,
 		    float baseline_mm,
+			float dist_from_centre_of_tilt_mm,		                 
 		    int image_width,
 		    int image_height,
 		    float FOV_degrees,
@@ -98,6 +99,7 @@ namespace sentience.core
 			robot_geometry.CreateStereoCameras(
 			    no_of_stereo_cameras, 
 			    baseline_mm, 
+			    dist_from_centre_of_tilt_mm,
 			    image_width,
 			    image_height,
 			    FOV_degrees,

@@ -182,21 +182,30 @@ namespace surveyor.vision
 		
 		NetworkStream networkStream;
 		System.IO.StreamWriter streamWriter;
+        public string send_command = "";
 
         /// <summary>
         /// send a message to the server
         /// </summary>
         /// <param name="msg"></param>
         /// <param name="wait_for_reply">whether to wait for a reply</param>
-        private void Send(
+        protected void Send(
 		    string msg, 
 		    bool wait_for_reply)
-		{            
+		{
 			try
 			{
 				if (networkStream == null) networkStream = new NetworkStream(m_clientSocket);
 				if (streamWriter == null) streamWriter = new System.IO.StreamWriter(networkStream);
-				streamWriter.WriteLine(msg);
+                if ((send_command != null) && (send_command != ""))
+                {
+				    streamWriter.WriteLine(send_command);
+                    send_command = "";
+                }
+                else
+                {
+                    streamWriter.WriteLine(msg);
+                }
 				streamWriter.Flush();
                 waiting_for_reply = wait_for_reply;
 			}

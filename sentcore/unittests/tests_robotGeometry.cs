@@ -37,7 +37,7 @@ namespace sentience.core.tests
 			string filename = "tests_robotGeometry_SaveAndLoad.xml";
 			int no_of_stereo_cameras = 2;
 			robotGeometry geom1 = new robotGeometry();
-			geom1.CreateStereoCameras(no_of_stereo_cameras, 100, 320, 240, 78, 100, 0);
+			geom1.CreateStereoCameras(no_of_stereo_cameras, 120, 0, 320, 240, 78, 100, 0);
 			geom1.SetBodyDimensions(800,700,600);
 			geom1.SetCentreOfRotation(400, 350, 10);
 			geom1.SetHeadPosition(400,350, 1000);

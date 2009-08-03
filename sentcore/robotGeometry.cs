@@ -115,6 +115,7 @@ namespace sentience.core
 		public void CreateStereoCameras(
 		    int no_of_stereo_cameras,
 		    float cam_baseline_mm,
+			float dist_from_centre_of_tilt_mm, 
 		    int cam_image_width, 
 		    int cam_image_height,
 		    float cam_FOV_degrees,
@@ -145,6 +146,7 @@ namespace sentience.core
 				cam_orientation += default_head_orientation_degrees * (float)Math.PI / 180.0f;
 				stereo_camera_position_x[cam] = head_diameter_mm * 0.5f * (float)Math.Sin(cam_orientation);
 				stereo_camera_position_y[cam] = head_diameter_mm * 0.5f * (float)Math.Cos(cam_orientation);				
+				stereo_camera_position_z[cam] = dist_from_centre_of_tilt_mm;
 				stereo_camera_pan[cam] = cam_orientation;
 				
 				baseline_mm[cam] = cam_baseline_mm;

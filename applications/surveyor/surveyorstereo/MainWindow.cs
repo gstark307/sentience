@@ -41,6 +41,7 @@ public partial class MainWindow: Gtk.Window
     //bool disable_rectification = true; // false;
     //bool disable_radial_correction = true;
 	bool reverse_colours = true;
+	bool motors_active;
 	
     public SurveyorVisionStereoGtk stereo_camera;
     
@@ -61,7 +62,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        stereo_camera.Run();
+        stereo_camera.Run();		
     }
     
     private void CloseForm()
@@ -400,4 +401,98 @@ public partial class MainWindow: Gtk.Window
 	            stereo_camera.DisableEmbeddedStereo();
 	    }
 	}
+	    protected virtual void OnCmdForwardLeftClicked (object sender, System.EventArgs e)
+	{
+		stereo_camera.SendCommand(0, "7");
+	}
+			protected virtual void OnCmdForwardClicked (object sender, System.EventArgs e)
+	{
+		stereo_camera.SendCommand(0, "8");
+	}	
+	protected virtual void OnCmdForwardRightClicked (object sender, System.EventArgs e)
+	{
+		stereo_camera.SendCommand(0, "9");
+	}
+			protected virtual void OnCmdLeftClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, "4");
+	}
+    protected virtual void OnCmdStopClicked (object sender, System.EventArgs e)
+	{
+		stereo_camera.SendCommand(0, "5");
+    }
+	protected virtual void OnCmdRightClicked (object sender, System.EventArgs e)
+	{
+        stereo_camera.SendCommand(0, "6");
+    }
+			protected virtual void OnCmdBackLeftClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, "1");
+	}
+		protected virtual void OnCmdBackRightClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, "3");
+    }
+    protected virtual void OnCmdBackClicked (object sender, System.EventArgs e)
+    {
+		stereo_camera.SendCommand(0, "2");
+    }
+    protected virtual void OnCmdFastClicked (object sender, System.EventArgs e)
+		{
+        stereo_camera.SendCommand(0, "+");
+    }
+		protected virtual void OnCmdSlowClicked (object sender, System.EventArgs e)
+		{
+        stereo_camera.SendCommand(0, "-");
+    }
+		    protected virtual void OnCmdAvoidClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, "F");
+    }
+    protected virtual void OnCmdCrashClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, "f");
+    }
+    protected virtual void OnCmdLaserOnClicked (object sender, System.EventArgs e)
+	{
+	    stereo_camera.SendCommand(0, "l");
+    }
+    protected virtual void OnCmdSpinRightClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, ".");
+    }
+		    protected virtual void OnCmdSpinLeftClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, "0");
+    }
+    protected virtual void OnCmd160x128Clicked (object sender, System.EventArgs e)
+	{
+    }
+		    protected virtual void OnCmd320x256Clicked (object sender, System.EventArgs e)
+	{
+    }
+	protected virtual void OnCmd640x512Clicked (object sender, System.EventArgs e)
+    {
+    }
+        protected virtual void OnCmd1280x1024Clicked (object sender, System.EventArgs e)
+    {
+    }
+    protected virtual void OnCmdLaserOffClicked (object sender, System.EventArgs e)
+    {
+        stereo_camera.SendCommand(0, "L");
+    }
+        protected virtual void OnCmdForwardActivated (object sender, System.EventArgs e)
+    {
+		stereo_camera.SendCommand(0, "8");
+    }    
+    
+    protected virtual void OnCmdBackActivated (object sender, System.EventArgs e)    
+    {
+	    stereo_camera.SendCommand(0, "2");
+    }
+        protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
+    {
+    }
+
+
 }

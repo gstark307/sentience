@@ -95,7 +95,25 @@ namespace surveyor.vision
 		}
 		
 		#endregion
-		
+
+        #region "sending commands (typically for driving) to the Surveyor robot"
+
+        /// <summary>
+        /// send a command to the SRV robot 
+        /// </summary>
+        /// <param name="camera_index">index number of the camera (0 = left, 1 = right)</param>
+        /// <param name="command">command to be sent</param>
+        public void SendCommand(
+            int camera_index,
+            string command)
+        {
+            if (camera[camera_index] != null) {
+                camera[camera_index].send_command = command;
+            }
+        }
+
+        #endregion
+        
 		#region "state machine"
 		
 		private Bitmap bmp_state_left, bmp_state_right;
@@ -186,7 +204,7 @@ namespace surveyor.vision
 					    }
 					    else
 					    {
-				            int timeout_mS = 500;
+				            int timeout_mS = 1000;
 	                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
 						    if (diff.TotalMilliseconds > timeout_mS)
 						    {

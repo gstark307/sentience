@@ -1,19 +1,16 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/unittests/tests_gridCells.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../sentcore/robotGeometry.cs" ctype="Workbench">
     <Files>
-      <File FileName="Main.cs" Line="51" Column="71" />
-      <File FileName="../../sentcore/metagridBuffer.cs" Line="1459" Column="1" />
-      <File FileName="../../sentcore/steersman.cs" Line="389" Column="2" />
-      <File FileName="../../sentcore/unittests/tests_gridCells.cs" Line="35" Column="29" />
-      <File FileName="../../sentcore/gridCells.cs" Line="146" Column="14" />
+      <File FileName="Main.cs" Line="222" Column="1" />
+      <File FileName="../../sentcore/steersman.cs" Line="68" Column="1" />
+      <File FileName="../../sentcore/robotGeometry.cs" Line="87" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="sentcore" expanded="True">
-            <Node name="unittests" expanded="True">
-              <Node name="tests_gridCells.cs" selected="True" />
-            </Node>
+            <Node name="unittests" expanded="True" />
+            <Node name="robotGeometry.cs" selected="True" />
           </Node>
           <Node name="steersman" expanded="True" />
         </State>
@@ -21,27 +18,23 @@
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
       </Pad>
-      <Pad Id="MonoDevelop.Debugger.WatchPad">
-        <State>
-          <Value>no_of_cameras</Value>
-        </State>
-      </Pad>
-      <Pad Id="ConnectionManagerPad">
-        <State selected="True" />
-      </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
         <State expanded="True">
           <Node name="sentcore" expanded="True">
             <Node name="sentience" expanded="True">
               <Node name="core" expanded="True">
                 <Node name="tests" expanded="True">
-                  <Node name="tests_gridCells" expanded="True">
-                    <Node name="CreateMoireGrid" selected="True" />
-                  </Node>
+                  <Node name="tests_robotGeometry" expanded="True" selected="True" />
+                  <Node name="tests_steersman" expanded="True" />
                 </Node>
               </Node>
             </Node>
           </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State>
+          <Value>no_of_cameras</Value>
         </State>
       </Pad>
     </Pads>

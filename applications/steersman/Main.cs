@@ -102,10 +102,16 @@ namespace sentience.Steersman
                 if (no_of_stereo_cameras_str != "")
 					no_of_stereo_cameras = Convert.ToInt32(no_of_stereo_cameras_str);
 
-				float baseline_mm = 100;
+				float baseline_mm = 120;
                 string baseline_mm_str = commandline.GetParameterValue("baseline", parameters);
                 if (baseline_mm_str != "")
 					baseline_mm = Convert.ToSingle(baseline_mm_str);
+
+				// height of the cameras above the head tilt axis
+				float dist_from_centre_of_tilt_mm = 0;
+                string dist_from_centre_of_tilt_str = commandline.GetParameterValue("disttilt", parameters);
+                if (dist_from_centre_of_tilt_str != "")
+					dist_from_centre_of_tilt_mm = Convert.ToSingle(dist_from_centre_of_tilt_str);
 
 				int image_width = 320;
 				int image_height = 240;
@@ -120,7 +126,7 @@ namespace sentience.Steersman
 					}					
 				}
 
-				float FOV_degrees = 78;
+				float FOV_degrees = 65;
                 string FOV_degrees_str = commandline.GetParameterValue("fov", parameters);
                 if (FOV_degrees_str != "")
 					FOV_degrees = Convert.ToSingle(FOV_degrees_str);
@@ -173,6 +179,7 @@ namespace sentience.Steersman
 				    sensormodels_filename,
 				    no_of_stereo_cameras,
 				    baseline_mm,
+				    dist_from_centre_of_tilt_mm,
 				    image_width,
 				    image_height,
 				    FOV_degrees,
@@ -212,6 +219,7 @@ namespace sentience.Steersman
 			ValidParameters.Add("headz");
 			ValidParameters.Add("cameras");
 			ValidParameters.Add("baseline");
+			ValidParameters.Add("disttilt");
 			ValidParameters.Add("resolution");
 			ValidParameters.Add("fov");
 			ValidParameters.Add("headdiam");
@@ -250,6 +258,7 @@ namespace sentience.Steersman
 			Console.WriteLine("         -headz <head z centroid in mm>");
 			Console.WriteLine("         -cameras <number of stereo cameras>");
 			Console.WriteLine("         -baseline <stereo camera baseline>");
+			Console.WriteLine("         -disttilt <dist to centre of tilt>");
 			Console.WriteLine("         -resolution <widthxheight>");
 			Console.WriteLine("         -fov <field of view in degrees>");
 			Console.WriteLine("         -headdiam <head diameter in mm>");
