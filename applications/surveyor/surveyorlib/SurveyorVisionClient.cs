@@ -199,8 +199,10 @@ namespace surveyor.vision
 				if (streamWriter == null) streamWriter = new System.IO.StreamWriter(networkStream);
                 if ((send_command != null) && (send_command != ""))
                 {
+                    Console.WriteLine("Sending command: " + send_command);
 				    streamWriter.WriteLine(send_command);
                     send_command = "";
+                    wait_for_reply = false;
                 }
                 else
                 {

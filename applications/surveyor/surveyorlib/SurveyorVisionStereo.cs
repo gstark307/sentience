@@ -107,7 +107,7 @@ namespace surveyor.vision
             int camera_index,
             string command)
         {
-            if (camera[camera_index] != null) {
+            if (camera[camera_index] != null) {                
                 camera[camera_index].send_command = command;
             }
         }

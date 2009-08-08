@@ -42,12 +42,15 @@ public partial class MainWindow: Gtk.Window
     //bool disable_radial_correction = true;
 	bool reverse_colours = true;
 	bool motors_active;
+	int motors_tries = 5;
 	
     public SurveyorVisionStereoGtk stereo_camera;
     
     public MainWindow (): base (Gtk.WindowType.Toplevel)
     {
         Build ();
+		
+		SaveHpolarLookup();
 
         byte[] img = new byte[image_width * image_height * 3];
         Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -63,7 +66,35 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
         stereo_camera.Run();		
+		
+		// enable motors
+		//stereo_camera.SendCommand(0, "M");
+		//motors_active = true;		
     }
+			
+    private void SaveHpolarLookup()
+	{
+        int cartesian_dimension_cells_width = 40;
+        int cartesian_dimension_cells_range = 40;
+        float cartesian_cell_size_mm = 100;
+        int[] HpolarLookup = null;
+		float scale_down_factor = 5;
+		Hpolar.CreateHpolarLookupSRV(
+		    cartesian_dimension_cells_width,
+		    cartesian_dimension_cells_range,
+		    cartesian_cell_size_mm,
+		    scale_down_factor,
+		    ref HpolarLookup);
+		Hpolar.ShowHpolar(
+		    cartesian_dimension_cells_width, 
+		    cartesian_dimension_cells_range, 
+		    cartesian_cell_size_mm, 
+		    HpolarLookup, 
+		    1000, 
+		    scale_down_factor, 
+		    "Hpolar.jpg");
+		Hpolar.SaveHpolar(HpolarLookup, "HpolarLookup.txt");
+	}
     
     private void CloseForm()
     {
@@ -401,13 +432,13 @@ public partial class MainWindow: Gtk.Window
 	            stereo_camera.DisableEmbeddedStereo();
 	    }
 	}
-	    protected virtual void OnCmdForwardLeftClicked (object sender, System.EventArgs e)
+		protected virtual void OnCmdForwardLeftClicked (object sender, System.EventArgs e)
 	{
 		stereo_camera.SendCommand(0, "7");
 	}
 			protected virtual void OnCmdForwardClicked (object sender, System.EventArgs e)
 	{
-		stereo_camera.SendCommand(0, "8");
+	   stereo_camera.SendCommand(0, "8");
 	}	
 	protected virtual void OnCmdForwardRightClicked (object sender, System.EventArgs e)
 	{
@@ -417,40 +448,40 @@ public partial class MainWindow: Gtk.Window
     {
         stereo_camera.SendCommand(0, "4");
 	}
-    protected virtual void OnCmdStopClicked (object sender, System.EventArgs e)
+		    protected virtual void OnCmdStopClicked (object sender, System.EventArgs e)
 	{
 		stereo_camera.SendCommand(0, "5");
-    }
+	}
 	protected virtual void OnCmdRightClicked (object sender, System.EventArgs e)
 	{
-        stereo_camera.SendCommand(0, "6");
+		stereo_camera.SendCommand(0, "6");
     }
 			protected virtual void OnCmdBackLeftClicked (object sender, System.EventArgs e)
     {
         stereo_camera.SendCommand(0, "1");
 	}
 		protected virtual void OnCmdBackRightClicked (object sender, System.EventArgs e)
-    {
-        stereo_camera.SendCommand(0, "3");
+	{
+		stereo_camera.SendCommand(0, "3");
     }
-    protected virtual void OnCmdBackClicked (object sender, System.EventArgs e)
+	protected virtual void OnCmdBackClicked (object sender, System.EventArgs e)
     {
 		stereo_camera.SendCommand(0, "2");
     }
     protected virtual void OnCmdFastClicked (object sender, System.EventArgs e)
-		{
+	{
         stereo_camera.SendCommand(0, "+");
     }
-		protected virtual void OnCmdSlowClicked (object sender, System.EventArgs e)
-		{
+	protected virtual void OnCmdSlowClicked (object sender, System.EventArgs e)
+	{
         stereo_camera.SendCommand(0, "-");
     }
 		    protected virtual void OnCmdAvoidClicked (object sender, System.EventArgs e)
-    {
+	{
         stereo_camera.SendCommand(0, "F");
     }
-    protected virtual void OnCmdCrashClicked (object sender, System.EventArgs e)
-    {
+		    protected virtual void OnCmdCrashClicked (object sender, System.EventArgs e)
+	{
         stereo_camera.SendCommand(0, "f");
     }
     protected virtual void OnCmdLaserOnClicked (object sender, System.EventArgs e)
@@ -484,7 +515,7 @@ public partial class MainWindow: Gtk.Window
         protected virtual void OnCmdForwardActivated (object sender, System.EventArgs e)
     {
 		stereo_camera.SendCommand(0, "8");
-    }    
+    }    
     
     protected virtual void OnCmdBackActivated (object sender, System.EventArgs e)    
     {

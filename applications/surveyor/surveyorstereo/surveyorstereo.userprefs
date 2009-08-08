@@ -1,8 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
     <Files>
-      <File FileName="MainWindow.cs" Line="537" Column="5" />
-      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="203" Column="49" />
+      <File FileName="MainWindow.cs" Line="77" Column="48" />
+      <File FileName="../surveyorlib/Hpolar.cs" Line="278" Column="72" />
+      <File FileName="Main.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -25,7 +26,9 @@
     </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/home/motters/develop/sentience/applications/surveyor/surveyorlib/SurveyorVisionClient.cs" line="202" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
 </Properties>
