@@ -64,6 +64,8 @@
     <File name="correspondence/StereoVisionEdges.cs" subtype="Code" buildaction="Compile" />
     <File name="correspondence/StereoVisionEdgesCam.cs" subtype="Code" buildaction="Compile" />
     <File name="Hpolar.cs" subtype="Code" buildaction="Compile" />
+    <File name="tests" subtype="Directory" buildaction="Compile" />
+    <File name="tests/HpolarTests.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
@@ -72,5 +74,6 @@
     <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Gac" localcopy="True" refto="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Gac" localcopy="True" refto="gnome-sharp, Version=2.20.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <ProjectReference type="Gac" localcopy="True" refto="nunit.framework" />
   </References>
 </Project>

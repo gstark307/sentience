@@ -1,13 +1,13 @@
-<Combine name="surveyorstereo" fileversion="2.0">
+<Combine fileversion="2.0" name="surveyorstereo">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="CombineConfiguration">
       <Entry build="True" name="surveyorstereo" configuration="Debug" />
-      <Entry build="True" name="Packages" configuration="" />
+      <Entry build="True" name="Packages" configuration="Debug" />
       <Entry build="True" name="surveyorlib" configuration="Debug" />
     </Configuration>
     <Configuration name="Release" ctype="CombineConfiguration">
       <Entry build="True" name="surveyorstereo" configuration="Release" />
-      <Entry build="True" name="Packages" configuration="" />
+      <Entry build="True" name="Packages" configuration="Release" />
       <Entry build="True" name="surveyorlib" configuration="Release" />
     </Configuration>
   </Configurations>

@@ -68,17 +68,17 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.Run();		
 		
 		// enable motors
-		//stereo_camera.SendCommand(0, "M");
-		//motors_active = true;		
+		stereo_camera.SendCommand(0, "M");
+		motors_active = true;
     }
-			
+
     private void SaveHpolarLookup()
 	{
-        int cartesian_dimension_cells_width = 40;
-        int cartesian_dimension_cells_range = 40;
+        int cartesian_dimension_cells_width = 40; //40;
+        int cartesian_dimension_cells_range = 40; //40;
         float cartesian_cell_size_mm = 100;
         int[] HpolarLookup = null;
-		float scale_down_factor = 5;
+		float scale_down_factor = 10;
 		Hpolar.CreateHpolarLookupSRV(
 		    cartesian_dimension_cells_width,
 		    cartesian_dimension_cells_range,
@@ -94,6 +94,7 @@ public partial class MainWindow: Gtk.Window
 		    scale_down_factor, 
 		    "Hpolar.jpg");
 		Hpolar.SaveHpolar(HpolarLookup, "HpolarLookup.txt");
+		Hpolar.SaveTrigLookup("TrigLookup.txt");
 	}
     
     private void CloseForm()

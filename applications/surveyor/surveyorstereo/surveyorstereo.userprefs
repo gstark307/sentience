@@ -1,24 +1,36 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/Hpolar.cs" ctype="Workbench">
     <Files>
-      <File FileName="MainWindow.cs" Line="77" Column="48" />
-      <File FileName="../surveyorlib/Hpolar.cs" Line="278" Column="72" />
-      <File FileName="Main.cs" Line="1" Column="1" />
+      <File FileName="../surveyorlib/Hpolar.cs" Line="579" Column="41" />
+      <File FileName="../surveyorlib/tests/HpolarTests.cs" Line="127" Column="45" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorlib" expanded="True" />
-          <Node name="surveyorstereo" expanded="True">
-            <Node name="MainWindow.cs" selected="True" />
+          <Node name="surveyorlib" expanded="True">
+            <Node name="tests" expanded="True" />
+            <Node name="Hpolar.cs" selected="True" />
           </Node>
+          <Node name="surveyorstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State selected="True" />
+        <State expanded="True">
+          <Node name="surveyorlib" expanded="True">
+            <Node name="surveyor" expanded="True">
+              <Node name="vision" expanded="True">
+                <Node name="tests" expanded="True">
+                  <Node name="HpolarTests" expanded="True">
+                    <Node name="MapUpdate" selected="True" />
+                  </Node>
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State />
