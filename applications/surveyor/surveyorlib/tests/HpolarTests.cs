@@ -33,6 +33,54 @@ namespace surveyor.vision.tests
         [Test()]
         public void Recenter()
         {
+            int max_disparity_percent = 40;
+            int map_x = 60;
+            int map_y = 60;
+            byte[] cartesian_map = new byte[map_x * map_y * 3];
+            int stereo_matches = 0;
+            
+            Hpolar map = new Hpolar();
+            map.imgWidth = 320;
+            map.imgHeight = 240;
+            map.footline = new ushort[(int)map.imgWidth / map.SVS_HORIZONTAL_SAMPLING];
+            map.footline_dist_mm = new ushort[(int)map.imgWidth / map.SVS_HORIZONTAL_SAMPLING];
+
+            // create a footline
+            for (int x = 0; x < (int)map.imgWidth / map.SVS_HORIZONTAL_SAMPLING; x++)
+                map.footline[x] = (ushort)(map.imgHeight/2);
+
+            map.FootlineUpdate(max_disparity_percent);
+            
+            /* create a map */
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) - 2, (map_y/2)-6, (map_x/2) - 2, (map_y/2)-29, 255,0,0,0,false);
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) + 2, (map_y/2)-6, (map_x/2) + 2, (map_y/2)-29, 255,0,0,0,false);
+
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) - 2, (map_y/2)-6, (map_x/2) - 10, (map_y/2)-6, 255,0,0,0,false);
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) + 2, (map_y/2)-6, (map_x/2) + 10, (map_y/2)-6, 255,0,0,0,false);
+            
+            Bitmap bmp = new Bitmap(map_x,map_y,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapArrayConversions.updatebitmap_unsafe(cartesian_map, bmp);
+            bmp.Save("HpolarTests_Recenter0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+
+            /* convert map to stereo view */            
+            map.SimulateStereoView(
+                max_disparity_percent,
+                map_x, map_y,
+                cartesian_map,
+                ref stereo_matches);
+
+            map.SaveDisparities(
+                "HpolarTests_Recenter1.bmp",
+                stereo_matches);
+
+            map.MapUpdate(stereo_matches, 40);
+            map.Show("HpolarTests_Recenter2.bmp");
+
+            Assert.IsTrue(stereo_matches > 0);            
+        
+            map.robot_y_mm -= 200;
+            map.Recenter();
+            map.Show("HpolarTests_Recenter3.bmp");
         }
 
         [Test()]
@@ -105,9 +153,12 @@ namespace surveyor.vision.tests
             map.FootlineUpdate(max_disparity_percent);
             
             /* create a map */
-            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) - 2, (map_y/2), (map_x/2) - 2, (map_y/2)-29, 255,255,255,0,false);
-            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) + 2, (map_y/2), (map_x/2) + 2, (map_y/2)-29, 255,255,255,0,false);
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) - 2, (map_y/2)-6, (map_x/2) - 2, (map_y/2)-29, 255,0,0,0,false);
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) + 2, (map_y/2)-6, (map_x/2) + 2, (map_y/2)-29, 255,0,0,0,false);
 
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) - 2, (map_y/2)-6, (map_x/2) - 10, (map_y/2)-6, 255,0,0,0,false);
+            drawing.drawLine(cartesian_map, map_x, map_y, (map_x/2) + 2, (map_y/2)-6, (map_x/2) + 10, (map_y/2)-6, 255,0,0,0,false);
+            
             Bitmap bmp = new Bitmap(map_x,map_y,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(cartesian_map, bmp);
             bmp.Save("HpolarTests_MapUpdate0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);

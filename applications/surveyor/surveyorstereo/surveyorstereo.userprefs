@@ -1,8 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/Hpolar.cs" ctype="Workbench">
     <Files>
-      <File FileName="../surveyorlib/Hpolar.cs" Line="579" Column="41" />
-      <File FileName="../surveyorlib/tests/HpolarTests.cs" Line="127" Column="45" />
+      <File FileName="../surveyorlib/Hpolar.cs" Line="59" Column="1" />
+      <File FileName="../surveyorlib/tests/HpolarTests.cs" Line="82" Column="28" />
+      <File FileName="MainWindow.cs" Line="76" Column="3" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -24,7 +25,7 @@
               <Node name="vision" expanded="True">
                 <Node name="tests" expanded="True">
                   <Node name="HpolarTests" expanded="True">
-                    <Node name="MapUpdate" selected="True" />
+                    <Node name="Recenter" selected="True" />
                   </Node>
                 </Node>
               </Node>
