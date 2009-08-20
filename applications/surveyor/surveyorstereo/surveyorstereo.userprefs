@@ -1,16 +1,18 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/Hpolar.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/CartesianMap.cs" ctype="Workbench">
     <Files>
-      <File FileName="../surveyorlib/Hpolar.cs" Line="59" Column="1" />
-      <File FileName="../surveyorlib/tests/HpolarTests.cs" Line="82" Column="28" />
+      <File FileName="../surveyorlib/Hpolar.cs" Line="1090" Column="1" />
       <File FileName="MainWindow.cs" Line="76" Column="3" />
+      <File FileName="../surveyorlib/CartesianMap.cs" Line="54" Column="1" />
+      <File FileName="../surveyorlib/tests/CartesianMapTests.cs" Line="39" Column="36" />
+      <File FileName="../surveyorlib/tests/HpolarTests.cs" Line="29" Column="2" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="surveyorlib" expanded="True">
             <Node name="tests" expanded="True" />
-            <Node name="Hpolar.cs" selected="True" />
+            <Node name="CartesianMap.cs" selected="True" />
           </Node>
           <Node name="surveyorstereo" expanded="True" />
         </State>
@@ -24,7 +26,7 @@
             <Node name="surveyor" expanded="True">
               <Node name="vision" expanded="True">
                 <Node name="tests" expanded="True">
-                  <Node name="HpolarTests" expanded="True">
+                  <Node name="CartesianMapTests" expanded="True">
                     <Node name="Recenter" selected="True" />
                   </Node>
                 </Node>

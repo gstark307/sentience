@@ -1,5 +1,5 @@
 /*
-    H-polar tests
+    cartesian map tests
     Copyright (C) 2009 Bob Mottram
     fuzzgun@gmail.com
 
@@ -28,7 +28,7 @@ using NUnit.Framework;
 namespace surveyor.vision.tests
 {
     [TestFixture()]
-    public class HpolarTests
+    public class CartesianMapTests
     {
         [Test()]
         public void Recenter()
@@ -36,10 +36,11 @@ namespace surveyor.vision.tests
             int max_disparity_percent = 40;
             int map_x = 60;
             int map_y = 60;
+            int cell_size_mm = 100;
             byte[] cartesian_map = new byte[map_x * map_y * 3];
             int stereo_matches = 0;
             
-            Hpolar map = new Hpolar();
+            CartesianMap map = new CartesianMap();
             map.imgWidth = 320;
             map.imgHeight = 240;
             map.footline = new ushort[(int)map.imgWidth / map.SVS_HORIZONTAL_SAMPLING];
@@ -60,45 +61,46 @@ namespace surveyor.vision.tests
             
             Bitmap bmp = new Bitmap(map_x,map_y,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(cartesian_map, bmp);
-            bmp.Save("HpolarTests_Recenter0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+            bmp.Save("CartesianMapTests_Recenter0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 
             /* convert map to stereo view */            
             map.SimulateStereoView(
                 max_disparity_percent,
                 map_x, map_y,
+                cell_size_mm,
                 cartesian_map,
                 ref stereo_matches);
 
             map.SaveDisparities(
-                "HpolarTests_Recenter1.bmp",
+                "CartesianMapTests_Recenter1.bmp",
                 stereo_matches);
 
             map.MapUpdate(stereo_matches, 40);
-            map.Show("HpolarTests_Recenter2.bmp");
+            map.Show("CartesianMapTests_Recenter2.bmp");
 
             Assert.IsTrue(stereo_matches > 0);            
         
             map.robot_y_mm -= 200;
             map.Recenter();
-            map.Show("HpolarTests_Recenter3.bmp");
+            map.Show("CartesianMapTests_Recenter3.bmp");
 
             map.robot_y_mm -= 200;
             map.Recenter();
-            map.Show("HpolarTests_Recenter4.bmp");
+            map.Show("CartesianMapTests_Recenter4.bmp");
 
             map.robot_y_mm += 200;
             map.Recenter();
-            map.Show("HpolarTests_Recenter5.bmp");
+            map.Show("CartesianMapTests_Recenter5.bmp");
 
             map.robot_y_mm += 200;
             map.Recenter();
-            map.Show("HpolarTests_Recenter6.bmp");
+            map.Show("CartesianMapTests_Recenter6.bmp");
         }
 
         [Test()]
         public void FootlineUpdate()
         {
-            Hpolar map = new Hpolar();
+            CartesianMap map = new CartesianMap();
             map.imgWidth = 320;
             map.imgHeight = 240;
             map.footline = new ushort[map.imgWidth / map.SVS_HORIZONTAL_SAMPLING];
@@ -126,7 +128,7 @@ namespace surveyor.vision.tests
         {
             int image_width = 320;
             int image_height = 240;
-            Hpolar map = new Hpolar();
+            CartesianMap map = new CartesianMap();
             map.footline = new ushort[image_width / map.SVS_HORIZONTAL_SAMPLING];
             map.footline_dist_mm = new ushort[image_width / map.SVS_HORIZONTAL_SAMPLING];
 
@@ -149,10 +151,11 @@ namespace surveyor.vision.tests
             int max_disparity_percent = 40;
             int map_x = 60;
             int map_y = 60;
+            int cell_size_mm = 100;
             byte[] cartesian_map = new byte[map_x * map_y * 3];
             int stereo_matches = 0;
             
-            Hpolar map = new Hpolar();
+            CartesianMap map = new CartesianMap();
             map.imgWidth = 320;
             map.imgHeight = 240;
             map.footline = new ushort[(int)map.imgWidth / map.SVS_HORIZONTAL_SAMPLING];
@@ -173,23 +176,25 @@ namespace surveyor.vision.tests
             
             Bitmap bmp = new Bitmap(map_x,map_y,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             BitmapArrayConversions.updatebitmap_unsafe(cartesian_map, bmp);
-            bmp.Save("HpolarTests_MapUpdate0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+            bmp.Save("CartesianMapTests_MapUpdate0.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 
             /* convert map to stereo view */            
             map.SimulateStereoView(
                 max_disparity_percent,
                 map_x, map_y,
+                cell_size_mm,                   
                 cartesian_map,
                 ref stereo_matches);
 
             map.SaveDisparities(
-                "HpolarTests_MapUpdate1.bmp",
+                "CartesianMapTests_MapUpdate1.bmp",
                 stereo_matches);
 
             map.MapUpdate(stereo_matches, 40);
-            map.Show("HpolarTests_MapUpdate2.bmp");
+            map.Show("CartesianMapTests_MapUpdate2.bmp");
 
             Assert.IsTrue(stereo_matches > 0);
         }
+        
     }
 }

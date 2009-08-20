@@ -63,10 +63,11 @@ namespace surveyor.vision
         private int SVS_MAP_HRMIN = 970;
         private int SVS_MAP_RDIM = 30; //75;
         private int SVS_MAP_HYPRDIM = 30; //75;
-        private int SVS_MAP_TDIM = 200; //400;
+        private int SVS_MAP_TDIM = 100;
         
         private int SVS_MAP_WIDTH_CELLS = 40;
         private int SVS_MAP_CELL_SIZE_MM = 100;
+        public int SVS_MAP_MAX_RANGE_MM = 25000;
         const int SVS_EMPTY_CELL = 999999;
         const int TRIG_MULT = 1;
 
@@ -82,7 +83,7 @@ namespace surveyor.vision
         private byte[] Hpolar_map_occupancy;
         private int prev_array_length;
         
-        int[] SinLookup = {
+        int[] HpolarSinLookup = {
             0,174,348,523,697,871,1045,1218,1391,1564,1736,1908,2079,2249,2419,2588,2756,2923,3090,3255,3420,3583,3746,3907,4067,4226,4383,4539,4694,4848,5000,5150,5299,5446,5591,5735,5877,6018,6156,6293,6427,6560,6691,6819,6946,7071,
             7193,7313,7431,7547,7660,7771,7880,7986,8090,8191,8290,8386,8480,8571,8660,8746,8829,8910,8987,9063,9135,9205,9271,9335,9396,9455,9510,9563,9612,9659,9702,9743,9781,9816,9848,9876,9902,9925,9945,9961,9975,9986,9993,9998,9999,
             9998,9993,9986,9975,9961,9945,9925,9902,9876,9848,9816,9781,9743,9702,9659,9612,9563,9510,9455,9396,9335,9271,9205,9135,9063,8987,8910,8829,8746,8660,8571,8480,8386,8290,8191,8090,7986,7880,7771,7660,7547,7431,7313,7193,7071,
@@ -92,7 +93,7 @@ namespace surveyor.vision
             -9998,-9993,-9986,-9975,-9961,-9945,-9925,-9902,-9876,-9848,-9816,-9781,-9743,-9702,-9659,-9612,-9563,-9510,-9455,-9396,-9335,-9271,-9205,-9135,-9063,-8987,-8910,-8829,-8746,-8660,-8571,-8480,-8386,-8290,-8191,-8090,-7986,-7880,-7771,-7660,-7547,-7431,-7313,-7193,-7071,
             -6946,-6819,-6691,-6560,-6427,-6293,-6156,-6018,-5877,-5735,-5591,-5446,-5299,-5150,-4999,-4848,-4694,-4539,-4383,-4226,-4067,-3907,-3746,-3583,-3420,-3255,-3090,-2923,-2756,-2588,-2419,-2249,-2079,-1908,-1736,-1564,-1391,-1218,-1045,-871,-697,-523,-348,-174,
         };
-
+        
         public static float arctan2_float(float y, float x)
         {
            float coeff_1 = (float)Math.PI/4;
@@ -382,7 +383,7 @@ namespace surveyor.vision
             int no_of_matches,
             int max_disparity_percent)
         {
-            int i, j, d, w, rot, x, y, disp, disp_radius;
+            int i, rot, x, y, disp;
             int x_mm, y_mm, curr_y_mm, x_rotated_mm, y_rotated_mm, disp_mmx100;
             int r, n, SinVal, CosVal;
             int range_const = SVS_FOCAL_LENGTH_MMx100 * SVS_BASELINE_MM;
@@ -405,7 +406,7 @@ namespace surveyor.vision
                 if (svs_matches[i] > 0) {  // match probability > 0
                     x = svs_matches[i + 1];
                     y = svs_matches[i + 2];
-                    if (y <= footline[x / SVS_HORIZONTAL_SAMPLING])
+                    if (y < footline[x / SVS_HORIZONTAL_SAMPLING])
                         on_ground_plane = 0;
                     else
                         on_ground_plane = 1;
@@ -416,9 +417,7 @@ namespace surveyor.vision
                         // get position of the feature in space
                         y_mm = range_const / disp_mmx100;
                         
-                        disp_radius = disp/2;
-                        if (disp_radius > 10) disp_radius = 10;
-                        curr_y_mm = y_mm;                    
+                        curr_y_mm = y_mm;                   
                         int rot_off;
                         int max_rot_off = (int)SVS_FOV_DEGREES/2;
                                         
@@ -428,10 +427,10 @@ namespace surveyor.vision
         
                             CosVal = 90 - rot;
                             if (CosVal < 0) CosVal += 360;
-                            CosVal = SinLookup[CosVal];
+                            CosVal = HpolarSinLookup[CosVal];
                             if (rot >= 360) rot -= 360;
                             if (rot < 0) rot += 360;
-                            SinVal = SinLookup[rot];
+                            SinVal = HpolarSinLookup[rot];
                             
                             // rotate by the orientation of the robot 
                             x_rotated_mm = SinVal * curr_y_mm / (int)10000;                        
@@ -441,90 +440,83 @@ namespace surveyor.vision
                             svs_xyz_to_polar(x_rotated_mm + dx, y_rotated_mm + dy, 0);
 
                             if (hpolar_rP > 0) {                    
-                                d = hpolar_tP;
-                                w = 0;
-                                    
-                                for (j = d-w; j <= d+w; j++) {
-                                    hpolar_tP = j;
-                                    if (hpolar_tP >= SVS_MAP_TDIM) hpolar_tP -= SVS_MAP_TDIM;
-                                    if (hpolar_tP < 0) hpolar_tP += SVS_MAP_TDIM;
                             
-                                    // vacancy 
-                                    n = hpolar_tP*2;
-                                    int prob = 5;
-                                    if (prob > hpolar_rP) prob = hpolar_rP;
-                                    for (r = 0; r < hpolar_rP-1; r++, n += polar_stride) {
+                                // vacancy 
+                                n = hpolar_tP*2;
+                                int prob = 5;
+                                if (prob > hpolar_rP) prob = hpolar_rP;
+                                for (r = 0; r < hpolar_rP-1; r++, n += polar_stride) {
+                                    if (n >= Hpolar_max) break;
+                                        
+                                    // absolute position of the point in cartesian space 
+                                    x_mm = robot_x_mm + (r*x_rotated_mm/hpolar_rP);
+                                    y_mm = robot_y_mm + (r*y_rotated_mm/hpolar_rP);
+                                        
+                                    if (Hpolar_map_coords[n] == SVS_EMPTY_CELL) {
+                                        Hpolar_map_coords[n] = x_mm;
+                                        Hpolar_map_coords[n+1] = y_mm;
+                                    }
+                                    else {
+                                        Hpolar_map_coords[n] += (x_mm - Hpolar_map_coords[n])/2;
+                                        Hpolar_map_coords[n+1] += (y_mm - Hpolar_map_coords[n+1])/2;
+                                    }
+                                    if (Hpolar_map_occupancy[n] < 245) {
+                                        // increment vacancy                                     
+                                        Hpolar_map_occupancy[n] += (byte)prob;
+                                        prob--;
+                                        if (prob < 1) prob = 1;
+                                    }
+                                    else {
+                                        // decrement occupancy 
+                                        if (Hpolar_map_occupancy[n+1] > 0) Hpolar_map_occupancy[n+1]--;
+                                    }                    
+                                }
+                                if ((on_ground_plane == 0) && (n < Hpolar_max)) {
+                                    // occupancy
+                                    n++;
+                                    prob = 20;
+                                    /* in principle if the map cell size tracks stereo uncertainty 
+                                       there would be no tail growth.  This is another crude
+                                       approximation - better is possible */
+                                    int tail_length = hpolar_rP/10;
+                                    if (tail_length < 2) tail_length = 2;
+                                    while (r < hpolar_rP+tail_length) {
                                         if (n >= Hpolar_max) break;
                                             
                                         // absolute position of the point in cartesian space 
                                         x_mm = robot_x_mm + (r*x_rotated_mm/hpolar_rP);
                                         y_mm = robot_y_mm + (r*y_rotated_mm/hpolar_rP);
                                             
-                                        if (Hpolar_map_coords[n] == SVS_EMPTY_CELL) {
-                                            Hpolar_map_coords[n] = x_mm;
-                                            Hpolar_map_coords[n+1] = y_mm;
+                                        if (Hpolar_map_coords[n-1] == SVS_EMPTY_CELL) {
+                                            Hpolar_map_coords[n-1] = x_mm;
+                                            Hpolar_map_coords[n] = y_mm;
                                         }
                                         else {
-                                            Hpolar_map_coords[n] += (x_mm - Hpolar_map_coords[n])/2;
-                                            Hpolar_map_coords[n+1] += (y_mm - Hpolar_map_coords[n+1])/2;
+                                            Hpolar_map_coords[n-1] += (x_mm - Hpolar_map_coords[n-1])/2;
+                                            Hpolar_map_coords[n] += (y_mm - Hpolar_map_coords[n])/2;
                                         }
-                                        if (Hpolar_map_occupancy[n] < 245) {
-                                            // increment vacancy                                     
-                                            Hpolar_map_occupancy[n] += (byte)prob;
-                                            prob--;
-                                            if (prob < 1) prob = 1;
+                                        if (r < max_r) {
+                                            if (Hpolar_map_occupancy[n] < 245) {
+                                                // increment occupancy (very crude sensor model)
+                                                Hpolar_map_occupancy[n] += (byte)prob;
+                                                prob--;
+                                                if (prob < 1) prob = 1;
+                                            }
+                                            else {
+                                                // decrement vacancy 
+                                                if (Hpolar_map_occupancy[n-1] > 0) 
+                                                    Hpolar_map_occupancy[n-1]--;
+                                            }
                                         }
                                         else {
-                                            // decrement occupancy 
-                                            if (Hpolar_map_occupancy[n+1] > 0) Hpolar_map_occupancy[n+1]--;
-                                        }                    
-                                    }
-                                    if ((on_ground_plane == 0) && (n < Hpolar_max)) {
-                                        // occupancy
-                                        n++;
-                                        prob = 20;
-                                        /* in principle if the map cell size tracks stereo uncertainty 
-                                           there would be no tail growth.  This is another crude
-                                           approximation - better is possible */
-                                        int tail_length = hpolar_rP/10;
-                                        if (tail_length < 2) tail_length = 2;
-                                        while (r < hpolar_rP+tail_length) {
-                                            if (n >= Hpolar_max) break;
-                                                
-                                            // absolute position of the point in cartesian space 
-                                            x_mm = robot_x_mm + (r*x_rotated_mm/hpolar_rP);
-                                            y_mm = robot_y_mm + (r*y_rotated_mm/hpolar_rP);
-                                                
-                                            if (Hpolar_map_coords[n-1] == SVS_EMPTY_CELL) {
-                                                Hpolar_map_coords[n-1] = x_mm;
-                                                Hpolar_map_coords[n] = y_mm;
-                                            }
-                                            else {
-                                                Hpolar_map_coords[n-1] += (x_mm - Hpolar_map_coords[n-1])/2;
-                                                Hpolar_map_coords[n] += (y_mm - Hpolar_map_coords[n])/2;
-                                            }
-                                            if (r < max_r) {
-                                                if (Hpolar_map_occupancy[n] < 245) {
-                                                    // increment occupancy (very crude sensor model)
-                                                    Hpolar_map_occupancy[n] += (byte)prob;
-                                                    prob--;
-                                                    if (prob < 1) prob = 1;
-                                                }
-                                                else {
-                                                    // decrement vacancy 
-                                                    if (Hpolar_map_occupancy[n-1] > 0) 
-                                                        Hpolar_map_occupancy[n-1]--;
-                                                }
-                                            }
-                                            else {
-                                                break;
-                                            }
-                                            n += polar_stride;
-                                            r++;
+                                            break;
                                         }
+                                        n += polar_stride;
+                                        r++;
                                     }
                                 }
                             }
+                           
                         }
                     }            
                 }
@@ -582,10 +574,10 @@ namespace surveyor.vision
                 if (tP < 0) tP += (int)SVS_MAP_TDIM;
                 if (tP >= (int)SVS_MAP_TDIM) tP -= (int)SVS_MAP_TDIM;
                 
-                dx = radius * SinLookup[orient] / (int)10000;
+                dx = radius * HpolarSinLookup[orient] / (int)10000;
                 CosVal = 90*TRIG_MULT - orient;
                 if (CosVal < 0) CosVal += 360*TRIG_MULT;
-                dy = radius * SinLookup[CosVal] / (int)10000;
+                dy = radius * HpolarSinLookup[CosVal] / (int)10000;
                 for (r = 0; r < radius; r++) {
                     rP = r * (SVS_MAP_RDIM + SVS_MAP_HYPRDIM-1) / radius;
                     x = centre_x + (dx * r / radius);
@@ -639,7 +631,7 @@ namespace surveyor.vision
             int y_mm,
             int z_mm)
         {
-            const int scale = 25;
+            const int scale = 16;
             x_mm *= scale;
             y_mm *= scale;
             
@@ -651,39 +643,31 @@ namespace surveyor.vision
             hpolar_zP = z_mm;
 
             /* integer square root */
-            if ((x_mm < -32000) || (x_mm > 32000) ||
-                (y_mm < -32000) || (y_mm > 32000))
-            {                
-                x_mm/=10;
-                y_mm/=10;
-                v = (uint)(x_mm*x_mm + y_mm*y_mm);                
-                for (length_mm=0; v >= (2*length_mm)+1; v -= (2*length_mm++)+1);
-                x_mm*=10;
-                y_mm*=10;
-                length_mm*=10;
-            }
-            else
-            {
-                v = (uint)(x_mm*x_mm + y_mm*y_mm);                
-                for (length_mm=0; v >= (2*length_mm)+1; v -= (2*length_mm++)+1);
-            }
+            v = (uint)x_mm*(uint)x_mm + (uint)y_mm*(uint)y_mm;
+            for (length_mm=0; v >= (2*length_mm)+1; v -= (2*length_mm++)+1);
 
-            hpolar_rP =((((int)SVS_MAP_RMIN * (hpolar_zP - (int)SVS_MAP_HCAM)) / (int)length_mm) + (int)SVS_MAP_HCAM) *
-                 (int)SVS_MAP_HYPRDIM / (int)SVS_MAP_HRMIN + (int)SVS_MAP_RDIM;
-
-            if (abs_y < 1) abs_y = 1;
-            if (x_mm >= 0)
+            if ((length_mm > 0) && (length_mm < SVS_MAP_MAX_RANGE_MM))
             {
-                angle_degrees = 45 - (45 * ((int)x_mm - abs_y) / ((int)x_mm + abs_y));
+                hpolar_rP =((((int)SVS_MAP_RMIN * (hpolar_zP - (int)SVS_MAP_HCAM)) / (int)length_mm) + (int)SVS_MAP_HCAM) *
+                     (int)SVS_MAP_HYPRDIM / (int)SVS_MAP_HRMIN + (int)SVS_MAP_RDIM;
+    
+                if (abs_y < 1) abs_y = 1;
+                if (x_mm >= 0)
+                {
+                    angle_degrees = 45 - (45 * ((int)x_mm - abs_y) / ((int)x_mm + abs_y));
+                }
+                else
+                {
+                    angle_degrees = 135 - (45 * ((int)x_mm + abs_y) / (abs_y - (int)x_mm));
+                }
+                if (y_mm < 0) {
+                    hpolar_tP = -angle_degrees * SVS_MAP_TDIM / 360;
+                }
+                else {
+                    hpolar_tP = angle_degrees * SVS_MAP_TDIM / 360;
+                }
+                if (hpolar_tP < 0) hpolar_tP += SVS_MAP_TDIM;
             }
-            else
-            {
-                angle_degrees = 135 - (45 * ((int)x_mm + abs_y) / (abs_y - (int)x_mm));
-            }
-            if (y_mm < 0)
-                hpolar_tP = -angle_degrees * SVS_MAP_TDIM / 360;
-            else
-                hpolar_tP = angle_degrees * SVS_MAP_TDIM / 360;
         }
        
         /// <summary>
@@ -893,9 +877,9 @@ namespace surveyor.vision
             float Cres = 200;
             float hCam = 1000;
             float hRmin = 970;
-            float Rdim = 30; //75;
-            float hypRdim = 30; //75;
-            float Tdim = 200; //400;
+            float Rdim = 75;
+            float hypRdim = 75;
+            float Tdim = 400;
             float Rmin = 15260;
 
             CreateHpolarLookup(
@@ -918,9 +902,9 @@ namespace surveyor.vision
             float Cres = 200;
             float hCam = 1000;
             float hRmin = 970;
-            float Rdim = 30; //75;
-            float hypRdim = 30; //75;
-            float Tdim = 200; //400;
+            float Rdim = 75;
+            float hypRdim = 75;
+            float Tdim = 400;
             float Rmin = 15260;
             
             Console.WriteLine("Rmin " + Rmin.ToString());
