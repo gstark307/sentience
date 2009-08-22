@@ -111,10 +111,66 @@ namespace sentience.core
         }
 
         /// <summary>
+        /// returns the ray model (all integer values) as an XML object
+        /// </summary>
+        /// <param name="doc">xml document object</param>
+        /// <param name="parent"></param>
+        /// <returns></returns>
+        public XmlElement getXmlInteger(XmlDocument doc, XmlElement parent)
+        {
+            xml.AddComment(doc, parent, "Inverse sensor model data");
+
+            XmlElement nodeSensorModels = doc.CreateElement("InverseSensorModels");
+            parent.AppendChild(nodeSensorModels);
+
+            xml.AddComment(doc, nodeSensorModels, "Interval between models in pixels");
+            xml.AddTextElement(doc, nodeSensorModels, "SensorModelInterval", "1.0");
+
+            xml.AddComment(doc, nodeSensorModels, "Index numbers for the start of each model");
+			string dataStr="";
+			int total = 0;
+            for (int d = 0; d < dimension_disparity; d += 2)
+            {
+                dataStr += Convert.ToString(total) + ",";
+				Console.WriteLine("data " + length[d].ToString() + " " + total.ToString());
+                total += length[d];
+			}
+            if (dataStr != "")
+			{
+                dataStr += Convert.ToString(total) + "";
+                xml.AddTextElement(doc, nodeSensorModels, "RayModelIndexes", dataStr);
+			}
+			
+            xml.AddComment(doc, nodeSensorModels, "Model Data");
+            for (int d = 0; d < dimension_disparity; d+=2)
+            {
+                dataStr = "";
+                for (int i = 0; i < length[d]; i++)
+                {
+                    dataStr += Convert.ToString((int)(probability[d][i]*10000));
+                    if (i < length[d] - 1) dataStr += ",";
+                }
+                if (dataStr != "")
+                    xml.AddTextElement(doc, nodeSensorModels, "RayModel", dataStr);
+            }
+
+            return (nodeSensorModels);
+        }
+		
+        /// <summary>
         /// return an Xml document containing sensor model parameters
         /// </summary>
         /// <returns>xml document object</returns>
         private XmlDocument getXmlDocument()
+        {
+			return(getXmlDocument(false));
+        }
+
+        /// <summary>
+        /// return an Xml document containing sensor model parameters
+        /// </summary>
+        /// <returns>xml document object</returns>
+        private XmlDocument getXmlDocument(bool integer_version)
         {
             // Create the document.
             XmlDocument doc = new XmlDocument();
@@ -129,11 +185,14 @@ namespace sentience.core
             XmlElement nodeSentience = doc.CreateElement("Sentience");
             doc.AppendChild(nodeSentience);
 
-            nodeSentience.AppendChild(getXml(doc, nodeSentience));
+			if (integer_version)
+                nodeSentience.AppendChild(getXmlInteger(doc, nodeSentience));
+			else
+				nodeSentience.AppendChild(getXml(doc, nodeSentience));
 
             return (doc);
         }
-
+		
         /// <summary>
         /// save ray model parameters as an xml file
         /// </summary>

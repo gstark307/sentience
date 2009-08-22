@@ -1,11 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/CartesianMap.cs" ctype="Workbench">
     <Files>
-      <File FileName="../surveyorlib/Hpolar.cs" Line="1090" Column="1" />
-      <File FileName="MainWindow.cs" Line="76" Column="3" />
-      <File FileName="../surveyorlib/CartesianMap.cs" Line="54" Column="1" />
-      <File FileName="../surveyorlib/tests/CartesianMapTests.cs" Line="39" Column="36" />
-      <File FileName="../surveyorlib/tests/HpolarTests.cs" Line="29" Column="2" />
+      <File FileName="../surveyorlib/CartesianMap.cs" Line="652" Column="35" />
+      <File FileName="../surveyorlib/tests/CartesianMapTests.cs" Line="83" Column="35" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">

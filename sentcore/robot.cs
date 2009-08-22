@@ -1,6 +1,6 @@
 /*
     Sentience 3D Perception System
-    Copyright (C) 2000-2007 Bob Mottram
+    Copyright (C) 2000-2009 Bob Mottram
     fuzzgun@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -41,6 +41,9 @@ namespace sentience.core
         
         // the number of rays per stereo camera to be thrown at each time step
         private const int rays_per_stereo_camera = 50;
+		
+		// whether to save sensor model values as integers
+		public bool integer_sensor_model_values;		
 
         #region "benchmark timings"
 
@@ -1266,7 +1269,7 @@ namespace sentience.core
         #endregion
 
         #region "saving and loading"
-
+		
         public XmlElement getXml(XmlDocument doc, XmlElement parent)
         {
             XmlElement nodeRobot = doc.CreateElement("Robot");
@@ -1362,7 +1365,12 @@ namespace sentience.core
                 nodeSensorPlatform.AppendChild(head.calibration[i].getXml(doc, nodeSensorPlatform, 2));
 
                 if (head.sensormodel[i] != null)
-                    nodeSensorPlatform.AppendChild(head.sensormodel[i].getXml(doc, nodeRobot));
+				{
+					if (!integer_sensor_model_values)
+                        nodeSensorPlatform.AppendChild(head.sensormodel[i].getXml(doc, nodeRobot));
+					else
+						nodeSensorPlatform.AppendChild(head.sensormodel[i].getXmlInteger(doc, nodeRobot));
+				}
             }
 
             XmlElement nodeOccupancyGrid = doc.CreateElement("OccupancyGrid");

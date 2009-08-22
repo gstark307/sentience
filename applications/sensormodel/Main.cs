@@ -36,29 +36,37 @@ namespace sentience.sensormodel
                         
                 string filename = commandline.GetParameterValue("filename", parameters);
                 if (filename == "") filename = "sensormodel.xml";
+				
+				rob.integer_sensor_model_values = false;
+                string integer_sensor_model_values_str = commandline.GetParameterValue("integer", parameters);
+                if (integer_sensor_model_values_str != "") 
+				{
+					Console.WriteLine("Use integer sensor models");
+  				    rob.integer_sensor_model_values = true;
+				}
                 
-                float baseline_mm = 100;
+                float baseline_mm = 107;
                 string baseline_mm_str = commandline.GetParameterValue("baseline", parameters);
                 if (baseline_mm_str != "")
                 {
                     baseline_mm = Convert.ToSingle(baseline_mm_str);
                 }
                 
-                float camera_FOV_degrees = 78;
+                float camera_FOV_degrees = 90;
                 string camera_FOV_degrees_str = commandline.GetParameterValue("fov", parameters);
                 if (camera_FOV_degrees_str != "")
                 {
                     camera_FOV_degrees = Convert.ToSingle(camera_FOV_degrees_str);
                 }
                 
-                float LocalGridCellSize_mm = 32;
+                float LocalGridCellSize_mm = 40;
                 string LocalGridCellSize_mm_str = commandline.GetParameterValue("cellsize", parameters);
                 if (LocalGridCellSize_mm_str != "")
                 {
                     LocalGridCellSize_mm = Convert.ToSingle(LocalGridCellSize_mm_str);
                 }
 
-                int image_width = 640;
+                int image_width = 320;
                 string image_width_str = commandline.GetParameterValue("imagewidth", parameters);
                 if (image_width_str != "")
                 {
@@ -127,6 +135,7 @@ namespace sentience.sensormodel
             ValidParameters.Add("fov");
             ValidParameters.Add("cellsize");            
             ValidParameters.Add("imagewidth");
+            ValidParameters.Add("integer");
 
             return (ValidParameters);
         }
@@ -150,6 +159,7 @@ namespace sentience.sensormodel
             Console.WriteLine("         -fov <camera field of view in degrees>");
             Console.WriteLine("         -cellsize <size of each grid cell in mm>");
             Console.WriteLine("         -imagewidth <width of the camera image in pixels>");
+            Console.WriteLine("         -integer Use integer values within the sensor model");
         }
 
         #endregion		
