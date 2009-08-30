@@ -9,7 +9,8 @@
     <widget-library name="../../surveyorlib/bin/Debug/surveyorlib.dll" />
     <widget-library name="../bin/Debug/surveyorstereo.exe" internal="true" />
   </import>
-  <widget class="Gtk.Window" id="MainWindow" design-size="817 413">
+  <widget class="Gtk.Window" id="MainWindow" design-size="916 413">
+    <action-group name="New Action Group" />
     <action-group name="Default">
       <action id="FileAction">
         <property name="Type">Action</property>
@@ -37,7 +38,6 @@
         <signal name="Activated" handler="OnRecordImagesActionActivated" />
       </action>
     </action-group>
-    <action-group name="New Action Group" />
     <property name="MemberName" />
     <property name="CanFocus">True</property>
     <property name="Title" translatable="yes">Surveyor SVS</property>
@@ -146,6 +146,22 @@
               </packing>
             </child>
             <child>
+              <widget class="Gtk.CheckButton" id="chkLogging">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Label" translatable="yes">Logging</property>
+                <property name="DrawIndicator">True</property>
+                <property name="HasLabel">True</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnChkLoggingClicked" />
+              </widget>
+              <packing>
+                <property name="PackType">End</property>
+                <property name="Position">3</property>
+                <property name="AutoSize">True</property>
+              </packing>
+            </child>
+            <child>
               <widget class="Gtk.CheckButton" id="chkEmbedded">
                 <property name="MemberName" />
                 <property name="CanFocus">True</property>
@@ -157,7 +173,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">3</property>
+                <property name="Position">4</property>
                 <property name="AutoSize">True</property>
               </packing>
             </child>
@@ -172,7 +188,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">4</property>
+                <property name="Position">5</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>
@@ -189,7 +205,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">5</property>
+                <property name="Position">6</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>
@@ -206,7 +222,7 @@
               </widget>
               <packing>
                 <property name="PackType">End</property>
-                <property name="Position">6</property>
+                <property name="Position">7</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>

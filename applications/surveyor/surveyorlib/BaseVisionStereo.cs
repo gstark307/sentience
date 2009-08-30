@@ -116,6 +116,9 @@ namespace surveyor.vision
         public const int DISPLAY_STEREO_SIMPLE = 5;
         public const int DISPLAY_DIFFERENCE = 6;
         public int display_type = DISPLAY_CALIBRATION_GRID;
+
+        // log file storing the times at which images were taken
+        public string image_log = "images.dat";
         
         // path where any temporary files will be stored
         public string temporary_files_path;
@@ -1412,6 +1415,160 @@ namespace surveyor.vision
         {
         }
         
+        #endregion
+
+        #region "platform specific code"        
+        
+        /// <summary>
+        /// Are we on Windows? - uh oh
+        /// </summary>
+        protected static bool IsWindows()
+        {
+            return Path.DirectorySeparatorChar == '\\';
+        }
+        
+        #endregion
+
+        #region "compressing logged data"
+
+        /// <summary>
+        /// logs an event to a text file 
+        /// </summary>
+        /// <param name="t">Time at which the event occured</param>
+        /// <param name="event_str">description of the event</param>
+        /// <param name="event_log">event log filename</param>
+        public static void LogEvent(
+            DateTime t, 
+            string event_str,
+            string event_log)
+        {
+            StreamWriter oWrite = null;
+            bool allowWrite = true;
+
+            try
+            {
+                if (File.Exists(event_log))
+                    oWrite = File.AppendText(event_log);
+                else
+                    oWrite = File.CreateText(event_log);
+            }
+            catch
+            {
+                allowWrite = false;
+            }
+
+            if (allowWrite)
+            {
+                oWrite.Write(t.ToString() + " ");
+                oWrite.Write(t.Millisecond.ToString() + " ");
+                oWrite.WriteLine(event_str);
+                oWrite.Close();
+            }
+        }
+        
+        public static void CompressRecordedData(
+            string zip_utility, 
+            string path_identifier,
+            string record_path)
+        {
+            string util = zip_utility;
+            if ((util != "") &&
+                (util != null) &&
+                (record_path != null) &&
+                (path_identifier != null) &&
+                (path_identifier != ""))
+            {
+                string separator = "";
+                separator += Path.DirectorySeparatorChar;
+                string commandline_filename = "";
+                string commandline_arguments = "";
+                string training_file = "";
+                string filename = path_identifier;
+                if (!record_path.EndsWith(separator)) record_path += separator;
+
+                util = util.ToLower();
+                if (util == "zip")
+                {
+                    training_file = filename + ".zip";
+                }
+                if (util == "tar")
+                {
+                    training_file = filename + ".tar";
+                }
+
+                if (!IsWindows())
+                {
+                    commandline_filename = "sh";
+                    commandline_arguments = record_path + "temp.sh";
+                }
+                else
+                {
+                    commandline_filename = record_path + "tempbat.bat";
+                }
+
+                StreamWriter oWrite = null;
+                bool allowWrite = true;
+
+                try
+                {
+                    if (!IsWindows())
+                        oWrite = File.CreateText(record_path + "temp.sh");
+                    else
+                        oWrite = File.CreateText(record_path + "tempbat.bat");
+                }
+                catch
+                {
+                    allowWrite = false;
+                    Console.WriteLine("Can't create batch file");
+                }
+
+                if (allowWrite)
+                {
+                    oWrite.WriteLine("cd " + record_path);
+                    if (util == "tar")
+                        oWrite.WriteLine("tar -cvf " + training_file + " *.jpg *.gif *.dat");
+                    if (util == "zip")
+                        oWrite.WriteLine("zip " + training_file + " *.jpg *.gif *.dat");
+                    if (!IsWindows())
+                    {
+                        oWrite.WriteLine("rm *.jpg");
+                        oWrite.WriteLine("rm *.gif");
+                        oWrite.WriteLine("rm *.dat");
+                    }
+                    else
+                    {
+                        oWrite.WriteLine("del *.jpg");
+                        oWrite.WriteLine("del *.gif");
+                        oWrite.WriteLine("del *.dat");
+                    }
+                    oWrite.Close();
+                }
+
+                // run the command
+                if ((commandline_filename != "") &&
+                    (training_file != ""))
+                {
+                    System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                    proc.EnableRaisingEvents = false;
+                    proc.StartInfo.UseShellExecute = true;
+                    proc.StartInfo.WorkingDirectory = record_path;
+                    proc.StartInfo.FileName = commandline_filename;
+                    proc.StartInfo.Arguments = commandline_arguments;
+                    try
+                    {
+                        proc.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("Could not compress recorded training data.  Is the associated compression utility installed?");
+                        if (IsWindows())
+                            Console.WriteLine("You may need to include the compression utility within your PATH environment variable");
+                    }
+                }
+            }
+        }
+
         #endregion
         
     }

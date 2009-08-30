@@ -240,14 +240,31 @@ namespace surveyor.vision
 			                    
 			                    // save images to file
 			                    if (Record)
-			                    {
+   			                    {
+        
+                                    string path = "";
+                                    if ((recorded_images_path != null) &&
+                                        (recorded_images_path != ""))
+                                    {
+                                        if (recorded_images_path.EndsWith("/"))
+                                            path = recorded_images_path;
+                                        else
+                                            path = recorded_images_path + "/";
+                                    }
+                                
 			                        RecordFrameNumber++;
-			                        bmp_state_left.Save("raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-			                        bmp_state_right.Save("raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    DateTime t = DateTime.Now;
+                                    LogEvent(t, "RAW_L " + stereo_camera_index.ToString() + " raw0_" + RecordFrameNumber.ToString() + ".jpg", image_log);
+                                    LogEvent(t, "RAW_R " + stereo_camera_index.ToString() + " raw1_" + RecordFrameNumber.ToString() + ".jpg", image_log);
+			                        bmp_state_left.Save(path + "raw0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			                        bmp_state_right.Save(path + "raw1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
 			                        if ((rectified[0] != null) && (rectified[0] != null))
 			                        {
-			                            rectified[0].Save("rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-			                            rectified[1].Save("rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                                        LogEvent(t, "REC_L " + stereo_camera_index.ToString() + " rectified0_" + RecordFrameNumber.ToString() + ".jpg", image_log);
+                                        LogEvent(t, "REC_R " + stereo_camera_index.ToString() + " rectified1_" + RecordFrameNumber.ToString() + ".jpg", image_log);
+                                    
+			                            rectified[0].Save(path + "rectified0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+			                            rectified[1].Save(path + "rectified1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
 			                        }
 			                    }
 						    }

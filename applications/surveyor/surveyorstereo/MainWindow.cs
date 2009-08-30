@@ -34,8 +34,12 @@ public partial class MainWindow: Gtk.Window
     string calibration_filename = "calibration.xml";
     int broadcast_port = 10010;
     int fps = 5;
+    string log_path = Environment.CurrentDirectory;
+	string teleoperation_log = "teleop.dat";
     string temporary_files_path = "";
     string recorded_images_path = "";
+	string zip_utility = "tar";
+	string path_identifier = "log";
 
 	string manual_camera_alignment_calibration_program = "calibtweaks.exe";
     //bool disable_rectification = true; // false;
@@ -68,7 +72,24 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.Run();		
 		
 		// enable motors
-		stereo_camera.SendCommand(0, "M");
+		SendCommand("M");
+		
+		// wait for the command to take effect
+		DateTime start_time = DateTime.Now;
+		bool waiting=true;
+		while (waiting)
+		{
+			TimeSpan diff = DateTime.Now.Subtract(start_time);
+			if (diff.TotalMilliseconds > 500)
+			{
+				waiting = false;
+			}
+			Thread.Sleep(5);
+		}
+		
+		// send a stop command
+		SendCommand("5");
+		
 		motors_active = true;
     }
 
@@ -105,6 +126,9 @@ public partial class MainWindow: Gtk.Window
     
     protected void OnDeleteEvent (object sender, DeleteEventArgs a)
     {
+		// stop recording
+		if (stereo_camera.Record) ToggleLogging(false);
+		
         CloseForm();
         a.RetVal = true;
     }
@@ -435,96 +459,146 @@ public partial class MainWindow: Gtk.Window
 	}
 		protected virtual void OnCmdForwardLeftClicked (object sender, System.EventArgs e)
 	{
-		stereo_camera.SendCommand(0, "7");
+	    SendCommand("7");
 	}
 			protected virtual void OnCmdForwardClicked (object sender, System.EventArgs e)
 	{
-	   stereo_camera.SendCommand(0, "8");
+	    SendCommand("8");
 	}	
 	protected virtual void OnCmdForwardRightClicked (object sender, System.EventArgs e)
 	{
-		stereo_camera.SendCommand(0, "9");
+	    SendCommand("9");
 	}
 			protected virtual void OnCmdLeftClicked (object sender, System.EventArgs e)
     {
-        stereo_camera.SendCommand(0, "4");
+        SendCommand("4");
 	}
 		    protected virtual void OnCmdStopClicked (object sender, System.EventArgs e)
 	{
-		stereo_camera.SendCommand(0, "5");
+	    SendCommand("5");
 	}
 	protected virtual void OnCmdRightClicked (object sender, System.EventArgs e)
 	{
-		stereo_camera.SendCommand(0, "6");
+	    SendCommand("6");
     }
 			protected virtual void OnCmdBackLeftClicked (object sender, System.EventArgs e)
     {
-        stereo_camera.SendCommand(0, "1");
+        SendCommand("1");
 	}
-		protected virtual void OnCmdBackRightClicked (object sender, System.EventArgs e)
+			protected virtual void OnCmdBackRightClicked (object sender, System.EventArgs e)
 	{
-		stereo_camera.SendCommand(0, "3");
-    }
+        SendCommand("3");
+	}
 	protected virtual void OnCmdBackClicked (object sender, System.EventArgs e)
     {
-		stereo_camera.SendCommand(0, "2");
+        SendCommand("2");
     }
     protected virtual void OnCmdFastClicked (object sender, System.EventArgs e)
 	{
-        stereo_camera.SendCommand(0, "+");
+	    SendCommand("+");
     }
 	protected virtual void OnCmdSlowClicked (object sender, System.EventArgs e)
 	{
-        stereo_camera.SendCommand(0, "-");
+	    SendCommand("-");
     }
 		    protected virtual void OnCmdAvoidClicked (object sender, System.EventArgs e)
 	{
-        stereo_camera.SendCommand(0, "F");
-    }
+	    SendCommand("F");
+	}
 		    protected virtual void OnCmdCrashClicked (object sender, System.EventArgs e)
 	{
-        stereo_camera.SendCommand(0, "f");
+	    SendCommand("f");
     }
     protected virtual void OnCmdLaserOnClicked (object sender, System.EventArgs e)
 	{
-	    stereo_camera.SendCommand(0, "l");
+	    SendCommand("l");
     }
     protected virtual void OnCmdSpinRightClicked (object sender, System.EventArgs e)
     {
-        stereo_camera.SendCommand(0, ".");
+        SendCommand(".");
     }
 		    protected virtual void OnCmdSpinLeftClicked (object sender, System.EventArgs e)
     {
-        stereo_camera.SendCommand(0, "0");
-    }
+        SendCommand("0");
+	}
     protected virtual void OnCmd160x128Clicked (object sender, System.EventArgs e)
 	{
     }
-		    protected virtual void OnCmd320x256Clicked (object sender, System.EventArgs e)
+			protected virtual void OnCmd320x256Clicked (object sender, System.EventArgs e)
 	{
     }
-	protected virtual void OnCmd640x512Clicked (object sender, System.EventArgs e)
-    {
+		protected virtual void OnCmd640x512Clicked (object sender, System.EventArgs e)
+	{
+	}
+		protected virtual void OnCmd1280x1024Clicked (object sender, System.EventArgs e)
+	{
     }
-        protected virtual void OnCmd1280x1024Clicked (object sender, System.EventArgs e)
-    {
+		 	protected virtual void OnCmdLaserOffClicked (object sender, System.EventArgs e)
+	{
+        SendCommand("L");
     }
-    protected virtual void OnCmdLaserOffClicked (object sender, System.EventArgs e)
-    {
-        stereo_camera.SendCommand(0, "L");
-    }
-        protected virtual void OnCmdForwardActivated (object sender, System.EventArgs e)
-    {
-		stereo_camera.SendCommand(0, "8");
-    }    
+			protected virtual void OnCmdForwardActivated (object sender, System.EventArgs e)
+	{
+        SendCommand("8");
+	}    
     
     protected virtual void OnCmdBackActivated (object sender, System.EventArgs e)    
     {
-	    stereo_camera.SendCommand(0, "2");
+        SendCommand("2");
     }
-        protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
+    
+    private void SendCommand(string command_str)
     {
+        if (stereo_camera.Record) BaseVisionStereo.LogEvent(DateTime.Now, command_str, teleoperation_log);
+	    stereo_camera.SendCommand(0, command_str);
     }
+    			protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
+    {
+	}
 
+    /// <summary>
+    /// Toggles logging of images on or off  
+    /// </summary>
+    /// <param name="enable"></param>
+    private void ToggleLogging(bool enable)
+	{
+        Console.WriteLine("");
+        Console.WriteLine("");
+    
+        if (enable)
+            Console.WriteLine("Logging Enabled");
+        else
+            Console.WriteLine("Logging Disabled");
+            
+        Console.WriteLine("");
+        Console.WriteLine("");
+    
+        stereo_camera.recorded_images_path = log_path;
+        
+        // reset the frame number
+        if (enable == true)
+        {
+            BaseVisionStereo.LogEvent(DateTime.Now, "BEGIN", teleoperation_log);
+            // clear any previous recorded data
+            stereo_camera.RecordFrameNumber = 0;
+        }
+        
+        stereo_camera.Record = enable;
+                
+        if (enable == false)
+        {
+            BaseVisionStereo.LogEvent(DateTime.Now, "END", teleoperation_log);
+        
+            // compress the recorded images  
+            BaseVisionStereo.CompressRecordedData(
+                zip_utility, 
+                path_identifier,
+                log_path);
+        }
+    }
+        protected virtual void OnChkLoggingClicked (object sender, System.EventArgs e)
+    {
+        ToggleLogging(chkLogging.Active);
+    }
 
 }

@@ -272,10 +272,16 @@ namespace surveyor.vision
                             }
 
                             RecordFrameNumber++;
+                            DateTime t = DateTime.Now;
+                            LogEvent(t, "RAW_L " + stereo_camera_index.ToString() + " raw" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", image_log);
+                            LogEvent(t, "RAW_R " + stereo_camera_index.ToString() + " raw" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", image_log);                            
                             bmp[0].Save(path + "raw" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             bmp[1].Save(path + "raw" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             if ((rectified[0] != null) && (rectified[0] != null))
                             {
+                                LogEvent(t, "REC_L " + stereo_camera_index.ToString() + " rectified" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", image_log);
+                                LogEvent(t, "REC_R " + stereo_camera_index.ToString() + " rectified" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", image_log);
+                                
                                 rectified[0].Save(path + "rectified" + identifier + "_0_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                                 rectified[1].Save(path + "rectified" + identifier + "_1_" + RecordFrameNumber.ToString() + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                             }
