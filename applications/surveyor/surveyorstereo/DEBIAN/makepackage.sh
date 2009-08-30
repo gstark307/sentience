@@ -1,11 +1,14 @@
-cd /usr/bin
-sudo mkdir sentience
-sudo mkdir sentience/surveyorstereo
-sudo mkdir sentience/surveyorstereo/DEBIAN
-cd sentience/surveyorstereo
-sudo cp ~/develop/sentience/applications/surveyor/surveyorstereo/DEBIAN/control /usr/bin/sentience/surveyorstereo/DEBIAN
-sudo cp ~/develop/sentience/applications/surveyor/surveyorstereo/DEBIAN/install /usr/bin/sentience/surveyorstereo/DEBIAN
-sudo cp ~/develop/sentience/applications/surveyor/surveyorstereo/DEBIAN/copyright /usr/bin/sentience/surveyorstereo/DEBIAN
-sudo cp ~/develop/sentience/applications/surveyor/surveyorstereo/bin/Debug/*.* /usr/bin/sentience/surveyorstereo
-cd ~/develop/sentience/applications/surveyor/surveyorstereo/DEBIAN
-dpkg -b /usr/bin/sentience/surveyorstereo surveyorstereo.deb
+cd ..
+mkdir temp
+mkdir temp/DEBIAN
+mkdir temp/usr
+mkdir temp/usr/bin
+mkdir temp/usr/bin/sentience
+mkdir temp/usr/bin/sentience/surveyorstereo
+cp DEBIAN/control temp/DEBIAN
+cp DEBIAN/install temp/DEBIAN
+cp DEBIAN/copyright temp/DEBIAN
+cp DEBIAN/postinst temp/DEBIAN
+cp DEBIAN/surveyorstereo.sh temp/usr/bin
+cp bin/Debug/*.* temp/usr/bin/sentience/surveyorstereo
+dpkg -b temp DEBIAN/surveyorstereo.deb
