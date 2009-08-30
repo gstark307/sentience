@@ -9,8 +9,7 @@
     <widget-library name="../../surveyorlib/bin/Debug/surveyorlib.dll" />
     <widget-library name="../bin/Debug/surveyorstereo.exe" internal="true" />
   </import>
-  <widget class="Gtk.Window" id="MainWindow" design-size="916 413">
-    <action-group name="New Action Group" />
+  <widget class="Gtk.Window" id="MainWindow" design-size="916 540">
     <action-group name="Default">
       <action id="FileAction">
         <property name="Type">Action</property>
@@ -38,6 +37,7 @@
         <signal name="Activated" handler="OnRecordImagesActionActivated" />
       </action>
     </action-group>
+    <action-group name="New Action Group" />
     <property name="MemberName" />
     <property name="CanFocus">True</property>
     <property name="Title" translatable="yes">Surveyor SVS</property>
@@ -677,6 +677,45 @@
               </widget>
               <packing>
                 <property name="Position">5</property>
+                <property name="AutoSize">True</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="Gtk.VBox" id="vbox2">
+                <property name="MemberName" />
+                <property name="Spacing">6</property>
+                <child>
+                  <widget class="Gtk.Label" id="lblLogging">
+                    <property name="MemberName" />
+                    <property name="LabelProp" translatable="yes">Log file</property>
+                  </widget>
+                  <packing>
+                    <property name="Position">0</property>
+                    <property name="AutoSize">True</property>
+                    <property name="Expand">False</property>
+                    <property name="Fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="Gtk.Entry" id="txtLogging">
+                    <property name="MemberName" />
+                    <property name="CanFocus">True</property>
+                    <property name="IsEditable">True</property>
+                    <property name="InvisibleChar">●</property>
+                    <signal name="LeaveNotifyEvent" handler="OnTxtLoggingLeaveNotifyEvent" />
+                  </widget>
+                  <packing>
+                    <property name="Position">1</property>
+                    <property name="AutoSize">True</property>
+                    <property name="Expand">False</property>
+                    <property name="Fill">False</property>
+                  </packing>
+                </child>
+              </widget>
+              <packing>
+                <property name="Position">6</property>
                 <property name="AutoSize">True</property>
                 <property name="Expand">False</property>
                 <property name="Fill">False</property>

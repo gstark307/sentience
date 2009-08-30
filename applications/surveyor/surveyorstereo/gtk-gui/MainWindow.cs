@@ -106,6 +106,12 @@ public partial class MainWindow {
     
     private Gtk.Button cmd1280x1024;
     
+    private Gtk.VBox vbox2;
+    
+    private Gtk.Label lblLogging;
+    
+    private Gtk.Entry txtLogging;
+    
     private Gtk.HBox hbox3;
     
     private Gtk.Button cmdSimpleStereo;
@@ -883,12 +889,41 @@ public partial class MainWindow {
         w234.Position = 5;
         w234.Expand = false;
         w234.Fill = false;
-        this.vbox1.Add(this.hbox4);
-        Gtk.Box.BoxChild w235 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox4]));
-        w235.PackType = ((Gtk.PackType)(1));
-        w235.Position = 6;
+        // Container child hbox4.Gtk.Box+BoxChild
+        this.vbox2 = new Gtk.VBox();
+        this.vbox2.Name = "vbox2";
+        this.vbox2.Spacing = 6;
+        // Container child vbox2.Gtk.Box+BoxChild
+        this.lblLogging = new Gtk.Label();
+        this.lblLogging.Name = "lblLogging";
+        this.lblLogging.LabelProp = Mono.Unix.Catalog.GetString("Log file");
+        this.vbox2.Add(this.lblLogging);
+        Gtk.Box.BoxChild w235 = ((Gtk.Box.BoxChild)(this.vbox2[this.lblLogging]));
+        w235.Position = 0;
         w235.Expand = false;
         w235.Fill = false;
+        // Container child vbox2.Gtk.Box+BoxChild
+        this.txtLogging = new Gtk.Entry();
+        this.txtLogging.CanFocus = true;
+        this.txtLogging.Name = "txtLogging";
+        this.txtLogging.IsEditable = true;
+        this.txtLogging.InvisibleChar = '●';
+        this.vbox2.Add(this.txtLogging);
+        Gtk.Box.BoxChild w236 = ((Gtk.Box.BoxChild)(this.vbox2[this.txtLogging]));
+        w236.Position = 1;
+        w236.Expand = false;
+        w236.Fill = false;
+        this.hbox4.Add(this.vbox2);
+        Gtk.Box.BoxChild w237 = ((Gtk.Box.BoxChild)(this.hbox4[this.vbox2]));
+        w237.Position = 6;
+        w237.Expand = false;
+        w237.Fill = false;
+        this.vbox1.Add(this.hbox4);
+        Gtk.Box.BoxChild w238 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox4]));
+        w238.PackType = ((Gtk.PackType)(1));
+        w238.Position = 6;
+        w238.Expand = false;
+        w238.Fill = false;
         // Container child vbox1.Gtk.Box+BoxChild
         this.hbox3 = new Gtk.HBox();
         this.hbox3.Name = "hbox3";
@@ -900,10 +935,10 @@ public partial class MainWindow {
         this.cmdSimpleStereo.UseUnderline = true;
         this.cmdSimpleStereo.Label = Mono.Unix.Catalog.GetString("Simple Stereo");
         this.hbox3.Add(this.cmdSimpleStereo);
-        Gtk.Box.BoxChild w236 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
-        w236.Position = 0;
-        w236.Expand = false;
-        w236.Fill = false;
+        Gtk.Box.BoxChild w239 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
+        w239.Position = 0;
+        w239.Expand = false;
+        w239.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdDenseStereo = new Gtk.Button();
         this.cmdDenseStereo.CanFocus = true;
@@ -911,10 +946,10 @@ public partial class MainWindow {
         this.cmdDenseStereo.UseUnderline = true;
         this.cmdDenseStereo.Label = Mono.Unix.Catalog.GetString("Dense Stereo");
         this.hbox3.Add(this.cmdDenseStereo);
-        Gtk.Box.BoxChild w237 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
-        w237.Position = 1;
-        w237.Expand = false;
-        w237.Fill = false;
+        Gtk.Box.BoxChild w240 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
+        w240.Position = 1;
+        w240.Expand = false;
+        w240.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibration = new Gtk.Button();
         this.cmdSaveCalibration.CanFocus = true;
@@ -922,10 +957,10 @@ public partial class MainWindow {
         this.cmdSaveCalibration.UseUnderline = true;
         this.cmdSaveCalibration.Label = Mono.Unix.Catalog.GetString("Save calibration file");
         this.hbox3.Add(this.cmdSaveCalibration);
-        Gtk.Box.BoxChild w238 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
-        w238.Position = 3;
-        w238.Expand = false;
-        w238.Fill = false;
+        Gtk.Box.BoxChild w241 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
+        w241.Position = 3;
+        w241.Expand = false;
+        w241.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibrationImage = new Gtk.Button();
         this.cmdSaveCalibrationImage.CanFocus = true;
@@ -933,22 +968,22 @@ public partial class MainWindow {
         this.cmdSaveCalibrationImage.UseUnderline = true;
         this.cmdSaveCalibrationImage.Label = Mono.Unix.Catalog.GetString("Save calibration image");
         this.hbox3.Add(this.cmdSaveCalibrationImage);
-        Gtk.Box.BoxChild w239 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
-        w239.Position = 4;
-        w239.Expand = false;
-        w239.Fill = false;
+        Gtk.Box.BoxChild w242 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
+        w242.Position = 4;
+        w242.Expand = false;
+        w242.Fill = false;
         this.vbox1.Add(this.hbox3);
-        Gtk.Box.BoxChild w240 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
-        w240.PackType = ((Gtk.PackType)(1));
-        w240.Position = 7;
-        w240.Expand = false;
-        w240.Fill = false;
+        Gtk.Box.BoxChild w243 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
+        w243.PackType = ((Gtk.PackType)(1));
+        w243.Position = 7;
+        w243.Expand = false;
+        w243.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
         }
         this.DefaultWidth = 916;
-        this.DefaultHeight = 413;
+        this.DefaultHeight = 540;
         this.Show();
         this.DeleteEvent += new Gtk.DeleteEventHandler(this.OnDeleteEvent);
         this.ExitAction.Activated += new System.EventHandler(this.OnExitActionActivated);
@@ -971,6 +1006,7 @@ public partial class MainWindow {
         this.cmdForwardRight.Clicked += new System.EventHandler(this.OnCmdForwardRightClicked);
         this.cmdFast.Clicked += new System.EventHandler(this.OnCmdFastClicked);
         this.cmdSlow.Clicked += new System.EventHandler(this.OnCmdSlowClicked);
+        this.txtLogging.LeaveNotifyEvent += new Gtk.LeaveNotifyEventHandler(this.OnTxtLoggingLeaveNotifyEvent);
         this.cmdLeft.Clicked += new System.EventHandler(this.OnCmdLeftClicked);
         this.cmdStop.Clicked += new System.EventHandler(this.OnCmdStopClicked);
         this.cmdStop.Activated += new System.EventHandler(this.OnCmdStopActivated);

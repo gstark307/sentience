@@ -1,17 +1,19 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/CartesianMap.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
     <Files>
-      <File FileName="../surveyorlib/CartesianMap.cs" Line="652" Column="35" />
+      <File FileName="../surveyorlib/CartesianMap.cs" Line="662" Column="10" />
       <File FileName="../surveyorlib/tests/CartesianMapTests.cs" Line="83" Column="35" />
+      <File FileName="MainWindow.cs" Line="655" Column="51" />
+      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="202" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorlib" expanded="True">
-            <Node name="tests" expanded="True" />
-            <Node name="CartesianMap.cs" selected="True" />
+          <Node name="surveyorlib" expanded="True" />
+          <Node name="surveyorstereo" expanded="True">
+            <Node name="DEBIAN" expanded="True" />
+            <Node name="MainWindow.cs" selected="True" />
           </Node>
-          <Node name="surveyorstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
@@ -38,9 +40,7 @@
     </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService>
-    <BreakpointStore>
-      <Breakpoint file="/home/motters/develop/sentience/applications/surveyor/surveyorlib/SurveyorVisionClient.cs" line="202" />
-    </BreakpointStore>
+    <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
 </Properties>

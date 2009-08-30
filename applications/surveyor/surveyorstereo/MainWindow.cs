@@ -47,6 +47,7 @@ public partial class MainWindow: Gtk.Window
 	bool reverse_colours = true;
 	bool motors_active;
 	int motors_tries = 5;
+	bool starting = true;
 	
     public SurveyorVisionStereoGtk stereo_camera;
     
@@ -69,7 +70,9 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        stereo_camera.Run();		
+        stereo_camera.Run();
+		
+		txtLogging.Text = log_path + "/" + teleoperation_log;
 		
 		// enable motors
 		SendCommand("M");
@@ -91,6 +94,7 @@ public partial class MainWindow: Gtk.Window
 		SendCommand("5");
 		
 		motors_active = true;
+		starting = false;
     }
 
     private void SaveHpolarLookup()
@@ -553,7 +557,7 @@ public partial class MainWindow: Gtk.Window
 	    stereo_camera.SendCommand(0, command_str);
     }
     			protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
-    {
+			{
 	}
 
     /// <summary>
@@ -574,24 +578,26 @@ public partial class MainWindow: Gtk.Window
         Console.WriteLine("");
     
         stereo_camera.recorded_images_path = log_path;
-        
-        // reset the frame number
-        if (enable == true)
-        {
-            BaseVisionStereo.LogEvent(DateTime.Now, "BEGIN", teleoperation_log);
-            // clear any previous recorded data
-            stereo_camera.RecordFrameNumber = 0;
-        }
-        
-        stereo_camera.Record = enable;
-                
-        if (enable == false)
-        {
+	
+	// reset the frame number
+	if (enable == true)
+	{
+	    GetLogFile(txtLogging.Text);
+	    
+		    BaseVisionStereo.LogEvent(DateTime.Now, "BEGIN", teleoperation_log);
+			// clear any previous recorded data
+			stereo_camera.RecordFrameNumber = 0;
+			}
+			
+			stereo_camera.Record = enable;
+		
+			if (enable == false)
+			{
             BaseVisionStereo.LogEvent(DateTime.Now, "END", teleoperation_log);
         
-            // compress the recorded images  
-            BaseVisionStereo.CompressRecordedData(
-                zip_utility, 
+			// compress the recorded images  
+			BaseVisionStereo.CompressRecordedData(
+				zip_utility, 
                 path_identifier,
                 log_path);
         }
@@ -600,5 +606,38 @@ public partial class MainWindow: Gtk.Window
     {
         ToggleLogging(chkLogging.Active);
     }
-
-}
+		
+    private void GetLogFile(string filename)
+	{
+        if ((filename != null) && (filename != ""))
+		{
+		if (filename.Contains("/"))
+	{
+	            string[] str = filename.Split('/');
+		teleoperation_log = str[str.Length-1];
+	            log_path = filename.Substring(0, filename.Length - teleoperation_log.Length);
+		Console.WriteLine("log file: " + teleoperation_log);
+	            Console.WriteLine("path: " + log_path);
+	        }
+	        else
+	        {
+	            if (filename.Contains(@"\"))
+	            {
+	                string[] str = filename.Split('\\');
+	                teleoperation_log = str[str.Length-1];
+  	                log_path = filename.Substring(0, filename.Length - teleoperation_log.Length);
+	                Console.WriteLine("log file: " + teleoperation_log);
+	                Console.WriteLine("path: " + log_path);
+	            }
+	            else
+	            {
+	                teleoperation_log = filename;
+	            }
+	        }
+	    }
+    }
+        protected virtual void OnTxtLoggingLeaveNotifyEvent (object o, Gtk.LeaveNotifyEventArgs args)
+    {
+        GetLogFile(txtLogging.Text);
+    }
+    }
