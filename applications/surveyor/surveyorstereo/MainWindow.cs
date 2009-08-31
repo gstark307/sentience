@@ -55,7 +55,7 @@ public partial class MainWindow: Gtk.Window
     {
         Build ();
 		
-		SaveHpolarLookup();
+		//SaveHpolarLookup();
 
         byte[] img = new byte[image_width * image_height * 3];
         Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -72,27 +72,11 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.display_image[1] = rightimage;
         stereo_camera.Run();
 		
-		txtLogging.Text = log_path + "/" + teleoperation_log;
+		txtLogging.Text = path_identifier;
 		
 		// enable motors
 		SendCommand("M");
-		
-		// wait for the command to take effect
-		DateTime start_time = DateTime.Now;
-		bool waiting=true;
-		while (waiting)
-		{
-			TimeSpan diff = DateTime.Now.Subtract(start_time);
-			if (diff.TotalMilliseconds > 500)
-			{
-				waiting = false;
-			}
-			Thread.Sleep(5);
-		}
-		
-		// send a stop command
-		SendCommand("5");
-		
+				
 		motors_active = true;
 		starting = false;
     }
@@ -557,9 +541,9 @@ public partial class MainWindow: Gtk.Window
 	    stereo_camera.SendCommand(0, command_str);
     }
     			protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
-			{
-	}
-
+			    {
+			}
+				
     /// <summary>
     /// Toggles logging of images on or off  
     /// </summary>
@@ -582,7 +566,11 @@ public partial class MainWindow: Gtk.Window
 	// reset the frame number
 	if (enable == true)
 	{
-	    GetLogFile(txtLogging.Text);
+	        if ((txtLogging.Text != "") &&
+	            (txtLogging.Text != null))
+	        {
+	            path_identifier = txtLogging.Text;
+	        }
 	    
 		    BaseVisionStereo.LogEvent(DateTime.Now, "BEGIN", teleoperation_log);
 			// clear any previous recorded data
@@ -606,38 +594,4 @@ public partial class MainWindow: Gtk.Window
     {
         ToggleLogging(chkLogging.Active);
     }
-		
-    private void GetLogFile(string filename)
-	{
-        if ((filename != null) && (filename != ""))
-		{
-		if (filename.Contains("/"))
-	{
-	            string[] str = filename.Split('/');
-		teleoperation_log = str[str.Length-1];
-	            log_path = filename.Substring(0, filename.Length - teleoperation_log.Length);
-		Console.WriteLine("log file: " + teleoperation_log);
-	            Console.WriteLine("path: " + log_path);
-	        }
-	        else
-	        {
-	            if (filename.Contains(@"\"))
-	            {
-	                string[] str = filename.Split('\\');
-	                teleoperation_log = str[str.Length-1];
-  	                log_path = filename.Substring(0, filename.Length - teleoperation_log.Length);
-	                Console.WriteLine("log file: " + teleoperation_log);
-	                Console.WriteLine("path: " + log_path);
-	            }
-	            else
-	            {
-	                teleoperation_log = filename;
-	            }
-	        }
-	    }
-    }
-        protected virtual void OnTxtLoggingLeaveNotifyEvent (object o, Gtk.LeaveNotifyEventArgs args)
-    {
-        GetLogFile(txtLogging.Text);
-    }
-    }
+		        }

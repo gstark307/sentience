@@ -704,7 +704,7 @@
                     <property name="CanFocus">True</property>
                     <property name="IsEditable">True</property>
                     <property name="InvisibleChar">●</property>
-                    <signal name="LeaveNotifyEvent" handler="OnTxtLoggingLeaveNotifyEvent" />
+                    <property name="Xalign">0.01</property>
                   </widget>
                   <packing>
                     <property name="Position">1</property>

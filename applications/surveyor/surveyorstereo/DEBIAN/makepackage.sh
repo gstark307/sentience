@@ -1,4 +1,5 @@
 cd ..
+rm -r temp
 mkdir temp
 mkdir temp/DEBIAN
 mkdir temp/usr
@@ -12,3 +13,5 @@ cp DEBIAN/postinst temp/DEBIAN
 cp DEBIAN/surveyorstereo.sh temp/usr/bin
 cp bin/Debug/*.* temp/usr/bin/sentience/surveyorstereo
 dpkg -b temp DEBIAN/surveyorstereo.deb
+cd DEBIAN
+alien -r surveyorstereo.deb

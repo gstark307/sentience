@@ -1,2 +1,3 @@
-cd /usr/bin/sentience/surveyorstereo
-mono surveyorstereo.exe
+mkdir ~/svs
+cd ~/svs
+mono /usr/bin/sentience/surveyorstereo/surveyorstereo.exe

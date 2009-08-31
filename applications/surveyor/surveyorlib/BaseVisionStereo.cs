@@ -1508,13 +1508,15 @@ namespace surveyor.vision
 
                 StreamWriter oWrite = null;
                 bool allowWrite = true;
+                string temp_filename = "";
 
                 try
                 {
                     if (!IsWindows())
-                        oWrite = File.CreateText(record_path + "temp.sh");
+                        temp_filename = record_path + "temp.sh";
                     else
-                        oWrite = File.CreateText(record_path + "tempbat.bat");
+                        temp_filename = record_path + "tempbat.bat";
+                    oWrite = File.CreateText(temp_filename);
                 }
                 catch
                 {
@@ -1557,6 +1559,7 @@ namespace surveyor.vision
                     try
                     {
                         proc.Start();
+                        proc.WaitForExit();
                     }
                     catch (Exception ex)
                     {
@@ -1565,6 +1568,7 @@ namespace surveyor.vision
                         if (IsWindows())
                             Console.WriteLine("You may need to include the compression utility within your PATH environment variable");
                     }
+                    if (File.Exists(temp_filename)) File.Delete(temp_filename);
                 }
             }
         }

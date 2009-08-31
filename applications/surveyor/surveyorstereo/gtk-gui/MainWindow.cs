@@ -908,6 +908,7 @@ public partial class MainWindow {
         this.txtLogging.Name = "txtLogging";
         this.txtLogging.IsEditable = true;
         this.txtLogging.InvisibleChar = '●';
+        this.txtLogging.Xalign = 0.01F;
         this.vbox2.Add(this.txtLogging);
         Gtk.Box.BoxChild w236 = ((Gtk.Box.BoxChild)(this.vbox2[this.txtLogging]));
         w236.Position = 1;
@@ -1006,7 +1007,6 @@ public partial class MainWindow {
         this.cmdForwardRight.Clicked += new System.EventHandler(this.OnCmdForwardRightClicked);
         this.cmdFast.Clicked += new System.EventHandler(this.OnCmdFastClicked);
         this.cmdSlow.Clicked += new System.EventHandler(this.OnCmdSlowClicked);
-        this.txtLogging.LeaveNotifyEvent += new Gtk.LeaveNotifyEventHandler(this.OnTxtLoggingLeaveNotifyEvent);
         this.cmdLeft.Clicked += new System.EventHandler(this.OnCmdLeftClicked);
         this.cmdStop.Clicked += new System.EventHandler(this.OnCmdStopClicked);
         this.cmdStop.Activated += new System.EventHandler(this.OnCmdStopActivated);
