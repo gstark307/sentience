@@ -1574,6 +1574,270 @@ namespace surveyor.vision
         }
 
         #endregion
+
+        #region "uncompress a file from a log"
+
+        /// <summary>
+        /// extract a single file from a compressed log file 
+        /// </summary>
+        /// <param name="extract_file">name of the file to be extracted</param>
+        /// <param name="zip_utility">type of compression utility, eg. tar, zip</param>
+        /// <param name="record_path">path where the log file exists</param>
+        /// <param name="path_identifier">identifier name of the log file</param>
+        /// <returns>true if successful</returns>
+        public static bool ExtractFile(
+            string extract_file,
+            string zip_utility,
+            string record_path,
+            string path_identifier)
+        {
+            bool done = false;
+            
+            string util = zip_utility;
+            if ((util != "") &&
+                (util != null) &&
+                (record_path != null) &&
+                (record_path != "") &&
+                (path_identifier != null) &&
+                (path_identifier != ""))
+            {
+                string separator = "";
+                separator += Path.DirectorySeparatorChar;
+                string commandline_filename = "";
+                string commandline_arguments = "";
+                string training_file = "";
+                string filename = path_identifier;
+                if (!record_path.EndsWith(separator)) record_path += separator;
+
+                util = util.ToLower();
+                if (util == "zip")
+                {
+                    training_file = filename + ".zip";
+                }
+                if (util == "tar")
+                {
+                    training_file = filename + ".tar";
+                }
+
+                Console.WriteLine("Uncompressing " + training_file);
+
+                if (!IsWindows())
+                {
+                    commandline_filename = "sh";
+                    commandline_arguments = record_path + "uctemp.sh";
+                }
+                else
+                {
+                    commandline_filename = record_path + "uctempbat.bat";
+                }
+
+                StreamWriter oWrite = null;
+                bool allowWrite = true;
+                string temp_filename = "";
+
+                try
+                {
+                    if (!IsWindows())
+                        temp_filename = record_path + "uctemp.sh";
+                    else
+                        temp_filename = record_path + "uctempbat.bat";
+
+                    oWrite = File.CreateText(temp_filename);
+                }
+                catch
+                {
+                    allowWrite = false;
+                }
+
+                if (allowWrite)
+                {
+                    oWrite.WriteLine("cd " + record_path);
+                    
+                    // remove existing data
+                    if (!IsWindows())
+                    {
+                        oWrite.WriteLine("rm " + extract_file);
+                    }
+                    else
+                    {
+                        oWrite.WriteLine("del " + extract_file);
+                    }
+
+                    // now uncompress
+                    if (util == "tar")
+                        oWrite.WriteLine("tar -xf " + training_file + " " + extract_file);
+
+                    if (util == "zip")
+                        oWrite.WriteLine("unzip " + training_file + " " + extract_file);
+
+                    oWrite.Close();
+                }
+
+                // run the command
+                if ((commandline_filename != "") &&
+                    (training_file != ""))
+                {
+                    System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                    proc.EnableRaisingEvents = false;
+                    proc.StartInfo.UseShellExecute = true;
+                    proc.StartInfo.WorkingDirectory = record_path;
+                    proc.StartInfo.FileName = commandline_filename;
+                    proc.StartInfo.Arguments = commandline_arguments;
+                    try
+                    {
+                        proc.Start();
+                        proc.WaitForExit();
+                        done = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("Could not uncompress data.  Is the associated uncompression utility installed?");
+                        if (IsWindows())
+                            Console.WriteLine("You may need to include the uncompression utility within your PATH environment variable");
+                    }
+                    if (File.Exists(temp_filename)) File.Delete(temp_filename);
+                }
+            }
+            return(done);            
+        }
+        
+        #endregion
+
+        #region "replaying a recorded set of actions"
+
+        public virtual void ReplayCommand(
+            string command_str)
+        {
+        }
+
+        /// <summary>
+        /// extracts the date and time from the given log file entry  
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="result"></param>
+        /// <param name="command_str"></param>
+        protected void ReplayParse(
+            string str, 
+            ref DateTime result, 
+            ref string command_str)
+        {
+            result = DateTime.Now;
+            command_str = "";
+            
+            string[] str2 = str.Split(' ');
+            if (str2.Length > 3)
+            {
+                result = DateTime.Parse(str2[0] + " " + str2[1]);
+                result.AddMilliseconds(Convert.ToInt32(str2[2]));
+                for (int i = 3; i < str2.Length; i++)
+                {
+                    command_str += str2[i];
+                    if (i < str2.Length - 1) command_str += " ";                    
+                }
+            }
+        }
+
+        // whether actions are being replayed
+        public bool replaying_actions;
+        
+        public virtual void Replay(
+            string teleop_file,
+            string zip_utility,
+            string record_path,
+            string log_identifier)
+        {
+            if (File.Exists(teleop_file)) File.Delete(teleop_file);
+            
+            if (BaseVisionStereo.ExtractFile(teleop_file, zip_utility, record_path, log_identifier))
+            {
+                if (File.Exists(teleop_file))
+                {
+                    StreamReader oRead=null;
+                    string str;
+                    bool filefound = true;
+        
+                    try
+                    {
+                        oRead = File.OpenText(teleop_file);
+                    }
+                    catch
+                    {
+                        filefound = false;
+                    }
+        
+                    if (filefound)
+                    {
+                        DateTime start_event = DateTime.Now;
+                        DateTime next_event = DateTime.Now;
+                        DateTime start_time = DateTime.Now;
+                        string command_str = "";
+                        str = oRead.ReadLine();
+                        if (str != null) 
+                        {
+                            ReplayParse(str, ref next_event, ref command_str);
+                            start_event = next_event;
+                        }
+                        replaying_actions = true;
+                        while ((str != null) && 
+                               (!str.Contains(" END")) &&
+                               (replaying_actions))
+                        {
+                            TimeSpan diff0 = DateTime.Now.Subtract(start_time);
+                            TimeSpan diff1 = next_event.Subtract(start_event);
+                            if (diff0.TotalMilliseconds >= diff1.TotalMilliseconds)
+                            {
+                                ReplayCommand(command_str);
+                                str = oRead.ReadLine();
+                                ReplayParse(str, ref next_event, ref command_str);                                
+                            }
+                            Thread.Sleep(4);
+                        }
+        
+                        oRead.Close();
+                    }
+
+                    File.Delete(teleop_file);                    
+                }
+            }
+        }
+
+        #region "callbacks"
+
+        /// <summary>
+        /// callback for replaying actions
+        /// </summary>
+        /// <param name="state"></param>
+        protected void ReplayCallback(object state)
+        {
+        }
+
+        #endregion
+        
+        #region "starting and stopping"
+
+        public virtual void RunReplay(
+            string teleop_file,
+            string zip_utility,
+            string record_path,
+            string log_identifier)
+        {
+            Console.WriteLine("Replaying actions started");
+            replaying_actions = true;
+        }
+
+        public virtual void StopReplay()
+        {
+            if (replaying_actions)
+            {
+                replaying_actions = false;
+                Console.WriteLine("Replaying actions stopped");
+            }
+        }
+        
+        #endregion
+        
+        #endregion
         
     }
 }

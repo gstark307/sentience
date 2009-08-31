@@ -26,9 +26,9 @@ namespace WindowsApplication1
 {
     public class cameraSettings
     {
-        public String cameraName = "";
-        public String frameRate = "";
-        public String resolution = "";
+        public string cameraName = "";
+        public string frameRate = "";
+        public string resolution = "";
         public bool firstTime = true;
         public bool leftImage;
 

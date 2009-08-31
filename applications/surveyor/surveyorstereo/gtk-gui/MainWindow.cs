@@ -92,6 +92,18 @@ public partial class MainWindow {
     
     private Gtk.Button cmd640x512;
     
+    private Gtk.VBox vbox3;
+    
+    private Gtk.Label lblReplay;
+    
+    private Gtk.Entry txtReplay;
+    
+    private Gtk.Label lblReplayState;
+    
+    private Gtk.Button cmdReplay;
+    
+    private Gtk.Button cmdReplayStop;
+    
     private Gtk.HBox hbox4;
     
     private Gtk.Button cmdForwardLeft;
@@ -735,12 +747,71 @@ public partial class MainWindow {
         w179.Position = 5;
         w179.Expand = false;
         w179.Fill = false;
-        this.vbox1.Add(this.hbox5);
-        Gtk.Box.BoxChild w180 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox5]));
-        w180.PackType = ((Gtk.PackType)(1));
-        w180.Position = 5;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.vbox3 = new Gtk.VBox();
+        this.vbox3.Name = "vbox3";
+        this.vbox3.Spacing = 6;
+        // Container child vbox3.Gtk.Box+BoxChild
+        this.lblReplay = new Gtk.Label();
+        this.lblReplay.Name = "lblReplay";
+        this.lblReplay.LabelProp = Mono.Unix.Catalog.GetString("Replay name");
+        this.vbox3.Add(this.lblReplay);
+        Gtk.Box.BoxChild w180 = ((Gtk.Box.BoxChild)(this.vbox3[this.lblReplay]));
+        w180.Position = 0;
         w180.Expand = false;
         w180.Fill = false;
+        // Container child vbox3.Gtk.Box+BoxChild
+        this.txtReplay = new Gtk.Entry();
+        this.txtReplay.CanFocus = true;
+        this.txtReplay.Name = "txtReplay";
+        this.txtReplay.IsEditable = true;
+        this.txtReplay.InvisibleChar = '●';
+        this.vbox3.Add(this.txtReplay);
+        Gtk.Box.BoxChild w181 = ((Gtk.Box.BoxChild)(this.vbox3[this.txtReplay]));
+        w181.Position = 1;
+        w181.Expand = false;
+        w181.Fill = false;
+        // Container child vbox3.Gtk.Box+BoxChild
+        this.lblReplayState = new Gtk.Label();
+        this.lblReplayState.Name = "lblReplayState";
+        this.vbox3.Add(this.lblReplayState);
+        Gtk.Box.BoxChild w182 = ((Gtk.Box.BoxChild)(this.vbox3[this.lblReplayState]));
+        w182.Position = 2;
+        w182.Expand = false;
+        w182.Fill = false;
+        this.hbox5.Add(this.vbox3);
+        Gtk.Box.BoxChild w183 = ((Gtk.Box.BoxChild)(this.hbox5[this.vbox3]));
+        w183.Position = 6;
+        w183.Expand = false;
+        w183.Fill = false;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmdReplay = new Gtk.Button();
+        this.cmdReplay.CanFocus = true;
+        this.cmdReplay.Name = "cmdReplay";
+        this.cmdReplay.UseUnderline = true;
+        this.cmdReplay.Label = Mono.Unix.Catalog.GetString("Replay");
+        this.hbox5.Add(this.cmdReplay);
+        Gtk.Box.BoxChild w184 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmdReplay]));
+        w184.Position = 7;
+        w184.Expand = false;
+        w184.Fill = false;
+        // Container child hbox5.Gtk.Box+BoxChild
+        this.cmdReplayStop = new Gtk.Button();
+        this.cmdReplayStop.CanFocus = true;
+        this.cmdReplayStop.Name = "cmdReplayStop";
+        this.cmdReplayStop.UseUnderline = true;
+        this.cmdReplayStop.Label = Mono.Unix.Catalog.GetString("Stop");
+        this.hbox5.Add(this.cmdReplayStop);
+        Gtk.Box.BoxChild w185 = ((Gtk.Box.BoxChild)(this.hbox5[this.cmdReplayStop]));
+        w185.Position = 8;
+        w185.Expand = false;
+        w185.Fill = false;
+        this.vbox1.Add(this.hbox5);
+        Gtk.Box.BoxChild w186 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox5]));
+        w186.PackType = ((Gtk.PackType)(1));
+        w186.Position = 5;
+        w186.Expand = false;
+        w186.Fill = false;
         // Container child vbox1.Gtk.Box+BoxChild
         this.hbox4 = new Gtk.HBox();
         this.hbox4.Name = "hbox4";
@@ -751,144 +822,144 @@ public partial class MainWindow {
         this.cmdForwardLeft.Name = "cmdForwardLeft";
         this.cmdForwardLeft.UseUnderline = true;
         // Container child cmdForwardLeft.Gtk.Container+ContainerChild
-        Gtk.Alignment w181 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        Gtk.Alignment w187 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
         // Container child GtkAlignment.Gtk.Container+ContainerChild
-        Gtk.HBox w182 = new Gtk.HBox();
-        w182.Spacing = 2;
+        Gtk.HBox w188 = new Gtk.HBox();
+        w188.Spacing = 2;
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Image w183 = new Gtk.Image();
-        w183.Pixbuf = Gdk.Pixbuf.LoadFromResource("driftleft.png");
-        w182.Add(w183);
+        Gtk.Image w189 = new Gtk.Image();
+        w189.Pixbuf = Gdk.Pixbuf.LoadFromResource("driftleft.png");
+        w188.Add(w189);
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Label w185 = new Gtk.Label();
-        w182.Add(w185);
-        w181.Add(w182);
-        this.cmdForwardLeft.Add(w181);
+        Gtk.Label w191 = new Gtk.Label();
+        w188.Add(w191);
+        w187.Add(w188);
+        this.cmdForwardLeft.Add(w187);
         this.hbox4.Add(this.cmdForwardLeft);
-        Gtk.Box.BoxChild w189 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForwardLeft]));
-        w189.Position = 0;
-        w189.Expand = false;
-        w189.Fill = false;
+        Gtk.Box.BoxChild w195 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForwardLeft]));
+        w195.Position = 0;
+        w195.Expand = false;
+        w195.Fill = false;
         // Container child hbox4.Gtk.Box+BoxChild
         this.cmdForward = new Gtk.Button();
         this.cmdForward.CanFocus = true;
         this.cmdForward.Name = "cmdForward";
         this.cmdForward.UseUnderline = true;
         // Container child cmdForward.Gtk.Container+ContainerChild
-        Gtk.Alignment w190 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        Gtk.Alignment w196 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
         // Container child GtkAlignment.Gtk.Container+ContainerChild
-        Gtk.HBox w191 = new Gtk.HBox();
-        w191.Spacing = 2;
+        Gtk.HBox w197 = new Gtk.HBox();
+        w197.Spacing = 2;
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Image w192 = new Gtk.Image();
-        w192.Pixbuf = Gdk.Pixbuf.LoadFromResource("forward.png");
-        w191.Add(w192);
+        Gtk.Image w198 = new Gtk.Image();
+        w198.Pixbuf = Gdk.Pixbuf.LoadFromResource("forward.png");
+        w197.Add(w198);
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Label w194 = new Gtk.Label();
-        w191.Add(w194);
-        w190.Add(w191);
-        this.cmdForward.Add(w190);
+        Gtk.Label w200 = new Gtk.Label();
+        w197.Add(w200);
+        w196.Add(w197);
+        this.cmdForward.Add(w196);
         this.hbox4.Add(this.cmdForward);
-        Gtk.Box.BoxChild w198 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForward]));
-        w198.Position = 1;
-        w198.Expand = false;
-        w198.Fill = false;
+        Gtk.Box.BoxChild w204 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForward]));
+        w204.Position = 1;
+        w204.Expand = false;
+        w204.Fill = false;
         // Container child hbox4.Gtk.Box+BoxChild
         this.cmdForwardRight = new Gtk.Button();
         this.cmdForwardRight.CanFocus = true;
         this.cmdForwardRight.Name = "cmdForwardRight";
         this.cmdForwardRight.UseUnderline = true;
         // Container child cmdForwardRight.Gtk.Container+ContainerChild
-        Gtk.Alignment w199 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        Gtk.Alignment w205 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
         // Container child GtkAlignment.Gtk.Container+ContainerChild
-        Gtk.HBox w200 = new Gtk.HBox();
-        w200.Spacing = 2;
+        Gtk.HBox w206 = new Gtk.HBox();
+        w206.Spacing = 2;
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Image w201 = new Gtk.Image();
-        w201.Pixbuf = Gdk.Pixbuf.LoadFromResource("driftright.png");
-        w200.Add(w201);
+        Gtk.Image w207 = new Gtk.Image();
+        w207.Pixbuf = Gdk.Pixbuf.LoadFromResource("driftright.png");
+        w206.Add(w207);
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Label w203 = new Gtk.Label();
-        w200.Add(w203);
-        w199.Add(w200);
-        this.cmdForwardRight.Add(w199);
+        Gtk.Label w209 = new Gtk.Label();
+        w206.Add(w209);
+        w205.Add(w206);
+        this.cmdForwardRight.Add(w205);
         this.hbox4.Add(this.cmdForwardRight);
-        Gtk.Box.BoxChild w207 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForwardRight]));
-        w207.Position = 2;
-        w207.Expand = false;
-        w207.Fill = false;
+        Gtk.Box.BoxChild w213 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdForwardRight]));
+        w213.Position = 2;
+        w213.Expand = false;
+        w213.Fill = false;
         // Container child hbox4.Gtk.Box+BoxChild
         this.cmdFast = new Gtk.Button();
         this.cmdFast.CanFocus = true;
         this.cmdFast.Name = "cmdFast";
         this.cmdFast.UseUnderline = true;
         // Container child cmdFast.Gtk.Container+ContainerChild
-        Gtk.Alignment w208 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        Gtk.Alignment w214 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
         // Container child GtkAlignment.Gtk.Container+ContainerChild
-        Gtk.HBox w209 = new Gtk.HBox();
-        w209.Spacing = 2;
+        Gtk.HBox w215 = new Gtk.HBox();
+        w215.Spacing = 2;
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Image w210 = new Gtk.Image();
-        w210.Pixbuf = Gdk.Pixbuf.LoadFromResource("mot9.png");
-        w209.Add(w210);
+        Gtk.Image w216 = new Gtk.Image();
+        w216.Pixbuf = Gdk.Pixbuf.LoadFromResource("mot9.png");
+        w215.Add(w216);
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Label w212 = new Gtk.Label();
-        w209.Add(w212);
-        w208.Add(w209);
-        this.cmdFast.Add(w208);
+        Gtk.Label w218 = new Gtk.Label();
+        w215.Add(w218);
+        w214.Add(w215);
+        this.cmdFast.Add(w214);
         this.hbox4.Add(this.cmdFast);
-        Gtk.Box.BoxChild w216 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdFast]));
-        w216.Position = 3;
-        w216.Expand = false;
-        w216.Fill = false;
+        Gtk.Box.BoxChild w222 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdFast]));
+        w222.Position = 3;
+        w222.Expand = false;
+        w222.Fill = false;
         // Container child hbox4.Gtk.Box+BoxChild
         this.cmdSlow = new Gtk.Button();
         this.cmdSlow.CanFocus = true;
         this.cmdSlow.Name = "cmdSlow";
         this.cmdSlow.UseUnderline = true;
         // Container child cmdSlow.Gtk.Container+ContainerChild
-        Gtk.Alignment w217 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        Gtk.Alignment w223 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
         // Container child GtkAlignment.Gtk.Container+ContainerChild
-        Gtk.HBox w218 = new Gtk.HBox();
-        w218.Spacing = 2;
+        Gtk.HBox w224 = new Gtk.HBox();
+        w224.Spacing = 2;
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Image w219 = new Gtk.Image();
-        w219.Pixbuf = Gdk.Pixbuf.LoadFromResource("mot5.png");
-        w218.Add(w219);
+        Gtk.Image w225 = new Gtk.Image();
+        w225.Pixbuf = Gdk.Pixbuf.LoadFromResource("mot5.png");
+        w224.Add(w225);
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Label w221 = new Gtk.Label();
-        w218.Add(w221);
-        w217.Add(w218);
-        this.cmdSlow.Add(w217);
+        Gtk.Label w227 = new Gtk.Label();
+        w224.Add(w227);
+        w223.Add(w224);
+        this.cmdSlow.Add(w223);
         this.hbox4.Add(this.cmdSlow);
-        Gtk.Box.BoxChild w225 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdSlow]));
-        w225.Position = 4;
-        w225.Expand = false;
-        w225.Fill = false;
+        Gtk.Box.BoxChild w231 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmdSlow]));
+        w231.Position = 4;
+        w231.Expand = false;
+        w231.Fill = false;
         // Container child hbox4.Gtk.Box+BoxChild
         this.cmd1280x1024 = new Gtk.Button();
         this.cmd1280x1024.CanFocus = true;
         this.cmd1280x1024.Name = "cmd1280x1024";
         this.cmd1280x1024.UseUnderline = true;
         // Container child cmd1280x1024.Gtk.Container+ContainerChild
-        Gtk.Alignment w226 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
+        Gtk.Alignment w232 = new Gtk.Alignment(0.5F, 0.5F, 0F, 0F);
         // Container child GtkAlignment.Gtk.Container+ContainerChild
-        Gtk.HBox w227 = new Gtk.HBox();
-        w227.Spacing = 2;
+        Gtk.HBox w233 = new Gtk.HBox();
+        w233.Spacing = 2;
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Image w228 = new Gtk.Image();
-        w228.Pixbuf = Gdk.Pixbuf.LoadFromResource("1280.png");
-        w227.Add(w228);
+        Gtk.Image w234 = new Gtk.Image();
+        w234.Pixbuf = Gdk.Pixbuf.LoadFromResource("1280.png");
+        w233.Add(w234);
         // Container child GtkHBox.Gtk.Container+ContainerChild
-        Gtk.Label w230 = new Gtk.Label();
-        w227.Add(w230);
-        w226.Add(w227);
-        this.cmd1280x1024.Add(w226);
+        Gtk.Label w236 = new Gtk.Label();
+        w233.Add(w236);
+        w232.Add(w233);
+        this.cmd1280x1024.Add(w232);
         this.hbox4.Add(this.cmd1280x1024);
-        Gtk.Box.BoxChild w234 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmd1280x1024]));
-        w234.Position = 5;
-        w234.Expand = false;
-        w234.Fill = false;
+        Gtk.Box.BoxChild w240 = ((Gtk.Box.BoxChild)(this.hbox4[this.cmd1280x1024]));
+        w240.Position = 5;
+        w240.Expand = false;
+        w240.Fill = false;
         // Container child hbox4.Gtk.Box+BoxChild
         this.vbox2 = new Gtk.VBox();
         this.vbox2.Name = "vbox2";
@@ -896,12 +967,12 @@ public partial class MainWindow {
         // Container child vbox2.Gtk.Box+BoxChild
         this.lblLogging = new Gtk.Label();
         this.lblLogging.Name = "lblLogging";
-        this.lblLogging.LabelProp = Mono.Unix.Catalog.GetString("Log file");
+        this.lblLogging.LabelProp = Mono.Unix.Catalog.GetString("Log name");
         this.vbox2.Add(this.lblLogging);
-        Gtk.Box.BoxChild w235 = ((Gtk.Box.BoxChild)(this.vbox2[this.lblLogging]));
-        w235.Position = 0;
-        w235.Expand = false;
-        w235.Fill = false;
+        Gtk.Box.BoxChild w241 = ((Gtk.Box.BoxChild)(this.vbox2[this.lblLogging]));
+        w241.Position = 0;
+        w241.Expand = false;
+        w241.Fill = false;
         // Container child vbox2.Gtk.Box+BoxChild
         this.txtLogging = new Gtk.Entry();
         this.txtLogging.CanFocus = true;
@@ -910,21 +981,21 @@ public partial class MainWindow {
         this.txtLogging.InvisibleChar = '●';
         this.txtLogging.Xalign = 0.01F;
         this.vbox2.Add(this.txtLogging);
-        Gtk.Box.BoxChild w236 = ((Gtk.Box.BoxChild)(this.vbox2[this.txtLogging]));
-        w236.Position = 1;
-        w236.Expand = false;
-        w236.Fill = false;
+        Gtk.Box.BoxChild w242 = ((Gtk.Box.BoxChild)(this.vbox2[this.txtLogging]));
+        w242.Position = 1;
+        w242.Expand = false;
+        w242.Fill = false;
         this.hbox4.Add(this.vbox2);
-        Gtk.Box.BoxChild w237 = ((Gtk.Box.BoxChild)(this.hbox4[this.vbox2]));
-        w237.Position = 6;
-        w237.Expand = false;
-        w237.Fill = false;
+        Gtk.Box.BoxChild w243 = ((Gtk.Box.BoxChild)(this.hbox4[this.vbox2]));
+        w243.Position = 6;
+        w243.Expand = false;
+        w243.Fill = false;
         this.vbox1.Add(this.hbox4);
-        Gtk.Box.BoxChild w238 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox4]));
-        w238.PackType = ((Gtk.PackType)(1));
-        w238.Position = 6;
-        w238.Expand = false;
-        w238.Fill = false;
+        Gtk.Box.BoxChild w244 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox4]));
+        w244.PackType = ((Gtk.PackType)(1));
+        w244.Position = 6;
+        w244.Expand = false;
+        w244.Fill = false;
         // Container child vbox1.Gtk.Box+BoxChild
         this.hbox3 = new Gtk.HBox();
         this.hbox3.Name = "hbox3";
@@ -936,10 +1007,10 @@ public partial class MainWindow {
         this.cmdSimpleStereo.UseUnderline = true;
         this.cmdSimpleStereo.Label = Mono.Unix.Catalog.GetString("Simple Stereo");
         this.hbox3.Add(this.cmdSimpleStereo);
-        Gtk.Box.BoxChild w239 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
-        w239.Position = 0;
-        w239.Expand = false;
-        w239.Fill = false;
+        Gtk.Box.BoxChild w245 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSimpleStereo]));
+        w245.Position = 0;
+        w245.Expand = false;
+        w245.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdDenseStereo = new Gtk.Button();
         this.cmdDenseStereo.CanFocus = true;
@@ -947,10 +1018,10 @@ public partial class MainWindow {
         this.cmdDenseStereo.UseUnderline = true;
         this.cmdDenseStereo.Label = Mono.Unix.Catalog.GetString("Dense Stereo");
         this.hbox3.Add(this.cmdDenseStereo);
-        Gtk.Box.BoxChild w240 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
-        w240.Position = 1;
-        w240.Expand = false;
-        w240.Fill = false;
+        Gtk.Box.BoxChild w246 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdDenseStereo]));
+        w246.Position = 1;
+        w246.Expand = false;
+        w246.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibration = new Gtk.Button();
         this.cmdSaveCalibration.CanFocus = true;
@@ -958,10 +1029,10 @@ public partial class MainWindow {
         this.cmdSaveCalibration.UseUnderline = true;
         this.cmdSaveCalibration.Label = Mono.Unix.Catalog.GetString("Save calibration file");
         this.hbox3.Add(this.cmdSaveCalibration);
-        Gtk.Box.BoxChild w241 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
-        w241.Position = 3;
-        w241.Expand = false;
-        w241.Fill = false;
+        Gtk.Box.BoxChild w247 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibration]));
+        w247.Position = 3;
+        w247.Expand = false;
+        w247.Fill = false;
         // Container child hbox3.Gtk.Box+BoxChild
         this.cmdSaveCalibrationImage = new Gtk.Button();
         this.cmdSaveCalibrationImage.CanFocus = true;
@@ -969,16 +1040,16 @@ public partial class MainWindow {
         this.cmdSaveCalibrationImage.UseUnderline = true;
         this.cmdSaveCalibrationImage.Label = Mono.Unix.Catalog.GetString("Save calibration image");
         this.hbox3.Add(this.cmdSaveCalibrationImage);
-        Gtk.Box.BoxChild w242 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
-        w242.Position = 4;
-        w242.Expand = false;
-        w242.Fill = false;
+        Gtk.Box.BoxChild w248 = ((Gtk.Box.BoxChild)(this.hbox3[this.cmdSaveCalibrationImage]));
+        w248.Position = 4;
+        w248.Expand = false;
+        w248.Fill = false;
         this.vbox1.Add(this.hbox3);
-        Gtk.Box.BoxChild w243 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
-        w243.PackType = ((Gtk.PackType)(1));
-        w243.Position = 7;
-        w243.Expand = false;
-        w243.Fill = false;
+        Gtk.Box.BoxChild w249 = ((Gtk.Box.BoxChild)(this.vbox1[this.hbox3]));
+        w249.PackType = ((Gtk.PackType)(1));
+        w249.Position = 7;
+        w249.Expand = false;
+        w249.Fill = false;
         this.Add(this.vbox1);
         if ((this.Child != null)) {
             this.Child.ShowAll();
@@ -1013,6 +1084,8 @@ public partial class MainWindow {
         this.cmdRight.Clicked += new System.EventHandler(this.OnCmdRightClicked);
         this.cmdAvoid.Clicked += new System.EventHandler(this.OnCmdAvoidClicked);
         this.cmdCrash.Clicked += new System.EventHandler(this.OnCmdCrashClicked);
+        this.cmdReplay.Clicked += new System.EventHandler(this.OnCmdReplayClicked);
+        this.cmdReplayStop.Clicked += new System.EventHandler(this.OnCmdReplayStopClicked);
         this.cmdBackLeft.Clicked += new System.EventHandler(this.OnCmdBackLeftClicked);
         this.cmdBack.Clicked += new System.EventHandler(this.OnCmdBackClicked);
         this.cmdBack.Activated += new System.EventHandler(this.OnCmdBackActivated);

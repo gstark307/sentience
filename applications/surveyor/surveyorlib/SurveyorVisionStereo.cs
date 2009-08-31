@@ -403,6 +403,50 @@ namespace surveyor.vision
         }
         
         #endregion
+
+        #region "replaying a recorded set of actions"
+
+        public override void ReplayCommand(
+            string command_str)
+        {
+            if (command_str.Length == 1)
+            {
+                SendCommand(0, command_str);
+            }
+        }
+
+        public override void RunReplay(
+            string teleop_file,
+            string zip_utility,
+            string record_path,
+            string log_identifier)
+        {
+            // create a thread to send the master pulse
+            SurveyorReplayThread replay_actions = 
+                new SurveyorReplayThread(
+                    new WaitCallback(ReplayCallback), 
+                    this,
+                    teleop_file,
+                    zip_utility,
+                    record_path,
+                    log_identifier);
+            Thread replay_thread = new Thread(new ThreadStart(replay_actions.Execute));
+            replay_thread.Priority = ThreadPriority.Normal;
+            replay_thread.Start();
+            Console.WriteLine("Replaying actions started");
+        }
+
+        public override void StopReplay()
+        {
+            if (replaying_actions)
+            {
+                SendCommand(0, "5");
+                replaying_actions = false;
+                Console.WriteLine("Replaying actions stopped");
+            }
+        }
+                
+        #endregion
         
     }
 }
