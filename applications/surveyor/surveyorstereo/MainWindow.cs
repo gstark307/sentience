@@ -541,8 +541,8 @@ public partial class MainWindow: Gtk.Window
     {
         if (stereo_camera.Record) BaseVisionStereo.LogEvent(DateTime.Now, command_str, teleoperation_log);
 	    stereo_camera.SendCommand(0, command_str);
-    }
-    			protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
+	}
+					protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
 			    {
 			}
 				
@@ -556,7 +556,7 @@ public partial class MainWindow: Gtk.Window
         Console.WriteLine("");
     
         if (enable)
-            Console.WriteLine("Logging Enabled");
+		Console.WriteLine("Logging Enabled");
         else
             Console.WriteLine("Logging Disabled");
             
@@ -565,31 +565,34 @@ public partial class MainWindow: Gtk.Window
     
         stereo_camera.recorded_images_path = log_path;
 	
-	// reset the frame number
-	if (enable == true)
-	{
-	        if ((txtLogging.Text != "") &&
-	            (txtLogging.Text != null))
-	{
-	            path_identifier = txtLogging.Text;
-	}
-		
-		    BaseVisionStereo.LogEvent(DateTime.Now, "BEGIN", teleoperation_log);
-		// clear any previous recorded data
-			stereo_camera.RecordFrameNumber = 0;
+		// reset the frame number
+		if (!stereo_camera.replaying_actions)
+		{
+			if (enable == true)
+			{
+			    if ((txtLogging.Text != "") &&
+			        (txtLogging.Text != null))
+			    {
+			        path_identifier = txtLogging.Text;
+	  		    }
+			
+		        BaseVisionStereo.LogEvent(DateTime.Now, "BEGIN", teleoperation_log);
+		        // clear any previous recorded data
+		        stereo_camera.RecordFrameNumber = 0;
 			}
 			
 			stereo_camera.Record = enable;
-	
-			if (enable == false)
-			{
-            BaseVisionStereo.LogEvent(DateTime.Now, "END", teleoperation_log);
-        
+		}
+
+		if (enable == false)
+		{
+	        BaseVisionStereo.LogEvent(DateTime.Now, "END", teleoperation_log);
+	    
 			// compress the recorded images  
 			BaseVisionStereo.CompressRecordedData(
 				zip_utility, 
-                path_identifier,
-                log_path);
+	            path_identifier,
+	            log_path);
         }
     }
         protected virtual void OnChkLoggingClicked (object sender, System.EventArgs e)
@@ -600,7 +603,9 @@ public partial class MainWindow: Gtk.Window
     {
         replay_path_identifier = txtReplay.Text;
         if ((replay_path_identifier != null) &&
-            (replay_path_identifier != ""))
+            (replay_path_identifier != "") &&
+            (!stereo_camera.replaying_actions) &&
+            (!stereo_camera.Record))
         {
             lblReplayState.Text = "Playing";
             stereo_camera.RunReplay(teleoperation_log, "tar", log_path, replay_path_identifier);
@@ -611,8 +616,5 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.StopReplay();
         lblReplayState.Text = "";
     }
-
-
-
 
 		        }
