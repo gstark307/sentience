@@ -50,6 +50,10 @@ namespace surveyorstereo
         string replay_path_identifier = "log";
 
         string manual_camera_alignment_program = "calibtweaks.exe";
+        bool reverse_colours = true;
+        bool motors_active;
+        int motors_tries = 5;
+        bool starting = true;
 
         public frmStereo()
         {
@@ -83,7 +87,63 @@ namespace surveyorstereo
                 simpleToolStripMenuItem.Checked = false;
             }
 
+            txtLogging.Text = path_identifier;
+            txtReplay.Text = replay_path_identifier;
 
+            SendCommand("M");
+
+            motors_active = true;
+            starting = false;
+        }
+
+        /// <summary>
+        /// Toggles logging of images on or off  
+        /// </summary>
+        /// <param name="enable"></param>
+        private void ToggleLogging(bool enable)
+        {
+            Console.WriteLine("");
+            Console.WriteLine("");
+
+            if (enable)
+                Console.WriteLine("Logging Enabled");
+            else
+                Console.WriteLine("Logging Disabled");
+
+            Console.WriteLine("");
+            Console.WriteLine("");
+
+            stereo_camera.recorded_images_path = log_path;
+
+            // reset the frame number
+            if (!stereo_camera.replaying_actions)
+            {
+                if (enable == true)
+                {
+                    if ((txtLogging.Text != "") &&
+                        (txtLogging.Text != null))
+                    {
+                        path_identifier = txtLogging.Text;
+                    }
+
+                    BaseVisionStereo.LogEvent(DateTime.Now, "BEGIN", teleoperation_log);
+                    // clear any previous recorded data
+                    stereo_camera.RecordFrameNumber = 0;
+                }
+
+                stereo_camera.Record = enable;
+            }
+
+            if (enable == false)
+            {
+                BaseVisionStereo.LogEvent(DateTime.Now, "END", teleoperation_log);
+
+                // compress the recorded images  
+                BaseVisionStereo.CompressRecordedData(
+                    zip_utility,
+                    path_identifier,
+                    log_path);
+            }
         }
 
         private void frmStereo_FormClosing(object sender, FormClosingEventArgs e)
@@ -263,6 +323,122 @@ namespace surveyorstereo
                         File.Copy(calibration_filename, save_calibration_file.FileName);
                 }
             }
+        }
+
+        private void SendCommand(string command_str)
+        {
+            if (stereo_camera.Record) BaseVisionStereo.LogEvent(DateTime.Now, command_str, teleoperation_log);
+            stereo_camera.SendCommand(0, command_str);
+        }
+
+        private void cmdRight_Click(object sender, EventArgs e)
+        {
+            SendCommand("6");
+        }
+
+        private void cmdForwardLeft_Click(object sender, EventArgs e)
+        {
+            SendCommand("7");
+        }
+
+        private void cmdForward_Click(object sender, EventArgs e)
+        {
+            SendCommand("8");
+        }
+
+        private void cmdForwardRight_Click(object sender, EventArgs e)
+        {
+            SendCommand("9");
+        }
+
+        private void cmdLeft_Click(object sender, EventArgs e)
+        {
+            SendCommand("4");
+        }
+
+        private void cmdStop_Click(object sender, EventArgs e)
+        {
+            SendCommand("5");
+        }
+
+        private void cmdBackLeft_Click(object sender, EventArgs e)
+        {
+            SendCommand("1");
+        }
+
+        private void cmdBack_Click(object sender, EventArgs e)
+        {
+            SendCommand("2");
+        }
+
+        private void cmdBackRight_Click(object sender, EventArgs e)
+        {
+            SendCommand("3");
+        }
+
+        private void cmdSpinLeft_Click(object sender, EventArgs e)
+        {
+            SendCommand("0");
+        }
+
+        private void cmdSpinRight_Click(object sender, EventArgs e)
+        {
+            SendCommand(".");
+        }
+
+        private void cmdFast_Click(object sender, EventArgs e)
+        {
+            SendCommand("+");
+        }
+
+        private void cmdSlow_Click(object sender, EventArgs e)
+        {
+            SendCommand("-");
+        }
+
+        private void cmdAvoid_Click(object sender, EventArgs e)
+        {
+            SendCommand("F");
+        }
+
+        private void cmdCrash_Click(object sender, EventArgs e)
+        {
+            SendCommand("f");
+        }
+
+        private void cmdLaserOn_Click(object sender, EventArgs e)
+        {
+            SendCommand("l");
+        }
+
+        private void cmdLaserOff_Click(object sender, EventArgs e)
+        {
+            SendCommand("L");
+        }
+
+        private void cmdReplay_Click(object sender, EventArgs e)
+        {
+            replay_path_identifier = txtReplay.Text;
+            if ((replay_path_identifier != null) &&
+                (replay_path_identifier != "") &&
+                (!stereo_camera.replaying_actions) &&
+                (!stereo_camera.Record))
+            {
+                lblReplayState.Text = "Playing";
+                stereo_camera.RunReplay(teleoperation_log, zip_utility, log_path, replay_path_identifier);
+            }
+        }
+
+        private void cmdReplayStop_Click(object sender, EventArgs e)
+        {
+            stereo_camera.StopReplay();
+            lblReplayState.Text = "";
+        }
+
+        private void enableLoggingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            enableLoggingToolStripMenuItem.Checked = !enableLoggingToolStripMenuItem.Checked;
+            ToggleLogging(enableLoggingToolStripMenuItem.Checked);
         }
 
     }

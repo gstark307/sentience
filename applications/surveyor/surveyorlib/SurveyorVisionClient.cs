@@ -248,13 +248,16 @@ namespace surveyor.vision
 				    theSocPkt = new SocketPacket ();
 				theSocPkt.thisSocket = m_clientSocket;
 				
-				// Start listening to the data asynchronously				
-				m_clientSocket.BeginReceive (
-				    theSocPkt.dataBuffer,
-				    0, theSocPkt.dataBuffer.Length,
-				    SocketFlags.None, 
-				    m_pfnCallBack, 
-				    theSocPkt);				
+				// Start listening to the data asynchronously	
+                if (m_clientSocket != null)
+                {
+                    m_clientSocket.BeginReceive(
+                        theSocPkt.dataBuffer,
+                        0, theSocPkt.dataBuffer.Length,
+                        SocketFlags.None,
+                        m_pfnCallBack,
+                        theSocPkt);
+                }
 			}
 			catch(SocketException se)
 			{
