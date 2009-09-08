@@ -40,9 +40,16 @@ namespace surveyorstereo
         int left_port = 10001;
         int right_port = 10002;
         int broadcast_port = 10010;
-        int fps = 10;
+        int fps = 5;
+        string log_path = Environment.CurrentDirectory;
+        string teleoperation_log = "teleop.dat";
         string temporary_files_path = "";
         string recorded_images_path = "";
+        string zip_utility = "zip";
+        string path_identifier = "log";
+        string replay_path_identifier = "log";
+
+        string manual_camera_alignment_program = "calibtweaks.exe";
 
         public frmStereo()
         {
@@ -65,7 +72,7 @@ namespace surveyorstereo
             stereo_camera.Load(calibration_filename);
             stereo_camera.Run();
 
-            if (stereo_camera.stereo_algorithm_type == StereoVision.SIMPLE)
+            if (stereo_camera.stereo_algorithm_type == StereoVision.EDGES)
             {
                 denseToolStripMenuItem.Checked = false;
                 simpleToolStripMenuItem.Checked = true;
@@ -75,6 +82,8 @@ namespace surveyorstereo
                 denseToolStripMenuItem.Checked = true;
                 simpleToolStripMenuItem.Checked = false;
             }
+
+
         }
 
         private void frmStereo_FormClosing(object sender, FormClosingEventArgs e)

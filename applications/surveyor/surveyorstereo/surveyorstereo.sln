@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C# Express 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "surveyorstereo", "surveyorstereo.csproj", "{C06927B2-ABF2-4B57-901E-C7EF0EF09BA1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "surveyorlib", "..\surveyorlib\surveyorlib.csproj", "{5E1FABD4-451C-40F7-8C59-7E291D49985C}"

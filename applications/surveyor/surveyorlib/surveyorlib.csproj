@@ -17,6 +17,7 @@
     </UpgradeBackupLocation>
     <TargetFrameworkSubset>
     </TargetFrameworkSubset>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -29,7 +30,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -83,6 +83,7 @@
     <Compile Include="correspondence\StereoVision.cs" />
     <Compile Include="correspondence\StereoVisionDense.cs" />
     <Compile Include="correspondence\StereoVisionEdges.cs" />
+    <Compile Include="correspondence\StereoVisionEdgesCam.cs" />
     <Compile Include="correspondence\StereoVisionGeometric.cs" />
     <Compile Include="correspondence\StereoVisionSimple.cs" />
     <Compile Include="GifClass.cs" />
@@ -90,10 +91,10 @@
     <Compile Include="parallel.cs" />
     <Compile Include="probabilities.cs" />
     <Compile Include="SurveyorCalibration.cs" />
+    <Compile Include="SurveyorReplayThread.cs" />
     <Compile Include="SurveyorVisionClient.cs" />
     <Compile Include="SurveyorVisionStereo.cs" />
     <Compile Include="SurveyorVisionStereoWin.cs" />
-    <Compile Include="SurveyorvisionThreadGrabFrame.cs" />
     <Compile Include="SurveyorVisionThreadGrabFrameMulti.cs" />
     <Compile Include="WebcamVisionDirectShow.cs" />
     <Compile Include="WebcamVisionDirectShowBase.cs" />
