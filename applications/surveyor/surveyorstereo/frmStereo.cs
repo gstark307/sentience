@@ -183,12 +183,6 @@ namespace surveyorstereo
             this.Close();
         }
 
-        private void recordToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            recordToolStripMenuItem.Checked = !recordToolStripMenuItem.Checked;
-            stereo_camera.Record = !stereo_camera.Record;
-        }
-
         private Bitmap ShowDotPattern()
         {
             stereo_camera.calibration_pattern = SurveyorCalibration.CreateDotPattern(image_width, image_height, SurveyorCalibration.dots_across, SurveyorCalibration.dot_radius_percent);
@@ -439,6 +433,18 @@ namespace surveyorstereo
         {
             enableLoggingToolStripMenuItem.Checked = !enableLoggingToolStripMenuItem.Checked;
             ToggleLogging(enableLoggingToolStripMenuItem.Checked);
+        }
+
+        private void enableEmbeddedStereoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            enableEmbeddedStereoToolStripMenuItem.Checked = !enableEmbeddedStereoToolStripMenuItem.Checked;
+            if (stereo_camera != null)
+            {
+                if (enableEmbeddedStereoToolStripMenuItem.Checked)
+                    stereo_camera.EnableEmbeddedStereo();
+                else
+                    stereo_camera.DisableEmbeddedStereo();
+            }
         }
 
     }
