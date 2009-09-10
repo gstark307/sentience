@@ -272,7 +272,7 @@ namespace surveyorstereo
 
         private void simpleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            stereo_camera.stereo_algorithm_type = StereoVision.SIMPLE;
+            stereo_camera.stereo_algorithm_type = StereoVision.EDGES;
             denseToolStripMenuItem.Checked = false;
             simpleToolStripMenuItem.Checked = true;
         }

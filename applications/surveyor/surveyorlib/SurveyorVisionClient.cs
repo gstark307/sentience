@@ -183,6 +183,7 @@ namespace surveyor.vision
 		NetworkStream networkStream;
 		System.IO.StreamWriter streamWriter;
         public string send_command = "";
+        public int uploading_data_state;
 
         /// <summary>
         /// send a message to the server
@@ -201,14 +202,30 @@ namespace surveyor.vision
                 {
                     Console.WriteLine("Sending command: " + send_command);
 				    streamWriter.WriteLine(send_command);
+                    if (send_command == "X")
+                    {
+                        uploading_data_state = 1;
+                    }
                     send_command = "";
                     wait_for_reply = false;
                 }
                 else
                 {
-                    streamWriter.WriteLine(msg);
+                    if (uploading_data_state == 0)
+                        streamWriter.WriteLine(msg);
+                    else
+                    {
+                        streamWriter.Write(msg);
+                        uploading_data_state = 2;
+                    }
                 }
-				streamWriter.Flush();
+                try
+                {
+                    streamWriter.Flush();
+                }
+                catch
+                {
+                }
                 waiting_for_reply = wait_for_reply;
 			}
 			catch(SocketException se)
@@ -521,8 +538,14 @@ namespace surveyor.vision
 				    Console.WriteLine(received_data.Count.ToString() + " bytes received");
 				
 				//Console.Write(".");
-				
-                ReceiveFrame(received_data);
+
+                if (uploading_data_state == 0)
+                {
+                    ReceiveFrame(received_data);
+                }
+                else
+                {
+                }
 				//ReceiveDisparities(received_data);
 				WaitForData();
 			}
