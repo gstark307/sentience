@@ -1,0 +1,33 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workbench ActiveDocument="motionModel.cs" ctype="Workbench">
+    <Files>
+      <File FileName="tests/dpslam_tests.cs" Line="10" Column="10" />
+      <File FileName="dpslam.cs" Line="38" Column="9" />
+      <File FileName="tests/motionmodel_tests.cs" Line="6" Column="28" />
+      <File FileName="motionModel.cs" Line="774" Column="29" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="dpslam" expanded="True">
+            <Node name="tests" expanded="True" />
+            <Node name="motionModel.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
+</Properties>

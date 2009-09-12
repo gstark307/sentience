@@ -21,7 +21,7 @@ using System;
 using System.Threading;
 using System.Drawing;
 using Gdk;
-using Gnome;
+using Gtk;
 using sluggish.utilities;
 using sluggish.utilities.gtk;
 
@@ -65,8 +65,12 @@ namespace surveyor.vision
         /// <param name="sound_filename"></param>
         private void PlaySound(string sound_filename)
         {
-            Gnome.Sound.Init("localhost");
-            Gnome.Sound.Play(sound_filename);
+            System.Media.SoundPlayer myPlayer = new System.Media.SoundPlayer();
+            myPlayer.SoundLocation = sound_filename;
+            myPlayer.Play();
+            
+            //Gnome.Sound.Init("localhost");
+            //Gnome.Sound.Play(sound_filename);
         }
         
         #endregion
