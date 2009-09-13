@@ -1,0 +1,11 @@
+Package: stereosensormodel
+Version: 0.1
+Architecture: i386
+Maintainer: Bob Mottram <fuzzgun@gmail.com>
+Depends: mono-runtime (>= 1.1.8.1), mono-2.0-runtime (>= 2.0)
+Recommends: 
+Suggests: 
+Section: robotics
+Priority: optional
+Homepage: http://code.google.com/p/sentience/
+Description: Utility for creating probabilistic sensor models for stereo cameras.  The results are output as an xml file, quantised into steps suitable for use with occupancy grids.

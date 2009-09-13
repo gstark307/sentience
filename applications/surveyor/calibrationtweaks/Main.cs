@@ -16,7 +16,9 @@ namespace calibrationtweaks
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
 
             string left_image_filename = commandline.GetParameterValue("left", parameters);
+			if (!System.IO.File.Exists(left_image_filename)) left_image_filename = "";
             string right_image_filename = commandline.GetParameterValue("right", parameters);
+			if (!System.IO.File.Exists(right_image_filename)) right_image_filename = "";
 
             bool parameters_exist = false;
 

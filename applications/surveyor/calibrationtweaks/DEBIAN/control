@@ -1,0 +1,11 @@
+Package: stereotweaks
+Version: 0.1
+Architecture: i386
+Maintainer: Bob Mottram <fuzzgun@gmail.com>
+Depends: mono-runtime (>= 1.1.8.1), mono-2.0-runtime (>= 2.0)
+Recommends: 
+Suggests: 
+Section: robotics
+Priority: optional
+Homepage: http://code.google.com/p/sentience/
+Description: Utility for checking camera calibration and manually adjusting offset values

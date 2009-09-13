@@ -1,17 +1,18 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="motionModel.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="tests/motionmodel_tests.cs" ctype="Workbench">
     <Files>
       <File FileName="tests/dpslam_tests.cs" Line="10" Column="10" />
       <File FileName="dpslam.cs" Line="38" Column="9" />
-      <File FileName="tests/motionmodel_tests.cs" Line="6" Column="28" />
-      <File FileName="motionModel.cs" Line="774" Column="29" />
+      <File FileName="tests/motionmodel_tests.cs" Line="35" Column="4" />
+      <File FileName="motionModel.cs" Line="352" Column="14" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="dpslam" expanded="True">
-            <Node name="tests" expanded="True" />
-            <Node name="motionModel.cs" selected="True" />
+            <Node name="tests" expanded="True">
+              <Node name="motionmodel_tests.cs" selected="True" />
+            </Node>
           </Node>
         </State>
       </Pad>
@@ -19,7 +20,19 @@
         <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True" selected="True" />
+        <State expanded="True">
+          <Node name="dpslam" expanded="True">
+            <Node name="dpslam" expanded="True">
+              <Node name="core" expanded="True">
+                <Node name="tests" expanded="True">
+                  <Node name="motionmodel_tests" expanded="True">
+                    <Node name="Create" selected="True" />
+                  </Node>
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State />

@@ -159,7 +159,6 @@ namespace dpslam.core
         public float LocalGridLocalisationRadius_mm = 200;  // an extra radius applied when localising within the grid, to make localisation rays wider
         public float LocalGridVacancyWeighting = 1.0f;      // a weighting applied to the vacancy part of the sensor model
 
-        public int best_grid_index = 0;  // array index of the best performing occupancy grid
         public dpslam LocalGrid;       // grid containing the current local observations
 
         // parameters discovered by auto tuning
@@ -534,16 +533,20 @@ namespace dpslam.core
         /// <param name="pan">pan angle in radians</param>
         /// <param name="mapping">mapping or localisation</param>
         public void updateFromKnownPosition(
-		    List<byte[]> images,
-            float x, float y, float pan)                   
+		    List<byte[]> disparities,
+            float x, float y, float z,
+		    float pan, float tilt, float roll)
         {
             // update the grid
-            update(images);
+            update(disparities);
 
             // set the robot at the known position
             this.x = x;
             this.y = y;
+			this.z = z;
             this.pan = pan;
+			this.tilt = tilt;
+			this.roll = roll;
 
             // update the motion model
             motionModel motion_model = motion;
@@ -597,11 +600,15 @@ namespace dpslam.core
         /// <param name="sim_map">simulated environment</param>
         /// <param name="x">x position in mm</param>
         /// <param name="y">y position in mm</param>
+        /// <param name="z">z position in mm</param>
         /// <param name="pan">pan angle in radians</param>
+        /// <param name="tilt">tilt angle in radians</param>
+        /// <param name="roll">roll angle in radians</param>
         /// <param name="mapping">mapping or localisation</param>
         public void updateFromKnownPosition(
 		    dpslam sim_map,
-            float x, float y, float pan)                   
+            float x, float y, float z,
+		    float pan, float tilt, float roll)
         {
             // update the grid
             updateSimulation(sim_map);
@@ -609,7 +616,10 @@ namespace dpslam.core
             // set the robot at the known position
             this.x = x;
             this.y = y;
+			this.z = z;
             this.pan = pan;
+			this.tilt = tilt;
+			this.roll = roll;
 
             // update the motion model
             motionModel motion_model = motion;
@@ -788,10 +798,10 @@ namespace dpslam.core
             motion.forward_velocity = forward_velocity;
             motion.angular_acceleration_pan = angular_velocity_pan - motion.angular_velocity_pan;
             motion.angular_velocity_pan = angular_velocity_pan;
-            motion.angular_acceleration_tilt = angular_velocity_tilt - motion.angular_velocity_tilt;
-            motion.angular_velocity_tilt = angular_velocity_tilt;
-            motion.angular_acceleration_roll = angular_velocity_roll - motion.angular_velocity_roll;
-            motion.angular_velocity_roll = angular_velocity_roll;
+            //motion.angular_acceleration_tilt = angular_velocity_tilt - motion.angular_velocity_tilt;
+            //motion.angular_velocity_tilt = angular_velocity_tilt;
+            //motion.angular_acceleration_roll = angular_velocity_roll - motion.angular_velocity_roll;
+            //motion.angular_velocity_roll = angular_velocity_roll;
 
             clock.Start();
 
@@ -829,10 +839,10 @@ namespace dpslam.core
             motion.forward_velocity = forward_velocity;
             motion.angular_acceleration_pan = angular_velocity_pan - motion.angular_velocity_pan;
             motion.angular_velocity_pan = angular_velocity_pan;
-            motion.angular_acceleration_tilt = angular_velocity_tilt - motion.angular_velocity_tilt;
-            motion.angular_velocity_tilt = angular_velocity_tilt;
-            motion.angular_acceleration_roll = angular_velocity_roll - motion.angular_velocity_roll;
-            motion.angular_velocity_roll = angular_velocity_roll;
+            //motion.angular_acceleration_tilt = angular_velocity_tilt - motion.angular_velocity_tilt;
+            //motion.angular_velocity_tilt = angular_velocity_tilt;
+            //motion.angular_acceleration_roll = angular_velocity_roll - motion.angular_velocity_roll;
+            //motion.angular_velocity_roll = angular_velocity_roll;
 
             clock.Start();
 

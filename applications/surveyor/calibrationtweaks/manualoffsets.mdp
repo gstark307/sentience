@@ -1,7 +1,7 @@
-<Project name="calibrationtweaks" fileversion="2.0" language="C#" clr-version="Net_2_0" targetFramework="2.0" ctype="DotNetProject">
+<Project name="stereotweaks" fileversion="2.0" language="C#" clr-version="Net_2_0" targetFramework="2.0" ctype="DotNetProject">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
-      <Output directory="../../../../robotbridgeware/bin/Debug" assemblyKeyFile="/home/motters/develop/sentience/applications/surveyor/calibrationtweaks/." assembly="calibtweaks" />
+      <Output directory="bin/Debug" assemblyKeyFile="/home/motters/develop/sentience/applications/surveyor/calibrationtweaks/." assembly="stereotweaks" />
       <Build debugmode="True" target="Exe" />
       <Execution runwithwarnings="True" commandlineparameters="-left /home/motters/Desktop/testimages/left.jpg -right /home/motters/Desktop/testimages/right.jpg" consolepause="False" runtime="MsNet" clr-version="Net_2_0" />
       <EnvironmentVariables />
@@ -24,6 +24,9 @@
     <File name="frmAbout.cs" subtype="Code" buildaction="Compile" />
     <File name="frmAbout.Designer.cs" subtype="Code" buildaction="Compile" />
     <File name="frmAbout.resx" subtype="Code" buildaction="Nothing" />
+    <File name="DEBIAN" subtype="Directory" buildaction="Compile" />
+    <File name="DEBIAN/control" subtype="Code" buildaction="Nothing" />
+    <File name="DEBIAN/copyright" subtype="Code" buildaction="Nothing" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

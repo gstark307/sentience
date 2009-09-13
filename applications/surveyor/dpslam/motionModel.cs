@@ -31,9 +31,9 @@ namespace dpslam.core
     public class motionModel
     {
         // default noise parameters for the motion model
-        const float default_motion_noise_1 = 0.08f;
-        const float default_motion_noise_2 = 0.00025f;
-        const float default_motion_noise_3 = 0.00005f;
+        const float default_motion_noise_1 = 0.04f;
+        const float default_motion_noise_2 = 0.00009f;
+        const float default_motion_noise_3 = 0.00003f;
 
         // different modes used for creating pose lists
         public const int MODE_EGOCENTRIC = 0;  // sets all poses to the current known robot location
@@ -59,6 +59,7 @@ namespace dpslam.core
 
         // random number generator
 		private MersenneTwister rnd = new MersenneTwister(100);
+		//private Random rnd = new Random(100);
 
         // the time step at which all branches converge to a single path
         private UInt32 root_time_step = UInt32.MaxValue;
@@ -129,42 +130,35 @@ namespace dpslam.core
             int random_seed)
         {
             // seed the random number generator
+			//rnd = new Random(random_seed);
             rnd = new MersenneTwister(random_seed);
 
             this.rob = rob;
             this.LocalGrid = LocalGrid;
             Poses = new List<particlePath>();
             ActivePoses = new List<particlePath>();
-            motion_noise = new float[28];
+            motion_noise = new float[6];
 
             // some default noise values
             int i = 0;
-            while (i < 4)
+            while (i < 2)
             {
                 motion_noise[i] = default_motion_noise_1;
                 i++;
             }
-            while (i < 8)
+            while (i < 4)
             {
                 motion_noise[i] = default_motion_noise_2;
                 i++;
             }
-            while (i < 16)
-            {
-                motion_noise[i] = default_motion_noise_2/100.0f;
-                i++;
-            }
-            while (i < 20)
+            while (i < motion_noise.Length)
             {
                 motion_noise[i] = default_motion_noise_3;
                 i++;
             }
-            while (i < motion_noise.Length)
-            {
-                motion_noise[i] = default_motion_noise_3/100.0f;
-                i++;
-            }
-
+            
+			
+			
             // create some initial poses
             createNewPoses(rob.x, rob.y, rob.z, rob.pan, rob.tilt, rob.roll);
         }
@@ -205,7 +199,6 @@ namespace dpslam.core
             }
         }
 
-
         /// <summary>
         /// create poses distributed over an area, suitable for
         /// monte carlo localisation
@@ -244,98 +237,58 @@ namespace dpslam.core
         /// return a random gaussian distributed value
         /// </summary>
         /// <param name="b"></param>
-        private float sample_normal_distribution(float b)
+        public float sample_normal_distribution(float b)
         {
             float v = 0;
 
             for (int i = 0; i < 12; i++)
-                v += (((float)rnd.Next() * 2) - 1.0f) * b;
+                v += (((float)rnd.NextDouble() * 2) - 1.0f) * b;
                 //v += ((rnd.Next(200000) / 100000.0f) - 1.0f) * b;
 
             return(v / 2.0f);
         }
-
+		
         /// <summary>
         /// update the given pose using the motion model
         /// </summary>
         /// <param name="path">path to add the new estimated pose to</param>
         /// <param name="time_elapsed_sec">time elapsed since the last update in seconds</param>
-        private void sample_motion_model_velocity(
-		    particlePath path, 
-		    float time_elapsed_sec)
+        private void sample_motion_model_velocity(particlePath path, float time_elapsed_sec)
         {
             // calculate noisy velocities
             float fwd_velocity = forward_velocity + sample_normal_distribution(
                 (motion_noise[0] * Math.Abs(forward_velocity)) +
-                (motion_noise[1] * Math.Abs(angular_velocity_pan)) +
-			    (motion_noise[2] * Math.Abs(angular_velocity_tilt)) +
-			    (motion_noise[3] * Math.Abs(angular_velocity_pan)));
+                (motion_noise[1] * Math.Abs(angular_velocity_pan)));
 
-            float ang_velocity_pan = angular_velocity_pan + sample_normal_distribution(
+            float ang_velocity = angular_velocity_pan + sample_normal_distribution(
+                (motion_noise[2] * Math.Abs(forward_velocity)) +
+                (motion_noise[3] * Math.Abs(angular_velocity_pan)));
+
+            float v = sample_normal_distribution(
                 (motion_noise[4] * Math.Abs(forward_velocity)) +
-                (motion_noise[5] * Math.Abs(angular_velocity_pan)) +
-			    (motion_noise[6] * Math.Abs(angular_velocity_tilt)) +
-			    (motion_noise[7] * Math.Abs(angular_velocity_roll)));
-
-            float ang_velocity_tilt = angular_velocity_tilt + sample_normal_distribution(
-                (motion_noise[8] * Math.Abs(forward_velocity)) +
-                (motion_noise[9] * Math.Abs(angular_velocity_pan)) +
-			    (motion_noise[10] * Math.Abs(angular_velocity_tilt)) +
-			    (motion_noise[11] * Math.Abs(angular_velocity_roll)));
-
-			float ang_velocity_roll = angular_velocity_roll + sample_normal_distribution(
-                (motion_noise[12] * Math.Abs(forward_velocity)) +
-                (motion_noise[13] * Math.Abs(angular_velocity_pan)) +
-			    (motion_noise[14] * Math.Abs(angular_velocity_tilt)) +
-			    (motion_noise[15] * Math.Abs(angular_velocity_roll)));
-			
-            float v_pan = sample_normal_distribution(
-                (motion_noise[16] * Math.Abs(forward_velocity)) +
-                (motion_noise[17] * Math.Abs(angular_velocity_pan)) + 
-                (motion_noise[18] * Math.Abs(angular_velocity_tilt)) + 
-                (motion_noise[19] * Math.Abs(angular_velocity_roll)));
-
-			float v_tilt = sample_normal_distribution(
-                (motion_noise[20] * Math.Abs(forward_velocity)) +
-                (motion_noise[21] * Math.Abs(angular_velocity_pan)) + 
-                (motion_noise[22] * Math.Abs(angular_velocity_tilt)) + 
-                (motion_noise[23] * Math.Abs(angular_velocity_roll)));
-
-			float v_roll = sample_normal_distribution(
-                (motion_noise[24] * Math.Abs(forward_velocity)) +
-                (motion_noise[25] * Math.Abs(angular_velocity_pan)) + 
-                (motion_noise[26] * Math.Abs(angular_velocity_tilt)) + 
-                (motion_noise[27] * Math.Abs(angular_velocity_roll)));
+                (motion_noise[5] * Math.Abs(angular_velocity_pan)));
 
             float fraction = 0;
-			float angular = Math.Abs(ang_velocity_pan) + Math.Abs(ang_velocity_tilt) + Math.Abs(ang_velocity_roll);
-            if (angular > 0.000001f) fraction = fwd_velocity / angular;
+            if (Math.Abs(ang_velocity) > 0.000001f) fraction = fwd_velocity / ang_velocity;
             float current_pan = path.current_pose.pan;
-			float current_tilt = path.current_pose.tilt;
-			float current_roll = path.current_pose.roll;
 
             // if scan matching is active use the current estimated pan angle
             if (rob.ScanMatchingPanAngleEstimate != scanMatching.NOT_MATCHED)
                 current_pan = rob.ScanMatchingPanAngleEstimate;
 
-            float pan2 = current_pan - (ang_velocity_pan * time_elapsed_sec);
-			float tilt2 = current_tilt - (ang_velocity_tilt * time_elapsed_sec);
-			float roll2 = current_roll - (ang_velocity_roll * time_elapsed_sec);
+            float pan2 = current_pan - (ang_velocity * time_elapsed_sec);
 
-			pos3D p = new pos3D(0, fraction, 0);
-			pos3D p2 = p.rotate(current_pan, current_tilt, current_roll);			
-			p2.x += path.current_pose.x;
-			p2.y += path.current_pose.y;
-			p2.z += path.current_pose.z;
-            p2.pan = pan2 + (v_pan * time_elapsed_sec);
-            p2.tilt = tilt2 + (v_tilt * time_elapsed_sec);
-            p2.roll = roll2 + (v_roll * time_elapsed_sec);
+            float new_y = path.current_pose.y + (fraction * (float)Math.Sin(current_pan)) -
+                  (fraction * (float)Math.Sin(pan2));
+            float new_x = path.current_pose.x - (fraction * (float)Math.Cos(current_pan)) +
+                              (fraction * (float)Math.Cos(pan2));
+            float new_pan = pan2 + (v * time_elapsed_sec);
 
-            particlePose new_pose = new particlePose(p2.x, p2.y, p2.z, p2.pan, p2.tilt, p2.roll, path);
+            particlePose new_pose = new particlePose(new_x, new_y, 0, new_pan, 0, 0, path);
             new_pose.time_step = time_step;
             path.Add(new_pose);
-        }
-
+        }		
+		
         /// <summary>
         /// removes low probability poses
         /// Note that a maturity threshold is used, so that poses which may initially 
@@ -425,7 +378,7 @@ namespace dpslam.core
 
             if (possible_roots.Count == 1)
             {
-                // collapse tha psth
+                // collapse tha path
                 particlePath path = possible_roots[0];
 
                 if (path.branch_pose != null)
@@ -655,8 +608,9 @@ namespace dpslam.core
         /// <param name="g"></param>
         /// <param name="b"></param>
         /// <param name="line_thickness"></param>
-        public void ShowTree(Byte[] img, int width, int height,
-                             int r, int g, int b, int line_thickness)
+        public void ShowTree(
+		    byte[] img, int width, int height,
+            int r, int g, int b, int line_thickness)
         {
             for (int i = 0; i < ActivePoses.Count; i++)
             {
@@ -801,7 +755,7 @@ namespace dpslam.core
 				}
 				else
 				{
-					Console.WriteLine("Pose has no score");
+					//Console.WriteLine("Pose has no score");
 				}
             }
 
@@ -956,4 +910,5 @@ namespace dpslam.core
         #endregion
 
     }
+	
 }

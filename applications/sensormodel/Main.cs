@@ -16,9 +16,6 @@ namespace sentience.sensormodel
 	{
 		public static void Main(string[] args)
 		{
-            //tests_metagridbuffer.LocaliseAlongPath2();
-			//tests_robotGeometry.SaveAndLoad();
-
             // extract command line parameters
             ArrayList parameters = commandline.ParseCommandLineParameters(args, "-", GetValidParameters());
 
@@ -29,7 +26,7 @@ namespace sentience.sensormodel
             }
             else
             {
-                Console.WriteLine("sensormodel: stereo vision sensor modelling for dummies");
+                Console.WriteLine("stereosensormodel version 0.1");
             
 	            int no_of_cameras = 1;
                 robot rob = new robot(no_of_cameras, robot.MAPPING_DPSLAM);
@@ -150,10 +147,10 @@ namespace sentience.sensormodel
         private static void ShowHelp()
         {
             Console.WriteLine("");
-            Console.WriteLine("sensormodel help");
-            Console.WriteLine("----------------");
+            Console.WriteLine("stereosensormodel help");
+            Console.WriteLine("----------------------");
             Console.WriteLine("");
-            Console.WriteLine("Syntax:  sensormodel");
+            Console.WriteLine("Syntax:  stereosensormodel");
             Console.WriteLine("         -filename <xml filename to be generated>");
             Console.WriteLine("         -baseline <stereo camera baseline in mm>");
             Console.WriteLine("         -fov <camera field of view in degrees>");

@@ -1,11 +1,11 @@
-<Project name="sensormodel" fileversion="2.0" language="C#" clr-version="Net_2_0" targetFramework="2.0" ctype="DotNetProject">
+<Project name="stereosensormodel" fileversion="2.0" language="C#" clr-version="Net_2_0" targetFramework="2.0" ctype="DotNetProject">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
-      <Output directory="bin/Debug" assembly="sentcore" />
+      <Output directory="bin/Debug" assembly="stereosensormodel" />
       <Build debugmode="True" target="Exe" />
       <Execution runwithwarnings="True" commandlineparameters="-integer" externalconsole="True" consolepause="True" runtime="MsNet" clr-version="Net_2_0" />
       <EnvironmentVariables />
-      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+      <CodeGeneration compiler="Mcs" warninglevel="3" optimize="True" unsafecodeallowed="True" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
     <Configuration name="Release" ctype="DotNetProjectConfiguration">
       <Output directory="bin/Release" assembly="sentcore" />
@@ -17,6 +17,9 @@
   <Contents>
     <File name="AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
     <File name="Main.cs" subtype="Code" buildaction="Compile" />
+    <File name="DEBIAN" subtype="Directory" buildaction="Compile" />
+    <File name="DEBIAN/control" subtype="Code" buildaction="Nothing" />
+    <File name="DEBIAN/copyright" subtype="Code" buildaction="Nothing" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
