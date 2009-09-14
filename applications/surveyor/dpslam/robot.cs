@@ -430,7 +430,7 @@ namespace dpslam.core
 	            y = motion.current_robot_pose.y;
 	            z = motion.current_robot_pose.z;
 	            pan = motion.current_robot_pose.pan;
-				Console.WriteLine("Position " + x.ToString() + " " + y.ToString());
+				//Console.WriteLine("Position " + x.ToString() + " " + y.ToString());
 			}
 
         }

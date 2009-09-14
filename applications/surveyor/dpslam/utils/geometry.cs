@@ -52,7 +52,7 @@ namespace dpslam.core
 
             angle = (float)Math.Acos(angle);
             return (angle);
-        }
+        }	
 
         /// <summary>
         /// returns the perpendicular distance of a line from the centre of a circle
@@ -65,8 +65,11 @@ namespace dpslam.core
         /// <param name="circle_y">circle centre y coordinate</param>
         /// <param name="circle_radius">circle radius</param>
         /// <returns></returns>
-        public static float circleDistanceFromLine(float x0, float y0, float x1, float y1,
-                                                   float circle_x, float circle_y, float circle_radius)
+        public static float circleDistanceFromLine(
+		    float x0, float y0, 
+		    float x1, float y1,
+            float circle_x, float circle_y, 
+		    float circle_radius)
         {
             float perpendicular_dist = 999999;
 
@@ -78,15 +81,21 @@ namespace dpslam.core
             {
                 // perpendicular line, spanning the circle
                 float perp_line_x0 = circle_x - dy;
-                float perp_line_y0 = circle_y - dx;
+                float perp_line_y0 = circle_y + dx;
                 float perp_line_x1 = circle_x + dy;
-                float perp_line_y1 = circle_y + dx;
+                float perp_line_y1 = circle_y - dx;
 
                 float ix = 9999;
                 float iy = 0;
-                intersection(x0, y0, x1, y1,
-                             perp_line_x0, perp_line_y0, perp_line_x1, perp_line_y1,
-                             ref ix, ref iy);
+                intersection(
+				    x0, y0, x1, y1,
+                    perp_line_x0, perp_line_y0, 
+				    perp_line_x1, perp_line_y1,
+                    ref ix, ref iy);
+				
+				//Console.WriteLine("line0 " + x0.ToString() + " " + y0.ToString() + " " + x1.ToString() + " " + y1.ToString());
+				//Console.WriteLine("line1 " + perp_line_x0.ToString() + " " + perp_line_y0.ToString() + " " + perp_line_x1.ToString() + " " + perp_line_y1.ToString());
+				//Console.WriteLine("ix iy  " + ix.ToString() + " " + iy.ToString());
 
                 if (ix != 9999)
                 {

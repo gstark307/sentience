@@ -78,7 +78,7 @@ namespace dpslam.core.tests
 		}
 				
 		[Test()]
-        public void MotionModelOpenLoop()
+        public void OpenLoop()
         {
 			int image_width = 640;
 			byte[] img_rays = new byte[image_width*image_width*3];
@@ -104,42 +104,57 @@ namespace dpslam.core.tests
                 rob.motion.Show(
 				    img_rays, image_width, image_width, 
                     min_x_mm, min_y_mm, max_x_mm, max_y_mm,
+				    true, false,
                     initial);
                 initial = false;
             }
-						
-			Assert.IsTrue(rob.y > max_y_mm-50, "The robot did not move far enough");
-			
+									
 			BitmapArrayConversions.updatebitmap_unsafe(img_rays, bmp);
-			bmp.Save("motionmodel_tests_motion_model1.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+			bmp.Save("motionmodel_tests_OpenLoop.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+			
+			Assert.IsTrue(rob.y > max_y_mm-50, "The robot did not move far enough " + rob.y.ToString());
         }
 		
-		
 		[Test()]
-		public void Create()
-		{
-			robot rob = new robot(1);
-			motionModel mm = new motionModel(rob, rob.LocalGrid, 1);
-			
-			mm.forward_velocity = 1f;
-			
-			particlePath path = new particlePath(1000);
-			path.current_pose = new particlePose(0,0,0,0,0,0,path);
-			for (int t = 0; t < 10; t++)
-			{
-			    mm.Predict(1000);
-			}
-			
+        public void SpeedControl()
+        {
 			int image_width = 640;
-			int dimension_mm = 1000;
-			byte[] img = new byte[image_width*image_width*3];
+			byte[] img_rays = new byte[image_width*image_width*3];
 			Bitmap bmp = new Bitmap(image_width, image_width, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			
-			//mm.Show(img, image_width, image_width, true);
-			mm.ShowTree(img, image_width, image_width, 0,0,0,1);
+			bool closed_loop = false;
+            robot rob = new robot(1);
+
+            int min_x_mm = 0;
+            int min_y_mm = 0;
+            int max_x_mm = 1000;
+            int max_y_mm = 1000;
+            int step_size = (max_y_mm - min_y_mm) / 15;
+            int x = min_x_mm + ((max_x_mm - min_x_mm) / 2);
+            bool initial = true;
+            float pan = 0; // (float)Math.PI / 4;
+			rob.x = x-200;
+			rob.y = 0;
+            for (int y = min_y_mm; y <= max_y_mm; y += step_size)
+            {
+                if (closed_loop) surveyPosesDummy(rob);
+				List<byte[]> disparities = new List<byte[]>();
+				float forward_velocity = step_size;
+				float angular_velocity_pan = -4 * (float)Math.PI / 180.0f;
+				rob.updateFromVelocities(disparities, forward_velocity, angular_velocity_pan, 0, 0, 1.0f);
+                
+                rob.motion.Show(
+				    img_rays, image_width, image_width, 
+                    min_x_mm, min_y_mm, max_x_mm, max_y_mm,
+				    true, false,
+                    initial);
+                initial = false;
+            }
+									
+			BitmapArrayConversions.updatebitmap_unsafe(img_rays, bmp);
+			bmp.Save("motionmodel_tests_SpeedControl.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 			
-			BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
-			bmp.Save("motionmodel_tests_Create1.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
-		}
+			Assert.IsTrue(rob.y > max_y_mm-50, "The robot did not move far enough " + rob.y.ToString());
+        }
 	}
 }

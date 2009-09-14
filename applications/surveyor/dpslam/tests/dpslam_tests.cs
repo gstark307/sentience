@@ -149,6 +149,20 @@ namespace dpslam.core.tests
 		}
 		
 		[Test()]
+		public void PointLineDistance()			
+		{
+			float x0 = 382.5575f;
+			float y0 = 705.5103f;
+			float x1 = 389.1954f;
+			float y1 = 712.9895f;
+			float px = 393.5956f;
+			float py = 696.0023f;
+			
+			float dist = geometry.circleDistanceFromLine(x0,y0,x1,y1,px,py,0.01f);
+			Assert.IsTrue(dist < 20, "dist out of range = " + dist.ToString());
+		}
+		
+		[Test()]
 		public void CreateSimulation()
 		{		
             int dimension_cells = 100;

@@ -506,8 +506,11 @@ namespace dpslam.core
         /// <param name="img">image data within which to draw</param>
         /// <param name="width">width of the image</param>
         /// <param name="height">height of the image</param>
-        public void Show(Byte[] img, int width, int height,
-                         bool clearBackground)
+        public void Show(
+		    byte[] img, int width, int height,
+		    bool show_uncertainty_ellipse,
+		    bool show_path_tree,
+            bool clearBackground)
         {
             float min_x = 99999;
             float min_y = 99999;
@@ -521,8 +524,146 @@ namespace dpslam.core
                 if (pose.x > max_x) max_x = pose.x;
                 if (pose.y > max_y) max_y = pose.y;
             }
-            Show(img, width, height, min_x, min_y, max_x, max_y, clearBackground);
+            Show(img, width, height, min_x, min_y, max_x, max_y, show_uncertainty_ellipse, show_path_tree, clearBackground);
         }
+		
+		public void AveragePose(
+		    ref float x, 
+		    ref float y, 
+		    ref float z,
+		    ref float pan,
+		    ref float tilt,
+		    ref float roll,
+		    ref float deviation,
+		    ref float deviation_forward,
+		    ref float deviation_perp,
+		    ref float deviation_vertical)
+		{
+			x = 0;
+			y = 0;
+			z = 0;
+			pan = 0;
+			tilt = 0;
+			roll = 0;
+			deviation = 0;
+			deviation_forward = 0;
+			deviation_perp = 0;
+			deviation_vertical = 0;
+			for (int p  =0; p < Poses.Count; p++)
+			{
+				particlePose pose = Poses[p].current_pose;
+				x += pose.x;
+				y += pose.y;
+				z += pose.z;
+				float pan2 = pose.pan;
+				if (pan2 < -Math.PI) pan2 = -(2 * (float)Math.PI) - pan2;
+				if (pan2 > Math.PI) pan2 = (2 * (float)Math.PI) - pan2;
+				pan += pan2;
+				float tilt2 = pose.tilt;
+				if (tilt2 < -Math.PI) tilt2 = -(2 * (float)Math.PI) - tilt2;
+				if (tilt2 > Math.PI) tilt2 = (2 * (float)Math.PI) - tilt2;
+				tilt += tilt2;
+				roll += pose.roll;
+			}
+			if (Poses.Count > 0)
+			{
+				x /= Poses.Count;
+				y /= Poses.Count;
+				z /= Poses.Count;
+				pan /= Poses.Count;
+				tilt /= Poses.Count;
+				roll /= Poses.Count;
+				
+				float axis_x0 = x + (10 * (float)Math.Sin(pan));
+				float axis_y0 = y + (10 * (float)Math.Cos(pan));
+				float axis_x1 = x + (10 * (float)Math.Sin(pan + (Math.PI/2)));
+				float axis_y1 = y + (10 * (float)Math.Cos(pan + (Math.PI/2)));
+						
+			    for (int p  =0; p < Poses.Count; p++)
+			    {
+				    particlePose pose = Poses[p].current_pose;
+					float dx = x - pose.x;
+					float dy = y - pose.y;
+					float dz = z - pose.z;
+					float dev = (float)Math.Sqrt(dx*dx + dy*dy + dz*dz);
+					deviation += dev;
+					float d = Math.Abs(geometry.circleDistanceFromLine(x, y, axis_x0, axis_y0, pose.x, pose.y, 0));
+					deviation_forward += d;
+					d = Math.Abs(geometry.circleDistanceFromLine(x,y,axis_x1,axis_y1, pose.x, pose.y, 0));
+					deviation_perp += d;
+					deviation_vertical += Math.Abs(dz);
+				}
+				deviation /= Poses.Count;
+				deviation *= 4;
+				deviation_forward /= Poses.Count;
+				deviation_forward *= 4;
+				deviation_perp /= Poses.Count;
+				deviation_perp *= 4;
+				deviation_vertical /= Poses.Count;
+				deviation_vertical *= 4;
+			}
+		}
+		
+		private void ShowUncertaintyEllipse(
+		    byte[] img, int width, int height,
+            float min_x_mm, float min_y_mm,
+            float max_x_mm, float max_y_mm,
+		    int r, int g, int b)		                                    
+		{
+		    float x = 0;
+		    float y = 0;
+		    float z = 0;
+		    float pan = 0;
+		    float tilt = 0;
+		    float roll = 0;
+		    float deviation = 0;
+		    float deviation_forward = 0;
+		    float deviation_perp = 0;
+		    float deviation_vertical = 0;
+						
+		    AveragePose(
+		        ref x, 
+		        ref y, 
+		        ref z,
+		        ref pan,
+		        ref tilt,
+		        ref roll,
+		        ref deviation,
+		        ref deviation_forward,
+		        ref deviation_perp,
+		        ref deviation_vertical);
+			
+			int prev_img_x = 0;
+			int prev_img_y = 0;
+			int xx,yy;
+			float radius;
+			const int steps = 200;
+			for (int step = 0; step < steps; step++)
+			{
+				float angle = step * ((float)Math.PI * 2.0f) / (float)steps;
+				float xx0 = deviation_forward * (float)Math.Sin(angle);
+				float yy0 = deviation_perp * (float)Math.Cos(angle);
+				radius = (float)Math.Sqrt(xx0*xx0 + yy0*yy0);
+                xx = (int)(x + (radius * Math.Sin(pan + angle)));
+                yy = (int)(y + (radius * Math.Cos(pan + angle)));
+								
+				int img_x = (int)((xx - min_x_mm) * (width - 1) / (max_x_mm - min_x_mm));
+				int img_y = height - 1 - (int)((yy - min_y_mm) * (height - 1) / (max_y_mm - min_y_mm));
+				
+				if (step > 0)
+				{
+					drawing.drawLine(
+					    img, width, height, 
+					    img_x, img_y, 
+					    prev_img_x, prev_img_y, 
+					    r,g,b,
+					    0,false);
+				}
+				prev_img_x = img_x;
+				prev_img_y = img_y;
+			}
+			
+		}
 
         /// <summary>
         /// show the position uncertainty distribution within the given region
@@ -534,11 +675,16 @@ namespace dpslam.core
         /// <param name="min_y">bounding box top left y coordinate</param>
         /// <param name="max_x">bounding box bottom right x coordinate</param>
         /// <param name="max_y">bounding box bottom right y coordinate</param>
+        /// <param name="show_uncertainty_ellipse">whether to show the uncertainty ellipse</param>
+        /// <param name="show_path_tree">whether to show the path tree</param>
         /// <param name="clear_background">whether to clear the image before drawing</param>
-        public void Show(byte[] img, int width, int height,
-                         float min_x_mm, float min_y_mm,
-                         float max_x_mm, float max_y_mm,
-                         bool clear_background)
+        public void Show(
+		    byte[] img, int width, int height,
+            float min_x_mm, float min_y_mm,
+            float max_x_mm, float max_y_mm,
+		    bool show_uncertainty_ellipse,
+		    bool show_path_tree,
+            bool clear_background)
         {
             if (clear_background)
             {
@@ -565,9 +711,16 @@ namespace dpslam.core
                     }
                 }
             }
+			
+			if (show_uncertainty_ellipse)
+			    ShowUncertaintyEllipse(
+		            img, width, height,
+                    min_x_mm, min_y_mm,
+                    max_x_mm, max_y_mm,
+                    255, 0, 0);
 
             // show the path
-            ShowPath(img, width, height, 0, 255, 0, 0, min_x_mm, min_y_mm, max_x_mm, max_y_mm, false);
+            if (show_path_tree) ShowPath(img, width, height, 0, 255, 0, 0, min_x_mm, min_y_mm, max_x_mm, max_y_mm, false);
         }
 
 
