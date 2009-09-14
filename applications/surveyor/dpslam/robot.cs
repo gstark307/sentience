@@ -809,6 +809,22 @@ namespace dpslam.core
 
             clock.Stop();
             benchmark_prediction = clock.time_elapsed_mS;
+			
+		    float deviation = 0;
+		    float deviation_forward = 0;
+		    float deviation_perp = 0;
+		    float deviation_vertical = 0;
+            motion.AveragePose(
+		        ref x, 
+		        ref y, 
+		        ref z,
+		        ref pan,
+		        ref tilt,
+		        ref roll,
+		        ref deviation,
+		        ref deviation_forward,
+		        ref deviation_perp,
+		        ref deviation_vertical);
 
             storePreviousPosition();
         }
@@ -847,7 +863,23 @@ namespace dpslam.core
             clock.Start();
 
             motion.Predict(time_elapsed_sec);
-
+			
+		    float deviation = 0;
+		    float deviation_forward = 0;
+		    float deviation_perp = 0;
+		    float deviation_vertical = 0;
+            motion.AveragePose(
+		        ref x, 
+		        ref y, 
+		        ref z,
+		        ref pan,
+		        ref tilt,
+		        ref roll,
+		        ref deviation,
+		        ref deviation_forward,
+		        ref deviation_perp,
+		        ref deviation_vertical);
+			
             clock.Stop();
             benchmark_prediction = clock.time_elapsed_mS;
 

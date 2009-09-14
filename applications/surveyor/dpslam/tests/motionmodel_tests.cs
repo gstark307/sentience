@@ -128,19 +128,19 @@ namespace dpslam.core.tests
             int min_x_mm = 0;
             int min_y_mm = 0;
             int max_x_mm = 1000;
-            int max_y_mm = 1000;
+            int max_y_mm = 1200;
             int step_size = (max_y_mm - min_y_mm) / 15;
             int x = min_x_mm + ((max_x_mm - min_x_mm) / 2);
             bool initial = true;
             float pan = 0; // (float)Math.PI / 4;
-			rob.x = x-200;
+			rob.x = x;
 			rob.y = 0;
             for (int y = min_y_mm; y <= max_y_mm; y += step_size)
             {
                 if (closed_loop) surveyPosesDummy(rob);
 				List<byte[]> disparities = new List<byte[]>();
 				float forward_velocity = step_size;
-				float angular_velocity_pan = -4 * (float)Math.PI / 180.0f;
+				float angular_velocity_pan = 0 * (float)Math.PI / 180.0f;
 				rob.updateFromVelocities(disparities, forward_velocity, angular_velocity_pan, 0, 0, 1.0f);
                 
                 rob.motion.Show(

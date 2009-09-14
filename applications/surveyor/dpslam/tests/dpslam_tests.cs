@@ -163,7 +163,7 @@ namespace dpslam.core.tests
 		}
 		
 		[Test()]
-		public void CreateSimulation()
+		public void CreateSim()
 		{		
             int dimension_cells = 100;
             int dimension_cells_vertical = 20;

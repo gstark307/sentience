@@ -603,7 +603,7 @@ namespace dpslam.core
 				deviation_vertical *= 4;
 			}
 		}
-		
+				
 		private void ShowUncertaintyEllipse(
 		    byte[] img, int width, int height,
             float min_x_mm, float min_y_mm,
@@ -644,6 +644,7 @@ namespace dpslam.core
 				float xx0 = deviation_forward * (float)Math.Sin(angle);
 				float yy0 = deviation_perp * (float)Math.Cos(angle);
 				radius = (float)Math.Sqrt(xx0*xx0 + yy0*yy0);
+				angle = (float)Math.Atan2(xx0,yy0);
                 xx = (int)(x + (radius * Math.Sin(pan + angle)));
                 yy = (int)(y + (radius * Math.Cos(pan + angle)));
 								
