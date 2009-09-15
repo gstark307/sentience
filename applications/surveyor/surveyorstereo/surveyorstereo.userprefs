@@ -1,3 +1,42 @@
+<<<<<<< .mine
+﻿<Properties>
+  <MonoDevelop.Ide.Workbench ActiveDocument="c:\develop\sentience\applications\surveyor\surveyorlib\BaseVisionStereo.cs" ctype="Workbench">
+    <Files>
+      <File FileName="..\..\fishfood\MersenneTwister.cs" Line="1" Column="1" />
+      <File FileName="MainWindow.cs" Line="29" Column="22" />
+      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\GtkBitmap.cs" Line="147" Column="17" />
+      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\SurveyorVisionStereoGtk.cs" Line="69" Column="15" />
+      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\WebcamVisionStereoGtk.cs" Line="64" Column="15" />
+      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\BaseVisionStereo.cs" Line="1063" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="surveyorlib" expanded="True">
+            <Node name="References" expanded="True" />
+          </Node>
+          <Node name="surveyorstereo" expanded="True">
+            <Node name="References" expanded="True" selected="True" />
+            <Node name="DEBIAN" expanded="True" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.NUnit.TestPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
+=======
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/WebcamVisionStereoGtk.cs" ctype="Workbench">
     <Files>
@@ -40,4 +79,5 @@
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />
+>>>>>>> .r784
 </Properties>

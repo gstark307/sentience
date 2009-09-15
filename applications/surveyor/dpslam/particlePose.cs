@@ -299,8 +299,8 @@ namespace dpslam.core
                             camera_centre_location[cam].y,
 						    camera_centre_location[cam].z);
 					
-						Console.WriteLine("ray.vert[0] " + (trial_ray.vertices[0] == null).ToString());
-						Console.WriteLine("ray.vert[1] " + (trial_ray.vertices[1] == null).ToString());					
+						//Console.WriteLine("ray.vert[0] " + (trial_ray.vertices[0] == null).ToString());
+						//Console.WriteLine("ray.vert[1] " + (trial_ray.vertices[1] == null).ToString());					
 
                     // update the grid cells for this ray and update the
                     // localisation score accordingly					

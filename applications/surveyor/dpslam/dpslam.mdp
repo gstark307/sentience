@@ -1,50 +1,49 @@
 <Project name="dpslam" fileversion="2.0" language="C#" targetFramework="2.0" ctype="DotNetProject">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
-      <Output directory="bin/Debug" assembly="dpslam" />
+      <Output directory="bin\Debug" assembly="dpslam" />
       <Build debugmode="True" target="Library" />
-      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" />
-      <EnvironmentVariables />
+      <Execution consolepause="False" runwithwarnings="True" runtime="MsNet" />
       <CodeGeneration compiler="Mcs" warninglevel="3" optimize="False" unsafecodeallowed="True" generateoverflowchecks="False" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
     <Configuration name="Release" ctype="DotNetProjectConfiguration">
-      <Output directory="bin/Release" assembly="dpslam" />
+      <Output directory="bin\Release" assembly="dpslam" />
       <Build debugmode="False" target="Library" />
-      <Execution runwithwarnings="True" consolepause="False" runtime="MsNet" />
+      <Execution consolepause="False" runwithwarnings="True" runtime="MsNet" />
       <CodeGeneration compiler="Mcs" warninglevel="4" optimize="False" unsafecodeallowed="True" generateoverflowchecks="False" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
   </Configurations>
   <Contents>
-    <File name="dpslam.cs" subtype="Code" buildaction="Compile" />
-    <File name="AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
-    <File name="occupancyGridBase.cs" subtype="Code" buildaction="Compile" />
-    <File name="occupancyGridCell.cs" subtype="Code" buildaction="Compile" />
-    <File name="particleGridCell.cs" subtype="Code" buildaction="Compile" />
-    <File name="particlePath.cs" subtype="Code" buildaction="Compile" />
-    <File name="particlePose.cs" subtype="Code" buildaction="Compile" />
-    <File name="pos3D.cs" subtype="Code" buildaction="Compile" />
-    <File name="rayModelLookup.cs" subtype="Code" buildaction="Compile" />
-    <File name="evidenceRay.cs" subtype="Code" buildaction="Compile" />
-    <File name="robot.cs" subtype="Code" buildaction="Compile" />
-    <File name="MersenneTwister.cs" subtype="Code" buildaction="Compile" />
-    <File name="motionModel.cs" subtype="Code" buildaction="Compile" />
-    <File name="stereoHead.cs" subtype="Code" buildaction="Compile" />
-    <File name="stereoModel.cs" subtype="Code" buildaction="Compile" />
-    <File name="scanMatching.cs" subtype="Code" buildaction="Compile" />
-    <File name="tests" subtype="Directory" buildaction="Compile" />
-    <File name="tests/dpslam_tests.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils" subtype="Directory" buildaction="Compile" />
-    <File name="utils/ArrayConversions.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils/BitmapArrayConversions.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils/colours.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils/drawing.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils/geometry.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils/probabilities.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils/stopwatch.cs" subtype="Code" buildaction="Compile" />
-    <File name="utils/xml.cs" subtype="Code" buildaction="Compile" />
-    <File name="tests/motionmodel_tests.cs" subtype="Code" buildaction="Compile" />
-    <File name="dpslamServer.cs" subtype="Code" buildaction="Compile" />
-    <File name="ThreadServerReceive.cs" subtype="Code" buildaction="Compile" />
+    <File subtype="Code" buildaction="Compile" name="dpslam.cs" />
+    <File subtype="Code" buildaction="Compile" name="AssemblyInfo.cs" />
+    <File subtype="Code" buildaction="Compile" name="occupancyGridBase.cs" />
+    <File subtype="Code" buildaction="Compile" name="occupancyGridCell.cs" />
+    <File subtype="Code" buildaction="Compile" name="particleGridCell.cs" />
+    <File subtype="Code" buildaction="Compile" name="particlePath.cs" />
+    <File subtype="Code" buildaction="Compile" name="particlePose.cs" />
+    <File subtype="Code" buildaction="Compile" name="pos3D.cs" />
+    <File subtype="Code" buildaction="Compile" name="rayModelLookup.cs" />
+    <File subtype="Code" buildaction="Compile" name="evidenceRay.cs" />
+    <File subtype="Code" buildaction="Compile" name="robot.cs" />
+    <File subtype="Code" buildaction="Compile" name="MersenneTwister.cs" />
+    <File subtype="Code" buildaction="Compile" name="motionModel.cs" />
+    <File subtype="Code" buildaction="Compile" name="stereoHead.cs" />
+    <File subtype="Code" buildaction="Compile" name="stereoModel.cs" />
+    <File subtype="Code" buildaction="Compile" name="scanMatching.cs" />
+    <File subtype="Directory" buildaction="Compile" name="tests" />
+    <File subtype="Code" buildaction="Compile" name="tests\dpslam_tests.cs" />
+    <File subtype="Directory" buildaction="Compile" name="utils" />
+    <File subtype="Code" buildaction="Compile" name="utils\ArrayConversions.cs" />
+    <File subtype="Code" buildaction="Compile" name="utils\BitmapArrayConversions.cs" />
+    <File subtype="Code" buildaction="Compile" name="utils\colours.cs" />
+    <File subtype="Code" buildaction="Compile" name="utils\drawing.cs" />
+    <File subtype="Code" buildaction="Compile" name="utils\geometry.cs" />
+    <File subtype="Code" buildaction="Compile" name="utils\probabilities.cs" />
+    <File subtype="Code" buildaction="Compile" name="utils\stopwatch.cs" />
+    <File subtype="Code" buildaction="Compile" name="utils\xml.cs" />
+    <File subtype="Code" buildaction="Compile" name="tests\motionmodel_tests.cs" />
+    <File subtype="Code" buildaction="Compile" name="dpslamServer.cs" />
+    <File subtype="Code" buildaction="Compile" name="ThreadServerReceive.cs" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

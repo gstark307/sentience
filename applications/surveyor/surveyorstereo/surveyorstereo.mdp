@@ -1,3 +1,83 @@
+<<<<<<< .mine
+<Project name="surveyorstereo" fileversion="2.0" language="C#" clr-version="Net_2_0" targetFramework="2.0" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="DotNetProjectConfiguration">
+      <Output directory="bin\Debug" assembly="surveyorstereo" />
+      <Build debugmode="True" target="Exe" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" ctype="DotNetProjectConfiguration">
+      <Output directory="bin\Release" assembly="surveyorstereo" />
+      <Build debugmode="False" target="Exe" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" clr-version="Net_2_0" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="False" generateoverflowchecks="True" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <Contents>
+    <File subtype="Code" buildaction="EmbedAsResource" name="gtk-gui\gui.stetic" />
+    <File subtype="Code" buildaction="Compile" name="gtk-gui\generated.cs" />
+    <File subtype="Code" buildaction="Compile" name="MainWindow.cs" />
+    <File subtype="Code" buildaction="Compile" name="gtk-gui\MainWindow.cs" />
+    <File subtype="Code" buildaction="Compile" name="Main.cs" />
+    <File subtype="Code" buildaction="Compile" name="AssemblyInfo.cs" />
+    <File subtype="Code" name="beep.wav" buildaction="FileCopy" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\111.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\160.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\320.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\640.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\1280.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\avoid.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\back.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\backleft.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\backright.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\blank.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\ccw.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\cw.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\diff-off.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\diff-on.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\driftleft.png" DeployService.UseProjectRelativePath="True" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\driftright.png" DeployService.UseProjectRelativePath="True" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\forward.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\invert.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\jpg.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\laser.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\mot5.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\mot7.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\mot9.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\no-avoid.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\no-laser.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\no-vid.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\no-wander.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\prop-00.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\prop-45.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\prop-90.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\prop-135.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\raw.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\reset.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\restore.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\stop.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\turnleft.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\turnright.png" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="buttons\wander.png" />
+    <File subtype="Code" buildaction="Nothing" name="DEBIAN\control" />
+    <File subtype="Code" buildaction="Nothing" name="DEBIAN\copyright" />
+    <File subtype="Code" buildaction="Nothing" name="DEBIAN\install" />
+  </Contents>
+  <References>
+    <ProjectReference type="Gac" localcopy="True" refto="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <ProjectReference type="Gac" localcopy="True" refto="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <ProjectReference type="Gac" localcopy="True" refto="glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <ProjectReference type="Gac" localcopy="True" refto="glade-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <ProjectReference type="Gac" localcopy="True" refto="pango-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference type="Gac" localcopy="True" refto="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756" />
+    <ProjectReference type="Gac" localcopy="True" refto="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference type="Project" localcopy="True" refto="surveyorlib" />
+    <ProjectReference type="Gac" localcopy="True" refto="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+  </References>
+=======
 <Project name="surveyorstereo" fileversion="2.0" language="C#" clr-version="Net_2_0" targetFramework="2.0" ctype="DotNetProject">
   <Configurations active="Debug">
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
@@ -77,4 +157,5 @@
     <ProjectReference type="Project" localcopy="True" refto="surveyorlib" />
     <ProjectReference type="Gac" localcopy="True" refto="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
   </References>
+>>>>>>> .r784
 </Project>

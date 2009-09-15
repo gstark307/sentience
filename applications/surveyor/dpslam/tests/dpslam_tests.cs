@@ -215,18 +215,26 @@ namespace dpslam.core.tests
 			sensor_model.InitSurveyorSVS();
 			
 			rob.head.sensormodel[0] = sensor_model;
-			
+
 			float time_elapsed_sec = 1;
-			float forward_velocity = 30;
+			float forward_velocity = 50;
 			float angular_velocity_pan = 0;
 			float angular_velocity_tilt = 0;
 			float angular_velocity_roll = 0;
-			for (float t = 0; t < 4; t += time_elapsed_sec)
+            float min_x_mm = -((dimension_cells / 2) * cellSize_mm) / 3;
+            float min_y_mm = -((dimension_cells / 2) * cellSize_mm) / 3;
+            float max_x_mm = -min_x_mm;
+            float max_y_mm = -min_y_mm;
+            for (float t = 0.0f; t < 6; t += time_elapsed_sec)
 			{
   			    rob.updateFromVelocities(sim, forward_velocity, angular_velocity_pan, angular_velocity_tilt, angular_velocity_roll, time_elapsed_sec);
 				Console.WriteLine("xy: " + rob.x.ToString() + " " + rob.y.ToString());
+                
+                rob.motion.Show(img, img_width, img_width, min_x_mm, min_y_mm, max_x_mm, max_y_mm, true, false, t == 0.0f);
 			}
 			rob.SaveGridImage("dpslam_tests_CreateSimulation2.bmp");
+            BitmapArrayConversions.updatebitmap_unsafe(img, bmp);
+            bmp.Save("dpslam_tests_CreateSimulation3.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 		}
 		
 	}

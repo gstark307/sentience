@@ -1,31 +1,24 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../dpslam/tests/dpslam_tests.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="..\dpslam\tests\dpslam_tests.cs" ctype="Workbench">
     <Files>
-      <File FileName="Main.cs" Line="119" Column="74" />
-      <File FileName="../dpslam/dpslamServer.cs" Line="70" Column="1" />
-      <File FileName="../dpslam/tests/dpslam_tests.cs" Line="225" Column="5" />
-      <File FileName="../dpslam/robot.cs" Line="493" Column="1" />
-      <File FileName="../dpslam/motionModel.cs" Line="920" Column="1" />
-      <File FileName="../dpslam/dpslam.cs" Line="146" Column="1" />
+      <File FileName="Main.cs" Line="1" Column="1" />
+      <File FileName="..\dpslam\dpslamServer.cs" Line="1" Column="1" />
+      <File FileName="..\dpslam\tests\dpslam_tests.cs" Line="225" Column="5" />
+      <File FileName="..\dpslam\robot.cs" Line="1" Column="1" />
+      <File FileName="..\dpslam\motionModel.cs" Line="1" Column="1" />
+      <File FileName="..\dpslam\dpslam.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="dpslam" expanded="True">
-            <Node name="tests" expanded="True">
-              <Node name="dpslam_tests.cs" selected="True" />
-            </Node>
-          </Node>
-          <Node name="dpslamserver" expanded="True">
-            <Node name="Properties" expanded="True" />
-          </Node>
+          <Node name="dpslamserver" expanded="True" selected="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
         <State selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True" selected="True" />
+        <State selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State />
@@ -35,6 +28,8 @@
   <MonoDevelop.Ide.DebuggingService>
     <BreakpointStore>
       <Breakpoint file="/home/motters/develop/sentience/applications/surveyor/dpslam/tests/dpslam_tests.cs" line="229" />
+      <Breakpoint file="C:\develop\sentience\applications\surveyor\dpslam\tests\dpslam_tests.cs" line="229" />
+      <Breakpoint file="C:\develop\sentience\applications\surveyor\dpslam\tests\dpslam_tests.cs" line="227" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ctype="Workspace" />

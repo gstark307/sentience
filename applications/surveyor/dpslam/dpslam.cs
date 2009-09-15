@@ -195,6 +195,9 @@ namespace dpslam.core
 					}
 				}
 			}
+
+            Console.WriteLine("no_of_features " + no_of_features.ToString());
+
 			if (nothing_seen) Console.WriteLine("createSimulatedObservation: nothing seen");
 			head.setStereoFeatures(stereo_camera_index, features, no_of_features);
 			head.setStereoFeatureColours(stereo_camera_index, featureColours, no_of_features);
