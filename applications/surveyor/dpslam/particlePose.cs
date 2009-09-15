@@ -288,7 +288,7 @@ namespace dpslam.core
                     // observed ray.  Note that this is in an egocentric
                     // coordinate frame relative to the head of the robot
                     evidenceRay ray = stereo_rays[cam][r];
-
+										
                     // translate and rotate this ray appropriately for the pose
                     evidenceRay trial_ray = 
 						ray.trialPose(
@@ -298,9 +298,13 @@ namespace dpslam.core
                             camera_centre_location[cam].x, 
                             camera_centre_location[cam].y,
 						    camera_centre_location[cam].z);
+					
+						Console.WriteLine("ray.vert[0] " + (trial_ray.vertices[0] == null).ToString());
+						Console.WriteLine("ray.vert[1] " + (trial_ray.vertices[1] == null).ToString());					
 
                     // update the grid cells for this ray and update the
-                    // localisation score accordingly
+                    // localisation score accordingly					
+					
                     float score =
                         LocalGrid.Insert(
 						    trial_ray, this, 

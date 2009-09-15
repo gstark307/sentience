@@ -251,6 +251,12 @@ namespace dpslam.core
             rotated_ray.vertices[0].y += translation_y;
             rotated_ray.vertices[0].z += translation_z;
 
+			pos3D r2 = new pos3D(0, start_dist+length, 0);			
+            rotated_ray.vertices[1] = r2.rotate(new_pan_angle, new_tilt_angle, new_roll_angle);
+            rotated_ray.vertices[1].x += translation_x;
+            rotated_ray.vertices[1].y += translation_y;
+            rotated_ray.vertices[1].z += translation_z;
+			
             rotated_ray.pan_angle = new_pan_angle;
 			rotated_ray.tilt_angle = new_tilt_angle;
 			rotated_ray.roll_angle = new_roll_angle;

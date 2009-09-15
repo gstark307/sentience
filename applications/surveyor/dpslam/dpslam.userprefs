@@ -1,37 +1,26 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="robot.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="tests/motionmodel_tests.cs" ctype="Workbench">
     <Files>
-      <File FileName="tests/motionmodel_tests.cs" Line="141" Column="1" />
-      <File FileName="motionModel.cs" Line="758" Column="8" />
-      <File FileName="robot.cs" Line="572" Column="1" />
-      <File FileName="tests/dpslam_tests.cs" Line="154" Column="39" />
+      <File FileName="tests/motionmodel_tests.cs" Line="135" Column="19" />
+      <File FileName="motionModel.cs" Line="911" Column="6" />
+      <File FileName="robot.cs" Line="409" Column="1" />
+      <File FileName="dpslam.cs" Line="640" Column="45" />
+      <File FileName="evidenceRay.cs" Line="258" Column="13" />
+      <File FileName="dpslamServer.cs" Line="1105" Column="56" />
+      <File FileName="ThreadServerReceive.cs" Line="40" Column="40" />
+      <File FileName="tests/dpslam_tests.cs" Line="169" Column="17" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="dpslam" expanded="True">
-            <Node name="tests" expanded="True" />
-            <Node name="robot.cs" selected="True" />
-          </Node>
+          <Node name="dpslam" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True">
-          <Node name="dpslam" expanded="True">
-            <Node name="dpslam" expanded="True">
-              <Node name="core" expanded="True">
-                <Node name="tests" expanded="True">
-                  <Node name="motionmodel_tests" expanded="True">
-                    <Node name="Create" selected="True" />
-                  </Node>
-                </Node>
-              </Node>
-            </Node>
-          </Node>
-        </State>
+        <State expanded="True" />
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State />

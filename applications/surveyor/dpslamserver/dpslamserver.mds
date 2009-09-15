@@ -1,0 +1,20 @@
+<Combine fileversion="2.0" name="motionserver">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="dpslamserver" configuration="Debug" />
+      <Entry build="True" name="dpslam" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="dpslamserver" configuration="Release" />
+      <Entry build="True" name="dpslam" configuration="Release" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="dpslamserver" single="True">
+    <Execute type="None" entry="dpslamserver" />
+    <Execute type="None" entry="dpslam" />
+  </StartMode>
+  <Entries>
+    <Entry filename="dpslamserver.mdp" />
+    <Entry filename="../dpslam/dpslam.mdp" />
+  </Entries>
+</Combine>

@@ -596,7 +596,7 @@ namespace dpslam.core
                     {
                         // convert from camera-centric coordinates to head coordinates
                         ray.translateRotate(cameraOrientation);
-
+						
                         // add to the result
                         result.Add(ray);
                     }

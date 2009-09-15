@@ -162,8 +162,8 @@ namespace dpslam.core.tests
 			Assert.IsTrue(dist < 20, "dist out of range = " + dist.ToString());
 		}
 		
-		[Test()]
-		public void CreateSim()
+		//[Test()]
+		public static void CreateSim()
 		{		
             int dimension_cells = 100;
             int dimension_cells_vertical = 20;
@@ -221,7 +221,7 @@ namespace dpslam.core.tests
 			float angular_velocity_pan = 0;
 			float angular_velocity_tilt = 0;
 			float angular_velocity_roll = 0;
-			for (float t = 0; t < 30; t += time_elapsed_sec)
+			for (float t = 0; t < 4; t += time_elapsed_sec)
 			{
   			    rob.updateFromVelocities(sim, forward_velocity, angular_velocity_pan, angular_velocity_tilt, angular_velocity_roll, time_elapsed_sec);
 				Console.WriteLine("xy: " + rob.x.ToString() + " " + rob.y.ToString());
