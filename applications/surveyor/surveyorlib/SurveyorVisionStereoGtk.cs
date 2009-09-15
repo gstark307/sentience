@@ -21,11 +21,7 @@ using System;
 using System.Threading;
 using System.Drawing;
 using Gdk;
-<<<<<<< .mine
-using Gtk; //Gnome;
-=======
 using Gtk;
->>>>>>> .r784
 using sluggish.utilities;
 using sluggish.utilities.gtk;
 
@@ -68,11 +64,6 @@ namespace surveyor.vision
         /// </summary>
         /// <param name="sound_filename"></param>
         private void PlaySound(string sound_filename)
-<<<<<<< .mine
-        {
-            //Gnome.Sound.Init("localhost");
-            //Gnome.Sound.Play(sound_filename);
-=======
         {
             System.Media.SoundPlayer myPlayer = new System.Media.SoundPlayer();
             myPlayer.SoundLocation = sound_filename;
@@ -80,7 +71,6 @@ namespace surveyor.vision
             
             //Gnome.Sound.Init("localhost");
             //Gnome.Sound.Play(sound_filename);
->>>>>>> .r784
         }
         
         #endregion
@@ -103,8 +93,8 @@ namespace surveyor.vision
         /// refreshes the GUI images
         /// </summary>
         /// <param name="window">Gtk window to be refreshed</param>
-        private void UpdateGUI(Gtk.Window window, Gtk.Window calibration_window)
-        {            
+        public void UpdateGUI(Gtk.Window window, Gtk.Window calibration_window)
+        {
             window.GdkWindow.ProcessUpdates(true);
             if (calibration_window != null) 
                 calibration_window.GdkWindow.ProcessUpdates(true);			
