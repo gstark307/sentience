@@ -1,6 +1,6 @@
 /*
-    Surveyor stereo camera
-    Copyright (C) 2008 Bob Mottram
+    Surveyor Stereo GUI
+    Copyright (C) 2009 Bob Mottram
     fuzzgun@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ namespace surveyorstereo
         string path_identifier = "log";
         string replay_path_identifier = "log";
 
-        string manual_camera_alignment_program = "calibtweaks.exe";
+        string manual_camera_alignment_program = "stereotweaks.exe";
         bool reverse_colours = true;
         bool motors_active;
         int motors_tries = 5;
@@ -445,6 +445,150 @@ namespace surveyorstereo
                 else
                     stereo_camera.DisableEmbeddedStereo();
             }
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            About frm = new About();
+            frm.ShowDialog();
+        }
+
+        private void LoadManualCameraAlignmentCalibrationParameters(string filename)
+        {
+            StreamReader oRead = null;
+            string str;
+            bool filefound = true;
+
+            try
+            {
+                oRead = File.OpenText(filename);
+            }
+            catch
+            {
+                filefound = false;
+            }
+
+            if (filefound)
+            {
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    string left_image_filename = str;
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    string right_image_filename = str;
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    stereo_camera.offset_x = Convert.ToSingle(str);
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    stereo_camera.offset_y = Convert.ToSingle(str);
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    stereo_camera.scale = Convert.ToSingle(str);
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    stereo_camera.rotation = Convert.ToSingle(str) * (float)Math.PI / 180.0f;
+                }
+
+                str = oRead.ReadLine();
+                if (str != null)
+                {
+                    float delay_mS = Convert.ToInt32(str);
+                }
+
+                oRead.Close();
+            }
+        }
+
+        private void SaveImages(
+            string left_image_filename,
+            string right_image_filename)
+        {
+            Bitmap left_bmp = (Bitmap)picLeftImage.Image.Clone();
+            Bitmap right_bmp = (Bitmap)picRightImage.Image.Clone();
+            if (left_image_filename.ToLower().EndsWith("png"))
+            {
+                left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Png);
+                right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Png);
+            }
+            if (left_image_filename.ToLower().EndsWith("bmp"))
+            {
+                left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+                right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Bmp);
+            }
+            if (left_image_filename.ToLower().EndsWith("gif"))
+            {
+                left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Gif);
+                right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Gif);
+            }
+            if (left_image_filename.ToLower().EndsWith("jpg"))
+            {
+                left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+                right_bmp.Save(right_image_filename, System.Drawing.Imaging.ImageFormat.Jpeg);
+            }
+        }
+
+        private void RunTweaks()
+        {
+            if ((picLeftImage.Image != null) && (picRightImage.Image != null))
+            {
+                string left_filename = System.Environment.CurrentDirectory + "\\calib0.bmp";
+                string right_filename = System.Environment.CurrentDirectory + "\\calib1.bmp";
+                SaveImages(left_filename, right_filename);
+
+                if ((File.Exists(left_filename)) &&
+                    (File.Exists(right_filename)))
+                {
+                    System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                    proc.EnableRaisingEvents = false;
+
+                    proc.StartInfo.FileName = manual_camera_alignment_program;
+
+                    proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
+                    proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
+                    proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
+                    proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
+                    proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
+                    proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
+                    if (reverse_colours) proc.StartInfo.Arguments += " -reverse";
+
+                    Console.WriteLine(manual_camera_alignment_program + " " + proc.StartInfo.Arguments);
+                    try
+                    {
+                        proc.Start();
+                        proc.WaitForExit();
+
+                        string params_filename = "manualoffsets_params.txt";
+                        LoadManualCameraAlignmentCalibrationParameters(params_filename);
+                        stereo_camera.Save(calibration_filename);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+            }
+        }
+
+        private void tweaksToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RunTweaks();
         }
 
     }

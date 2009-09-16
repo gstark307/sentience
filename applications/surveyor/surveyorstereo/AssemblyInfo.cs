@@ -9,8 +9,8 @@ using System.Runtime.CompilerServices;
 // Information about this assembly is defined by the following attributes. 
 // Change them to the values specific to your project.
 
-[assembly: AssemblyTitle("surveyorstereo")]
-[assembly: AssemblyDescription("A test GUI for surveyor robots with multiple cameras")]
+[assembly: AssemblyTitle("SurveyorStereo")]
+[assembly: AssemblyDescription("A GUI for use with the Surveyor SVS")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("")]
@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 // The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
 // If the build and revision are set to '*' they will be updated automatically.
 
-[assembly: AssemblyVersion("0.3.0.0")]
+[assembly: AssemblyVersion("0.3.1.0")]
 
 // The following attributes are used to specify the signing key for the assembly, 
 // if desired. See the Mono documentation for more information about signing.

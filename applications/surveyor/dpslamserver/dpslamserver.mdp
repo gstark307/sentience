@@ -1,0 +1,25 @@
+<Project name="dpslamserver" fileversion="2.0" language="C#" targetFramework="3.5" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="DotNetProjectConfiguration">
+      <Output directory="bin\Debug" assembly="dpslamserver" />
+      <Build debugmode="True" target="Exe" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="False" unsafecodeallowed="False" generateoverflowchecks="False" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" ctype="DotNetProjectConfiguration">
+      <Output directory="bin\Release" assembly="dpslamserver" />
+      <Build debugmode="False" target="Exe" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="False" unsafecodeallowed="False" generateoverflowchecks="False" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <Contents>
+    <File subtype="Code" buildaction="Compile" name="Main.cs" />
+    <File subtype="Code" buildaction="Compile" name="Properties\AssemblyInfo.cs" />
+    <File subtype="Code" buildaction="Compile" name="commandline.cs" />
+  </Contents>
+  <References>
+    <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference type="Project" localcopy="True" refto="dpslam" />
+  </References>
+</Project>

@@ -75,6 +75,9 @@ namespace surveyorstereo
             this.lblLogName = new System.Windows.Forms.Label();
             this.txtReplay = new System.Windows.Forms.TextBox();
             this.txtLogging = new System.Windows.Forms.TextBox();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tweaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLeftImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRightImage)).BeginInit();
@@ -87,7 +90,8 @@ namespace surveyorstereo
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.toolsToolStripMenuItem,
-            this.algorithmToolStripMenuItem});
+            this.algorithmToolStripMenuItem,
+            this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(610, 24);
@@ -131,6 +135,7 @@ namespace surveyorstereo
             this.calibrateLeftCameraToolStripMenuItem,
             this.calibrateRightCameraToolStripMenuItem,
             this.calibrateCameraAlignmentToolStripMenuItem,
+            this.tweaksToolStripMenuItem,
             this.enableEmbeddedStereoToolStripMenuItem,
             this.enableLoggingToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
@@ -525,6 +530,28 @@ namespace surveyorstereo
             this.txtLogging.Size = new System.Drawing.Size(104, 20);
             this.txtLogging.TabIndex = 0;
             // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // tweaksToolStripMenuItem
+            // 
+            this.tweaksToolStripMenuItem.Name = "tweaksToolStripMenuItem";
+            this.tweaksToolStripMenuItem.Size = new System.Drawing.Size(222, 22);
+            this.tweaksToolStripMenuItem.Text = "Tweaks";
+            this.tweaksToolStripMenuItem.Click += new System.EventHandler(this.tweaksToolStripMenuItem_Click);
+            // 
             // frmStereo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -537,7 +564,7 @@ namespace surveyorstereo
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmStereo";
-            this.Text = "Surveyor Stereo Vision Test";
+            this.Text = "Surveyor SVS";
             this.SizeChanged += new System.EventHandler(this.frmStereo_SizeChanged);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmStereo_FormClosing);
             this.ResizeEnd += new System.EventHandler(this.frmStereo_ResizeEnd);
@@ -601,6 +628,9 @@ namespace surveyorstereo
         private System.Windows.Forms.Button cmdReplay;
         private System.Windows.Forms.Button cmdReplayStop;
         private System.Windows.Forms.Label lblReplayState;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem tweaksToolStripMenuItem;
     }
 }
 

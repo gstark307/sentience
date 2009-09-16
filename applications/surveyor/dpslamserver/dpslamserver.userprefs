@@ -1,15 +1,14 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="Main.cs" ctype="Workbench">
     <Files>
-      <File FileName="Main.cs" Line="1" Column="1" />
+      <File FileName="Main.cs" Line="37" Column="13" />
       <File FileName="commandline.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="dpslam" selected="True" />
           <Node name="dpslamserver" expanded="True">
-            <Node name="References" expanded="True" />
+            <Node name="References" selected="True" />
           </Node>
         </State>
       </Pad>
@@ -17,7 +16,17 @@
         <State selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State selected="True" />
+        <State expanded="True" selected="True">
+          <Node name="dpslam" expanded="True">
+            <Node name="dpslam" expanded="True">
+              <Node name="core" expanded="True">
+                <Node name="tests" expanded="True">
+                  <Node name="motionmodel_tests" expanded="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State />
