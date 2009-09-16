@@ -23,4 +23,5 @@
     <ProjectReference type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     <ProjectReference type="Project" localcopy="True" refto="dpslam" />
   </References>
+  <LanguageParameters StartupObject="dpslam.server.MainClass" ctype="CSharpProjectParameters" />
 </Project>

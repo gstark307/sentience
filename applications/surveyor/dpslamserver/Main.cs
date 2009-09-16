@@ -62,7 +62,6 @@ namespace dpslam.server
 
                     Console.WriteLine("DP-SLAM Server version 0.1");
                     
-                    bool Attached = false;
                     dpslamServer server = null;
                     
                     // create the server
