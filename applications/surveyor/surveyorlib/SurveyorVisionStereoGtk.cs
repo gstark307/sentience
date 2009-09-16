@@ -243,11 +243,11 @@ namespace surveyor.vision
                 // Here we need to update the GUI after receiving the right camera image
                 // Since we're running in a separate thread from the GUI we have to
                 // call it in a special way
-                RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
+                //RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
 				
-                Gdk.Threads.Enter();
-                window.QueueDraw();
-                Gdk.Threads.Leave();
+                //Gdk.Threads.Enter();
+                //window.QueueDraw();
+                //Gdk.Threads.Leave();
             }
             
         }

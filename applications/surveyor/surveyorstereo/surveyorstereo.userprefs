@@ -3,19 +3,20 @@
   <MonoDevelop.Ide.DebuggingService>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService>
-  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="c:\develop\sentience\applications\surveyor\surveyorlib\SurveyorVisionStereoGtk.cs" ctype="Workbench">
     <Files>
-      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\SurveyorVisionStereoGtk.cs" Line="101" Column="1" />
-      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\WebcamVisionStereoGtk.cs" Line="254" Column="1" />
-      <File FileName="Main.cs" Line="35" Column="9" />
-      <File FileName="MainWindow.cs" Line="80" Column="20" />
+      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\SurveyorVisionStereoGtk.cs" Line="251" Column="14" />
+      <File FileName="c:\develop\sentience\applications\surveyor\surveyorlib\WebcamVisionStereoGtk.cs" Line="1" Column="1" />
+      <File FileName="Main.cs" Line="1" Column="1" />
+      <File FileName="MainWindow.cs" Line="59" Column="11" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorstereo" expanded="True">
-            <Node name="MainWindow.cs" selected="True" />
+          <Node name="surveyorlib" expanded="True">
+            <Node name="SurveyorVisionStereoGtk.cs" selected="True" />
           </Node>
+          <Node name="surveyorstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
