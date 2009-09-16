@@ -7,7 +7,10 @@
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="dpslamserver" expanded="True" selected="True" />
+          <Node name="dpslam" selected="True" />
+          <Node name="dpslamserver" expanded="True">
+            <Node name="References" expanded="True" />
+          </Node>
         </State>
       </Pad>
       <Pad Id="ClassPad">
