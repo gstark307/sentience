@@ -1,7 +1,7 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workbench ActiveDocument="..\surveyorlib\SurveyorVisionStereo.cs" ctype="Workbench">
     <Files>
-      <File FileName="MainWindow.cs" Line="121" Column="6" />
+      <File FileName="MainWindow.cs" Line="1" Column="1" />
       <File FileName="..\surveyorlib\SurveyorVisionStereo.cs" Line="374" Column="14" />
     </Files>
     <Pads>
