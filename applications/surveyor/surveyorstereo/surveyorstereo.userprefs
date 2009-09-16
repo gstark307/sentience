@@ -1,13 +1,15 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="..\surveyorlib\SurveyorVisionStereo.cs" ctype="Workbench">
     <Files>
-      <File FileName="Main.cs" Line="1" Column="1" />
-      <File FileName="MainWindow.cs" Line="384" Column="72" />
+      <File FileName="MainWindow.cs" Line="121" Column="6" />
+      <File FileName="..\surveyorlib\SurveyorVisionStereo.cs" Line="374" Column="14" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="surveyorlib" expanded="True" />
+          <Node name="surveyorlib" expanded="True">
+            <Node name="SurveyorVisionStereo.cs" selected="True" />
+          </Node>
           <Node name="surveyorstereo" expanded="True">
             <Node name="UserInterface" expanded="True">
               <Node name="MainWindow">
@@ -15,7 +17,7 @@
                 <Option id="ShowVersionControlOverlays" value="True" />
               </Node>
             </Node>
-            <Node name="MainWindow.cs" selected="True" />
+            <Node name="DEBIAN" expanded="True" />
           </Node>
         </State>
       </Pad>

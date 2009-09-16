@@ -113,6 +113,7 @@ public partial class MainWindow: Gtk.Window
     private void CloseForm()
     {
         stereo_camera.Stop();
+		Thread.Sleep(2000);
         Application.Quit ();
     }
     
@@ -123,11 +124,12 @@ public partial class MainWindow: Gtk.Window
 		
         CloseForm();
         a.RetVal = true;
+		
     }
 
     protected virtual void OnExitActionActivated (object sender, System.EventArgs e)
     {
-        //CloseForm();
+        CloseForm();
     }
 
     private void ShowDotPattern(Gtk.Image dest_img)

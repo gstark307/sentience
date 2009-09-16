@@ -306,7 +306,7 @@ namespace surveyor.vision
 			{
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
-                sync_thread.Start(); 			
+                if (Running) sync_thread.Start(); 			
 			}
         }
 
@@ -364,12 +364,13 @@ namespace surveyor.vision
         {
             if (Running)
             {
+				Running = false;
                 for (int cam = 0; cam < 2; cam++)
                 {
                     camera[cam].StopStream();
                     camera[cam].Stop();
                 }
-                if (sync_thread != null) sync_thread.Abort();
+                //if (sync_thread != null) sync_thread.Abort();
             }
         }
         
