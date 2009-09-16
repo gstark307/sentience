@@ -68,9 +68,6 @@ namespace surveyor.vision
             System.Media.SoundPlayer myPlayer = new System.Media.SoundPlayer();
             myPlayer.SoundLocation = sound_filename;
             myPlayer.Play();
-            
-            //Gnome.Sound.Init("localhost");
-            //Gnome.Sound.Play(sound_filename);
         }
         
         #endregion
@@ -240,14 +237,17 @@ namespace surveyor.vision
             
             if (window != null)
             {
-                // Here we need to update the GUI after receiving the right camera image
-                // Since we're running in a separate thread from the GUI we have to
-                // call it in a special way
-                //RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
-				
-                //Gdk.Threads.Enter();
-                //window.QueueDraw();
-                //Gdk.Threads.Leave();
+                if (!IsWindows())
+                {
+                    // Here we need to update the GUI after receiving the right camera image
+                    // Since we're running in a separate thread from the GUI we have to
+                    // call it in a special way
+                    RunOnMainThread.Run(this, "UpdateGUI", new object[] { window, calibration_window });
+    				
+                    Gdk.Threads.Enter();
+                    window.QueueDraw();
+                    Gdk.Threads.Leave();
+                }
             }
             
         }

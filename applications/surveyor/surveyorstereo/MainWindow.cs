@@ -42,7 +42,7 @@ public partial class MainWindow: Gtk.Window
 	string path_identifier = "log";
 	string replay_path_identifier = "log";
 
-	string manual_camera_alignment_calibration_program = "calibtweaks.exe";
+	string manual_camera_alignment_calibration_program = "stereotweaks.exe";
     //bool disable_rectification = true; // false;
     //bool disable_radial_correction = true;
 	bool reverse_colours = true;
@@ -57,6 +57,8 @@ public partial class MainWindow: Gtk.Window
         Build ();
 		
 		//SaveHpolarLookup();
+		
+		if (BaseVisionStereo.IsWindows()) zip_utility = "zip";
 
         byte[] img = new byte[image_width * image_height * 3];
         Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -125,19 +127,7 @@ public partial class MainWindow: Gtk.Window
 
     protected virtual void OnExitActionActivated (object sender, System.EventArgs e)
     {
-        CloseForm();
-    }
-
-    protected virtual void OnRecordImagesActionActivated (object sender, System.EventArgs e)
-    {
-        RecordImagesAction.Active = !RecordImagesAction.Active;
-        stereo_camera.Record = RecordImagesAction.Active;
-    }
-
-    protected virtual void OnChkRecordClicked (object sender, System.EventArgs e)
-    {
-        stereo_camera.Record = !stereo_camera.Record;
-        chkRecord.Active = stereo_camera.Record; 
+        //CloseForm();
     }
 
     private void ShowDotPattern(Gtk.Image dest_img)
@@ -390,15 +380,19 @@ public partial class MainWindow: Gtk.Window
             {
                 System.Diagnostics.Process proc = new System.Diagnostics.Process();
                 proc.EnableRaisingEvents = false;
-                proc.StartInfo.FileName = "mono " + manual_camera_alignment_calibration_program;
-                proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
+				
+                proc.StartInfo.FileName = manual_camera_alignment_calibration_program;
+				
+				proc.StartInfo.Arguments = "-left " + '"' + left_filename + '"' + " ";
                 proc.StartInfo.Arguments += "-right " + '"' + right_filename + '"' + " ";
                 proc.StartInfo.Arguments += "-offsetx " + stereo_camera.offset_x.ToString() + " ";
                 proc.StartInfo.Arguments += "-offsety " + stereo_camera.offset_y.ToString() + " ";
                 proc.StartInfo.Arguments += "-scale " + stereo_camera.scale.ToString() + " ";
-                proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();
+                proc.StartInfo.Arguments += "-rotation " + (stereo_camera.rotation * 180 / (float)Math.PI).ToString();				
 				if (reverse_colours) proc.StartInfo.Arguments += " -reverse";
-                proc.Start();
+				
+                Console.WriteLine(manual_camera_alignment_calibration_program + " " + proc.StartInfo.Arguments);
+				proc.Start();
                 proc.WaitForExit();
 
                 string params_filename = "manualoffsets_params.txt";
@@ -608,7 +602,7 @@ public partial class MainWindow: Gtk.Window
             (!stereo_camera.Record))
         {
             lblReplayState.Text = "Playing";
-            stereo_camera.RunReplay(teleoperation_log, "tar", log_path, replay_path_identifier);
+            stereo_camera.RunReplay(teleoperation_log, zip_utility, log_path, replay_path_identifier);
         }
     }
         protected virtual void OnCmdReplayStopClicked (object sender, System.EventArgs e)

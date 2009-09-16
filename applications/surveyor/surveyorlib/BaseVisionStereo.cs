@@ -1376,7 +1376,7 @@ namespace surveyor.vision
             }
             else
             {
-                Console.WriteLine("Warning: Images not rectified");
+                //Console.WriteLine("Warning: Images not rectified");
             }
 
             if (!broadcasting)
@@ -1422,7 +1422,7 @@ namespace surveyor.vision
         /// <summary>
         /// Are we on Windows? - uh oh
         /// </summary>
-        protected static bool IsWindows()
+        public static bool IsWindows()
         {
             return Path.DirectorySeparatorChar == '\\';
         }

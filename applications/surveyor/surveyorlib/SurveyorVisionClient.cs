@@ -402,8 +402,8 @@ namespace surveyor.vision
                         for (int j = 0; j < 4; j++) 
     					    frame_size += (0xFF & received_data[search_pos + 6 + j]) << (8 * j);
     					    
-    					Console.WriteLine("Frame size: " + frame_size.ToString() + " bytes");
-						Console.WriteLine((received_data.Count - search_pos - 10).ToString() + " bytes received");
+    					//Console.WriteLine("Frame size: " + frame_size.ToString() + " bytes");
+						//Console.WriteLine((received_data.Count - search_pos - 10).ToString() + " bytes received");
     					        					
     					image_header_pos = search_pos;
     					
@@ -535,7 +535,7 @@ namespace surveyor.vision
 				    received_data.Add(theSockId.dataBuffer[i]);
 				    
 				//if (Verbose)
-				    Console.WriteLine(received_data.Count.ToString() + " bytes received");
+				    //Console.WriteLine(received_data.Count.ToString() + " bytes received");
 				
 				//Console.Write(".");
 
