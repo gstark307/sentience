@@ -25,6 +25,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Reflection;
 using surveyor.vision;
 using sluggish.utilities;
 
@@ -55,18 +56,42 @@ namespace surveyorstereo
         int motors_tries = 5;
         bool starting = true;
 
-        public frmStereo()
+        public frmStereo(
+            string stereo_camera_IP,
+            int leftport,
+            int rightport)
         {
             InitializeComponent();
 
             picLeftImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             picRightImage.Image = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
-            Init();
+            Init(stereo_camera_IP, leftport, rightport);
         }
 
-        public void Init()
+        private string AssemblyVersion
         {
+            get
+            {
+                return Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            }
+        }
+
+        public void Init(
+            string stereo_camera_IP,
+            int leftport,
+            int rightport)
+        {
+            this.stereo_camera_IP = stereo_camera_IP;
+            left_port = leftport;
+            right_port = rightport;
+
+            string version = String.Format("{0}", AssemblyVersion);
+            Console.WriteLine("surveyorstereo GUI version " + version);
+            Console.WriteLine("SVS IP: " + stereo_camera_IP.ToString());
+            Console.WriteLine("Left camera port: " + leftport.ToString());
+            Console.WriteLine("Right camera port: " + rightport.ToString());
+
             stereo_camera = new SurveyorVisionStereoWin(stereo_camera_IP, left_port, right_port, broadcast_port, fps);
             stereo_camera.temporary_files_path = temporary_files_path;
             stereo_camera.recorded_images_path = recorded_images_path;

@@ -70,6 +70,7 @@
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="commandline.cs" />
     <Compile Include="frmStereo.cs">
       <SubType>Form</SubType>
     </Compile>

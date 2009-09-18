@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Drawing;
 using System.Threading;
+using System.Reflection;
 using Gtk;
 using surveyor.vision;
 using sluggish.utilities;
@@ -52,6 +53,14 @@ public partial class MainWindow: Gtk.Window
 	
     public SurveyorVisionStereoGtk stereo_camera;
     
+    private string AssemblyVersion
+    {
+        get
+        {
+            return Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        }
+    }	
+	
 	/// <summary>
 	/// 
 	/// </summary>
@@ -67,8 +76,8 @@ public partial class MainWindow: Gtk.Window
 		
 		this.stereo_camera_IP = stereo_camera_IP;
 		
-		string version = "0.3.2";
-		Console.WriteLine("surveyorstereo GUI version " + version);
+        string version = String.Format("{0}", AssemblyVersion);
+        Console.WriteLine("surveyorstereo GUI version " + version);
 		Console.WriteLine("SVS IP: " + stereo_camera_IP.ToString());
 		Console.WriteLine("Left camera port: " + leftport.ToString());
 		Console.WriteLine("Right camera port: " + rightport.ToString());
@@ -441,16 +450,19 @@ public partial class MainWindow: Gtk.Window
                 //MessageBox.Show("Animated gif created");
             }
         }		
-	}	
+	}
+	
 	protected virtual void OnCmdTweaksClicked (object sender, System.EventArgs e)
 	{
 	    RunTweaks();
     }
-		protected virtual void OnCmdAnimatedGifClicked (object sender, System.EventArgs e)
+	
+	protected virtual void OnCmdAnimatedGifClicked (object sender, System.EventArgs e)
 	{
 	    SaveAnimatedGif();
 	}
-		    protected virtual void OnChkEmbeddedClicked (object sender, System.EventArgs e)
+		
+    protected virtual void OnChkEmbeddedClicked (object sender, System.EventArgs e)
 	{
 		if (stereo_camera != null)
 	    {
@@ -460,87 +472,109 @@ public partial class MainWindow: Gtk.Window
 	            stereo_camera.DisableEmbeddedStereo();
 	    }
 	}
-		protected virtual void OnCmdForwardLeftClicked (object sender, System.EventArgs e)
+	
+	protected virtual void OnCmdForwardLeftClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("7");
 	}
-			protected virtual void OnCmdForwardClicked (object sender, System.EventArgs e)
+		
+	protected virtual void OnCmdForwardClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("8");
-	}	
+	}
+	
 	protected virtual void OnCmdForwardRightClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("9");
 	}
-			protected virtual void OnCmdLeftClicked (object sender, System.EventArgs e)
+		
+	protected virtual void OnCmdLeftClicked (object sender, System.EventArgs e)
     {
         SendCommand("4");
 	}
-		    protected virtual void OnCmdStopClicked (object sender, System.EventArgs e)
+		
+    protected virtual void OnCmdStopClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("5");
 	}
-	protected virtual void OnCmdRightClicked (object sender, System.EventArgs e)
+
+	protected virtual void OnCmdRightClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("6");
     }
-			protected virtual void OnCmdBackLeftClicked (object sender, System.EventArgs e)
+		
+	protected virtual void OnCmdBackLeftClicked (object sender, System.EventArgs e)
     {
         SendCommand("1");
 	}
-			protected virtual void OnCmdBackRightClicked (object sender, System.EventArgs e)
+		
+	protected virtual void OnCmdBackRightClicked (object sender, System.EventArgs e)
 	{
         SendCommand("3");
 	}
-	protected virtual void OnCmdBackClicked (object sender, System.EventArgs e)
+
+	protected virtual void OnCmdBackClicked (object sender, System.EventArgs e)
     {
         SendCommand("2");
-    }
+    }
+
     protected virtual void OnCmdFastClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("+");
     }
-	protected virtual void OnCmdSlowClicked (object sender, System.EventArgs e)
+
+	protected virtual void OnCmdSlowClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("-");
     }
-		    protected virtual void OnCmdAvoidClicked (object sender, System.EventArgs e)
+		
+    protected virtual void OnCmdAvoidClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("F");
 	}
-		    protected virtual void OnCmdCrashClicked (object sender, System.EventArgs e)
+		
+    protected virtual void OnCmdCrashClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("f");
     }
-    protected virtual void OnCmdLaserOnClicked (object sender, System.EventArgs e)
+
+    protected virtual void OnCmdLaserOnClicked (object sender, System.EventArgs e)
 	{
 	    SendCommand("l");
     }
-    protected virtual void OnCmdSpinRightClicked (object sender, System.EventArgs e)
+
+    protected virtual void OnCmdSpinRightClicked (object sender, System.EventArgs e)
     {
         SendCommand(".");
     }
-		    protected virtual void OnCmdSpinLeftClicked (object sender, System.EventArgs e)
+		
+    protected virtual void OnCmdSpinLeftClicked (object sender, System.EventArgs e)
     {
         SendCommand("0");
 	}
-    protected virtual void OnCmd160x128Clicked (object sender, System.EventArgs e)
+
+    protected virtual void OnCmd160x128Clicked (object sender, System.EventArgs e)
 	{
     }
-			protected virtual void OnCmd320x256Clicked (object sender, System.EventArgs e)
+		
+	protected virtual void OnCmd320x256Clicked (object sender, System.EventArgs e)
 	{
     }
-		protected virtual void OnCmd640x512Clicked (object sender, System.EventArgs e)
+	
+	protected virtual void OnCmd640x512Clicked (object sender, System.EventArgs e)
 	{
 	}
-		protected virtual void OnCmd1280x1024Clicked (object sender, System.EventArgs e)
+	
+	protected virtual void OnCmd1280x1024Clicked (object sender, System.EventArgs e)
 	{
     }
-		 	protected virtual void OnCmdLaserOffClicked (object sender, System.EventArgs e)
+		 
+	protected virtual void OnCmdLaserOffClicked (object sender, System.EventArgs e)
 	{
         SendCommand("L");
     }
-			protected virtual void OnCmdForwardActivated (object sender, System.EventArgs e)
+		
+	protected virtual void OnCmdForwardActivated (object sender, System.EventArgs e)
 	{
         SendCommand("8");
 	}    
@@ -555,7 +589,8 @@ public partial class MainWindow: Gtk.Window
         if (stereo_camera.Record) BaseVisionStereo.LogEvent(DateTime.Now, command_str, teleoperation_log);
 	    stereo_camera.SendCommand(0, command_str);
 	}
-					protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
+		
+			protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
 			    {
 			}
 				
@@ -608,11 +643,13 @@ public partial class MainWindow: Gtk.Window
 	            log_path);
         }
     }
-        protected virtual void OnChkLoggingClicked (object sender, System.EventArgs e)
+    
+    protected virtual void OnChkLoggingClicked (object sender, System.EventArgs e)
     {
         ToggleLogging(chkLogging.Active);
     }
-        protected virtual void OnCmdReplayClicked (object sender, System.EventArgs e)
+    
+    protected virtual void OnCmdReplayClicked (object sender, System.EventArgs e)
     {
         replay_path_identifier = txtReplay.Text;
         if ((replay_path_identifier != null) &&
@@ -624,10 +661,12 @@ public partial class MainWindow: Gtk.Window
             stereo_camera.RunReplay(teleoperation_log, zip_utility, log_path, replay_path_identifier);
         }
     }
-        protected virtual void OnCmdReplayStopClicked (object sender, System.EventArgs e)
+    
+    protected virtual void OnCmdReplayStopClicked (object sender, System.EventArgs e)
     {
         stereo_camera.StopReplay();
         lblReplayState.Text = "";
     }
 
-		        }
+		        
+}
