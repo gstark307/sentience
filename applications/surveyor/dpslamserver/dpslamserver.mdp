@@ -3,20 +3,21 @@
     <Configuration name="Debug" ctype="DotNetProjectConfiguration">
       <Output directory="bin\Debug" assembly="dpslamserver" />
       <Build debugmode="True" target="Exe" />
-      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <Execution runwithwarnings="True" commandlineparameters="-force" consolepause="True" runtime="MsNet" />
+      <EnvironmentVariables />
       <CodeGeneration compiler="Mcs" warninglevel="4" optimize="False" unsafecodeallowed="False" generateoverflowchecks="False" definesymbols="DEBUG" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
     <Configuration name="Release" ctype="DotNetProjectConfiguration">
       <Output directory="bin\Release" assembly="dpslamserver" />
       <Build debugmode="False" target="Exe" />
-      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <Execution runwithwarnings="True" consolepause="True" runtime="MsNet" />
       <CodeGeneration compiler="Mcs" warninglevel="4" optimize="False" unsafecodeallowed="False" generateoverflowchecks="False" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
     </Configuration>
   </Configurations>
   <Contents>
-    <File subtype="Code" buildaction="Compile" name="Main.cs" />
-    <File subtype="Code" buildaction="Compile" name="Properties\AssemblyInfo.cs" />
-    <File subtype="Code" buildaction="Compile" name="commandline.cs" />
+    <File name="Main.cs" subtype="Code" buildaction="Compile" />
+    <File name="commandline.cs" subtype="Code" buildaction="Compile" />
+    <File name="Properties/AssemblyInfo.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />

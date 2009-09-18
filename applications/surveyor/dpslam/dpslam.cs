@@ -172,13 +172,16 @@ namespace dpslam.core
 			
 			// generate stereo features from the ranges
 			bool nothing_seen = true;
-			float focal_length_pixels = head.cameraFocalLengthMm[stereo_camera_index] / head.cameraSensorSizeMm[stereo_camera_index];
+			float focal_length_pixels = 
+				head.cameraFocalLengthMm[stereo_camera_index] * image_width / 
+				head.cameraSensorSizeMm[stereo_camera_index];
 			float baseline_mm = head.cameraBaseline[stereo_camera_index];
 			int n = 0;
 			int idx = 0;
 			int no_of_features = 0;
 			float[] features = new float[range_buffer.Length*4];
 			byte[] featureColours = new byte[range_buffer.Length*3];
+			for (int i = 0; i < featureColours.Length; i++) featureColours[i] = 100;
 			for (int camy = 0; camy < image_height; camy+=step_size)
 			{
 			    for (int camx = 0; camx < image_width; camx+=step_size, n++)
@@ -186,7 +189,14 @@ namespace dpslam.core
 					if (idx < head.MAX_STEREO_FEATURES-5)
 					{
 						if (range_buffer[n] > -1) nothing_seen = false;
-					    float disparity_pixels = stereoModel.DistanceToDisparity(range_buffer[n], focal_length_pixels, baseline_mm);					
+					    float disparity_pixels = 
+							stereoModel.DistanceToDisparity(
+							    range_buffer[n], 
+							    focal_length_pixels, 
+							    baseline_mm);
+						//Console.WriteLine("range:        " + range_buffer[n].ToString());
+						//Console.WriteLine("focal length: " + head.cameraFocalLengthMm[stereo_camera_index] + " " + focal_length_pixels.ToString());
+						//Console.WriteLine("disparity:    " + disparity_pixels.ToString());
 					    features[idx++] = 1;
 					    features[idx++] = camx;
 					    features[idx++] = camy;
@@ -210,7 +220,7 @@ namespace dpslam.core
 			    head.cameraFOVdegrees[stereo_camera_index],
 			    head.features[stereo_camera_index],
 			    head.featureColours[stereo_camera_index],
-			    false);			
+			    false);
 			
             return (result);
         }
@@ -315,6 +325,7 @@ namespace dpslam.core
 			float fraction = 0;
 			float[] colour = new float[3];
 			float mean_variance = 0;
+			float prob, peak_prob = 0;
 			for (int dist = 0; dist < dist_cells; dist++, fraction += incr)
 			{
 				x_cell = x0_cell + (int)(fraction * dx);
@@ -329,18 +340,23 @@ namespace dpslam.core
 							if ((z_cell < ground_plane_cells) && (use_ground_plane))
 							{
 								range_mm = dist * cellSize_mm;
-								break;
+								//break;
 							}
 							else
 							{
 								occupancygridCellMultiHypothesis c = cell[x_cell][y_cell];
 								if (c != null)
 								{
-								    if (c.GetProbability(pose, x_cell, y_cell, z_cell, false, colour, ref mean_variance) > 0.5f)
-								    {
-										range_mm = dist * cellSize_mm;
-										break;
-									}
+								    prob = c.GetProbability(pose, x_cell, y_cell, z_cell, false, colour, ref mean_variance);
+									if (prob > 0)
+									{
+										if (prob > peak_prob)
+									    {
+											peak_prob  = prob;
+											range_mm = dist * cellSize_mm;										
+										}
+										if ((peak_prob > 0.5f) && (prob < peak_prob)) break;
+								    }
 								}
 							}
 						}
@@ -540,6 +556,8 @@ namespace dpslam.core
                 float colour_probability = 1.0f  - colour_difference;
 
                 // localisation matching probability, expressed as log odds
+				//Console.WriteLine("occupancy_probability = " + occupancy_probability.ToString());
+				if (occupancy_probability > 1) occupancy_probability = 1;
                 prob_log_odds = LogOdds[(int)(occupancy_probability * colour_probability * LOG_ODDS_LOOKUP_LEVELS)];
             }
             return (prob_log_odds);

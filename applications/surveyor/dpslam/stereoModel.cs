@@ -71,10 +71,11 @@ namespace dpslam.core
         /// <param name="sensor_pixels_per_mm">number of pixels per millimetre on the sensor chip</param>
         /// <param name="baseline_mm">distance between cameras in millimetres</param>
         /// <returns>range in millimetres</returns>        
-        public static float DisparityToDistance(float disparity_pixels,
-                                                float focal_length_mm,
-                                                float sensor_pixels_per_mm,
-                                                float baseline_mm)
+        public static float DisparityToDistance(
+		    float disparity_pixels,
+            float focal_length_mm,
+            float sensor_pixels_per_mm,
+            float baseline_mm)
         {
             float focal_length_pixels = focal_length_mm * sensor_pixels_per_mm;
             float distance_mm = baseline_mm * focal_length_pixels / disparity_pixels;
@@ -88,9 +89,10 @@ namespace dpslam.core
         /// <param name="focal_length_pixels">focal length in pixels</param>
         /// <param name="baseline_mm">distance between cameras in millimetres</param>
         /// <returns>range in millimetres</returns>        
-        public static float DisparityToDistance(float disparity_pixels,
-                                                float focal_length_pixels,
-                                                float baseline_mm)
+        public static float DisparityToDistance(
+		    float disparity_pixels,
+            float focal_length_pixels,
+            float baseline_mm)
         {
             float distance_mm = baseline_mm * focal_length_pixels / disparity_pixels;
             return(distance_mm);
@@ -103,13 +105,15 @@ namespace dpslam.core
         /// <param name="focal_length_pixels">focal length in pixels</param>
         /// <param name="baseline_mm">distance between cameras in millimetres</param>
         /// <returns>range in millimetres</returns>        
-        public static float DistanceToDisparity(float distance_mm,
-                                                float focal_length_pixels,
-                                                float baseline_mm)
+        public static float DistanceToDisparity(
+		    float distance_mm,
+            float focal_length_pixels,
+            float baseline_mm)
         {
-            float disparity_pixels = baseline_mm * focal_length_pixels / distance_mm;
+            float disparity_pixels = 
+				baseline_mm * focal_length_pixels / distance_mm;
             return(disparity_pixels);
-        }        
+        }
 		
         #endregion
 
@@ -118,7 +122,9 @@ namespace dpslam.core
         /// <summary>
         /// creates a lookup table for sensor models at different visual disparities
         /// </summary>
-        public void createLookupTables(stereoHead robot_head, int gridCellSize_mm)
+        public void createLookupTables(
+		    stereoHead robot_head, 
+		    int gridCellSize_mm)
         {
             int width = 100;
             int height = 100;
@@ -141,7 +147,8 @@ namespace dpslam.core
             }
         }
 
-        public void createLookupTable(int gridCellSize_mm)
+        public void createLookupTable(
+		    int gridCellSize_mm)
         {
             int width = 320;
             int height = 240;

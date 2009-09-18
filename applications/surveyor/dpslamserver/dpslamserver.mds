@@ -15,6 +15,6 @@
   </StartMode>
   <Entries>
     <Entry filename="dpslamserver.mdp" />
-    <Entry filename="..\dpslam\dpslam.mdp" />
+    <Entry filename="../dpslam/dpslam.mdp" />
   </Entries>
 </Combine>

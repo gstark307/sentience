@@ -63,6 +63,7 @@
     <File name="DEBIAN/control" subtype="Code" buildaction="Nothing" />
     <File name="DEBIAN/copyright" subtype="Code" buildaction="Nothing" />
     <File name="DEBIAN/install" subtype="Code" buildaction="Nothing" />
+    <File name="commandline.cs" subtype="Code" buildaction="Compile" />
   </Contents>
   <References>
     <ProjectReference type="Gac" localcopy="True" refto="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />

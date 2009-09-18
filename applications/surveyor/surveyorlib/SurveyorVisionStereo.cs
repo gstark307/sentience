@@ -370,7 +370,6 @@ namespace surveyor.vision
                     camera[cam].StopStream();
                     camera[cam].Stop();
                 }
-                //if (sync_thread != null) sync_thread.Abort();
             }
         }
         

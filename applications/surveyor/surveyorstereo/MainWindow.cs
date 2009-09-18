@@ -52,9 +52,26 @@ public partial class MainWindow: Gtk.Window
 	
     public SurveyorVisionStereoGtk stereo_camera;
     
-    public MainWindow (): base (Gtk.WindowType.Toplevel)
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="stereo_camera_IP">IP address of the SVS</param>
+	/// <param name="leftport">port number of the left camera</param>
+	/// <param name="rightport">port number of the right camera</param>
+    public MainWindow (
+	    string stereo_camera_IP, 
+	    int leftport, 
+	    int rightport): base (Gtk.WindowType.Toplevel)
     {
         Build ();
+		
+		this.stereo_camera_IP = stereo_camera_IP;
+		
+		string version = "0.3.2";
+		Console.WriteLine("surveyorstereo GUI version " + version);
+		Console.WriteLine("SVS IP: " + stereo_camera_IP.ToString());
+		Console.WriteLine("Left camera port: " + leftport.ToString());
+		Console.WriteLine("Right camera port: " + rightport.ToString());
 		
 		//SaveHpolarLookup();
 		
@@ -68,7 +85,7 @@ public partial class MainWindow: Gtk.Window
         GtkBitmap.setBitmap(left_bmp, leftimage);
         GtkBitmap.setBitmap(right_bmp, rightimage);
         
-        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, 10001, 10002, broadcast_port, fps, this);
+        stereo_camera = new SurveyorVisionStereoGtk(stereo_camera_IP, leftport, rightport, broadcast_port, fps, this);
         stereo_camera.temporary_files_path = temporary_files_path;
         stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.display_image[0] = leftimage;
@@ -87,8 +104,8 @@ public partial class MainWindow: Gtk.Window
 
     private void SaveHpolarLookup()
 	{
-        int cartesian_dimension_cells_width = 40; //40;
-        int cartesian_dimension_cells_range = 40; //40;
+        int cartesian_dimension_cells_width = 40;
+        int cartesian_dimension_cells_range = 40;
         float cartesian_cell_size_mm = 100;
         int[] HpolarLookup = null;
 		float scale_down_factor = 10;

@@ -225,7 +225,7 @@ namespace dpslam.core.tests
             float min_y_mm = -((dimension_cells / 2) * cellSize_mm) / 3;
             float max_x_mm = -min_x_mm;
             float max_y_mm = -min_y_mm;
-            for (float t = 0.0f; t < 6; t += time_elapsed_sec)
+            for (float t = 0.0f; t < 4; t += time_elapsed_sec)
 			{
   			    rob.updateFromVelocities(sim, forward_velocity, angular_velocity_pan, angular_velocity_tilt, angular_velocity_roll, time_elapsed_sec);
 				Console.WriteLine("xy: " + rob.x.ToString() + " " + rob.y.ToString());
