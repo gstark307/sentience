@@ -123,18 +123,21 @@ namespace surveyor.vision
 		public const int SVS_STATE_PROCESS_IMAGES = 2;
 		public const int EMBEDDED_TIMEOUT_SEC = 5;
 		private DateTime svs_state_last;
+        private bool first_frame_request = true;
 				
 		public void update_state()
 		{
 			if ((camera[0].Running) && 
 			    (camera[1].Running))
-			{			
+			{
+                TimeSpan diff;
+                
 				switch(svs_state)
 				{
 				    case SVS_STATE_GRAB_IMAGES:
 				    {					    					
 					    int time_step_mS = (int)(1000 / fps);
-					    TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
+					    diff = DateTime.Now.Subtract(svs_state_last);
 					    if (diff.TotalMilliseconds > time_step_mS)
 					    {
 						    svs_state_last = DateTime.Now;
@@ -172,12 +175,23 @@ namespace surveyor.vision
 						
 						    if ((Pause) || (is_paused)) Console.WriteLine("Paused");
 						
-						    if (((!is_paused) || (Pause)) && (diff2.TotalSeconds > EMBEDDED_TIMEOUT_SEC))
+						    if (((!is_paused) || (Pause)) && 
+                                ((diff2.TotalSeconds > EMBEDDED_TIMEOUT_SEC) || (first_frame_request)))
 						    {
 						        // request images                        
 						        camera[0].RequestFrame();
-						        camera[1].RequestFrame();					    
-						        svs_state = SVS_STATE_RECEIVE_IMAGES;
+						        camera[1].RequestFrame();
+                                if ((camera[0].send_command != null) && (camera[0].send_command != ""))
+                                    svs_state = SVS_STATE_GRAB_IMAGES;
+                                else
+                                {
+						            svs_state = SVS_STATE_RECEIVE_IMAGES;
+                                    if (first_frame_request)
+                                    {
+                                        Console.WriteLine("Frames requested");
+                                        first_frame_request = false;
+                                    }
+                                }
 						    }
 					    }
 					    break;
@@ -205,7 +219,7 @@ namespace surveyor.vision
 					    else
 					    {
 				            int timeout_mS = 1000;
-	                        TimeSpan diff = DateTime.Now.Subtract(svs_state_last);
+	                        diff = DateTime.Now.Subtract(svs_state_last);
 						    if (diff.TotalMilliseconds > timeout_mS)
 						    {
 							    // timed out - request images again
@@ -286,8 +300,14 @@ namespace surveyor.vision
 					//if (Verbose) 
 					//Console.WriteLine(msg);
 				}
+
+                if (svs_state != prev_svs_state)
+                {
+                    //Console.WriteLine("svs_state = " + svs_state.ToString());                    
+                }
+                
 				prev_svs_state = svs_state;
-			}
+			}            
 		}
 		
 		#endregion
@@ -304,10 +324,18 @@ namespace surveyor.vision
         {
 			if (camera[0].Streaming)
 			{
+                //grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), this);
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
-                if (Running) sync_thread.Start(); 			
+                if (Running) 
+                    sync_thread.Start();
+                else
+                    Console.WriteLine("Not running");
 			}
+            else
+            {
+                Console.WriteLine("Not streaming");
+            }
         }
 
         #endregion
@@ -337,6 +365,7 @@ namespace surveyor.vision
 	                }
 	                else
 	                {
+                        Console.WriteLine("Camera " + cam.ToString() + " not running");
 	                    cameras_started = false;
 	                    break;
 	                }
@@ -348,8 +377,8 @@ namespace surveyor.vision
 	                grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), this);        
 	                sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
 	                sync_thread.Priority = ThreadPriority.Normal;
+                    Running = true;
 	                sync_thread.Start();   
-	                Running = true;
 					retry = false;
 	                Console.WriteLine("Stereo camera active on " + host);
 	            }

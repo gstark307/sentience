@@ -59,7 +59,7 @@ namespace surveyor.vision
         public PictureBox[] display_image;
         public PictureBox calibration_image;
         public Form window;
-        private byte[] buffer = null;
+        //private byte[] buffer = null;
         private double prev_minimum_rms_error;
 
 /*

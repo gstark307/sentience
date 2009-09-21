@@ -463,16 +463,20 @@ namespace surveyor.vision
         /// <param name="PortNumber">port number</param>		
         public bool StartService(int PortNumber)
         {
-            if (PortNumber >= 1024)
+            if (PortNumber > -1)
             {
-			    string IPaddress = GetIP();
-			    return(StartService(IPaddress, PortNumber));
-			}
-			else
-			{
-			    Console.WriteLine("broadcast port should be >= 1024");
-			    return(false);
-			}			
+                if (PortNumber >= 1024)
+                {
+    			    string IPaddress = GetIP();
+    			    return(StartService(IPaddress, PortNumber));
+    			}
+    			else
+    			{
+    			    Console.WriteLine("broadcast port should be >= 1024");
+    			    return(false);		
+                }
+            }
+            else return (false);
 		}
 		
         /// <summary>
@@ -480,48 +484,53 @@ namespace surveyor.vision
         /// </summary>
         /// <param name="IPaddress">IP address to listen on</param>		
         /// <param name="PortNumber">port number</param>		
-        public bool StartService(string IPaddress, int PortNumber)
+        public bool StartService(
+            string IPaddress, 
+            int PortNumber)
         {
             bool success = true;
             ServiceRunning = false;
-			
-			if (PortNumber < 1024)
-			{
-				Console.WriteLine("Port number is too low.  Try something >= 1024");
-			}
-			else
-			{
-                m_workerSocketList = ArrayList.Synchronized(new System.Collections.ArrayList()); 
-                
-                try
-	            {
-	                // Create the listening socket...
-	                m_mainSocket = new Socket(AddressFamily.InterNetwork,
-	                    SocketType.Stream,
-	                    ProtocolType.Tcp);
-	                IPEndPoint ipLocal = new IPEndPoint(IPAddress.Parse(IPaddress), PortNumber);
 
-	                Console.WriteLine("Stereo feature broadcast running on " + ipLocal.ToString());
-
-	                // Bind to local IP Address...
-	                m_mainSocket.Bind(ipLocal);
-					
-	                // Start listening...
-	                m_mainSocket.Listen(4);
-					
-	                // Create the call back for any client connections...
-	                m_mainSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
-
-	                ServiceRunning = true;
-	            }
-	            catch (SocketException se)
-	            {
-	                success = false;
-	                Console.WriteLine("Failed to start stereo feature service: " + se.Message);
-					Console.WriteLine("Check your firewall or iptables");
-					Console.WriteLine("Try:  sudo iptables -A INPUT -p tcp --dport " + PortNumber.ToString() + " -j ACCEPT");
-	            }
-			}
+            if (PortNumber > -1)
+            {
+    			if (PortNumber < 1024)
+    			{
+    				Console.WriteLine("Port number is too low.  Try something >= 1024");
+    			}
+    			else
+    			{
+                    m_workerSocketList = ArrayList.Synchronized(new System.Collections.ArrayList()); 
+                    
+                    try
+    	            {
+    	                // Create the listening socket...
+    	                m_mainSocket = new Socket(AddressFamily.InterNetwork,
+    	                    SocketType.Stream,
+    	                    ProtocolType.Tcp);
+    	                IPEndPoint ipLocal = new IPEndPoint(IPAddress.Parse(IPaddress), PortNumber);
+    
+    	                Console.WriteLine("Stereo feature broadcast running on " + ipLocal.ToString());
+    
+    	                // Bind to local IP Address...
+    	                m_mainSocket.Bind(ipLocal);
+    					
+    	                // Start listening...
+    	                m_mainSocket.Listen(4);
+    					
+    	                // Create the call back for any client connections...
+    	                m_mainSocket.BeginAccept(new AsyncCallback(OnClientConnect), null);
+    
+    	                ServiceRunning = true;
+    	            }
+    	            catch (SocketException se)
+    	            {
+    	                success = false;
+    	                Console.WriteLine("Failed to start stereo feature service: " + se.Message);
+    					Console.WriteLine("Check your firewall or iptables");
+    					Console.WriteLine("Try:  sudo iptables -A INPUT -p tcp --dport " + PortNumber.ToString() + " -j ACCEPT");
+    	            }
+    			}
+            }
             return (success);
         }
 

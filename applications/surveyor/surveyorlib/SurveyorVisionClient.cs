@@ -88,7 +88,7 @@ namespace surveyor.vision
 
         #region "sockets stuff"
 
-        const int DATA_BUFFER_SIZE = 1024*4;
+        const int DATA_BUFFER_SIZE = 1024; //*4;
 		public AsyncCallback m_pfnCallBack;
 		public Socket m_clientSocket;
 		public DateTime data_last_received;
@@ -113,15 +113,16 @@ namespace surveyor.vision
             return (is_ip);
         }
 
-
-        public void Start(string server_address, int serverPort)
+        public void Start(
+            string server_address, 
+            int serverPort)
 		{
 			Running = false;
 
             Console.WriteLine("Connecting client to " + server_address + ":" + serverPort.ToString());
 
             string serverIP = server_address;
-
+            
             // get the IP address from the host name
             if (!isIPAddress(server_address))
             {
@@ -148,7 +149,7 @@ namespace surveyor.vision
 			try
 			{
                 // Create the socket instance
-				m_clientSocket = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp );				
+				m_clientSocket = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp );
                 
 				// Get the remote IP address
 				IPAddress ip = IPAddress.Parse(serverIP);
@@ -196,8 +197,10 @@ namespace surveyor.vision
 		{
 			try
 			{
-				if (networkStream == null) networkStream = new NetworkStream(m_clientSocket);
-				if (streamWriter == null) streamWriter = new System.IO.StreamWriter(networkStream);
+				if (networkStream == null) 
+                    networkStream = new NetworkStream(m_clientSocket);
+				if (streamWriter == null) 
+                    streamWriter = new System.IO.StreamWriter(networkStream);
                 if ((send_command != null) && (send_command != ""))
                 {
                     Console.WriteLine("Sending command: " + send_command);
@@ -207,28 +210,32 @@ namespace surveyor.vision
                         uploading_data_state = 1;
                     }
                     send_command = "";
-                    wait_for_reply = false;
+                    wait_for_reply = false;                    
                 }
                 else
                 {
                     if (uploading_data_state == 0)
-                        streamWriter.WriteLine(msg);
+                    {
+                        streamWriter.WriteLine(msg);                        
+                    }
                     else
                     {
                         streamWriter.Write(msg);
                         uploading_data_state = 2;
                     }
                 }
+
                 try
                 {
                     streamWriter.Flush();
                 }
                 catch
                 {
+                    Console.WriteLine("Error: streamWriter.Flush");
                 }
                 waiting_for_reply = wait_for_reply;
 			}
-			catch(SocketException se)
+			catch(Exception se)
 			{
 				Console.WriteLine("Send: " + se.Message);
 			}
@@ -245,7 +252,7 @@ namespace surveyor.vision
                 System.Threading.Thread.Sleep(50);
             }
             if (seconds_elapsed >= timeout_sec)
-                Console.WriteLine("Timed out waiting for SRV1 reply");
+                Console.WriteLine("Timed out waiting for SVS reply");
         }
 
         SocketPacket theSocPkt;
@@ -268,12 +275,18 @@ namespace surveyor.vision
 				// Start listening to the data asynchronously	
                 if (m_clientSocket != null)
                 {
+                    //IAsyncResult result = 
                     m_clientSocket.BeginReceive(
                         theSocPkt.dataBuffer,
                         0, theSocPkt.dataBuffer.Length,
                         SocketFlags.None,
                         m_pfnCallBack,
                         theSocPkt);
+                    //Console.WriteLine("BeginReceive: " + socketState.ToString());
+                }
+                else
+                {
+                    Console.WriteLine("m_clientSocket = null");
                 }
 			}
 			catch(SocketException se)
@@ -596,10 +609,6 @@ namespace surveyor.vision
         public void StartStream()
         {
             Streaming = true;
-            //grab_frames = new SurveyorVisionThreadGrabFrame(new WaitCallback(FrameGrabCallbackClient),this);        
-            //Thread grabber_thread = new Thread(new ThreadStart(grab_frames.Execute));
-            //grabber_thread.Priority = ThreadPriority.Normal;
-            //grabber_thread.Start();        
         }
 
 		/// <summary>

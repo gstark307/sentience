@@ -1,17 +1,19 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../dpslam/tests/stereomodel_tests.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../dpslam/stereoModel.cs" ctype="Workbench">
     <Files>
       <File FileName="Main.cs" Line="34" Column="47" />
       <File FileName="../dpslam/dpslam.cs" Line="223" Column="15" />
       <File FileName="commandline.cs" Line="1" Column="1" />
-      <File FileName="../dpslam/stereoModel.cs" Line="932" Column="1" />
+      <File FileName="../dpslam/stereoModel.cs" Line="953" Column="35" />
       <File FileName="../dpslam/tests/stereomodel_tests.cs" Line="18" Column="38" />
       <File FileName="../dpslam/tests/motionmodel_tests.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
-          <Node name="dpslam" expanded="True" />
+          <Node name="dpslam" expanded="True">
+            <Node name="References" expanded="True" selected="True" />
+          </Node>
           <Node name="dpslamserver" expanded="True" />
         </State>
       </Pad>
