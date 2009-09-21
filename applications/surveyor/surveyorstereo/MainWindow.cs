@@ -33,7 +33,7 @@ public partial class MainWindow: Gtk.Window
     int image_height = 240;
     string stereo_camera_IP = "169.254.0.10";
     string calibration_filename = "calibration.xml";
-    int broadcast_port = -1; //10010;
+    int broadcast_port = 10010;
     int fps = 5;
     string log_path = Environment.CurrentDirectory;
 	string teleoperation_log = "teleop.dat";
@@ -99,7 +99,7 @@ public partial class MainWindow: Gtk.Window
         stereo_camera.recorded_images_path = recorded_images_path;
         stereo_camera.display_image[0] = leftimage;
         stereo_camera.display_image[1] = rightimage;
-        stereo_camera.Run();
+        stereo_camera.Run("M");
 						
 		txtLogging.Text = path_identifier;
 		txtReplay.Text = replay_path_identifier;
@@ -108,7 +108,7 @@ public partial class MainWindow: Gtk.Window
 		starting = false;
 		
 		// enable motors
-		SendCommand("M");	
+		//SendCommand("M");	
     }
 
     private void SaveHpolarLookup()

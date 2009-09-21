@@ -1,16 +1,16 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/SurveyorVisionClient.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/SurveyorVisionStereo.cs" ctype="Workbench">
     <Files>
-      <File FileName="MainWindow.cs" Line="87" Column="3" />
-      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="256" Column="73" />
-      <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="63" Column="12" />
-      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="193" Column="55" />
+      <File FileName="MainWindow.cs" Line="38" Column="45" />
+      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="366" Column="1" />
+      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="58" Column="38" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="surveyorlib" expanded="True">
-            <Node name="SurveyorVisionClient.cs" selected="True" />
+            <Node name="correspondence" expanded="True" />
+            <Node name="SurveyorVisionStereo.cs" selected="True" />
           </Node>
           <Node name="surveyorstereo" expanded="True">
             <Node name="UserInterface" expanded="True">
@@ -27,7 +27,7 @@
         <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True" />
+        <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State />

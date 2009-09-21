@@ -343,8 +343,13 @@ namespace surveyor.vision
         #region "starting and stopping"
 
         private SurveyorVisionThreadGrabFrameMulti grab_frames;
-        
+
         public override void Run()
+        {
+            Run("");
+        }
+        
+        public override void Run(string initial_command)
         {
             bool cameras_started = true;
 			bool retry = true;
@@ -358,6 +363,7 @@ namespace surveyor.vision
 	            for (int cam = 0; cam < 2; cam++)
 	            {
 	                camera[cam].fps = fps;
+                    if (cam == 0) camera[cam].send_command = initial_command;
 	                camera[cam].Start(host, port_number[cam]);
 	                if (camera[cam].Running)
 	                {

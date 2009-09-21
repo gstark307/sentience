@@ -55,7 +55,7 @@ namespace surveyor.vision
 		public string processing_type_command = "g";
 		public string processing_type_stereo_command = "5";
 		public string processing_type_normal_command = "a";
-        public string request_320_240 = "b";
+        public string request_320_256 = "b";
         public string request_640_480 = "c";
         
         public int image_width, image_height;
@@ -269,20 +269,20 @@ namespace surveyor.vision
 					m_pfnCallBack = new AsyncCallback (OnDataReceived);
 				}
 				if (theSocPkt == null)
+                {
 				    theSocPkt = new SocketPacket ();
+                }
 				theSocPkt.thisSocket = m_clientSocket;
 				
 				// Start listening to the data asynchronously	
                 if (m_clientSocket != null)
                 {
-                    //IAsyncResult result = 
                     m_clientSocket.BeginReceive(
                         theSocPkt.dataBuffer,
                         0, theSocPkt.dataBuffer.Length,
                         SocketFlags.None,
                         m_pfnCallBack,
                         theSocPkt);
-                    //Console.WriteLine("BeginReceive: " + socketState.ToString());
                 }
                 else
                 {
@@ -566,7 +566,7 @@ namespace surveyor.vision
 			{
 				System.Diagnostics.Debugger.Log(0,"1","\nOnDataReceived: Socket has been closed\n");
 			}
-			catch(SocketException se)
+			catch(Exception se)
 			{
 				Console.WriteLine(se.Message);
 			}
@@ -647,7 +647,7 @@ namespace surveyor.vision
 
         public void RequestResolution320x256()
         {            
-            Send(request_320_240, false);
+            Send(request_320_256, false);
         }
         
         /// <summary>

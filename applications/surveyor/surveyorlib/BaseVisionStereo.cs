@@ -1076,6 +1076,12 @@ namespace surveyor.vision
             bool cameras_started = true;
             
         }
+        
+        public virtual void Run(string initial_command)
+        {
+            bool cameras_started = true;
+            
+        }
 
         public virtual void Stop()
         {

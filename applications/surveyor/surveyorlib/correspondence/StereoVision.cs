@@ -461,7 +461,8 @@ namespace surveyor.vision
         /// start the service listening for clients on the given port number
         /// </summary>
         /// <param name="PortNumber">port number</param>		
-        public bool StartService(int PortNumber)
+        public bool StartService(
+            int PortNumber)
         {
             if (PortNumber > -1)
             {
