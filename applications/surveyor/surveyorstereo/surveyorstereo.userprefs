@@ -1,9 +1,9 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/SurveyorVisionStereo.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="..\surveyorlib\SurveyorVisionStereo.cs" ctype="Workbench">
     <Files>
-      <File FileName="MainWindow.cs" Line="38" Column="45" />
-      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="366" Column="1" />
-      <File FileName="../surveyorlib/SurveyorVisionClient.cs" Line="58" Column="38" />
+      <File FileName="MainWindow.cs" Line="1" Column="1" />
+      <File FileName="..\surveyorlib\SurveyorVisionStereo.cs" Line="364" Column="15" />
+      <File FileName="..\surveyorlib\SurveyorVisionClient.cs" Line="58" Column="38" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -15,8 +15,8 @@
           <Node name="surveyorstereo" expanded="True">
             <Node name="UserInterface" expanded="True">
               <Node name="MainWindow">
-                <Option id="ShowVersionControlOverlays" value="True" />
                 <Option id="ShowAllFiles" value="True" />
+                <Option id="ShowVersionControlOverlays" value="True" />
               </Node>
             </Node>
             <Node name="DEBIAN" expanded="True" />

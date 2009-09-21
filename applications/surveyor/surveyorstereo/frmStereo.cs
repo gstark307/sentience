@@ -99,7 +99,7 @@ namespace surveyorstereo
             stereo_camera.display_image[0] = picLeftImage;
             stereo_camera.display_image[1] = picRightImage;
             stereo_camera.Load(calibration_filename);
-            stereo_camera.Run();
+            stereo_camera.Run("M");
 
             if (stereo_camera.stereo_algorithm_type == StereoVision.EDGES)
             {
