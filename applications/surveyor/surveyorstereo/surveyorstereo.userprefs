@@ -1,22 +1,23 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="..\surveyorlib\SurveyorVisionStereo.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/BaseVisionStereo.cs" ctype="Workbench">
     <Files>
+      <File FileName="../../fishfood/MersenneTwister.cs" Line="444" Column="1" />
       <File FileName="MainWindow.cs" Line="1" Column="1" />
-      <File FileName="..\surveyorlib\SurveyorVisionStereo.cs" Line="364" Column="15" />
-      <File FileName="..\surveyorlib\SurveyorVisionClient.cs" Line="58" Column="38" />
+      <File FileName="../surveyorlib/BaseVisionStereo.cs" Line="164" Column="15" />
+      <File FileName="../surveyorlib/SurveyorVisionStereo.cs" Line="322" Column="15" />
+      <File FileName="../surveyorlib/UsageGraph.cs" Line="380" Column="18" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="surveyorlib" expanded="True">
-            <Node name="correspondence" expanded="True" />
-            <Node name="SurveyorVisionStereo.cs" selected="True" />
+            <Node name="BaseVisionStereo.cs" selected="True" />
           </Node>
           <Node name="surveyorstereo" expanded="True">
-            <Node name="UserInterface" expanded="True">
+            <Node name="UserInterface">
               <Node name="MainWindow">
-                <Option id="ShowAllFiles" value="True" />
                 <Option id="ShowVersionControlOverlays" value="True" />
+                <Option id="ShowAllFiles" value="True" />
               </Node>
             </Node>
             <Node name="DEBIAN" expanded="True" />

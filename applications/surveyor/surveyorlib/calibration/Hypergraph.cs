@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 
 namespace surveyor.vision
@@ -52,6 +53,30 @@ namespace surveyor.vision
         {
             Links.Add(link);
         }
+        
+        public void Clear()
+        {
+            Links.Clear();
+            Flags.Clear();
+        }
+        
+        /// <summary>
+        /// return the link with the given from ID
+        /// </summary>
+        /// <param name="from_ID">ID to search for</param>
+        /// <returns>link object (null if not found)</returns>
+        public hypergraph_link GetLink(int from_ID)
+        {
+            hypergraph_link lnk = null;
+
+            int i = 0;
+            while ((i < Links.Count) && (lnk == null))
+            {
+                if (Links[i].From.ID == from_ID) lnk = Links[i];
+                i++;
+            }
+            return (lnk);
+        }        
     }
     
     /// <summary>
@@ -156,7 +181,25 @@ namespace surveyor.vision
         #endregion
 
         #region "creating links between nodes"
-        
+
+        public bool LinkExists(hypergraph_node from_node, hypergraph_node to_node)
+        {
+            bool exists = false;
+            
+            if ((from_node != null) && (to_node != null))
+            {
+                int i = 0;
+                while ((i < to_node.Links.Count) && (!exists))
+                {
+                    if (to_node.Links[i] != null)
+                        if (to_node.Links[i].From != null)
+                            if (to_node.Links[i].From == from_node) exists = true;
+                    i++;
+                }
+            }
+            return (exists);
+        }
+                
         public void LinkByIndex(int from_node_index, int to_node_index)
         {
             hypergraph_link link = new hypergraph_link();
@@ -166,7 +209,7 @@ namespace surveyor.vision
             Links.Add(link);
         }
 
-        public void LinkByID(int from_node_ID, int to_node_ID)
+        public virtual void LinkByID(int from_node_ID, int to_node_ID)
         {
             hypergraph_link link = new hypergraph_link();
             link.From = GetNode(from_node_ID);
@@ -313,15 +356,9 @@ namespace surveyor.vision
         /// <summary>
         /// propogates the given flag index from the given node
         /// </summary>
-        /// <param name="node">
-        /// A <see cref="hypergraph_node"/>
-        /// </param>
-        /// <param name="flag_index">
-        /// A <see cref="System.Int32"/>
-        /// </param>
-        /// <param name="members">
-        /// A <see cref="List`1"/>
-        /// </param>
+        /// <param name="node"></param>
+        /// <param name="flag_index"></param>
+        /// <param name="members"></param>
         public void PropogateFlag(hypergraph_node node, int flag_index, List<hypergraph_node> members)
         {
             if (node.Flags[flag_index] == false)
@@ -335,5 +372,61 @@ namespace surveyor.vision
                 }
             }
         }
+        
+        #region "exporting dot files for use with Graphviz"
+
+        /// <summary>
+        /// export the graph in dot format
+        /// </summary>
+        /// <param name="filename">filename to save as</param>
+        public void ExportAsDot(
+            string filename)
+        {
+            ExportAsDot(filename, false, false);
+        }
+
+        /// <summary>
+        /// export the graph in dot format
+        /// </summary>
+        /// <param name="filename">filename to save as</param>
+        /// <param name="invert">inverts the direction of links</param>
+        /// <param name="show_weight">show eights of the links if possible</param>
+        public virtual void ExportAsDot(
+            string filename, 
+            bool invert,
+            bool show_weight)
+        {
+            StreamWriter oWrite = null;
+            bool allowWrite = true;
+
+            try
+            {
+                oWrite = File.CreateText(filename);
+            }
+            catch
+            {
+                allowWrite = false;
+            }
+
+            if (allowWrite)
+            {
+                oWrite.WriteLine("digraph G {");
+                for (int i = 0; i < Nodes.Count; i++)
+                {
+                    for (int j = 0; j < Nodes[i].Links.Count; j++)
+                    {
+                        if (!invert)
+                            oWrite.WriteLine("    " + Nodes[i].Links[j].From.Name + " -> " + Nodes[i].Name + ";");
+                        else
+                            oWrite.WriteLine("    " + Nodes[i].Name + " -> " + Nodes[i].Links[j].From.Name + ";");
+                    }
+                }
+                oWrite.WriteLine("}");
+                oWrite.Close();
+            }
+        }
+
+        #endregion
+        
     }
 }

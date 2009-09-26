@@ -65,6 +65,8 @@ namespace surveyor.vision
 		
 		public bool Embedded;
 		public int cam_index;  // 0 = left 1 = right
+
+        public UsageGraph usage;
 		
         #region "platform specific code"		
 		
@@ -110,6 +112,12 @@ namespace surveyor.vision
                 if (!((c == '.') || ((c >= 48) && (c <= 57)))) is_ip = false;
                 i++;
             }
+
+            if (is_ip)
+                usage.Update(nameOrAddress + " is an IP address, SurveyorVisionClient, isIPAddress");
+            else
+                usage.Update(nameOrAddress + " is not an IP address, SurveyorVisionClient, isIPAddress");
+            
             return (is_ip);
         }
 
@@ -117,6 +125,8 @@ namespace surveyor.vision
             string server_address, 
             int serverPort)
 		{
+            usage.Update("Start camera " + server_address + ":" + serverPort.ToString() + ", SurveyorVisionClient, Start");
+            
 			Running = false;
 
             Console.WriteLine("Connecting client to " + server_address + ":" + serverPort.ToString());
@@ -164,7 +174,9 @@ namespace surveyor.vision
                 {					
                     m_clientSocket.ReceiveTimeout = 500;
 				    m_clientSocket.SendTimeout = 500;
-					
+
+                    usage.Update("Socket connected, SurveyorVisionClient, Start");
+                    					
 					//Wait for data asynchronously 
 					WaitForData();
 					
@@ -172,11 +184,13 @@ namespace surveyor.vision
 				}
 				else
 				{
+                    usage.Update("Socket not connected, SurveyorVisionClient, Start");
 					Console.WriteLine("Not connected");
 				}
 			}
-			catch(SocketException se)
+			catch(Exception se)
 			{
+                usage.Update("Connection failed "  + se.Message + ", SurveyorVisionClient, Start");
 				Console.WriteLine("\nConnection failed, is the SVS running?\n" + se.Message);
 			}		
 		}
@@ -195,6 +209,8 @@ namespace surveyor.vision
 		    string msg, 
 		    bool wait_for_reply)
 		{
+            usage.Update("Send "  + msg + ", SurveyorVisionClient, Send");
+            
 			try
 			{
 				if (networkStream == null) 
@@ -204,6 +220,8 @@ namespace surveyor.vision
                 if ((send_command != null) && (send_command != ""))
                 {
                     Console.WriteLine("Sending command: " + send_command);
+                    usage.Update("Send command " + send_command + ", SurveyorVisionClient, Send");
+                    
 				    streamWriter.WriteLine(send_command);
                     if (send_command == "X")
                     {
@@ -231,18 +249,22 @@ namespace surveyor.vision
                 }
                 catch
                 {
+                    usage.Update("Send flush error, SurveyorVisionClient, Send");
                     Console.WriteLine("Error: streamWriter.Flush");
                 }
                 waiting_for_reply = wait_for_reply;
 			}
 			catch(Exception se)
 			{
+                usage.Update("Send failed "  + se.Message + ", SurveyorVisionClient, Send");
 				Console.WriteLine("Send: " + se.Message);
 			}
 		}
 
         public void WaitForReply(int timeout_sec)
         {
+            usage.Update("Wait for reply, SurveyorVisionClient, WaitForReply");
+            
             DateTime start_time = DateTime.Now;
             int seconds_elapsed = 0;
             while ((seconds_elapsed < timeout_sec) && (waiting_for_reply))
@@ -252,7 +274,14 @@ namespace surveyor.vision
                 System.Threading.Thread.Sleep(50);
             }
             if (seconds_elapsed >= timeout_sec)
+            {
+                usage.Update("Timed out, SurveyorVisionClient, WaitForReply");
                 Console.WriteLine("Timed out waiting for SVS reply");
+            }
+            else
+            {
+                usage.Update("Reply arrived, SurveyorVisionClient, WaitForReply");
+            }
         }
 
         SocketPacket theSocPkt;
@@ -262,6 +291,7 @@ namespace surveyor.vision
         /// </summary>
         public void WaitForData()
 		{
+            usage.Update("Wait for data, SurveyorVisionClient, WaitForData");
 			try
 			{
 				if  ( m_pfnCallBack == null ) 
@@ -277,6 +307,8 @@ namespace surveyor.vision
 				// Start listening to the data asynchronously	
                 if (m_clientSocket != null)
                 {
+                    usage.Update("Begin receive, SurveyorVisionClient, WaitForData");
+                    
                     m_clientSocket.BeginReceive(
                         theSocPkt.dataBuffer,
                         0, theSocPkt.dataBuffer.Length,
@@ -286,11 +318,13 @@ namespace surveyor.vision
                 }
                 else
                 {
+                    usage.Update("Socked closed, SurveyorVisionClient, WaitForData");
                     Console.WriteLine("m_clientSocket = null");
                 }
 			}
-			catch(SocketException se)
+			catch(Exception se)
 			{
+                usage.Update("Wait for data error " + se.Message + ", SurveyorVisionClient, WaitForData");
 				Console.WriteLine("WaitForData: " + se.Message);
 			}
 		}
@@ -332,6 +366,8 @@ namespace surveyor.vision
             long frame_size,
             int image_width, int image_height)
         {
+            usage.Update("Receive frame, SurveyorVisionClient, ReceiveFrame");
+            
             if ((frame_size > 0) && 
 			    (received_data.Count - start_index - 100 >= frame_size)) // &&
 			    //(!current_frame_busy))
@@ -369,15 +405,25 @@ namespace surveyor.vision
                             current_frame_swapping = false;
                             
                             if (Verbose) 
-							    Console.WriteLine("Frame received");						
+							    Console.WriteLine("Frame received");
+                            usage.Update("Frame received, SurveyorVisionClient, ReceiveFrame");
 						}
-						else Console.WriteLine("current_frame_busy = true");
+						else
+                        {
+                            usage.Update("new_current_frame_busy, SurveyorVisionClient, ReceiveFrame");
+                            Console.WriteLine("current_frame_busy = true");
+                        }
 					}
-					else Console.WriteLine("new_current_frame = null");
+					else
+                    {
+                        usage.Update("new_current_frame is null, SurveyorVisionClient, ReceiveFrame");
+                        Console.WriteLine("new_current_frame = null");
+                    }
                 }
                 catch (Exception ex)
                 {
                     current_frame = null;
+                    usage.Update("Receive frame error + " + ex.Message + ", SurveyorVisionClient, ReceiveFrame");
                     Console.WriteLine("Error converting to jpeg: " + ex.Message);                    
                 }
             }
@@ -386,6 +432,7 @@ namespace surveyor.vision
 
         private bool ReceiveFrame(List<byte> received_data)
         {
+            usage.Update("Receive frame 2, SurveyorVisionClient, ReceiveFrame");
 			bool received = false;
             data_last_received = DateTime.Now;
             while (search_pos < received_data.Count - 10)
@@ -451,6 +498,8 @@ namespace surveyor.vision
             int start_index, int end_index,
             int no_of_matches)
         {
+            usage.Update("Receive disparities, SurveyorVisionClient, ReceiveDisparities");
+            
             if (no_of_matches > 0)
             {
                 const int initial_block = 9;
@@ -502,6 +551,8 @@ namespace surveyor.vision
 		
         private bool ReceiveDisparities(List<byte> received_data)
         {
+            usage.Update("Receive disparities 2, SurveyorVisionClient, ReceiveDisparities");
+            
 			bool received = false;
             data_last_received = DateTime.Now;
             while (search_pos < received_data.Count - 9)
@@ -539,6 +590,8 @@ namespace surveyor.vision
 		
         private void OnDataReceived(IAsyncResult asyn)
 		{
+            usage.Update("Data received callback, SurveyorVisionClient, OnDataReceived");
+            
 			try
 			{
 				SocketPacket theSockId = (SocketPacket)asyn.AsyncState ;
@@ -564,16 +617,20 @@ namespace surveyor.vision
 			}
 			catch (ObjectDisposedException )
 			{
+                usage.Update("Socket has been closed, SurveyorVisionClient, OnDataReceived");
 				System.Diagnostics.Debugger.Log(0,"1","\nOnDataReceived: Socket has been closed\n");
 			}
 			catch(Exception se)
 			{
+                usage.Update("Data received error " + se.Message + ", SurveyorVisionClient, OnDataReceived");
 				Console.WriteLine(se.Message);
 			}
 		}
 		
         public void Stop()
 		{
+            usage.Update("Stop camera, SurveyorVisionClient, Stop");
+            
 			if ( m_clientSocket != null )
 			{
 				m_clientSocket.Close();
@@ -597,6 +654,8 @@ namespace surveyor.vision
         /// <param name="state"></param>
         private void FrameGrabCallbackClient(object state)
         {            
+            usage.Update("Frame callback, SurveyorVisionClient, FrameGrabCallbackClient");
+            
             //SurveyorVisionClient istate = (SurveyorVisionClient)state;
 			Thread.Sleep(10);
         }
@@ -608,6 +667,7 @@ namespace surveyor.vision
         /// </summary>
         public void StartStream()
         {
+            usage.Update("Start camera stream, SurveyorVisionClient, StartStream");
             Streaming = true;
         }
 
@@ -616,6 +676,7 @@ namespace surveyor.vision
 		/// </summary>
 		public void EnableEmbeddedStereo()
 		{
+            usage.Update("Enable enbedded, SurveyorVisionClient, EnableEmbeddedStereo");
 			Send(processing_type_command + processing_type_stereo_command, false);
 		}
 
@@ -624,6 +685,7 @@ namespace surveyor.vision
 		/// </summary>
 		public void DisableEmbeddedStereo()
 		{
+            usage.Update("Disable enbedded, SurveyorVisionClient, DisableEmbeddedStereo");
 			Send(processing_type_command + processing_type_normal_command, false);
 		}
 		
@@ -631,22 +693,27 @@ namespace surveyor.vision
         {            
 			if (!((Embedded) && (cam_index == 1)))
 			{
+                usage.Update("Frame request, SurveyorVisionClient, RequestFrame");
+                
 				frame_arrived = false;
                 Send(image_request_command, true);
 			}
 			else
 			{
+                usage.Update("Embedded frame request, SurveyorVisionClient, RequestFrame");
 				frame_arrived = true;
 			}
         }
 
         public void RequestResolution640x480()
         {            
+            usage.Update("Resolution 640x480, SurveyorVisionClient, RequestResolution640x480");
             Send(request_640_480, false);
         }
 
         public void RequestResolution320x256()
         {            
+            usage.Update("Resolution 640x480, SurveyorVisionClient, RequestResolution320x256");
             Send(request_320_256, false);
         }
         
@@ -655,6 +722,7 @@ namespace surveyor.vision
         /// </summary>
         public void StopStream()
         {
+            usage.Update("Stop stream, SurveyorVisionClient, StopStream");
             Streaming = false;
             //grab_frames.Halt = true;
         }

@@ -128,6 +128,8 @@ namespace surveyor.vision
 
         // whether to flip images if the cameras are inverted
         public bool flip_left_image, flip_right_image;
+
+        public UsageGraph usage;
         
         #region "constructors"
         
@@ -157,6 +159,10 @@ namespace surveyor.vision
                 for (int v = 0; v < victims.Length; v++)
                     File.Delete(victims[v]);
             }
+
+            usage = new UsageGraph();
+            //usage.log_file = "debug.txt";
+            if (File.Exists(usage.log_file)) File.Delete(usage.log_file);
         }
         
         #endregion
@@ -172,6 +178,8 @@ namespace surveyor.vision
         /// <param name="histogram">histogram data</param>
         private unsafe float GetMeanLight(float[] histogram)
         {
+            usage.Update("Mean light, BaseVisionStereo, GetMeanLight");
+            
             float MeanDark=0, MeanLight=0;
             float MinVariance = 999999;  // some large figure
             float currMeanDark, currMeanLight, VarianceDark, VarianceLight;
@@ -261,6 +269,8 @@ namespace surveyor.vision
         protected void AutoExposure(byte[] left_img, byte[] right_img)
         {        
             const int ideal_mean_light = 200;
+
+            usage.Update("Auto exposure, BaseVisionStereo, AutoExposure");
             
             if ((left_img != null) && (right_img != null))
             {
@@ -340,6 +350,8 @@ namespace surveyor.vision
             bool flip_left_image,
             bool flip_right_image)
         {
+            //usage.Update("Get xml document, BaseVisionStereo, GetXmlDocument");
+            
             // Create the document.
             XmlDocument doc = new XmlDocument();
 
@@ -382,6 +394,8 @@ namespace surveyor.vision
         /// <param name="filename">filename to save as</param>
         public void Save(string filename)
         {
+            usage.Update("Save, BaseVisionStereo, Save");
+            
             int img_width = image_width;
             int img_height = image_height;
 
@@ -484,6 +498,8 @@ namespace surveyor.vision
             bool flip_left_image,
             bool flip_right_image)
         {
+            //usage.Update("Get xml, BaseVisionStereo, GetXml");
+            
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
 
@@ -595,6 +611,8 @@ namespace surveyor.vision
             float scale,
             float offset_x, float offset_y)		                                        
 		{
+            usage.Update("Save camera params, BaseVisionStereo, SaveCameraParameters");
+            
 			FileStream fs;
 			BinaryWriter bw;
 			
@@ -669,6 +687,8 @@ namespace surveyor.vision
             float scale,
             bool flip_image)
         {
+            //usage.Update("Get camera Xml, BaseVisionStereo, GetCameraXml");
+            
             // make sure that floating points are saved in a standard format
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
 
@@ -715,6 +735,8 @@ namespace surveyor.vision
         /// <param name="filename">filename to load from</param>
         public void Load(string filename)
         {
+            usage.Update("Load " + filename + ", BaseVisionStereo, Load");
+            
             if (File.Exists(filename))
             {
                 // use an XmlTextReader to open an XML document
@@ -750,6 +772,7 @@ namespace surveyor.vision
         /// <param name="camera_index">index number of the camera</param>
         public void ResetCalibration(int camera_index)
         {
+            usage.Update("Reset calibration, BaseVisionStereo, ResetCalibration");
             calibration_survey[camera_index].Reset();
             calibration_map[camera_index] = null;
         }
@@ -761,6 +784,7 @@ namespace surveyor.vision
         /// <param name="level"></param>
         public void LoadFromXml(XmlNode xnod, int level, ref int camera_index)
         {
+            usage.Update("Load from Xml, BaseVisionStereo, LoadFromXml");
             IFormatProvider format = new System.Globalization.CultureInfo("en-GB");
 
             if (xnod.Name == "Camera")
@@ -902,6 +926,8 @@ namespace surveyor.vision
 		/// </returns>
         public bool CalibrateCameraAlignment()
         {
+            usage.Update("Calibrate alignment, BaseVisionStereo, CalibrateCameraAlignment");
+            
             bool done = false;
             if (rectified != null)
             {
@@ -919,6 +945,8 @@ namespace surveyor.vision
 
         public void ResetCalibration()
         {
+            usage.Update("Reset calibration, BaseVisionStereo, ResetCalibration");
+            
             ResetCalibration(0);
             ResetCalibration(1);
         }
@@ -930,6 +958,8 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>        
         protected void RectifyImages(Bitmap left_image, Bitmap right_image)
         {
+            usage.Update("Rectify images, BaseVisionStereo, RectifyImages");
+            
             byte[][] img_rectified = new byte[2][];
 			int ww = 0;
 			int hh = 0;
@@ -1054,6 +1084,8 @@ namespace surveyor.vision
 								}
 								catch
 								{
+                                    usage.Update("Rectify fail, BaseVisionStereo, RectifyImages");
+                                    Console.WriteLine("failed to update rectified image");
 								}
 	                        }
 						}
@@ -1110,6 +1142,8 @@ namespace surveyor.vision
         protected Bitmap DetectEdges(Bitmap bmp, EdgeDetectorCanny edge_detector,
                                      ref hypergraph dots)
         {
+            usage.Update("Detect edges, BaseVisionStereo, DetectEdges");
+            
             byte[] image_data = new byte[bmp.Width * bmp.Height * 3];
             BitmapArrayConversions.updatebitmap(bmp, image_data);
             
@@ -1136,6 +1170,8 @@ namespace surveyor.vision
 
         protected void UpdateRawDifference(Bitmap left_image, Bitmap right_image)
         {
+            usage.Update("Update raw difference, BaseVisionStereo, UpdateRawDifference");
+            
             if (raw_difference == null)
             {
                 raw_difference = new Bitmap(left_image.Width, left_image.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);    
@@ -1207,7 +1243,9 @@ namespace surveyor.vision
         /// perform stereo correspondence between the two images
         /// </summary>
         protected void StereoCorrespondence()
-        {        
+        {
+            usage.Update("Stereo correspondence, BaseVisionStereo, StereoCorrespondence");
+            
             bool images_rectified = false;
             if ((rectified[0] != null) && (rectified[1] != null)) images_rectified = true;
         
@@ -1448,6 +1486,8 @@ namespace surveyor.vision
             string event_str,
             string event_log)
         {
+            //usage.Update("Log event, BaseVisionStereo, LogEvent");
+            
             StreamWriter oWrite = null;
             bool allowWrite = true;
 
@@ -1477,6 +1517,8 @@ namespace surveyor.vision
             string path_identifier,
             string record_path)
         {
+            //usage.Update("Compress recorded data, BaseVisionStereo, CompressRecordedData");
+            
             string util = zip_utility;
             if ((util != "") &&
                 (util != null) &&
@@ -1527,6 +1569,7 @@ namespace surveyor.vision
                 catch
                 {
                     allowWrite = false;
+                    //usage.Update("Can't create batch, BaseVisionStereo, CompressRecordedData");
                     Console.WriteLine("Can't create batch file");
                 }
 
@@ -1570,6 +1613,7 @@ namespace surveyor.vision
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message);
+                        //usage.Update("Can't compress " + ex.Message + ", BaseVisionStereo, CompressRecordedData");
                         Console.WriteLine("Could not compress recorded training data.  Is the associated compression utility installed?");
                         if (IsWindows())
                             Console.WriteLine("You may need to include the compression utility within your PATH environment variable");
@@ -1597,6 +1641,8 @@ namespace surveyor.vision
             string record_path,
             string path_identifier)
         {
+            //usage.Update("Extract file, BaseVisionStereo, ExtractFile");
+            
             bool done = false;
             
             string util = zip_utility;

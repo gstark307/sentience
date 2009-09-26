@@ -50,6 +50,8 @@ namespace surveyor.vision
             int broadcast_port,
             float fps) : base(broadcast_port, fps)
         {
+            usage.Update("Create, SurveyorVisionStereo, Constructor");
+            
             device_name = "Surveyor stereo camera";
             this.host = host;
             
@@ -57,6 +59,7 @@ namespace surveyor.vision
             for (int cam = 0; cam < 2; cam++)
             {
                 camera[cam] = new SurveyorVisionClient();
+                camera[cam].usage = usage;
                 camera[cam].grab_mode = SurveyorVisionClient.GRAB_MULTI_CAMERA;
 				camera[cam].cam_index = cam;
             }
@@ -78,6 +81,8 @@ namespace surveyor.vision
 		public void EnableEmbeddedStereo()
 		{
 			Console.WriteLine("Enabling embedded stereo");
+            usage.Update("Enable embedded, SurveyorVisionStereo, EnableEmbeddedStereo");
+            
 			embedded_last_enabled_disabled = DateTime.Now;
 			disable_embedded = false;
 			enable_embedded = true;	
@@ -88,6 +93,8 @@ namespace surveyor.vision
 		public void DisableEmbeddedStereo()
 		{
 			Console.WriteLine("Disabling embedded stereo");
+            usage.Update("Disable embedded, SurveyorVisionStereo, DisableEmbeddedStereo");
+            
 			embedded_last_enabled_disabled = DateTime.Now;
 			disable_embedded = true;
 			enable_embedded = false;
@@ -107,7 +114,8 @@ namespace surveyor.vision
             int camera_index,
             string command)
         {
-            if (camera[camera_index] != null) {                
+            if (camera[camera_index] != null) {
+                usage.Update("Command: " + command + ", SurveyorVisionStereo, SendCommand");
                 camera[camera_index].send_command = command;
             }
         }
@@ -127,6 +135,8 @@ namespace surveyor.vision
 				
 		public void update_state()
 		{
+            usage.Update("Update entry state " + svs_state.ToString() + ", SurveyorVisionStereo, update_state");
+            
 			if ((camera[0].Running) && 
 			    (camera[1].Running))
 			{
@@ -307,7 +317,9 @@ namespace surveyor.vision
                 }
                 
 				prev_svs_state = svs_state;
-			}            
+			}
+            usage.Update("Update exit state " + svs_state.ToString() + ", SurveyorVisionStereo, update_state");
+            //usage.ExportAsDot("debug.dot", true, true);
 		}
 		
 		#endregion
@@ -322,13 +334,18 @@ namespace surveyor.vision
         /// <param name="state"></param>
         private void FrameGrabCallbackMulti(object state)
         {
+            usage.Update("Callback, SurveyorVisionStereo, FrameGrabCallbackMulti");
+            
 			if (camera[0].Streaming)
 			{
                 //grab_frames = new SurveyorVisionThreadGrabFrameMulti(new WaitCallback(FrameGrabCallbackMulti), this);
                 sync_thread = new Thread(new ThreadStart(grab_frames.Execute));
                 sync_thread.Priority = ThreadPriority.Normal;
-                if (Running) 
+                if (Running)
+                {
                     sync_thread.Start();
+                    usage.Update("Callback new thread started, SurveyorVisionStereo, FrameGrabCallbackMulti");
+                }
                 else
                     Console.WriteLine("Not running");
 			}
@@ -354,6 +371,8 @@ namespace surveyor.vision
             bool cameras_started = true;
 			bool retry = true;
 			int tries = 0;
+
+            usage.Update("Run, SurveyorVisionStereo, Run");
 			
 			while ((retry) && (tries < 4))
 			{
@@ -368,9 +387,12 @@ namespace surveyor.vision
 	                if (camera[cam].Running)
 	                {
 	                    camera[cam].StartStream();
+                        usage.Update("Camera " + cam.ToString() + " stream sterted, SurveyorVisionStereo, Run");
 	                }
 	                else
 	                {
+                        usage.Update("Camera " + cam.ToString() + " not running, SurveyorVisionStereo, Run");
+                        
                         Console.WriteLine("Camera " + cam.ToString() + " not running");
 	                    cameras_started = false;
 	                    break;
@@ -387,9 +409,11 @@ namespace surveyor.vision
 	                sync_thread.Start();   
 					retry = false;
 	                Console.WriteLine("Stereo camera active on " + host);
+                    usage.Update("Stereo camera active, SurveyorVisionStereo, Run");
 	            }
 				else
 				{
+                    usage.Update("Stereo camera not started, SurveyorVisionStereo, Run");
 					Console.WriteLine("Cameras not started");
 				}
 			}
@@ -397,11 +421,13 @@ namespace surveyor.vision
 
         public override void Stop()
         {
+            usage.Update("Stop, SurveyorVisionStereo, Stop");
             if (Running)
             {
 				Running = false;
                 for (int cam = 0; cam < 2; cam++)
                 {
+                    usage.Update("Stopping camera " + cam.ToString() + ", SurveyorVisionStereo, Stop");
                     camera[cam].StopStream();
                     camera[cam].Stop();
                 }
@@ -414,6 +440,7 @@ namespace surveyor.vision
         
         public override void SetFramesPerSecond(int fps)
         {
+            usage.Update("fps=" + fps.ToString() + ", SurveyorVisionStereo, SetFramesPerSecond");
             this.fps = fps;
             camera[0].fps = fps;
             camera[1].fps = fps;
@@ -432,7 +459,9 @@ namespace surveyor.vision
         #region "process images"
 
         public override void Process(Bitmap left_image, Bitmap right_image)
-        {        
+        {
+            usage.Update("Process images, SurveyorVisionStereo, Process");
+            
             DisplayImages(left_image, right_image);
             StereoCorrespondence();
         }
@@ -446,6 +475,7 @@ namespace surveyor.vision
         {
             if (command_str.Length == 1)
             {
+                usage.Update("Replaying command, SurveyorVisionStereo, ReplayCommand");
                 SendCommand(0, command_str);
             }
         }
@@ -456,6 +486,8 @@ namespace surveyor.vision
             string record_path,
             string log_identifier)
         {
+            usage.Update("Run Replay, SurveyorVisionStereo, RunReplay");
+            
             // create a thread to send the master pulse
             SurveyorReplayThread replay_actions = 
                 new SurveyorReplayThread(
@@ -473,6 +505,8 @@ namespace surveyor.vision
 
         public override void StopReplay()
         {
+            usage.Update("Stop Replay, SurveyorVisionStereo, StopReplay");
+            
             if (replaying_actions)
             {
                 SendCommand(0, "5");

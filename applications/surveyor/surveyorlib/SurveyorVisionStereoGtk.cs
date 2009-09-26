@@ -65,6 +65,8 @@ namespace surveyor.vision
         /// <param name="sound_filename"></param>
         private void PlaySound(string sound_filename)
         {
+            usage.Update("Play Sound, SurveyorVisionStereoGtk, PlaySound");
+            
             System.Media.SoundPlayer myPlayer = new System.Media.SoundPlayer();
             myPlayer.SoundLocation = sound_filename;
             myPlayer.Play();
@@ -92,6 +94,7 @@ namespace surveyor.vision
         /// <param name="window">Gtk window to be refreshed</param>
         public void UpdateGUI(Gtk.Window window, Gtk.Window calibration_window)
         {
+            usage.Update("Update GUI, SurveyorVisionStereoGtk, UpdateGUI");
             window.GdkWindow.ProcessUpdates(true);
             if (calibration_window != null) 
                 calibration_window.GdkWindow.ProcessUpdates(true);			
@@ -99,6 +102,7 @@ namespace surveyor.vision
         
         private Bitmap OverlayImage(Bitmap bmp, Bitmap overlay, int overlay_width)
         {
+            usage.Update("Overlay image, SurveyorVisionStereoGtk, OverlayImage");
             Bitmap result = (Bitmap)bmp.Clone();
             byte[] image_data = new byte[result.Width * result.Height * 3];
             BitmapArrayConversions.updatebitmap(result, image_data);
@@ -127,6 +131,7 @@ namespace surveyor.vision
 
         private void DisplayImage(Gtk.Image img, Bitmap default_image, bool is_left)
         {
+            usage.Update("Display Image, SurveyorVisionStereoGtk, DisplayImage");
             Bitmap disp_image = null;
             
             switch(display_type)
@@ -171,6 +176,7 @@ namespace surveyor.vision
         /// <param name="right_image">right image bitmap</param>
         protected override void DisplayImages(Bitmap left_image, Bitmap right_image)
         {
+            usage.Update("Display Images, SurveyorVisionStereoGtk, DisplayImages");
             if (display_image[0] != null)
             {
                 if ((show_left_image) &&
