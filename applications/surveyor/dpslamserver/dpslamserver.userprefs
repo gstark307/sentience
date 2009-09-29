@@ -5,7 +5,7 @@
       <File FileName="../dpslam/dpslam.cs" Line="223" Column="15" />
       <File FileName="commandline.cs" Line="1" Column="1" />
       <File FileName="../dpslam/stereoModel.cs" Line="953" Column="35" />
-      <File FileName="../dpslam/tests/stereomodel_tests.cs" Line="18" Column="38" />
+      <File FileName="../dpslam/tests/stereomodel_tests.cs" Line="18" Column="35" />
       <File FileName="../dpslam/tests/motionmodel_tests.cs" Line="1" Column="1" />
     </Files>
     <Pads>
