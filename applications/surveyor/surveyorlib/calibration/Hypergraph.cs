@@ -72,7 +72,8 @@ namespace surveyor.vision
             int i = 0;
             while ((i < Links.Count) && (lnk == null))
             {
-                if (Links[i].From.ID == from_ID) lnk = Links[i];
+                if (Links[i] != null)
+                    if (Links[i].From.ID == from_ID) lnk = Links[i];
                 i++;
             }
             return (lnk);

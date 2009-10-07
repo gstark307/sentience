@@ -24,6 +24,7 @@ using System.Threading;
 using System.Reflection;
 using Gtk;
 using surveyor.vision;
+using dpslam.core;
 using sluggish.utilities;
 using sluggish.utilities.gtk;
 
@@ -51,6 +52,8 @@ public partial class MainWindow: Gtk.Window
 	int motors_tries = 5;
 	bool starting = true;
 	
+	robotSurveyor robot;
+	
     public SurveyorVisionStereoGtk stereo_camera;
     
     private string AssemblyVersion
@@ -74,6 +77,7 @@ public partial class MainWindow: Gtk.Window
     {
         Build ();
 		
+		robot = new robotSurveyor();
 		this.stereo_camera_IP = stereo_camera_IP;
 		
         string version = String.Format("{0}", AssemblyVersion);
@@ -89,8 +93,8 @@ public partial class MainWindow: Gtk.Window
         byte[] img = new byte[image_width * image_height * 3];
         Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
         Bitmap right_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-        BitmapArrayConversions.updatebitmap_unsafe(img, left_bmp);
-        BitmapArrayConversions.updatebitmap_unsafe(img, right_bmp);
+        sluggish.utilities.BitmapArrayConversions.updatebitmap_unsafe(img, left_bmp);
+        sluggish.utilities.BitmapArrayConversions.updatebitmap_unsafe(img, right_bmp);
         GtkBitmap.setBitmap(left_bmp, leftimage);
         GtkBitmap.setBitmap(right_bmp, rightimage);
         
@@ -138,6 +142,7 @@ public partial class MainWindow: Gtk.Window
     
     private void CloseForm()
     {
+		robot.updating = false;
         stereo_camera.Stop();
 		Thread.Sleep(2000);
         Application.Quit ();
@@ -370,8 +375,8 @@ public partial class MainWindow: Gtk.Window
 		GtkBitmap.getBitmap(rightimage, right);
 		Bitmap left_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 		Bitmap right_bmp = new Bitmap(image_width, image_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-		BitmapArrayConversions.updatebitmap_unsafe(left, left_bmp);
-		BitmapArrayConversions.updatebitmap_unsafe(right, right_bmp);
+		sluggish.utilities.BitmapArrayConversions.updatebitmap_unsafe(left, left_bmp);
+		sluggish.utilities.BitmapArrayConversions.updatebitmap_unsafe(right, right_bmp);
 		if (left_image_filename.ToLower().EndsWith("png"))
 		{
 		    left_bmp.Save(left_image_filename, System.Drawing.Imaging.ImageFormat.Png);
@@ -588,11 +593,12 @@ public partial class MainWindow: Gtk.Window
     {
         if (stereo_camera.Record) BaseVisionStereo.LogEvent(DateTime.Now, command_str, teleoperation_log);
 	    stereo_camera.SendCommand(0, command_str);
+		robot.TeleoperationCommand(command_str);
 	}
 		
-			protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
-			    {
-			}
+	protected virtual void OnCmdStopActivated (object sender, System.EventArgs e)
+	{
+	}
 				
     /// <summary>
     /// Toggles logging of images on or off  

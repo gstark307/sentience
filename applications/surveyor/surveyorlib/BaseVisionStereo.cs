@@ -138,7 +138,9 @@ namespace surveyor.vision
         /// </summary>
         /// <param name="broadcast_port">port number on which to broadcast stereo feature data to other applications</param>
         /// <param name="fps">ideal frames per second</param>
-        public BaseVisionStereo(int broadcast_port, float fps)
+        public BaseVisionStereo(
+            int broadcast_port, 
+            float fps)
         {
             this.fps = fps;
         

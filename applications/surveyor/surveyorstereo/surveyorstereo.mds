@@ -4,21 +4,25 @@
       <Entry build="True" name="surveyorstereo" configuration="Debug" />
       <Entry build="True" name="Packages" configuration="Debug" />
       <Entry build="True" name="surveyorlib" configuration="Debug" />
+      <Entry build="True" name="dpslam" configuration="Debug" />
     </Configuration>
     <Configuration name="Release" ctype="CombineConfiguration">
       <Entry build="True" name="surveyorstereo" configuration="Release" />
       <Entry build="True" name="Packages" configuration="Release" />
       <Entry build="True" name="surveyorlib" configuration="Release" />
+      <Entry build="True" name="dpslam" configuration="Release" />
     </Configuration>
   </Configurations>
   <StartMode startupentry="surveyorstereo" single="True">
     <Execute type="None" entry="surveyorstereo" />
     <Execute type="None" entry="Packages" />
     <Execute type="None" entry="surveyorlib" />
+    <Execute type="None" entry="dpslam" />
   </StartMode>
   <Entries>
     <Entry filename="surveyorstereo.mdp" />
     <Entry filename="Packages.mdse" />
     <Entry filename="../surveyorlib/surveyorlib.mdp" />
+    <Entry filename="../dpslam/dpslam.mdp" />
   </Entries>
 </Combine>
