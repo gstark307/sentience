@@ -119,6 +119,10 @@ namespace dpslam.core
         public float angular_acceleration_pan = 0;
         public float angular_acceleration_tilt = 0;
         public float angular_acceleration_roll = 0;
+		
+		public const int NOISE = 0;
+		public const int SPEED = 1;
+		public int uncertainty_type = NOISE;
 
         private bool initialised = false;
 
@@ -157,12 +161,34 @@ namespace dpslam.core
                 i++;
             }
             
-			
-			
             // create some initial poses
             createNewPoses(rob.x, rob.y, rob.z, rob.pan, rob.tilt, rob.roll);
         }
 
+		
+        public void SetMotionNoise(
+		    float motion_noise_1,
+		    float motion_noise_2,
+		    float motion_noise_3)
+        {
+            int i = 0;
+            while (i < 2)
+            {
+                motion_noise[i] = motion_noise_1;
+                i++;
+            }
+            while (i < 4)
+            {
+                motion_noise[i] = motion_noise_2;
+                i++;
+            }
+            while (i < motion_noise.Length)
+            {
+                motion_noise[i] = motion_noise_3;
+                i++;
+            }
+        }
+		
         #endregion
 
         #region "creation of new paths"
@@ -253,7 +279,9 @@ namespace dpslam.core
         /// </summary>
         /// <param name="path">path to add the new estimated pose to</param>
         /// <param name="time_elapsed_sec">time elapsed since the last update in seconds</param>
-        private void sample_motion_model_velocity(particlePath path, float time_elapsed_sec)
+        private void sample_motion_model_velocity(
+		    particlePath path, 
+		    float time_elapsed_sec)
         {
             // calculate noisy velocities
             float fwd_velocity = forward_velocity + sample_normal_distribution(
@@ -288,6 +316,37 @@ namespace dpslam.core
             new_pose.time_step = time_step;
             path.Add(new_pose);
         }		
+
+		
+		public float speed_uncertainty_forward = 10;
+		public float speed_uncertainty_angular = 10 / 180.0f * (float)Math.PI;
+		
+        /// <summary>
+        /// update the given pose using the motion model
+        /// </summary>
+        /// <param name="path">path to add the new estimated pose to</param>
+        /// <param name="time_elapsed_sec">time elapsed since the last update in seconds</param>
+        private void sample_motion_model_speed(
+		    particlePath path, 
+		    float time_elapsed_sec)
+        {
+            float fwd_velocity = forward_velocity + 
+				sample_normal_distribution(
+                    speed_uncertainty_forward);
+            float ang_velocity = angular_velocity_pan + 
+				sample_normal_distribution(
+                    speed_uncertainty_angular);
+
+			float new_pan = path.current_pose.pan + (ang_velocity * time_elapsed_sec);
+			float dist = fwd_velocity * time_elapsed_sec;
+			float new_y = path.current_pose.y + (dist * (float)Math.Cos(new_pan));
+			float new_x = path.current_pose.x + (dist * (float)Math.Sin(new_pan));
+
+            particlePose new_pose = new particlePose(new_x, new_y, 0, new_pan, 0, 0, path);
+            new_pose.time_step = time_step;
+            path.Add(new_pose);
+        }		
+		
 		
         /// <summary>
         /// removes low probability poses
@@ -876,8 +935,16 @@ namespace dpslam.core
                 }
 
                 // update poses
-                for (int sample = Poses.Count-1; sample >= 0; sample--)
-                    sample_motion_model_velocity(Poses[sample], time_elapsed_sec);
+				if (uncertainty_type == NOISE)
+				{
+                    for (int sample = Poses.Count-1; sample >= 0; sample--)
+                        sample_motion_model_velocity(Poses[sample], time_elapsed_sec);
+				}
+				else
+				{
+                    for (int sample = Poses.Count-1; sample >= 0; sample--)
+                        sample_motion_model_speed(Poses[sample], time_elapsed_sec);
+				}
 
                 time_step++;
 

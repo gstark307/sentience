@@ -49,6 +49,7 @@ namespace dpslam.core
 		public float current_speed_mmsec = 0;
 		public float current_speed_uncertainty_mmsec = 0;
 		public int speed_increment = 3;
+		public bool displaying_motion_model;
 		
 		DateTime last_position_update;
 		pos3D curr_pos;
@@ -77,7 +78,7 @@ namespace dpslam.core
             WheelBase_mm = 90;
             WheelDiameter_mm = 30;
             WheelBaseForward_mm = 0;
-		
+					
 			disparities = new List<byte[]>();
 			curr_pos = new pos3D(0,0,0);
 			last_position_update = DateTime.Now;
@@ -128,7 +129,7 @@ namespace dpslam.core
 			TimeSpan diff = t.Subtract(last_position_update);
 			float time_elapsed_sec = (float)diff.TotalSeconds;
 			if (time_elapsed_sec > 0)
-			{		
+			{						
 				float dist_mm = current_speed_mmsec * time_elapsed_sec;
 				curr_pos.x += dist_mm * (float)Math.Sin(pan);
 				curr_pos.y += dist_mm * (float)Math.Cos(pan);
@@ -145,11 +146,45 @@ namespace dpslam.core
 		
 		public void UpdateSurveyor()
 		{
+			float horizon = 2000;
+			DateTime save_motion_model_time = new DateTime(1990,1,1);
+			pos3D map_centre = new pos3D(x,y,z);
 			updating = true;
 			while (updating)
 			{
+				if (current_speed_mmsec != 0)
+				{
+			        motion.speed_uncertainty_forward = current_speed_uncertainty_mmsec;
+			        motion.speed_uncertainty_angular = 0.5f / 180.0f * (float)Math.PI;
+				}
+				else
+				{
+			        motion.speed_uncertainty_forward = 0;
+			        motion.speed_uncertainty_angular = 0;
+				}
+
 				UpdatePosition();
-				Thread.Sleep(500);
+				TimeSpan diff = DateTime.Now.Subtract(save_motion_model_time);
+				if (diff.TotalSeconds >= 5)
+				{
+					float dx = map_centre.x - curr_pos.x;
+					float dy = map_centre.y - curr_pos.y;
+					float dz = map_centre.z - curr_pos.z;
+					bool redraw_map = false;
+					if (!displaying_motion_model)
+					{
+					    float dist = (float)Math.Sqrt(dx*dx + dy*dy + dz*dz);
+						if (dist > 1000)
+						{
+							map_centre.x = curr_pos.x;
+							map_centre.y = curr_pos.y;
+							map_centre.z = curr_pos.z;
+							redraw_map = true;
+						}
+						SaveMotionModel("motion_model.jpg", map_centre.x-horizon, map_centre.y-horizon, map_centre.x+horizon, map_centre.y+horizon, redraw_map);
+					}
+				}
+				Thread.Sleep(500);				
 			}
 			thread_stopped = true;
 		}

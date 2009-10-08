@@ -136,18 +136,18 @@ public partial class MainWindow {
         Stetic.Gui.Initialize(this);
         // Widget MainWindow
         this.UIManager = new Gtk.UIManager();
-        Gtk.ActionGroup w1 = new Gtk.ActionGroup("New Action Group");
-        this.UIManager.InsertActionGroup(w1, 0);
-        Gtk.ActionGroup w2 = new Gtk.ActionGroup("Default");
+        Gtk.ActionGroup w1 = new Gtk.ActionGroup("Default");
         this.FileAction = new Gtk.Action("FileAction", Mono.Unix.Catalog.GetString("File"), null, null);
         this.FileAction.ShortLabel = Mono.Unix.Catalog.GetString("File");
-        w2.Add(this.FileAction, null);
+        w1.Add(this.FileAction, null);
         this.ExitAction = new Gtk.Action("ExitAction", Mono.Unix.Catalog.GetString("Exit"), null, "gtk-stop");
         this.ExitAction.ShortLabel = Mono.Unix.Catalog.GetString("Exit");
-        w2.Add(this.ExitAction, null);
+        w1.Add(this.ExitAction, null);
         this.ToolsAction = new Gtk.Action("ToolsAction", Mono.Unix.Catalog.GetString("Tools"), null, null);
         this.ToolsAction.ShortLabel = Mono.Unix.Catalog.GetString("Tools");
-        w2.Add(this.ToolsAction, null);
+        w1.Add(this.ToolsAction, null);
+        this.UIManager.InsertActionGroup(w1, 0);
+        Gtk.ActionGroup w2 = new Gtk.ActionGroup("New Action Group");
         this.UIManager.InsertActionGroup(w2, 1);
         this.AddAccelGroup(this.UIManager.AccelGroup);
         this.CanFocus = true;

@@ -114,6 +114,47 @@ namespace dpslam.core.tests
 			
 			Assert.IsTrue(rob.y > max_y_mm-50, "The robot did not move far enough " + rob.y.ToString());
         }
+
+		[Test()]
+        public void OpenLoopSpeed()
+        {
+			int image_width = 640;
+			byte[] img_rays = new byte[image_width*image_width*3];
+			Bitmap bmp = new Bitmap(image_width, image_width, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			
+			bool closed_loop = false;
+            robot rob = new robot(1);
+			rob.motion.uncertainty_type = motionModel.SPEED;
+			rob.motion.speed_uncertainty_forward = 4;
+			rob.motion.speed_uncertainty_angular = 0.5f / 180.0f * (float)Math.PI;
+
+            int min_x_mm = 0;
+            int min_y_mm = 0;
+            int max_x_mm = 1000;
+            int max_y_mm = 1000;
+            int step_size = (max_y_mm - min_y_mm) / 15;
+            int x = min_x_mm + ((max_x_mm - min_x_mm) / 2);
+            bool initial = true;
+            float pan = 0; // (float)Math.PI / 4;
+            for (int y = min_y_mm; y <= max_y_mm; y += step_size)
+            {
+                if (closed_loop) surveyPosesDummy(rob);
+				List<byte[]> disparities = new List<byte[]>();
+                rob.updateFromKnownPosition(disparities, x, y, 0, pan, 0, 0);
+                
+                rob.motion.Show(
+				    img_rays, image_width, image_width, 
+                    min_x_mm, min_y_mm, max_x_mm, max_y_mm,
+				    true, false,
+                    initial);
+                initial = false;
+            }
+									
+			BitmapArrayConversions.updatebitmap_unsafe(img_rays, bmp);
+			bmp.Save("motionmodel_tests_OpenLoopSpeed.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+			
+			Assert.IsTrue(rob.y > max_y_mm-50, "The robot did not move far enough " + rob.y.ToString());
+        }
 		
 		[Test()]
         public void SpeedControl()

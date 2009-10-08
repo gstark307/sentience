@@ -2,7 +2,10 @@
   <MonoDevelop.Ide.Workbench ActiveDocument="../dpslam/robotSurveyor.cs" ctype="Workbench">
     <Files>
       <File FileName="MainWindow.cs" Line="145" Column="26" />
-      <File FileName="../dpslam/robotSurveyor.cs" Line="138" Column="5" />
+      <File FileName="../dpslam/robotSurveyor.cs" Line="160" Column="9" />
+      <File FileName="../dpslam/robotSurveyorThread.cs" Line="52" Column="6" />
+      <File FileName="../dpslam/tests/motionmodel_tests.cs" Line="131" Column="30" />
+      <File FileName="../dpslam/motionModel.cs" Line="343" Column="37" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -28,7 +31,19 @@
         <State expanded="True" selected="True" />
       </Pad>
       <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True" selected="True" />
+        <State expanded="True">
+          <Node name="dpslam" expanded="True">
+            <Node name="dpslam" expanded="True">
+              <Node name="core" expanded="True">
+                <Node name="tests" expanded="True">
+                  <Node name="motionmodel_tests" expanded="True">
+                    <Node name="OpenLoopSpeed" selected="True" />
+                  </Node>
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
         <State />
