@@ -37,8 +37,7 @@ namespace surveyor.vision
         uint minimum_response = 300;
 
         /* matching params */
-        int ideal_no_of_matches = 200;
-        int descriptor_match_threshold = 0;
+        int ideal_no_of_matches = 400;
         
         /* These weights are used during matching of stereo features.
          * You can adjust them if you wish */
@@ -127,7 +126,6 @@ namespace surveyor.vision
                 camera[1],
                 ideal_no_of_matches,
                 max_disparity_percent,
-                descriptor_match_threshold,
                 learnDesc,
                 learnLuma,
                 learnDisp,

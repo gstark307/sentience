@@ -40,6 +40,7 @@ namespace surveyor.vision
         const int SVS_MAX_LINES = 200;
         const int SVS_PEAKS_HISTORY = 10;
         const bool SVS_VERBOSE = true;
+        const int SVS_FILTER_SAMPLING = 40;
 
         public uint imgWidth, imgHeight;
     
@@ -80,7 +81,12 @@ namespace surveyor.vision
         private int enable_peaks_filter;
     
         /* array used to store a disparity histogram */
-        private int[] disparity_histogram;
+        private int[] disparity_histogram_plane;
+        private int[] disparity_plane_fit;
+        
+        /* number of detected planes found during the filtering step */
+        private int no_of_planes;
+        private int[] plane;
     
         /* maps raw image pixels to rectified pixels */
         private int[] calibration_map;
@@ -118,7 +124,10 @@ namespace surveyor.vision
             feature_x = new short[SVS_MAX_FEATURES];
             feature_y = new short[SVS_MAX_FEATURES];
         
-            disparity_histogram = null;
+            disparity_histogram_plane = new int[(SVS_MAX_IMAGE_WIDTH/SVS_FILTER_SAMPLING)*(SVS_MAX_IMAGE_WIDTH / 2)];
+            disparity_plane_fit = new int[SVS_MAX_IMAGE_WIDTH / SVS_FILTER_SAMPLING];
+            plane = new int[11*9];
+
             calibration_map = null;
         
             /* array storing the number of features detected on each row */
@@ -197,15 +206,15 @@ namespace surveyor.vision
         
             /* compute peaks */
             int p0, p1;
-            for (j = 4; j < max - 4; j++) {
+            for (j = 2; j < max - 2; j++) {
                 sum = row_sum[j];
                 /* edge using 2 pixel radius */
-                p0 = (sum - row_sum[j - 2]) - (row_sum[j + 2] - sum);
+                p0 = (sum - row_sum[j - 1]) - (row_sum[j + 1] - sum);
                 if (p0 < 0)
                     p0 = -p0;
         
                 /* edge using 4 pixel radius */
-                p1 = (sum - row_sum[j - 4]) - (row_sum[j + 4] - sum);
+                p1 = (sum - row_sum[j - 2]) - (row_sum[j + 2] - sum);
                 if (p1 < 0)
                     p1 = -p1;
         
@@ -443,7 +452,6 @@ namespace surveyor.vision
             StereoVisionEdgesCam other, 
             int ideal_no_of_matches, /* ideal number of matches to be returned */
             int max_disparity_percent, /* max disparity as a percent of image width */
-            int descriptor_match_threshold, /* minimum no of descriptor bits to be matched, in the range 1 - SVS_DESCRIPTOR_PIXELS */
             int learnDesc, /* descriptor match weight */
             int learnLuma, /* luminance match weight */
             int learnDisp, /* disparity weight */
@@ -589,8 +597,6 @@ namespace surveyor.vision
                                     + BitsSetTable256[(desc_match >> 16) & 0xff]
                                     + BitsSetTable256[desc_match >> 24];
         
-                            /* were enough bits matched ? */
-                            if ((int) correlation >= descriptor_match_threshold) {
         
                                 /* bitwise descriptor anti-correlation match */
                                 desc_match = descLanti & descR;
@@ -622,7 +628,7 @@ namespace surveyor.vision
                                 /* store overall matching score */
                                 row_peaks[R] = (uint) score;
                                 total += row_peaks[R];
-                            }
+                            
                         } else {
                             if ((disp < min_disp) && (disp > -max_disp)) {
                                 row_peaks[R] = (uint) ((max_disp - disp)
@@ -685,7 +691,7 @@ namespace surveyor.vision
                 for (int i=priors_length-1;i>=0;i--) disparity_priors[i]=0;
         
                 /* filter the results */
-                svs_filter(no_of_possible_matches, max_disp, 3, use_priors);
+                svs_filter_plane(no_of_possible_matches, max_disp);
         
                 /* sort matches in descending order of probability */
                 if (no_of_possible_matches < ideal_no_of_matches) {
@@ -807,195 +813,362 @@ namespace surveyor.vision
         
             return (matches);
         }
-        
-        /* filtering function removes noise by searching for a peak in the disparity histogram */
-        private void svs_filter(
+
+        /* filtering function removes noise by fitting planes to the disparities
+           and disguarding outliers */
+        private void svs_filter_plane(
             int no_of_possible_matches, /* the number of stereo matches */
-            int max_disparity_pixels, /*maximum disparity in pixels */
-            int tolerance, /* tolerance around the peak in pixels of disparity */
-            int enable_secondary) /* enable secondary filtering (over time) */
-        {         
-            int i, hf, min, max, maxval, p, disp3, disp2_hits;
-            uint tx = 0, ty = 0, bx = 0, by = 0;
-        
-            /* create the histogram */
-            if (disparity_histogram == null) {
-                /* more than half of the image width is overkill */
-                disparity_histogram = new int[SVS_MAX_IMAGE_WIDTH / 2];
-            }
+            int max_disparity_pixels) /*maximum disparity in pixels */
+        {
+            int i, j, hf, hist_max, w = SVS_FILTER_SAMPLING, w2, n, horizontal = 0;
+            int x, y, disp, tx = 0, ty = 0, bx = 0, by = 0;
+            int hist_thresh, hist_mean, hist_mean_hits, mass, disp2;
+            int min_ww, max_ww, m, ww, d;
+            int ww0, ww1, disp0, disp1, cww, dww, ddisp;
+            int max_hits;
+            no_of_planes = 0;
         
             /* clear quadrants */
-            for (int i2 = no_of_possible_matches-1; i2 >=0; i2--) valid_quadrants[i2]=0;
+            for (i = no_of_possible_matches-1; i >= 0; i--)
+                valid_quadrants[i] = 0;
         
             /* create disparity histograms within different
              * zones of the image */
-            for (hf = 0; hf < 4; hf++) {
+            for (hf = 0; hf < 11; hf++) {
         
                 switch (hf) {
-                /* left hemifield */
+        
+                    // overall horizontal
                 case 0: {
                     tx = 0;
                     ty = 0;
-                    bx = imgWidth / 2;
-                    by = imgHeight;
+                    bx = (int)imgWidth;
+                    by = (int)imgHeight;
+                    horizontal = 1;
+                    w = bx;
                     break;
                 }
-                    /* right hemifield */
+                // overall vertical
                 case 1: {
-                    tx = bx;
-                    bx = imgWidth;
+                    tx = 0;
+                    ty = 0;
+                    bx = (int)imgWidth;
+                    by = (int)imgHeight;
+                    horizontal = 0;
+                    w = by;
                     break;
                 }
-                    /* upper hemifield */
+                // left hemifield 1
                 case 2: {
                     tx = 0;
                     ty = 0;
-                    bx = imgWidth;
-                    by = imgHeight / 2;
+                    bx = (int)imgWidth / 3;
+                    by = (int)imgHeight;
+                    horizontal = 1;
+                    w = bx;
                     break;
                 }
-                    /* lower hemifield */
+                // left hemifield 2
                 case 3: {
+                    tx = 0;
+                    ty = 0;
+                    bx = (int)imgWidth / 2;
+                    by = (int)imgHeight;
+                    horizontal = 1;
+                    w = bx;
+                    break;
+                }
+        
+                // centre field (vertical)
+                case 4: {
+                    tx = (int)imgWidth / 3;
+                    bx = (int)imgWidth * 2 / 3;
+                    w = (int)imgHeight;
+                    horizontal = 0;
+                    break;
+                }
+                // centre above field
+                case 5: {
+                    tx = (int)imgWidth / 3;
+                    ty = 0;
+                    bx = (int)imgWidth * 2 / 3;
+                    by = (int)imgHeight / 2;
+                    w = by;
+                    horizontal = 0;
+                    break;
+                }
+                // centre below field
+                case 6: {
+                    tx = (int)imgWidth / 3;
+                    ty = (int)imgHeight / 2;
+                    bx = (int)imgWidth * 2 / 3;
+                    by = (int)imgHeight;
+                    w = ty;
+                    horizontal = 0;
+                    break;
+                }
+                // right hemifield 0
+                case 7: {
+                    tx = (int)imgWidth * 2 / 3;
+                    bx = (int)imgWidth;
+                    horizontal = 1;
+                    break;
+                }
+                // right hemifield 1
+                case 8: {
+                    tx = (int)imgWidth / 2;
+                    bx = (int)imgWidth;
+                    w = tx;
+                    break;
+                }
+                // upper hemifield
+                case 9: {
+                    tx = 0;
+                    ty = 0;
+                    bx = (int)imgWidth;
+                    by = (int)imgHeight / 2;
+                    horizontal = 0;
+                    w = by;
+                    break;
+                }
+                // lower hemifield
+                case 10: {
                     ty = by;
-                    by = imgHeight;
+                    by = (int)imgHeight;
+                    horizontal = 0;
                     break;
                 }
                 }
         
                 /* clear the histogram */
-                for (int i2 = max_disparity_pixels-1; i2 >=0; i2--) disparity_histogram[i2] = 0;
-                int hist_max = 0;
+                w2 = w / SVS_FILTER_SAMPLING;
+                if (w2 < 1) w2 = 1;
+                for (i = w2 * max_disparity_pixels - 1; i >= 0; i--) disparity_histogram_plane[i] = 0;
+                for (i = w2 - 1; i >= 0; i--) disparity_plane_fit[i] = 0;
+                hist_max = 0;
         
                 /* update the disparity histogram */
-                for (i = 0; i < no_of_possible_matches; i++) {
-                    uint x = svs_matches[i * 4 + 1];
+                n = 0;
+                for (i = no_of_possible_matches-1; i >= 0; i--) {
+                    x = (int)svs_matches[i * 4 + 1];
                     if ((x > tx) && (x < bx)) {
-                        uint y = svs_matches[i * 4 + 2];
+                        y = (int)svs_matches[i * 4 + 2];
                         if ((y > ty) && (y < by)) {
-                            int disp = (int)svs_matches[i * 4 + 3];
-                            disparity_histogram[disp]++;
-                            if (disparity_histogram[disp] > hist_max)
-                                hist_max = disparity_histogram[disp];
+                            disp = (int)svs_matches[i * 4 + 3];
+                            if ((int) disp < max_disparity_pixels) {
+                                if (horizontal != 0) {
+                                    n = (((x - tx) / SVS_FILTER_SAMPLING)
+                                         * max_disparity_pixels) + disp;
+                                } else {
+                                    n = (((y - ty) / SVS_FILTER_SAMPLING)
+                                         * max_disparity_pixels) + disp;
+                                }
+                                disparity_histogram_plane[n]++;
+                                if (disparity_histogram_plane[n] > hist_max)
+                                    hist_max = disparity_histogram_plane[n];
+                            }
                         }
                     }
                 }
         
-                /* locate the histogram peak */
-                int mass = 0;
-                int disp2 = 0;
-                int hist_thresh = hist_max / 4;
-                int hist_mean = 0;
-                int hist_mean_hits = 0;
-                for (int d = 3; d < max_disparity_pixels - 1; d++) {
-                    if (disparity_histogram[d] > hist_thresh) {
-                        int m = disparity_histogram[d] + disparity_histogram[d - 1]
-                                + disparity_histogram[d + 1];
-                        mass += m;
-                        disp2 += m * d;
+                /* find peak disparities along a range of positions */
+                hist_thresh = hist_max / 4;
+                hist_mean = 0;
+                hist_mean_hits = 0;
+                disp2 = 0;
+                min_ww = w2;
+                max_ww = 0;
+                for (ww = 0; ww < (int) w2; ww++) {
+                    mass = 0;
+                    disp2 = 0;
+                    for (d = 1; d < max_disparity_pixels - 1; d++) {
+                        n = ww * max_disparity_pixels + d;
+                        if (disparity_histogram_plane[n] > hist_thresh) {
+                            m = disparity_histogram_plane[n]
+                                + disparity_histogram_plane[n - 1]
+                                + disparity_histogram_plane[n + 1];
+                            mass += m;
+                            disp2 += m * d;
+                        }
+                        if (disparity_histogram_plane[n] > 0) {
+                            hist_mean += disparity_histogram_plane[n];
+                            hist_mean_hits++;
+                        }
                     }
-                    if (disparity_histogram[d] > 0) {
-                        hist_mean += disparity_histogram[d];
-                        hist_mean_hits++;
+                    if (mass > 0) {
+                        // peak disparity at this position
+                        disparity_plane_fit[ww] = disp2 / mass;
+                        if (min_ww == (int) w2)
+                            min_ww = ww;
+                        if (ww > max_ww)
+                            max_ww = ww;
                     }
                 }
-                if (mass > 0) {
-                    disp2 /= mass;
+                if (hist_mean_hits > 0)
                     hist_mean /= hist_mean_hits;
-                }
         
-                /* simple near/far classification adjusts
-                 * the peak disparity that we're interested in */
-                int near = 1;
-                if (hist_mean * 4 > disparity_histogram[0]) {
-                    near = 0;
-                }
-        
-                if (enable_secondary!=0) {
-        
-                    /* store history */
-                    peaks_history[hf * SVS_PEAKS_HISTORY + peaks_history_index]
-                            = (ushort) disp2;
-        
-                    /* secondary filtering over time
-                     * this is only useful if the frame rate is high */
-                    if (enable_peaks_filter != 0) {
-                        /* clear the histogram */
-                        for (int i2 = max_disparity_pixels-1; i2 >=0; i2--) disparity_histogram[i2]=0;
-                        min = max_disparity_pixels;
-                        max = 0;
-                        /* create a histogram of peak disparities over the last few frames */
-                        for (p = 0; p < SVS_PEAKS_HISTORY; p++) {
-                            disp2 = peaks_history[hf * SVS_PEAKS_HISTORY + p] / 5;
-                            disparity_histogram[disp2]++;
-                            if (disp2 < min)
-                                min = disp2;
-                            if (disp2 > max)
-                                max = disp2;
+                /* fit a line to the disparity values */
+                ww0 = 0;
+                ww1 = 0;
+                disp0 = 0;
+                disp1 = 0;
+                int hits0,hits1;
+                if (max_ww >= min_ww) {
+                    cww = min_ww + ((max_ww - min_ww) / 2);
+                    hits0 = 0;
+                    hits1 = 0;
+                    for (ww = min_ww; ww <= max_ww; ww++) {
+                        if (ww < cww) {
+                            disp0 += disparity_plane_fit[ww];
+                            ww0 += ww;
+                            hits0++;
+                        } else {
+                            disp1 += disparity_plane_fit[ww];
+                            ww1 += ww;
+                            hits1++;
                         }
-                        /* find the peak */
-                        maxval = -1;
-                        disp3 = 0;
-                        for (p = max; p >= min; p--) {
-                            if (disparity_histogram[p] > maxval) {
-                                maxval = disparity_histogram[p];
-                                disp3 = p;
-                            }
-                        }
-                        /* average the disparity values */
-                        disp2 = 0;
-                        disp2_hits = 0;
-                        for (p = 0; p < SVS_PEAKS_HISTORY; p++) {
-                            if (peaks_history[hf * SVS_PEAKS_HISTORY + p] / 5 == disp3) {
-                                disp2 += peaks_history[hf * SVS_PEAKS_HISTORY + p];
-                                disp2_hits++;
-                            }
-                        }
-                        if (disp2_hits > 0)
-                            disp2 /= disp2_hits;
+                    }
+                    if (hits0 > 0) {
+                        disp0 /= hits0;
+                        ww0 /= hits0;
+                    }
+                    if (hits1 > 0) {
+                        disp1 /= hits1;
+                        ww1 /= hits1;
                     }
                 }
+                dww = ww1 - ww0;
+                ddisp = disp1 - disp0;
         
-                /* remove matches too far away from the peak by setting
-                 * their probabilities to zero */
-                uint min_disp = (uint)(disp2 - tolerance);
-                uint max_disp = (uint)(disp2 + tolerance);
-                for (i = 0; i < no_of_possible_matches; i++) {
-                    uint x = svs_matches[i * 4 + 1];
+                /* find inliers */
+                int plane_tx = (int)imgWidth;
+                int plane_ty = 0;
+                int plane_bx = (int)imgHeight;
+                int plane_by = 0;
+                int plane_disp0 = 0;
+                int plane_disp1 = 0;
+                int hits = 0;
+                for (i = no_of_possible_matches-1; i >= 0; i--) {
+                    x = (int)svs_matches[i * 4 + 1];
                     if ((x > tx) && (x < bx)) {
-                        uint y = svs_matches[i * 4 + 2];
+                        y = (int)svs_matches[i * 4 + 2];
                         if ((y > ty) && (y < by)) {
-                            uint disp = svs_matches[i * 4 + 3];
-                            if (near == 1) {
-                                if (!((disp < min_disp) || (disp > max_disp))) {
-                                    /* near - within stereo ranging resolution */
-                                    valid_quadrants[i]++;
-                                }
+                            disp = (int)svs_matches[i * 4 + 3];
+        
+                            if (horizontal != 0) {
+                                ww = (x - tx) / SVS_FILTER_SAMPLING;
+                                n = ww * max_disparity_pixels + disp;
                             } else {
-                                if (disp <= 2) {
-                                    /* far out man */
-                                    valid_quadrants[i]++;
+                                ww = (y - ty) / SVS_FILTER_SAMPLING;
+                                n = ww * max_disparity_pixels + disp;
+                            }
+        
+                            if (dww > 0) {
+                                disp2 = disp0 + ((ww - ww0) * ddisp / dww);
+                            }
+                            else {
+                                disp2 = disp0;
+                            }
+        
+                            /* check how far this is from the plane */
+                            if (((int)disp >= disp2-2) &&
+                                    ((int)disp <= disp2+2) &&
+                                    ((int)disp < max_disparity_pixels)) {
+        
+                                /* inlier detected - this disparity lies along the plane */
+                                valid_quadrants[i]++;
+                                hits++;
+                                
+                                /* keep note of the bounds of the plane */
+                                if (x < plane_tx) {
+                                    plane_tx = x;
+                                    if (horizontal == 1) plane_disp0 = disp2;
+                                }
+                                if (y < plane_ty) {
+                                    plane_ty = y;
+                                    if (horizontal == 0) plane_disp0 = disp2;
+                                }
+                                if (x > plane_bx) {
+                                    plane_bx = x;
+                                    if (horizontal == 1) plane_disp1 = disp2;
+                                }
+                                if (y > plane_by) {
+                                    plane_by = y;
+                                    if (horizontal == 0) plane_disp1 = disp2;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (hits > 5) {
+                    /* add a detected plane */
+                    plane[no_of_planes*9+0]=plane_tx;
+                    plane[no_of_planes*9+1]=plane_ty;
+                    plane[no_of_planes*9+2]=plane_bx;
+                    plane[no_of_planes*9+3]=plane_by;
+                    plane[no_of_planes*9+4]=horizontal;
+                    plane[no_of_planes*9+5]=plane_disp0;
+                    plane[no_of_planes*9+6]=plane_disp1;
+                    plane[no_of_planes*9+7]=hits;
+                    plane[no_of_planes*9+8]=0;
+                    no_of_planes++;
+                }
+            }
+        
+            /* deal with the outliers */
+            for (i = no_of_possible_matches-1; i >= 0; i--) {
+                if (valid_quadrants[i] == 0) {
+                
+                    /* by default set outlier probability to zero,
+                       which eliminates it from further enquiries */
+                    svs_matches[i * 4] = 0;
+        
+                    /* if the point is within a known plane region then force
+                       its disparity onto the plane */
+                    x = (int)svs_matches[i * 4 + 1];
+                    y = (int)svs_matches[i * 4 + 2];
+                    max_hits = 0;
+                    for (j = no_of_planes-1; j >= 0; j--) {
+                        if ((x > plane[j*9+0]) &&
+                                (x < plane[j*9+2]) &&
+                                (y > plane[j*9+1]) &&
+                                (y < plane[j*9+3])) {
+        
+                            if (max_hits < plane[j*9+7]) {
+                                                
+                                max_hits = plane[j*9+7];
+                                
+                                /* find the disparity value at this point on the plane */
+                                if (plane[j*9+4] == 1) {
+                                
+                                    disp = plane[j*9+5] +
+                                           ((x - plane[j*9+0]) *
+                                            (plane[j*9+6] - plane[j*9+5]) /
+                                            (plane[j*9+2] - plane[j*9+0]));
+                                }
+                                else {
+        
+                                    disp = plane[j*9+5] +
+                                            ((y - plane[j*9+1]) *
+                                             (plane[j*9+6] - plane[j*9+5]) /
+                                             (plane[j*9+3] - plane[j*9+1]));
+                                }
+                                
+                                /* ignore big disparities, which are likely to be noise */
+                                if (disp < 4) { 
+                                    /* update disparity for this stereo match */
+                                    svs_matches[i * 4 + 3] = (uint)disp;
+                                    
+                                    /* non zero match probability resurects this stereo match */
+                                    svs_matches[i * 4] = 1; 
                                 }
                             }
                         }
                     }
                 }
             }
+        }
         
-            for (i = 0; i < no_of_possible_matches; i++) {
-                if (valid_quadrants[i] == 0) {
-                    /* set probability to zero */
-                    svs_matches[i * 4] = 0;
-                }
-            }
         
-            if (enable_secondary != 0) {
-                /* increment history counter */
-                peaks_history_index++;
-                if (peaks_history_index >= SVS_PEAKS_HISTORY) {
-                    peaks_history_index = 0;
-                    enable_peaks_filter = 1;
-                }
-            }
-        }                
     }
 }

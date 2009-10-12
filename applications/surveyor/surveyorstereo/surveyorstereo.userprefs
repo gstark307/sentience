@@ -1,20 +1,18 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../dpslam/robotSurveyor.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/correspondence/StereoVisionEdgesCam.cs" ctype="Workbench">
     <Files>
-      <File FileName="MainWindow.cs" Line="145" Column="26" />
-      <File FileName="../dpslam/robotSurveyor.cs" Line="160" Column="9" />
-      <File FileName="../dpslam/robotSurveyorThread.cs" Line="52" Column="6" />
-      <File FileName="../dpslam/tests/motionmodel_tests.cs" Line="131" Column="30" />
-      <File FileName="../dpslam/motionModel.cs" Line="343" Column="37" />
+      <File FileName="../surveyorlib/correspondence/StereoVisionEdgesCam.cs" Line="1045" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="dpslam" expanded="True">
-            <Node name="robotSurveyor.cs" selected="True" />
+            <Node name="tests" expanded="True" />
           </Node>
           <Node name="surveyorlib" expanded="True">
-            <Node name="calibration" expanded="True" />
+            <Node name="correspondence" expanded="True">
+              <Node name="StereoVisionEdgesCam.cs" selected="True" />
+            </Node>
           </Node>
           <Node name="surveyorstereo" expanded="True">
             <Node name="UserInterface">
