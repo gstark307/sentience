@@ -468,6 +468,7 @@ namespace surveyor.vision
             int idx, max, curr_idx = 0, search_idx, winner_idx = 0;
             int no_of_possible_matches = 0, matches = 0;
             int itt, prev_matches, row_offset, col_offset;
+            int p, pmax=3;
         
             uint meandescL, meandescR;
             short[] meandesc = new short[SVS_DESCRIPTOR_PIXELS];
@@ -641,39 +642,48 @@ namespace surveyor.vision
                     /* non-zero total matching score */
                     if (total > 0) {
         
-                        /* convert matching scores to probabilities */
-                        best_prob = 0;
-                        for (R = 0; R < no_of_feats_right; R++) {
-                            if (row_peaks[R] > 0) {
-                                match_prob = row_peaks[R] * 1000 / total;
-                                if (match_prob > best_prob) {
-                                    best_prob = match_prob;
-                                    bestR = R;
+                        /* several candidate disparities per feature
+                           observing the principle of least commitment */
+                        for (p = 0; p < pmax; p++) {
+
+                            /* convert matching scores to probabilities */
+                            best_prob = 0;
+                            for (R = 0; R < no_of_feats_right; R++) {
+                                if (row_peaks[R] > 0) {
+                                    match_prob = row_peaks[R] * 1000 / total;
+                                    if (match_prob > best_prob) {
+                                        best_prob = match_prob;
+                                        bestR = R;
+                                    }
                                 }
                             }
-                        }
-        
-                        if ((best_prob > 0) && (best_prob < 1000)
-                                && (no_of_possible_matches < SVS_MAX_FEATURES)) {
-        
-                            /* x coordinate of the feature in the right camera */
-                            xR = other.feature_x[fR + bestR];
-        
-                            /* possible disparity */
-                            disp = xL - xR;
-        
-                            if (disp >= -10) {
-                                if (disp < 0)
-                                    disp = 0;
-                                /* add the best result to the list of possible matches */
-                                svs_matches[no_of_possible_matches * 4] = best_prob;
-                                svs_matches[no_of_possible_matches * 4 + 1]
-                                        = (uint) xL;
-                                svs_matches[no_of_possible_matches * 4 + 2]
-                                        = (uint) y;
-                                svs_matches[no_of_possible_matches * 4 + 3]
-                                        = (uint) disp;
-                                no_of_possible_matches++;
+            
+                            if ((best_prob > 0) && (best_prob < 1000)
+                                    && (no_of_possible_matches < SVS_MAX_FEATURES)) {
+            
+                                /* x coordinate of the feature in the right camera */
+                                xR = other.feature_x[fR + bestR];
+            
+                                /* possible disparity */
+                                disp = xL - xR;
+            
+                                if (disp >= -10) {
+                                    if (disp < 0)
+                                        disp = 0;
+                                    /* add the best result to the list of possible matches */
+                                    svs_matches[no_of_possible_matches * 4] = best_prob;
+                                    svs_matches[no_of_possible_matches * 4 + 1]
+                                            = (uint) xL;
+                                    svs_matches[no_of_possible_matches * 4 + 2]
+                                            = (uint) y;
+                                    svs_matches[no_of_possible_matches * 4 + 3]
+                                            = (uint) disp;
+                                    if (p > 0) {
+                                        svs_matches[no_of_possible_matches * 4 + 1] += imgWidth;
+                                    }
+                                    no_of_possible_matches++;
+                                    row_peaks[bestR] = 0;
+                                }
                             }
                         }
                     }
@@ -733,17 +743,22 @@ namespace surveyor.vision
                         svs_matches[curr_idx + 3] = (uint)disp;
         
                         /* update your priors */
-                        row = y / SVS_VERTICAL_SAMPLING;
-                        for (row_offset = -3; row_offset <= 3; row_offset++) {
-                            for (col_offset = -1; col_offset <= 1; col_offset++) {
-                                idx = (((row + row_offset) * (int)imgWidth + xL) / 16)
-                                        + col_offset;
-                                if ((idx > -1) && (idx < priors_length)) {
-                                    if (disparity_priors[idx] == 0)
-                                        disparity_priors[idx] = disp;
-                                    else
-                                        disparity_priors[idx] = (disp
-                                                + disparity_priors[idx]) / 2;
+                        if (svs_matches[winner_idx + 1] >= imgWidth) {
+                            svs_matches[winner_idx + 1] -= imgWidth;
+                        }
+                        else {
+                            row = y / SVS_VERTICAL_SAMPLING;
+                            for (row_offset = -3; row_offset <= 3; row_offset++) {
+                                for (col_offset = -1; col_offset <= 1; col_offset++) {
+                                    idx = (((row + row_offset) * (int)imgWidth + xL) / 16)
+                                            + col_offset;
+                                    if ((idx > -1) && (idx < priors_length)) {
+                                        if (disparity_priors[idx] == 0)
+                                            disparity_priors[idx] = disp;
+                                        else
+                                            disparity_priors[idx] = (disp
+                                                    + disparity_priors[idx]) / 2;
+                                    }
                                 }
                             }
                         }
@@ -1160,7 +1175,7 @@ namespace surveyor.vision
                                     svs_matches[i * 4 + 3] = (uint)disp;
                                     
                                     /* non zero match probability resurects this stereo match */
-                                    svs_matches[i * 4] = 1; 
+                                    svs_matches[i * 4] = 500; 
                                 }
                             }
                         }

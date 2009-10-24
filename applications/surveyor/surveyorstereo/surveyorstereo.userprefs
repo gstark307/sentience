@@ -1,50 +1,13 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="../surveyorlib/correspondence/StereoVisionEdgesCam.cs" ctype="Workbench">
-    <Files>
-      <File FileName="../surveyorlib/correspondence/StereoVisionEdgesCam.cs" Line="1045" Column="1" />
-    </Files>
+  <MonoDevelop.Ide.Workbench ctype="Workbench">
     <Pads>
       <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="dpslam" expanded="True">
-            <Node name="tests" expanded="True" />
-          </Node>
-          <Node name="surveyorlib" expanded="True">
-            <Node name="correspondence" expanded="True">
-              <Node name="StereoVisionEdgesCam.cs" selected="True" />
-            </Node>
-          </Node>
-          <Node name="surveyorstereo" expanded="True">
-            <Node name="UserInterface">
-              <Node name="MainWindow">
-                <Option id="ShowVersionControlOverlays" value="True" />
-                <Option id="ShowAllFiles" value="True" />
-              </Node>
-            </Node>
-            <Node name="DEBIAN" expanded="True" />
-          </Node>
+        <State expanded="True" selected="True">
+          <Node name="surveyorstereo" expanded="True" />
         </State>
       </Pad>
       <Pad Id="ClassPad">
         <State expanded="True" selected="True" />
-      </Pad>
-      <Pad Id="MonoDevelop.NUnit.TestPad">
-        <State expanded="True">
-          <Node name="dpslam" expanded="True">
-            <Node name="dpslam" expanded="True">
-              <Node name="core" expanded="True">
-                <Node name="tests" expanded="True">
-                  <Node name="motionmodel_tests" expanded="True">
-                    <Node name="OpenLoopSpeed" selected="True" />
-                  </Node>
-                </Node>
-              </Node>
-            </Node>
-          </Node>
-        </State>
-      </Pad>
-      <Pad Id="MonoDevelop.Debugger.WatchPad">
-        <State />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
