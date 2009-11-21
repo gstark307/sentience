@@ -1,0 +1,11 @@
+Package: sentience-core
+Version: 0.1
+Architecture: i386
+Maintainer: Bob Mottram <fuzzgun@gmail.com>
+Depends: mono-runtime
+Recommends: 
+Suggests: 
+Section: robotics
+Priority: optional
+Homepage: http://code.google.com/p/sentience/
+Description: Core libraries for the sentience project

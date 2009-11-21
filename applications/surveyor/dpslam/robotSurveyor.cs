@@ -54,8 +54,8 @@ namespace dpslam.core
 		DateTime last_position_update;
 		pos3D curr_pos;
 		
-		// stereo disparities (prob/x/y/disp)
-		List<byte[]> disparities;
+		// stereo disparities (prob/x/y/disp/r/g/b)
+		List<ushort[]> stereo_matches;
 		
 		robotSurveyorThread update_thread2;
 		Thread update_thread;
@@ -79,7 +79,7 @@ namespace dpslam.core
             WheelDiameter_mm = 30;
             WheelBaseForward_mm = 0;
 					
-			disparities = new List<byte[]>();
+			stereo_matches = new List<ushort[]>();
 			curr_pos = new pos3D(0,0,0);
 			last_position_update = DateTime.Now;
 			UpdatePosition();
@@ -134,7 +134,7 @@ namespace dpslam.core
 				curr_pos.x += dist_mm * (float)Math.Sin(pan);
 				curr_pos.y += dist_mm * (float)Math.Cos(pan);
 				
-	            updateFromKnownPosition(disparities, curr_pos.x, curr_pos.y, 0, pan, 0, 0);
+	            updateFromKnownPosition(stereo_matches, curr_pos.x, curr_pos.y, 0, pan, 0, 0);
 				
 				//Console.WriteLine("xy: " + x.ToString() + " " + y.ToString());
 			}

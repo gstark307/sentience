@@ -315,7 +315,8 @@ namespace dpslam.core
         /// set the number of trial poses within the motion model
         /// </summary>
         /// <param name="no_of_poses"></param>
-        public void SetMotionModelTrialPoses(int no_of_poses)
+        public void SetMotionModelTrialPoses(
+		    int no_of_poses)
         {
             motion.survey_trial_poses = no_of_poses;
         }
@@ -324,7 +325,8 @@ namespace dpslam.core
         /// set the culling threshold for the motion model
         /// </summary>
         /// <param name="culling_threshold"></param>
-        public void SetMotionModelCullingThreshold(int culling_threshold)
+        public void SetMotionModelCullingThreshold(
+		    int culling_threshold)
         {
             motion.cull_threshold = culling_threshold;
         }
@@ -339,7 +341,10 @@ namespace dpslam.core
         /// <param name="x">x position in millimetres</param>
         /// <param name="y">y position in millimetres</param>
         /// <param name="z">z position in millimetres</param>
-        public void SetLocalGridPosition(float x, float y, float z)
+        public void SetLocalGridPosition(
+		    float x, 
+		    float y, 
+		    float z)
         {
             LocalGrid.x = x;
             LocalGrid.y = y;
@@ -354,7 +359,8 @@ namespace dpslam.core
         /// set the tuning parameters from a comma separated string
         /// </summary>
         /// <param name="parameters">comma separated tuning parameters</param>
-        public void SetTuningParameters(string parameters)
+        public void SetTuningParameters(
+		    string parameters)
         {
             this.TuningParameters = parameters;
 
@@ -381,7 +387,8 @@ namespace dpslam.core
         /// set parameters required for mapping
         /// </summary>
         /// <param name="sigma"></param>
-        public void setMappingParameters(float sigma)
+        public void setMappingParameters(
+		    float sigma)
         {
             inverseSensorModel.sigma = sigma;
         }
@@ -394,7 +401,8 @@ namespace dpslam.core
         /// mapping update, which can consist of multiple threads running concurrently
         /// </summary>
         /// <param name="stereo_rays">rays to be thrown into the grid map</param>
-        private void MappingUpdate(List<evidenceRay>[] stereo_rays)
+        private void MappingUpdate(
+		    List<evidenceRay>[] stereo_rays)
         {
 		    pos3D pose = new pos3D(x, y, z);
 
@@ -470,11 +478,17 @@ namespace dpslam.core
             return (mean_variance);
         }
 
-        public List<evidenceRay>[] GetRays(List<byte[]> disparities)
+		/// <summary>
+		/// transform the given stereo matches into a set of rays
+		/// </summary>
+        /// <param name="stereo_matches">list of stereo matches (prob/x/y/disp/r/g/b)</param>		
+        /// <returns></returns>
+        public List<evidenceRay>[] GetRays(
+		    List<ushort[]> stereo_matches)
         {
-            if (disparities != null)
+            if (stereo_matches != null)
             {                
-                loadDisparities(disparities);
+                loadStereoMatches(stereo_matches);
 
                 // create an observation as a set of rays from the stereo correspondence results
                 List<evidenceRay>[] stereo_rays = new List<evidenceRay>[head.no_of_stereo_cameras];
@@ -486,11 +500,13 @@ namespace dpslam.core
             else return(null);
         }
 		
-		private void loadDisparities(List<byte[]> disparities)
+		private void loadStereoMatches(
+		    List<ushort[]> stereo_matches)
 		{
 		}
 
-        private void updateSimulation(dpslam sim_map)
+        private void updateSimulation(
+		    dpslam sim_map)
         {
 			// create simulated observation based upon the given map
             List<evidenceRay>[] stereo_rays = new List<evidenceRay>[head.no_of_stereo_cameras];
@@ -504,15 +520,14 @@ namespace dpslam.core
         /// <summary>
         /// update the state of the robot using a list of images from its stereo camera/s
         /// </summary>
-        /// <param name="images">list containing stereo images in left/right order</param>
-        /// <param name="motion_model">the motion model to be used</param>
-        /// <param name="grid">the ocupancy grid to be updated</param>
-        private void update(List<byte[]> disparities)
+        /// <param name="stereo_matches">list of stereo matches (prob/x/y/disp/r/g/b)</param>
+        private void update(
+		    List<ushort[]> stereo_matches)
         {
-            if (disparities != null)
+            if (stereo_matches != null)
             {                
-                // load stereo images
-                loadDisparities(disparities);
+                // load stereo matches
+                loadStereoMatches(stereo_matches);
 
                 // create an observation as a set of rays from the stereo correspondence results
                 List<evidenceRay>[] stereo_rays = new List<evidenceRay>[head.no_of_stereo_cameras];
@@ -527,18 +542,23 @@ namespace dpslam.core
         /// <summary>
         /// update from a known position and orientation
         /// </summary>
-        /// <param name="images">list of bitmap images (3bpp)</param>
+        /// <param name="stereo_matches">list of stereo matches (prob/x/y/disp/r/g/b)</param>
         /// <param name="x">x position in mm</param>
         /// <param name="y">y position in mm</param>
         /// <param name="pan">pan angle in radians</param>
-        /// <param name="mapping">mapping or localisation</param>
+        /// <param name="tilt">tilt angle in radians</param>
+        /// <param name="roll">roll angle in radians</param>
         public void updateFromKnownPosition(
-		    List<byte[]> disparities,
-            float x, float y, float z,
-		    float pan, float tilt, float roll)
+		    List<ushort[]> stereo_matches,
+            float x, 
+		    float y, 
+		    float z,
+		    float pan, 
+		    float tilt, 
+		    float roll)
         {
             // update the grid
-            update(disparities);
+            update(stereo_matches);
 
             // set the robot at the known position
             this.x = x;
@@ -551,13 +571,15 @@ namespace dpslam.core
             // update the motion model
             motionModel motion_model = motion;
             motion_model.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
-            if (!((previousPosition.x == -1) && (previousPosition.y == -1)))
+            if (!((previousPosition.x == -1) && 
+			      (previousPosition.y == -1)))
             {
                 float time_per_index_sec = 1;
 
                 float dx = x - previousPosition.x;
                 float dy = y - previousPosition.y;
-                float distance = (float)Math.Sqrt((dx * dx) + (dy * dy));
+				float dz = z - previousPosition.z;
+                float distance = (float)Math.Sqrt((dx * dx) + (dy * dy) + (dz * dz));
                 float acceleration = (2 * (distance - (motion_model.forward_velocity * time_per_index_sec))) / (time_per_index_sec * time_per_index_sec);
                 acceleration /= time_per_index_sec;
                 float forward_velocity = motion_model.forward_velocity + (acceleration * time_per_index_sec);
@@ -607,8 +629,12 @@ namespace dpslam.core
         /// <param name="mapping">mapping or localisation</param>
         public void updateFromKnownPosition(
 		    dpslam sim_map,
-            float x, float y, float z,
-		    float pan, float tilt, float roll)
+            float x, 
+		    float y, 
+		    float z,
+		    float pan, 
+		    float tilt, 
+		    float roll)
         {
             // update the grid
             updateSimulation(sim_map);
@@ -671,7 +697,8 @@ namespace dpslam.core
         /// reset the pose list for the robot
         /// </summary>
         /// <param name="mode">a motionmodel MODE constant: egocentric or monte carlo</param>
-        public void Reset(int mode)
+        public void Reset(
+		    int mode)
         {
             previousPosition.x = -1;
             previousPosition.y = -1;
@@ -681,18 +708,19 @@ namespace dpslam.core
         /// <summary>
         /// update using wheel encoder positions
         /// </summary>
-        /// <param name="disparities"></param>
+        /// <param name="stereo_matches"></param>
         /// <param name="left_wheel_encoder">left wheel encoder position</param>
         /// <param name="right_wheel_encoder">right wheel encoder position</param>
         /// <param name="time_elapsed_sec">time elapsed since the last update in sec</param>
         /// <param name="mapping">mapping or localisation</param>
         public void updateFromEncoderPositions(
-		    List<byte[]> disparities,
-            long left_wheel_encoder, long right_wheel_encoder,
+		    List<ushort[]> stereo_matches,
+            long left_wheel_encoder, 
+		    long right_wheel_encoder,
             float time_elapsed_sec)
         {
             // update the grid
-            update(disparities);
+            update(stereo_matches);
 
             //float wheel_circumference_mm = (float)Math.PI * WheelDiameter_mm;
             long countsPerWheelRev = CountsPerRev * GearRatio;
@@ -735,7 +763,8 @@ namespace dpslam.core
         /// <param name="mapping">mapping or localisation</param>
         public void updateFromEncoderPositions(
 		    dpslam sim_map,
-            long left_wheel_encoder, long right_wheel_encoder,
+            long left_wheel_encoder, 
+		    long right_wheel_encoder,
             float time_elapsed_sec)
         {
             // update the grid
@@ -775,14 +804,14 @@ namespace dpslam.core
         /// <summary>
         /// update using known velocities
         /// </summary>
-        /// <param name="disparities">list of bitmap images (3bpp)</param>
+        /// <param name="stereo_matches">list of stereo matches (prob/x/y/disp/r/g/b)</param>
         /// <param name="forward_velocity">forward velocity in mm/sec</param>
         /// <param name="angular_velocity_pan">angular velocity in the pan axis in radians/sec</param>
         /// <param name="angular_velocity_tilt">angular velocity in the tilt axis in radians/sec</param>
         /// <param name="angular_velocity_roll">angular velocity in the roll axis in radians/sec</param>
         /// <param name="time_elapsed_sec">time elapsed since the last update in sec</param>
         public void updateFromVelocities(
-		    List<byte[]> disparities, 
+		    List<ushort[]> stereo_matches, 
             float forward_velocity, 
 		    float angular_velocity_pan,
 		    float angular_velocity_tilt,
@@ -790,7 +819,7 @@ namespace dpslam.core
             float time_elapsed_sec)
         {
             // update the grid
-            update(disparities);
+            update(stereo_matches);
 
             // update the motion model
             motion.InputType = motionModel.INPUTTYPE_BODY_FORWARD_AND_ANGULAR_VELOCITY;
@@ -896,8 +925,14 @@ namespace dpslam.core
         /// <param name="img">image within which to show the grid</param>
         /// <param name="width">width of the image</param>
         /// <param name="height">height of the image</param>
-        public void ShowGrid(int view_type, Byte[] img, int width, int height, bool show_robot, 
-                             bool colour, bool scalegrid)
+        public void ShowGrid(
+		    int view_type, 
+		    byte[] img, 
+		    int width, 
+		    int height, 
+		    bool show_robot, 
+            bool colour, 
+		    bool scalegrid)
         {
             dpslam grid = LocalGrid;
             motionModel motion_model = motion;
@@ -927,7 +962,10 @@ namespace dpslam.core
         /// <param name="img"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public void ShowPathTree(Byte[] img, int width, int height)
+        public void ShowPathTree(
+		    byte[] img, 
+		    int width, 
+		    int height)
         {
             motion.ShowTree(img, width, height, 0, 0, 0, 0);
         }
@@ -936,7 +974,9 @@ namespace dpslam.core
 
         #region "saving and loading"
 		
-        public XmlElement getXml(XmlDocument doc, XmlElement parent)
+        public XmlElement getXml(
+		    XmlDocument doc, 
+		    XmlElement parent)
         {
             XmlElement nodeRobot = doc.CreateElement("Robot");
             parent.AppendChild(nodeRobot);
@@ -1124,7 +1164,8 @@ namespace dpslam.core
         /// save camera calibration parameters as an xml file
         /// </summary>
         /// <param name="filename">file name to save as</param>
-        public void Save(String filename)
+        public void Save(
+		    string filename)
         {
             XmlDocument doc = getXmlDocument();
             doc.Save(filename);
@@ -1134,7 +1175,8 @@ namespace dpslam.core
         /// <summary>
         /// </summary>
         /// <param name="filename"></param>
-        public bool Load(string filename)
+        public bool Load(
+		    string filename)
         {
             bool loaded = false;
 
@@ -1173,8 +1215,10 @@ namespace dpslam.core
         /// </summary>
         /// <param name="xnod"></param>
         /// <param name="level"></param>
-        public void LoadFromXml(XmlNode xnod, int level,
-                                ref int cameraIndex)
+        public void LoadFromXml(
+		    XmlNode xnod, 
+		    int level,
+            ref int cameraIndex)
         {
             XmlNode xnodWorking;
 
@@ -1414,12 +1458,14 @@ namespace dpslam.core
         /// save the occupancy grid to file
         /// </summary>
         /// <param name="filename">name of the file to save as</param>
-        public void SaveGrid(string filename)
+        public void SaveGrid(
+		    string filename)
         {
             LocalGrid.Save(filename, motion.best_path.current_pose);
         }
 
-		public void SaveGridImage(string filename)
+		public void SaveGridImage(
+		    string filename)
         {
             LocalGrid.Show(filename, 640, 640, motion.best_path.current_pose);
         }
@@ -1429,12 +1475,13 @@ namespace dpslam.core
         /// subsequent zip compression
         /// </summary>
         /// <returns>occupancy grid data</returns>
-        public Byte[] SaveGrid()
+        public byte[] SaveGrid()
         {
             return (LocalGrid.Save(motion.best_path.current_pose));
         }
 
-        public void LoadGrid(Byte[] data)
+        public void LoadGrid(
+		    byte[] data)
         {
             createLocalGrid();
             LocalGrid.Load(data);
@@ -1444,7 +1491,8 @@ namespace dpslam.core
         /// load the occupancy grid from file
         /// </summary>
         /// <param name="filename"></param>
-        public void LoadGrid(string filename)
+        public void LoadGrid(
+		    string filename)
         {
             createLocalGrid();
             LocalGrid.Load(filename);
@@ -1458,7 +1506,8 @@ namespace dpslam.core
         /// export occupancy grid data so that it can be visualised within IFrIT
         /// </summary>
         /// <param name="filename">name of the file to export as</param>
-        public void ExportToIFrIT(string filename)
+        public void ExportToIFrIT(
+		    string filename)
         {
             LocalGrid.ExportToIFrIT(filename, motion.best_path.current_pose);
         }

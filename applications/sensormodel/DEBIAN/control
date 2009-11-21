@@ -1,8 +1,8 @@
 Package: stereosensormodel
-Version: 0.1
+Version: 0.1b
 Architecture: i386
 Maintainer: Bob Mottram <fuzzgun@gmail.com>
-Depends: mono-runtime (>= 1.1.8.1), mono-2.0-runtime (>= 2.0)
+Depends: mono-runtime, sentience-core
 Recommends: 
 Suggests: 
 Section: robotics

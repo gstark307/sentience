@@ -98,8 +98,8 @@ namespace dpslam.core.tests
             for (int y = min_y_mm; y <= max_y_mm; y += step_size)
             {
                 if (closed_loop) surveyPosesDummy(rob);
-				List<byte[]> disparities = new List<byte[]>();
-                rob.updateFromKnownPosition(disparities, x, y, 0, pan, 0, 0);
+				List<ushort[]> stereo_matches = new List<ushort[]>();
+                rob.updateFromKnownPosition(stereo_matches, x, y, 0, pan, 0, 0);
                 
                 rob.motion.Show(
 				    img_rays, image_width, image_width, 
@@ -139,8 +139,8 @@ namespace dpslam.core.tests
             for (int y = min_y_mm; y <= max_y_mm; y += step_size)
             {
                 if (closed_loop) surveyPosesDummy(rob);
-				List<byte[]> disparities = new List<byte[]>();
-                rob.updateFromKnownPosition(disparities, x, y, 0, pan, 0, 0);
+				List<ushort[]> stereo_matches = new List<ushort[]>();
+                rob.updateFromKnownPosition(stereo_matches, x, y, 0, pan, 0, 0);
                 
                 rob.motion.Show(
 				    img_rays, image_width, image_width, 
@@ -179,10 +179,10 @@ namespace dpslam.core.tests
             for (int y = min_y_mm; y <= max_y_mm; y += step_size)
             {
                 if (closed_loop) surveyPosesDummy(rob);
-				List<byte[]> disparities = new List<byte[]>();
+				List<ushort[]> stereo_matches = new List<ushort[]>();
 				float forward_velocity = step_size;
 				float angular_velocity_pan = 0 * (float)Math.PI / 180.0f;
-				rob.updateFromVelocities(disparities, forward_velocity, angular_velocity_pan, 0, 0, 1.0f);
+				rob.updateFromVelocities(stereo_matches, forward_velocity, angular_velocity_pan, 0, 0, 1.0f);
                 
                 rob.motion.Show(
 				    img_rays, image_width, image_width, 
