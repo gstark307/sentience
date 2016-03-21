@@ -1,0 +1,1 @@
+The disparity of a feature is the difference in its horizontal position as obsevred from left and right cameras.  In [dense stereo correspondence](StereoCorrespondence.md) individual disparity values are used to populate a [disparity map](DisparityMap.md) giving an indication of the depth of the observed scene.

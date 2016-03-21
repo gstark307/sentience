@@ -1,0 +1,17 @@
+There's no escaping the fact that occupancy grids can consume a fair amount of space both in terms of memory and disk storage.  However, we can use some tricks to ensure that use of storage space is as efficient as possible.
+
+I assume that most robots in the not too distant future will be equipped with solid state storage, such as flash disks, but for the present hard disk usage is still common and relatively inexpensive.  Hard disks work well in mobile devices (for example iPods), but the inevitable _rough and tumble_ of robotic excursions means that they will receive unexpected physical shocks which can cause the read/write head of the drive to "crash" into the surface of the spinning disk, which may either destroy the device or result in serious data loss.  Physical measures can be taken to protect hard disks from high deceleration forces, but from my own personal experiences even packing them in foam or mounting them onto flexible rubber buffers is not always enough.
+
+It's therefore essential that any robotics software running on contemporary storage devices tries to minimise the amount of time that the hard disk is exposed to the potential risk of a head crash.  This means writing the software in such a way as to reduce disk access to the bare minimum.  An additional beneficial side effect is that smaller storage devices may be used (hence making the system more amenable to using solid state storage) and much larger occupancy grids can be stored efficiently.
+
+We can compress a 3D occupancy grid in two ways.  Firstly, by using an efficient coding format which only stores information about cells which have occupancy or vacancy evidence associated with them, and secondly by using already available off-the-shelf data compression algorithms.
+
+### Binary indexing ###
+
+Within any occupancy grid it is to be expected that a significant fraction of the cells will not be observed by the robot and therefore contain no useful information.  By using a binary index on the grid we can represent the state of each cell and whether it contains any evidence using a single boolean value (one bit per cell).  After the initial index we then store the full information for the occupancy and colour evidence.  Within a typical grid this method alone gives a substantial memory and disk space saving.
+
+### Algorithmic compression ###
+
+In addition to indexing we can also compress the grid data using standard methods so that grids may be stored and retrieved either from memory or permanent storage in a compact fashion.  This ensures that hardly any time is spent doing disk I/O which is relatively sluggish compared to in-memory access times.
+
+To achieve this I have used the [compression system written by Andrey Dryazgov](http://www.codeproject.com/useritems/IMCompressor.asp).  Using this system on a test data set gives a significant improvement in storage efficiency, reducing a colour 3D grid roughly 3.5MB in size (in binary indexed format) down to a mere 230K.  Obviously the number of such grids which could be stored, even on a modest flash disk, is considerable and should easily be adequate to cover a typical home or office area at a high spatial resolution.  The small size of the data also enables the possibility of having multiple robots share their grid maps over a wireless network as an exercise in navigational team work.

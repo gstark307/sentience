@@ -1,0 +1,1 @@
+The job of rectification is to remove any _golfish bowl-like_ spherical distortion from the image, such that straight lines in the real world always correspond to straight lines in the rectified image.

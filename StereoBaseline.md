@@ -1,0 +1,1 @@
+In stereo vision the _baseline_ value is the distance which separates the two cameras.  In robotics applications this is typically between 50-150 millimetres.  On early versions of a humanoid robot I used a 70mm baseline.  Later robots used a wider 140mm baseline in order to generate larger pixel disparities for modelling of objects at close range.

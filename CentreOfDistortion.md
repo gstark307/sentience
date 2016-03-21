@@ -1,0 +1,1 @@
+This a point within the image around which distortion due to the shape of the camera lens is approximately symmetrical.  Usually this is somewhere close to the centre of the image.

@@ -1,0 +1,17 @@
+When two features in a pair of stereo images are matched the range to the feature may be computed.  However, this does not mean that the distance to the feature is known with certainty.  There is always some small degree of uncertainty about the position of a feature within an image, which could be as great as plus or minus half a pixel.  It may be possible to increase the accuracy of the range by using [sub-pixel interpolation](SubPixelInterploation.md), but it's never possible to eliminate the uncertainty entirely.
+
+If we know the field of vision of the camera, which is typically 40 degrees horizontal and 20 degrees vertical for most webcams, the horizontal pixel position of the feature may be turned into an angle which is the angle of the incoming ray of light heading from the feature to the camera.  There will be some amount of uncertainty about this angle due to imperfections in image quality which can be modelled as a [gaussian distribution](http://en.wikipedia.org/wiki/Normal_distribution) having some [standard deviation](http://en.wikipedia.org/wiki/Standard_deviation).
+
+An overhead view of the incoming rays for a single matched feature are shown in the diagram below.  **L** and **R** are the left and right cameras.  The black lines are the angles calculated from the horizontal positions of the feature as observed by each camera, and the grey lines represent the [standard deviation](http://en.wikipedia.org/wiki/Standard_deviation) about this angle.
+
+![http://sentience.googlegroups.com/web/stereo_uncertainty_region.jpg](http://sentience.googlegroups.com/web/stereo_uncertainty_region.jpg)
+
+So taking into account the uncertainty in the feature position we can say that its actual position must lie somewhere inside the intersection of the two rays represented by the red diamond shape in the diagram above.  The axis of the diamond is always aligned with the centre point between the two cameras (yellow line), and its shape varies depending upon the range of the feature and the standard deviation value.  For more distant features the "tail" of the diamond can stretch off to infinity.  It should also be noted that a similar uncertainty exists in the vertical axis.
+
+### Probability distribution ###
+
+Inside the diamond shaped area what does the probability distribution look like ?  For convenience it's often assumed to be an ellipse with uniform gaussian distribution but this isn't really the case for stereo.  To get a better idea of how the uncertainty varies we can run a numerical simulation which updates a high resolution grid.  The result looks like this.
+
+![http://sentience.googlegroups.com/web/stereo_uncertainties.jpg](http://sentience.googlegroups.com/web/stereo_uncertainties.jpg)
+
+The stereo cameras aren't actually shown here, but they're positioned at the bottom of the image.  For convenient viewing a few rays are shown for features distributed in space at regular intervals.  From this simulation we can create a [sensor model](StereoSensorModel.md), which is basically just a lookup table.  The sensor model can be used within a real time application, without having to do any computationally expensive maths calculations for all the stereo matched features.
